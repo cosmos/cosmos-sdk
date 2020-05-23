@@ -5,7 +5,7 @@ import (
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -26,7 +26,10 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		{"couldn't add connection to client", func() {}, false},
 	}
 
-	counterparty := connection.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+	prefix := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+	suite.Require().NotNil(prefix)
+	counterparty, err := connection.NewCounterparty(testClientIDB, testConnectionIDB, prefix)
+	suite.Require().NoError(err)
 
 	for i, tc := range testCases {
 		tc := tc
@@ -50,9 +53,10 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 // connection on Chain A (ID #1) is INIT
 func (suite *KeeperTestSuite) TestConnOpenTry() {
 	// counterparty for A on B
-	counterparty := connection.NewCounterparty(
-		testClientIDB, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
-	)
+	prefix := suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+	suite.Require().NotNil(prefix)
+	counterparty, err := connection.NewCounterparty(testClientIDB, testConnectionIDA, prefix)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		msg      string

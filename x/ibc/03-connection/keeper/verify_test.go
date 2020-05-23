@@ -6,7 +6,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -20,10 +20,11 @@ const (
 
 func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	// create connection on chainA to chainB
-	counterparty := types.NewCounterparty(
-		testClientIDA, testConnectionIDA,
-		commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
-	)
+	prefix := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+	suite.Require().NotNil(prefix)
+	counterparty, err := types.NewCounterparty(testClientIDA, testConnectionIDA, prefix)
+	suite.Require().NoError(err)
+
 	connection1 := types.NewConnectionEnd(
 		types.UNINITIALIZED, testConnectionIDB, testClientIDB, counterparty,
 		types.GetCompatibleVersions(),
@@ -133,10 +134,15 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			}
 
 			// Create B's connection to A
-			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+			prefix := suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+			suite.Require().NotNil(prefix)
+
+			counterparty, err := types.NewCounterparty(testClientIDB, testConnectionIDB, prefix)
+			suite.Require().NoError(err)
+
 			connection := types.NewConnectionEnd(types.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
-			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
+			err = suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
 			)
 
@@ -153,10 +159,11 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	channelKey := host.KeyChannel(testPort1, testChannel1)
 
 	// create connection of chainB to pass into verify function
-	counterparty := types.NewCounterparty(
-		testClientIDB, testConnectionIDB,
-		commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
-	)
+	prefix := suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+	suite.Require().NotNil(prefix)
+
+	counterparty, err := types.NewCounterparty(testClientIDB, testConnectionIDB, prefix)
+	suite.Require().NoError(err)
 
 	connection := types.NewConnectionEnd(
 		types.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty,

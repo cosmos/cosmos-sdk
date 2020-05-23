@@ -10,6 +10,8 @@ import (
 )
 
 func TestValidateGenesis(t *testing.T) {
+	prefixAny, err := commitmenttypes.NewMerklePrefix([]byte("prefix")).ToAny()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name     string
@@ -25,7 +27,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, *prefixAny}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{host.ConnectionPath(connectionID)}},
@@ -37,7 +39,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid connection",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, "(CLIENTIDONE)", Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+					NewConnectionEnd(INIT, connectionID, "(CLIENTIDONE)", Counterparty{clientID, connectionID, *prefixAny}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{host.ConnectionPath(connectionID)}},
@@ -49,7 +51,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid client id",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, *prefixAny}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{"(CLIENTIDONE)", []string{host.ConnectionPath(connectionID)}},
@@ -61,7 +63,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid path",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, *prefixAny}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{connectionID}},

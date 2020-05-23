@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
@@ -89,12 +90,19 @@ func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 	_, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), testConnectionIDA)
 	suite.Require().False(existed)
 
-	counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+	prefix := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Signature)
+	suite.Require().NotNil(prefix)
+	counterparty, err := types.NewCounterparty(testClientIDA, testConnectionIDA, prefix)
+	suite.Require().NoError(err)
+
+	// clear prefix cached value
+	counterparty.Prefix.ClearCachedValue()
+
 	expConn := types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty, types.GetCompatibleVersions())
 	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConn)
 	conn, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), testConnectionIDA)
 	suite.Require().True(existed)
-	suite.Require().EqualValues(expConn, conn)
+	suite.Require().Equal(expConn, conn)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
@@ -109,9 +117,23 @@ func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
 
 func (suite KeeperTestSuite) TestGetAllConnections() {
 	// Connection (Counterparty): A(C) -> C(B) -> B(A)
-	counterparty1 := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
-	counterparty2 := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
-	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+	prefixMerkle := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+	suite.Require().NotNil(prefixMerkle)
+
+	prefixSig := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Signature)
+	suite.Require().NotNil(prefixSig)
+
+	counterparty1, err := types.NewCounterparty(testClientIDA, testConnectionIDA, prefixMerkle)
+	suite.Require().NoError(err)
+	counterparty1.Prefix.ClearCachedValue()
+
+	counterparty2, err := types.NewCounterparty(testClientIDB, testConnectionIDB, prefixMerkle)
+	suite.Require().NoError(err)
+	counterparty2.Prefix.ClearCachedValue()
+
+	counterparty3, err := types.NewCounterparty(testClientID3, testConnectionID3, prefixSig)
+	suite.Require().NoError(err)
+	counterparty3.Prefix.ClearCachedValue()
 
 	conn1 := types.NewConnectionEnd(types.INIT, testConnectionIDA, testClientIDA, counterparty3, types.GetCompatibleVersions())
 	conn2 := types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty1, types.GetCompatibleVersions())
@@ -358,7 +380,12 @@ func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
 	state types.State,
 ) types.ConnectionEnd {
-	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+	prefix := chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+	counterparty, err := types.NewCounterparty(counterpartyClientID, counterpartyConnID, prefix)
+	if err != nil {
+		panic(err)
+	}
+
 	connection := types.ConnectionEnd{
 		State:        state,
 		ID:           connID,

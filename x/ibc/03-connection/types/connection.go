@@ -3,9 +3,11 @@ package types
 import (
 	"strings"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -96,9 +98,23 @@ func (c Counterparty) GetConnectionID() string {
 
 // GetPrefix implements the CounterpartyI interface
 func (c Counterparty) GetPrefix() (commitmentexported.Prefix, error) {
-	prefix, ok := c.Prefix.GetCachedValue().(commitmentexported.Prefix)
+	var prefix commitmentexported.Prefix
+	cachedValue := c.Prefix.GetCachedValue()
+
+	if cachedValue == nil {
+		registry := cdctypes.NewInterfaceRegistry()
+		commitmenttypes.RegisterInterfaces(registry)
+
+		if err := registry.UnpackAny(&c.Prefix, &prefix); err != nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, err.Error())
+		}
+
+		return prefix, nil
+	}
+
+	prefix, ok := cachedValue.(commitmentexported.Prefix)
 	if !ok {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "prefix is not cached")
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "prefix is not cached: %T", cachedValue)
 	}
 
 	return prefix, nil

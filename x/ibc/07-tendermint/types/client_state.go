@@ -399,7 +399,7 @@ func validateVerificationArgs(
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
 	}
 
-	_, ok := prefix.(commitmenttypes.MerklePrefix)
+	_, ok := prefix.(*commitmenttypes.MerklePrefix)
 	if !ok {
 		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
 	}

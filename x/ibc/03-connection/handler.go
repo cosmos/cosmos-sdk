@@ -3,6 +3,7 @@ package connection
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
@@ -33,9 +34,12 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpenTry) (*sdk.Result, error) {
+	proofInit := msg.ProofInit.GetCachedValue().(commitmentexported.Proof)
+	proofConsensus := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
+
 	if err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
-		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
+		msg.CounterpartyVersions, proofInit, proofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {
 		return nil, err
@@ -61,8 +65,11 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpenAck) (*sdk.Result, error) {
+	proofTry := msg.ProofTry.GetCachedValue().(commitmentexported.Proof)
+	proofConsensus := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
+
 	if err := k.ConnOpenAck(
-		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
+		ctx, msg.ConnectionID, msg.Version, proofTry, proofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {
 		return nil, err
@@ -86,8 +93,10 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
 func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg MsgConnectionOpenConfirm) (*sdk.Result, error) {
+	proofAck := msg.ProofAck.GetCachedValue().(commitmentexported.Proof)
+
 	if err := k.ConnOpenConfirm(
-		ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight,
+		ctx, msg.ConnectionID, proofAck, msg.ProofHeight,
 	); err != nil {
 		return nil, err
 	}

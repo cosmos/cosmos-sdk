@@ -49,10 +49,14 @@ func connectionOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgConnectionOpenInit(
+		msg, err := types.NewMsgConnectionOpenInit(
 			req.ConnectionID, req.ClientID, req.CounterpartyConnectionID,
 			req.CounterpartyClientID, req.CounterpartyPrefix, fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -92,12 +96,16 @@ func connectionOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgConnectionOpenTry(
+		msg, err := types.NewMsgConnectionOpenTry(
 			req.ConnectionID, req.ClientID, req.CounterpartyConnectionID,
 			req.CounterpartyClientID, req.CounterpartyPrefix, req.CounterpartyVersions,
 			req.ProofInit, req.ProofConsensus, req.ProofHeight,
 			req.ConsensusHeight, fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -142,10 +150,14 @@ func connectionOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgConnectionOpenAck(
+		msg, err := types.NewMsgConnectionOpenAck(
 			connectionID, req.ProofTry, req.ProofConsensus, req.ProofHeight,
 			req.ConsensusHeight, req.Version, fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -190,9 +202,13 @@ func connectionOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 		}
 
 		// create the message
-		msg := types.NewMsgConnectionOpenConfirm(
+		msg, err := types.NewMsgConnectionOpenConfirm(
 			connectionID, req.ProofAck, req.ProofHeight, fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

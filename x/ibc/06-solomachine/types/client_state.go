@@ -98,7 +98,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	if err := validateVerificationArgs(cs, height, prefix, proof, prefix, cs.ConsensusState); err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, cs.ConsensusState); err != nil {
 		return err
 	}
 
@@ -142,7 +142,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	if err := validateVerificationArgs(cs, height, prefix, proof, prefix, cs.ConsensusState); err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, cs.ConsensusState); err != nil {
 		return err
 	}
 
@@ -194,7 +194,7 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	if err := validateVerificationArgs(cs, height, prefix, proof, prefix, cs.ConsensusState); err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, cs.ConsensusState); err != nil {
 		return err
 	}
 
@@ -246,7 +246,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	if err := validateVerificationArgs(cs, height, prefix, proof, prefix, cs.ConsensusState); err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, cs.ConsensusState); err != nil {
 		return err
 	}
 
@@ -289,7 +289,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	if err := validateVerificationArgs(cs, height, prefix, proof, prefix, cs.ConsensusState); err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, cs.ConsensusState); err != nil {
 		return err
 	}
 
@@ -332,7 +332,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	if err := validateVerificationArgs(cs, height, prefix, proof, prefix, cs.ConsensusState); err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, cs.ConsensusState); err != nil {
 		return err
 	}
 
@@ -372,7 +372,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	if err := validateVerificationArgs(cs, height, prefix, proof, prefix, cs.ConsensusState); err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, cs.ConsensusState); err != nil {
 		return err
 	}
 
@@ -381,7 +381,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-// casted type already verified
+	// casted type already verified
 	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
 
 	// value = sequence + path + nextSequenceRecv
@@ -432,8 +432,9 @@ func validateVerificationArgs(
 		)
 	}
 
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return , clienttypes.ErrClientFrozen
+	// TODO: && cs.FrozenHeight <= height
+	if cs.IsFrozen() {
+		return clienttypes.ErrClientFrozen
 	}
 
 	if prefix == nil {
@@ -449,7 +450,7 @@ func validateVerificationArgs(
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
-	_, ok := proof.(commitmenttypes.SignatureProof)
+	_, ok = proof.(commitmenttypes.SignatureProof)
 	if !ok {
 		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "invalid proof type %T, expected SignatureProof", proof)
 	}
@@ -458,9 +459,9 @@ func validateVerificationArgs(
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	_, ok := consensusState.(ConsensusState)
+	_, ok = consensusState.(ConsensusState)
 	if !ok {
-		return  sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
 	}
 
 	return nil

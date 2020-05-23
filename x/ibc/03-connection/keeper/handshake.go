@@ -66,8 +66,17 @@ func (k Keeper) ConnOpenTry(
 
 	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
-	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(clientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	counterpartyPrefix, err := counterparty.GetPrefix()
+	if err != nil {
+		return err
+	}
+
+	prefix := k.GetCommitmentPrefix(counterpartyPrefix.GetCommitmentType())
+	expectedCounterparty, err := types.NewCounterparty(clientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	if err != nil {
+		return err
+	}
+
 	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ConnectionID, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
@@ -96,13 +105,20 @@ func (k Keeper) ConnOpenTry(
 	// is chainA and connection is on INIT stage
 	// Check that existing connection version is on desired version of current handshake
 	previousConnection, found := k.GetConnection(ctx, connectionID)
-	if found && !(previousConnection.State == types.INIT &&
-		previousConnection.Counterparty.ConnectionID == counterparty.ConnectionID &&
-		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
-		previousConnection.ClientID == clientID &&
-		previousConnection.Counterparty.ClientID == counterparty.ClientID &&
-		previousConnection.Versions[0] == version) {
-		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
+	if found {
+		prevConnCountPrefix, err := previousConnection.Counterparty.GetPrefix()
+		if err != nil {
+			return err
+		}
+
+		if !(previousConnection.State == types.INIT &&
+			previousConnection.Counterparty.ConnectionID == counterparty.ConnectionID &&
+			bytes.Equal(prevConnCountPrefix.Bytes(), counterpartyPrefix.Bytes()) &&
+			previousConnection.ClientID == clientID &&
+			previousConnection.Counterparty.ClientID == counterparty.ClientID &&
+			previousConnection.Versions[0] == version) {
+			return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
+		}
 	}
 
 	// Set connection state to TRYOPEN and store in chainB state
@@ -162,8 +178,17 @@ func (k Keeper) ConnOpenAck(
 		return clienttypes.ErrSelfConsensusStateNotFound
 	}
 
-	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	counterpartyPrefix, err := connection.Counterparty.GetPrefix()
+	if err != nil {
+		return err
+	}
+
+	prefix := k.GetCommitmentPrefix(counterpartyPrefix.GetCommitmentType())
+	expectedCounterparty, err := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	if err != nil {
+		return err
+	}
+
 	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
@@ -213,8 +238,16 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	counterpartyPrefix, err := connection.Counterparty.GetPrefix()
+	if err != nil {
+		return err
+	}
+
+	prefix := k.GetCommitmentPrefix(counterpartyPrefix.GetCommitmentType())
+	expectedCounterparty, err := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	if err != nil {
+		return err
+	}
 	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	// Check that connection on ChainA is open

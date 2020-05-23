@@ -106,6 +106,15 @@ var (
 	// ErrInvalidType defines an error an invalid type.
 	ErrInvalidType = Register(RootCodespace, 29, "invalid type")
 
+	// ErrMarshal defines a general marshaling error to either protobuf or amino.
+	ErrMarshal = Register(RootCodespace, 30, "failed to marshal")
+
+	// ErrUnmarshal defines a general unmarshaling error from either protobuf or amino.
+	ErrUnmarshal = Register(RootCodespace, 31, "failed to marshal")
+
+	// ErrProtobufAny defines an error when a type cannot be packed into a protobuf Any message.
+	ErrProtobufAny = Register(RootCodespace, 32, "protobuf (un)pack Any failed")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

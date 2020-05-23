@@ -31,9 +31,14 @@ func (k Keeper) VerifyClientConsensusState(
 		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
 	}
 
+	counterpartyPrefix, err := connection.GetCounterparty().GetPrefix()
+	if err != nil {
+		return err
+	}
+
 	return clientState.VerifyClientConsensusState(
 		k.clientKeeper.ClientStore(ctx, clientID), k.aminoCdc, targetConsState.GetRoot(), height,
-		connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
+		connection.GetCounterparty().GetClientID(), consensusHeight, counterpartyPrefix, proof, consensusState,
 	)
 }
 
@@ -63,9 +68,14 @@ func (k Keeper) VerifyConnectionState(
 		)
 	}
 
+	counterpartyPrefix, err := connection.GetCounterparty().GetPrefix()
+	if err != nil {
+		return err
+	}
+
 	return clientState.VerifyConnectionState(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
-		connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
+		counterpartyPrefix, proof, connectionID, connectionEnd, consensusState,
 	)
 }
 
@@ -96,9 +106,14 @@ func (k Keeper) VerifyChannelState(
 		)
 	}
 
+	counterpartyPrefix, err := connection.GetCounterparty().GetPrefix()
+	if err != nil {
+		return err
+	}
+
 	return clientState.VerifyChannelState(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
-		connection.GetCounterparty().GetPrefix(), proof,
+		counterpartyPrefix, proof,
 		portID, channelID, channel, consensusState,
 	)
 }
@@ -131,9 +146,14 @@ func (k Keeper) VerifyPacketCommitment(
 		)
 	}
 
+	counterpartyPrefix, err := connection.GetCounterparty().GetPrefix()
+	if err != nil {
+		return err
+	}
+
 	return clientState.VerifyPacketCommitment(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
-		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		counterpartyPrefix, proof, portID, channelID,
 		sequence, commitmentBytes, consensusState,
 	)
 }
@@ -166,9 +186,14 @@ func (k Keeper) VerifyPacketAcknowledgement(
 		)
 	}
 
+	counterpartyPrefix, err := connection.GetCounterparty().GetPrefix()
+	if err != nil {
+		return err
+	}
+
 	return clientState.VerifyPacketAcknowledgement(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
-		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		counterpartyPrefix, proof, portID, channelID,
 		sequence, acknowledgement, consensusState,
 	)
 }
@@ -201,9 +226,14 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 		)
 	}
 
+	counterpartyPrefix, err := connection.GetCounterparty().GetPrefix()
+	if err != nil {
+		return err
+	}
+
 	return clientState.VerifyPacketAcknowledgementAbsence(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
-		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		counterpartyPrefix, proof, portID, channelID,
 		sequence, consensusState,
 	)
 }
@@ -235,9 +265,14 @@ func (k Keeper) VerifyNextSequenceRecv(
 		)
 	}
 
+	counterpartyPrefix, err := connection.GetCounterparty().GetPrefix()
+	if err != nil {
+		return err
+	}
+
 	return clientState.VerifyNextSequenceRecv(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
-		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		counterpartyPrefix, proof, portID, channelID,
 		nextSequenceRecv, consensusState,
 	)
 }

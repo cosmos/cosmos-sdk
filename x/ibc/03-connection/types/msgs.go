@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -14,16 +15,20 @@ var _ sdk.Msg = MsgConnectionOpenInit{}
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
+	counterpartyClientID string, counterpartyPrefix commitmentexported.Prefix,
 	signer sdk.AccAddress,
-) MsgConnectionOpenInit {
-	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+) (MsgConnectionOpenInit, error) {
+	counterparty, err := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+	if err != nil {
+		return MsgConnectionOpenInit{}, err
+	}
+
 	return MsgConnectionOpenInit{
 		ConnectionID: connectionID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Signer:       signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -65,22 +70,36 @@ var _ sdk.Msg = MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	counterpartyVersions []string, proofInit, proofConsensus commitmenttypes.MerkleProof,
+	counterpartyClientID string, counterpartyPrefix commitmentexported.Prefix,
+	counterpartyVersions []string, proofInit, proofConsensus commitmentexported.Proof,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
-) MsgConnectionOpenTry {
-	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+) (MsgConnectionOpenTry, error) {
+	counterparty, err := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+	if err != nil {
+		return MsgConnectionOpenTry{}, err
+	}
+
+	proofInitAny, err := proofInit.ToAny()
+	if err != nil {
+		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "proof init")
+	}
+
+	proofConsensusAny, err := proofConsensus.ToAny()
+	if err != nil {
+		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "proof consensus")
+	}
+
 	return MsgConnectionOpenTry{
 		ConnectionID:         connectionID,
 		ClientID:             clientID,
 		Counterparty:         counterparty,
 		CounterpartyVersions: counterpartyVersions,
-		ProofInit:            proofInit,
-		ProofConsensus:       proofConsensus,
+		ProofInit:            *proofInitAny,
+		ProofConsensus:       *proofConsensusAny,
 		ProofHeight:          proofHeight,
 		ConsensusHeight:      consensusHeight,
 		Signer:               signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -109,14 +128,22 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
 	}
-	if msg.ProofInit.IsEmpty() || msg.ProofConsensus.IsEmpty() {
+	proofInit, ok := msg.ProofInit.GetCachedValue().(commitmentexported.Proof)
+	if !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof init is not cached")
+	}
+	proofConsensus, ok := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
+	if !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof consensus is not cached")
+	}
+	if proofInit.IsEmpty() || proofConsensus.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.ProofInit.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof init cannot be nil")
+	if err := proofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init")
 	}
-	if err := msg.ProofConsensus.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
+	if err := proofConsensus.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof consensus")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -144,19 +171,29 @@ var _ sdk.Msg = MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, proofTry, proofConsensus commitmenttypes.MerkleProof,
+	connectionID string, proofTry, proofConsensus commitmentexported.Proof,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
-) MsgConnectionOpenAck {
+) (MsgConnectionOpenAck, error) {
+	proofTryAny, err := proofTry.ToAny()
+	if err != nil {
+		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "proof try")
+	}
+
+	proofConsensusAny, err := proofConsensus.ToAny()
+	if err != nil {
+		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "proof consensus")
+	}
+
 	return MsgConnectionOpenAck{
 		ConnectionID:    connectionID,
-		ProofTry:        proofTry,
-		ProofConsensus:  proofConsensus,
+		ProofTry:        *proofTryAny,
+		ProofConsensus:  *proofConsensusAny,
 		ProofHeight:     proofHeight,
 		ConsensusHeight: consensusHeight,
 		Version:         version,
 		Signer:          signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -177,14 +214,22 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.Version) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 	}
-	if msg.ProofTry.IsEmpty() || msg.ProofConsensus.IsEmpty() {
+	proofTry, ok := msg.ProofTry.GetCachedValue().(commitmentexported.Proof)
+	if !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof try is not cached")
+	}
+	proofConsensus, ok := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
+	if !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof consensus is not cached")
+	}
+	if proofTry.IsEmpty() || proofConsensus.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.ProofTry.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof try cannot be nil")
+	if err := proofTry.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof try")
 	}
-	if err := msg.ProofConsensus.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
+	if err := proofConsensus.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof consensus")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -212,15 +257,20 @@ var _ sdk.Msg = MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
+	connectionID string, proofAck commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgConnectionOpenConfirm {
+) (MsgConnectionOpenConfirm, error) {
+	proofAckAny, err := proofAck.ToAny()
+	if err != nil {
+		return MsgConnectionOpenConfirm{}, sdkerrors.Wrap(err, "proof ack")
+	}
+
 	return MsgConnectionOpenConfirm{
 		ConnectionID: connectionID,
-		ProofAck:     proofAck,
+		ProofAck:     *proofAckAny,
 		ProofHeight:  proofHeight,
 		Signer:       signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -238,11 +288,15 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if msg.ProofAck.IsEmpty() {
+	proofAck, ok := msg.ProofAck.GetCachedValue().(commitmentexported.Proof)
+	if !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof ack is not cached")
+	}
+	if proofAck.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.ProofAck.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	if err := proofAck.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")

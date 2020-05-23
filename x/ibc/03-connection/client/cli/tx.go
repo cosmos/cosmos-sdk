@@ -59,10 +59,14 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 				return err
 			}
 
-			msg := types.NewMsgConnectionOpenInit(
+			msg, err := types.NewMsgConnectionOpenInit(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
 				counterpartyPrefix, cliCtx.GetFromAddress(),
 			)
+
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -124,11 +128,15 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 				return err
 			}
 
-			msg := types.NewMsgConnectionOpenTry(
+			msg, err := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
 				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofInit, proofHeight,
 				consensusHeight, cliCtx.GetFromAddress(),
 			)
+
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -175,10 +183,14 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 
 			version := args[4]
 
-			msg := types.NewMsgConnectionOpenAck(
+			msg, err := types.NewMsgConnectionOpenAck(
 				connectionID, proofTry, proofTry, proofHeight,
 				consensusHeight, version, cliCtx.GetFromAddress(),
 			)
+
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -224,9 +236,13 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 				return err
 			}
 
-			msg := types.NewMsgConnectionOpenConfirm(
+			msg, err := types.NewMsgConnectionOpenConfirm(
 				connectionID, proofAck, proofHeight, cliCtx.GetFromAddress(),
 			)
+
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err

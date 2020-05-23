@@ -1,5 +1,9 @@
 package exported
 
+import (
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+)
+
 // ICS 023 Types Implementation
 //
 // This file includes types defined under
@@ -23,6 +27,7 @@ type Prefix interface {
 	GetCommitmentType() Type
 	Bytes() []byte
 	IsEmpty() bool
+	ToAny() (*cdctypes.Any, error)
 }
 
 // Path implements spec:CommitmentPath.
@@ -42,6 +47,7 @@ type Proof interface {
 	VerifyMembership(Root, Path, []byte) error
 	VerifyNonMembership(Root, Path) error
 	IsEmpty() bool
+	ToAny() (*cdctypes.Any, error)
 
 	ValidateBasic() error
 }

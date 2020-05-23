@@ -3,6 +3,7 @@ package types
 import (
 	"net/url"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -63,6 +64,15 @@ func (mp MerklePrefix) Bytes() []byte {
 // IsEmpty returns true if the prefix is empty
 func (mp MerklePrefix) IsEmpty() bool {
 	return len(mp.Bytes()) == 0
+}
+
+// ToAny converts merkle prefix to protobuf Any.
+func (mp MerklePrefix) ToAny() (*cdctypes.Any, error) {
+	any, err := cdctypes.NewAnyWithValue(&mp)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "prefix %T: %s", mp, err.Error())
+	}
+	return any, nil
 }
 
 var _ exported.Path = (*MerklePath)(nil)
@@ -150,6 +160,15 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 // IsEmpty returns true if the root is empty
 func (proof MerkleProof) IsEmpty() bool {
 	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
+}
+
+// ToAny converts merkle proof to protobuf Any.
+func (proof MerkleProof) ToAny() (*cdctypes.Any, error) {
+	any, err := cdctypes.NewAnyWithValue(&proof)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "proof %T: %s", proof, err.Error())
+	}
+	return any, nil
 }
 
 // ValidateBasic checks if the proof is empty.

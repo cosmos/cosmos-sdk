@@ -17,7 +17,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 // GetCmdCreateClient defines the command to create a new IBC Client.
@@ -35,7 +35,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 
 			clientID := args[0]
 
-			var consensusState solomachinetypes.ConsensusState
+			var consensusState types.ConsensusState
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &consensusState); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -47,7 +47,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			msg := solomachinetypes.NewMsgCreateClient(clientID, consensusState)
+			msg := types.NewMsgCreateClient(clientID, consensusState)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -74,7 +74,7 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 
 			clientID := args[0]
 
-			var header solomachinetypes.Header
+			var header types.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -86,7 +86,7 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			msg := solomachinetypes.NewMsgUpdateClient(clientID, header)
+			msg := types.NewMsgUpdateClient(clientID, header)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -124,7 +124,7 @@ func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			msg := solomachinetypes.NewMsgSubmitClientMisbehaviour(ev, cliCtx.GetFromAddress())
+			msg := types.NewMsgSubmitClientMisbehaviour(ev, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

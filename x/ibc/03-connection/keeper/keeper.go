@@ -41,8 +41,15 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetCommitmentPrefix returns the IBC connection store prefix as a commitment
 // Prefix
-func (k Keeper) GetCommitmentPrefix() commitmentexported.Prefix {
-	return commitmenttypes.NewMerklePrefix([]byte(k.storeKey.Name()))
+func (k Keeper) GetCommitmentPrefix(t commitmentexported.Type) commitmentexported.Prefix {
+	switch t {
+	case commitmentexported.Merkle:
+		return commitmenttypes.NewMerklePrefix([]byte(k.storeKey.Name()))
+	case commitmentexported.Signature:
+		return commitmenttypes.NewSignaturePrefix([]byte(k.storeKey.Name()))
+	default:
+		return nil
+	}
 }
 
 // GetConnection returns a connection with a particular identifier

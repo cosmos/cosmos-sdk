@@ -18,6 +18,6 @@ type ConnectionI interface {
 type CounterpartyI interface {
 	GetClientID() string
 	GetConnectionID() string
-	GetPrefix() commitmentexported.Prefix
+	GetPrefix() (commitmentexported.Prefix, error)
 	ValidateBasic() error
 }

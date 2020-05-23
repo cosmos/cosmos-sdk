@@ -2,10 +2,6 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 // SubModuleCdc defines the IBC tendermint client codec.
@@ -29,33 +25,33 @@ func SetSubModuleCodec(cdc *codec.Codec) {
 	SubModuleCdc = cdc
 }
 
-// RegisterInterfaces registers the tendermint concrete evidence and client-related
-// implementations and interfaces.
-func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
-		&MsgCreateClient{},
-		&MsgUpdateClient{},
-		&MsgSubmitClientMisbehaviour{},
-	)
-	registry.RegisterImplementations(
-		(*clientexported.ClientState)(nil),
-		&ClientState{},
-	)
-	registry.RegisterImplementations(
-		(*clientexported.ConsensusState)(nil),
-		&ConsensusState{},
-	)
-	registry.RegisterImplementations(
-		(*clientexported.Header)(nil),
-		&Header{},
-	)
-	registry.RegisterImplementations(
-		(*clientexported.Misbehaviour)(nil),
-		&Evidence{},
-	)
-	registry.RegisterImplementations(
-		(*evidenceexported.Evidence)(nil),
-		&Evidence{},
-	)
-}
+// // RegisterInterfaces registers the tendermint concrete evidence and client-related
+// // implementations and interfaces.
+// func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+// 	registry.RegisterImplementations(
+// 		(*sdk.Msg)(nil),
+// 		&MsgCreateClient{},
+// 		&MsgUpdateClient{},
+// 		&MsgSubmitClientMisbehaviour{},
+// 	)
+// 	registry.RegisterImplementations(
+// 		(*clientexported.ClientState)(nil),
+// 		&ClientState{},
+// 	)
+// 	registry.RegisterImplementations(
+// 		(*clientexported.ConsensusState)(nil),
+// 		&ConsensusState{},
+// 	)
+// 	registry.RegisterImplementations(
+// 		(*clientexported.Header)(nil),
+// 		&Header{},
+// 	)
+// 	registry.RegisterImplementations(
+// 		(*clientexported.Misbehaviour)(nil),
+// 		&Evidence{},
+// 	)
+// 	registry.RegisterImplementations(
+// 		(*evidenceexported.Evidence)(nil),
+// 		&Evidence{},
+// 	)
+// }

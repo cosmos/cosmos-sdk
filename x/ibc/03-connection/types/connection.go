@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -72,12 +71,17 @@ func (c ConnectionEnd) ValidateBasic() error {
 var _ exported.CounterpartyI = (*Counterparty)(nil)
 
 // NewCounterparty creates a new Counterparty instance.
-func NewCounterparty(clientID, connectionID string, prefix commitmenttypes.MerklePrefix) Counterparty {
+func NewCounterparty(clientID, connectionID string, prefix commitmentexported.Prefix) (Counterparty, error) {
+	any, err := prefix.ToAny()
+	if err != nil {
+		return Counterparty{}, err
+	}
+
 	return Counterparty{
 		ClientID:     clientID,
 		ConnectionID: connectionID,
-		Prefix:       prefix,
-	}
+		Prefix:       *any,
+	}, nil
 }
 
 // GetClientID implements the CounterpartyI interface
@@ -91,8 +95,13 @@ func (c Counterparty) GetConnectionID() string {
 }
 
 // GetPrefix implements the CounterpartyI interface
-func (c Counterparty) GetPrefix() commitmentexported.Prefix {
-	return &c.Prefix
+func (c Counterparty) GetPrefix() (commitmentexported.Prefix, error) {
+	prefix, ok := c.Prefix.GetCachedValue().(commitmentexported.Prefix)
+	if !ok {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "prefix is not cached")
+	}
+
+	return prefix, nil
 }
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
@@ -103,7 +112,11 @@ func (c Counterparty) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
-	if c.Prefix.IsEmpty() {
+	prefix, err := c.GetPrefix()
+	if err != nil {
+		return err
+	}
+	if prefix.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty prefix cannot be empty")
 	}
 	return nil

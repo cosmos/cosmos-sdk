@@ -35,6 +35,7 @@ const (
 // ...
   // Emit Event with Channel metadata for the relayer to pick up and
   // relay to the other chain
+  // This appears immediately before the successful return statement.
   ctx.EventManager().EmitEvents(sdk.Events{
     sdk.NewEvent(
       types.EventTypeChannelMeta,
@@ -56,27 +57,18 @@ const (
 
 These metadata events capture all the "header" information needed to route IBC channel handshake transactions without requiring the client to query any data except that of the connection ID that it is willing to relay.  It is intended that `channel_meta.src_connection` is the only event key that needs to be indexed for a passive relayer to function.
 
-### Accepting Channel Opens
+### Handling Channel Open Attempts
 
 In the case of the passive relayer, when one chain sends a `ChanOpenInit`, the relayer should inform the other chain of this open attempt and allow that chain to decide how (and if) it continues the handshake.  Once both chains have actively approved the channel opening, then the rest of the handshake can happen as it does with the current "naive" relayer.
 
-To implement this behavior, we propose adding a new callback `cbs.OnChanOpenAccept` which is either returns the version number to be used in the `keeper.ChanOpenTry`, or an error.  If the callback is not supplied, then the default behaviour would be to pass through directly to `channel.HandleMsgChannelOpenTry`, for compatibility with existing chains that expect a "naive" relayer.
+To implement this behavior, we propose adding a new callback `cbs.OnAttemptedChanOpenTry` which explicitly handles the `MsgChannelOpenTry`, usually by resulting in a call to `keeper.ChanOpenTry`.  If the callback is not supplied, then the default behaviour would be to use `channel.HandleMsgChannelOpenTry`, for compatibility with existing chains that expect a "naive" relayer.
 
 Here is how this callback would be used, in the implementation of `x/ibc/handler.go`:
 
 ```go
-// Declare an interface for accepting a channel open.
-type ChanOpenAcceptor interface {
-  OnChanOpenAccept(
-    ctx sdk.Context,
-    order channeltypes.Order,
-    connectionHops []string,
-    portID,
-    channelID,
-    counterparty channeltypes.Counterparty,
-    proposedVersion,
-    counterpartyVersion string,
-  ) (string, error)
+// Declare an interface for handling a ChanOpenTry.
+type AttemptedChanOpenTryCallback interface {
+  OnAttemptedChanOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg types.MsgChannelOpenTry) (*sdk.Result, error)
 }
 // ...
     case channel.MsgChannelOpenTry:
@@ -86,33 +78,30 @@ type ChanOpenAcceptor interface {
               return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
       }
       // =======================================
-      // NEW CODE: Check if the module defines an OnChanOpenAccept callback.
+      // NEW CODE: Check if the module defines an HandleMsgChannelOpenTry callback.
       // Retrieve callbacks from router
       cbs, ok := k.Router.GetRoute(module)
       if !ok {
               return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
       }
-      // Default behaviour: use the proposed version directly.
-      version := proposedVersion
-      if acceptor, ok := cbs.(ChanOpenAcceptor); ok {
-        // Allow the acceptor to alter the proposed version or reject the connection
-        version, err = acceptor(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion)
-        if err != nil {
-          return nil, err
-        }
+      if tryHandler, ok := cbs.(AttemptedChanOpenTryCallback); ok {
+        // Allow the port's try handler to override the default OpenTry behaviour.
+        return tryHandler.OnAttemptedChanOpenTry(ctx, k.ChannelKeeper, portCap, msg)
       }
       // END OF NEW CODE
       // ======================================
-      // Continue the handshake.
+      // Use the default handshake behaviour.
       res, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
       // ...
 ```
+
+The reason we do not have a more structured interaction between `x/ibc/handler.go` and the port's module (to explicitly negotiate versions, etc) is that we do not wish to constrain the app module to have to finish handling the `MsgChannelOpenTry` during this transaction or even this block.
 
 ## Decision
 
 - Expose events to allow "passive" connection relayers.
 - Enable application-initiated channels via such passive relayers.
-- Allow port modules to control which channel open attempts they honour.
+- Allow port modules to control how to handle open-try messages.
 
 ## Consequences
 
@@ -126,9 +115,7 @@ A passive relayer does not have to know what kind of channel (version string, or
 
 ### Negative
 
-Introduces different SDK paths for "naive" versus "passive" relayers.  It would be cleaner to have only one code path that accomodated both designs.
-
-It may be better to break compatibility and always require the `OnChanOpenAccept` callback to be defined.
+Introduces different SDK paths for "naive" versus "passive" relayers.  It would be cleaner to have only one code path that accomodated both designs, but that would require breaking compatibility.
 
 ### Neutral
 

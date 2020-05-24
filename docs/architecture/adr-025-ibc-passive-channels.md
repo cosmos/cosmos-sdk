@@ -61,14 +61,14 @@ These metadata events capture all the "header" information needed to route IBC c
 
 In the case of the passive relayer, when one chain sends a `ChanOpenInit`, the relayer should inform the other chain of this open attempt and allow that chain to decide how (and if) it continues the handshake.  Once both chains have actively approved the channel opening, then the rest of the handshake can happen as it does with the current "naive" relayer.
 
-To implement this behavior, we propose adding a new callback `cbs.OnAttemptedChanOpenTry` which explicitly handles the `MsgChannelOpenTry`, usually by resulting in a call to `keeper.ChanOpenTry`.  If the callback is not supplied, then the default behaviour would be to use `channel.HandleMsgChannelOpenTry`, for compatibility with existing chains that expect a "naive" relayer.
+To implement this behavior, we propose adding a new callback `cbs.OnAttemptChanOpenTry` which explicitly handles the `MsgChannelOpenTry`, usually by resulting in a call to `keeper.ChanOpenTry`.  If the callback is not supplied, then the default behaviour would be to use `channel.HandleMsgChannelOpenTry`, for compatibility with existing chains that expect a "naive" relayer.
 
 Here is how this callback would be used, in the implementation of `x/ibc/handler.go`:
 
 ```go
 // Declare an interface for handling a ChanOpenTry.
-type AttemptedChanOpenTryCallback interface {
-  OnAttemptedChanOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg types.MsgChannelOpenTry) (*sdk.Result, error)
+type AttemptChanOpenTryCallback interface {
+  OnAttemptChanOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg types.MsgChannelOpenTry) (*sdk.Result, error)
 }
 // ...
     case channel.MsgChannelOpenTry:
@@ -84,9 +84,9 @@ type AttemptedChanOpenTryCallback interface {
       if !ok {
               return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
       }
-      if tryHandler, ok := cbs.(AttemptedChanOpenTryCallback); ok {
+      if tryHandler, ok := cbs.(AttemptChanOpenTryCallback); ok {
         // Allow the port's try handler to override the default OpenTry behaviour.
-        return tryHandler.OnAttemptedChanOpenTry(ctx, k.ChannelKeeper, portCap, msg)
+        return tryHandler.OnAttemptChanOpenTry(ctx, k.ChannelKeeper, portCap, msg)
       }
       // END OF NEW CODE
       // ======================================

@@ -112,33 +112,35 @@ func SimulateSubmitProposal(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		deposit, skip, errDeposit := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
+		msg, errMsg := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
+
 		if content == nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "content is nil"), nil, nil
 		}
 
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
 		switch {
 		case skip:
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
-		case err != nil:
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "skip deposit"), nil, nil
+		case errDeposit != nil:
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate deposit"), nil, errDeposit
 		}
 
-		msg, err := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+		if errMsg != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate a submit proposal msg"), nil, errMsg
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
+		var err error
 		coins, hasNeg := spendable.SafeSub(deposit)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName), nil, err
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 			}
 		}
 
@@ -154,7 +156,7 @@ func SimulateSubmitProposal(
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		opMsg := simtypes.NewOperationMsg(msg, true, "")
@@ -162,7 +164,7 @@ func SimulateSubmitProposal(
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate proposalID"), nil, err
 		}
 
 		// 2) Schedule operations for votes
@@ -198,19 +200,19 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
+		msg := types.NewMsgDeposit(simAccount.Address, proposalID, deposit)
+
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate proposalID"), nil, nil
 		}
 
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
 		switch {
 		case skip:
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "skip deposit"), nil, nil
 		case err != nil:
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate deposit"), nil, err
 		}
-
-		msg := types.NewMsgDeposit(simAccount.Address, proposalID, deposit)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -220,7 +222,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName), nil, err
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 			}
 		}
 
@@ -236,7 +238,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -259,27 +261,27 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		var proposalID uint64
+		var msg types.MsgVote
 
 		switch {
 		case proposalIDInt < 0:
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx, types.StatusVotingPeriod)
+			option := randomVotingOption(r)
+			msg := types.NewMsgVote(simAccount.Address, proposalID, option)
 			if !ok {
-				return simtypes.NoOpMsg(types.ModuleName), nil, nil
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate proposalID"), nil, nil
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
 		}
-
-		option := randomVotingOption(r)
-		msg := types.NewMsgVote(simAccount.Address, proposalID, option)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 		}
 
 		tx := helpers.GenTx(
@@ -294,7 +296,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil

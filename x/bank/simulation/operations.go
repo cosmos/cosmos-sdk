@@ -60,21 +60,20 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
-		}
-
 		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
+
+		if !bk.GetSendEnabled(ctx) {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "transfers are not enabled"), nil, nil
+		}
 
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "skip all transfers"), nil, nil
 		}
-
-		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
 		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -130,10 +129,6 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
-		}
-
 		// random number of inputs/outputs between [1, 3]
 		inputs := make([]types.Input, r.Intn(3)+1)
 		outputs := make([]types.Output, r.Intn(3)+1)
@@ -146,8 +141,13 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 
 		var totalSentCoins sdk.Coins
 		for i := range inputs {
-			// generate random input fields, ignore to address
-			simAccount, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+			// generate random input fields
+			simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+			msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
+
+			if !bk.GetSendEnabled(ctx) {
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "transfers are not enabled"), nil, nil
+			}
 
 			// make sure account is fresh and not used in previous input
 			for usedAddrs[simAccount.Address.String()] {
@@ -155,7 +155,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			}
 
 			if skip {
-				return simtypes.NoOpMsg(types.ModuleName), nil, nil
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "skip all transfers"), nil, nil
 			}
 
 			// set input address in used address map
@@ -205,7 +205,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil

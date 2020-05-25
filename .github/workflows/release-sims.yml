@@ -1,9 +1,11 @@
 name: Release Sims
-on: 
-  pull_request: 
-    branches: 
-      - 'rc**'
-    
+# Release Sims workflow runs long lived sims
+# This workflow only runs on Pull Request when the branch containts rc** (rc1/vX.X.x)
+on:
+  pull_request:
+    branches:
+      - "rc**"
+
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest

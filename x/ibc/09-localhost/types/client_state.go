@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -67,10 +66,10 @@ func (cs ClientState) IsFrozen() bool {
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainID) == "" {
-		return errors.New("chain id cannot be blank")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
 	if cs.Height <= 0 {
-		return fmt.Errorf("height must be positive: %d", cs.Height)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
 	}
 	return host.ClientIdentifierValidator(cs.ID)
 }

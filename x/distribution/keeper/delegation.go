@@ -100,7 +100,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val exported.Validat
 	currentStake := val.TokensFromShares(del.GetShares())
 
 	if stake.GT(currentStake) {
-		// Account for rounding inconsistencies between:
+		// AccountI for rounding inconsistencies between:
 		//
 		//     currentStake: calculated as in staking with a single computation
 		//     stake:        calculated as an accumulation of stake

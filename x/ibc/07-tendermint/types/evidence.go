@@ -75,7 +75,7 @@ func (ev Evidence) GetHeight() int64 {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
-	if err := host.DefaultClientIdentifierValidator(ev.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 

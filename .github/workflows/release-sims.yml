@@ -1,6 +1,6 @@
 name: Release Sims
-# Release Sims workflow runs long lived sims
-# This workflow only runs on Pull Request when the branch containts rc** (rc1/vX.X.x)
+# Release Sims workflow runs long-lived (multi-seed & large block size) simulations
+# This workflow only runs on a pull request when the branch contains rc** (rc1/vX.X.x)
 on:
   pull_request:
     branches:

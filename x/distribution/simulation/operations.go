@@ -125,19 +125,23 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
+		// the interesting msg follow below.
+		// This is used only to provide the msg.Type() in NoOpMsg.
+		msg := types.NewMsgWithdrawDelegatorReward(nil, nil)
+
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
-		delegation := delegations[r.Intn(len(delegations))]
-		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
-
 		if len(delegations) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "number of delegators equal 0"), nil, nil
 		}
 
+		delegation := delegations[r.Intn(len(delegations))]
+		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
 		if validator == nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
+		// this is the interesting msg.
+		msg = types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -180,7 +184,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
 		if commission.Commission.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "validator commision is zero"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "validator commission is zero"), nil, nil
 		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))

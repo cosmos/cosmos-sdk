@@ -100,12 +100,12 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		address := sdk.ValAddress(simAccount.Address)
 
-		denom := k.GetParams(ctx).BondDenom
-
-		balance := bk.GetBalance(ctx, simAccount.Address, denom).Amount
-		amount, err := simtypes.RandPositiveInt(r, balance)
-		selfDelegation := sdk.NewCoin(denom, amount)
-
+		maxCommission := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
+		commission := types.NewCommissionRates(
+			simtypes.RandomDecAmount(r, maxCommission),
+			maxCommission,
+			simtypes.RandomDecAmount(r, maxCommission),
+		)
 		description := types.NewDescription(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
@@ -113,16 +113,10 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 		)
-
-		maxCommission := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
-		commission := types.NewCommissionRates(
-			simtypes.RandomDecAmount(r, maxCommission),
-			maxCommission,
-			simtypes.RandomDecAmount(r, maxCommission),
-		)
-
-		msg := types.NewMsgCreateValidator(address, simAccount.PubKey,
-			selfDelegation, description, commission, sdk.OneInt())
+		// the interesting msg follow below.
+		// This is used only to provide the msg.Type() in NoOpMsg.
+		msg := types.NewMsgCreateValidator(nil, nil,
+			sdk.NewCoin("test", sdk.OneInt()), description, commission, sdk.OneInt())
 
 		// ensure the validator doesn't exist already
 		_, found := k.GetValidator(ctx, address)
@@ -130,13 +124,19 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to find validator"), nil, nil
 		}
 
+		denom := k.GetParams(ctx).BondDenom
+
+		balance := bk.GetBalance(ctx, simAccount.Address, denom).Amount
 		if !balance.IsPositive() {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "balance is negative"), nil, nil
 		}
 
+		amount, err := simtypes.RandPositiveInt(r, balance)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate positive amount"), nil, err
 		}
+
+		selfDelegation := sdk.NewCoin(denom, amount)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -150,6 +150,10 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 			}
 		}
+
+		// this is the interesting msg.
+		msg = types.NewMsgCreateValidator(address, simAccount.PubKey,
+			selfDelegation, description, commission, sdk.OneInt())
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
@@ -200,7 +204,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 
 		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time); err != nil {
 			// skip as the commission is invalid
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid commision rate"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid commission rate"), nil, nil
 		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
@@ -243,17 +247,17 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		denom := k.GetParams(ctx).BondDenom
 
+		// the interesting msg follow below.
+		// This is used only to provide the msg.Type() in NoOpMsg.
+		msg := types.NewMsgDelegate(nil, nil, sdk.NewCoin("test", sdk.OneInt()))
+
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		val, ok := keeper.RandomValidator(r, k, ctx)
-		balanceAmount := bk.GetBalance(ctx, simAccount.Address, denom).Amount
-		amount, err := simtypes.RandPositiveInt(r, balanceAmount)
-		bondAmt := sdk.NewCoin(denom, amount)
-		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "number of validators equal zero"), nil, nil
 		}
 
+		val, ok := keeper.RandomValidator(r, k, ctx)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to pick a validator"), nil, nil
 		}
@@ -262,13 +266,19 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "validator's invalid echange rate"), nil, nil
 		}
 
+		balanceAmount := bk.GetBalance(ctx, simAccount.Address, denom).Amount
 		if !balanceAmount.IsPositive() {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "balance is negative"), nil, nil
 		}
 
+		amount, err := simtypes.RandPositiveInt(r, balanceAmount)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate positive amount"), nil, err
 		}
+
+		bondAmt := sdk.NewCoin(denom, amount)
+		// this is the interesting msg.
+		msg = types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())

@@ -134,8 +134,10 @@ func SimulateSubmitProposal(
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		var fees sdk.Coins
-		var err error
+		var (
+			fees sdk.Coins
+			err  error
+		)
 		coins, hasNeg := spendable.SafeSub(deposit)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
@@ -260,20 +262,24 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			simAccount, _ = simtypes.RandomAcc(r, accs)
 		}
 
-		var proposalID uint64
-		var msg types.MsgVote
+		var (
+			proposalID uint64
+			msg        types.MsgVote
+		)
+
+		option := randomVotingOption(r)
 
 		switch {
 		case proposalIDInt < 0:
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx, types.StatusVotingPeriod)
-			option := randomVotingOption(r)
-			msg := types.NewMsgVote(simAccount.Address, proposalID, option)
+			msg = types.NewMsgVote(simAccount.Address, proposalID, option)
 			if !ok {
 				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate proposalID"), nil, nil
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
+			msg = types.NewMsgVote(simAccount.Address, proposalID, option)
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)

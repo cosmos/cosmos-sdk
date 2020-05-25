@@ -2,8 +2,8 @@ syntax = "proto3";
 package cosmos_sdk.tx.v1;
 
 import "third_party/proto/gogoproto/gogo.proto";
-import "types/types.proto";
 import "crypto/types/types.proto";
+import "types/types.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/tx/types";

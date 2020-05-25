@@ -1,9 +1,11 @@
-name: RELEASE
+name: Release
+# This workflow helps with creating releases.
+# This job will only be triggered when a tag (vX.X.x) is pushed
 on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v[12].[0-9]+.[0-9]+" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   release:

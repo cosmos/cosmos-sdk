@@ -23,9 +23,9 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient     = MsgCreateClient{}
-	_ clientexported.MsgUpdateClient     = MsgUpdateClient{}
-	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
+	_ clientexported.MsgCreateClient     = &MsgCreateClient{}
+	_ clientexported.MsgUpdateClient     = &MsgUpdateClient{}
+	_ evidenceexported.MsgSubmitEvidence = &MsgSubmitClientMisbehaviour{}
 )
 
 // MsgCreateClient defines a message to create an IBC client
@@ -37,6 +37,18 @@ type MsgCreateClient struct {
 	UnbondingPeriod time.Duration   `json:"unbonding_period" yaml:"unbonding_period"`
 	MaxClockDrift   time.Duration   `json:"max_clock_drift" yaml:"max_clock_drift"`
 	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
+}
+
+func (msg MsgCreateClient) Reset() {
+	panic("implement me")
+}
+
+func (msg MsgCreateClient) String() string {
+	panic("implement me")
+}
+
+func (msg MsgCreateClient) ProtoMessage() {
+	panic("implement me")
 }
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -129,6 +141,18 @@ type MsgUpdateClient struct {
 	Signer   sdk.AccAddress `json:"address" yaml:"address"`
 }
 
+func (msg MsgUpdateClient) Reset() {
+	panic("implement me")
+}
+
+func (msg MsgUpdateClient) String() string {
+	panic("implement me")
+}
+
+func (msg MsgUpdateClient) ProtoMessage() {
+	panic("implement me")
+}
+
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
 	return MsgUpdateClient{
@@ -181,6 +205,18 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 type MsgSubmitClientMisbehaviour struct {
 	Evidence  evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
 	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
+}
+
+func (msg MsgSubmitClientMisbehaviour) Reset() {
+	panic("implement me")
+}
+
+func (msg MsgSubmitClientMisbehaviour) String() string {
+	panic("implement me")
+}
+
+func (msg MsgSubmitClientMisbehaviour) ProtoMessage() {
+	panic("implement me")
 }
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour

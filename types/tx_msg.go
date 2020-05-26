@@ -3,12 +3,15 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/tendermint/tendermint/crypto"
 )
 
 type (
 	// Msg defines the interface a transaction message must fulfill.
 	Msg interface {
+		proto.Message
 
 		// Return the message type.
 		// Must be alphanumeric or empty.
@@ -69,6 +72,18 @@ var _ Msg = (*TestMsg)(nil)
 // msg type for testing
 type TestMsg struct {
 	signers []AccAddress
+}
+
+func (msg *TestMsg) Reset() {
+	panic("implement me")
+}
+
+func (msg *TestMsg) String() string {
+	panic("implement me")
+}
+
+func (msg *TestMsg) ProtoMessage() {
+	panic("implement me")
 }
 
 func NewTestMsg(addrs ...AccAddress) *TestMsg {

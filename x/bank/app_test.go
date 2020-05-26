@@ -405,7 +405,8 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		_, _, err := simapp.SignCheckDeliver(t, app.GetEncodingConfig().TxGenerator, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		txGen := app.GetEncodingConfig().TxGenerator
+		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {

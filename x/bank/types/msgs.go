@@ -5,11 +5,11 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ sdk.Msg = MsgSend{}
+var _ sdk.Msg = &MsgSend{}
 
 // NewMsgSend - construct arbitrary multi-in, multi-out send msg.
-func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
-	return MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
+func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
+	return &MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
 }
 
 // Route Implements Msg.
@@ -49,7 +49,7 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAddress}
 }
 
-var _ sdk.Msg = MsgMultiSend{}
+var _ sdk.Msg = &MsgMultiSend{}
 
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
 func NewMsgMultiSend(in []Input, out []Output) MsgMultiSend {

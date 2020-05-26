@@ -81,7 +81,7 @@ func DecodeMultisignatures(bz []byte) ([][]byte, error) {
 	if len(multisig.XXX_unrecognized) > 0 {
 		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
 	}
-	return multisig.Sigs, nil
+	return multisig.Signatures, nil
 }
 
 func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool {

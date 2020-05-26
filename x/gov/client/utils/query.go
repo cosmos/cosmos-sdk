@@ -55,7 +55,7 @@ func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposa
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.Tx.GetMsgs() {
 			if msg.Type() == types.TypeMsgDeposit {
-				depMsg := msg.(types.MsgDeposit)
+				depMsg := msg.(*types.MsgDeposit)
 
 				deposits = append(deposits, types.Deposit{
 					Depositor:  depMsg.Depositor,
@@ -96,7 +96,7 @@ func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVo
 		for _, info := range searchResult.Txs {
 			for _, msg := range info.Tx.GetMsgs() {
 				if msg.Type() == types.TypeMsgVote {
-					voteMsg := msg.(types.MsgVote)
+					voteMsg := msg.(*types.MsgVote)
 
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
@@ -140,7 +140,7 @@ func QueryVoteByTxQuery(cliCtx context.CLIContext, params types.QueryVoteParams)
 		for _, msg := range info.Tx.GetMsgs() {
 			// there should only be a single vote under the given conditions
 			if msg.Type() == types.TypeMsgVote {
-				voteMsg := msg.(types.MsgVote)
+				voteMsg := msg.(*types.MsgVote)
 
 				vote := types.Vote{
 					Voter:      voteMsg.Voter,
@@ -180,7 +180,7 @@ func QueryDepositByTxQuery(cliCtx context.CLIContext, params types.QueryDepositP
 		for _, msg := range info.Tx.GetMsgs() {
 			// there should only be a single deposit under the given conditions
 			if msg.Type() == types.TypeMsgDeposit {
-				depMsg := msg.(types.MsgDeposit)
+				depMsg := msg.(*types.MsgDeposit)
 
 				deposit := types.Deposit{
 					Depositor:  depMsg.Depositor,

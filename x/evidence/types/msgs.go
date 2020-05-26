@@ -17,9 +17,9 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = MsgSubmitEvidence{}
+	_ sdk.Msg                       = &MsgSubmitEvidence{}
 	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
-	_ exported.MsgSubmitEvidence    = MsgSubmitEvidence{}
+	_ exported.MsgSubmitEvidence    = &MsgSubmitEvidence{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.

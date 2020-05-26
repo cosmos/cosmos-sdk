@@ -11,9 +11,12 @@ import (
 
 // query routes supported by the IBC channel Querier
 const (
-	QueryAllChannels        = "channels"
-	QueryChannel            = "channel"
-	QueryConnectionChannels = "connection-channels"
+	QueryAllChannels                  = "channels"
+	QueryChannel                      = "channel"
+	QueryConnectionChannels           = "connection-channels"
+	QueryAllPacketCommitments         = "packet-commitments"
+	QueryAllUnrelayedSequences        = "unrelayed-sequences"
+	QueryAllUnrelayedAcknowledgements = "unrelayed-acknowledgements"
 )
 
 // ChannelResponse defines the client query response for a channel which also

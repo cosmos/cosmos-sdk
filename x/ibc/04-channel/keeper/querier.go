@@ -66,3 +66,10 @@ func QuerierConnectionChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 
 	return res, nil
 }
+
+// QuerierUnrelayedSequences defines the sdk.Querier to query all unrelayed
+// sequence for a specified channel.
+func QuerierUnrelayedSequences(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+	packetCommitments := k.GetAllPacketCommitments(ctx)
+
+}

@@ -47,7 +47,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channel.SubModuleName)
 			}
 		default:
-			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC query endpoint")
+			err = sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown IBC query endpoint")
 		}
 
 		return res, err

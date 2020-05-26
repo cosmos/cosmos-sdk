@@ -26,29 +26,29 @@ func TestMarshalAny(t *testing.T) {
 	cdc := NewProtoCodec(registry)
 
 	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := MarshalAny(cdc, kitty)
+	bz, err := cdc.MarshalAny(kitty)
 	require.NoError(t, err)
 
 	var animal testdata.Animal
 
 	// empty registry should fail
-	err = UnmarshalAny(cdc, &animal, bz)
+	err = cdc.UnmarshalAny(bz, &animal)
 	require.Error(t, err)
 
 	// wrong type registration should fail
 	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	err = UnmarshalAny(cdc, &animal, bz)
+	err = cdc.UnmarshalAny(bz, &animal)
 	require.Error(t, err)
 
 	// should pass
 	registry = NewTestInterfaceRegistry()
 	cdc = NewProtoCodec(registry)
-	err = UnmarshalAny(cdc, &animal, bz)
+	err = cdc.UnmarshalAny(bz, &animal)
 	require.NoError(t, err)
 	require.Equal(t, kitty, animal)
 
 	// nil should fail
 	registry = NewTestInterfaceRegistry()
-	err = UnmarshalAny(cdc, nil, bz)
+	err = cdc.UnmarshalAny(bz, nil)
 	require.Error(t, err)
 }

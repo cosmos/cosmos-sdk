@@ -7,33 +7,31 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
-func SimappTxDecoder() types.TxDecoder {
-	_, _, cdc := MakeCodecs()
-	return auth.DefaultTxDecoder(cdc)
-}
-
-func MakeTxGenerator() signing.TxGenerator {
-	_, _, cdc := MakeCodecs()
-	return types.StdTxGenerator{Cdc: cdc}
-}
-
-// MakeCodecs constructs the *std.Codec and *codec.Codec instances used by
-// simapp. It is useful for tests and clients who do not want to construct the
-// full simapp
-func MakeCodecs() (codec.Marshaler, codectypes.InterfaceRegistry, *codec.Codec) {
+func MakeEncodingConfig() EncodingConfig {
 	cdc := std.MakeCodec(ModuleBasics)
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	ModuleBasics.RegisterInterfaceModules(interfaceRegistry)
-	appCodec := codec.NewHybridCodec(cdc, interfaceRegistry)
-	return appCodec, nil, cdc
+	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
+	return EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Marshaler:         marshaler,
+		TxDecoder:         authtypes.DefaultTxDecoder(cdc),
+		TxGenerator:       authtypes.StdTxGenerator{Cdc: cdc},
+		Amino:             cdc,
+	}
+}
+
+func MakeCodecs() (codec.Marshaler, codectypes.InterfaceRegistry, *codec.Codec) {
+	cfg := MakeEncodingConfig()
+	return cfg.Marshaler, cfg.InterfaceRegistry, cfg.Amino
 }
 
 func NewAnteHandler(ak auth.AccountKeeper, bk bank.Keeper, ibcK ibc.Keeper) types.AnteHandler {

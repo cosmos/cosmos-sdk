@@ -594,6 +594,11 @@ type msgCounter struct {
 	FailOnHandler bool
 }
 
+// Implements proto.Message
+func (msg msgCounter) Reset()         { panic("implement me") }
+func (msg msgCounter) String() string { panic("implement me") }
+func (msg msgCounter) ProtoMessage()  { panic("implement me") }
+
 // Implements Msg
 func (msg msgCounter) Route() string                { return routeMsgCounter }
 func (msg msgCounter) Type() string                 { return "counter1" }
@@ -633,6 +638,11 @@ func (tx msgNoDecode) Route() string { return routeMsgCounter }
 type msgCounter2 struct {
 	Counter int64
 }
+
+// Implements proto.Message
+func (msg msgCounter2) Reset()         { panic("implement me") }
+func (msg msgCounter2) String() string { panic("implement me") }
+func (msg msgCounter2) ProtoMessage()  { panic("implement me") }
 
 // Implements Msg
 func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
@@ -974,13 +984,13 @@ func TestSimulateTx(t *testing.T) {
 		require.Nil(t, err)
 
 		// simulate a message, check gas reported
-		gInfo, result, err := app.Simulate(txBytes, tx)
+		gInfo, result, _, err := app.Simulate(txBytes)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, gasConsumed, gInfo.GasUsed)
 
 		// simulate again, same result
-		gInfo, result, err = app.Simulate(txBytes, tx)
+		gInfo, result, _, err = app.Simulate(txBytes)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, gasConsumed, gInfo.GasUsed)

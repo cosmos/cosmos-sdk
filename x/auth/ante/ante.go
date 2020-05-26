@@ -2,6 +2,7 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	ibcante "github.com/cosmos/cosmos-sdk/x/ibc/ante"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
@@ -47,7 +48,10 @@ func NewProtoAnteHandler(
 		NewValidateSigCountDecorator(ak),
 		NewDeductFeeDecorator(ak, bankKeeper),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		NewProtoSigVerificationDecorator(ak),
+		NewProtoSigVerificationDecorator(ak, []signing.SignModeHandler{
+			signing.DirectModeHandler{},
+			signing.LegacyAminoJSONHandler{},
+		}),
 		NewIncrementSequenceDecorator(ak),
 		ibcante.NewProofVerificationDecorator(ibcKeeper.ClientKeeper, ibcKeeper.ChannelKeeper), // innermost AnteDecorator
 	)

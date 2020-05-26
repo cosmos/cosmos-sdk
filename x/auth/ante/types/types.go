@@ -24,13 +24,13 @@ type TxWithMemo interface {
 // SigVerifiableTx defines a Tx interface for all signature verification decorators
 type SigVerifiableTx interface {
 	types.Tx
-	HasPubKeysTx
-	GetSignatures() [][]byte
+	SigTx
 	GetSignBytes(ctx types.Context, acc types2.AccountI) []byte
 }
 
-type HasPubKeysTx interface {
+type SigTx interface {
 	types.Tx
+	GetSignatures() [][]byte
 	GetSigners() []types.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
 }

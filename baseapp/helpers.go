@@ -3,6 +3,8 @@ package baseapp
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -10,8 +12,13 @@ func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	return app.runTx(runTxModeCheck, nil, tx)
 }
 
-func (app *BaseApp) Simulate(txBytes []byte, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeSimulate, txBytes, tx)
+func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Tx, error) {
+	tx, err := app.txDecoder(txBytes)
+	if err != nil {
+		return sdk.GasInfo{}, nil, nil, sdkerrors.Wrap(err, "failed to decode tx")
+	}
+	gi, r, err := app.runTx(runTxModeSimulate, txBytes, tx)
+	return gi, r, tx, err
 }
 
 func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {

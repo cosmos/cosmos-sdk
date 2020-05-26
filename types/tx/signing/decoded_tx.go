@@ -27,7 +27,7 @@ type DecodedTx struct {
 var _ sdk.Tx = DecodedTx{}
 var _ antetypes.FeeTx = DecodedTx{}
 var _ antetypes.TxWithMemo = DecodedTx{}
-var _ antetypes.HasPubKeysTx = DecodedTx{}
+var _ antetypes.SigTx = DecodedTx{}
 
 func DefaultTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {

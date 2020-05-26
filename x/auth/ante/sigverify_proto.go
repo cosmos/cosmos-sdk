@@ -13,13 +13,18 @@ import (
 )
 
 type ProtoSigVerificationDecorator struct {
-	ak                AccountKeeper
-	signModeVerifiers map[types.SignMode]signing.SignModeHandler
+	ak               AccountKeeper
+	signModeHandlers map[types.SignMode]signing.SignModeHandler
 }
 
-func NewProtoSigVerificationDecorator(ak AccountKeeper) ProtoSigVerificationDecorator {
+func NewProtoSigVerificationDecorator(ak AccountKeeper, signModeHandlers []signing.SignModeHandler) ProtoSigVerificationDecorator {
+	handlerMap := make(map[types.SignMode]signing.SignModeHandler)
+	for _, h := range signModeHandlers {
+		handlerMap[h.Mode()] = h
+	}
 	return ProtoSigVerificationDecorator{
-		ak: ak,
+		ak:               ak,
+		signModeHandlers: handlerMap,
 	}
 }
 
@@ -110,7 +115,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 }
 
 func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, single *types.ModeInfo_Single, signerAcc auth.AccountI, sigTx signing.DecodedTx) ([]byte, error) {
-	verifier, found := svd.signModeVerifiers[single.Mode]
+	verifier, found := svd.signModeHandlers[single.Mode]
 	if !found {
 		return nil, fmt.Errorf("can't verify sign mode %s", single.Mode.String())
 	}

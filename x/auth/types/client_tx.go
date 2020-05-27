@@ -36,7 +36,7 @@ func (s StdTxBuilder) GetSignatures() []sdk.Signature {
 }
 
 // SetSignatures implements TxBuilder.SetSignatures
-func (s *StdTxBuilder) SetSignatures(signatures ...client.ClientSignature) error {
+func (s *StdTxBuilder) SetSignatures(signatures ...client.Signature) error {
 	sigs := make([]StdSignature, len(signatures))
 	for i, sig := range signatures {
 		pubKey := sig.GetPubKey()
@@ -59,7 +59,7 @@ func (s StdTxBuilder) GetFee() sdk.Fee {
 }
 
 // SetFee implements TxBuilder.SetFee
-func (s *StdTxBuilder) SetFee(fee client.ClientFee) error {
+func (s *StdTxBuilder) SetFee(fee client.Fee) error {
 	s.Fee = StdFee{Amount: fee.GetAmount(), Gas: fee.GetGas()}
 	return nil
 }
@@ -87,12 +87,12 @@ func (s StdTxGenerator) NewTx() client.TxBuilder {
 }
 
 // NewFee implements TxGenerator.NewFee
-func (s StdTxGenerator) NewFee() client.ClientFee {
+func (s StdTxGenerator) NewFee() client.Fee {
 	return &StdFee{}
 }
 
 // NewSignature implements TxGenerator.NewSignature
-func (s StdTxGenerator) NewSignature() client.ClientSignature {
+func (s StdTxGenerator) NewSignature() client.Signature {
 	return &StdSignature{}
 }
 
@@ -101,27 +101,27 @@ func (s StdTxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
 	return DefaultTxEncoder(s.Cdc)(tx)
 }
 
-var _ client.ClientFee = &StdFee{}
+var _ client.Fee = &StdFee{}
 
-// SetGas implements ClientFee.SetGas
+// SetGas implements Fee.SetGas
 func (fee *StdFee) SetGas(gas uint64) {
 	fee.Gas = gas
 }
 
-// SetAmount implements ClientFee.SetAmount
+// SetAmount implements Fee.SetAmount
 func (fee *StdFee) SetAmount(coins sdk.Coins) {
 	fee.Amount = coins
 }
 
-var _ client.ClientSignature = &StdSignature{}
+var _ client.Signature = &StdSignature{}
 
-// SetPubKey implements ClientSignature.SetPubKey
+// SetPubKey implements Signature.SetPubKey
 func (ss *StdSignature) SetPubKey(key crypto.PubKey) error {
 	ss.PubKey = key.Bytes()
 	return nil
 }
 
-// SetSignature implements ClientSignature.SetSignature
+// SetSignature implements Signature.SetSignature
 func (ss *StdSignature) SetSignature(bytes []byte) {
 	ss.Signature = bytes
 }

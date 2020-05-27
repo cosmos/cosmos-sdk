@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -21,7 +20,7 @@ func TestSanitize(t *testing.T) {
 	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	authAcc2 := types.NewBaseAccountWithAddress(addr2)
 
-	genAccs := exported.GenesisAccounts{authAcc1, authAcc2}
+	genAccs := types.GenesisAccounts{authAcc1, authAcc2}
 
 	require.True(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[1].GetAddress(), addr2)
@@ -42,7 +41,7 @@ var (
 func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 
-	genAccs := make(exported.GenesisAccounts, 2)
+	genAccs := make(types.GenesisAccounts, 2)
 	genAccs[0] = acc1
 	genAccs[1] = acc1
 
@@ -53,7 +52,7 @@ func TestGenesisAccountIterator(t *testing.T) {
 	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc2 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 
-	genAccounts := exported.GenesisAccounts{acc1, acc2}
+	genAccounts := types.GenesisAccounts{acc1, acc2}
 
 	authGenState := types.DefaultGenesisState()
 	authGenState.Accounts = genAccounts
@@ -66,7 +65,7 @@ func TestGenesisAccountIterator(t *testing.T) {
 
 	var addresses []sdk.AccAddress
 	types.GenesisAccountIterator{}.IterateGenesisAccounts(
-		appCodec, appGenesis, func(acc exported.Account) (stop bool) {
+		appCodec, appGenesis, func(acc types.AccountI) (stop bool) {
 			addresses = append(addresses, acc.GetAddress())
 			return false
 		},

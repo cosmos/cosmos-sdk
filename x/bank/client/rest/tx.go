@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -22,10 +21,8 @@ type SendReq struct {
 
 // NewSendRequestHandlerFn returns an HTTP REST handler for creating a MsgSend
 // transaction.
-func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func NewSendRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx = ctx.WithMarshaler(m)
-
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
 
@@ -35,7 +32,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 		}
 
 		var req SendReq
-		if !rest.ReadRESTReq(w, r, ctx.Marshaler, &req) {
+		if !rest.ReadRESTReq(w, r, ctx.JSONMarshaler, &req) {
 			return
 		}
 
@@ -50,7 +47,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 		}
 
 		msg := types.NewMsgSend(fromAddr, toAddr, req.Amount)
-		tx.WriteGeneratedTxResponse(ctx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(ctx, w, req.BaseReq, msg)
 	}
 }
 

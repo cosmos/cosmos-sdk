@@ -216,6 +216,7 @@ only pull requests targeted directly against master.
   - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
 - On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
   - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
 - Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `master`
   and create a new `RC` branch (making sure to increment the `rcN`)
@@ -234,13 +235,15 @@ releases will be based off of that release.
 - checkout a new branch `rcN/vX.X.X`
 - cherry pick the desired changes from `master`
   - these changes should be small and NON-BREAKING (both API and state machine)
-- add entries to CHANGELOG.md and remove corresponding pending log entries
+- create a `RELEASE_CHANGELOG.md`, add entires.
+  - this is needed so the bot knows which entries to add to the release page on github.
 - checkout a new branch `release/vX.X.X` based off of the previous release
 - create a PR merging `rcN/vX.X.X` into `release/vX.X.X`
 - run tests and simulations (noted in [Release Procedure](#release-procedure))
 - after tests and simulation have successfully completed, merge the `RC` branch into `release/vX.X.X`
   - Make sure to delete the `RC` branch
-- create a PR into `master` containing ONLY the CHANGELOG.md updates
+- create a PR into `master` containing ONLY CHANGELOG.md updates
+  - Do not push `RELEASE_CHANGELOG.md` to master
 - tag (use `git tag -a`) then push the tags (`git push --tags`)
 
 ## Code Owner Membership

@@ -1,4 +1,6 @@
-name: Code Coverage
+name: Uint-Tests / Code Coverage
+#  Uint-Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
+#  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
   push:
@@ -29,7 +31,6 @@ jobs:
         run: |
           make build
         if: "env.GIT_DIFF != ''"
-
       - name: test & coverage report creation
         run: |
           go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
@@ -50,10 +51,18 @@ jobs:
           file: ./coverage.txt # optional
           fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
+
   integration-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
       - name: build-sim
         run: |
           make build-sim
@@ -61,3 +70,4 @@ jobs:
       - name: cli-test
         run: |
           make test-integration
+        if: "env.GIT_DIFF != ''"

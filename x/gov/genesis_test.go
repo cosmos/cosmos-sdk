@@ -55,9 +55,9 @@ func TestImportExportQueues(t *testing.T) {
 	govGenState := gov.ExportGenesis(ctx, app.GovKeeper)
 	genesisState := simapp.NewDefaultGenesisState()
 
-	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenState)
-	genesisState[bank.ModuleName] = app.Codec().MustMarshalJSON(bankGenState)
-	genesisState[gov.ModuleName] = app.Codec().MustMarshalJSON(govGenState)
+	genesisState[auth.ModuleName] = app.AppCodec().MustMarshalJSON(authGenState)
+	genesisState[bank.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
+	genesisState[gov.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {

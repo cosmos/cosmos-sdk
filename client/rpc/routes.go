@@ -1,4 +1,4 @@
-package rest
+package rpc
 
 import (
 	"github.com/gorilla/mux"
@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
-// RegisterRoutes registers minting module REST handlers on the provided router.
+// Register routes
 func RegisterRoutes(cliCtx client.Context, r *mux.Router) {
-	registerQueryRoutes(cliCtx, r)
+	RegisterRPCRoutes(cliCtx, r)
 }

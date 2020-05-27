@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	"github.com/gorilla/mux"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerQueryRoutes(cliCtx client.Context, r *mux.Router) {
 	r.HandleFunc(
 		fmt.Sprintf("/evidence/{%s}", RestParamEvidenceHash),
 		queryEvidenceHandler(cliCtx),
@@ -24,7 +24,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	).Methods(MethodGet)
 }
 
-func queryEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func queryEvidenceHandler(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		evidenceHash := vars[RestParamEvidenceHash]
@@ -57,7 +57,7 @@ func queryEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func queryAllEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func queryAllEvidenceHandler(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {

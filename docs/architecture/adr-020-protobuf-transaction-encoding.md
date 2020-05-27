@@ -333,10 +333,10 @@ generate or broadcast a transaction. For example:
 
 ```go
 import "github.com/spf13/cobra"
+import "github.com/cosmos/cosmos-sdk/client"
 import "github.com/cosmos/cosmos-sdk/client/tx"
-import "github.com/cosmos/cosmos-sdk/client/context"
 
-func NewCmdDoSomething(ctx context.CLIContext) *cobra.Command {
+func NewCmdDoSomething(ctx client.Context) *cobra.Command {
 	return &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := ctx.InitWithInput(cmd.InOrStdin())

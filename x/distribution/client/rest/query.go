@@ -9,12 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerQueryRoutes(cliCtx client.Context, r *mux.Router) {
 	// Get the total rewards balance from all delegations
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
@@ -66,7 +66,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 }
 
 // HTTP request handler to query the total rewards balance from all delegations
-func delegatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func delegatorRewardsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -97,7 +97,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query a delegation rewards
-func delegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func delegationRewardsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -119,7 +119,7 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query a delegation rewards
-func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func delegatorWithdrawalAddrHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		delegatorAddr, ok := checkDelegatorAddressVar(w, r)
 		if !ok {
@@ -161,7 +161,7 @@ func NewValidatorDistInfo(operatorAddr sdk.AccAddress, rewards sdk.DecCoins,
 }
 
 // HTTP request handler to query validator's distribution information
-func validatorInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func validatorInfoHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		valAddr, ok := checkValidatorAddressVar(w, r)
 		if !ok {
@@ -207,7 +207,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query validator's commission and self-delegation rewards
-func validatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func validatorRewardsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		valAddr := mux.Vars(r)["validatorAddr"]
 		validatorAddr, ok := checkValidatorAddressVar(w, r)
@@ -232,7 +232,7 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query the distribution params values
-func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func paramsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -250,7 +250,7 @@ func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func communityPoolHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func communityPoolHandler(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -273,7 +273,7 @@ func communityPoolHandler(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query the outstanding rewards
-func outstandingRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func outstandingRewardsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		validatorAddr, ok := checkValidatorAddressVar(w, r)
 		if !ok {
@@ -297,7 +297,7 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 func checkResponseQueryDelegationRewards(
-	w http.ResponseWriter, cliCtx context.CLIContext, queryRoute, delAddr, valAddr string,
+	w http.ResponseWriter, cliCtx client.Context, queryRoute, delAddr, valAddr string,
 ) (res []byte, height int64, ok bool) {
 
 	res, height, err := common.QueryDelegationRewards(cliCtx, queryRoute, delAddr, valAddr)

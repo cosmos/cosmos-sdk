@@ -1,4 +1,4 @@
-package context
+package client
 
 import (
 	"github.com/tendermint/tendermint/crypto"

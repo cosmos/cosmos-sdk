@@ -11,7 +11,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -20,15 +20,15 @@ import (
 
 // nolint
 func newRegisterTxRoutes(
-	cliCtx context.CLIContext,
-	txg context.TxGenerator,
+	cliCtx client.Context,
+	txg client.TxGenerator,
 	newMsgFn func() gov.MsgSubmitProposalI,
 	r *mux.Router) {
 	r.HandleFunc("/upgrade/plan", newPostPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
 	r.HandleFunc("/upgrade/cancel", newCancelPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
 }
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/upgrade/plan", postPlanHandler(cliCtx)).Methods("POST")
 	r.HandleFunc("/upgrade/cancel", cancelPlanHandler(cliCtx)).Methods("POST")
 }
@@ -53,7 +53,7 @@ type CancelRequest struct {
 	Deposit     sdk.Coins    `json:"deposit" yaml:"deposit"`
 }
 
-func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(cliCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "upgrade",
 		Handler:  postPlanHandler(cliCtx),
@@ -61,7 +61,7 @@ func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler 
 }
 
 // nolint
-func newPostPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newPostPlanHandler(cliCtx client.Context, txg client.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
@@ -106,7 +106,7 @@ func newPostPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, newM
 }
 
 // nolint
-func newCancelPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newCancelPlanHandler(cliCtx client.Context, txg client.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 
@@ -141,7 +141,7 @@ func newCancelPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, ne
 	}
 }
 
-func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func postPlanHandler(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
@@ -181,7 +181,7 @@ func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func cancelPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func cancelPlanHandler(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 

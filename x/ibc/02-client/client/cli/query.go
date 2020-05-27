@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -32,7 +32,7 @@ $ %s query ibc client states
 		),
 		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -65,7 +65,7 @@ $ %s query ibc client state [client-id]
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
@@ -96,7 +96,7 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.ClientName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
@@ -130,7 +130,7 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 		Long:    "Query the latest Tendermint header of the running chain",
 		Example: fmt.Sprintf("%s query ibc client header", version.ClientName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 
 			header, height, err := utils.QueryTendermintHeader(cliCtx)
 			if err != nil {
@@ -158,7 +158,7 @@ $ %s query ibc client node-state
 		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 
 			state, height, err := utils.QueryNodeConsensusState(cliCtx)
 			if err != nil {
@@ -177,7 +177,7 @@ func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 		Use:   "path",
 		Short: "Query the commitment path of the running chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
+			ctx := client.NewContext().WithCodec(cdc)
 			path := commitmenttypes.NewMerklePrefix([]byte("ibc"))
 			return ctx.PrintOutput(path)
 		},

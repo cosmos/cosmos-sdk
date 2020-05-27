@@ -15,7 +15,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -147,14 +147,14 @@ func TestParseQueryHeight(t *testing.T) {
 		name           string
 		req            *http.Request
 		w              http.ResponseWriter
-		cliCtx         context.CLIContext
+		cliCtx         client.Context
 		expectedHeight int64
 		expectedOk     bool
 	}{
-		{"no height", req0, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, true},
-		{"height", req1, httptest.NewRecorder(), context.CLIContext{}, height, true},
-		{"invalid height", req2, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
-		{"negative height", req3, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
+		{"no height", req0, httptest.NewRecorder(), client.Context{}, emptyHeight, true},
+		{"height", req1, httptest.NewRecorder(), client.Context{}, height, true},
+		{"invalid height", req2, httptest.NewRecorder(), client.Context{}, emptyHeight, false},
+		{"negative height", req3, httptest.NewRecorder(), client.Context{}, emptyHeight, false},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -187,7 +187,7 @@ func TestProcessPostResponse(t *testing.T) {
 
 	// setup
 	viper.Set(flags.FlagOffline, true)
-	ctx := context.NewCLIContext()
+	ctx := client.NewContext()
 	height := int64(194423)
 
 	privKey := secp256k1.GenPrivKey()
@@ -312,7 +312,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	t.Parallel()
 
 	// write bytes
-	ctx := context.CLIContext{}
+	ctx := client.Context{}
 	w := httptest.NewRecorder()
 	bs := []byte("text string")
 
@@ -328,7 +328,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, "text string", string(got))
 
 	// write struct and indent response
-	ctx = context.CLIContext{Indent: true}.WithCodec(codec.New())
+	ctx = client.Context{Indent: true}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data := struct {
 		X int    `json:"x"`
@@ -350,7 +350,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 }`, string(got))
 
 	// write struct, don't indent response
-	ctx = context.CLIContext{Indent: false}.WithCodec(codec.New())
+	ctx = client.Context{Indent: false}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data = struct {
 		X int    `json:"x"`
@@ -369,7 +369,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, `{"x":"10","s":"test"}`, string(got))
 
 	// test marshalling failure
-	ctx = context.CLIContext{Indent: false}.WithCodec(codec.New())
+	ctx = client.Context{Indent: false}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data2 := badJSONMarshaller{}
 
@@ -395,7 +395,7 @@ func (badJSONMarshaller) MarshalJSON() ([]byte, error) {
 // asserts that ResponseRecorder returns the expected code and body
 // runs PostProcessResponse on the objects regular interface and on
 // the marshalled struct.
-func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{}, expectedBody []byte, indent bool) {
+func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, expectedBody []byte, indent bool) {
 	if indent {
 		ctx.Indent = indent
 	}

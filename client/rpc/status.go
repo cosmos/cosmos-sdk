@@ -9,7 +9,7 @@ import (
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -32,7 +32,7 @@ func StatusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
+func getNodeStatus(cliCtx client.Context) (*ctypes.ResultStatus, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
@@ -47,7 +47,7 @@ func printNodeStatus(_ *cobra.Command, _ []string) error {
 	// No need to verify proof in getting node status
 	viper.Set(flags.FlagKeyringBackend, flags.DefaultKeyringBackend)
 
-	cliCtx := context.NewCLIContext()
+	cliCtx := client.NewContext()
 	status, err := getNodeStatus(cliCtx)
 	if err != nil {
 		return err
@@ -76,7 +76,7 @@ type NodeInfoResponse struct {
 }
 
 // REST handler for node info
-func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeInfoRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if rest.CheckInternalServerError(w, err) {
@@ -97,7 +97,7 @@ type SyncingResponse struct {
 }
 
 // REST handler for node syncing
-func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeSyncingRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if rest.CheckInternalServerError(w, err) {

@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +11,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
-func NewTxCmd(ctx context.CLIContext) *cobra.Command {
+func NewTxCmd(ctx client.Context) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Slashing transaction subcommands",
@@ -25,7 +24,7 @@ func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	return slashingTxCmd
 }
 
-func NewUnjailTxCmd(ctx context.CLIContext) *cobra.Command {
+func NewUnjailTxCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,

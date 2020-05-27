@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -15,7 +15,7 @@ import (
 
 // QueryBalancesRequestHandlerFn returns a REST handler that queries for all
 // account balances or a specific balance by denomination.
-func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
+func QueryBalancesRequestHandlerFn(ctx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -72,7 +72,7 @@ func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query the total supply of coins
-func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func totalSupplyHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
@@ -103,7 +103,7 @@ func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query the supply of a single denom
-func supplyOfHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func supplyOfHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)

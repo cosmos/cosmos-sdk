@@ -8,16 +8,16 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/client"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
 // query accountREST Handler
-func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) http.HandlerFunc {
+func QueryAccountRequestHandlerFn(storeName string, cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
@@ -32,7 +32,7 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 			return
 		}
 
-		accGetter := types.NewAccountRetriever(client.Codec)
+		accGetter := types.NewAccountRetriever(authclient.Codec)
 
 		account, height, err := accGetter.GetAccountWithHeight(cliCtx, addr)
 		if err != nil {
@@ -56,7 +56,7 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 // QueryTxsHandlerFn implements a REST handler that searches for transactions.
 // Genesis transactions are returned if the height parameter is set to zero,
 // otherwise the transactions are searched for by events.
-func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func QueryTxsRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
@@ -97,7 +97,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		searchResult, err := client.QueryTxsByEvents(cliCtx, events, page, limit, "")
+		searchResult, err := authclient.QueryTxsByEvents(cliCtx, events, page, limit, "")
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -108,7 +108,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // QueryTxRequestHandlerFn implements a REST handler that queries a transaction
 // by hash in a committed block.
-func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func QueryTxRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
@@ -118,7 +118,7 @@ func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := client.QueryTx(cliCtx, hashHexStr)
+		output, err := authclient.QueryTx(cliCtx, hashHexStr)
 		if err != nil {
 			if strings.Contains(err.Error(), hashHexStr) {
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -136,7 +136,7 @@ func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func queryParamsHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func queryParamsHandler(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {

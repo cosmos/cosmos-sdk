@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -14,27 +14,27 @@ import (
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 )
 
-func RegisterHandlers(cliCtx context.CLIContext, r *mux.Router) {
+func RegisterHandlers(cliCtx client.Context, r *mux.Router) {
 	registerQueryRoutes(cliCtx, r)
 	registerTxHandlers(cliCtx, r)
 }
 
 // RegisterRoutes register distribution REST routes.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
+func RegisterRoutes(cliCtx client.Context, r *mux.Router, queryRoute string) {
 	registerQueryRoutes(cliCtx, r)
 	registerTxRoutes(cliCtx, r, queryRoute)
 }
 
 // TODO add proto compatible Handler after x/gov migration
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the community pool spend REST handler with a given sub-route.
-func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(cliCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "community_pool_spend",
 		Handler:  postProposalHandlerFn(cliCtx),
 	}
 }
 
-func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func postProposalHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CommunityPoolSpendProposalReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {

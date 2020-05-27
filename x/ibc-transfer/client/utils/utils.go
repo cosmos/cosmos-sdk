@@ -5,7 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -13,7 +13,7 @@ import (
 // QueryNextSequenceRecv queries the store to get the next receive sequence and
 // a merkle proof.
 func QueryNextSequenceRecv(
-	cliCtx context.CLIContext, portID, channelID string, prove bool,
+	cliCtx client.Context, portID, channelID string, prove bool,
 ) (channeltypes.RecvResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",

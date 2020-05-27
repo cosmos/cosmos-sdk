@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/client"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetBroadcastCommand returns the tx broadcast command.
@@ -26,13 +26,13 @@ $ <appcli> tx broadcast ./mytxn.json
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 
 			if cliCtx.Offline {
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
+			stdTx, err := authclient.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}

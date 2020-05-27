@@ -3,6 +3,7 @@ package ibc
 import (
 	"encoding/json"
 	"fmt"
+	client2 "github.com/cosmos/cosmos-sdk/client"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -10,7 +11,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,12 +61,12 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes registers the REST routes for the ibc module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func (AppModuleBasic) RegisterRESTRoutes(ctx client2.Context, rtr *mux.Router) {
 	rest.RegisterRoutes(ctx, rtr, StoreKey)
 }
 
 // GetTxCmd returns the root tx command for the ibc module.
-func (AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+func (AppModuleBasic) GetTxCmd(ctx client2.Context) *cobra.Command {
 	return cli.GetTxCmd(StoreKey, ctx.Codec)
 }
 

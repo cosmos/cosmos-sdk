@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +11,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
-func NewTxCmd(cliCtx context.CLIContext) *cobra.Command {
+func NewTxCmd(cliCtx client.Context) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Bank transaction subcommands",
@@ -27,7 +26,7 @@ func NewTxCmd(cliCtx context.CLIContext) *cobra.Command {
 }
 
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
-func NewSendTxCmd(cliCtx context.CLIContext) *cobra.Command {
+func NewSendTxCmd(cliCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",
 		Short: "Create and/or sign and broadcast a MsgSend transaction",

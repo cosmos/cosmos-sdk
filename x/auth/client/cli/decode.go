@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,7 +31,7 @@ func GetDecodeCommand(codec *codec.Codec) *cobra.Command {
 
 func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		cliCtx := context.NewCLIContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
+		cliCtx := client.NewContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
 		var txBytes []byte
 
 		if viper.GetBool(flagHex) {

@@ -7,19 +7,19 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // RegisterRoutes registers REST routes for the upgrade module under the path specified by routeName.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func RegisterRoutes(cliCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/upgrade/current", getCurrentPlanHandler(cliCtx)).Methods("GET")
 	r.HandleFunc("/upgrade/applied/{name}", getDonePlanHandler(cliCtx)).Methods("GET")
 	registerTxRoutes(cliCtx, r)
 }
 
-func getCurrentPlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, *http.Request) {
+func getCurrentPlanHandler(cliCtx client.Context) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, request *http.Request) {
 		// ignore height for now
 		res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
@@ -41,7 +41,7 @@ func getCurrentPlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, 
 	}
 }
 
-func getDonePlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, *http.Request) {
+func getDonePlanHandler(cliCtx client.Context) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 

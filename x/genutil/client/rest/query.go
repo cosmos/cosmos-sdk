@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -12,7 +12,7 @@ import (
 
 // QueryGenesisTxs writes the genesis transactions to the response if no error
 // occurs.
-func QueryGenesisTxs(cliCtx context.CLIContext, w http.ResponseWriter) {
+func QueryGenesisTxs(cliCtx client.Context, w http.ResponseWriter) {
 	resultGenesis, err := cliCtx.Client.Genesis()
 	if err != nil {
 		rest.WriteErrorResponse(

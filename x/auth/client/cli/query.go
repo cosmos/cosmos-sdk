@@ -9,7 +9,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +53,7 @@ func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
 $ <appcli> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
 			res, _, err := cliCtx.QueryWithData(route, nil)
@@ -82,7 +81,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for account by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 			accGetter := types.NewAccountRetriever(authclient.Codec)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
@@ -150,7 +149,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
@@ -196,7 +195,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for a transaction by hash in a committed block",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewContext().WithCodec(cdc)
 
 			output, err := authclient.QueryTx(cliCtx, args[0])
 			if err != nil {

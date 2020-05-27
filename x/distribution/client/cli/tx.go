@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +30,7 @@ const (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
-func NewTxCmd(ctx context.CLIContext) *cobra.Command {
+func NewTxCmd(ctx client.Context) *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Distribution transactions subcommands",
@@ -50,11 +49,11 @@ func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	return distTxCmd
 }
 
-type newGenerateOrBroadcastFunc func(ctx context.CLIContext, msgs ...sdk.Msg) error
+type newGenerateOrBroadcastFunc func(ctx client.Context, msgs ...sdk.Msg) error
 
 func newSplitAndApply(
 	newGenerateOrBroadcast newGenerateOrBroadcastFunc,
-	cliCtx context.CLIContext,
+	cliCtx client.Context,
 	msgs []sdk.Msg,
 	chunkSize int,
 ) error {
@@ -80,7 +79,7 @@ func newSplitAndApply(
 	return nil
 }
 
-func NewWithdrawRewardsCmd(ctx context.CLIContext) *cobra.Command {
+func NewWithdrawRewardsCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [validator-addr]",
 		Short: "Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
@@ -123,7 +122,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 	return cmd
 }
 
-func NewWithdrawAllRewardsCmd(ctx context.CLIContext) *cobra.Command {
+func NewWithdrawAllRewardsCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
@@ -160,7 +159,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 	return cmd
 }
 
-func NewSetWithdrawAddrCmd(ctx context.CLIContext) *cobra.Command {
+func NewSetWithdrawAddrCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
@@ -194,7 +193,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 	return cmd
 }
 
-func NewFundCommunityPoolCmd(ctx context.CLIContext) *cobra.Command {
+func NewFundCommunityPoolCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -240,7 +239,7 @@ Where proposal.json contains:
 }
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
-func GetCmdSubmitProposal(ctx context.CLIContext) *cobra.Command {
+func GetCmdSubmitProposal(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -300,11 +299,11 @@ Where proposal.json contains:
 	return cmd
 }
 
-type generateOrBroadcastFunc func(context.CLIContext, []sdk.Msg) error
+type generateOrBroadcastFunc func(client.Context, []sdk.Msg) error
 
 func splitAndApply(
 	generateOrBroadcast generateOrBroadcastFunc,
-	cliCtx context.CLIContext,
+	cliCtx client.Context,
 	msgs []sdk.Msg,
 	chunkSize int,
 ) error {

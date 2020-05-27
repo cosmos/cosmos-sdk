@@ -9,20 +9,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_splitAndCall_NoMessages(t *testing.T) {
-	ctx := context.CLIContext{}
+	ctx := client.Context{}
 
 	err := splitAndApply(nil, ctx, nil, 10)
 	assert.NoError(t, err, "")
 }
 
 func Test_splitAndCall_Splitting(t *testing.T) {
-	ctx := context.CLIContext{}
+	ctx := client.Context{}
 
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
@@ -40,7 +40,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	callCount := 0
 	err := splitAndApply(
-		func(ctx context.CLIContext, msgs []sdk.Msg) error {
+		func(ctx client.Context, msgs []sdk.Msg) error {
 			callCount++
 
 			assert.NotNil(t, ctx)

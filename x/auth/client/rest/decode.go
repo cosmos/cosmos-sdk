@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -23,7 +23,7 @@ type (
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
 // it takes base64-decoded bytes, decodes it from the Amino wire protocol,
 // and responds with a json-formatted transaction.
-func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func DecodeTxRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req DecodeReq
 

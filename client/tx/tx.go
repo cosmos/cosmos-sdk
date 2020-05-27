@@ -10,7 +10,7 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -21,14 +21,14 @@ import (
 
 // GenerateOrBroadcastTx will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTx(ctx context.CLIContext, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTx(ctx client.Context, msgs ...sdk.Msg) error {
 	txf := NewFactoryFromCLI(ctx.Input).WithTxGenerator(ctx.TxGenerator).WithAccountRetriever(ctx.AccountRetriever)
 	return GenerateOrBroadcastTxWithFactory(ctx, txf, msgs...)
 }
 
 // GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxWithFactory(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTxWithFactory(ctx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	if ctx.GenerateOnly {
 		return GenerateTx(ctx, txf, msgs...)
 	}
@@ -40,7 +40,7 @@ func GenerateOrBroadcastTxWithFactory(ctx context.CLIContext, txf Factory, msgs 
 // specified by ctx.Output. If simulation was requested, the gas will be
 // simulated and also printed to the same writer before the transaction is
 // printed.
-func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func GenerateTx(ctx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	if txf.SimulateAndExecute() {
 		if ctx.Offline {
 			return errors.New("cannot estimate gas in offline mode")
@@ -66,7 +66,7 @@ func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func BroadcastTx(ctx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	txf, err := PrepareFactory(ctx, txf)
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
 func WriteGeneratedTxResponse(
-	ctx context.CLIContext, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
+	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
@@ -185,7 +185,7 @@ func WriteGeneratedTxResponse(
 // BuildUnsignedTx builds a transaction to be signed given a set of messages. The
 // transaction is initially created via the provided factory's generator. Once
 // created, the fee, memo, and messages are set.
-func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (context.TxBuilder, error) {
+func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	if txf.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
@@ -278,7 +278,7 @@ func CalculateGas(
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory. A new Factory with
 // the updated fields will be returned.
-func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
+func PrepareFactory(ctx client.Context, txf Factory) (Factory, error) {
 	from := ctx.GetFromAddress()
 
 	if err := txf.accountRetriever.EnsureExists(ctx, from); err != nil {
@@ -312,7 +312,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name, passphrase string, tx context.TxBuilder) ([]byte, error) {
+func Sign(txf Factory, name, passphrase string, tx client.TxBuilder) ([]byte, error) {
 	if txf.keybase == nil {
 		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}

@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // REST query and parameter values
@@ -12,7 +12,7 @@ const (
 )
 
 // RegisterRoutes registers the auth module REST routes.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
+func RegisterRoutes(cliCtx client.Context, r *mux.Router, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}", QueryAccountRequestHandlerFn(storeName, cliCtx),
 	).Methods(MethodGet)
@@ -24,7 +24,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 }
 
 // RegisterTxRoutes registers all transaction routes on the provided router.
-func RegisterTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func RegisterTxRoutes(cliCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/txs/{hash}", QueryTxRequestHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/txs", QueryTxsRequestHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/txs", BroadcastTxRequest(cliCtx)).Methods("POST")

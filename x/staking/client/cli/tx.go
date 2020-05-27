@@ -15,7 +15,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +34,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(ctx context.CLIContext) *cobra.Command {
+func NewTxCmd(ctx client.Context) *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -55,7 +54,7 @@ func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	return stakingTxCmd
 }
 
-func NewCreateValidatorCmd(ctx context.CLIContext) *cobra.Command {
+func NewCreateValidatorCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
@@ -87,7 +86,7 @@ func NewCreateValidatorCmd(ctx context.CLIContext) *cobra.Command {
 	return cmd
 }
 
-func NewEditValidatorCmd(ctx context.CLIContext) *cobra.Command {
+func NewEditValidatorCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
@@ -140,7 +139,7 @@ func NewEditValidatorCmd(ctx context.CLIContext) *cobra.Command {
 	return cmd
 }
 
-func NewDelegateCmd(ctx context.CLIContext) *cobra.Command {
+func NewDelegateCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -183,7 +182,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 	return cmd
 }
 
-func NewRedelegateCmd(ctx context.CLIContext) *cobra.Command {
+func NewRedelegateCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "Redelegate illiquid tokens from one validator to another",
@@ -228,7 +227,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 	return cmd
 }
 
-func NewUnbondCmd(ctx context.CLIContext) *cobra.Command {
+func NewUnbondCmd(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond [validator-addr] [amount]",
 		Short: "Unbond shares from a validator",
@@ -268,7 +267,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 	return cmd
 }
 
-func NewBuildCreateValidatorMsg(cliCtx context.CLIContext, txf tx.Factory) (tx.Factory, sdk.Msg, error) {
+func NewBuildCreateValidatorMsg(cliCtx client.Context, txf tx.Factory) (tx.Factory, sdk.Msg, error) {
 	amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
 	if err != nil {
 		return txf, nil, err
@@ -408,7 +407,7 @@ func PrepareFlagsForTxCreateValidator(
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error) {
+func BuildCreateValidatorMsg(cliCtx client.Context, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(amounstStr)
 

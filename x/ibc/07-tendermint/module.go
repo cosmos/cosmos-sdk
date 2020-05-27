@@ -2,11 +2,11 @@ package tendermint
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/client/rest"
@@ -19,7 +19,7 @@ func Name() string {
 }
 
 // RegisterRESTRoutes registers the REST routes for the IBC client
-func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, queryRoute string) {
+func RegisterRESTRoutes(ctx client.Context, rtr *mux.Router, queryRoute string) {
 	rest.RegisterRoutes(ctx, rtr, fmt.Sprintf("%s/%s", queryRoute, types.SubModuleName))
 }
 

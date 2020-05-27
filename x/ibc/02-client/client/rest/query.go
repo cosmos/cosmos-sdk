@@ -7,13 +7,13 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerQueryRoutes(cliCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/clients", queryAllClientStatesFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx)).Methods("GET")
@@ -32,7 +32,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients [get]
-func queryAllClientStatesFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryAllClientStatesFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if err != nil {
@@ -67,7 +67,7 @@ func queryAllClientStatesFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/client-state [get]
-func queryClientStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryClientStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
@@ -101,7 +101,7 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/consensus-state [get]
-func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryConsensusStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
@@ -137,7 +137,7 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} QueryHeader "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/header [get]
-func queryHeaderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryHeaderHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header, height, err := utils.QueryTendermintHeader(cliCtx)
 		if err != nil {
@@ -159,7 +159,7 @@ func queryHeaderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} QueryNodeConsensusState "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/node-state [get]
-func queryNodeConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryNodeConsensusStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		state, height, err := utils.QueryNodeConsensusState(cliCtx)
 		if err != nil {

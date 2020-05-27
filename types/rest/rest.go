@@ -14,7 +14,7 @@ import (
 
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -229,7 +229,7 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 
 // ParseQueryHeightOrReturnBadRequest sets the height to execute a query if set by the http request.
 // It returns false if there was an error parsing the height.
-func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (context.CLIContext, bool) {
+func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx client.Context, r *http.Request) (client.Context, bool) {
 	heightStr := r.FormValue("height")
 	if heightStr != "" {
 		height, err := strconv.ParseInt(heightStr, 10, 64)
@@ -254,7 +254,7 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 
 // PostProcessResponseBare post processes a body similar to PostProcessResponse
 // except it does not wrap the body and inject the height.
-func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body interface{}) {
+func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body interface{}) {
 	var (
 		resp []byte
 		err  error
@@ -293,7 +293,7 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body
 // PostProcessResponse performs post processing for a REST response. The result
 // returned to clients will contain two fields, the height at which the resource
 // was queried at and the original result.
-func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp interface{}) {
+func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interface{}) {
 	var (
 		result []byte
 		err    error

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -21,7 +21,7 @@ type SendReq struct {
 
 // NewSendRequestHandlerFn returns an HTTP REST handler for creating a MsgSend
 // transaction.
-func NewSendRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
+func NewSendRequestHandlerFn(ctx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
@@ -61,7 +61,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func SendRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]

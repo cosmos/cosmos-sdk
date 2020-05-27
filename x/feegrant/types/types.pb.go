@@ -5,8 +5,9 @@ package types
 
 import (
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
@@ -30,109 +31,19 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// FeeAllowance defines the application-level fee allowance to be used in
-// feegrant module
-type FeeAllowance struct {
-	// sum defines a set of all acceptable concrete feeallowance implementations.
-	//
-	// Types that are valid to be assigned to Sum:
-	//	*FeeAllowance_BasicFeeAllowance
-	//	*FeeAllowance_PeriodicFeeAllowance
-	Sum isFeeAllowance_Sum `protobuf_oneof:"sum"`
-}
-
-func (m *FeeAllowance) Reset()         { *m = FeeAllowance{} }
-func (m *FeeAllowance) String() string { return proto.CompactTextString(m) }
-func (*FeeAllowance) ProtoMessage()    {}
-func (*FeeAllowance) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{0}
-}
-func (m *FeeAllowance) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *FeeAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_FeeAllowance.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *FeeAllowance) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FeeAllowance.Merge(m, src)
-}
-func (m *FeeAllowance) XXX_Size() int {
-	return m.Size()
-}
-func (m *FeeAllowance) XXX_DiscardUnknown() {
-	xxx_messageInfo_FeeAllowance.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_FeeAllowance proto.InternalMessageInfo
-
-type isFeeAllowance_Sum interface {
-	isFeeAllowance_Sum()
-	Equal(interface{}) bool
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type FeeAllowance_BasicFeeAllowance struct {
-	BasicFeeAllowance *BasicFeeAllowance `protobuf:"bytes,1,opt,name=basic_fee_allowance,json=basicFeeAllowance,proto3,oneof" json:"basic_fee_allowance,omitempty"`
-}
-type FeeAllowance_PeriodicFeeAllowance struct {
-	PeriodicFeeAllowance *PeriodicFeeAllowance `protobuf:"bytes,2,opt,name=periodic_fee_allowance,json=periodicFeeAllowance,proto3,oneof" json:"periodic_fee_allowance,omitempty"`
-}
-
-func (*FeeAllowance_BasicFeeAllowance) isFeeAllowance_Sum()    {}
-func (*FeeAllowance_PeriodicFeeAllowance) isFeeAllowance_Sum() {}
-
-func (m *FeeAllowance) GetSum() isFeeAllowance_Sum {
-	if m != nil {
-		return m.Sum
-	}
-	return nil
-}
-
-func (m *FeeAllowance) GetBasicFeeAllowance() *BasicFeeAllowance {
-	if x, ok := m.GetSum().(*FeeAllowance_BasicFeeAllowance); ok {
-		return x.BasicFeeAllowance
-	}
-	return nil
-}
-
-func (m *FeeAllowance) GetPeriodicFeeAllowance() *PeriodicFeeAllowance {
-	if x, ok := m.GetSum().(*FeeAllowance_PeriodicFeeAllowance); ok {
-		return x.PeriodicFeeAllowance
-	}
-	return nil
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*FeeAllowance) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*FeeAllowance_BasicFeeAllowance)(nil),
-		(*FeeAllowance_PeriodicFeeAllowance)(nil),
-	}
-}
-
 // MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 type MsgGrantFeeAllowance struct {
 	Granter   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=granter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"granter,omitempty"`
 	Grantee   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=grantee,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"grantee,omitempty"`
-	Allowance *FeeAllowance                                 `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
+	Allowance *types.Any                                    `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
 func (m *MsgGrantFeeAllowance) Reset()         { *m = MsgGrantFeeAllowance{} }
 func (m *MsgGrantFeeAllowance) String() string { return proto.CompactTextString(m) }
 func (*MsgGrantFeeAllowance) ProtoMessage()    {}
 func (*MsgGrantFeeAllowance) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{1}
+	return fileDescriptor_86c534389d2c5768, []int{0}
 }
 func (m *MsgGrantFeeAllowance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -171,7 +82,7 @@ func (m *MsgRevokeFeeAllowance) Reset()         { *m = MsgRevokeFeeAllowance{} }
 func (m *MsgRevokeFeeAllowance) String() string { return proto.CompactTextString(m) }
 func (*MsgRevokeFeeAllowance) ProtoMessage()    {}
 func (*MsgRevokeFeeAllowance) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{2}
+	return fileDescriptor_86c534389d2c5768, []int{1}
 }
 func (m *MsgRevokeFeeAllowance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -225,7 +136,7 @@ func (m *BasicFeeAllowance) Reset()         { *m = BasicFeeAllowance{} }
 func (m *BasicFeeAllowance) String() string { return proto.CompactTextString(m) }
 func (*BasicFeeAllowance) ProtoMessage()    {}
 func (*BasicFeeAllowance) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{3}
+	return fileDescriptor_86c534389d2c5768, []int{2}
 }
 func (m *BasicFeeAllowance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -268,7 +179,7 @@ func (m *PeriodicFeeAllowance) Reset()         { *m = PeriodicFeeAllowance{} }
 func (m *PeriodicFeeAllowance) String() string { return proto.CompactTextString(m) }
 func (*PeriodicFeeAllowance) ProtoMessage()    {}
 func (*PeriodicFeeAllowance) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{4}
+	return fileDescriptor_86c534389d2c5768, []int{3}
 }
 func (m *PeriodicFeeAllowance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -308,7 +219,7 @@ func (m *Duration) Reset()         { *m = Duration{} }
 func (m *Duration) String() string { return proto.CompactTextString(m) }
 func (*Duration) ProtoMessage()    {}
 func (*Duration) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{5}
+	return fileDescriptor_86c534389d2c5768, []int{4}
 }
 func (m *Duration) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -362,7 +273,7 @@ func (m *ExpiresAt) Reset()         { *m = ExpiresAt{} }
 func (m *ExpiresAt) String() string { return proto.CompactTextString(m) }
 func (*ExpiresAt) ProtoMessage()    {}
 func (*ExpiresAt) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{6}
+	return fileDescriptor_86c534389d2c5768, []int{5}
 }
 func (m *ExpiresAt) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -409,14 +320,14 @@ func (m *ExpiresAt) GetHeight() int64 {
 type FeeAllowanceGrant struct {
 	Granter   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=granter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"granter,omitempty"`
 	Grantee   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=grantee,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"grantee,omitempty"`
-	Allowance *FeeAllowance                                 `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
+	Allowance *types.Any                                    `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
 func (m *FeeAllowanceGrant) Reset()         { *m = FeeAllowanceGrant{} }
 func (m *FeeAllowanceGrant) String() string { return proto.CompactTextString(m) }
 func (*FeeAllowanceGrant) ProtoMessage()    {}
 func (*FeeAllowanceGrant) Descriptor() ([]byte, []int) {
-	return fileDescriptor_86c534389d2c5768, []int{7}
+	return fileDescriptor_86c534389d2c5768, []int{6}
 }
 func (m *FeeAllowanceGrant) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -446,7 +357,6 @@ func (m *FeeAllowanceGrant) XXX_DiscardUnknown() {
 var xxx_messageInfo_FeeAllowanceGrant proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*FeeAllowance)(nil), "cosmos_sdk.x.feegrant.v1.FeeAllowance")
 	proto.RegisterType((*MsgGrantFeeAllowance)(nil), "cosmos_sdk.x.feegrant.v1.MsgGrantFeeAllowance")
 	proto.RegisterType((*MsgRevokeFeeAllowance)(nil), "cosmos_sdk.x.feegrant.v1.MsgRevokeFeeAllowance")
 	proto.RegisterType((*BasicFeeAllowance)(nil), "cosmos_sdk.x.feegrant.v1.BasicFeeAllowance")
@@ -459,133 +369,53 @@ func init() {
 func init() { proto.RegisterFile("x/feegrant/types/types.proto", fileDescriptor_86c534389d2c5768) }
 
 var fileDescriptor_86c534389d2c5768 = []byte{
-	// 735 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x56, 0xcd, 0x4f, 0x13, 0x4d,
-	0x18, 0xef, 0xbc, 0x6d, 0x79, 0x61, 0x4a, 0xc8, 0xdb, 0xa1, 0x2f, 0xd6, 0x6a, 0xba, 0x64, 0x4d,
-	0x08, 0x91, 0xb0, 0x0d, 0x78, 0x31, 0x3d, 0xd9, 0x05, 0x41, 0x82, 0x24, 0x66, 0xf5, 0x64, 0x62,
-	0x36, 0xfb, 0x31, 0xdd, 0x6e, 0xda, 0xdd, 0xd9, 0xec, 0x6c, 0x11, 0x12, 0xff, 0x00, 0xe3, 0x89,
-	0xa3, 0x47, 0xce, 0x9e, 0x34, 0xf1, 0x8f, 0x20, 0x9e, 0x38, 0x7a, 0x02, 0x03, 0x89, 0xf1, 0x6c,
-	0xbc, 0x68, 0x3c, 0x98, 0x9d, 0x99, 0xa5, 0x0b, 0x65, 0x0d, 0xe8, 0xc9, 0x78, 0x69, 0x76, 0x9e,
-	0x3c, 0xbf, 0x8f, 0xe7, 0x63, 0x77, 0x0a, 0xaf, 0x6f, 0x35, 0xda, 0x18, 0x3b, 0xa1, 0xe1, 0x47,
-	0x8d, 0x68, 0x3b, 0xc0, 0x94, 0xff, 0x2a, 0x41, 0x48, 0x22, 0x82, 0xaa, 0x16, 0xa1, 0x1e, 0xa1,
-	0x3a, 0xb5, 0xbb, 0xca, 0x96, 0x92, 0x24, 0x2a, 0x9b, 0x0b, 0xb5, 0xb9, 0xa8, 0xe3, 0x86, 0xb6,
-	0x1e, 0x18, 0x61, 0xb4, 0xdd, 0x60, 0xc9, 0x0d, 0x9e, 0x3b, 0x9f, 0x3e, 0x70, 0x9a, 0xda, 0xcc,
-	0x70, 0xb2, 0x43, 0x1c, 0x32, 0x78, 0x12, 0x79, 0xe5, 0x21, 0x07, 0x35, 0xc9, 0x21, 0xc4, 0xe9,
-	0x61, 0x8e, 0x32, 0xfb, 0xed, 0x46, 0xe4, 0x7a, 0x98, 0x46, 0x86, 0x17, 0xf0, 0x04, 0xf9, 0x0b,
-	0x80, 0xe3, 0x2b, 0x18, 0xb7, 0x7a, 0x3d, 0xf2, 0xd4, 0xf0, 0x2d, 0x8c, 0x9e, 0xc0, 0x49, 0xd3,
-	0xa0, 0xae, 0xa5, 0xb7, 0x31, 0xd6, 0x8d, 0x24, 0x5c, 0x05, 0xd3, 0x60, 0xb6, 0xb4, 0x38, 0xa7,
-	0x64, 0x55, 0xa4, 0xa8, 0x31, 0x28, 0xcd, 0x74, 0x2f, 0xa7, 0x95, 0xcd, 0xb3, 0x41, 0xd4, 0x86,
-	0x53, 0x01, 0x0e, 0x5d, 0x62, 0x0f, 0x29, 0xfc, 0xc3, 0x14, 0x94, 0x6c, 0x85, 0x07, 0x02, 0x77,
-	0x46, 0xa4, 0x12, 0x9c, 0x13, 0x6f, 0x4e, 0x7d, 0xda, 0x95, 0xc0, 0xbb, 0xb7, 0xf3, 0x13, 0x37,
-	0xd3, 0xe1, 0x35, 0xb5, 0x08, 0xf3, 0xb4, 0xef, 0xc9, 0xdf, 0x01, 0xac, 0x6c, 0x50, 0x67, 0x35,
-	0xe6, 0x3e, 0xe5, 0x6f, 0x1d, 0xfe, 0xcb, 0x04, 0x71, 0xc8, 0x4a, 0x1e, 0x57, 0x17, 0xbe, 0x1d,
-	0x48, 0xf3, 0x8e, 0x1b, 0x75, 0xfa, 0xa6, 0x62, 0x11, 0x4f, 0x4c, 0x26, 0x99, 0x16, 0xb5, 0xbb,
-	0xa2, 0xdf, 0x2d, 0xcb, 0x6a, 0xd9, 0x76, 0x88, 0x29, 0xd5, 0x12, 0x86, 0x01, 0x19, 0xaf, 0xee,
-	0x77, 0xc8, 0x30, 0x5a, 0x86, 0x63, 0x83, 0x66, 0xe5, 0x59, 0xb3, 0x66, 0xb2, 0x9b, 0x95, 0x2e,
-	0x4a, 0x1b, 0x00, 0x9b, 0x85, 0xe7, 0xbb, 0x52, 0x4e, 0x7e, 0x03, 0xe0, 0xff, 0x1b, 0xd4, 0xd1,
-	0xf0, 0x26, 0xe9, 0xe2, 0x3f, 0xa3, 0x7e, 0xf9, 0x23, 0x80, 0xe5, 0xa1, 0x25, 0x43, 0xcf, 0x60,
-	0x89, 0x06, 0xd8, 0xb7, 0xf5, 0x9e, 0xeb, 0xb9, 0x51, 0x15, 0x4c, 0xe7, 0x67, 0x4b, 0x8b, 0x93,
-	0xe9, 0xbe, 0x6c, 0x2e, 0x28, 0x4b, 0xc4, 0xf5, 0xd5, 0x95, 0xbd, 0x03, 0x29, 0xf7, 0xf9, 0x40,
-	0x42, 0xdb, 0x86, 0xd7, 0x6b, 0xca, 0x29, 0x94, 0xfc, 0xea, 0x50, 0x9a, 0xbd, 0x80, 0xab, 0x98,
-	0x86, 0x6a, 0x90, 0x21, 0xef, 0xc7, 0x40, 0xb4, 0x06, 0x21, 0xde, 0x0a, 0xdc, 0xd0, 0x88, 0x5c,
-	0xe2, 0x8b, 0x0d, 0xbe, 0x91, 0x3d, 0x94, 0xbb, 0x71, 0x2e, 0xa6, 0xad, 0x48, 0x2d, 0xc4, 0x66,
-	0xb4, 0x14, 0xb8, 0x39, 0x1a, 0x0f, 0x26, 0x5e, 0x5a, 0xf9, 0x75, 0x01, 0x56, 0xce, 0xdb, 0x75,
-	0xb4, 0x0a, 0x8b, 0xec, 0x85, 0xfa, 0x85, 0x97, 0x51, 0x08, 0x72, 0x3c, 0xba, 0x03, 0x47, 0xf8,
-	0x4b, 0x23, 0x2c, 0xcb, 0xd9, 0x4c, 0xcb, 0x7d, 0xee, 0x4f, 0x10, 0x08, 0x1c, 0xda, 0x01, 0x10,
-	0xf1, 0x47, 0x3d, 0xdd, 0xfe, 0x7c, 0x76, 0xfb, 0x37, 0x44, 0xfb, 0xaf, 0xf2, 0xf6, 0x0f, 0x83,
-	0x2f, 0x37, 0x85, 0xff, 0x38, 0xc1, 0xc3, 0xc1, 0x2c, 0x5e, 0x00, 0x28, 0x82, 0xba, 0x65, 0xf8,
-	0x9c, 0xb9, 0x5a, 0xc8, 0x36, 0xb4, 0x2e, 0x0c, 0x5d, 0x39, 0x65, 0xe8, 0x04, 0x7a, 0x39, 0x3b,
-	0x13, 0x1c, 0xbe, 0x64, 0xf8, 0xcc, 0x11, 0xb2, 0xe0, 0xb8, 0x20, 0x0c, 0x31, 0xc5, 0x51, 0xb5,
-	0x78, 0xf1, 0xd5, 0xb8, 0x26, 0x7c, 0x4d, 0x9e, 0xf2, 0xc5, 0x68, 0x64, 0xad, 0xc4, 0x8f, 0x5a,
-	0x7c, 0x4a, 0xad, 0x8c, 0x09, 0x47, 0x93, 0x41, 0xa1, 0x26, 0x2c, 0x5a, 0x3d, 0x62, 0x75, 0xc5,
-	0x96, 0xd4, 0x14, 0x7e, 0x05, 0x28, 0xc9, 0x15, 0xa0, 0x3c, 0x4a, 0xae, 0x00, 0x75, 0x34, 0x96,
-	0x7a, 0x79, 0x28, 0x01, 0x8d, 0x43, 0x50, 0x05, 0x16, 0x4d, 0x86, 0x8d, 0xf7, 0x22, 0xaf, 0xf1,
-	0x43, 0xb3, 0xc0, 0x34, 0x2c, 0x38, 0x76, 0x62, 0x12, 0xdd, 0x86, 0x85, 0xf8, 0x26, 0xb9, 0xa8,
-	0xc6, 0x4e, 0xac, 0xc1, 0x10, 0x68, 0x0a, 0x8e, 0x74, 0xb0, 0xeb, 0x74, 0x22, 0xa1, 0x21, 0x4e,
-	0x42, 0xe4, 0x2b, 0x80, 0xe5, 0xf4, 0xde, 0xb2, 0x0f, 0xf4, 0xdf, 0xf1, 0x51, 0x56, 0x57, 0xf7,
-	0x8e, 0xea, 0x60, 0xff, 0xa8, 0x0e, 0x3e, 0x1c, 0xd5, 0xc1, 0xce, 0x71, 0x3d, 0xb7, 0x7f, 0x5c,
-	0xcf, 0xbd, 0x3f, 0xae, 0xe7, 0x1e, 0xff, 0xdc, 0xdd, 0xd9, 0xbf, 0x20, 0xe6, 0x08, 0x1b, 0xc3,
-	0xad, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x60, 0xf1, 0xd1, 0x21, 0x9d, 0x08, 0x00, 0x00,
+	// 695 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x95, 0xc1, 0x6b, 0x13, 0x41,
+	0x14, 0xc6, 0x33, 0x26, 0xa9, 0xed, 0xa4, 0x8a, 0x99, 0x46, 0xdd, 0x46, 0xc9, 0x96, 0x15, 0x24,
+	0x50, 0xba, 0xa1, 0xf1, 0x22, 0x39, 0x99, 0xad, 0x6d, 0x29, 0xb5, 0x20, 0xab, 0x27, 0x2f, 0x61,
+	0xb3, 0x3b, 0xdd, 0x2c, 0xc9, 0xee, 0x2c, 0x3b, 0xd3, 0xda, 0x80, 0x7f, 0x80, 0x78, 0xea, 0xd1,
+	0x63, 0xcf, 0xde, 0x04, 0xff, 0x01, 0x6f, 0xc5, 0x53, 0xf1, 0xe4, 0xa9, 0x95, 0xf6, 0xe2, 0xd9,
+	0x8b, 0x50, 0x10, 0x64, 0x76, 0x66, 0x9b, 0x6d, 0x42, 0x4a, 0x8b, 0x27, 0xf1, 0x12, 0x76, 0x92,
+	0xf7, 0x7d, 0xef, 0xf7, 0xe6, 0x9b, 0xcc, 0xc2, 0xfb, 0x3b, 0xb5, 0x4d, 0x8c, 0xdd, 0xc8, 0x0a,
+	0x58, 0x8d, 0xf5, 0x43, 0x4c, 0xc5, 0xa7, 0x1e, 0x46, 0x84, 0x11, 0xa4, 0xd8, 0x84, 0xfa, 0x84,
+	0xb6, 0xa8, 0xd3, 0xd5, 0x77, 0xf4, 0xa4, 0x50, 0xdf, 0x5e, 0x2c, 0xcf, 0xb3, 0x8e, 0x17, 0x39,
+	0xad, 0xd0, 0x8a, 0x58, 0xbf, 0x16, 0x17, 0xd7, 0x44, 0xed, 0x42, 0x7a, 0x21, 0x6c, 0xca, 0x0f,
+	0x47, 0x8b, 0x5d, 0xe2, 0x92, 0xc1, 0x93, 0xac, 0x2b, 0x8e, 0x10, 0x94, 0x55, 0x97, 0x10, 0xb7,
+	0x87, 0x85, 0xaa, 0xbd, 0xb5, 0x59, 0x63, 0x9e, 0x8f, 0x29, 0xb3, 0xfc, 0x50, 0x16, 0xcc, 0x0e,
+	0x17, 0x58, 0x41, 0x5f, 0xfc, 0xa4, 0xfd, 0x06, 0xb0, 0xb4, 0x41, 0xdd, 0x55, 0xce, 0xbc, 0x82,
+	0x71, 0xb3, 0xd7, 0x23, 0xaf, 0xad, 0xc0, 0xc6, 0x68, 0x1d, 0x5e, 0x8f, 0x07, 0xc1, 0x91, 0x02,
+	0xe6, 0x40, 0x75, 0xda, 0x58, 0x3c, 0x3d, 0x54, 0x17, 0x5c, 0x8f, 0x75, 0xb6, 0xda, 0xba, 0x4d,
+	0x7c, 0x49, 0x9f, 0x4c, 0x44, 0x9d, 0xae, 0x64, 0x6a, 0xda, 0x76, 0xd3, 0x71, 0x22, 0x4c, 0xa9,
+	0x99, 0x38, 0x0c, 0xcc, 0xb0, 0x72, 0xed, 0x2f, 0xcd, 0x30, 0x5a, 0x86, 0x53, 0x56, 0x82, 0xa9,
+	0x64, 0xe7, 0x40, 0xb5, 0x50, 0x2f, 0xe9, 0x62, 0x42, 0x3d, 0x99, 0x50, 0x6f, 0x06, 0x7d, 0xa3,
+	0xf8, 0xe5, 0xd3, 0xc2, 0x8d, 0xf4, 0x50, 0x6b, 0xe6, 0x40, 0xd9, 0xc8, 0xbd, 0xdd, 0x53, 0x33,
+	0xda, 0x47, 0x00, 0x6f, 0x6f, 0x50, 0xd7, 0xc4, 0xdb, 0xa4, 0x8b, 0xff, 0x8d, 0x0d, 0xd0, 0x7e,
+	0x01, 0x58, 0x34, 0x2c, 0xea, 0xd9, 0xe7, 0x78, 0xdf, 0xc0, 0x02, 0x0d, 0x71, 0xe0, 0xb4, 0x7a,
+	0x9e, 0xef, 0x31, 0x05, 0xcc, 0x65, 0xab, 0x85, 0xfa, 0x8c, 0x9e, 0x3a, 0x9d, 0xdb, 0x8b, 0xfa,
+	0x12, 0xf1, 0x02, 0x63, 0x65, 0xff, 0x50, 0xcd, 0xfc, 0x3c, 0x54, 0x51, 0xdf, 0xf2, 0x7b, 0x0d,
+	0x2d, 0xa5, 0xd2, 0x3e, 0x1c, 0xa9, 0xd5, 0x4b, 0x50, 0x71, 0x1b, 0x6a, 0xc2, 0x58, 0xf9, 0x8c,
+	0x0b, 0xd1, 0x1a, 0x84, 0x78, 0x27, 0xf4, 0x22, 0x8b, 0x79, 0x24, 0x88, 0x67, 0x2c, 0xd4, 0x1f,
+	0xe8, 0xe3, 0xfe, 0x1a, 0xfa, 0x32, 0xaf, 0xc5, 0xb4, 0xc9, 0x8c, 0x1c, 0x87, 0x31, 0x53, 0xe2,
+	0xc6, 0x2c, 0x0f, 0xe6, 0xc7, 0x9e, 0x0a, 0xbe, 0x0e, 0xc7, 0xa7, 0x7d, 0xce, 0xc1, 0xd2, 0x73,
+	0x1c, 0x79, 0xc4, 0x19, 0x1a, 0x7e, 0x15, 0xe6, 0xdb, 0x7c, 0x47, 0xe2, 0xa8, 0x0a, 0xf5, 0xf9,
+	0xf1, 0x9d, 0x47, 0x36, 0x4e, 0x12, 0x08, 0x3d, 0x7a, 0x02, 0x27, 0xc2, 0xb8, 0x81, 0x9c, 0x41,
+	0x1b, 0xef, 0xf4, 0x74, 0x4b, 0x00, 0x4b, 0x03, 0xa9, 0x43, 0xbb, 0x00, 0x22, 0xf1, 0xd8, 0x4a,
+	0xe7, 0x91, 0x1d, 0x9f, 0xc7, 0x86, 0xcc, 0x63, 0x56, 0xe4, 0x31, 0x2a, 0xbe, 0x5a, 0x2c, 0xb7,
+	0x84, 0xc1, 0x8b, 0x41, 0x38, 0xef, 0x00, 0x94, 0x5f, 0xb6, 0x6c, 0x2b, 0x10, 0xce, 0x4a, 0x6e,
+	0x3c, 0xd0, 0xba, 0x04, 0xba, 0x7b, 0x0e, 0xe8, 0x4c, 0x7a, 0x35, 0x9c, 0x9b, 0x42, 0xbe, 0x64,
+	0x05, 0x31, 0x11, 0xb2, 0xe1, 0xb4, 0x34, 0x8c, 0x30, 0xc5, 0x4c, 0xc9, 0x5f, 0xfe, 0xac, 0xdc,
+	0x93, 0x5c, 0x33, 0xe7, 0xb8, 0x62, 0x1b, 0xcd, 0x2c, 0x88, 0xa5, 0xc9, 0x57, 0x17, 0x9d, 0xa1,
+	0x36, 0x9c, 0x4c, 0x92, 0x43, 0x0d, 0x98, 0xb7, 0x7b, 0xc4, 0xee, 0xca, 0x63, 0x53, 0x1e, 0xb9,
+	0x46, 0x5e, 0x26, 0x37, 0xa9, 0x31, 0xc9, 0x7b, 0xbf, 0x3f, 0x52, 0x81, 0x29, 0x24, 0xa8, 0x04,
+	0xf3, 0xed, 0x58, 0xcb, 0x0f, 0x4a, 0xd6, 0x14, 0x8b, 0x46, 0x8e, 0x37, 0xd5, 0x6c, 0x38, 0x75,
+	0x46, 0x8d, 0x1e, 0xc3, 0x1c, 0xbf, 0x90, 0x2f, 0xdb, 0x63, 0x97, 0xf7, 0x88, 0x15, 0xe8, 0x0e,
+	0x9c, 0xe8, 0x60, 0xcf, 0xed, 0x30, 0xd9, 0x43, 0xae, 0x64, 0x93, 0x53, 0x00, 0x8b, 0xe9, 0xd1,
+	0xe2, 0x3b, 0xfc, 0x3f, 0xb9, 0xb7, 0x8d, 0xd5, 0xfd, 0xe3, 0x0a, 0x38, 0x38, 0xae, 0x80, 0xef,
+	0xc7, 0x15, 0xb0, 0x7b, 0x52, 0xc9, 0x1c, 0x9c, 0x54, 0x32, 0xdf, 0x4e, 0x2a, 0x99, 0x57, 0x17,
+	0xe3, 0x0d, 0xbf, 0xca, 0xdb, 0x13, 0x71, 0xeb, 0x47, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x84,
+	0xb2, 0x94, 0x51, 0xe5, 0x07, 0x00, 0x00,
 }
 
-func (this *FeeAllowance) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*FeeAllowance)
-	if !ok {
-		that2, ok := that.(FeeAllowance)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if that1.Sum == nil {
-		if this.Sum != nil {
-			return false
-		}
-	} else if this.Sum == nil {
-		return false
-	} else if !this.Sum.Equal(that1.Sum) {
-		return false
-	}
-	return true
-}
-func (this *FeeAllowance_BasicFeeAllowance) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*FeeAllowance_BasicFeeAllowance)
-	if !ok {
-		that2, ok := that.(FeeAllowance_BasicFeeAllowance)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.BasicFeeAllowance.Equal(that1.BasicFeeAllowance) {
-		return false
-	}
-	return true
-}
-func (this *FeeAllowance_PeriodicFeeAllowance) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*FeeAllowance_PeriodicFeeAllowance)
-	if !ok {
-		that2, ok := that.(FeeAllowance_PeriodicFeeAllowance)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.PeriodicFeeAllowance.Equal(that1.PeriodicFeeAllowance) {
-		return false
-	}
-	return true
-}
 func (this *BasicFeeAllowance) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -717,106 +547,6 @@ func (this *ExpiresAt) Equal(that interface{}) bool {
 		return false
 	}
 	return true
-}
-func (this *FeeAllowance) GetFeeAllowanceI() FeeAllowanceI {
-	if x := this.GetBasicFeeAllowance(); x != nil {
-		return x
-	}
-	if x := this.GetPeriodicFeeAllowance(); x != nil {
-		return x
-	}
-	return nil
-}
-
-func (this *FeeAllowance) SetFeeAllowanceI(value FeeAllowanceI) error {
-	if value == nil {
-		this.Sum = nil
-		return nil
-	}
-	switch vt := value.(type) {
-	case *BasicFeeAllowance:
-		this.Sum = &FeeAllowance_BasicFeeAllowance{vt}
-		return nil
-	case *PeriodicFeeAllowance:
-		this.Sum = &FeeAllowance_PeriodicFeeAllowance{vt}
-		return nil
-	}
-	return fmt.Errorf("can't encode value of type %T as message FeeAllowance", value)
-}
-
-func (m *FeeAllowance) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *FeeAllowance) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *FeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Sum != nil {
-		{
-			size := m.Sum.Size()
-			i -= size
-			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *FeeAllowance_BasicFeeAllowance) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *FeeAllowance_BasicFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.BasicFeeAllowance != nil {
-		{
-			size, err := m.BasicFeeAllowance.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-func (m *FeeAllowance_PeriodicFeeAllowance) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *FeeAllowance_PeriodicFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.PeriodicFeeAllowance != nil {
-		{
-			size, err := m.PeriodicFeeAllowance.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	return len(dAtA) - i, nil
 }
 func (m *MsgGrantFeeAllowance) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -1057,12 +787,12 @@ func (m *Duration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	n8, err8 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Clock, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Clock):])
-	if err8 != nil {
-		return 0, err8
+	n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Clock, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Clock):])
+	if err6 != nil {
+		return 0, err6
 	}
-	i -= n8
-	i = encodeVarintTypes(dAtA, i, uint64(n8))
+	i -= n6
+	i = encodeVarintTypes(dAtA, i, uint64(n6))
 	i--
 	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
@@ -1093,12 +823,12 @@ func (m *ExpiresAt) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	n9, err9 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Time):])
-	if err9 != nil {
-		return 0, err9
+	n7, err7 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Time):])
+	if err7 != nil {
+		return 0, err7
 	}
-	i -= n9
-	i = encodeVarintTypes(dAtA, i, uint64(n9))
+	i -= n7
+	i = encodeVarintTypes(dAtA, i, uint64(n7))
 	i--
 	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
@@ -1163,42 +893,6 @@ func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	}
 	dAtA[offset] = uint8(v)
 	return base
-}
-func (m *FeeAllowance) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Sum != nil {
-		n += m.Sum.Size()
-	}
-	return n
-}
-
-func (m *FeeAllowance_BasicFeeAllowance) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.BasicFeeAllowance != nil {
-		l = m.BasicFeeAllowance.Size()
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-func (m *FeeAllowance_PeriodicFeeAllowance) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.PeriodicFeeAllowance != nil {
-		l = m.PeriodicFeeAllowance.Size()
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
 }
 func (m *MsgGrantFeeAllowance) Size() (n int) {
 	if m == nil {
@@ -1337,129 +1031,6 @@ func sovTypes(x uint64) (n int) {
 func sozTypes(x uint64) (n int) {
 	return sovTypes(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *FeeAllowance) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: FeeAllowance: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FeeAllowance: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BasicFeeAllowance", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &BasicFeeAllowance{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Sum = &FeeAllowance_BasicFeeAllowance{v}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PeriodicFeeAllowance", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &PeriodicFeeAllowance{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Sum = &FeeAllowance_PeriodicFeeAllowance{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *MsgGrantFeeAllowance) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1587,7 +1158,7 @@ func (m *MsgGrantFeeAllowance) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Allowance == nil {
-				m.Allowance = &FeeAllowance{}
+				m.Allowance = &types.Any{}
 			}
 			if err := m.Allowance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1796,7 +1367,7 @@ func (m *BasicFeeAllowance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SpendLimit = append(m.SpendLimit, types.Coin{})
+			m.SpendLimit = append(m.SpendLimit, types1.Coin{})
 			if err := m.SpendLimit[len(m.SpendLimit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1982,7 +1553,7 @@ func (m *PeriodicFeeAllowance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PeriodSpendLimit = append(m.PeriodSpendLimit, types.Coin{})
+			m.PeriodSpendLimit = append(m.PeriodSpendLimit, types1.Coin{})
 			if err := m.PeriodSpendLimit[len(m.PeriodSpendLimit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2016,7 +1587,7 @@ func (m *PeriodicFeeAllowance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PeriodCanSpend = append(m.PeriodCanSpend, types.Coin{})
+			m.PeriodCanSpend = append(m.PeriodCanSpend, types1.Coin{})
 			if err := m.PeriodCanSpend[len(m.PeriodCanSpend)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2415,7 +1986,7 @@ func (m *FeeAllowanceGrant) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Allowance == nil {
-				m.Allowance = &FeeAllowance{}
+				m.Allowance = &types.Any{}
 			}
 			if err := m.Allowance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

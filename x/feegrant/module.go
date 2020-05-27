@@ -2,6 +2,8 @@ package feegrant
 
 import (
 	"encoding/json"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -15,8 +17,9 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule       = AppModule{}
+	_ module.AppModuleBasic  = AppModuleBasic{}
+	_ module.InterfaceModule = AppModuleBasic{}
 )
 
 // ----------------------------------------------------------------------------
@@ -66,15 +69,20 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 }
 
 // GetTxCmd returns the root tx command for the feegrant module.
-func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetTxCmd(context.CLIContext) *cobra.Command {
 	// TODO
 	return nil
 }
 
 // GetQueryCmd returns no root query command for the feegrant module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd(*codec.Codec) *cobra.Command {
 	// TODO
 	return nil
+}
+
+// RegisterInterfaceTypes implements InterfaceModule.RegisterInterfaceTypes
+func (a AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // ----------------------------------------------------------------------------

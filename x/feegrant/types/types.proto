@@ -7,19 +7,8 @@ import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
-// FeeAllowance defines the application-level fee allowance to be used in
-// feegrant module
-message FeeAllowance {
-    option (gogoproto.equal)           = true;
-    option (cosmos_proto.interface_type) = "*FeeAllowanceI";
-
-    // sum defines a set of all acceptable concrete feeallowance implementations.
-    oneof sum{
-        BasicFeeAllowance basic_fee_allowance= 1;
-        PeriodicFeeAllowance periodic_fee_allowance= 2;
-    }
-}
 // MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 message MsgGrantFeeAllowance{
@@ -27,7 +16,7 @@ message MsgGrantFeeAllowance{
 
     bytes granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     bytes grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    FeeAllowance allowance = 3;
+    google.protobuf.Any allowance = 3[(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }
 
 // MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
@@ -41,6 +30,7 @@ message MsgRevokeFeeAllowance{
 message BasicFeeAllowance{
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters)  = false;
+    option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
     repeated cosmos_sdk.v1.Coin spend_limit = 1 [
                                            (gogoproto.nullable)     = false,
@@ -55,6 +45,7 @@ message BasicFeeAllowance{
 message PeriodicFeeAllowance{
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters)  = false;
+    option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
     BasicFeeAllowance basic = 1[(gogoproto.nullable) = false];
     Duration period = 2[(gogoproto.nullable) = false];
@@ -101,5 +92,5 @@ message FeeAllowanceGrant{
 
     bytes granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     bytes grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    FeeAllowance allowance = 3;
+    google.protobuf.Any allowance = 3[(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }

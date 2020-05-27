@@ -1,20 +1,14 @@
 package keeper_test
 
 import (
-	"testing"
-	"time"
-
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
 	codec "github.com/cosmos/cosmos-sdk/codec"
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"testing"
 )
 
 type KeeperTestSuite struct {
@@ -35,21 +29,8 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	db := dbm.NewMemDB()
-
-	cdc := codec.New()
-	types.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	suite.cdc = cdc
-	appCodec := codecstd.NewAppCodec(cdc)
-	delCapKey := sdk.NewKVStoreKey("delKey")
-
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(delCapKey, sdk.StoreTypeIAVL, db)
-	ms.LoadLatestVersion()
-
-	suite.dk = keeper.NewKeeper(appCodec, delCapKey)
-	suite.ctx = sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id", Time: time.Now().UTC(), Height: 1234}, false, log.NewNopLogger())
+	app := simapp.Setup(false)
+	suite.ctx = app.BaseApp.NewContext(false, abci.Header{})
 
 	suite.addr = mustAddr("cosmos157ez5zlaq0scm9aycwphhqhmg3kws4qusmekll")
 	suite.addr2 = mustAddr("cosmos1rjxwm0rwyuldsg00qf5lt26wxzzppjzxs2efdw")
@@ -73,17 +54,13 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	basic := &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	basic := types.BasicFeeAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(334455),
-	},
-	},
 	}
-	basic2 := &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	basic2 := &types.BasicFeeAllowance{
 		SpendLimit: eth,
 		Expiration: types.ExpiresAtHeight(172436),
-	},
-	},
 	}
 
 	// let's set up some initial state here
@@ -136,7 +113,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	cases := map[string]struct {
 		grantee   sdk.AccAddress
 		granter   sdk.AccAddress
-		allowance *types.FeeAllowance
+		allowance *types.FeeAllowanceI
 	}{
 		"addr revoked": {
 			granter: suite.addr,
@@ -212,28 +189,22 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	future := &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	future := &types.BasicFeeAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(5678),
-	},
-	},
 	}
 
-	expired := &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	expired := &types.BasicFeeAllowance{
 		SpendLimit: eth,
 		Expiration: types.ExpiresAtHeight(55),
-	},
-	},
 	}
 
 	// for testing limits of the contract
 	hugeAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 9999))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
-	futureAfterSmall := &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	futureAfterSmall := &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
 		Expiration: types.ExpiresAtHeight(5678),
-	},
-	},
 	}
 
 	// then lots of queries
@@ -242,7 +213,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 		granter sdk.AccAddress
 		fee     sdk.Coins
 		allowed bool
-		final   *types.FeeAllowance
+		final   *types.FeeAllowanceI
 	}{
 		"use entire pot": {
 			granter: suite.addr,

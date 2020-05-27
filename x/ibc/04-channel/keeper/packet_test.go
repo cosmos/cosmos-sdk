@@ -277,6 +277,19 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitAcknowledgement(ack))
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(suite.chainB.GetContext(), counterparty.GetPortID(), counterparty.GetChannelID(), 1)
 		}, true},
+		{"success for unordered channel", func() {
+			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainB.CreateClient(suite.chainA)
+			suite.chainA.CreateClient(suite.chainB)
+			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, connection.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.UNORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.UNORDERED, testConnectionIDB)
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitAcknowledgement(ack))
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(suite.chainB.GetContext(), counterparty.GetPortID(), counterparty.GetChannelID(), 1)
+		}, true},
+
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)

@@ -39,7 +39,7 @@ func GenTx(gen context.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64
 		sigs[i] = clientSig
 	}
 
-	tx := gen.NewTx()
+	tx := gen.NewTxBuilder()
 	tx.SetMsgs(msgs...)
 	tx.SetFee(fee)
 	tx.SetSignatures(sigs...)

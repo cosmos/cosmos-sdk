@@ -266,7 +266,9 @@ func NewSimApp(
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.mm = module.NewManager(
-		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx),
+		genutil.NewAppModule(
+			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
+			AminoJSONTxDecoder(encodingConfig), encodingConfig.TxGenerator.TxEncoder()),
 		auth.NewAppModule(marshaler, app.AccountKeeper),
 		bank.NewAppModule(marshaler, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(marshaler, *app.CapabilityKeeper),

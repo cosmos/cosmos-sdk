@@ -45,9 +45,9 @@ func TestCLIValidateSignatures(t *testing.T) {
 	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
 	require.True(t, success)
 
-	stdTx := cli.UnmarshalStdTx(t, f.Amino, stdout)
+	stdTx := f.UnmarshalTxJSON(stdout)
 
-	require.Equal(t, len(stdTx.Msgs), 1)
+	require.Equal(t, len(stdTx.GetMsgs()), 1)
 	require.Equal(t, 1, len(stdTx.GetSignatures()))
 	require.Equal(t, fooAddr.String(), stdTx.GetSigners()[0].String())
 
@@ -60,8 +60,8 @@ func TestCLIValidateSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// modify the transaction
-	stdTx.Memo = "MODIFIED-ORIGINAL-TX-BAD"
-	bz := cli.MarshalStdTx(t, f.Amino, stdTx)
+	stdTx.SetMemo("MODIFIED-ORIGINAL-TX-BAD")
+	bz := f.MarshalTx(stdTx)
 	modSignedTxFile, cleanup := tests.WriteToNewTempFile(t, string(bz))
 	t.Cleanup(cleanup)
 
@@ -89,9 +89,9 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg := cli.UnmarshalStdTx(t, f.Amino, stdout)
-	require.Equal(t, msg.Fee.Gas, uint64(flags.DefaultGasLimit))
-	require.Equal(t, len(msg.Msgs), 1)
+	msg := f.UnmarshalTxJSON(stdout)
+	require.Equal(t, msg.GetGas(), uint64(flags.DefaultGasLimit))
+	require.Equal(t, len(msg.GetMsgs()), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx with --gas=$amount
@@ -99,18 +99,18 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.True(t, success)
 	require.Empty(t, stderr)
 
-	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
-	require.Equal(t, msg.Fee.Gas, uint64(100))
-	require.Equal(t, len(msg.Msgs), 1)
+	msg = f.UnmarshalTxJSON(stdout)
+	require.Equal(t, msg.GetGas(), uint64(100))
+	require.Equal(t, len(msg.GetMsgs()), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx, estimate gas
 	success, stdout, stderr = bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
-	require.True(t, msg.Fee.Gas > 0)
-	require.Equal(t, len(msg.Msgs), 1)
+	msg = f.UnmarshalTxJSON(stdout)
+	require.True(t, msg.GetGas() > 0)
+	require.Equal(t, len(msg.GetMsgs()), 1)
 
 	// Write the output to disk
 	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
@@ -135,8 +135,8 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	// Sign transaction
 	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
 	require.True(t, success)
-	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
-	require.Equal(t, len(msg.Msgs), 1)
+	msg = f.UnmarshalTxJSON(stdout)
+	require.Equal(t, len(msg.GetMsgs()), 1)
 	require.Equal(t, 1, len(msg.GetSignatures()))
 	require.Equal(t, fooAddr.String(), msg.GetSigners()[0].String())
 

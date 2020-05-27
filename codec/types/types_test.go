@@ -3,6 +3,8 @@ package types_test
 import (
 	"testing"
 
+	"github.com/gogo/protobuf/jsonpb"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/stretchr/testify/require"
@@ -130,4 +132,15 @@ func TestNested(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, spot, hhha2.TheHasHasAnimal().TheHasAnimal().TheAnimal())
+}
+
+func TestAny_ProtoJSON(t *testing.T) {
+	spot := &testdata.Dog{Name: "Spot"}
+	any, err := types.NewAnyWithValue(spot)
+	require.NoError(t, err)
+
+	jm := &jsonpb.Marshaler{}
+	json, err := jm.MarshalToString(any)
+	require.NoError(t, err)
+	require.Equal(t, "{\"@type\":\"/cosmos_sdk.codec.v1.Dog\",\"name\":\"Spot\"}", json)
 }

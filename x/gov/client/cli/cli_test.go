@@ -42,9 +42,9 @@ func TestCLISubmitProposal(t *testing.T) {
 		fooAddr.String(), "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "--generate-only", "-y")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg := cli.UnmarshalStdTx(t, f.Amino, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
+	msg := f.UnmarshalTxJSON(stdout)
+	require.NotZero(t, msg.GetGas())
+	require.Equal(t, len(msg.GetMsgs()), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
@@ -80,9 +80,9 @@ func TestCLISubmitProposal(t *testing.T) {
 	success, stdout, stderr = testutil.TxGovDeposit(f, 1, fooAddr.String(), sdk.NewCoin(cli.Denom, depositTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
+	msg = f.UnmarshalTxJSON(stdout)
+	require.NotZero(t, msg.GetGas())
+	require.Equal(t, len(msg.GetMsgs()), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Run the deposit transaction
@@ -114,9 +114,9 @@ func TestCLISubmitProposal(t *testing.T) {
 	success, stdout, stderr = testutil.TxGovVote(f, 1, gov.OptionYes, fooAddr.String(), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
+	msg = f.UnmarshalTxJSON(stdout)
+	require.NotZero(t, msg.GetGas())
+	require.Equal(t, len(msg.GetMsgs()), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Vote on the proposal

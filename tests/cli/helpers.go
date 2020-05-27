@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/types"
+
 	"github.com/stretchr/testify/require"
 
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var (
@@ -191,18 +191,29 @@ func AddFlags(cmd string, flags []string) string {
 	return strings.TrimSpace(cmd)
 }
 
-func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx auth.StdTx) {
-	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
-	return
+type CLITx interface {
+	types.SigTx
+	types.FeeTx
+	types.TxWithMemo
+
+	SetMemo(string)
+}
+
+func (f Fixtures) UnmarshalTxJSON(s string) CLITx {
+	tx, err := f.EncodingConfig.TxJSONDecoder([]byte(s))
+	require.Nil(f.T, err)
+	sigTx, ok := tx.(CLITx)
+	require.True(f.T, ok, "couldn't decode tx")
+	return sigTx
 }
 
 func buildEventsQueryString(events []string) string {
 	return strings.Join(events, "&")
 }
 
-func MarshalStdTx(t require.TestingT, c *codec.Codec, stdTx auth.StdTx) []byte {
-	bz, err := c.MarshalBinaryBare(stdTx)
-	require.NoError(t, err)
+func (f Fixtures) MarshalTx(tx sdk.Tx) []byte {
+	bz, err := f.EncodingConfig.TxGenerator.TxEncoder()(tx)
+	require.NoError(f.T, err)
 
 	return bz
 }

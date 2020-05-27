@@ -10,7 +10,7 @@ import (
 
 func MakeTxCLIContext() context.CLIContext {
 	cliCtx := context.CLIContext{}
-	protoCdc := codec.NewHybridCodec(encodingConfig.Amino, encodingConfig.InterfaceRegistry)
+	protoCdc := codec.NewProtoCodec(encodingConfig.InterfaceRegistry)
 	return cliCtx.
 		WithJSONMarshaler(protoCdc).
 		WithTxGenerator(encodingConfig.TxGenerator).

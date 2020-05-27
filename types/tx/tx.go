@@ -26,6 +26,14 @@ type ProtoTx interface {
 
 var _ ProtoTx = &Tx{}
 
+func NewTx() *Tx {
+	return &Tx{
+		Body:       &TxBody{},
+		AuthInfo:   &AuthInfo{},
+		Signatures: nil,
+	}
+}
+
 func (tx *Tx) GetMsgs() []sdk.Msg {
 	anys := tx.Body.Messages
 	res := make([]sdk.Msg, len(anys))

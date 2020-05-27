@@ -14,12 +14,14 @@ func MakeEncodingConfig() EncodingConfig {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
 	pubKeyCodec := cryptocodec.DefaultPublicKeyCodec{}
+	txGen := signing.NewTxGenerator(marshaler, pubKeyCodec)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         marshaler,
 		TxDecoder:         signing.DefaultTxDecoder(marshaler, pubKeyCodec),
-		TxGenerator:       signing.NewTxGenerator(marshaler, pubKeyCodec),
+		TxJSONDecoder:     signing.DefaultJSONTxDecoder(marshaler, pubKeyCodec),
+		TxGenerator:       txGen,
 		Amino:             cdc,
 	}
 }

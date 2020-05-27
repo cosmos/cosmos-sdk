@@ -213,7 +213,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (context.TxBuilder, error) {
 	clientFee.SetAmount(fees)
 	clientFee.SetGas(txf.gas)
 
-	tx := txf.txGenerator.NewTx()
+	tx := txf.txGenerator.NewTxBuilder()
 	tx.SetMemo(txf.memo)
 
 	if err := tx.SetFee(clientFee); err != nil {
@@ -248,7 +248,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return txf.txGenerator.MarshalTx(tx.GetTx())
+	return txf.txGenerator.TxEncoder()(tx.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
@@ -338,7 +338,7 @@ func Sign(txf Factory, name, passphrase string, tx context.TxBuilder) ([]byte, e
 		return nil, err
 	}
 
-	return txf.txGenerator.MarshalTx(tx.GetTx())
+	return txf.txGenerator.TxEncoder()(tx.GetTx())
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

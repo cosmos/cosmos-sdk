@@ -55,10 +55,10 @@ func TestCLISend(t *testing.T) {
 	)
 	require.Empty(t, stderr)
 	require.True(t, success)
-	msg := cli.UnmarshalStdTx(f.T, f.Amino, stdout)
+	msg := f.UnmarshalTxJSON(stdout)
 	t.Log(msg)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
+	require.NotZero(t, msg.GetGas())
+	require.Len(t, msg.GetMsgs(), 1)
 	require.Len(t, msg.GetSignatures(), 0)
 
 	// Check state didn't change

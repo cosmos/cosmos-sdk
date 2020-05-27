@@ -6,15 +6,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 )
 
 // Fixtures is used to setup the testing environment
@@ -32,6 +31,7 @@ type Fixtures struct {
 	JSONMarshaler     codec.JSONMarshaler
 	Amino             *codec.Codec
 	InterfaceRegistry types.InterfaceRegistry
+	EncodingConfig    params.EncodingConfig
 	T                 *testing.T
 }
 
@@ -51,7 +51,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 		t.Skip("builddir is empty, skipping")
 	}
 
-	cdc, interfaceRegistry, amino := simapp.MakeCodecs()
+	encodingConfig := simapp.MakeEncodingConfig()
 
 	return &Fixtures{
 		T:                 t,
@@ -63,9 +63,10 @@ func NewFixtures(t *testing.T) *Fixtures {
 		SimcliHome:        filepath.Join(tmpDir, ".simcli"),
 		RPCAddr:           servAddr,
 		P2PAddr:           p2pAddr,
-		JSONMarshaler:     cdc,
-		InterfaceRegistry: interfaceRegistry,
-		Amino:             amino,
+		JSONMarshaler:     encodingConfig.Marshaler,
+		InterfaceRegistry: encodingConfig.InterfaceRegistry,
+		Amino:             encodingConfig.Amino,
+		EncodingConfig:    encodingConfig,
 		Port:              port,
 	}
 }

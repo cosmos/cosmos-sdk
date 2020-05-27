@@ -255,7 +255,7 @@ func SignCheckDeliver(
 		priv...,
 	)
 
-	txBytes, err := txGen.MarshalTx(tx)
+	txBytes, err := txGen.TxEncoder()(tx)
 	require.Nil(t, err)
 
 	// Must simulate now as CheckTx doesn't run Msgs anymore

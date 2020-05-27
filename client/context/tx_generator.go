@@ -3,7 +3,7 @@ package context
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
@@ -11,20 +11,20 @@ type (
 	// application-defined concrete transaction type. The type returned must
 	// implement TxBuilder.
 	TxGenerator interface {
-		NewTx() TxBuilder
+		NewTxBuilder() TxBuilder
 		NewFee() ClientFee
 		NewSignature() ClientSignature
-		MarshalTx(tx types.Tx) ([]byte, error)
+		TxEncoder() sdk.TxEncoder
 	}
 
 	ClientFee interface {
-		types.Fee
+		sdk.Fee
 		SetGas(uint64)
-		SetAmount(types.Coins)
+		SetAmount(sdk.Coins)
 	}
 
 	ClientSignature interface {
-		types.Signature
+		sdk.Signature
 		SetPubKey(crypto.PubKey) error
 		SetSignature([]byte)
 	}
@@ -34,12 +34,12 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	TxBuilder interface {
-		GetTx() types.Tx
+		GetTx() sdk.Tx
 
-		SetMsgs(...types.Msg) error
-		GetSignatures() []types.Signature
+		SetMsgs(...sdk.Msg) error
+		GetSignatures() []sdk.Signature
 		SetSignatures(...ClientSignature) error
-		GetFee() types.Fee
+		GetFee() sdk.Fee
 		SetFee(ClientFee) error
 		GetMemo() string
 		SetMemo(string)

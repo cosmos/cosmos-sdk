@@ -81,8 +81,8 @@ type StdTxGenerator struct {
 
 var _ context.TxGenerator = StdTxGenerator{}
 
-// NewTx implements TxGenerator.NewTx
-func (s StdTxGenerator) NewTx() context.TxBuilder {
+// NewTxBuilder implements TxGenerator.NewTxBuilder
+func (s StdTxGenerator) NewTxBuilder() context.TxBuilder {
 	return &StdTxBuilder{}
 }
 
@@ -97,8 +97,8 @@ func (s StdTxGenerator) NewSignature() context.ClientSignature {
 }
 
 // MarshalTx implements TxGenerator.MarshalTx
-func (s StdTxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
-	return DefaultTxEncoder(s.Cdc)(tx)
+func (s StdTxGenerator) TxEncoder() sdk.TxEncoder {
+	return DefaultTxEncoder(s.Cdc)
 }
 
 var _ context.ClientFee = &StdFee{}

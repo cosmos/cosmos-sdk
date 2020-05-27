@@ -11,6 +11,7 @@ type EncodingConfig struct {
 	InterfaceRegistry types.InterfaceRegistry
 	Marshaler         codec.Marshaler
 	TxDecoder         sdk.TxDecoder
+	TxJSONDecoder     sdk.TxDecoder
 	TxGenerator       context.TxGenerator
 	Amino             *codec.Codec
 }

@@ -22,13 +22,9 @@ func NewTxGenerator(marshaler codec.Marshaler, pubKeyCodec cryptotypes.PublicKey
 
 var _ context.TxGenerator = TxGenerator{}
 
-func (t TxGenerator) NewTx() context.TxBuilder {
+func (t TxGenerator) NewTxBuilder() context.TxBuilder {
 	return TxBuilder{
-		Tx: &types.Tx{
-			Body:       &types.TxBody{},
-			AuthInfo:   &types.AuthInfo{},
-			Signatures: nil,
-		},
+		Tx:          types.NewTx(),
 		Marshaler:   t.Marshaler,
 		PubKeyCodec: t.PubKeyCodec,
 	}
@@ -51,10 +47,12 @@ func (t TxGenerator) NewSignature() context.ClientSignature {
 	}
 }
 
-func (t TxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
-	ptx, ok := tx.(*types.Tx)
-	if !ok {
-		return nil, fmt.Errorf("expected protobuf Tx, got %T", tx)
+func (t TxGenerator) TxEncoder() sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
+		ptx, ok := tx.(*types.Tx)
+		if !ok {
+			return nil, fmt.Errorf("expected protobuf Tx, got %T", tx)
+		}
+		return t.Marshaler.MarshalBinaryBare(ptx)
 	}
-	return t.Marshaler.MarshalBinaryBare(ptx)
 }

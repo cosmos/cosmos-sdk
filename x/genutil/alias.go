@@ -22,9 +22,6 @@ var (
 	GenesisStateFromGenDoc      = types.GenesisStateFromGenDoc
 	GenesisStateFromGenFile     = types.GenesisStateFromGenFile
 	ValidateGenesis             = types.ValidateGenesis
-
-	// variable aliases
-	ModuleCdc = types.ModuleCdc
 )
 
 type (

@@ -11,12 +11,11 @@ import (
 
 // query routes supported by the IBC channel Querier
 const (
-	QueryAllChannels                  = "channels"
-	QueryChannel                      = "channel"
-	QueryConnectionChannels           = "connection-channels"
-	QueryAllPacketCommitments         = "packet-commitments"
-	QueryAllUnrelayedSequences        = "unrelayed-sequences"
-	QueryAllUnrelayedAcknowledgements = "unrelayed-acknowledgements"
+	QueryAllChannels               = "channels"
+	QueryChannel                   = "channel"
+	QueryConnectionChannels        = "connection-channels"
+	QueryPacketCommitments         = "packet-commitments"
+	QueryUnrelayedAcknowledgements = "unrelayed-acknowledgements"
 )
 
 // ChannelResponse defines the client query response for a channel which also
@@ -70,6 +69,46 @@ func NewQueryConnectionChannelsParams(connection string, page, limit int) QueryC
 		Connection: connection,
 		Page:       page,
 		Limit:      limit,
+	}
+}
+
+// QueryPacketCommitmentsParams defines the parameters necessary for querying
+// all packet commitments at an associated port ID and channel ID.
+type QueryPacketCommitmentsParams struct {
+	PortID    string `json:"port_id" yaml:"port_id"`
+	ChannelID string `json:"channel_id" yaml:"channel_id"`
+	Page      int    `json:"page" yaml:"page"`
+	Limit     int    `json:"limit" yaml:"limit"`
+}
+
+// NewQueryPacketCommitmentsParams creates a new QueryPacketCommitmentsParams instance.
+func NewQueryPacketCommitmentsParams(portID, channelID string, page, limit int) QueryPacketCommitmentsParams {
+	return QueryPacketCommitmentsParams{
+		PortID:    portID,
+		ChannelID: channelID,
+		Page:      page,
+		Limit:     limit,
+	}
+}
+
+// QueryUnrelayedAcknowledgementsParams defines the parameters necessary for querying
+// all unrelayed acknowledgements at an associated port ID and channel ID.
+type QueryUnrelayedAcknowledgementsParams struct {
+	PortID    string   `json:"port_id" yaml:"port_id"`
+	ChannelID string   `json:"channel_id" yaml:"channel_id"`
+	Sequences []uint64 `json:"sequences" yaml:"sequences"`
+	Page      int      `json:"page" yaml:"page"`
+	Limit     int      `json:"limit" yaml:"limit"`
+}
+
+// NewQueryUnrealyedAcknowledgementsParams creates a new QueryPacketCommitmentsParams instance.
+func NewQueryUnrelayedAcknowledgementsParams(portID, channelID string, sequences []uint64, page, limit int) QueryUnrelayedAcknowledgementsParams {
+	return QueryUnrelayedAcknowledgementsParams{
+		PortID:    portID,
+		ChannelID: channelID,
+		Sequences: sequences,
+		Page:      page,
+		Limit:     limit,
 	}
 }
 

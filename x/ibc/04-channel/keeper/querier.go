@@ -67,9 +67,64 @@ func QuerierConnectionChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 	return res, nil
 }
 
-// QuerierUnrelayedSequences defines the sdk.Querier to query all unrelayed
-// sequence for a specified channel.
-func QuerierUnrelayedSequences(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	packetCommitments := k.GetAllPacketCommitments(ctx)
+// QuerierPacketCommitments defines the sdk.Querier to query all packet
+// commitments on a specified channel.
+func QuerierPacketCommitments(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+	var params types.QueryPacketCommitmentsParams
 
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	packetCommitments := k.GetAllPacketCommitmentsAtChannel(ctx, params.PortID, params.ChannelID)
+
+	var sequences []uint64
+	for _, pc := range packetCommitments {
+		sequences = append(sequences, pc.Sequence)
+	}
+
+	start, end := client.Paginate(len(sequences), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
+		sequences = []uint64{}
+	} else {
+		sequences = sequences[start:end]
+	}
+
+	res, err := codec.MarshalJSONIndent(k.cdc, sequences)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}
+
+// QuerierUnrelayedAcknowledgements defines the sdk.Querier to query all unrelayed
+// acknowledgements for a specified channel end.
+func QuerierUnrelayedAcknowledgements(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+	var params types.QueryUnrelayedAcknowledgementsParams
+
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	var unrelayedAcks []uint64
+	for _, seq := range params.Sequences {
+		if _, found := k.GetPacketAcknowledgement(ctx, params.PortID, params.ChannelID, seq); found {
+			unrelayedAcks = append(unrelayedAcks, seq)
+		}
+	}
+
+	start, end := client.Paginate(len(unrelayedAcks), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
+		unrelayedAcks = []uint64{}
+	} else {
+		unrelayedAcks = unrelayedAcks[start:end]
+	}
+
+	res, err := codec.MarshalJSONIndent(k.cdc, unrelayedAcks)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
 }

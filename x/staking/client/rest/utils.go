@@ -20,6 +20,7 @@ func contains(stringSlice []string, txType string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -42,14 +43,12 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 		bech32validator := vars["validatorAddr"]
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -61,14 +60,12 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 		params := types.NewQueryBondsParams(delegatorAddr, validatorAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData(endpoint, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -83,8 +80,7 @@ func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 		bech32delegator := vars["delegatorAddr"]
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -96,14 +92,12 @@ func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 		params := types.NewQueryDelegatorParams(delegatorAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData(endpoint, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -118,8 +112,7 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 		bech32validatorAddr := vars["validatorAddr"]
 
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -131,14 +124,12 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 		params := types.NewQueryValidatorParams(validatorAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData(endpoint, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

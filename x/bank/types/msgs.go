@@ -5,6 +5,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// bank message types
+const (
+	TypeMsgSend      = "send"
+	TypeMsgMultiSend = "multisend"
+)
+
 var _ sdk.Msg = MsgSend{}
 
 // NewMsgSend - construct arbitrary multi-in, multi-out send msg.
@@ -16,22 +22,26 @@ func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
 func (msg MsgSend) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgSend) Type() string { return "send" }
+func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
 	if msg.FromAddress.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
+
 	if msg.ToAddress.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
+
 	if !msg.Amount.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
+
 	if !msg.Amount.IsAllPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
+
 	return nil
 }
 
@@ -56,7 +66,7 @@ func NewMsgMultiSend(in []Input, out []Output) MsgMultiSend {
 func (msg MsgMultiSend) Route() string { return RouterKey }
 
 // Type Implements Msg
-func (msg MsgMultiSend) Type() string { return "multisend" }
+func (msg MsgMultiSend) Type() string { return TypeMsgMultiSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMultiSend) ValidateBasic() error {
@@ -65,6 +75,7 @@ func (msg MsgMultiSend) ValidateBasic() error {
 	if len(msg.Inputs) == 0 {
 		return ErrNoInputs
 	}
+
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs
 	}
@@ -83,6 +94,7 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
+
 	return addrs
 }
 
@@ -91,12 +103,15 @@ func (in Input) ValidateBasic() error {
 	if len(in.Address) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "input address missing")
 	}
+
 	if !in.Coins.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
+
 	if !in.Coins.IsAllPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
+
 	return nil
 }
 
@@ -113,12 +128,15 @@ func (out Output) ValidateBasic() error {
 	if len(out.Address) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "output address missing")
 	}
+
 	if !out.Coins.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
+
 	if !out.Coins.IsAllPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
+
 	return nil
 }
 

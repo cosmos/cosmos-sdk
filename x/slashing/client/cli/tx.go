@@ -1,40 +1,32 @@
 package cli
 
 import (
-	"bufio"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// GetTxCmd returns the transaction commands for this module
-func GetTxCmd(cdc *codec.Codec) *cobra.Command {
+// NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
+func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Slashing transactions subcommands",
+		Short:                      "Slashing transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
-	slashingTxCmd.AddCommand(flags.PostCommands(
-		GetCmdUnjail(cdc),
-	)...)
-
+	slashingTxCmd.AddCommand(NewUnjailTxCmd(ctx))
 	return slashingTxCmd
 }
 
-// GetCmdUnjail implements the create unjail validator command.
-func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+func NewUnjailTxCmd(ctx context.CLIContext) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
 		Short: "unjail validator previously jailed for downtime",
@@ -43,14 +35,16 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 $ <appcli> tx slashing unjail --from mykey
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			valAddr := cliCtx.GetFromAddress()
-
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
+	return flags.PostCommands(cmd)[0]
 }

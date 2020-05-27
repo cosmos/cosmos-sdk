@@ -6,14 +6,14 @@ In the Cosmos network, keys and addresses may refer to a number of different rol
 
 ## HRP table
 
-| HRP               | Definition                            |
-|-------------------|---------------------------------------|
-| cosmos            | Cosmos Account Address                |
-| cosmospub         | Cosmos Account Public Key             |
-| cosmosvalcons     | Cosmos Validator Consensus Address    |
-| cosmosvalconspub  | Cosmos Validator Consensus Public Key |
-| cosmosvaloper     | Cosmos Validator Operator Address     |
-| cosmosvaloperpub  | Cosmos Validator Operator Public Key  |
+| HRP              | Definition                            |
+| ---------------- | ------------------------------------- |
+| cosmos           | Cosmos Account Address                |
+| cosmospub        | Cosmos Account Public Key             |
+| cosmosvalcons    | Cosmos Validator Consensus Address    |
+| cosmosvalconspub | Cosmos Validator Consensus Public Key |
+| cosmosvaloper    | Cosmos Validator Operator Address     |
+| cosmosvaloperpub | Cosmos Validator Operator Public Key  |
 
 ## Encoding
 
@@ -21,4 +21,4 @@ While all user facing interfaces to Cosmos software should exposed Bech32 interf
 
 To covert between other binary representation of addresses and keys, it is important to first apply the Amino encoding process before bech32 encoding.
 
-A complete implementation of the Amino serialization format is unnecessary in most cases. Simply prepending bytes from this [table](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/encoding.md#public-key-cryptography) to the byte string payload before bech32 encoding will sufficient for compatible representation.
+A complete implementation of the Amino serialization format is unnecessary in most cases. Simply prepending bytes from this [table](https://github.com/tendermint/spec/blob/master/spec/blockchain/encoding.md#public-key-cryptography) to the byte string payload before bech32 encoding will sufficient for compatible representation.

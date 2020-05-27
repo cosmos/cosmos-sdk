@@ -4,15 +4,15 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 // AccountKeeper expected account keeper
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
-	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.AccountI
+	IterateAccounts(ctx sdk.Context, process func(auth.AccountI) (stop bool))
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -26,6 +26,7 @@ type BankKeeper interface {
 
 // ParamSubspace defines the expected Subspace interfacace
 type ParamSubspace interface {
+	HasKeyTable() bool
 	WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace
 	Get(ctx sdk.Context, key []byte, ptr interface{})
 	GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)

@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 
 	// double sign less than max age
 	oldTokens := suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	evidence := types.Equivocation{
+	evidence := &types.Equivocation{
 		Height:           0,
 		Time:             time.Unix(0, 0),
 		Power:            power,
@@ -106,13 +106,18 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	)
 	suite.Equal(amt, suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
-	evidence := types.Equivocation{
+	evidence := &types.Equivocation{
 		Height:           0,
 		Time:             ctx.BlockTime(),
 		Power:            power,
 		ConsensusAddress: sdk.ConsAddress(val.Address()),
 	}
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(suite.app.EvidenceKeeper.MaxEvidenceAge(ctx) + 1))
+
+	cp := suite.app.BaseApp.GetConsensusParams(ctx)
+
+	ctx = ctx.WithConsensusParams(cp)
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
 
 	suite.False(suite.app.StakingKeeper.Validator(ctx, operatorAddr).IsJailed())

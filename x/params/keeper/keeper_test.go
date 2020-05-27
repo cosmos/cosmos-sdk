@@ -207,19 +207,23 @@ func TestJSONUpdate(t *testing.T) {
 
 	var param paramJSON
 
-	space.Update(ctx, key, []byte(`{"param1": "10241024"}`))
+	err := space.Update(ctx, key, []byte(`{"param1": "10241024"}`))
+	require.NoError(t, err)
 	space.Get(ctx, key, &param)
 	require.Equal(t, paramJSON{10241024, ""}, param)
 
-	space.Update(ctx, key, []byte(`{"param2": "helloworld"}`))
+	err = space.Update(ctx, key, []byte(`{"param2": "helloworld"}`))
+	require.NoError(t, err)
 	space.Get(ctx, key, &param)
 	require.Equal(t, paramJSON{10241024, "helloworld"}, param)
 
-	space.Update(ctx, key, []byte(`{"param1": "20482048"}`))
+	err = space.Update(ctx, key, []byte(`{"param1": "20482048"}`))
+	require.NoError(t, err)
 	space.Get(ctx, key, &param)
 	require.Equal(t, paramJSON{20482048, "helloworld"}, param)
 
-	space.Update(ctx, key, []byte(`{"param1": "40964096", "param2": "goodbyeworld"}`))
+	err = space.Update(ctx, key, []byte(`{"param1": "40964096", "param2": "goodbyeworld"}`))
+	require.NoError(t, err)
 	space.Get(ctx, key, &param)
 	require.Equal(t, paramJSON{40964096, "goodbyeworld"}, param)
 }

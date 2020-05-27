@@ -24,8 +24,8 @@ var _ types.DelegationSet = Keeper{}
 type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.Marshaler
+	authKeeper         types.AccountKeeper
 	bankKeeper         types.BankKeeper
-	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
 	paramstore         paramtypes.Subspace
 	validatorCache     map[string]cachedValidator
@@ -34,27 +34,28 @@ type Keeper struct {
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps paramtypes.Subspace,
+	cdc codec.Marshaler, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
+	ps paramtypes.Subspace,
 ) Keeper {
-
+	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(ParamKeyTable())
 	}
 
 	// ensure bonded and not bonded module accounts are set
-	if addr := sk.GetModuleAddress(types.BondedPoolName); addr == nil {
+	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
 	}
 
-	if addr := sk.GetModuleAddress(types.NotBondedPoolName); addr == nil {
+	if addr := ak.GetModuleAddress(types.NotBondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
 	return Keeper{
 		storeKey:           key,
 		cdc:                cdc,
+		authKeeper:         ak,
 		bankKeeper:         bk,
-		supplyKeeper:       sk,
 		paramstore:         ps,
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
@@ -72,7 +73,9 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
+
 	k.hooks = sh
+
 	return k
 }
 
@@ -80,18 +83,20 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
+
 	if bz == nil {
 		return sdk.ZeroInt()
 	}
 
 	ip := sdk.IntProto{}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &ip)
+	k.cdc.MustUnmarshalBinaryBare(bz, &ip)
+
 	return ip.Int
 }
 
 // Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&sdk.IntProto{Int: power})
+	bz := k.cdc.MustMarshalBinaryBare(&sdk.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)
 }

@@ -11,7 +11,7 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
 var (
@@ -104,7 +104,6 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 // LedgerShowAddress triggers a ledger device to show the corresponding address.
 func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 	accountAddressPrefix string) error {
-
 	device, err := getLedgerDevice()
 	if err != nil {
 		return err

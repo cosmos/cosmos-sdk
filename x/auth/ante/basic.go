@@ -3,13 +3,11 @@ package ante
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	err "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -32,6 +30,7 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
 	}
+
 	if err := tx.ValidateBasic(); err != nil {
 		return ctx, err
 	}
@@ -49,10 +48,10 @@ type TxWithMemo interface {
 // If memo is too large decorator returns with error, otherwise call next AnteHandler
 // CONTRACT: Tx must implement TxWithMemo interface
 type ValidateMemoDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewValidateMemoDecorator(ak keeper.AccountKeeper) ValidateMemoDecorator {
+func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 	return ValidateMemoDecorator{
 		ak: ak,
 	}
@@ -68,7 +67,7 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 
 	memoLength := len(memoTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
-		return ctx, err.Wrapf(err.ErrMemoTooLarge,
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
 			"maximum number of characters is %d but received %d characters",
 			params.MaxMemoCharacters, memoLength,
 		)
@@ -87,10 +86,10 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 // CONTRACT: To use this decorator, signatures of transaction must be represented
 // as types.StdSignature otherwise simulate mode will incorrectly estimate gas cost.
 type ConsumeTxSizeGasDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewConsumeGasForTxSizeDecorator(ak keeper.AccountKeeper) ConsumeTxSizeGasDecorator {
+func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator {
 	return ConsumeTxSizeGasDecorator{
 		ak: ak,
 	}
@@ -102,6 +101,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 	params := cgts.ak.GetParams(ctx)
+
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes())), "txSize")
 
 	// simulate gas cost for signatures in simulate mode
@@ -115,6 +115,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			}
 
 			var pubkey crypto.PubKey
+
 			acc := cgts.ak.GetAccount(ctx, signer)
 
 			// use placeholder simSecp256k1Pubkey if sig is nil
@@ -125,12 +126,12 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			}
 
 			// use stdsignature to mock the size of a full signature
-			simSig := types.StdSignature{
+			simSig := types.StdSignature{ //nolint:staticcheck
 				Signature: simSecp256k1Sig[:],
-				PubKey:    pubkey,
+				PubKey:    pubkey.Bytes(),
 			}
 
-			sigBz := codec.Cdc.MustMarshalBinaryLengthPrefixed(simSig)
+			sigBz := codec.Cdc.MustMarshalBinaryBare(simSig)
 			cost := sdk.Gas(len(sigBz) + 6)
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum

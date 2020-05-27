@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -23,7 +24,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
+	appParams simtypes.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
 
 	var weightMsgSend, weightMsgMultiSend int
@@ -53,33 +54,30 @@ func WeightedOperations(
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
+func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string,
-	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "transfers are not enabled"), nil, nil
 		}
 
-		simAccount, toSimAcc, coins, skip, err := randomSendFields(r, ctx, accs, bk, ak)
-		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
-		}
+		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 		if skip {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "skip all transfers"), nil, nil
 		}
 
 		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
-		err = sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
+		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 
-		return simulation.NewOperationMsg(msg, true, ""), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -100,7 +98,7 @@ func sendMsgSend(
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount)
 	if !hasNeg {
-		fees, err = simulation.RandomFees(r, ctx, coins)
+		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
 		}
@@ -126,14 +124,14 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
-func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
+func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string,
-	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "transfers are not enabled"), nil, nil
 		}
 
 		// random number of inputs/outputs between [1, 3]
@@ -149,18 +147,15 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 		var totalSentCoins sdk.Coins
 		for i := range inputs {
 			// generate random input fields, ignore to address
-			simAccount, _, coins, skip, err := randomSendFields(r, ctx, accs, bk, ak)
+			simAccount, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 			// make sure account is fresh and not used in previous input
 			for usedAddrs[simAccount.Address.String()] {
-				simAccount, _, coins, skip, err = randomSendFields(r, ctx, accs, bk, ak)
+				simAccount, _, coins, skip = randomSendFields(r, ctx, accs, bk, ak)
 			}
 
-			if err != nil {
-				return simulation.NoOpMsg(types.ModuleName), nil, err
-			}
 			if skip {
-				return simulation.NoOpMsg(types.ModuleName), nil, nil
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "skip all transfers"), nil, nil
 			}
 
 			// set input address in used address map
@@ -175,7 +170,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 		}
 
 		for o := range outputs {
-			outAddr, _ := simulation.RandomAcc(r, accs)
+			outAddr, _ := simtypes.RandomAcc(r, accs)
 
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
@@ -184,7 +179,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 			} else {
 				// take random subset of remaining coins for output
 				// and update remaining coins
-				outCoins = simulation.RandSubsetCoins(r, totalSentCoins)
+				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
 				totalSentCoins = totalSentCoins.Sub(outCoins)
 			}
 
@@ -210,10 +205,10 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 
-		return simulation.NewOperationMsg(msg, true, ""), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -245,7 +240,7 @@ func sendMsgMultiSend(
 
 	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
 	if !hasNeg {
-		fees, err = simulation.RandomFees(r, ctx, coins)
+		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
 		}
@@ -273,28 +268,28 @@ func sendMsgMultiSend(
 // as the transferred amount.
 // nolint: interfacer
 func randomSendFields(
-	r *rand.Rand, ctx sdk.Context, accs []simulation.Account, bk keeper.Keeper, ak types.AccountKeeper,
-) (simulation.Account, simulation.Account, sdk.Coins, bool, error) {
+	r *rand.Rand, ctx sdk.Context, accs []simtypes.Account, bk keeper.Keeper, ak types.AccountKeeper,
+) (simtypes.Account, simtypes.Account, sdk.Coins, bool) {
 
-	simAccount, _ := simulation.RandomAcc(r, accs)
-	toSimAcc, _ := simulation.RandomAcc(r, accs)
+	simAccount, _ := simtypes.RandomAcc(r, accs)
+	toSimAcc, _ := simtypes.RandomAcc(r, accs)
 
 	// disallow sending money to yourself
 	for simAccount.PubKey.Equals(toSimAcc.PubKey) {
-		toSimAcc, _ = simulation.RandomAcc(r, accs)
+		toSimAcc, _ = simtypes.RandomAcc(r, accs)
 	}
 
 	acc := ak.GetAccount(ctx, simAccount.Address)
 	if acc == nil {
-		return simAccount, toSimAcc, nil, true, nil // skip error
+		return simAccount, toSimAcc, nil, true
 	}
 
 	spendable := bk.SpendableCoins(ctx, acc.GetAddress())
 
-	sendCoins := simulation.RandSubsetCoins(r, spendable)
+	sendCoins := simtypes.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {
-		return simAccount, toSimAcc, nil, true, nil // skip error
+		return simAccount, toSimAcc, nil, true
 	}
 
-	return simAccount, toSimAcc, sendCoins, false, nil
+	return simAccount, toSimAcc, sendCoins, false
 }

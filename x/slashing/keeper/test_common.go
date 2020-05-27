@@ -1,14 +1,13 @@
 package keeper
 
-// nolint:deadcode,unused
 // DONTCOVER
-// noalias
 
 import (
+	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
@@ -23,11 +22,13 @@ func TestParams() types.Params {
 	params := types.DefaultParams()
 	params.SignedBlocksWindow = 1000
 	params.DowntimeJailDuration = 60 * 60
+
 	return params
 }
 
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
 	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+
 	return staking.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
 		staking.Description{}, commission, sdk.OneInt(),

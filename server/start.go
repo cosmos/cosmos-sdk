@@ -34,17 +34,6 @@ const (
 	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
 )
 
-var (
-	errPruningWithGranularOptions = fmt.Errorf(
-		"'--%s' flag is not compatible with granular options  '--%s' or '--%s'",
-		flagPruning, flagPruningKeepEvery, flagPruningSnapshotEvery,
-	)
-	errPruningGranularOptions = fmt.Errorf(
-		"'--%s' and '--%s' must be set together",
-		flagPruningSnapshotEvery, flagPruningKeepEvery,
-	)
-)
-
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
 func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
@@ -72,7 +61,8 @@ For profiling and benchmarking purposes, CPU profiling can be enabled via the '-
 which accepts a path for the resulting pprof file.
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return checkPruningParams()
+			_, err := GetPruningOptionsFromFlags()
+			return err
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !viper.GetBool(flagWithTendermint) {
@@ -82,7 +72,7 @@ which accepts a path for the resulting pprof file.
 
 			ctx.Logger.Info("starting ABCI with Tendermint")
 
-			_, err := startInProcess(ctx, appCreator)
+			err := startInProcess(ctx, appCreator)
 			return err
 		},
 	}
@@ -91,9 +81,9 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
-	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything")
-	cmd.Flags().Int64(flagPruningKeepEvery, 0, "Define the state number that will be kept")
-	cmd.Flags().Int64(flagPruningSnapshotEvery, 0, "Defines the state that will be snapshot for pruning")
+	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything, custom")
+	cmd.Flags().Int64(flagPruningKeepEvery, 0, "Define the state number that will be kept. Ignored if pruning is not custom.")
+	cmd.Flags().Int64(flagPruningSnapshotEvery, 0, "Defines the state that will be snapshot for pruning. Ignored if pruning is not custom.")
 	cmd.Flags().String(
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
@@ -104,30 +94,13 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
+	viper.BindPFlag(flagPruning, cmd.Flags().Lookup(flagPruning))
+	viper.BindPFlag(flagPruningKeepEvery, cmd.Flags().Lookup(flagPruningKeepEvery))
+	viper.BindPFlag(flagPruningSnapshotEvery, cmd.Flags().Lookup(flagPruningSnapshotEvery))
+
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
-}
-
-// checkPruningParams checks that the provided pruning params are correct
-func checkPruningParams() error {
-	if !viper.IsSet(flagPruning) && !viper.IsSet(flagPruningKeepEvery) && !viper.IsSet(flagPruningSnapshotEvery) {
-		return nil
-	}
-
-	if viper.IsSet(flagPruning) {
-		if viper.IsSet(flagPruningKeepEvery) || viper.IsSet(flagPruningSnapshotEvery) {
-			return errPruningWithGranularOptions
-		}
-
-		return nil
-	}
-
-	if !(viper.IsSet(flagPruningKeepEvery) && viper.IsSet(flagPruningSnapshotEvery)) {
-		return errPruningGranularOptions
-	}
-
-	return nil
 }
 
 func startStandAlone(ctx *Context, appCreator AppCreator) error {
@@ -170,29 +143,27 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
+func startInProcess(ctx *Context, appCreator AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
 	traceWriterFile := viper.GetString(flagTraceStore)
 	db, err := openDB(home)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	UpgradeOldPrivValFile(cfg)
 
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
@@ -206,11 +177,11 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		ctx.Logger.With("module", "node"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := tmNode.Start(); err != nil {
-		return nil, err
+		return err
 	}
 
 	var cpuProfileCleanup func()
@@ -218,12 +189,12 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	if cpuProfile := viper.GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
 		if err := pprof.StartCPUProfile(f); err != nil {
-			return nil, err
+			return err
 		}
 
 		cpuProfileCleanup = func() {

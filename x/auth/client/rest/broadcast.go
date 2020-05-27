@@ -23,28 +23,23 @@ func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
 		var req BroadcastReq
 
 		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		err = cliCtx.Codec.UnmarshalJSON(body, &req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if err := cliCtx.Codec.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(req.Tx)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		txBytes, err := cliCtx.Codec.MarshalBinaryBare(req.Tx)
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		cliCtx = cliCtx.WithBroadcastMode(req.Mode)
 
 		res, err := cliCtx.BroadcastTx(txBytes)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

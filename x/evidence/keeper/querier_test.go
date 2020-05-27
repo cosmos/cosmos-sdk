@@ -3,7 +3,10 @@ package keeper_test
 import (
 	"strings"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	"github.com/cosmos/cosmos-sdk/std"
+
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
@@ -17,7 +20,7 @@ const (
 func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
-	cdc := codecstd.NewAppCodec(suite.app.Codec())
+	cdc := std.NewAppCodec(suite.app.Codec(), codectypes.NewInterfaceRegistry())
 
 	evidence := suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
@@ -36,7 +39,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 
 func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc := codecstd.NewAppCodec(suite.app.Codec())
+	cdc := std.NewAppCodec(suite.app.Codec(), codectypes.NewInterfaceRegistry())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -52,7 +55,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc := codecstd.NewAppCodec(suite.app.Codec())
+	cdc := std.NewAppCodec(suite.app.Codec(), codectypes.NewInterfaceRegistry())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -72,7 +75,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc := codecstd.NewAppCodec(suite.app.Codec())
+	cdc := std.NewAppCodec(suite.app.Codec(), codectypes.NewInterfaceRegistry())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -88,13 +91,4 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	var e []exported.Evidence
 	suite.Nil(cdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, 0)
-}
-
-func (suite *KeeperTestSuite) TestQueryParams() {
-	ctx := suite.ctx.WithIsCheckTx(false)
-
-	bz, err := suite.querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
-	suite.Nil(err)
-	suite.NotNil(bz)
-	suite.Equal("{\n  \"max_evidence_age\": \"120000000000\"\n}", string(bz))
 }

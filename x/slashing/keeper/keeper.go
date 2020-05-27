@@ -23,11 +23,16 @@ type Keeper struct {
 
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc codec.Marshaler, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramspace.HasKeyTable() {
+		paramspace = paramspace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
-		paramspace: paramspace.WithKeyTable(types.ParamKeyTable()),
+		paramspace: paramspace,
 	}
 }
 
@@ -53,7 +58,7 @@ func (k Keeper) GetPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 	store := ctx.KVStore(k.storeKey)
 
 	var pubkey gogotypes.StringValue
-	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
+	err := k.cdc.UnmarshalBinaryBare(store.Get(types.AddrPubkeyRelationKey(address)), &pubkey)
 	if err != nil {
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
 	}
@@ -97,11 +102,11 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey string) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.StringValue{Value: pubkey})
-	store.Set(types.GetAddrPubkeyRelationKey(addr), bz)
+	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: pubkey})
+	store.Set(types.AddrPubkeyRelationKey(addr), bz)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetAddrPubkeyRelationKey(addr))
+	store.Delete(types.AddrPubkeyRelationKey(addr))
 }

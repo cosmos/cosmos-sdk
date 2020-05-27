@@ -23,21 +23,18 @@ func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		var req types.StdTx
 
 		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		err = cliCtx.Codec.UnmarshalJSON(body, &req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		// re-encode it via the Amino wire protocol
-		txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		txBytes, err := cliCtx.Codec.MarshalBinaryBare(req)
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

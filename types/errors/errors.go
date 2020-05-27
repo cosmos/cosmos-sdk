@@ -82,6 +82,30 @@ var (
 	// ErrTxTooLarge defines an ABCI typed error where tx is too large.
 	ErrTxTooLarge = Register(RootCodespace, 21, "tx too large")
 
+	// ErrKeyNotFound defines an error when the key doesn't exist
+	ErrKeyNotFound = Register(RootCodespace, 22, "key not found")
+
+	// ErrWrongPassword defines an error when the key password is invalid.
+	ErrWrongPassword = Register(RootCodespace, 23, "invalid account password")
+
+	// ErrorInvalidSigner defines an error when the tx intended signer does not match the given signer.
+	ErrorInvalidSigner = Register(RootCodespace, 24, "tx intended signer does not match the given signer")
+
+	// ErrorInvalidGasAdjustment defines an error for an invalid gas adjustment
+	ErrorInvalidGasAdjustment = Register(RootCodespace, 25, "invalid gas adjustment")
+
+	// ErrInvalidHeight defines an error for an invalid height
+	ErrInvalidHeight = Register(RootCodespace, 26, "invalid height")
+
+	// ErrInvalidVersion defines a general error for an invalid version
+	ErrInvalidVersion = Register(RootCodespace, 27, "invalid version")
+
+	// ErrInvalidChainID defines an error when the chain-id is invalid.
+	ErrInvalidChainID = Register(RootCodespace, 28, "invalid chain-id")
+
+	// ErrInvalidType defines an error an invalid type.
+	ErrInvalidType = Register(RootCodespace, 29, "invalid type")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
@@ -256,7 +280,7 @@ type wrappedError struct {
 }
 
 func (e *wrappedError) Error() string {
-	return fmt.Sprintf("%s: %s", e.parent.Error(), e.msg)
+	return fmt.Sprintf("%s: %s", e.msg, e.parent.Error())
 }
 
 func (e *wrappedError) Cause() error {

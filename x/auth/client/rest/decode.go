@@ -28,27 +28,23 @@ func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		var req DecodeReq
 
 		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		err = cliCtx.Codec.UnmarshalJSON(body, &req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		txBytes, err := base64.StdEncoding.DecodeString(req.Tx)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		var stdTx authtypes.StdTx
-		err = cliCtx.Codec.UnmarshalBinaryLengthPrefixed(txBytes, &stdTx)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		err = cliCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 

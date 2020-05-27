@@ -2,7 +2,6 @@ package auth
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -10,7 +9,7 @@ import (
 //
 // CONTRACT: old coins from the FeeCollectionKeeper need to be transferred through
 // a genesis port script to the new fee collector account
-func InitGenesis(ctx sdk.Context, ak AccountKeeper, sk types.SupplyKeeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
 	data.Accounts = SanitizeGenesisAccounts(data.Accounts)
 
@@ -19,16 +18,16 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, sk types.SupplyKeeper, data 
 		ak.SetAccount(ctx, acc)
 	}
 
-	sk.GetModuleAccount(ctx, FeeCollectorName)
+	ak.GetModuleAccount(ctx, FeeCollectorName)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
 
-	var genAccounts exported.GenesisAccounts
-	ak.IterateAccounts(ctx, func(account exported.Account) bool {
-		genAccount := account.(exported.GenesisAccount)
+	var genAccounts types.GenesisAccounts
+	ak.IterateAccounts(ctx, func(account types.AccountI) bool {
+		genAccount := account.(types.GenesisAccount)
 		genAccounts = append(genAccounts, genAccount)
 		return false
 	})

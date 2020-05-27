@@ -1,13 +1,12 @@
 <!--
 order: 6
-synopsis: Amino and Protobuf are the primary binary wire encoding schemes in the Cosmos SDK.
 -->
 
 # Encoding
 
-> NOTE: This document a WIP.
+The `codec` is used everywhere in the Cosmos SDK to encode and decode structs and interfaces. The specific codec used in the Cosmos SDK is called `go-amino`. {synopsis}
 
-## Pre-requisite Readings {hide}
+## Pre-requisite Readings
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 

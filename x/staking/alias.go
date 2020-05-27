@@ -1,7 +1,5 @@
 package staking
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -12,7 +10,6 @@ const (
 	DefaultParamspace                  = keeper.DefaultParamspace
 	ModuleName                         = types.ModuleName
 	StoreKey                           = types.StoreKey
-	TStoreKey                          = types.TStoreKey
 	QuerierRoute                       = types.QuerierRoute
 	RouterKey                          = types.RouterKey
 	DefaultUnbondingTime               = types.DefaultUnbondingTime

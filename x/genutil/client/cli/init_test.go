@@ -113,11 +113,13 @@ func TestStartStandAlone(t *testing.T) {
 	svr, err := abciServer.NewServer(svrAddr, "socket", app)
 	require.Nil(t, err, "error creating listener")
 	svr.SetLogger(logger.With("module", "abci-server"))
-	svr.Start()
+	err = svr.Start()
+	require.NoError(t, err)
 
 	timer := time.NewTimer(time.Duration(2) * time.Second)
 	for range timer.C {
-		svr.Stop()
+		err = svr.Stop()
+		require.NoError(t, err)
 		break
 	}
 }

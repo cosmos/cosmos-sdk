@@ -2,11 +2,9 @@ package store
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/types"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
-// nolint
 type (
 	PruningOptions   = types.PruningOptions
 	Store            = types.Store
@@ -23,16 +21,15 @@ type (
 	CacheWrapper     = types.CacheWrapper
 	CacheWrap        = types.CacheWrap
 	CommitID         = types.CommitID
-	StoreKey         = types.StoreKey
-	StoreType        = types.StoreType
+	Key              = types.StoreKey
+	Type             = types.StoreType
 	Queryable        = types.Queryable
 	TraceContext     = types.TraceContext
-	Gas              = stypes.Gas
+	Gas              = types.Gas
 	GasMeter         = types.GasMeter
-	GasConfig        = stypes.GasConfig
+	GasConfig        = types.GasConfig
 )
 
-// nolint - reexport
 var (
 	PruneNothing    = types.PruneNothing
 	PruneEverything = types.PruneEverything

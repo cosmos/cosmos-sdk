@@ -38,7 +38,7 @@ func (bm BasicManager) RegisterMetrics(appName string, labelsAndValues... string
 }
 ```
 
-Each module can define its own `Metrics` type and`CreateMetrics` function in the x/<module>/observability/metrics.go file:
+Each module can define its own `Metrics` type and`CreateMetrics` function in the x/\<module\>/observability/metrics.go file:
 
 ```go
 type Metrics struct {

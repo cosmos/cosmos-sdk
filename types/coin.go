@@ -563,7 +563,6 @@ func removeZeroCoins(coins Coins) Coins {
 //-----------------------------------------------------------------------------
 // Sort interface
 
-//nolint
 func (coins Coins) Len() int           { return len(coins) }
 func (coins Coins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
 func (coins Coins) Swap(i, j int)      { coins[i], coins[j] = coins[j], coins[i] }
@@ -580,8 +579,8 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can be 3 ~ 32 characters long.
-	reDnmString = `[a-z][a-z0-9/]{2,31}`
+	// Denominations can be 3 ~ 64 characters long.
+	reDnmString = `[a-z][a-z0-9/]{2,63}`
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`

@@ -24,29 +24,21 @@ func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 	cdc := codec.New()
-	wantDefaultGenesis := map[string]json.RawMessage{
-		"mockAppModuleBasic1": json.RawMessage(``),
-		"mockAppModuleBasic2": json.RawMessage(`{"key":"value"}`),
-	}
+	ctx := context.CLIContext{}
+	ctx = ctx.WithCodec(cdc)
+	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
-	mockAppModuleBasic2 := mocks.NewMockAppModuleBasic(mockCtrl)
 
-	mockAppModuleBasic1.EXPECT().Name().Times(3).Return("mockAppModuleBasic1")
-	mockAppModuleBasic2.EXPECT().Name().Times(2).Return("mockAppModuleBasic2")
+	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
-	mockAppModuleBasic2.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key":"value"}`))
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(context.CLIContext{}), gomock.Eq(&mux.Router{})).Times(1)
-	mockAppModuleBasic2.EXPECT().RegisterRESTRoutes(gomock.Eq(context.CLIContext{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
-	mockAppModuleBasic2.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
-	mockAppModuleBasic1.EXPECT().GetTxCmd(cdc).Times(1).Return(nil)
-	mockAppModuleBasic2.EXPECT().GetTxCmd(cdc).Times(1).Return(&cobra.Command{})
+	mockAppModuleBasic1.EXPECT().GetTxCmd(ctx).Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd(cdc).Times(1).Return(nil)
-	mockAppModuleBasic2.EXPECT().GetQueryCmd(cdc).Times(1).Return(&cobra.Command{})
 
-	mm := module.NewBasicManager(mockAppModuleBasic1, mockAppModuleBasic2)
+	mm := module.NewBasicManager(mockAppModuleBasic1)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
 
 	mm.RegisterCodec(cdc)
@@ -54,15 +46,14 @@ func TestBasicManager(t *testing.T) {
 	require.Equal(t, wantDefaultGenesis, mm.DefaultGenesis(cdc))
 
 	var data map[string]string
-	require.NoError(t, json.Unmarshal(wantDefaultGenesis["mockAppModuleBasic2"], &data))
-	require.Equal(t, map[string]string{"key": "value"}, data)
+	require.Equal(t, map[string]string(nil), data)
 
 	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, wantDefaultGenesis)))
 
 	mm.RegisterRESTRoutes(context.CLIContext{}, &mux.Router{})
 
 	mockCmd := &cobra.Command{Use: "root"}
-	mm.AddTxCommands(mockCmd, cdc)
+	mm.AddTxCommands(mockCmd, ctx)
 
 	mm.AddQueryCommands(mockCmd, cdc)
 
@@ -71,7 +62,6 @@ func TestBasicManager(t *testing.T) {
 }
 
 func TestGenesisOnlyAppModule(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -91,7 +81,6 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 }
 
 func TestManagerOrderSetters(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
@@ -121,7 +110,6 @@ func TestManagerOrderSetters(t *testing.T) {
 }
 
 func TestManager_RegisterInvariants(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -141,7 +129,6 @@ func TestManager_RegisterInvariants(t *testing.T) {
 }
 
 func TestManager_RegisterRoutes(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -173,7 +160,6 @@ func TestManager_RegisterRoutes(t *testing.T) {
 }
 
 func TestManager_InitGenesis(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -195,8 +181,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
 		"module2": json.RawMessage(`{"key": "value"}`)}
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 }
 
@@ -255,13 +241,13 @@ func TestManager_EndBlock(t *testing.T) {
 
 	req := abci.RequestEndBlock{Height: 10}
 
-	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
+	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1)
 	ret := mm.EndBlock(sdk.Context{}, req)
-	require.Equal(t, []abci.ValidatorUpdate{abci.ValidatorUpdate{}}, ret.ValidatorUpdates)
+	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
-	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
-	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
+	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
 }

@@ -2,6 +2,8 @@ package proposal
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 type Codec struct {
@@ -13,10 +15,10 @@ type Codec struct {
 }
 
 func NewCodec(amino *codec.Codec) *Codec {
-	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
+	return &Codec{Marshaler: codec.NewHybridCodec(amino, types.NewInterfaceRegistry()), amino: amino}
 }
 
-// module codec
+// ModuleCdc is the module codec.
 var ModuleCdc *Codec
 
 func init() {
@@ -28,5 +30,12 @@ func init() {
 
 // RegisterCodec registers all necessary param module types with a given codec.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal", nil)
+	cdc.RegisterConcrete(&ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal", nil)
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations(
+		(*gov.Content)(nil),
+		&ParameterChangeProposal{},
+	)
 }

@@ -39,7 +39,7 @@ func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, s
 
 // MustMarshalDelegation returns the delegation bytes. Panics if fails
 func MustMarshalDelegation(cdc codec.Marshaler, delegation Delegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&delegation)
+	return cdc.MustMarshalBinaryBare(&delegation)
 }
 
 // MustUnmarshalDelegation return the unmarshaled delegation from bytes.
@@ -49,16 +49,16 @@ func MustUnmarshalDelegation(cdc codec.Marshaler, value []byte) Delegation {
 	if err != nil {
 		panic(err)
 	}
+
 	return delegation
 }
 
 // return the delegation
 func UnmarshalDelegation(cdc codec.Marshaler, value []byte) (delegation Delegation, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &delegation)
+	err = cdc.UnmarshalBinaryBare(value, &delegation)
 	return delegation, err
 }
 
-// nolint - for Delegation
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
 func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }
 func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
@@ -76,6 +76,7 @@ func (d Delegations) String() (out string) {
 	for _, del := range d {
 		out += del.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -104,7 +105,6 @@ func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) UnbondingDelegation {
-
 	return UnbondingDelegation{
 		DelegatorAddress: delegatorAddr,
 		ValidatorAddress: validatorAddr,
@@ -127,7 +127,7 @@ func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 
 // return the unbonding delegation
 func MustMarshalUBD(cdc codec.Marshaler, ubd UnbondingDelegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&ubd)
+	return cdc.MustMarshalBinaryBare(&ubd)
 }
 
 // unmarshal a unbonding delegation from a store value
@@ -136,12 +136,13 @@ func MustUnmarshalUBD(cdc codec.Marshaler, value []byte) UnbondingDelegation {
 	if err != nil {
 		panic(err)
 	}
+
 	return ubd
 }
 
 // unmarshal a unbonding delegation from a store value
 func UnmarshalUBD(cdc codec.Marshaler, value []byte) (ubd UnbondingDelegation, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &ubd)
+	err = cdc.UnmarshalBinaryBare(value, &ubd)
 	return ubd, err
 }
 
@@ -158,6 +159,7 @@ func (ubd UnbondingDelegation) String() string {
       Expected balance:          %s`, i, entry.CreationHeight,
 			entry.CompletionTime, entry.Balance)
 	}
+
 	return out
 }
 
@@ -168,6 +170,7 @@ func (ubds UnbondingDelegations) String() (out string) {
 	for _, u := range ubds {
 		out += u.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -195,7 +198,6 @@ func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec,
 ) Redelegation {
-
 	return Redelegation{
 		DelegatorAddress:    delegatorAddr,
 		ValidatorSrcAddress: validatorSrcAddr,
@@ -219,7 +221,7 @@ func (red *Redelegation) RemoveEntry(i int64) {
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.
 func MustMarshalRED(cdc codec.Marshaler, red Redelegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&red)
+	return cdc.MustMarshalBinaryBare(&red)
 }
 
 // MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.
@@ -228,12 +230,13 @@ func MustUnmarshalRED(cdc codec.Marshaler, value []byte) Redelegation {
 	if err != nil {
 		panic(err)
 	}
+
 	return red
 }
 
 // UnmarshalRED unmarshals a redelegation from a store value
 func UnmarshalRED(cdc codec.Marshaler, value []byte) (red Redelegation, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &red)
+	err = cdc.UnmarshalBinaryBare(value, &red)
 	return red, err
 }
 
@@ -268,6 +271,7 @@ func (d Redelegations) String() (out string) {
 	for _, red := range d {
 		out += red.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -318,6 +322,7 @@ func (d DelegationResponses) String() (out string) {
 	for _, del := range d {
 		out += del.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -407,5 +412,6 @@ func (r RedelegationResponses) String() (out string) {
 	for _, red := range r {
 		out += red.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }

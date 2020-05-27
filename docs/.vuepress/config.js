@@ -1,11 +1,6 @@
 module.exports = {
   theme: "cosmos",
   title: "Cosmos SDK",
-  markdown: {
-    anchor: {
-      permalinkSymbol: ""
-    }
-  },
   head: [
     [
       "link",
@@ -19,9 +14,6 @@ module.exports = {
   locales: {
     "/": {
       lang: "en-US"
-    },
-    kr: {
-      lang: "kr"
     },
     kr: {
       lang: "kr"
@@ -40,6 +32,11 @@ module.exports = {
     docsDir: "docs",
     editLinks: true,
     label: "sdk",
+    algolia: {
+      id: "BH4D9OD16A",
+      key: "ac317234e6a42074175369b2f42e9754",
+      index: "cosmos-sdk"
+    },
     sidebar: [
       {
         title: "Using the SDK",
@@ -73,9 +70,9 @@ module.exports = {
       title: "Help & Support",
       editLink: true,
       chat: {
-        title: "Riot Chat",
-        text: "Chat with Cosmos developers on Riot Chat.",
-        url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org",
+        title: "Discord",
+        text: "Chat with Cosmos developers on Discord.",
+        url: "https://discordapp.com/channels/669268347736686612",
         bg: "linear-gradient(225.11deg, #2E3148 0%, #161931 95.68%)"
       },
       forum: {
@@ -91,10 +88,11 @@ module.exports = {
       }
     },
     footer: {
+      questionsText: "Chat with Cosmos developers on [Discord](https://discord.gg/W8trcGV) or reach out on the [SDK Developer Forum](https://forum.cosmos.network/) to learn more.",
       logo: "/logo-bw.svg",
       textLink: {
         text: "cosmos.network",
-        url: "/"
+        url: "https://cosmos.network"
       },
       services: [
         {

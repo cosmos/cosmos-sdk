@@ -1,31 +1,31 @@
-package keys
+package keys_test
 
 import (
-	"fmt"
-	"reflect"
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 type testCases struct {
-	Keys    []keys.KeyOutput
-	Answers []keys.KeyOutput
+	Keys    []keyring.KeyOutput
+	Answers []keyring.KeyOutput
 	JSON    [][]byte
 }
 
 func getTestCases() testCases {
 	return testCases{
 		// nolint:govet
-		[]keys.KeyOutput{
+		[]keyring.KeyOutput{
 			{"A", "B", "C", "D", "E", 0, nil},
 			{"A", "B", "C", "D", "", 0, nil},
 			{"", "B", "C", "D", "", 0, nil},
 			{"", "", "", "", "", 0, nil},
 		},
-		make([]keys.KeyOutput, 4),
+		make([]keyring.KeyOutput, 4),
 		[][]byte{
 			[]byte(`{"name":"A","type":"B","address":"C","pubkey":"D","mnemonic":"E"}`),
 			[]byte(`{"name":"A","type":"B","address":"C","pubkey":"D"}`),
@@ -37,7 +37,7 @@ func getTestCases() testCases {
 
 func TestMarshalJSON(t *testing.T) {
 	type args struct {
-		o keys.KeyOutput
+		o keyring.KeyOutput
 	}
 
 	data := getTestCases()
@@ -58,15 +58,9 @@ func TestMarshalJSON(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := MarshalJSON(tt.args.o)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			fmt.Printf("%s\n", got)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MarshalJSON() = %v, want %v", got, tt.want)
-			}
+			got, err := keys.MarshalJSON(tt.args.o)
+			require.Equal(t, tt.wantErr, err != nil)
+			require.True(t, bytes.Equal(got, tt.want))
 		})
 	}
 }
@@ -94,10 +88,8 @@ func TestUnmarshalJSON(t *testing.T) {
 	for idx, tt := range tests {
 		idx, tt := idx, tt
 		t.Run(tt.name, func(t *testing.T) {
-			if err := UnmarshalJSON(tt.args.bz, tt.args.ptr); (err != nil) != tt.wantErr {
-				t.Errorf("unmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
+			err := keys.UnmarshalJSON(tt.args.bz, tt.args.ptr)
+			require.Equal(t, tt.wantErr, err != nil)
 			// Confirm deserialized objects are the same
 			require.Equal(t, data.Keys[idx], data.Answers[idx])
 		})

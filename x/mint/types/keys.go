@@ -1,9 +1,8 @@
 package types
 
-// the one key to use for the keeper store
+// MinterKey is the key to use for the keeper store.
 var MinterKey = []byte{0x00}
 
-// nolint
 const (
 	// module name
 	ModuleName = "mint"

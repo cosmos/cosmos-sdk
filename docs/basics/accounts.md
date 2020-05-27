@@ -1,11 +1,12 @@
 <!--
 order: 3
-synopsis: This document describes the in-built accounts system of the Cosmos SDK.
 -->
 
 # Accounts 
 
-## Pre-requisite Readings {hide}
+This document describes the in-built accounts system of the Cosmos SDK. {synopsis}
+
+### Pre-requisite Readings
 
 - [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
 

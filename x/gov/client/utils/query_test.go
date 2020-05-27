@@ -137,9 +137,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				cdc        = newTestCodec()
 			)
 			for i := range tc.txs {
-				tx, err := cdc.MarshalBinaryLengthPrefixed(&tc.txs[i])
+				tx, err := cdc.MarshalBinaryBare(&tc.txs[i])
 				require.NoError(t, err)
-				marshalled[i] = tmtypes.Tx(tx)
+				marshalled[i] = tx
 			}
 			client := TxSearchMock{txs: marshalled}
 			ctx := context.CLIContext{}.WithCodec(cdc).WithTrustNode(true).WithClient(client)

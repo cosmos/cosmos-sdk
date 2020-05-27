@@ -36,9 +36,7 @@ type printInfo struct {
 	AppMessage json.RawMessage `json:"app_message" yaml:"app_message"`
 }
 
-func newPrintInfo(moniker, chainID, nodeID, genTxsDir string,
-	appMessage json.RawMessage) printInfo {
-
+func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.RawMessage) printInfo {
 	return printInfo{
 		Moniker:    moniker,
 		ChainID:    chainID,
@@ -55,13 +53,13 @@ func displayInfo(cdc codec.JSONMarshaler, info printInfo) error {
 	}
 
 	_, err = fmt.Fprintf(os.Stderr, "%s\n", string(sdk.MustSortJSON(out)))
+
 	return err
 }
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManager,
-	defaultNodeHome string) *cobra.Command { // nolint: golint
+func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",

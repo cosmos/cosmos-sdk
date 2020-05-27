@@ -1,26 +1,23 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-// GetCmdSubmitProposal implements a command handler for submitting a parameter
-// change proposal transaction.
-func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
+// NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
+// a parameter change proposal governance transaction.
+func NewSubmitParamChangeProposalTxCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -53,36 +50,39 @@ Where proposal.json contains:
       "value": 105
     }
   ],
-  "deposit": [
-    {
-      "denom": "stake",
-      "amount": "10000"
-    }
-  ]
+  "deposit": "1000stake"
 }
 `,
 				version.ClientName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
-			proposal, err := paramscutils.ParseParamChangeProposalJSON(cdc, args[0])
+			proposal, err := paramscutils.ParseParamChangeProposalJSON(ctx.JSONMarshaler, args[0])
 			if err != nil {
 				return err
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := paramproposal.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
+			content := paramproposal.NewParameterChangeProposal(
+				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
+			)
 
-			msg := govtypes.NewMsgSubmitProposal(content, proposal.Deposit, from)
+			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 

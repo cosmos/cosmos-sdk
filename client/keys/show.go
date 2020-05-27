@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -35,10 +35,10 @@ const (
 // ShowKeysCmd shows key information for a given key name.
 func ShowKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show [name [name...]]",
-		Short: "Show key info for the given name",
-		Long: `Return public details of a single local key. If multiple names are
-provided, then an ephemeral multisig key will be created under the name "multi"
+		Use:   "show [name_or_address [name_or_address...]]",
+		Short: "Retrieve key information by name or address",
+		Long: `Display keys details. If multiple names or addresses are provided,
+then an ephemeral multisig key will be created under the name "multi"
 consisting of all the keys provided by name and multisig threshold.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: runShowCmd,
@@ -55,23 +55,23 @@ consisting of all the keys provided by name and multisig threshold.`,
 }
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
-	var info keys.Info
+	var info keyring.Info
 
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
 	if len(args) == 1 {
-		info, err = kb.Get(args[0])
+		info, err = fetchKey(kb, args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
 		}
 	} else {
 		pks := make([]tmcrypto.PubKey, len(args))
-		for i, keyName := range args {
-			info, err := kb.Get(keyName)
+		for i, keyref := range args {
+			info, err := fetchKey(kb, keyref)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s is not a valid name or address: %v", keyref, err)
 			}
 
 			pks[i] = info.GetPubKey()
@@ -84,7 +84,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-		info = keys.NewMultiInfo(defaultMultiSigKeyName, multikey)
+		info = keyring.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
 	isShowAddr := viper.GetBool(FlagAddress)
@@ -112,11 +112,11 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	switch {
 	case isShowAddr:
-		printKeyAddress(info, bechKeyOut)
+		printKeyAddress(cmd.OutOrStdout(), info, bechKeyOut)
 	case isShowPubKey:
-		printPubKey(info, bechKeyOut)
+		printPubKey(cmd.OutOrStdout(), info, bechKeyOut)
 	default:
-		printKeyInfo(info, bechKeyOut)
+		printKeyInfo(cmd.OutOrStdout(), info, bechKeyOut)
 	}
 
 	if isShowDevice {
@@ -127,7 +127,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts")
 		}
 		// Override and show in the device
-		if info.GetType() != keys.TypeLedger {
+		if info.GetType() != keyring.TypeLedger {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts stored in devices")
 		}
 
@@ -140,6 +140,22 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	return nil
+}
+
+func fetchKey(kb keyring.Keyring, keyref string) (keyring.Info, error) {
+	info, err := kb.Key(keyref)
+	if err != nil {
+		accAddr, err := sdk.AccAddressFromBech32(keyref)
+		if err != nil {
+			return info, err
+		}
+
+		info, err = kb.KeyByAddress(accAddr)
+		if err != nil {
+			return info, errors.New("key not found")
+		}
+	}
+	return info, nil
 }
 
 func validateMultisigThreshold(k, nKeys int) error {
@@ -156,11 +172,11 @@ func validateMultisigThreshold(k, nKeys int) error {
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
 	case sdk.PrefixAccount:
-		return keys.Bech32KeyOutput, nil
+		return keyring.Bech32KeyOutput, nil
 	case sdk.PrefixValidator:
-		return keys.Bech32ValKeyOutput, nil
+		return keyring.Bech32ValKeyOutput, nil
 	case sdk.PrefixConsensus:
-		return keys.Bech32ConsKeyOutput, nil
+		return keyring.Bech32ConsKeyOutput, nil
 	}
 
 	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)

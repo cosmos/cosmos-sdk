@@ -22,6 +22,10 @@ const (
 	DefaultSigVerifyCostSecp256k1 = types.DefaultSigVerifyCostSecp256k1
 	QueryAccount                  = types.QueryAccount
 	QueryParams                   = types.QueryParams
+	MaxGasWanted                  = types.MaxGasWanted
+	Minter                        = types.Minter
+	Burner                        = types.Burner
+	Staking                       = types.Staking
 )
 
 var (
@@ -49,7 +53,7 @@ var (
 	NewQueryAccountParams             = types.NewQueryAccountParams
 	NewStdTx                          = types.NewStdTx
 	CountSubKeys                      = types.CountSubKeys
-	NewStdFee                         = types.NewStdFee
+	NewStdFee                         = types.NewStdFee //nolint:staticcheck
 	StdSignBytes                      = types.StdSignBytes
 	DefaultTxDecoder                  = types.DefaultTxDecoder
 	DefaultTxEncoder                  = types.DefaultTxEncoder
@@ -58,9 +62,12 @@ var (
 	MakeSignature                     = types.MakeSignature
 	ValidateGenAccounts               = types.ValidateGenAccounts
 	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
+	NewStdSignature                   = types.NewStdSignature
+	NewModuleAddress                  = types.NewModuleAddress
+	NewEmptyModuleAccount             = types.NewEmptyModuleAccount
+	NewModuleAccount                  = types.NewModuleAccount
 
 	// variable aliases
-	ModuleCdc                 = types.ModuleCdc
 	AddressStoreKeyPrefix     = types.AddressStoreKeyPrefix
 	GlobalAccountNumberKey    = types.GlobalAccountNumberKey
 	KeyMaxMemoCharacters      = types.KeyMaxMemoCharacters
@@ -71,20 +78,22 @@ var (
 )
 
 type (
+	AccountI                         = types.AccountI
 	SignatureVerificationGasConsumer = ante.SignatureVerificationGasConsumer
 	AccountKeeper                    = keeper.AccountKeeper
 	BaseAccount                      = types.BaseAccount
-	NodeQuerier                      = types.NodeQuerier
 	AccountRetriever                 = types.AccountRetriever
 	GenesisState                     = types.GenesisState
 	Params                           = types.Params
 	QueryAccountParams               = types.QueryAccountParams
 	StdSignMsg                       = types.StdSignMsg
 	StdTx                            = types.StdTx
-	StdFee                           = types.StdFee
+	StdFee                           = types.StdFee //nolint:staticcheck
 	StdSignDoc                       = types.StdSignDoc
-	StdSignature                     = types.StdSignature
+	StdSignature                     = types.StdSignature //nolint:staticcheck
 	TxBuilder                        = types.TxBuilder
 	GenesisAccountIterator           = types.GenesisAccountIterator
-	Codec                            = types.Codec
+	ModuleAccount                    = types.ModuleAccount
+	GenesisAccounts                  = types.GenesisAccounts
+	GenesisAccount                   = types.GenesisAccount
 )

@@ -6,17 +6,14 @@ option (gogoproto.equal_all) = true;
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
 
-// MsgSubmitEvidenceBase defines an sdk.Msg type that supports submitting arbitrary
+// MsgSubmitEvidence defines an sdk.Msg type that supports submitting arbitrary
 // Evidence.
-//
-// Note, this message type provides the basis for which a true MsgSubmitEvidence
-// can be constructed. Since the evidence submitted in the message can be arbitrary,
-// assuming it fulfills the Evidence interface, it must be defined at the
-// application-level and extend MsgSubmitEvidenceBase.
-message MsgSubmitEvidenceBase {
+message MsgSubmitEvidence {
+  option (gogoproto.goproto_getters)  = false;
   bytes submitter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  google.protobuf.Any evidence = 2;
 }
 
 // Equivocation implements the Evidence interface and defines evidence of double
@@ -31,16 +28,5 @@ message Equivocation {
   bytes                     consensus_address = 4 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress",
     (gogoproto.moretags) = "yaml:\"consensus_address\""
-  ];
-}
-
-// Params defines the total set of parameters for the evidence module
-message Params {
-  option (gogoproto.goproto_stringer) = false;
-
-  google.protobuf.Duration max_evidence_age = 1 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.moretags)    = "yaml:\"max_evidence_age\""
   ];
 }

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -17,12 +16,12 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
 
-	appCodec := codecstd.NewAppCodec(app.Codec())
+	appCodec, _ := simapp.MakeCodecs()
 	app.StakingKeeper = staking.NewKeeper(
 		appCodec,
 		app.GetKey(staking.StoreKey),
+		app.AccountKeeper,
 		app.BankKeeper,
-		app.SupplyKeeper,
 		app.GetSubspace(staking.ModuleName),
 	)
 

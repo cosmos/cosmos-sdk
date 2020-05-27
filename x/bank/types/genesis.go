@@ -16,6 +16,7 @@ var _ exported.GenesisBalance = (*Balance)(nil)
 type GenesisState struct {
 	SendEnabled bool      `json:"send_enabled" yaml:"send_enabled"`
 	Balances    []Balance `json:"balances" yaml:"balances"`
+	Supply      sdk.Coins `json:"supply" yaml:"supply"`
 }
 
 // Balance defines an account address and balance pair used in the bank module's
@@ -49,21 +50,24 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(sendEnabled bool, balances []Balance) GenesisState {
-	return GenesisState{SendEnabled: sendEnabled, Balances: balances}
+func NewGenesisState(sendEnabled bool, balances []Balance, supply sdk.Coins) GenesisState {
+	return GenesisState{
+		SendEnabled: sendEnabled,
+		Balances:    balances,
+		Supply:      supply,
+	}
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
-func DefaultGenesisState() GenesisState { return NewGenesisState(true, []Balance{}) }
-
-// ValidateGenesis performs basic validation of bank genesis data returning an
-// error for any failed validation criteria.
-func ValidateGenesis(data GenesisState) error { return nil }
+func DefaultGenesisState() GenesisState {
+	return NewGenesisState(true, []Balance{}, DefaultSupply().GetTotal())
+}
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application
 // genesis state.
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
+
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	}

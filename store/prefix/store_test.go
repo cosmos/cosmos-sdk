@@ -33,9 +33,11 @@ func genRandomKVPairs(t *testing.T) []kvpair {
 
 	for i := 0; i < 20; i++ {
 		kvps[i].key = make([]byte, 32)
-		rand.Read(kvps[i].key)
+		_, err := rand.Read(kvps[i].key)
+		require.NoError(t, err)
 		kvps[i].value = make([]byte, 32)
-		rand.Read(kvps[i].value)
+		_, err = rand.Read(kvps[i].value)
+		require.NoError(t, err)
 	}
 
 	return kvps

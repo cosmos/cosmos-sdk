@@ -15,31 +15,31 @@ const (
 )
 
 // Assert ParameterChangeProposal implements govtypes.Content at compile-time
-var _ govtypes.Content = ParameterChangeProposal{}
+var _ govtypes.Content = &ParameterChangeProposal{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeChange)
-	govtypes.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
+	govtypes.RegisterProposalTypeCodec(&ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
 }
 
-func NewParameterChangeProposal(title, description string, changes []ParamChange) ParameterChangeProposal {
-	return ParameterChangeProposal{title, description, changes}
+func NewParameterChangeProposal(title, description string, changes []ParamChange) *ParameterChangeProposal {
+	return &ParameterChangeProposal{title, description, changes}
 }
 
 // GetTitle returns the title of a parameter change proposal.
-func (pcp ParameterChangeProposal) GetTitle() string { return pcp.Title }
+func (pcp *ParameterChangeProposal) GetTitle() string { return pcp.Title }
 
 // GetDescription returns the description of a parameter change proposal.
-func (pcp ParameterChangeProposal) GetDescription() string { return pcp.Description }
+func (pcp *ParameterChangeProposal) GetDescription() string { return pcp.Description }
 
 // ProposalRoute returns the routing key of a parameter change proposal.
-func (pcp ParameterChangeProposal) ProposalRoute() string { return RouterKey }
+func (pcp *ParameterChangeProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a parameter change proposal.
-func (pcp ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
+func (pcp *ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
 
 // ValidateBasic validates the parameter change proposal
-func (pcp ParameterChangeProposal) ValidateBasic() error {
+func (pcp *ParameterChangeProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(pcp)
 	if err != nil {
 		return err

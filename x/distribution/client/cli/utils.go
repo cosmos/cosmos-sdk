@@ -13,13 +13,13 @@ type (
 		Title       string         `json:"title" yaml:"title"`
 		Description string         `json:"description" yaml:"description"`
 		Recipient   sdk.AccAddress `json:"recipient" yaml:"recipient"`
-		Amount      sdk.Coins      `json:"amount" yaml:"amount"`
-		Deposit     sdk.Coins      `json:"deposit" yaml:"deposit"`
+		Amount      string         `json:"amount" yaml:"amount"`
+		Deposit     string         `json:"deposit" yaml:"deposit"`
 	}
 )
 
 // ParseCommunityPoolSpendProposalJSON reads and parses a CommunityPoolSpendProposalJSON from a file.
-func ParseCommunityPoolSpendProposalJSON(cdc *codec.Codec, proposalFile string) (CommunityPoolSpendProposalJSON, error) {
+func ParseCommunityPoolSpendProposalJSON(cdc codec.JSONMarshaler, proposalFile string) (CommunityPoolSpendProposalJSON, error) {
 	proposal := CommunityPoolSpendProposalJSON{}
 
 	contents, err := ioutil.ReadFile(proposalFile)

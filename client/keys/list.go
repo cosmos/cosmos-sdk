@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +26,7 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, _ []string) error {
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -36,12 +36,12 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cmd.SetOut(cmd.OutOrStdout())
 	if !viper.GetBool(flagListNames) {
-		printInfos(infos)
+		printInfos(cmd.OutOrStdout(), infos)
 		return nil
 	}
 
-	cmd.SetOut(cmd.OutOrStdout())
 	for _, info := range infos {
 		cmd.Println(info.GetName())
 	}

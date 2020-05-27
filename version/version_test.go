@@ -33,10 +33,10 @@ func TestInfo_String(t *testing.T) {
 		BuildTags:  "netgo,ledger",
 		GoVersion:  "go version go1.14 linux/amd64",
 	}
-	want := fmt.Sprintf(`testapp: 1.0.0
+	want := `testapp: 1.0.0
 git commit: 1b78457135a4104bc3af97f20654d49e2ea87454
 build tags: netgo,ledger
-go version go1.14 linux/amd64`)
+go version go1.14 linux/amd64`
 	require.Equal(t, want, info.String())
 }
 

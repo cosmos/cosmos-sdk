@@ -34,18 +34,25 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
-# Pruning sets the pruning strategy: syncable, nothing, everything
+# Pruning sets the pruning strategy: syncable, nothing, everything, custom
 # syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
 # everything: all saved states will be deleted, storing only the current state
+# custom: allows fine-grained control through the pruning-keep-every and pruning-snapshot-every options.
 pruning = "{{ .BaseConfig.Pruning }}"
+
+# These are applied if and only if the pruning strategy is custom.
+pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
+pruning-snapshot-every = "{{ .BaseConfig.PruningSnapshotEvery }}"
 `
 
 var configTemplate *template.Template
 
 func init() {
 	var err error
+
 	tmpl := template.New("appConfigFileTemplate")
+
 	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
 		panic(err)
 	}
@@ -56,6 +63,7 @@ func init() {
 func ParseConfig() (*Config, error) {
 	conf := DefaultConfig()
 	err := viper.Unmarshal(conf)
+
 	return conf, err
 }
 

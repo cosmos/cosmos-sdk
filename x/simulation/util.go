@@ -9,12 +9,14 @@ import (
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
 	testingMode = false
+
 	if _t, ok := tb.(*testing.T); ok {
 		t = _t
 		testingMode = true
 	} else {
 		b = tb.(*testing.B)
 	}
+
 	return testingMode, t, b
 }
 
@@ -27,7 +29,7 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize int) (state, blockSize int) {
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
-	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
+	state = params.BlockSizeTransitionMatrix().NextState(r, lastBlockSizeState)
 
 	switch state {
 	case 0:

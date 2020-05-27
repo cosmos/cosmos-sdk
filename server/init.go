@@ -3,40 +3,48 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
-	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
 func GenerateCoinKey() (sdk.AccAddress, string, error) {
-
 	// generate a private key, with recovery phrase
-	info, secret, err := clkeys.NewInMemoryKeyBase().CreateMnemonic(
-		"name", keys.English, "pass", keys.Secp256k1)
+	info, secret, err := keyring.NewInMemory().NewMnemonic("name", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
-	addr := info.GetPubKey().Address()
-	return sdk.AccAddress(addr), secret, nil
+	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(keybase keys.Keybase, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
+func GenerateSaveCoinKey(keybase keyring.Keyring, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
+	exists := false
+	_, err := keybase.Key(keyName)
+	if err == nil {
+		exists = true
+	}
+
 	// ensure no overwrite
-	if !overwrite {
-		_, err := keybase.Get(keyName)
-		if err == nil {
-			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
-				"key already exists, overwrite is disabled")
-		}
+	if !overwrite && exists {
+		return sdk.AccAddress([]byte{}), "", fmt.Errorf(
+			"key already exists, overwrite is disabled")
 	}
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
+	if exists {
+		err = keybase.Delete(keyName)
+		if err != nil {
+			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
+				"failed to overwrite key")
+		}
+	}
+
+	info, secret, err := keybase.NewMnemonic(keyName, keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

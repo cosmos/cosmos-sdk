@@ -40,6 +40,6 @@ func (i ValidatorSigningInfo) String() string {
 
 // unmarshal a validator signing info from a store value
 func UnmarshalValSigningInfo(cdc codec.Marshaler, value []byte) (signingInfo ValidatorSigningInfo, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &signingInfo)
+	err = cdc.UnmarshalBinaryBare(value, &signingInfo)
 	return signingInfo, err
 }

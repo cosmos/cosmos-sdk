@@ -1,13 +1,12 @@
 <!--
 order: 7
-synopsis: "`Event`s are objects that contain information about the execution of the application.
-They are mainly used by service providers like block explorers and wallet to track the execution of
-various messages and index transactions."
 -->
 
 # Events
 
-## Pre-Requisite Readings {hide}
+`Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions. {synopsis}
+
+## Pre-requisite Readings
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -33,7 +32,7 @@ Events are returned to the underlying consensus engine in the response of the fo
 - [`DeliverTx`](./baseapp.md#delivertx)
 
 Events, the `type` and `attributes`, are defined on a **per-module basis** in the module's
-`/internal/types/events.go` file, and triggered from the module's [`handler`](../building-modules/handler.md)
+`/types/events.go` file, and triggered from the module's [`handler`](../building-modules/handler.md)
 via the [`EventManager`](#eventmanager). In addition, each module documents its events under
 `spec/xx_events.md`.
 
@@ -97,7 +96,7 @@ The main `eventCategory` you can subscribe to are:
 These events are triggered from the `state` package after a block is committed. You can get the
 full list of `event` categories [here](https://godoc.org/github.com/tendermint/tendermint/types#pkg-constants).
 
-The `type` and `attribute` value of the `query` allow you to filter the specific `event` you are looking for. For example, a `transfer` transaction triggers an `event` of type `Transfer` and has `Recipient` and `Sender` as `attributes` (as defined in the [`events` file of the `bank` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/internal/types/events.go)). Subscribing to this `event` would be done like so:
+The `type` and `attribute` value of the `query` allow you to filter the specific `event` you are looking for. For example, a `transfer` transaction triggers an `event` of type `Transfer` and has `Recipient` and `Sender` as `attributes` (as defined in the [`events` file of the `bank` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/types/events.go)). Subscribing to this `event` would be done like so:
 
 ```json
 {

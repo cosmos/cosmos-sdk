@@ -1,59 +1,45 @@
 package codec
 
-// AminoCodec defines a codec that utilizes Amino for both binary and JSON
+// AminoCodec defines a codec that utilizes Codec for both binary and JSON
 // encoding.
 type AminoCodec struct {
-	amino *Codec
+	*Codec
 }
 
-func NewAminoCodec(amino *Codec) Marshaler {
-	return &AminoCodec{amino}
+var _ Marshaler = &AminoCodec{}
+
+func NewAminoCodec(codec *Codec) *AminoCodec {
+	return &AminoCodec{Codec: codec}
 }
 
 func (ac *AminoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
-	return ac.amino.MarshalBinaryBare(o)
+	return ac.Codec.MarshalBinaryBare(o)
 }
 
 func (ac *AminoCodec) MustMarshalBinaryBare(o ProtoMarshaler) []byte {
-	return ac.amino.MustMarshalBinaryBare(o)
+	return ac.Codec.MustMarshalBinaryBare(o)
 }
 
 func (ac *AminoCodec) MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
-	return ac.amino.MarshalBinaryLengthPrefixed(o)
+	return ac.Codec.MarshalBinaryLengthPrefixed(o)
 }
 
 func (ac *AminoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {
-	return ac.amino.MustMarshalBinaryLengthPrefixed(o)
+	return ac.Codec.MustMarshalBinaryLengthPrefixed(o)
 }
 
 func (ac *AminoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
-	return ac.amino.UnmarshalBinaryBare(bz, ptr)
+	return ac.Codec.UnmarshalBinaryBare(bz, ptr)
 }
 
 func (ac *AminoCodec) MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) {
-	ac.amino.MustUnmarshalBinaryBare(bz, ptr)
+	ac.Codec.MustUnmarshalBinaryBare(bz, ptr)
 }
 
 func (ac *AminoCodec) UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
-	return ac.amino.UnmarshalBinaryLengthPrefixed(bz, ptr)
+	return ac.Codec.UnmarshalBinaryLengthPrefixed(bz, ptr)
 }
 
 func (ac *AminoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
-	ac.amino.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
-}
-
-func (ac *AminoCodec) MarshalJSON(o interface{}) ([]byte, error) { // nolint: stdmethods
-	return ac.amino.MarshalJSON(o)
-}
-
-func (ac *AminoCodec) MustMarshalJSON(o interface{}) []byte {
-	return ac.amino.MustMarshalJSON(o)
-}
-
-func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error { // nolint: stdmethods
-	return ac.amino.UnmarshalJSON(bz, ptr)
-}
-
-func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
-	ac.amino.MustUnmarshalJSON(bz, ptr)
+	ac.Codec.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
 }

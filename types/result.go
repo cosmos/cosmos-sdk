@@ -7,32 +7,31 @@ import (
 	"math"
 	"strings"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-// GasInfo defines tx execution gas context.
-type GasInfo struct {
-	// GasWanted is the maximum units of work we allow this tx to perform.
-	GasWanted uint64
-
-	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
-	GasUsed uint64
+func (gi GasInfo) String() string {
+	bz, _ := yaml.Marshal(gi)
+	return string(bz)
 }
 
-// Result is the union of ResponseFormat and ResponseCheckTx.
-type Result struct {
-	// Data is any data returned from message or handler execution. It MUST be length
-	// prefixed in order to separate data from multiple message executions.
-	Data []byte
+func (r Result) String() string {
+	bz, _ := yaml.Marshal(r)
+	return string(bz)
+}
 
-	// Log contains the log information from message or handler execution.
-	Log string
+func (r Result) GetEvents() Events {
+	events := make(Events, len(r.Events))
+	for i, e := range r.Events {
+		events[i] = Event(e)
+	}
 
-	// Events contains a slice of Event objects that were emitted during message or
-	// handler execution.
-	Events Events
+	return events
 }
 
 // ABCIMessageLogs represents a slice of ABCIMessageLog.
@@ -184,11 +183,12 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 	parsedLogs, _ := ParseABCILogs(res.Log)
 
 	return TxResponse{
-		Code:   res.Code,
-		Data:   res.Data.String(),
-		RawLog: res.Log,
-		Logs:   parsedLogs,
-		TxHash: res.Hash.String(),
+		Code:      res.Code,
+		Codespace: res.Codespace,
+		Data:      res.Data.String(),
+		RawLog:    res.Log,
+		Logs:      parsedLogs,
+		TxHash:    res.Hash.String(),
 	}
 }
 
@@ -264,4 +264,25 @@ func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) Se
 func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	err = json.Unmarshal([]byte(logs), &res)
 	return res, err
+}
+
+var _, _ types.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+//
+// types.UnpackInterfaces needs to be called for each nested Tx because
+// there are generally interfaces to unpack in Tx's
+func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, tx := range s.Txs {
+		err := types.UnpackInterfaces(tx, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (r TxResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	return types.UnpackInterfaces(r.Tx, unpacker)
 }

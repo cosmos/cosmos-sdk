@@ -1,7 +1,5 @@
 package mint
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -33,7 +31,6 @@ var (
 	DefaultParams        = types.DefaultParams
 
 	// variable aliases
-	ModuleCdc              = types.ModuleCdc
 	MinterKey              = types.MinterKey
 	KeyMintDenom           = types.KeyMintDenom
 	KeyInflationRateChange = types.KeyInflationRateChange

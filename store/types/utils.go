@@ -20,8 +20,11 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 // that differ from one another. It also skips value comparison for a set of provided prefixes.
 func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []tmkv.Pair) {
 	iterA := a.Iterator(nil, nil)
+
 	defer iterA.Close()
+
 	iterB := b.Iterator(nil, nil)
+
 	defer iterB.Close()
 
 	for {
@@ -32,26 +35,27 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []t
 		var kvA, kvB tmkv.Pair
 		if iterA.Valid() {
 			kvA = tmkv.Pair{Key: iterA.Key(), Value: iterA.Value()}
+
 			iterA.Next()
 		}
+
 		if iterB.Valid() {
 			kvB = tmkv.Pair{Key: iterB.Key(), Value: iterB.Value()}
+
 			iterB.Next()
-		}
-		if !bytes.Equal(kvA.Key, kvB.Key) {
-			kvAs = append(kvAs, kvA)
-			kvBs = append(kvBs, kvB)
-			continue // no need to compare the value
 		}
 
 		compareValue := true
+
 		for _, prefix := range prefixesToSkip {
 			// Skip value comparison if we matched a prefix
-			if bytes.Equal(kvA.Key[:len(prefix)], prefix) {
+			if bytes.HasPrefix(kvA.Key, prefix) || bytes.HasPrefix(kvB.Key, prefix) {
 				compareValue = false
+				break
 			}
 		}
-		if compareValue && !bytes.Equal(kvA.Value, kvB.Value) {
+
+		if compareValue && (!bytes.Equal(kvA.Key, kvB.Key) || !bytes.Equal(kvA.Value, kvB.Value)) {
 			kvAs = append(kvAs, kvA)
 			kvBs = append(kvBs, kvB)
 		}
@@ -74,13 +78,15 @@ func PrefixEndBytes(prefix []byte) []byte {
 			end[len(end)-1]++
 			break
 		}
+
 		end = end[:len(end)-1]
+
 		if len(end) == 0 {
 			end = nil
 			break
 		}
-
 	}
+
 	return end
 }
 

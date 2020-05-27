@@ -15,11 +15,16 @@ func TestIncrementProposalNumber(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	tp := TestProposal
-	app.GovKeeper.SubmitProposal(ctx, tp)
-	app.GovKeeper.SubmitProposal(ctx, tp)
-	app.GovKeeper.SubmitProposal(ctx, tp)
-	app.GovKeeper.SubmitProposal(ctx, tp)
-	app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
 	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 

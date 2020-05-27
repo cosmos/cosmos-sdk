@@ -4,16 +4,15 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // the total amount of defined parameters changes, all of which have random valid values.
 func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) simulation.ContentSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) govtypes.Content {
+	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content {
 
 		lenParamChange := len(paramChangePool)
 		if lenParamChange == 0 {
@@ -40,7 +39,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 			// add a new distinct parameter to the set of changes and register the key
 			// to avoid further duplicates
 			paramChangesKeys[spc.ComposedKey()] = struct{}{}
-			paramChanges[i] = proposal.NewParamChange(spc.Subspace, spc.Key, spc.SimValue(r))
+			paramChanges[i] = proposal.NewParamChange(spc.Subspace(), spc.Key(), spc.SimValue()(r))
 		}
 
 		return proposal.NewParameterChangeProposal(

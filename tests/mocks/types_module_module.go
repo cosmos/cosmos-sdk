@@ -106,7 +106,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterRESTRoutes(arg0, arg1 interfac
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModuleBasic) GetTxCmd(arg0 *codec.Codec) *cobra.Command {
+func (m *MockAppModuleBasic) GetTxCmd(arg0 context.CLIContext) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)
@@ -223,7 +223,7 @@ func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interf
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModuleGenesis) GetTxCmd(arg0 *codec.Codec) *cobra.Command {
+func (m *MockAppModuleGenesis) GetTxCmd(arg0 context.CLIContext) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)
@@ -368,7 +368,7 @@ func (mr *MockAppModuleMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) 
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModule) GetTxCmd(arg0 *codec.Codec) *cobra.Command {
+func (m *MockAppModule) GetTxCmd(arg0 context.CLIContext) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)

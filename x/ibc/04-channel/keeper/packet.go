@@ -304,7 +304,10 @@ func (k Keeper) AcknowledgePacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
+		return nil, sdkerrors.Wrapf(
+			types.ErrChannelNotFound,
+			packet.GetSourcePort(), packet.GetSourceChannel(),
+		)
 	}
 
 	if channel.State != types.OPEN {
@@ -314,7 +317,7 @@ func (k Keeper) AcknowledgePacket(
 		)
 	}
 
-	// NOTE: RecvPacket is called by the AnteHandler which acts upon the packet.Route(),
+	// NOTE: AcknowledgePacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
 	// packet must have been sent to the channel's counterparty

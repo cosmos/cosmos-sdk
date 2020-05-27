@@ -347,9 +347,17 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 
 			ctx := suite.chainB.GetContext()
 			packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
+			packetCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
+				suite.Require().Nil(packetCommitment)
+
+				// check replay attacks
+				packetOut, err = suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
+				suite.Require().Error(err)
+				suite.Require().Nil(packetOut)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)

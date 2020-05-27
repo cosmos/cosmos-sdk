@@ -6,12 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // TimeoutPacket is called by a module which originally attempted to send a
@@ -109,6 +107,13 @@ func (k Keeper) TimeoutPacket(
 		return nil, err
 	}
 
+	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	if channel.Ordering == types.ORDERED {
+		channel.State = types.CLOSED
+		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
+	}
+
 	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out: %v", packet))
 
 	// emit an event marking that we have processed the timeout
@@ -125,29 +130,7 @@ func (k Keeper) TimeoutPacket(
 		),
 	})
 
-	// NOTE: the remaining code is located on the TimeoutExecuted function
 	return packet, nil
-}
-
-// TimeoutExecuted deletes the commitment send from this chain after it verifies timeout
-func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability, packet exported.PacketI) error {
-	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if !found {
-		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
-	}
-
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
-	}
-
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-
-	if channel.Ordering == types.ORDERED {
-		channel.State = types.CLOSED
-		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
-	}
-
-	return nil
 }
 
 // TimeoutOnClose is called by a module in order to prove that the channel to

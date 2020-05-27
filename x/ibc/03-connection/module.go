@@ -2,11 +2,11 @@ package connection
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/rest"

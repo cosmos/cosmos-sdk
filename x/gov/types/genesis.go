@@ -79,11 +79,5 @@ var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	for _, p := range data.Proposals {
-		err := p.UnpackInterfaces(unpacker)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return data.Proposals.UnpackInterfaces(unpacker)
 }

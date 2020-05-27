@@ -2,8 +2,10 @@ package types
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strings"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -60,7 +62,10 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenTry{}
+var (
+	_ sdk.Msg                          = MsgChannelOpenTry{}
+	_ cdctypes.UnpackInterfacesMessage = MsgChannelOpenTry{}
+)
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 func NewMsgChannelOpenTry(
@@ -135,7 +140,21 @@ func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenAck{}
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgChannelOpenTry) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proofInit commitmentexported.Proof
+	err := unpacker.UnpackAny(&msg.ProofInit, &proofInit)
+	if err != nil {
+		return fmt.Errorf("proof init unpack failed: %w", err)
+	}
+
+	return nil
+}
+
+var (
+	_ sdk.Msg                          = MsgChannelOpenAck{}
+	_ cdctypes.UnpackInterfacesMessage = MsgChannelOpenAck{}
+)
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
@@ -205,7 +224,21 @@ func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenConfirm{}
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgChannelOpenAck) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proofTry commitmentexported.Proof
+	err := unpacker.UnpackAny(&msg.ProofTry, &proofTry)
+	if err != nil {
+		return fmt.Errorf("proof try unpack failed: %w", err)
+	}
+
+	return nil
+}
+
+var (
+	_ sdk.Msg                          = MsgChannelOpenConfirm{}
+	_ cdctypes.UnpackInterfacesMessage = MsgChannelOpenConfirm{}
+)
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
@@ -270,6 +303,17 @@ func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgChannelOpenConfirm) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proofAck commitmentexported.Proof
+	err := unpacker.UnpackAny(&msg.ProofAck, &proofAck)
+	if err != nil {
+		return fmt.Errorf("proof ack unpack failed: %w", err)
+	}
+
+	return nil
+}
+
 var _ sdk.Msg = MsgChannelCloseInit{}
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
@@ -315,7 +359,10 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelCloseConfirm{}
+var (
+	_ sdk.Msg                          = MsgChannelCloseConfirm{}
+	_ cdctypes.UnpackInterfacesMessage = MsgChannelCloseConfirm{}
+)
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
@@ -381,7 +428,21 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgPacket{}
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgChannelCloseConfirm) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proofInit commitmentexported.Proof
+	err := unpacker.UnpackAny(&msg.ProofInit, &proofInit)
+	if err != nil {
+		return fmt.Errorf("proof init unpack failed: %w", err)
+	}
+
+	return nil
+}
+
+var (
+	_ sdk.Msg                          = MsgPacket{}
+	_ cdctypes.UnpackInterfacesMessage = MsgPacket{}
+)
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(
@@ -450,7 +511,16 @@ func (msg MsgPacket) Type() string {
 	return "ics04/opaque"
 }
 
-var _ sdk.Msg = MsgTimeout{}
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgPacket) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proof commitmentexported.Proof
+	return unpacker.UnpackAny(&msg.Proof, &proof)
+}
+
+var (
+	_ sdk.Msg                          = MsgTimeout{}
+	_ cdctypes.UnpackInterfacesMessage = MsgTimeout{}
+)
 
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
@@ -512,7 +582,16 @@ func (msg MsgTimeout) Type() string {
 	return "ics04/timeout"
 }
 
-var _ sdk.Msg = MsgAcknowledgement{}
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgTimeout) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proof commitmentexported.Proof
+	return unpacker.UnpackAny(&msg.Proof, &proof)
+}
+
+var (
+	_ sdk.Msg                          = MsgAcknowledgement{}
+	_ cdctypes.UnpackInterfacesMessage = MsgAcknowledgement{}
+)
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
@@ -575,4 +654,10 @@ func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 // Type implements sdk.Msg
 func (msg MsgAcknowledgement) Type() string {
 	return "ics04/opaque"
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgAcknowledgement) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proof commitmentexported.Proof
+	return unpacker.UnpackAny(&msg.Proof, &proof)
 }

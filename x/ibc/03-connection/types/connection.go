@@ -3,6 +3,7 @@ package types
 import (
 	"strings"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -116,4 +117,10 @@ func (c Counterparty) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty prefix cannot be empty")
 	}
 	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (c Counterparty) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var prefix commitmentexported.Prefix
+	return unpacker.UnpackAny(&c.Prefix, &prefix)
 }

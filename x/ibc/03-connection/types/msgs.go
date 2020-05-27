@@ -1,8 +1,10 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -65,7 +67,10 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenTry{}
+var (
+	_ sdk.Msg                          = MsgConnectionOpenTry{}
+	_ cdctypes.UnpackInterfacesMessage = MsgConnectionOpenTry{}
+)
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
@@ -167,7 +172,28 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenAck{}
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var (
+		proofInit      commitmentexported.Proof
+		proofConsensus commitmentexported.Proof
+	)
+	err := unpacker.UnpackAny(&msg.ProofInit, &proofInit)
+	if err != nil {
+		return fmt.Errorf("proof init unpack failed: %w", err)
+	}
+
+	err = unpacker.UnpackAny(&msg.ProofConsensus, &proofConsensus)
+	if err != nil {
+		return fmt.Errorf("proof consensus unpack failed: %w", err)
+	}
+	return nil
+}
+
+var (
+	_ sdk.Msg                          = MsgConnectionOpenAck{}
+	_ cdctypes.UnpackInterfacesMessage = MsgConnectionOpenAck{}
+)
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
@@ -253,7 +279,28 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenConfirm{}
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenAck) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var (
+		proofTry       commitmentexported.Proof
+		proofConsensus commitmentexported.Proof
+	)
+	err := unpacker.UnpackAny(&msg.ProofTry, &proofTry)
+	if err != nil {
+		return fmt.Errorf("proof try unpack failed: %w", err)
+	}
+
+	err = unpacker.UnpackAny(&msg.ProofConsensus, &proofConsensus)
+	if err != nil {
+		return fmt.Errorf("proof consensus unpack failed: %w", err)
+	}
+	return nil
+}
+
+var (
+	_ sdk.Msg                          = MsgConnectionOpenConfirm{}
+	_ cdctypes.UnpackInterfacesMessage = MsgConnectionOpenConfirm{}
+)
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
@@ -315,4 +362,15 @@ func (msg MsgConnectionOpenConfirm) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenConfirm) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var proofAck commitmentexported.Proof
+	err := unpacker.UnpackAny(&msg.ProofAck, &proofAck)
+	if err != nil {
+		return fmt.Errorf("proof ack unpack failed: %w", err)
+	}
+
+	return nil
 }

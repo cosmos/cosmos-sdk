@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	params2 "github.com/cosmos/cosmos-sdk/simapp/params"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -95,7 +97,7 @@ type SimApp struct {
 	*baseapp.BaseApp
 	amino          *codec.Codec
 	marshaler      codec.Marshaler
-	encodingConfig EncodingConfig
+	encodingConfig params2.EncodingConfig
 
 	invCheckPeriod uint
 
@@ -424,7 +426,7 @@ func (app *SimApp) AppCodec() codec.Marshaler {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SimApp) GetEncodingConfig() EncodingConfig {
+func (app *SimApp) GetEncodingConfig() params2.EncodingConfig {
 	return app.encodingConfig
 }
 

@@ -86,7 +86,8 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		tx := helpers.GenTx(nil, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
+		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		tx := helpers.GenTx(txGen, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
 
 		_, res, err := app.Deliver(tx)
 

@@ -16,5 +16,5 @@ type SigningData struct {
 
 type SignModeHandler interface {
 	Mode() types.SignMode
-	GetSignBytes(data SigningData, tx DecodedTx) ([]byte, error)
+	GetSignBytes(data SigningData, tx types.ProtoTx) ([]byte, error)
 }

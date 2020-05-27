@@ -104,7 +104,8 @@ func sendMsgSend(
 		}
 	}
 
-	tx := helpers.GenTx(nil, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, privkeys...)
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	tx := helpers.GenTx(txGen, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, privkeys...)
 
 	_, _, err = app.Deliver(tx)
 	if err != nil {
@@ -235,7 +236,8 @@ func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak t
 		}
 	}
 
-	tx := helpers.GenTx(nil, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, accountNumbers, sequenceNumbers, privkeys...)
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	tx := helpers.GenTx(txGen, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, accountNumbers, sequenceNumbers, privkeys...)
 
 	_, _, err = app.Deliver(tx)
 	if err != nil {

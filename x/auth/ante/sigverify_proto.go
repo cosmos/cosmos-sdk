@@ -33,7 +33,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
 	}
-	sigTx, ok := tx.(signing.DecodedTx)
+	sigTx, ok := tx.(types.ProtoTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -60,7 +60,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 
 		signerAccs[i] = signerAcc
 
-		signerInfo := sigTx.AuthInfo.SignerInfos[i]
+		signerInfo := sigTx.GetAuthInfo().SignerInfos[i]
 
 		// retrieve pubkey
 		pubKey := signerAccs[i].GetPubKey()
@@ -114,7 +114,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 	return next(ctx, tx, simulate)
 }
 
-func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, single *types.ModeInfo_Single, signerAcc auth.AccountI, sigTx signing.DecodedTx) ([]byte, error) {
+func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, single *types.ModeInfo_Single, signerAcc auth.AccountI, sigTx types.ProtoTx) ([]byte, error) {
 	verifier, found := svd.signModeHandlers[single.Mode]
 	if !found {
 		return nil, fmt.Errorf("can't verify sign mode %s", single.Mode.String())

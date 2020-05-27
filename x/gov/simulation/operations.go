@@ -142,7 +142,8 @@ func SimulateSubmitProposal(
 			}
 		}
 
-		tx := helpers.GenTx(nil, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
+		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		tx := helpers.GenTx(txGen, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -216,7 +217,8 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			}
 		}
 
-		tx := helpers.GenTx(nil, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
+		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		tx := helpers.GenTx(txGen, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -266,7 +268,8 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 		}
 
-		tx := helpers.GenTx(nil, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
+		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		tx := helpers.GenTx(txGen, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey)
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {

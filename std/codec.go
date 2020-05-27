@@ -18,11 +18,15 @@ func MakeCodec(bm module.BasicManager) *codec.Codec {
 	cdc := codec.New()
 
 	bm.RegisterCodec(cdc)
-	vesting.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	RegisterCodec(cdc)
 
 	return cdc
+}
+
+func RegisterCodec(cdc *codec.Codec) {
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	vesting.RegisterCodec(cdc)
 }
 
 // RegisterInterfaces registers Interfaces from sdk/types and vesting

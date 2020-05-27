@@ -1,9 +1,128 @@
 package types
 
 import (
+	"github.com/tendermint/tendermint/crypto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	antetypes "github.com/cosmos/cosmos-sdk/x/auth/ante/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+type ProtoTx interface {
+	sdk.Tx
+	antetypes.FeeTx
+	antetypes.TxWithMemo
+	antetypes.SigTx
+
+	GetBody() *TxBody
+	GetAuthInfo() *AuthInfo
+	GetSignatures() [][]byte
+
+	GetBodyBytes() []byte
+	GetAuthInfoBytes() []byte
+}
+
+var _ ProtoTx = &Tx{}
+
+func (tx *Tx) GetMsgs() []sdk.Msg {
+	anys := tx.Body.Messages
+	res := make([]sdk.Msg, len(anys))
+	for i, any := range anys {
+		msg := any.GetCachedValue().(sdk.Msg)
+		res[i] = msg
+	}
+	return res
+}
+
+func (tx *Tx) ValidateBasic() error {
+	sigs := tx.GetSignatures()
+
+	if tx.GetGas() > auth.MaxGasWanted {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"invalid gas supplied; %d > %d", tx.GetGas(), auth.MaxGasWanted,
+		)
+	}
+	if tx.GetFee().IsAnyNegative() {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInsufficientFee,
+			"invalid fee provided: %s", tx.GetFee(),
+		)
+	}
+	if len(sigs) == 0 {
+		return sdkerrors.ErrNoSignatures
+	}
+	if len(sigs) != len(tx.GetSigners()) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrUnauthorized,
+			"wrong number of signers; expected %d, got %d", tx.GetSigners(), len(sigs),
+		)
+	}
+
+	return nil
+}
+
+func (m *Tx) GetGas() uint64 {
+	return m.AuthInfo.Fee.GasLimit
+}
+
+func (m *Tx) GetFee() sdk.Coins {
+	return m.AuthInfo.Fee.Amount
+}
+
+func (m *Tx) FeePayer() sdk.AccAddress {
+	signers := m.GetSigners()
+	if signers != nil {
+		return signers[0]
+	}
+	return sdk.AccAddress{}
+}
+
+func (m *Tx) GetMemo() string {
+	return m.Body.Memo
+}
+
+func (m *Tx) GetSigners() []sdk.AccAddress {
+	var signers []sdk.AccAddress
+	seen := map[string]bool{}
+
+	for _, msg := range m.GetMsgs() {
+		for _, addr := range msg.GetSigners() {
+			if !seen[addr.String()] {
+				signers = append(signers, addr)
+				seen[addr.String()] = true
+			}
+		}
+	}
+	return signers
+}
+
+func (m *Tx) GetPubKeys() []crypto.PubKey {
+	signerInfos := m.AuthInfo.SignerInfos
+	res := make([]crypto.PubKey, len(signerInfos))
+	for i, si := range signerInfos {
+		res[i] = si.PublicKey.GetCachedPubKey()
+	}
+	return res
+}
+
+func (m *Tx) GetBodyBytes() []byte {
+	bz, err := m.Body.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (m *Tx) GetAuthInfoBytes() []byte {
+	bz, err := m.AuthInfo.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
 
 var _ codectypes.UnpackInterfacesMessage = &Tx{}
 var _ codectypes.UnpackInterfacesMessage = &TxBody{}
@@ -25,45 +144,5 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 			return err
 		}
 	}
-	return nil
-}
-
-var _ sdk.Tx = &Tx{}
-
-func (tx *Tx) GetMsgs() []sdk.Msg {
-	anys := tx.Body.Messages
-	res := make([]sdk.Msg, len(anys))
-	for i, any := range anys {
-		msg := any.GetCachedValue().(sdk.Msg)
-		res[i] = msg
-	}
-	return res
-}
-
-func (tx *Tx) ValidateBasic() error {
-	// TODO
-	//stdSigs := tx.GetSignatures()
-	//
-	//if tx.Fee.Gas > MaxGasWanted {
-	//	return sdkerrors.Wrapf(
-	//		sdkerrors.ErrInvalidRequest,
-	//		"invalid gas supplied; %d > %d", tx.Fee.Gas, MaxGasWanted,
-	//	)
-	//}
-	//if tx.Fee.Amount.IsAnyNegative() {
-	//	return sdkerrors.Wrapf(
-	//		sdkerrors.ErrInsufficientFee,
-	//		"invalid fee provided: %s", tx.Fee.Amount,
-	//	)
-	//}
-	//if len(stdSigs) == 0 {
-	//	return sdkerrors.ErrNoSignatures
-	//}
-	//if len(stdSigs) != len(tx.GetSigners()) {
-	//	return sdkerrors.Wrapf(
-	//		sdkerrors.ErrUnauthorized,
-	//		"wrong number of signers; expected %d, got %d", tx.GetSigners(), len(stdSigs),
-	//	)
-	//}
 	return nil
 }

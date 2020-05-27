@@ -17,7 +17,7 @@ type TxGenerator struct {
 }
 
 func NewTxGenerator(marshaler codec.Marshaler, pubKeyCodec cryptotypes.PublicKeyCodec) *TxGenerator {
-	return &TxGenerator{Marshaler: marshaler, PubKeyCodec: pubKeyCodec}
+	return &TxGenerator{Marshaler: marshaler, PubKeyCodec: cryptotypes.CacheWrapCodec(pubKeyCodec)}
 }
 
 var _ context.TxGenerator = TxGenerator{}

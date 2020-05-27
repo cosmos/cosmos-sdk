@@ -21,6 +21,8 @@ message PublicKey {
     // not explicitly defined in the oneof
     google.protobuf.Any any_pubkey = 15;  // 15 is largest field that occupies one byte
   }
+
+  option (gogoproto.typedecl) = false;
 }
 
 // PubKeyMultisigThreshold specifies a public key type which nests multiple public

@@ -111,6 +111,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   - TxBuilder.BuildAndSign
   - TxBuilder.Sign
   - TxBuilder.SignStdTx
+* (client) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CliContext` has been renamed to `Context`. `Context` and all related methods have been moved from package context to client.
 
 ### Features
 

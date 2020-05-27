@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
@@ -74,6 +76,10 @@ func (AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
 // GetQueryCmd returns no root query command for the slashing module.
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
+}
+
+func (b AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 //____________________________________________________________________________

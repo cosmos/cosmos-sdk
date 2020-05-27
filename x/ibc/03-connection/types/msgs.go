@@ -128,13 +128,13 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
 	}
-	proofInit, ok := msg.ProofInit.GetCachedValue().(commitmentexported.Proof)
-	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof init is not cached")
+	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof init: %s", err.Error())
 	}
-	proofConsensus, ok := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
-	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof consensus is not cached")
+	proofConsensus, err := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof consensus: %s", err.Error())
 	}
 	if proofInit.IsEmpty() || proofConsensus.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
@@ -214,13 +214,13 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.Version) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 	}
-	proofTry, ok := msg.ProofTry.GetCachedValue().(commitmentexported.Proof)
-	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof try is not cached")
+	proofTry, err := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof try: %s", err.Error())
 	}
-	proofConsensus, ok := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
-	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof consensus is not cached")
+	proofConsensus, err := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof consensus: %s", err.Error())
 	}
 	if proofTry.IsEmpty() || proofConsensus.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
@@ -288,9 +288,9 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	proofAck, ok := msg.ProofAck.GetCachedValue().(commitmentexported.Proof)
-	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrProtobufAny, "merkle proof ack is not cached")
+	proofAck, err := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof ack: %s", err.Error())
 	}
 	if proofAck.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")

@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -65,19 +66,25 @@ var _ sdk.Msg = MsgChannelOpenTry{}
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
-	proofInit commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress,
-) MsgChannelOpenTry {
+	proofInit commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress,
+) (MsgChannelOpenTry, error) {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
+
+	proofInitAny, err := proofInit.PackAny()
+	if err != nil {
+		return MsgChannelOpenTry{}, sdkerrors.Wrap(err, "invalid proof init")
+	}
+
 	return MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,
 		Channel:             channel,
 		CounterpartyVersion: counterpartyVersion,
-		ProofInit:           proofInit,
+		ProofInit:           *proofInitAny,
 		ProofHeight:         proofHeight,
 		Signer:              signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -101,11 +108,15 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	if msg.ProofInit.IsEmpty() {
+	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof init: %s", err.Error())
+	}
+	if proofInit.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.ProofInit.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof init cannot be nil")
+	if err := proofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -130,15 +141,20 @@ var _ sdk.Msg = MsgChannelOpenAck{}
 func NewMsgChannelOpenAck(
 	portID, channelID string, cpv string, proofTry commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelOpenAck {
+) (MsgChannelOpenAck, error) {
+	proofTryAny, err := proofTry.PackAny()
+	if err != nil {
+		return MsgChannelOpenAck{}, sdkerrors.Wrap(err, "invalid proof try")
+	}
+
 	return MsgChannelOpenAck{
 		PortID:              portID,
 		ChannelID:           channelID,
 		CounterpartyVersion: cpv,
-		ProofTry:            proofTry,
+		ProofTry:            *proofTryAny,
 		ProofHeight:         proofHeight,
 		Signer:              signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -162,11 +178,15 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	if msg.ProofTry.IsEmpty() {
+	proofTry, err := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof try: %s", err.Error())
+	}
+	if proofTry.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.ProofTry.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof try cannot be nil")
+	if err := proofTry.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof try failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -191,14 +211,18 @@ var _ sdk.Msg = MsgChannelOpenConfirm{}
 func NewMsgChannelOpenConfirm(
 	portID, channelID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelOpenConfirm {
+) (MsgChannelOpenConfirm, error) {
+	proofAckAny, err := proofAck.PackAny()
+	if err != nil {
+		return MsgChannelOpenConfirm{}, sdkerrors.Wrap(err, "invalid proof ack")
+	}
 	return MsgChannelOpenConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
-		ProofAck:    proofAck,
+		ProofAck:    *proofAckAny,
 		ProofHeight: proofHeight,
 		Signer:      signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -219,11 +243,15 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if msg.ProofAck.IsEmpty() {
+	proofAck, err := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof ack: %s", err.Error())
+	}
+	if proofAck.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.ProofAck.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	if err := proofAck.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -293,14 +321,19 @@ var _ sdk.Msg = MsgChannelCloseConfirm{}
 func NewMsgChannelCloseConfirm(
 	portID, channelID string, proofInit commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelCloseConfirm {
+) (MsgChannelCloseConfirm, error) {
+	proofInitAny, err := proofInit.PackAny()
+	if err != nil {
+		return MsgChannelCloseConfirm{}, sdkerrors.Wrap(err, "invalid proof init")
+	}
+
 	return MsgChannelCloseConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
-		ProofInit:   proofInit,
+		ProofInit:   *proofInitAny,
 		ProofHeight: proofHeight,
 		Signer:      signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -321,11 +354,15 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if msg.ProofInit.IsEmpty() {
+	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof init: %s", err.Error())
+	}
+	if proofInit.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.ProofInit.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof init cannot be nil")
+	if err := proofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -350,13 +387,18 @@ var _ sdk.Msg = MsgPacket{}
 func NewMsgPacket(
 	packet Packet, proof commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgPacket {
+) (MsgPacket, error) {
+	proofAny, err := proof.PackAny()
+	if err != nil {
+		return MsgPacket{}, sdkerrors.Wrap(err, "invalid packet proof")
+	}
+
 	return MsgPacket{
 		Packet:      packet,
-		Proof:       proof,
+		Proof:       *proofAny,
 		ProofHeight: proofHeight,
 		Signer:      signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -366,11 +408,15 @@ func (msg MsgPacket) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() error {
-	if msg.Proof.IsEmpty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+	proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid packet proof: %s", err.Error())
 	}
-	if err := msg.Proof.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	if proof.IsEmpty() {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty packet proof")
+	}
+	if err := proof.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "packet proof failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -410,14 +456,18 @@ var _ sdk.Msg = MsgTimeout{}
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof commitmenttypes.MerkleProof,
 	proofHeight uint64, signer sdk.AccAddress,
-) MsgTimeout {
+) (MsgTimeout, error) {
+	proofAny, err := proof.PackAny()
+	if err != nil {
+		return MsgTimeout{}, sdkerrors.Wrap(err, "invalid timeout proof")
+	}
 	return MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
-		Proof:            proof,
+		Proof:            *proofAny,
 		ProofHeight:      proofHeight,
 		Signer:           signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -427,11 +477,15 @@ func (msg MsgTimeout) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
-	if msg.Proof.IsEmpty() {
+	proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid timeout proof: %s", err.Error())
+	}
+	if proof.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.Proof.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	if err := proof.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "timeout proof failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -462,14 +516,20 @@ var _ sdk.Msg = MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
+	packet Packet, ack []byte, proof commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress,
+) (MsgAcknowledgement, error) {
+	proofAny, err := proof.PackAny()
+	if err != nil {
+		return MsgAcknowledgement{}, sdkerrors.Wrap(err, "invalid packet proof")
+	}
+
 	return MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
-		Proof:           proof,
+		Proof:           *proofAny,
 		ProofHeight:     proofHeight,
 		Signer:          signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -479,11 +539,15 @@ func (msg MsgAcknowledgement) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
-	if msg.Proof.IsEmpty() {
+	proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid acknowledgement proof: %s", err.Error())
+	}
+	if proof.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if err := msg.Proof.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	if err := proof.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "acknowledgement proof failed basic validation")
 	}
 	if len(msg.Acknowledgement) > 100 {
 		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")

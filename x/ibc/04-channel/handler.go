@@ -2,9 +2,11 @@ package channel
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // HandleMsgChannelOpenInit defines the sdk.Handler for MsgChannelOpenInit
@@ -39,8 +41,13 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
 func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg types.MsgChannelOpenTry) (*sdk.Result, *capability.Capability, error) {
+	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "invalid proof init")
+	}
+
 	capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
-		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
+		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, proofInit, msg.ProofHeight,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -68,8 +75,13 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 
 // HandleMsgChannelOpenAck defines the sdk.Handler for MsgChannelOpenAck
 func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capability.Capability, msg types.MsgChannelOpenAck) (*sdk.Result, error) {
-	err := k.ChanOpenAck(
-		ctx, msg.PortID, msg.ChannelID, channelCap, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
+	proofTry, err := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof try")
+	}
+
+	err = k.ChanOpenAck(
+		ctx, msg.PortID, msg.ChannelID, channelCap, msg.CounterpartyVersion, proofTry, msg.ProofHeight,
 	)
 	if err != nil {
 		return nil, err
@@ -94,7 +106,12 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 
 // HandleMsgChannelOpenConfirm defines the sdk.Handler for MsgChannelOpenConfirm
 func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capability.Capability, msg types.MsgChannelOpenConfirm) (*sdk.Result, error) {
-	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofAck, msg.ProofHeight)
+	proofAck, err := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof ack")
+	}
+
+	err = k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, proofAck, msg.ProofHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +159,12 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 
 // HandleMsgChannelCloseConfirm defines the sdk.Handler for MsgChannelCloseConfirm
 func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capability.Capability, msg types.MsgChannelCloseConfirm) (*sdk.Result, error) {
-	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofInit, msg.ProofHeight)
+	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof init")
+	}
+
+	err = k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, proofInit, msg.ProofHeight)
 	if err != nil {
 		return nil, err
 	}

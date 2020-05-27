@@ -93,18 +93,20 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	cctx, _ := ctx.CacheContext()
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, packet.SourcePort, packet.SourceChannel, 1)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet))
-	msg := channel.NewMsgPacket(packet, commitmenttypes.MerkleProof{}, 0, addr1)
-	_, err := handler(cctx, suite.newTx(msg), false)
-	suite.Error(err, "%+v", err) // channel does not exist
+	msg, err := channel.NewMsgPacket(packet, commitmenttypes.MerkleProof{}, 0, addr1)
+	suite.Require().NoError(err)
+	_, err = handler(cctx, suite.newTx(msg), false)
+	suite.Require().Error(err)
 
 	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 	ctx = suite.chainA.GetContext()
 	packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
-	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+	msg, err = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+	suite.Require().NoError(err)
 	_, err = handler(cctx, suite.newTx(msg), false)
-	suite.Error(err, "%+v", err) // invalid proof
+	suite.Require().Error(err, "%+v", err) // invalid proof
 
 	suite.chainA.updateClient(suite.chainB)
 	// // commit chainA to flush to IAVL so we can get proof
@@ -113,7 +115,8 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	// ctx = suite.chainA.GetContext()
 
 	proof, proofHeight = queryProof(suite.chainB, packetCommitmentPath)
-	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+	msg, err = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+	suite.Require().NoError(err)
 
 	for i := 0; i < 10; i++ {
 		cctx, write := suite.chainA.GetContext().CacheContext()
@@ -128,10 +131,10 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, chanCap, packet, packet.Data)
 		}
 		if i == 1 {
-			suite.NoError(err, "%d", i) // successfully executed
+			suite.Require().NoError(err, "%d", i) // successfully executed
 			write()
 		} else {
-			suite.Error(err, "%d", i) // wrong incoming sequence
+			suite.Require().Error(err, "%d", i) // wrong incoming sequence
 		}
 	}
 }
@@ -161,13 +164,14 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 		packet = channel.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100, 0)
 		packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
 		proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
-		msg := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
-		_, err := handler(cctx, suite.newTx(msg), false)
+		msg, err := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+		suite.Require().NoError(err)
+		_, err = handler(cctx, suite.newTx(msg), false)
 		if i < 5 {
-			suite.NoError(err, "%d", i) // successfully executed
+			suite.Require().NoError(err, "%d", i) // successfully executed
 			write()
 		} else {
-			suite.Error(err, "%d", i) // wrong incoming sequence
+			suite.Require().Error(err, "%d", i) // wrong incoming sequence
 		}
 	}
 }

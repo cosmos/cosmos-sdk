@@ -102,7 +102,7 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgChannelOpenTry(
+		msg, err := types.NewMsgChannelOpenTry(
 			req.PortID,
 			req.ChannelID,
 			req.Version,
@@ -115,6 +115,11 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			req.ProofHeight,
 			fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -161,7 +166,7 @@ func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgChannelOpenAck(
+		msg, err := types.NewMsgChannelOpenAck(
 			portID,
 			channelID,
 			req.CounterpartyVersion,
@@ -169,6 +174,11 @@ func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			req.ProofHeight,
 			fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -215,13 +225,18 @@ func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgChannelOpenConfirm(
+		msg, err := types.NewMsgChannelOpenConfirm(
 			portID,
 			channelID,
 			req.ProofAck,
 			req.ProofHeight,
 			fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -319,13 +334,18 @@ func channelCloseConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgChannelCloseConfirm(
+		msg, err := types.NewMsgChannelCloseConfirm(
 			portID,
 			channelID,
 			req.ProofInit,
 			req.ProofHeight,
 			fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -365,12 +385,17 @@ func recvPacketHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgPacket(
+		msg, err := types.NewMsgPacket(
 			req.Packet,
 			req.Proofs,
 			req.Height,
 			fromAddr,
 		)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

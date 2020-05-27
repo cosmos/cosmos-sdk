@@ -110,7 +110,7 @@ var (
 	ErrMarshal = Register(RootCodespace, 30, "failed to marshal")
 
 	// ErrUnmarshal defines a general unmarshaling error from either protobuf or amino.
-	ErrUnmarshal = Register(RootCodespace, 31, "failed to marshal")
+	ErrUnmarshal = Register(RootCodespace, 31, "failed to unmarshal")
 
 	// ErrProtobufAny defines an error when a type cannot be packed into a protobuf Any message.
 	ErrProtobufAny = Register(RootCodespace, 32, "protobuf (un)pack Any failed")

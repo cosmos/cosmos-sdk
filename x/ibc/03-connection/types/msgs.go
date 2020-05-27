@@ -81,12 +81,12 @@ func NewMsgConnectionOpenTry(
 
 	proofInitAny, err := proofInit.PackAny()
 	if err != nil {
-		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "proof init")
+		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "invalid proof init")
 	}
 
 	proofConsensusAny, err := proofConsensus.PackAny()
 	if err != nil {
-		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "proof consensus")
+		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "invalid proof consensus")
 	}
 
 	return MsgConnectionOpenTry{
@@ -140,10 +140,10 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proofInit.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof init")
+		return sdkerrors.Wrap(err, "proof init failed basic validation")
 	}
 	if err := proofConsensus.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof consensus")
+		return sdkerrors.Wrap(err, "proof consensus failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -177,12 +177,12 @@ func NewMsgConnectionOpenAck(
 ) (MsgConnectionOpenAck, error) {
 	proofTryAny, err := proofTry.PackAny()
 	if err != nil {
-		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "proof try")
+		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "invalid proof try")
 	}
 
 	proofConsensusAny, err := proofConsensus.PackAny()
 	if err != nil {
-		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "proof consensus")
+		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "invalid proof consensus")
 	}
 
 	return MsgConnectionOpenAck{
@@ -226,10 +226,10 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proofTry.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof try")
+		return sdkerrors.Wrap(err, "proof try failed basic validation")
 	}
 	if err := proofConsensus.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof consensus")
+		return sdkerrors.Wrap(err, "proof consensus failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -262,7 +262,7 @@ func NewMsgConnectionOpenConfirm(
 ) (MsgConnectionOpenConfirm, error) {
 	proofAckAny, err := proofAck.PackAny()
 	if err != nil {
-		return MsgConnectionOpenConfirm{}, sdkerrors.Wrap(err, "proof ack")
+		return MsgConnectionOpenConfirm{}, sdkerrors.Wrap(err, "invalid proof ack")
 	}
 
 	return MsgConnectionOpenConfirm{
@@ -296,7 +296,7 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proofAck.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack")
+		return sdkerrors.Wrap(err, "proof ack failed basic validation")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")

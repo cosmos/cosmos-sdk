@@ -377,6 +377,8 @@ func (k Keeper) AcknowledgePacket(
 		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck+1)
 	}
 
+	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))
 
@@ -384,122 +386,6 @@ func (k Keeper) AcknowledgePacket(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeAcknowledgePacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
-			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
-			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
-			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
-			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
-			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
-		),
-	})
-
-	return packet, nil
-}
-
-// CleanupPacket is called by a module to remove a received packet commitment
-// from storage. The receiving end must have already processed the packet
-// (whether regularly or past timeout).
-//
-// In the ORDERED channel case, CleanupPacket cleans-up a packet on an ordered
-// channel by proving that the packet has been received on the other end.
-//
-// In the UNORDERED channel case, CleanupPacket cleans-up a packet on an
-// unordered channel by proving that the associated acknowledgement has been
-//written.
-func (k Keeper) CleanupPacket(
-	ctx sdk.Context,
-	packet exported.PacketI,
-	proof commitmentexported.Proof,
-	proofHeight,
-	nextSequenceRecv uint64,
-	acknowledgement []byte,
-) (exported.PacketI, error) {
-	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if !found {
-		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
-	}
-
-	if channel.State != types.OPEN {
-		return nil, sdkerrors.Wrapf(
-			types.ErrInvalidChannelState,
-			"channel state is not OPEN (got %s)", channel.State.String(),
-		)
-	}
-
-	// TODO: blocked by #5542
-	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	// if !found {
-	// 	return nil, types.ErrChannelCapabilityNotFound
-	// }
-
-	// portCapabilityKey := sdk.NewKVStoreKey(capKey)
-
-	// if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
-	// 	return nil, sdkerrors.Wrapf(port.ErrInvalidPort, "invalid source port: %s", packet.GetSourcePort())
-	// }
-
-	if packet.GetDestPort() != channel.Counterparty.PortID {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
-		)
-	}
-
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
-		return nil, sdkerrors.Wrapf(
-			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
-		)
-	}
-
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
-	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
-	}
-
-	// check that packet has been received on the other end
-	if nextSequenceRecv <= packet.GetSequence() {
-		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
-	}
-
-	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-
-	// verify we sent the packet and haven't cleared it out yet
-	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
-	}
-
-	var err error
-	switch channel.Ordering {
-	case types.ORDERED:
-		// check that the recv sequence is as claimed
-		err = k.connectionKeeper.VerifyNextSequenceRecv(
-			ctx, connectionEnd, proofHeight, proof,
-			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
-		)
-	case types.UNORDERED:
-		err = k.connectionKeeper.VerifyPacketAcknowledgement(
-			ctx, connectionEnd, proofHeight, proof,
-			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-			acknowledgement,
-		)
-	default:
-		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))
-	}
-
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "packet verification failed")
-	}
-
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-
-	// log that a packet has been acknowledged
-	k.Logger(ctx).Info(fmt.Sprintf("packet cleaned-up: %v", packet))
-
-	// emit an event marking that we have cleaned up the packet
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeCleanupPacket,
 			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),

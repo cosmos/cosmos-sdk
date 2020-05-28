@@ -26,6 +26,7 @@ func (rtr *Router) AddRoute(path string, h sdk.Handler) sdk.Router {
 		panic("route expressions can only contain alphanumeric characters")
 	}
 	if rtr.routes[path] != nil {
+
 		panic(fmt.Sprintf("route %s has already been initialized", path))
 	}
 

@@ -78,10 +78,10 @@ var (
 )
 
 type (
+	AccountI                         = types.AccountI
 	SignatureVerificationGasConsumer = ante.SignatureVerificationGasConsumer
 	AccountKeeper                    = keeper.AccountKeeper
 	BaseAccount                      = types.BaseAccount
-	NodeQuerier                      = types.NodeQuerier
 	AccountRetriever                 = types.AccountRetriever
 	GenesisState                     = types.GenesisState
 	Params                           = types.Params
@@ -93,6 +93,7 @@ type (
 	StdSignature                     = types.StdSignature //nolint:staticcheck
 	TxBuilder                        = types.TxBuilder
 	GenesisAccountIterator           = types.GenesisAccountIterator
-	Codec                            = types.Codec
 	ModuleAccount                    = types.ModuleAccount
+	GenesisAccounts                  = types.GenesisAccounts
+	GenesisAccount                   = types.GenesisAccount
 )

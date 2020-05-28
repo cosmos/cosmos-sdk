@@ -6,14 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/stretchr/testify/require"
-	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 )
 
-func createTestCodec() *amino.Codec {
-	cdc := amino.NewCodec()
+func createTestCodec() *codec.Codec {
+	cdc := codec.New()
 
 	cdc.RegisterInterface((*testdata.Animal)(nil), nil)
 	cdc.RegisterConcrete(testdata.Dog{}, "testdata/Dog", nil)

@@ -3,9 +3,6 @@ package rest
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -31,14 +28,9 @@ type ProposalRESTHandler struct {
 	Handler  func(http.ResponseWriter, *http.Request)
 }
 
-func RegisterHandlers(
-	cliCtx context.CLIContext,
-	txg tx.Generator,
-	r *mux.Router,
-	newMsgFn func() types.MsgSubmitProposalI,
-	phs []ProposalRESTHandler) {
+func RegisterHandlers(cliCtx context.CLIContext, r *mux.Router, phs []ProposalRESTHandler) {
 	registerQueryRoutes(cliCtx, r)
-	registerTxHandlers(cliCtx, txg, r, newMsgFn, phs)
+	registerTxHandlers(cliCtx, r, phs)
 }
 
 // RegisterRoutes - Central function to define routes that get registered by the main application

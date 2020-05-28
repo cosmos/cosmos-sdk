@@ -5,6 +5,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// bank message types
+const (
+	TypeMsgSend      = "send"
+	TypeMsgMultiSend = "multisend"
+)
+
 var _ sdk.Msg = MsgSend{}
 
 // NewMsgSend - construct arbitrary multi-in, multi-out send msg.
@@ -16,7 +22,7 @@ func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
 func (msg MsgSend) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgSend) Type() string { return "send" }
+func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
@@ -60,7 +66,7 @@ func NewMsgMultiSend(in []Input, out []Output) MsgMultiSend {
 func (msg MsgMultiSend) Route() string { return RouterKey }
 
 // Type Implements Msg
-func (msg MsgMultiSend) Type() string { return "multisend" }
+func (msg MsgMultiSend) Type() string { return TypeMsgMultiSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMultiSend) ValidateBasic() error {

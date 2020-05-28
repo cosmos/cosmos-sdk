@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -45,7 +45,7 @@ func TestSlashingMsgs(t *testing.T) {
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
 	}
-	accs := authexported.GenesisAccounts{acc1}
+	accs := authtypes.GenesisAccounts{acc1}
 	balances := []bank.Balance{
 		{
 			Address: addr1,

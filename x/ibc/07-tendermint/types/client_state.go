@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -42,7 +41,10 @@ func Initialize(
 ) (ClientState, error) {
 
 	if trustingPeriod >= ubdPeriod {
-		return ClientState{}, errors.New("trusting period should be < unbonding period")
+		return ClientState{}, sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", trustingPeriod, ubdPeriod,
+		)
 	}
 
 	fraction := Fraction{Numerator: trustLevel.Numerator, Denominator: trustLevel.Denominator}
@@ -112,13 +114,13 @@ func (cs ClientState) Validate() error {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {
-		return errors.New("trusting period cannot be zero")
+		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "trusting period cannot be zero")
 	}
 	if cs.UnbondingPeriod == 0 {
-		return errors.New("unbonding period cannot be zero")
+		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "unbonding period cannot be zero")
 	}
 	if cs.MaxClockDrift == 0 {
-		return errors.New("max clock drift cannot be zero")
+		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }
@@ -186,7 +188,7 @@ func (cs ClientState) VerifyConnectionState(
 
 	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
 	if !ok {
-		return fmt.Errorf("invalid connection type %T", connectionEnd)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid connection type %T", connectionEnd)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&connection)
@@ -225,7 +227,7 @@ func (cs ClientState) VerifyChannelState(
 
 	channelEnd, ok := channel.(channeltypes.Channel)
 	if !ok {
-		return fmt.Errorf("invalid channel type %T", channel)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid channel type %T", channel)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&channelEnd)

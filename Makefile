@@ -36,7 +36,7 @@ build-sim: go.sum
  build-sim
 
 mocks: $(MOCKS_DIR)
-	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+	mockgen -source=client/context/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
 	mockgen -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
 	mockgen -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
 	mockgen -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
@@ -124,7 +124,7 @@ test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
 test-integration: build-sim
-	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags=-tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
 
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 

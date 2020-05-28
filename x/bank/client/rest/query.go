@@ -41,8 +41,8 @@ func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 		// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
 		var marshaler codec.JSONMarshaler
 
-		if ctx.Marshaler != nil {
-			marshaler = ctx.Marshaler
+		if ctx.JSONMarshaler != nil {
+			marshaler = ctx.JSONMarshaler
 		} else {
 			marshaler = ctx.Codec
 		}

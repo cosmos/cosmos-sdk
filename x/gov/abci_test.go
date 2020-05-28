@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -29,7 +27,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg, err := std.NewMsgSubmitProposal(
+	newProposalMsg, err := gov.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
@@ -81,7 +79,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg, err := std.NewMsgSubmitProposal(
+	newProposalMsg, err := gov.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
@@ -104,7 +102,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg2, err := std.NewMsgSubmitProposal(
+	newProposalMsg2, err := gov.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
@@ -161,7 +159,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	newProposalMsg, err := std.NewMsgSubmitProposal(
+	newProposalMsg, err := gov.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
@@ -217,7 +215,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
-	newProposalMsg, err := std.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
+	newProposalMsg, err := gov.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
 	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)

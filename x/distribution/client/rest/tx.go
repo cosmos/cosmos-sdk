@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -31,41 +30,40 @@ type (
 	}
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
+func registerTxHandlers(cliCtx context.CLIContext, r *mux.Router) {
 	// Withdraw all delegator rewards
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
-		newWithdrawDelegatorRewardsHandlerFn(cliCtx, m, txg),
+		newWithdrawDelegatorRewardsHandlerFn(cliCtx),
 	).Methods("POST")
 
 	// Withdraw delegation rewards
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}",
-		newWithdrawDelegationRewardsHandlerFn(cliCtx, m, txg),
+		newWithdrawDelegationRewardsHandlerFn(cliCtx),
 	).Methods("POST")
 
 	// Replace the rewards withdrawal address
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/withdraw_address",
-		newSetDelegatorWithdrawalAddrHandlerFn(cliCtx, m, txg),
+		newSetDelegatorWithdrawalAddrHandlerFn(cliCtx),
 	).Methods("POST")
 
 	// Withdraw validator rewards and commission
 	r.HandleFunc(
 		"/distribution/validators/{validatorAddr}/rewards",
-		newWithdrawValidatorRewardsHandlerFn(cliCtx, m, txg),
+		newWithdrawValidatorRewardsHandlerFn(cliCtx),
 	).Methods("POST")
 
 	// Fund the community pool
 	r.HandleFunc(
 		"/distribution/community_pool",
-		newFundCommunityPoolHandlerFn(cliCtx, m, txg),
+		newFundCommunityPoolHandlerFn(cliCtx),
 	).Methods("POST")
 }
 
-func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -87,13 +85,12 @@ func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msgs...)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msgs...)
 	}
 }
 
-func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -120,13 +117,12 @@ func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Ma
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
-func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
 		var req setWithdrawalAddrReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -148,13 +144,12 @@ func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.M
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
-func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -177,13 +172,12 @@ func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msgs...)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msgs...)
 	}
 }
 
-func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
 		var req fundCommunityPoolReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -204,7 +198,7 @@ func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext, m codec.Marshaler,
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 

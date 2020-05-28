@@ -1,6 +1,7 @@
 package tendermint_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"testing"
 	"time"
 
@@ -35,7 +36,7 @@ type TendermintTestSuite struct {
 
 func (suite *TendermintTestSuite) SetupTest() {
 	suite.cdc = codec.New()
-	codec.RegisterCrypto(suite.cdc)
+	legacy_global.RegisterCrypto(suite.cdc)
 	ibctmtypes.RegisterCodec(suite.cdc)
 	commitmenttypes.RegisterCodec(suite.cdc)
 

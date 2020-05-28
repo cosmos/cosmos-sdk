@@ -4,17 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
-	types "github.com/cosmos/cosmos-sdk/types/tx"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
+	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // Deprecated: StdFee includes the amount of coins paid in fees and the maximum
@@ -49,7 +50,7 @@ func (fee StdFee) Bytes() []byte {
 		fee.Amount = sdk.NewCoins()
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(fee)
+	bz, err := legacy_global.Cdc.MarshalJSON(fee)
 	if err != nil {
 		panic(err)
 	}
@@ -280,21 +281,22 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 
 func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureV2 {
 	switch pk := pk.(type) {
-	case multisig.PubKeyMultisigThreshold:
+	case multisig2.MultisigPubKey:
 		var multisignature multisig.Multisignature
-		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
+		legacy_global.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 		sigs := make([]types.SignatureV2, len(multisignature.Sigs))
 		size := multisignature.BitArray.Size()
 		sigIndex := 0
+		pubKeys := pk.GetPubKeys()
 
 		for i := 0; i < size; i++ {
 			if multisignature.BitArray.GetIndex(i) {
-				sigs[i] = stdSignatureToSignatureV2(pk.PubKeys[i], multisignature.Sigs[sigIndex])
+				sigs[i] = stdSignatureToSignatureV2(pubKeys[i], multisignature.Sigs[sigIndex])
 				sigIndex++
 			}
 		}
 
-		return types.MultiSignature{
+		return &types.MultiSignature{
 			BitArray: &types2.CompactBitArray{
 				ExtraBitsStored: uint32(multisignature.BitArray.ExtraBitsStored),
 				Elems:           multisignature.BitArray.Elems,
@@ -302,7 +304,7 @@ func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureV2 {
 			Signatures: sigs,
 		}
 	default:
-		return types.SingleSignature{
+		return &types.SingleSignature{
 			SignMode:  types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: sig,
 		}
@@ -349,7 +351,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(StdSignDoc{
+	bz, err := legacy_global.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),

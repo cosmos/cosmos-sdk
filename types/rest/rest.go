@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -180,7 +181,7 @@ func CheckNotFoundError(w http.ResponseWriter, err error) bool {
 func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_, _ = w.Write(codec.Cdc.MustMarshalJSON(NewErrorResponse(0, err)))
+	_, _ = w.Write(legacy_global.Cdc.MustMarshalJSON(NewErrorResponse(0, err)))
 }
 
 // WriteSimulationResponse prepares and writes an HTTP

@@ -3,21 +3,20 @@ package multisig
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// PubKey implements a K of N threshold multisig.
-type PubKey struct {
+// ThresholdMultisigPubKey implements a K of N threshold multisig.
+type ThresholdMultisigPubKey struct {
 	K       uint32          `json:"threshold"`
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 
-var _ crypto.PubKey = PubKey{}
+var _ MultisigPubKey = ThresholdMultisigPubKey{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
-func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) crypto.PubKey {
+func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) MultisigPubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -29,49 +28,17 @@ func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) crypto.PubKey
 			panic("nil pubkey")
 		}
 	}
-	return PubKey{k, pubkeys}
+	return ThresholdMultisigPubKey{k, pubkeys}
 }
 
-// VerifyBytes expects sig to be an amino encoded version of a MultiSignature.
-// Returns true iff the multisignature contains k or more signatures
-// for the correct corresponding keys,
-// and all signatures are valid. (Not just k of the signatures)
-// The multisig uses a bitarray, so multiple signatures for the same key is not
-// a concern.
-func (pk PubKey) VerifyBytes(msg []byte, marshalledSig []byte) bool {
-	var sig Multisignature
-	err := cdc.UnmarshalBinaryBare(marshalledSig, &sig)
-	if err != nil {
-		return false
-	}
-	size := sig.BitArray.Size()
-	// ensure bit array is the correct size
-	if len(pk.PubKeys) != size {
-		return false
-	}
-	// ensure size of signature list
-	if len(sig.Sigs) < int(pk.K) || len(sig.Sigs) > size {
-		return false
-	}
-	// ensure at least k signatures are set
-	if sig.BitArray.NumTrueBitsBefore(size) < int(pk.K) {
-		return false
-	}
-	// index in the list of signatures which we are concerned with.
-	sigIndex := 0
-	for i := 0; i < size; i++ {
-		if sig.BitArray.GetIndex(i) {
-			if !pk.PubKeys[i].VerifyBytes(msg, sig.Sigs[sigIndex]) {
-				return false
-			}
-			sigIndex++
-		}
-	}
-	return true
+// VerifyBytes should not be used with this ThresholdMultisigPubKey, instead VerifyMultisignature
+// must be used
+func (pk ThresholdMultisigPubKey) VerifyBytes([]byte, []byte) bool {
+	return false
 }
 
-func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool {
-	bitarray := sig.ModeInfo.Bitarray
+func (pk ThresholdMultisigPubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *txtypes.MultiSignature) bool {
+	bitarray := sig.BitArray
 	sigs := sig.Signatures
 	size := bitarray.Size()
 	// ensure bit array is the correct size
@@ -90,29 +57,22 @@ func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig Decoded
 	sigIndex := 0
 	for i := 0; i < size; i++ {
 		if bitarray.GetIndex(i) {
-			mi := sig.ModeInfo.ModeInfos[sigIndex]
-			switch mi := mi.Sum.(type) {
-			case *txtypes.ModeInfo_Single_:
-				msg, err := getSignBytes(mi.Single)
+			si := sig.Signatures[sigIndex]
+			switch si := si.(type) {
+			case *txtypes.SingleSignature:
+				msg, err := getSignBytes(si.SignMode)
 				if err != nil {
 					return false
 				}
-				if !pk.PubKeys[i].VerifyBytes(msg, sigs[sigIndex]) {
+				if !pk.PubKeys[i].VerifyBytes(msg, si.Signature) {
 					return false
 				}
-			case *txtypes.ModeInfo_Multi_:
+			case *txtypes.MultiSignature:
 				nestedMultisigPk, ok := pk.PubKeys[i].(MultisigPubKey)
 				if !ok {
 					return false
 				}
-				nestedSigs, err := types.DecodeMultisignatures(sigs[sigIndex])
-				if err != nil {
-					return false
-				}
-				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, DecodedMultisignature{
-					ModeInfo:   mi.Multi,
-					Signatures: nestedSigs,
-				}) {
+				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, si) {
 					return false
 				}
 			default:
@@ -124,20 +84,24 @@ func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig Decoded
 	return true
 }
 
-// Bytes returns the amino encoded version of the PubKey
-func (pk PubKey) Bytes() []byte {
+func (pk ThresholdMultisigPubKey) GetPubKeys() []crypto.PubKey {
+	return pk.PubKeys
+}
+
+// Bytes returns the amino encoded version of the ThresholdMultisigPubKey
+func (pk ThresholdMultisigPubKey) Bytes() []byte {
 	return cdc.MustMarshalBinaryBare(pk)
 }
 
-// Address returns tmhash(PubKey.Bytes())
-func (pk PubKey) Address() crypto.Address {
+// Address returns tmhash(ThresholdMultisigPubKey.Bytes())
+func (pk ThresholdMultisigPubKey) Address() crypto.Address {
 	return crypto.AddressHash(pk.Bytes())
 }
 
 // Equals returns true iff pk and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (pk PubKey) Equals(other crypto.PubKey) bool {
-	otherKey, sameType := other.(PubKey)
+func (pk ThresholdMultisigPubKey) Equals(other crypto.PubKey) bool {
+	otherKey, sameType := other.(ThresholdMultisigPubKey)
 	if !sameType {
 		return false
 	}

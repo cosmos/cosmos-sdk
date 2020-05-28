@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,7 +27,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 func queryParams(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QuerySubspaceParams
 
-	if err := codec.Cdc.UnmarshalJSON(req.Data, &params); err != nil {
+	if err := legacy_global.Cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
@@ -38,7 +39,7 @@ func queryParams(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, erro
 	rawValue := ss.GetRaw(ctx, []byte(params.Key))
 	resp := types.NewSubspaceParamsResponse(params.Subspace, params.Key, string(rawValue))
 
-	bz, err := codec.MarshalJSONIndent(codec.Cdc, resp)
+	bz, err := codec.MarshalJSONIndent(legacy_global.Cdc, resp)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

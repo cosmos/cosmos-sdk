@@ -2,6 +2,7 @@ package v039
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
@@ -11,11 +12,11 @@ import (
 
 func Migrate(appState genutil.AppMap) genutil.AppMap {
 	v038Codec := codec.New()
-	codec.RegisterCrypto(v038Codec)
+	legacy_global.RegisterCrypto(v038Codec)
 	v038auth.RegisterCodec(v038Codec)
 
 	v039Codec := codec.New()
-	codec.RegisterCrypto(v039Codec)
+	legacy_global.RegisterCrypto(v039Codec)
 	v038auth.RegisterCodec(v039Codec)
 
 	// remove balances from existing accounts

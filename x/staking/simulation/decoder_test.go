@@ -2,6 +2,7 @@ package simulation_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ var (
 func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	types.RegisterCodec(cdc)
 	return
 }

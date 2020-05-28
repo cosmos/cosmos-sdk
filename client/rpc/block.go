@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
@@ -65,10 +66,10 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 
 	if cliCtx.Indent {
-		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
+		return legacy_global.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
 
-	return codec.Cdc.MarshalJSON(res)
+	return legacy_global.Cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height

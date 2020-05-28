@@ -66,7 +66,7 @@ func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, er
 		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key[:]}}, nil
 	case sr25519.PubKeySr25519:
 		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key[:]}}, nil
-	case multisig.PubKey:
+	case multisig.ThresholdMultisigPubKey:
 		pubKeys := key.PubKeys
 		resKeys := make([]*types.PublicKey, len(pubKeys))
 		for i, k := range pubKeys {

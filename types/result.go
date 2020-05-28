@@ -4,16 +4,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"math"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
+
+var cdc = codec.New()
 
 func (gi GasInfo) String() string {
 	bz, _ := yaml.Marshal(gi)
@@ -48,7 +50,7 @@ func NewABCIMessageLog(i uint16, log string, events Events) ABCIMessageLog {
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.
 func (logs ABCIMessageLogs) String() (str string) {
 	if logs != nil {
-		raw, err := codec.Cdc.MarshalJSON(logs)
+		raw, err := cdc.MarshalJSON(logs)
 		if err == nil {
 			str = string(raw)
 		}

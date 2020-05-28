@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"io"
 	"os"
 	"testing"
@@ -141,6 +142,6 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	return cdc
 }

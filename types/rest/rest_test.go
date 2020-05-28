@@ -2,6 +2,7 @@ package rest_test
 
 import (
 	"errors"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -199,7 +200,7 @@ func TestProcessPostResponse(t *testing.T) {
 
 	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
 	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
 	ctx = ctx.WithCodec(cdc)
 

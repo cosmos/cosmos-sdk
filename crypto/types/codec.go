@@ -1,6 +1,8 @@
 package types
 
-import "github.com/tendermint/tendermint/crypto"
+import (
+	"github.com/tendermint/tendermint/crypto"
+)
 
 type PublicKeyCodec interface {
 	Decode(key *PublicKey) (crypto.PubKey, error)

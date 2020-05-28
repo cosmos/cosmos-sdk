@@ -1,10 +1,10 @@
 package ante
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types3 "github.com/cosmos/cosmos-sdk/types/tx"
@@ -126,7 +126,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 				PubKey:    pubkey.Bytes(),
 			}
 
-			sigBz := codec.Cdc.MustMarshalBinaryBare(simSig)
+			sigBz := legacy_global.Cdc.MustMarshalBinaryBare(simSig)
 			cost := sdk.Gas(len(sigBz) + 6)
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum

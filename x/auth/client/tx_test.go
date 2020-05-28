@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -158,7 +159,7 @@ func writeToNewTempFile(t *testing.T, data string) *os.File {
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	authtypes.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc

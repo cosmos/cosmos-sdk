@@ -3,11 +3,11 @@
 package v0_36
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 )
@@ -94,7 +94,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return codec.Cdc.MarshalJSON(bechValidator{
+	return legacy_global.Cdc.MarshalJSON(bechValidator{
 		OperatorAddress:         v.OperatorAddress,
 		ConsPubKey:              bechConsPubKey,
 		Jailed:                  v.Jailed,
@@ -111,7 +111,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 
 func (v *Validator) UnmarshalJSON(data []byte) error {
 	bv := &bechValidator{}
-	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
+	if err := legacy_global.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
 	consPubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, bv.ConsPubKey)

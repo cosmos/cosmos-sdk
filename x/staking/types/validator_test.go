@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"math/rand"
 	"reflect"
 	"sort"
@@ -11,7 +12,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -230,12 +230,12 @@ func TestPossibleOverflow(t *testing.T) {
 
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 	validator := NewValidator(valAddr1, pk1, Description{})
-	js, err := codec.Cdc.MarshalJSON(validator)
+	js, err := legacy_global.Cdc.MarshalJSON(validator)
 	require.NoError(t, err)
 	require.NotEmpty(t, js)
 	require.Contains(t, string(js), "\"consensus_pubkey\":\"cosmosvalconspu")
 	got := &Validator{}
-	err = codec.Cdc.UnmarshalJSON(js, got)
+	err = legacy_global.Cdc.UnmarshalJSON(js, got)
 	assert.NoError(t, err)
 	assert.Equal(t, validator, *got)
 }

@@ -2,6 +2,7 @@ package keys
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 )
 
 // KeysCdc defines codec to be used with key operations
@@ -9,7 +10,7 @@ var KeysCdc *codec.Codec
 
 func init() {
 	KeysCdc = codec.New()
-	codec.RegisterCrypto(KeysCdc)
+	legacy_global.RegisterCrypto(KeysCdc)
 	KeysCdc.Seal()
 }
 

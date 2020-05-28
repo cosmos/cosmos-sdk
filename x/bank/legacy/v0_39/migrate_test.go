@@ -1,6 +1,7 @@
 package v039_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,7 +15,7 @@ import (
 
 func TestMigrate(t *testing.T) {
 	v039Codec := codec.New()
-	codec.RegisterCrypto(v039Codec)
+	legacy_global.RegisterCrypto(v039Codec)
 	v038auth.RegisterCodec(v039Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))

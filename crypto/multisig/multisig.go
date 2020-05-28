@@ -1,14 +1,15 @@
 package multisig
 
-import types "github.com/cosmos/cosmos-sdk/types/tx"
+import (
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/tendermint/tendermint/crypto"
+)
 
-type DecodedMultisignature struct {
-	ModeInfo   *types.ModeInfo_Multi
-	Signatures [][]byte
-}
-
-type GetSignBytesFunc func(single *types.ModeInfo_Single) ([]byte, error)
+type GetSignBytesFunc func(mode types.SignMode) ([]byte, error)
 
 type MultisigPubKey interface {
-	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool
+	crypto.PubKey
+
+	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *types.MultiSignature) bool
+	GetPubKeys() []crypto.PubKey
 }

@@ -2,6 +2,7 @@ package std
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -25,7 +26,7 @@ func MakeCodec(bm module.BasicManager) *codec.Codec {
 
 func RegisterCodec(cdc *codec.Codec) {
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	vesting.RegisterCodec(cdc)
 }
 

@@ -53,7 +53,7 @@ func (ev Evidence) String() string {
 
 // Hash implements Evidence interface
 func (ev Evidence) Hash() tmbytes.HexBytes {
-	bz := SubModuleCdc.MustMarshalBinaryBare(ev)
+	bz := SubModuleCdc.MustMarshalBinaryBare(&ev)
 	return tmhash.Sum(bz)
 }
 
@@ -61,7 +61,7 @@ func (ev Evidence) Hash() tmbytes.HexBytes {
 //
 // NOTE: assumes that evidence headers have the same height
 func (ev Evidence) GetHeight() int64 {
-	return int64(math.Min(float64(ev.Header1.Height), float64(ev.Header2.Height)))
+	return int64(math.Min(float64(ev.Header1.GetHeight()), float64(ev.Header2.GetHeight())))
 }
 
 // ValidateBasic implements Evidence interface
@@ -84,17 +84,17 @@ func (ev Evidence) ValidateBasic() error {
 		)
 	}
 	// Ensure that Heights are the same
-	if ev.Header1.Height != ev.Header2.Height {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
+	if ev.Header1.GetHeight() != ev.Header2.GetHeight() {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.GetHeight(), ev.Header2.GetHeight())
 	}
 	// Ensure that Commit Hashes are different
-	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
+	if ev.Header1.SignedHeader.Commit.BlockID.Equals(ev.Header2.SignedHeader.Commit.BlockID) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
+	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit, ev.Header1.ValidatorSet); err != nil {
 		return err
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err != nil {
+	if err := ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit, ev.Header2.ValidatorSet); err != nil {
 		return err
 	}
 	return nil

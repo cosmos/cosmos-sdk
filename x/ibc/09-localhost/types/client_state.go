@@ -27,7 +27,7 @@ func NewClientState(chainID string, height int64) ClientState {
 	return ClientState{
 		ID:      clientexported.Localhost.String(),
 		ChainID: chainID,
-		Height:  height,
+		Height:  uint64(height),
 	}
 }
 

@@ -176,12 +176,12 @@ func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
 			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
 
 			actualTimestamp, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
-				suite.chainA.GetContext(), connection, uint64(suite.chainB.Header.Height),
+				suite.chainA.GetContext(), connection, suite.chainB.Header.GetHeight(),
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().EqualValues(uint64(suite.chainB.Header.Time.UnixNano()), actualTimestamp)
+				suite.Require().EqualValues(uint64(suite.chainB.Header.GetTime().UnixNano()), actualTimestamp)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

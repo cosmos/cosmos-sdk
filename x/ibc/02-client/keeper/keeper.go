@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -56,7 +57,7 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 // SetClientState sets a particular Client to the store
 func (k Keeper) SetClientState(ctx sdk.Context, clientState exported.ClientState) {
 	store := k.ClientStore(ctx, clientState.GetID())
-	bz := k.cdc.MustMarshalBinaryBare(clientState)
+	bz := k.cdc.MustMarshalBinaryBare(&clientState)
 	store.Set(host.KeyClientState(), bz)
 }
 
@@ -94,7 +95,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
-	bz := k.cdc.MustMarshalBinaryBare(consensusState)
+	bz := k.cdc.MustMarshalBinaryBare(&consensusState)
 	store.Set(host.KeyConsensusState(height), bz)
 }
 
@@ -189,21 +190,25 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
+func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, error) {
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height))
 	if !found {
-		return nil, false
+		return nil, sdkerrors.Wrapf(stakingtypes.ErrNoHistoricalInfo, "height %d", height)
 	}
 
 	valSet := stakingtypes.Validators(histInfo.Valset)
+	protoValset, err := tmtypes.NewValidatorSet(valSet.ToTmValidators()).ToProto()
+	if err != nil {
+		return nil, err
+	}
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       height,
 		Timestamp:    histInfo.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),
+		ValidatorSet: protoValset,
 	}
-	return consensusState, true
+	return consensusState, nil
 }
 
 // IterateClients provides an iterator over all stored light client State

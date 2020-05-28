@@ -38,8 +38,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.aminoCdc = app.Codec()
-
+	suite.cdc = app.AppCodec()
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()
 

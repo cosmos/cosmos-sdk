@@ -63,7 +63,7 @@ func checkValidity(
 	}
 
 	// assert header timestamp is not past the trusting period
-	if header.Time.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
+	if header.GetTime().Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidHeader,
 			"header blocktime is outside trusting period from last client timestamp",
@@ -71,11 +71,11 @@ func checkValidity(
 	}
 
 	// assert header timestamp is past latest clientstate timestamp
-	if header.Time.Unix() <= clientState.GetLatestTimestamp().Unix() {
+	if header.GetTime().Unix() <= clientState.GetLatestTimestamp().Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header blocktime ≤ latest client state block time (%s ≤ %s)",
-			header.Time.String(), clientState.GetLatestTimestamp().String(),
+			header.GetTime().String(), clientState.GetLatestTimestamp().String(),
 		)
 	}
 
@@ -103,9 +103,9 @@ func checkValidity(
 func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
 	clientState.LastHeader = header
 	consensusState := types.ConsensusState{
-		Height:       uint64(header.Height),
-		Timestamp:    header.Time,
-		Root:         commitmenttypes.NewMerkleRoot(header.AppHash),
+		Height:       header.GetHeight(),
+		Timestamp:    header.GetTime(),
+		Root:         commitmenttypes.NewMerkleRoot(header.SignedHeader.Header.AppHash),
 		ValidatorSet: header.ValidatorSet,
 	}
 

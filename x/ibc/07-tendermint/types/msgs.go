@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,10 +30,9 @@ var (
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
-	id string, header Header, trustLevel tmmath.Fraction,
+	id string, header Header, trustLevel Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration, signer sdk.AccAddress,
 ) MsgCreateClient {
-
 	return MsgCreateClient{
 		ClientID:        id,
 		Header:          header,
@@ -74,7 +72,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
 	}
 	// ValidateBasic of provided header with self-attested chain-id
-	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
+	if err := msg.Header.ValidateBasic(msg.Header.SignedHeader.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
 	return host.ClientIdentifierValidator(msg.ClientID)
@@ -103,11 +101,11 @@ func (msg MsgCreateClient) GetClientType() string {
 // GetConsensusState implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
-	root := commitmenttypes.NewMerkleRoot(msg.Header.AppHash)
+	root := commitmenttypes.NewMerkleRoot(msg.Header.SignedHeader.Header.AppHash)
 	return ConsensusState{
-		Timestamp:    msg.Header.Time,
+		Timestamp:    msg.Header.GetTime(),
 		Root:         root,
-		Height:       uint64(msg.Header.Height),
+		Height:       msg.Header.GetHeight(),
 		ValidatorSet: msg.Header.ValidatorSet,
 	}
 }

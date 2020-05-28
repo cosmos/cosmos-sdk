@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,7 +34,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustLevel tmmath.Fraction,
+	id string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header,
 ) (ClientState, error) {
@@ -92,12 +91,12 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns latest block height.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.LastHeader.Height)
+	return cs.LastHeader.GetHeight()
 }
 
 // GetLatestTimestamp returns latest block time.
 func (cs ClientState) GetLatestTimestamp() time.Time {
-	return cs.LastHeader.Time
+	return cs.LastHeader.GetTime()
 }
 
 // IsFrozen returns true if the frozen height has been set.

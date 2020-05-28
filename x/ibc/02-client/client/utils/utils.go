@@ -114,9 +114,15 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64,
 		return ibctmtypes.Header{}, 0, err
 	}
 
+	protoCommit := commit.SignedHeader.ToProto()
+	protoValset, err := tmtypes.NewValidatorSet(validators.Validators).ToProto()
+	if err != nil {
+		return ibctmtypes.Header{}, 0, err
+	}
+
 	header := ibctmtypes.Header{
-		SignedHeader: commit.SignedHeader,
-		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+		SignedHeader: *protoCommit,
+		ValidatorSet: protoValset,
 	}
 
 	return header, height, nil
@@ -147,10 +153,15 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusSta
 		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
+	protoValset, err := tmtypes.NewValidatorSet(validators.Validators).ToProto()
+	if err != nil {
+		return ibctmtypes.ConsensusState{}, 0, err
+	}
+
 	state := ibctmtypes.ConsensusState{
 		Timestamp:    commit.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+		ValidatorSet: protoValset,
 	}
 
 	return state, height, nil

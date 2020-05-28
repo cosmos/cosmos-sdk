@@ -93,7 +93,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	cctx, _ := ctx.CacheContext()
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, packet.SourcePort, packet.SourceChannel, 1)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet))
-	msg, err := channel.NewMsgPacket(packet, commitmenttypes.MerkleProof{}, 0, addr1)
+	msg, err := channel.NewMsgPacket(packet, &commitmenttypes.MerkleProof{}, 0, addr1)
 	suite.Require().NoError(err)
 	_, err = handler(cctx, suite.newTx(msg), false)
 	suite.Require().Error(err)

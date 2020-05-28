@@ -9,7 +9,6 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.
@@ -72,7 +71,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	prefix := k.GetCommitmentPrefix(counterpartyPrefix.GetCommitmentType())
-	expectedCounterparty, err := types.NewCounterparty(clientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	expectedCounterparty, err := types.NewCounterparty(clientID, connectionID, prefix)
 	if err != nil {
 		return err
 	}
@@ -184,7 +183,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	prefix := k.GetCommitmentPrefix(counterpartyPrefix.GetCommitmentType())
-	expectedCounterparty, err := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	expectedCounterparty, err := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	if err != nil {
 		return err
 	}
@@ -244,7 +243,7 @@ func (k Keeper) ConnOpenConfirm(
 	}
 
 	prefix := k.GetCommitmentPrefix(counterpartyPrefix.GetCommitmentType())
-	expectedCounterparty, err := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	expectedCounterparty, err := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	if err != nil {
 		return err
 	}

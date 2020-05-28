@@ -162,7 +162,7 @@ var (
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
-	portID, channelID string, cpv string, proofTry commitmenttypes.MerkleProof, proofHeight uint64,
+	portID, channelID string, cpv string, proofTry commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) (MsgChannelOpenAck, error) {
 	proofTryAny, err := proofTry.PackAny()
@@ -250,7 +250,7 @@ var (
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
-	portID, channelID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
+	portID, channelID string, proofAck commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) (MsgChannelOpenConfirm, error) {
 	proofAckAny, err := proofAck.PackAny()
@@ -378,7 +378,7 @@ var (
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
-	portID, channelID string, proofInit commitmenttypes.MerkleProof, proofHeight uint64,
+	portID, channelID string, proofInit commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) (MsgChannelCloseConfirm, error) {
 	proofInitAny, err := proofInit.PackAny()
@@ -462,7 +462,7 @@ var (
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(
-	packet Packet, proof commitmenttypes.MerkleProof, proofHeight uint64,
+	packet Packet, proof commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) (MsgPacket, error) {
 	proofAny, err := proof.PackAny()
@@ -544,7 +544,7 @@ var (
 
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
-	packet Packet, nextSequenceRecv uint64, proof commitmenttypes.MerkleProof,
+	packet Packet, nextSequenceRecv uint64, proof commitmentexported.Proof,
 	proofHeight uint64, signer sdk.AccAddress,
 ) (MsgTimeout, error) {
 	proofAny, err := proof.PackAny()

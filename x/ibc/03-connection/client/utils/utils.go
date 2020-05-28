@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -114,16 +114,16 @@ func QueryClientConnections(
 
 // ParsePrefix unmarshals an cmd input argument from a JSON string to a commitment
 // Prefix. If the input is not a JSON, it looks for a path to the JSON file.
-func ParsePrefix(cdc *codec.Codec, arg string) (commitmenttypes.MerklePrefix, error) {
-	var prefix commitmenttypes.MerklePrefix
+func ParsePrefix(cdc *codec.Codec, arg string) (commitmentexported.Prefix, error) {
+	var prefix commitmentexported.Prefix
 	if err := cdc.UnmarshalJSON([]byte(arg), &prefix); err != nil {
 		// check for file path if JSON input is not provided
 		contents, err := ioutil.ReadFile(arg)
 		if err != nil {
-			return commitmenttypes.MerklePrefix{}, errors.New("neither JSON input nor path to .json file were provided")
+			return nil, errors.New("neither JSON input nor path to .json file were provided")
 		}
 		if err := cdc.UnmarshalJSON(contents, &prefix); err != nil {
-			return commitmenttypes.MerklePrefix{}, errors.Wrap(err, "error unmarshalling commitment prefix")
+			return nil, errors.Wrap(err, "error unmarshalling commitment prefix")
 		}
 	}
 	return prefix, nil
@@ -131,16 +131,16 @@ func ParsePrefix(cdc *codec.Codec, arg string) (commitmenttypes.MerklePrefix, er
 
 // ParseProof unmarshals an cmd input argument from a JSON string to a commitment
 // Proof. If the input is not a JSON, it looks for a path to the JSON file.
-func ParseProof(cdc *codec.Codec, arg string) (commitmenttypes.MerkleProof, error) {
-	var proof commitmenttypes.MerkleProof
+func ParseProof(cdc *codec.Codec, arg string) (commitmentexported.Proof, error) {
+	var proof commitmentexported.Proof
 	if err := cdc.UnmarshalJSON([]byte(arg), &proof); err != nil {
 		// check for file path if JSON input is not provided
 		contents, err := ioutil.ReadFile(arg)
 		if err != nil {
-			return commitmenttypes.MerkleProof{}, errors.New("neither JSON input nor path to .json file were provided")
+			return nil, errors.New("neither JSON input nor path to .json file were provided")
 		}
 		if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
-			return commitmenttypes.MerkleProof{}, errors.Wrap(err, "error unmarshalling commitment proof")
+			return nil, errors.Wrap(err, "error unmarshalling commitment proof")
 		}
 	}
 	return proof, nil

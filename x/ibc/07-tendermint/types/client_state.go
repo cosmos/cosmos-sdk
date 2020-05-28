@@ -401,7 +401,7 @@ func validateVerificationArgs(
 
 	_, ok := prefix.(*commitmenttypes.MerklePrefix)
 	if !ok {
-		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
+		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected *MerklePrefix", prefix)
 	}
 
 	if proof == nil {

@@ -2,11 +2,9 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // ProofVerificationDecorator handles messages that contains application specific packet types,
@@ -34,26 +32,11 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		case clientexported.MsgUpdateClient:
 			_, err = pvr.clientKeeper.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
 		case channel.MsgPacket:
-			proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
-			if err != nil {
-				return ctx, sdkerrors.Wrap(err, "invalid packet proof")
-			}
-
-			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, proof, msg.ProofHeight)
+			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.GetProof(), msg.ProofHeight)
 		case channel.MsgAcknowledgement:
-			proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
-			if err != nil {
-				return ctx, sdkerrors.Wrap(err, "invalid acknowledgement proof")
-			}
-
-			_, err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, proof, msg.ProofHeight)
+			_, err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.GetProof(), msg.ProofHeight)
 		case channel.MsgTimeout:
-			proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
-			if err != nil {
-				return ctx, sdkerrors.Wrap(err, "invalid timeout proof")
-			}
-
-			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, proof, msg.ProofHeight, msg.NextSequenceRecv)
+			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.GetProof(), msg.ProofHeight, msg.NextSequenceRecv)
 		}
 
 		attributes := make([]sdk.Attribute, len(msg.GetSigners()))

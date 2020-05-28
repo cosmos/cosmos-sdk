@@ -4,9 +4,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const (
-	SubModuleName = "tendermint"
-)
+// SubModuleName defines the tendermint client name
+const SubModuleName = "tendermint"
 
 // IBC tendermint client sentinel errors
 var (
@@ -16,4 +15,5 @@ var (
 	ErrInvalidMaxClockDrift   = sdkerrors.Register(SubModuleName, 5, "invalid max clock drift")
 	ErrTrustingPeriodExpired  = sdkerrors.Register(SubModuleName, 6, "time since latest trusted state has passed the trusting period")
 	ErrUnbondingPeriodExpired = sdkerrors.Register(SubModuleName, 7, "time since latest trusted state has passed the unbonding period")
+	ErrInvalidTrustLevel      = sdkerrors.Register(SubModuleName, 8, "invalid trust level")
 )

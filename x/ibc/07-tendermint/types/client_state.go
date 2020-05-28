@@ -23,33 +23,11 @@ import (
 var _ clientexported.ClientState = (*ClientState)(nil)
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
-	return Initialize(
-		msg.GetClientID(), msg.TrustLevel,
+func InitializeFromMsg(msg MsgCreateClient) ClientState {
+	return NewClientState(msg.GetClientID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
 		msg.Header,
 	)
-}
-
-// Initialize creates a client state and validates its contents, checking that
-// the provided consensus state is from the same client type.
-func Initialize(
-	id string, trustLevel Fraction,
-	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header,
-) (ClientState, error) {
-
-	if trustingPeriod >= ubdPeriod {
-		return ClientState{}, sdkerrors.Wrapf(
-			ErrInvalidTrustingPeriod,
-			"trusting period (%s) should be < unbonding period (%s)", trustingPeriod, ubdPeriod,
-		)
-	}
-
-	fraction := Fraction{Numerator: trustLevel.Numerator, Denominator: trustLevel.Denominator}
-
-	clientState := NewClientState(id, fraction, trustingPeriod, ubdPeriod, maxClockDrift, header)
-	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
@@ -115,6 +93,12 @@ func (cs ClientState) Validate() error {
 	}
 	if cs.UnbondingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "unbonding period cannot be zero")
+	}
+	if cs.TrustingPeriod >= cs.UnbondingPeriod {
+		return sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
+		)
 	}
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")

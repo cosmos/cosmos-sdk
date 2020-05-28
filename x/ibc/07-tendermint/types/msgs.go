@@ -60,10 +60,16 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
 	}
 	if err := lite.ValidateTrustLevel(msg.TrustLevel.ToTendermint()); err != nil {
-		return err
+		return sdkerrors.Wrap(ErrInvalidTrustLevel, err.Error())
 	}
 	if msg.UnbondingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "duration cannot be 0")
+	}
+	if msg.TrustingPeriod >= msg.UnbondingPeriod {
+		return sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", msg.TrustingPeriod, msg.UnbondingPeriod,
+		)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

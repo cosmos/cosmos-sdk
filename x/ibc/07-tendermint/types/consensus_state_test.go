@@ -26,7 +26,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Height:       height,
-				Root:         nil,
+				Root:         commitmenttypes.NewMerkleRoot(nil),
 				ValidatorSet: suite.valSet,
 			},
 			false},

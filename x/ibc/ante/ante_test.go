@@ -244,11 +244,8 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
-	if err != nil {
-		return err
-	}
-	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
+	clientState := ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
+	_, err := chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
 	if err != nil {
 		return err
 	}

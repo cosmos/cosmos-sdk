@@ -12,6 +12,10 @@ type ThresholdMultisigPubKey struct {
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 
+func (pk ThresholdMultisigPubKey) Threshold() uint32 {
+	return pk.K
+}
+
 var _ MultisigPubKey = ThresholdMultisigPubKey{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.

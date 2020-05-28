@@ -3,8 +3,12 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
+
+	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -54,133 +58,111 @@ func makeValidateSignaturesCmd(cliCtx context.CLIContext) func(cmd *cobra.Comman
 func printAndValidateSigs(
 	cmd *cobra.Command, cliCtx context.CLIContext, chainID string, tx sdk.Tx, offline bool,
 ) bool {
-	//sigTx := tx.(txtypes.SigTx)
-	//signModeHandler := cliCtx.TxGenerator.SignModeHandler()
-	//
-	//cmd.Println("Signers:")
-	//signers := sigTx.GetSigners()
-	//
-	//for i, signer := range signers {
-	//	cmd.Printf("  %v: %v\n", i, signer.String())
-	//}
-	//
-	//success := true
-	//sigs := sigTx.GetSignatures()
-	//pubKeys := sigTx.GetPubKeys()
-	//cmd.Println("")
-	//cmd.Println("Signatures:")
-	//
-	//if len(sigs) != len(signers) {
-	//	success = false
-	//}
-	//
-	//for i, sig := range sigs {
-	//	var (
-	//		pubKey         = pubKeys[i]
-	//		multiSigHeader string
-	//		multiSigMsg    string
-	//		sigAddr        = sdk.AccAddress(pubKey.Address())
-	//		sigSanity      = "OK"
-	//	)
-	//
-	//	if i >= len(signers) || !sigAddr.Equals(signers[i]) {
-	//		sigSanity = "ERROR: signature does not match its respective signer"
-	//		success = false
-	//	}
-	//
-	//	// Validate the actual signature over the transaction bytes since we can
-	//	// reach out to a full node to query accounts.
-	//	if !offline && success {
-	//		accNum, accSeq, err := cliCtx.AccountRetriever.GetAccountNumberSequence(cliCtx, sigAddr)
-	//		if err != nil {
-	//			cmd.Printf("failed to get account: %s\n", sigAddr)
-	//			return false
-	//		}
-	//
-	//		signingData := txtypes.SigningData{
-	//			PublicKey:       pubKey,
-	//			ChainID:         chainID,
-	//			AccountNumber:   accNum,
-	//			AccountSequence: accSeq,
-	//		}
-	//
-	//		if protoTx, ok := tx.(txtypes.ProtoTx); ok {
-	//			modeInfo := protoTx.GetAuthInfo().SignerInfos[i].ModeInfo
-	//			switch modeInfo := modeInfo.Sum.(type) {
-	//			case *txtypes.ModeInfo_Single_:
-	//				signingData.ModeInfo = modeInfo.Single
-	//				sigBytes, err := signModeHandler.GetSignBytes(signingData, tx)
-	//				if err != nil {
-	//					sigSanity = "ERROR: can't get sign bytes"
-	//					success = false
-	//				}
-	//
-	//				if ok := pubKey.VerifyBytes(sigBytes, sig); !ok {
-	//					sigSanity = "ERROR: signature invalid"
-	//					success = false
-	//				}
-	//			case *txtypes.ModeInfo_Multi_:
-	//				multisigs, err := types.DecodeMultisignatures(sig)
-	//				if err != nil {
-	//					sigSanity = "ERROR: can't decoded multisignature"
-	//					success = false
-	//				}
-	//
-	//				if multiPK, ok := pubKey.(multisig2.MultisigPubKey); ok {
-	//					multiPK.VerifyMultisignature(func(single *txtypes.ModeInfo_Single) ([]byte, error) {
-	//						signingData.ModeInfo = single
-	//						return signModeHandler.GetSignBytes(signingData, tx)
-	//					}, multisig2.DecodedMultisignature{
-	//						ModeInfo:   modeInfo.Multi,
-	//						Signatures: multisigs,
-	//					})
-	//				}
-	//			default:
-	//				sigSanity = "ERROR: unexpected ModeInfo"
-	//				success = false
-	//			}
-	//		} else {
-	//			sigBytes, err := signModeHandler.GetSignBytes(signingData, tx)
-	//			if err != nil {
-	//				sigSanity = "ERROR: can't get sign bytes"
-	//				success = false
-	//			}
-	//
-	//			if ok := pubKey.VerifyBytes(sigBytes, sig); !ok {
-	//				sigSanity = "ERROR: signature invalid"
-	//				success = false
-	//			}
-	//		}
-	//	}
-	//
-	//	multiPK, ok := pubKey.(multisig.PubKeyMultisigThreshold)
-	//	if ok {
-	//		var multiSig multisig.Multisignature
-	//
-	//		panic("TODO: update this:")
-	//		cliCtx.Codec.MustUnmarshalBinaryBare(sig, &multiSig)
-	//
-	//		var b strings.Builder
-	//		b.WriteString("\n  MultiSig Signatures:\n")
-	//
-	//		for i := 0; i < multiSig.BitArray.Size(); i++ {
-	//			if multiSig.BitArray.GetIndex(i) {
-	//				addr := sdk.AccAddress(multiPK.PubKeys[i].Address().Bytes())
-	//				b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
-	//			}
-	//		}
-	//
-	//		multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.K, len(multiPK.PubKeys))
-	//		multiSigMsg = b.String()
-	//	}
-	//
-	//	cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
-	//}
-	//
-	//cmd.Println("")
-	//
-	//return success
-	panic("TODO")
+	sigTx := tx.(txtypes.SigTx)
+	signModeHandler := cliCtx.TxGenerator.SignModeHandler()
+
+	cmd.Println("Signers:")
+	signers := sigTx.GetSigners()
+
+	for i, signer := range signers {
+		cmd.Printf("  %v: %v\n", i, signer.String())
+	}
+
+	success := true
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		panic(err)
+	}
+	pubKeys := sigTx.GetPubKeys()
+	cmd.Println("")
+	cmd.Println("Signatures:")
+
+	if len(sigs) != len(signers) {
+		success = false
+	}
+
+	for i, sig := range sigs {
+		var (
+			pubKey         = pubKeys[i]
+			multiSigHeader string
+			multiSigMsg    string
+			sigAddr        = sdk.AccAddress(pubKey.Address())
+			sigSanity      = "OK"
+		)
+
+		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
+			sigSanity = "ERROR: signature does not match its respective signer"
+			success = false
+		}
+
+		// Validate the actual signature over the transaction bytes since we can
+		// reach out to a full node to query accounts.
+		if !offline && success {
+			accNum, accSeq, err := cliCtx.AccountRetriever.GetAccountNumberSequence(cliCtx, sigAddr)
+			if err != nil {
+				cmd.Printf("failed to get account: %s\n", sigAddr)
+				return false
+			}
+
+			signingData := txtypes.SigningData{
+				PublicKey:       pubKey,
+				ChainID:         chainID,
+				AccountNumber:   accNum,
+				AccountSequence: accSeq,
+			}
+
+			switch sig := sig.(type) {
+			case *txtypes.SingleSignature:
+				signingData.Mode = sig.SignMode
+				sigBytes, err := signModeHandler.GetSignBytes(signingData, tx)
+				if err != nil {
+					sigSanity = "ERROR: can't get sign bytes"
+					success = false
+				}
+
+				if ok := pubKey.VerifyBytes(sigBytes, sig.Signature); !ok {
+					sigSanity = "ERROR: signature invalid"
+					success = false
+				}
+			case *txtypes.MultiSignature:
+				multiPK, ok := pubKey.(multisig2.MultisigPubKey)
+				if ok {
+					if !multiPK.VerifyMultisignature(func(mode txtypes.SignMode) ([]byte, error) {
+						signingData.Mode = mode
+						return signModeHandler.GetSignBytes(signingData, tx)
+					}, sig) {
+						sigSanity = "ERROR: signature invalid"
+						success = false
+					}
+
+					var b strings.Builder
+					b.WriteString("\n  MultiSig Signatures:\n")
+
+					pks := multiPK.GetPubKeys()
+					for i := 0; i < sig.BitArray.Size(); i++ {
+						if sig.BitArray.GetIndex(i) {
+							addr := sdk.AccAddress(pks[i].Address().Bytes())
+							b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
+						}
+					}
+
+					multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.Threshold(), len(pks))
+					multiSigMsg = b.String()
+					cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
+				} else {
+					sigSanity = "ERROR: expected multisig pub key"
+					success = false
+				}
+			default:
+				sigSanity = "ERROR: unexpected ModeInfo"
+				success = false
+			}
+		}
+	}
+
+	cmd.Println("")
+
+	return success
 }
 
 func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filename string) (context.CLIContext, tx.Factory, sdk.Tx, error) {

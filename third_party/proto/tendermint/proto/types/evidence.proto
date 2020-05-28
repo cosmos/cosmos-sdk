@@ -11,6 +11,12 @@ import "third_party/proto/tendermint/proto/crypto/keys/types.proto";
 // DuplicateVoteEvidence contains evidence a validator signed two conflicting
 // votes.
 message DuplicateVoteEvidence {
+  tendermint.proto.crypto.keys.PublicKey pub_key = 1;
+  Vote vote_a = 2;
+  Vote vote_b = 3;
+}
+
+message PotentialAmnesiaEvidence {
   Vote vote_a = 1;
   Vote vote_b = 2;
 }
@@ -46,8 +52,10 @@ message Evidence {
     DuplicateVoteEvidence      duplicate_vote_evidence      = 1;
     ConflictingHeadersEvidence conflicting_headers_evidence = 2;
     LunaticValidatorEvidence   lunatic_validator_evidence   = 3;
-    MockEvidence               mock_evidence                = 4;
-    MockRandomEvidence         mock_random_evidence         = 5;
+    PotentialAmnesiaEvidence   potential_amnesia_evidence   = 4;
+
+    MockEvidence       mock_evidence        = 5;
+    MockRandomEvidence mock_random_evidence = 6;
   }
 }
 

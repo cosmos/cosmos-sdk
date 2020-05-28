@@ -269,7 +269,7 @@ proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking-ci
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/marko/add_proto
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.5
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 
@@ -293,7 +293,8 @@ proto-update-deps:
 
 	@mkdir -p $(TM_ABCI_TYPES)
 	@curl -sSL $(TM_URL)/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '7 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
 
 	@mkdir -p $(TM_PROTO)/types
 	@curl -sSL $(TM_URL)/proto/types/params.proto > $(TM_PROTO)/types/params.proto
@@ -305,10 +306,6 @@ proto-update-deps:
 	@curl -sSL $(TM_URL)/proto/types/evidence.proto > $(TM_PROTO)/types/evidence.proto
 	@sed -i '' '7 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_PROTO)/types/evidence.proto
 	@sed -i '' '9 s|proto/crypto/keys/types.proto|third_party/proto/tendermint/proto/crypto/keys/types.proto|g' $(TM_PROTO)/types/evidence.proto
-
-	@mkdir -p $(TM_PROTO)/evidence
-	@curl -sSL $(TM_URL)/proto/evidence/msgs.proto > $(TM_PROTO)/evidence/msgs.proto
-	@sed -i '' '7 s|proto/types/evidence.proto|third_party/proto/tendermint/proto/types/evidence.proto|g' $(TM_PROTO)/evidence/msgs.proto
 
 	@curl -sSL $(TM_URL)/proto/types/block.proto > $(TM_PROTO)/types/block.proto
 	@sed -i '' '7 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_PROTO)/types/block.proto

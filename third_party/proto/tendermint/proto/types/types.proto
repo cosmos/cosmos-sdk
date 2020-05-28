@@ -33,8 +33,8 @@ enum SignedMsgType {
 
 // PartsetHeader
 message PartSetHeader {
-  uint32 total = 1;
-  bytes  hash  = 2;
+  int64 total = 1;
+  bytes hash  = 2;
 }
 
 message Part {
@@ -93,14 +93,14 @@ message Data {
 message Vote {
   SignedMsgType type     = 1;
   int64         height   = 2;
-  int32         round    = 3;
+  int64         round    = 3;
   BlockID       block_id = 4
       [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];  // zero if vote is nil.
   google.protobuf.Timestamp timestamp = 5
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes  validator_address = 6;
-  uint32 validator_index   = 7;
-  bytes  signature         = 8;
+  bytes validator_address = 6;
+  int64 validator_index   = 7;
+  bytes signature         = 8;
 }
 
 // Commit contains the evidence that a block was committed by a set of validators.

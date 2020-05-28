@@ -4,10 +4,11 @@ option  go_package = "github.com/tendermint/tendermint/abci/types";
 
 // For more information on gogo.proto, see:
 // https://github.com/gogo/protobuf/blob/master/extensions.md
-import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
 import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
+import "third_party/proto/tendermint/libs/kv/types.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 // This file is copied from http://github.com/tendermint/abci
 // NOTE: When using custom types, mind the warnings.
@@ -17,27 +18,27 @@ option (gogoproto.marshaler_all)        = true;
 option (gogoproto.unmarshaler_all)      = true;
 option (gogoproto.sizer_all)            = true;
 option (gogoproto.goproto_registration) = true;
+// Generate tests
+option (gogoproto.populate_all) = true;
+option (gogoproto.equal_all)    = true;
+option (gogoproto.testgen_all)  = true;
 
 //----------------------------------------
 // Request types
 
 message Request {
   oneof value {
-    RequestEcho               echo                 = 2;
-    RequestFlush              flush                = 3;
-    RequestInfo               info                 = 4;
-    RequestSetOption          set_option           = 5;
-    RequestInitChain          init_chain           = 6;
-    RequestQuery              query                = 7;
-    RequestBeginBlock         begin_block          = 8;
-    RequestCheckTx            check_tx             = 9;
-    RequestDeliverTx          deliver_tx           = 19;
-    RequestEndBlock           end_block            = 11;
-    RequestCommit             commit               = 12;
-    RequestListSnapshots      list_snapshots       = 13;
-    RequestOfferSnapshot      offer_snapshot       = 14;
-    RequestLoadSnapshotChunk  load_snapshot_chunk  = 15;
-    RequestApplySnapshotChunk apply_snapshot_chunk = 16;
+    RequestEcho       echo        = 2;
+    RequestFlush      flush       = 3;
+    RequestInfo       info        = 4;
+    RequestSetOption  set_option  = 5;
+    RequestInitChain  init_chain  = 6;
+    RequestQuery      query       = 7;
+    RequestBeginBlock begin_block = 8;
+    RequestCheckTx    check_tx    = 9;
+    RequestDeliverTx  deliver_tx  = 19;
+    RequestEndBlock   end_block   = 11;
+    RequestCommit     commit      = 12;
   }
 }
 
@@ -60,9 +61,8 @@ message RequestSetOption {
 }
 
 message RequestInitChain {
-  google.protobuf.Timestamp time             = 1
-    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  string                    chain_id         = 2;
+  google.protobuf.Timestamp time     = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  string                    chain_id = 2;
   ConsensusParams           consensus_params = 3;
   repeated ValidatorUpdate  validators       = 4 [(gogoproto.nullable) = false];
   bytes                     app_state_bytes  = 5;
@@ -102,51 +102,23 @@ message RequestEndBlock {
 
 message RequestCommit {}
 
-// lists available snapshots
-message RequestListSnapshots {
-}
-
-// offers a snapshot to the application
-message RequestOfferSnapshot {
-  Snapshot snapshot = 1;  // snapshot offered by peers
-  bytes    app_hash = 2;  // light client-verified app hash for snapshot height
-}
-
-// loads a snapshot chunk
-message RequestLoadSnapshotChunk {
-  uint64 height = 1;
-  uint32 format = 2;
-  uint32 chunk  = 3;
-}
-
-// Applies a snapshot chunk
-message RequestApplySnapshotChunk {
-  uint32 index  = 1;
-  bytes  chunk  = 2;
-  string sender = 3;
-}
-
 //----------------------------------------
 // Response types
 
 message Response {
   oneof value {
-    ResponseException          exception            = 1;
-    ResponseEcho               echo                 = 2;
-    ResponseFlush              flush                = 3;
-    ResponseInfo               info                 = 4;
-    ResponseSetOption          set_option           = 5;
-    ResponseInitChain          init_chain           = 6;
-    ResponseQuery              query                = 7;
-    ResponseBeginBlock         begin_block          = 8;
-    ResponseCheckTx            check_tx             = 9;
-    ResponseDeliverTx          deliver_tx           = 10;
-    ResponseEndBlock           end_block            = 11;
-    ResponseCommit             commit               = 12;
-    ResponseListSnapshots      list_snapshots       = 13;
-    ResponseOfferSnapshot      offer_snapshot       = 14;
-    ResponseLoadSnapshotChunk  load_snapshot_chunk  = 15;
-    ResponseApplySnapshotChunk apply_snapshot_chunk = 16;
+    ResponseException  exception   = 1;
+    ResponseEcho       echo        = 2;
+    ResponseFlush      flush       = 3;
+    ResponseInfo       info        = 4;
+    ResponseSetOption  set_option  = 5;
+    ResponseInitChain  init_chain  = 6;
+    ResponseQuery      query       = 7;
+    ResponseBeginBlock begin_block = 8;
+    ResponseCheckTx    check_tx    = 9;
+    ResponseDeliverTx  deliver_tx  = 10;
+    ResponseEndBlock   end_block   = 11;
+    ResponseCommit     commit      = 12;
   }
 }
 
@@ -199,7 +171,7 @@ message ResponseQuery {
 
 message ResponseBeginBlock {
   repeated Event events = 1
-    [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
 }
 
 message ResponseCheckTx {
@@ -210,7 +182,7 @@ message ResponseCheckTx {
   int64          gas_wanted = 5;
   int64          gas_used   = 6;
   repeated Event events     = 7
-    [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   string codespace = 8;
 }
 
@@ -222,56 +194,21 @@ message ResponseDeliverTx {
   int64          gas_wanted = 5;
   int64          gas_used   = 6;
   repeated Event events     = 7
-    [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   string codespace = 8;
 }
 
 message ResponseEndBlock {
-  repeated ValidatorUpdate validator_updates       = 1
-    [(gogoproto.nullable) = false];
+  repeated ValidatorUpdate validator_updates       = 1 [(gogoproto.nullable) = false];
   ConsensusParams          consensus_param_updates = 2;
   repeated Event           events                  = 3
-    [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
 }
 
 message ResponseCommit {
   // reserve 1
   bytes data          = 2;
   int64 retain_height = 3;
-}
-
-message ResponseListSnapshots {
-  repeated Snapshot snapshots = 1;
-}
-
-message ResponseOfferSnapshot {
-  Result result = 1;
-
-  enum Result {
-    ACCEPT        = 0;  // Snapshot accepted, apply chunks
-    ABORT         = 1;  // Abort all snapshot restoration
-    REJECT        = 2;  // Reject this specific snapshot, try others
-    REJECT_FORMAT = 3;  // Reject all snapshots of this format, try others
-    REJECT_SENDER = 4;  // Reject all snapshots from the sender(s), try others
-  }
-}
-
-message ResponseLoadSnapshotChunk {
-  bytes chunk = 1;
-}
-
-message ResponseApplySnapshotChunk {
-  Result          result         = 1;
-  repeated uint32 refetch_chunks = 2;  // Chunks to refetch and reapply
-  repeated string reject_senders = 3;  // Chunk senders to reject and ban
-
-  enum Result {
-    ACCEPT          = 0;  // Chunk successfully accepted
-    ABORT           = 1;  // Abort all snapshot restoration
-    RETRY           = 2;  // Retry chunk (combine with refetch and reject)
-    RETRY_SNAPSHOT  = 3;  // Retry snapshot (combine with refetch and reject)
-    REJECT_SNAPSHOT = 4;  // Reject this snapshot, try others
-  }
 }
 
 //----------------------------------------
@@ -297,8 +234,7 @@ message EvidenceParams {
   // Note: must be greater than 0
   int64                    max_age_num_blocks = 1;
   google.protobuf.Duration max_age_duration   = 2
-    [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
-  uint32                   max_num            = 3;
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 }
 
 // ValidatorParams contains limits on validators.
@@ -311,19 +247,10 @@ message LastCommitInfo {
   repeated VoteInfo votes = 2 [(gogoproto.nullable) = false];
 }
 
-
-// EventAttribute represents an event to the indexing service.
-message EventAttribute {
-  bytes key = 1;
-  bytes value = 2;
-  bool index = 3;
-}
-
 message Event {
-  string   type                      = 1;
-  repeated EventAttribute attributes = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag) = "attributes,omitempty"];
+  string   type                               = 1;
+  repeated tendermint.libs.kv.Pair attributes = 2
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "attributes,omitempty"];
 }
 
 //----------------------------------------
@@ -334,8 +261,7 @@ message Header {
   Version                   version  = 1 [(gogoproto.nullable) = false];
   string                    chain_id = 2 [(gogoproto.customname) = "ChainID"];
   int64                     height   = 3;
-  google.protobuf.Timestamp time     = 4
-    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
   // prev block info
   BlockID last_block_id = 5 [(gogoproto.nullable) = false];
@@ -349,7 +275,7 @@ message Header {
   bytes next_validators_hash = 9;   // validators for the next block
   bytes consensus_hash       = 10;  // consensus params for current block
   bytes app_hash             = 11;  // state after txs from the previous block
-  bytes last_results_hash    = 12;  // root hash of tx results from prev block
+  bytes last_results_hash    = 12;  // root hash of all results from the txs from the previous block
 
   // consensus info
   bytes evidence_hash    = 13;  // evidence included in the block
@@ -399,21 +325,8 @@ message Evidence {
   string                    type      = 1;
   Validator                 validator = 2 [(gogoproto.nullable) = false];
   int64                     height    = 3;
-  google.protobuf.Timestamp time = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp time = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   int64                     total_voting_power = 5;
-}
-
-//----------------------------------------
-// State Sync Types
-
-message Snapshot {
-  uint64 height   = 1;  // The height at which the snapshot was taken
-  uint32 format   = 2;  // The application-specific snapshot format
-  uint32 chunks   = 3;  // Number of chunks in the snapshot
-  bytes  hash     = 4;  // Arbitrary snapshot hash, equal only if identical
-  bytes  metadata = 5;  // Arbitrary application metadata
 }
 
 //----------------------------------------
@@ -431,8 +344,4 @@ service ABCIApplication {
   rpc InitChain(RequestInitChain) returns (ResponseInitChain);
   rpc BeginBlock(RequestBeginBlock) returns (ResponseBeginBlock);
   rpc EndBlock(RequestEndBlock) returns (ResponseEndBlock);
-  rpc ListSnapshots(RequestListSnapshots) returns (ResponseListSnapshots);
-  rpc OfferSnapshot(RequestOfferSnapshot) returns (ResponseOfferSnapshot);
-  rpc LoadSnapshotChunk(RequestLoadSnapshotChunk) returns (ResponseLoadSnapshotChunk);
-  rpc ApplySnapshotChunk(RequestApplySnapshotChunk) returns (ResponseApplySnapshotChunk);
 }

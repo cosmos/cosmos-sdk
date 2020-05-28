@@ -382,8 +382,8 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 
 func (suite *KeeperTestSuite) TestCleanupPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
-	packetUnorderedKey := host.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
-	packetOrderedKey := host.KeyNextSequenceRecv(testPort2, testChannel2)
+	unorderedPacketKey := host.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
+	orderedPacketKey := host.KeyNextSequenceRecv(testPort2, testChannel2)
 
 	var (
 		packet      types.Packet
@@ -426,6 +426,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
+			ordered = true
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.CLOSED, types.ORDERED, testConnectionIDA)
 		}, false},
@@ -466,6 +467,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 		}, false},
 		{"packet ack verification failed", func() {
 			nextSeqRecv = 10
+			ordered = false
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.UNORDERED, testConnectionIDA)
@@ -488,9 +490,9 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			suite.chainA.updateClient(suite.chainB)
 
 			if ordered {
-				proof, proofHeight = queryProof(suite.chainA, packetOrderedKey)
+				proof, proofHeight = queryProof(suite.chainA, orderedPacketKey)
 			} else {
-				proof, proofHeight = queryProof(suite.chainA, packetUnorderedKey)
+				proof, proofHeight = queryProof(suite.chainA, unorderedPacketKey)
 			}
 
 			cap, err := suite.chainB.App.ScopedIBCKeeper.NewCapability(ctx, host.ChannelCapabilityPath(testPort1, testChannel1))

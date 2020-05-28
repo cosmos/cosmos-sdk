@@ -39,9 +39,9 @@ func (h HandlerMap) Modes() []types.SignMode {
 }
 
 func (h HandlerMap) GetSignBytes(data types.SigningData, tx sdk.Tx) ([]byte, error) {
-	handler, found := h.signModeHandlers[data.ModeInfo.Mode]
+	handler, found := h.signModeHandlers[data.Mode]
 	if !found {
-		return nil, fmt.Errorf("can't verify sign mode %s", data.ModeInfo.Mode.String())
+		return nil, fmt.Errorf("can't verify sign mode %s", data.Mode.String())
 	}
 	return handler.GetSignBytes(data, tx)
 }

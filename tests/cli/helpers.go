@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/types"
+	tx "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/stretchr/testify/require"
 
@@ -192,9 +192,7 @@ func AddFlags(cmd string, flags []string) string {
 }
 
 type CLITx interface {
-	types.SigTx
-	types.FeeTx
-	types.TxWithMemo
+	tx.SigTx
 
 	SetMemo(string)
 }

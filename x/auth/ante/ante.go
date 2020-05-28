@@ -49,10 +49,10 @@ func NewProtoAnteHandler(
 		NewValidateSigCountDecorator(ak),
 		NewDeductFeeDecorator(ak, bankKeeper),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		NewProtoSigVerificationDecorator(ak, []types2.SignModeHandler{
+		NewProtoSigVerificationDecorator(ak, signing.NewHandlerMap([]types2.SignModeHandler{
 			signing.DirectModeHandler{},
 			types.LegacyAminoJSONHandler{},
-		}),
+		})),
 		NewIncrementSequenceDecorator(ak),
 		ibcante.NewProofVerificationDecorator(ibcKeeper.ClientKeeper, ibcKeeper.ChannelKeeper), // innermost AnteDecorator
 	)

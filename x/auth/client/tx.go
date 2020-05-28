@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/gogo/protobuf/jsonpb"
@@ -191,7 +193,7 @@ func SignStdTx(txBldr tx.Factory, cliCtx context.CLIContext, name string, stdTx 
 	addr := info.GetPubKey().Address()
 
 	// check whether the address is a signer
-	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
+	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetTx().(types.SigTx).GetSigners()) {
 		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 
@@ -202,27 +204,29 @@ func SignStdTx(txBldr tx.Factory, cliCtx context.CLIContext, name string, stdTx 
 		}
 	}
 
-	return tx.Sign(txBldr, name, "", stdTx)
+	//return tx.Sign(txBldr, name, "", stdTx)
+	panic("TODO")
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
 func SignStdTxWithSignerAddress(txBldr tx.Factory, cliCtx context.CLIContext, addr sdk.AccAddress, name string, stdTx sdk.Tx, offline bool) (signedStdTx authtypes.StdTx, err error) {
+	panic("TODO")
 
 	// check whether the address is a signer
-	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
-	}
-
-	if !offline {
-		txBldr, err = populateAccountFromState(txBldr, cliCtx, addr)
-		if err != nil {
-			return signedStdTx, err
-		}
-	}
-
-	return txBldr.SignStdTx(name, stdTx, false)
+	//if !isTxSigner(addr, stdTx.GetSigners()) {
+	//	return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	//}
+	//
+	//if !offline {
+	//	txBldr, err = populateAccountFromState(txBldr, cliCtx, addr)
+	//	if err != nil {
+	//		return signedStdTx, err
+	//	}
+	//}
+	//
+	//return txBldr.SignStdTx(name, stdTx, false)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.

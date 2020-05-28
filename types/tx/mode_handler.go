@@ -7,7 +7,7 @@ import (
 )
 
 type SigningData struct {
-	ModeInfo        *ModeInfo_Single
+	Mode            SignMode
 	PublicKey       crypto.PubKey
 	ChainID         string
 	AccountNumber   uint64

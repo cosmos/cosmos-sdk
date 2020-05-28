@@ -1,17 +1,12 @@
 package cli
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -73,59 +68,60 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 }
 
 func makeSignCmd(cdc context.CLIContext) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		cliCtx, txBldr, stdTx, err := readTxAndInitContexts(cdc, cmd, args[0])
-		if err != nil {
-			return err
-		}
-
-		// if --signature-only is on, then override --append
-		var newTx types.StdTx
-		generateSignatureOnly := viper.GetBool(flagSigOnly)
-		multisigAddrStr := viper.GetString(flagMultisig)
-
-		if multisigAddrStr != "" {
-			var multisigAddr sdk.AccAddress
-
-			multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
-			if err != nil {
-				return err
-			}
-			newTx, err = client.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, cliCtx.Offline,
-			)
-			generateSignatureOnly = true
-		} else {
-			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, cliCtx.Offline)
-		}
-
-		if err != nil {
-			return err
-		}
-
-		json, err := getSignatureJSON(cliCtx.JSONMarshaler, newTx, cliCtx.Indent, generateSignatureOnly)
-		if err != nil {
-			return err
-		}
-
-		if viper.GetString(flagOutfile) == "" {
-			fmt.Printf("%s\n", json)
-			return nil
-		}
-
-		fp, err := os.OpenFile(
-			viper.GetString(flagOutfile), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
-		)
-		if err != nil {
-			return err
-		}
-
-		defer fp.Close()
-		fmt.Fprintf(fp, "%s\n", json)
-
-		return nil
-	}
+	panic("TODO")
+	//return func(cmd *cobra.Command, args []string) error {
+	//	cliCtx, txBldr, stdTx, err := readTxAndInitContexts(cdc, cmd, args[0])
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	// if --signature-only is on, then override --append
+	//	var newTx types.StdTx
+	//	generateSignatureOnly := viper.GetBool(flagSigOnly)
+	//	multisigAddrStr := viper.GetString(flagMultisig)
+	//
+	//	if multisigAddrStr != "" {
+	//		var multisigAddr sdk.AccAddress
+	//
+	//		multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		newTx, err = client.SignStdTxWithSignerAddress(
+	//			txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, cliCtx.Offline,
+	//		)
+	//		generateSignatureOnly = true
+	//	} else {
+	//		appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
+	//		newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, cliCtx.Offline)
+	//	}
+	//
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	json, err := getSignatureJSON(cliCtx.JSONMarshaler, newTx, cliCtx.Indent, generateSignatureOnly)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	if viper.GetString(flagOutfile) == "" {
+	//		fmt.Printf("%s\n", json)
+	//		return nil
+	//	}
+	//
+	//	fp, err := os.OpenFile(
+	//		viper.GetString(flagOutfile), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
+	//	)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	defer fp.Close()
+	//	fmt.Fprintf(fp, "%s\n", json)
+	//
+	//	return nil
+	//}
 }
 
 func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {

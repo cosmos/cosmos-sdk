@@ -2,8 +2,6 @@ package ante
 
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/multisig"
-	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
@@ -34,7 +32,10 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	sigs := sigTx.GetSignatures()
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return ctx, err
+	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
@@ -54,48 +55,34 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 
 		signerAccs[i] = signerAcc
 
-		signerInfo := sigTx.GetAuthInfo().SignerInfos[i]
-
 		// retrieve pubkey
 		pubKey := signerAccs[i].GetPubKey()
 		if !simulate && pubKey == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		switch mi := signerInfo.ModeInfo.Sum.(type) {
-		case *types.ModeInfo_Single_:
-			single := mi.Single
-
-			signBytes, err := svd.getSignBytesSingle(ctx, single, signerAcc, sigTx)
+		switch sig := sig.(type) {
+		case *types.SingleSignature:
+			signBytes, err := svd.getSignBytesSingle(ctx, sig.SignMode, signerAcc, sigTx)
 			if err != nil {
 				return ctx, err
 			}
 
 			// verify signature
-			if !simulate && !pubKey.VerifyBytes(signBytes, sig) {
+			if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
 			}
-		case *types.ModeInfo_Multi_:
+		case *types.MultiSignature:
 			multisigPubKey, ok := pubKey.(multisig.MultisigPubKey)
 			if !ok {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "key is not a multisig pubkey, but ModeInfo.Multi is used")
 			}
 
 			if !simulate {
-				multiSigs, err := types2.DecodeMultisignatures(sig)
-				if err != nil {
-					return ctx, sdkerrors.Wrap(err, "cannot decode MultiSignature")
-				}
-
-				decodedMultisig := multisig.DecodedMultisignature{
-					ModeInfo:   mi.Multi,
-					Signatures: multiSigs,
-				}
-
 				if !multisigPubKey.VerifyMultisignature(
-					func(single *types.ModeInfo_Single) ([]byte, error) {
-						return svd.getSignBytesSingle(ctx, single, signerAcc, sigTx)
-					}, decodedMultisig,
+					func(mode types.SignMode) ([]byte, error) {
+						return svd.getSignBytesSingle(ctx, mode, signerAcc, sigTx)
+					}, sig,
 				) {
 					return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
 				}
@@ -108,7 +95,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 	return next(ctx, tx, simulate)
 }
 
-func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, single *types.ModeInfo_Single, signerAcc auth.AccountI, sigTx types.ProtoTx) ([]byte, error) {
+func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, signMode types.SignMode, signerAcc auth.AccountI, sigTx types.ProtoTx) ([]byte, error) {
 	verifier := svd.handler
 	genesis := ctx.BlockHeight() == 0
 	var accNum uint64
@@ -116,7 +103,7 @@ func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, sin
 		accNum = signerAcc.GetAccountNumber()
 	}
 	data := types.SigningData{
-		ModeInfo:        single,
+		Mode:            signMode,
 		PublicKey:       signerAcc.GetPubKey(),
 		ChainID:         ctx.ChainID(),
 		AccountNumber:   accNum,

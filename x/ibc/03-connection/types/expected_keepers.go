@@ -9,7 +9,7 @@ import (
 type ClientKeeper interface {
 	GetClientState(ctx sdk.Context, clientID string) (clientexported.ClientState, bool)
 	GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (clientexported.ConsensusState, bool)
-	GetSelfConsensusState(ctx sdk.Context, height uint64) (clientexported.ConsensusState, bool)
+	GetSelfConsensusState(ctx sdk.Context, height uint64) (clientexported.ConsensusState, error)
 	IterateClients(ctx sdk.Context, cb func(clientexported.ClientState) bool)
 	ClientStore(ctx sdk.Context, clientID string) sdk.KVStore
 }

@@ -1,8 +1,6 @@
 package ibc_test
 
 import (
-	lite "github.com/tendermint/tendermint/lite2"
-
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -30,7 +28,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						ibctmtypes.NewClientState(clientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 						localhosttypes.NewClientState("chaindID", 10),
 					},
 					[]client.ConsensusStates{
@@ -38,7 +36,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID,
 							[]exported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet,
+									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.SignedHeader.Header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet,
 								),
 							},
 						),
@@ -86,7 +84,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						ibctmtypes.NewClientState(clientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 						localhosttypes.NewClientState("(chaindID)", 0),
 					},
 					nil,

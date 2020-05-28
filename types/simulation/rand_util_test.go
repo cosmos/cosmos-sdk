@@ -30,7 +30,6 @@ func TestRandSubsetCoins(t *testing.T) {
 			sortedStringRep := got.Sort().String()
 			require.Equal(t, gotStringRep, sortedStringRep)
 		})
-
 	}
 }
 

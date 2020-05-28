@@ -1,19 +1,19 @@
 package ante
 
 import (
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	types2 "github.com/cosmos/cosmos-sdk/x/auth/ante/types"
-
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig"
+	types3 "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
-	_ types2.TxWithMemo = (*types.StdTx)(nil) // assert StdTx implements TxWithMemo
+	_ types3.TxWithMemo = (*types.StdTx)(nil) // assert StdTx implements TxWithMemo
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
@@ -53,7 +53,7 @@ func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 }
 
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	memoTx, ok := tx.(types2.TxWithMemo)
+	memoTx, ok := tx.(types3.TxWithMemo)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -91,7 +91,7 @@ func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator
 }
 
 func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(types2.SigTx)
+	sigTx, ok := tx.(types3.SigTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}

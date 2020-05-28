@@ -3,6 +3,9 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -10,7 +13,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -138,7 +140,11 @@ func CountSubKeys(pub crypto.PubKey) int {
 // DEPRECATED
 // ---------------------------------------------------------------------------
 
-var _ sdk.Tx = (*StdTx)(nil)
+var (
+	_ sdk.Tx                             = (*StdTx)(nil)
+	_ types.SigTx                        = (*StdTx)(nil)
+	_ codectypes.UnpackInterfacesMessage = StdTx{}
+)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
@@ -272,6 +278,56 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 	return sdk.AccAddress{}
 }
 
+func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureV2 {
+	switch pk := pk.(type) {
+	case multisig.PubKeyMultisigThreshold:
+		var multisignature multisig.Multisignature
+		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
+		sigs := make([]types.SignatureV2, len(multisignature.Sigs))
+		size := multisignature.BitArray.Size()
+		sigIndex := 0
+
+		for i := 0; i < size; i++ {
+			if multisignature.BitArray.GetIndex(i) {
+				sigs[i] = stdSignatureToSignatureV2(pk.PubKeys[i], multisignature.Sigs[sigIndex])
+				sigIndex++
+			}
+		}
+
+		return types.MultiSignature{
+			BitArray: &types2.CompactBitArray{
+				ExtraBitsStored: uint32(multisignature.BitArray.ExtraBitsStored),
+				Elems:           multisignature.BitArray.Elems,
+			},
+			Signatures: sigs,
+		}
+	default:
+		return types.SingleSignature{
+			SignMode:  types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: sig,
+		}
+	}
+}
+
+func (tx StdTx) GetSignaturesV2() ([]types.SignatureV2, error) {
+	sigs := tx.Signatures
+	res := make([]types.SignatureV2, len(sigs))
+	for i, sig := range sigs {
+		res[i] = stdSignatureToSignatureV2(sig.GetPubKey(), sig.Signature)
+	}
+	return res, nil
+}
+
+func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, m := range tx.Msgs {
+		err := codectypes.UnpackInterfaces(m, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
 // as well as the ChainID (prevent cross chain replay)
@@ -359,16 +415,4 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryBare(tx)
 	}
-}
-
-var _ codectypes.UnpackInterfacesMessage = StdTx{}
-
-func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	for _, m := range tx.Msgs {
-		err := codectypes.UnpackInterfaces(m, unpacker)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

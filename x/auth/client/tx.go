@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -177,10 +179,7 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, m
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(
-	txBldr authtypes.TxBuilder, cliCtx context.CLIContext, name string,
-	stdTx authtypes.StdTx, appendSig bool, offline bool,
-) (authtypes.StdTx, error) {
+func SignStdTx(txBldr tx.Factory, cliCtx context.CLIContext, name string, stdTx context.TxBuilder, appendSig bool, offline bool) (authtypes.StdTx, error) {
 
 	var signedStdTx authtypes.StdTx
 
@@ -203,16 +202,13 @@ func SignStdTx(
 		}
 	}
 
-	return txBldr.SignStdTx(name, stdTx, appendSig)
+	return tx.Sign(txBldr, name, "", stdTx)
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func SignStdTxWithSignerAddress(
-	txBldr authtypes.TxBuilder, cliCtx context.CLIContext,
-	addr sdk.AccAddress, name string, stdTx authtypes.StdTx, offline bool,
-) (signedStdTx authtypes.StdTx, err error) {
+func SignStdTxWithSignerAddress(txBldr tx.Factory, cliCtx context.CLIContext, addr sdk.AccAddress, name string, stdTx sdk.Tx, offline bool) (signedStdTx authtypes.StdTx, err error) {
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
@@ -246,11 +242,9 @@ func ReadTxFromFile(ctx context.CLIContext, filename string) (tx sdk.Tx, err err
 	return ctx.TxJSONDecoder(bytes)
 }
 
-func populateAccountFromState(
-	txBldr authtypes.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
-) (authtypes.TxBuilder, error) {
+func populateAccountFromState(txBldr tx.Factory, cliCtx context.CLIContext, addr sdk.AccAddress) (tx.Factory, error) {
 
-	num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(cliCtx, addr)
+	num, seq, err := cliCtx.AccountRetriever.GetAccountNumberSequence(cliCtx, addr)
 	if err != nil {
 		return txBldr, err
 	}

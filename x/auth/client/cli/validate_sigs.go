@@ -3,17 +3,19 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -80,7 +82,7 @@ func printAndValidateSigs(
 
 	for i, sig := range sigs {
 		var (
-			pubKey = pubKeys[i]
+			pubKey         = pubKeys[i]
 			multiSigHeader string
 			multiSigMsg    string
 			sigAddr        = sdk.AccAddress(pubKey.Address())
@@ -124,7 +126,7 @@ func printAndValidateSigs(
 						success = false
 					}
 				case *txtypes.ModeInfo_Multi_:
-					multisigs, err := multisig2.DecodeMultisignatures(sig)
+					multisigs, err := types.DecodeMultisignatures(sig)
 					if err != nil {
 						sigSanity = "ERROR: can't decoded multisignature"
 						success = false
@@ -186,12 +188,11 @@ func printAndValidateSigs(
 	return success
 }
 
-func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filename string) (context.CLIContext, tx.Factory, sdk.Tx, error, ) {
+func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filename string) (context.CLIContext, tx.Factory, sdk.Tx, error) {
 	stdTx, err := client.ReadTxFromFile(cliCtx, filename)
 	if err != nil {
 		return cliCtx, tx.Factory{}, nil, err
 	}
-
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	cliCtx = cliCtx.InitWithInput(inBuf)

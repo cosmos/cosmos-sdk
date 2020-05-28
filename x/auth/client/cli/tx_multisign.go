@@ -3,10 +3,13 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	types2 "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -15,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -58,9 +60,9 @@ recommended to set such parameters manually.
 	return flags.PostCommands(cmd)[0]
 }
 
-func makeMultiSignCmd(cliContext context.CLIContext) (func(cmd *cobra.Command, args []string) error) {
+func makeMultiSignCmd(cliCtx context.CLIContext) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := client.ReadTxFromFile(cliContext, args[0])
+		stdTx, err := client.ReadTxFromFile(cliCtx, args[0])
 		if err != nil {
 			return
 		}
@@ -82,7 +84,7 @@ func makeMultiSignCmd(cliContext context.CLIContext) (func(cmd *cobra.Command, a
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		cliCtx := cliContext.InitWithInput(inBuf)
+		cliCtx := cliCtx.InitWithInput(inBuf)
 		txBldr := tx.NewFactoryFromCLI(inBuf)
 
 		if !cliCtx.Offline {
@@ -94,9 +96,17 @@ func makeMultiSignCmd(cliContext context.CLIContext) (func(cmd *cobra.Command, a
 			txBldr = txBldr.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
+		feeTx := stdTx.(types2.FeeTx)
+		fee := types.StdFee{
+			Amount: feeTx.GetFee(),
+			Gas:    feeTx.GetGas(),
+		}
+
+		memoTx := stdTx.(types2.TxWithMemo)
+
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
-			stdSig, err := readAndUnmarshalStdSignature(cliContext, args[i])
+			stdSig, err := readAndUnmarshalStdSignature(cliCtx, args[i])
 			if err != nil {
 				return err
 			}
@@ -104,7 +114,7 @@ func makeMultiSignCmd(cliContext context.CLIContext) (func(cmd *cobra.Command, a
 			// Validate each signature
 			sigBytes := types.StdSignBytes(
 				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
-				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
+				fee, stdTx.GetMsgs(), memoTx.GetMemo(),
 			)
 			if ok := stdSig.GetPubKey().VerifyBytes(sigBytes, stdSig.Signature); !ok {
 				return fmt.Errorf("couldn't verify signature")
@@ -114,20 +124,20 @@ func makeMultiSignCmd(cliContext context.CLIContext) (func(cmd *cobra.Command, a
 			}
 		}
 
-		newStdSig := types.StdSignature{Signature: cliContext.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()} //nolint:staticcheck
-		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo())                  //nolint:staticcheck
+		newStdSig := types.StdSignature{Signature: cliCtx.Codec.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()} //nolint:staticcheck
+		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo())                         //nolint:staticcheck
 
 		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
 		switch {
 		case sigOnly && cliCtx.Indent:
-			json, err = cliContext.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+			json, err = codec.MarshalJSONIndent(cliCtx.JSONMarshaler, newTx.Signatures[0])
 		case sigOnly && !cliCtx.Indent:
-			json, err = cliContext.MarshalJSON(newTx.Signatures[0])
+			json, err = cliCtx.JSONMarshaler.MarshalJSON(newTx.Signatures[0])
 		case !sigOnly && cliCtx.Indent:
-			json, err = cliContext.MarshalJSONIndent(newTx, "", "  ")
+			json, err = codec.MarshalJSONIndent(cliCtx.JSONMarshaler, newTx)
 		default:
-			json, err = cliContext.MarshalJSON(newTx)
+			json, err = cliCtx.JSONMarshaler.MarshalJSON(newTx)
 		}
 		if err != nil {
 			return err
@@ -152,12 +162,12 @@ func makeMultiSignCmd(cliContext context.CLIContext) (func(cmd *cobra.Command, a
 	}
 }
 
-func readAndUnmarshalStdSignature(cdc context.CLIContext, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
+func readAndUnmarshalStdSignature(cliContext context.CLIContext, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return
 	}
-	if err = cdc.UnmarshalJSON(bytes, &stdSig); err != nil {
+	if err = cliContext.JSONMarshaler.UnmarshalJSON(bytes, &stdSig); err != nil {
 		return
 	}
 	return

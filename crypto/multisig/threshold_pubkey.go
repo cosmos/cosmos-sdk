@@ -1,8 +1,6 @@
 package multisig
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -72,18 +70,6 @@ func (pk PubKey) VerifyBytes(msg []byte, marshalledSig []byte) bool {
 	return true
 }
 
-func DecodeMultisignatures(bz []byte) ([][]byte, error) {
-	multisig := types.MultiSignature{}
-	err := multisig.Unmarshal(bz)
-	if err != nil {
-		return nil, err
-	}
-	if len(multisig.XXX_unrecognized) > 0 {
-		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
-	}
-	return multisig.Signatures, nil
-}
-
 func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool {
 	bitarray := sig.ModeInfo.Bitarray
 	sigs := sig.Signatures
@@ -119,7 +105,7 @@ func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig Decoded
 				if !ok {
 					return false
 				}
-				nestedSigs, err := DecodeMultisignatures(sigs[sigIndex])
+				nestedSigs, err := types.DecodeMultisignatures(sigs[sigIndex])
 				if err != nil {
 					return false
 				}

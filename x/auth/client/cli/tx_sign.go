@@ -2,12 +2,12 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,7 +72,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(cdc context.CLIContext) (func(cmd *cobra.Command, args []string) error) {
+func makeSignCmd(cdc context.CLIContext) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		cliCtx, txBldr, stdTx, err := readTxAndInitContexts(cdc, cmd, args[0])
 		if err != nil {
@@ -104,7 +104,7 @@ func makeSignCmd(cdc context.CLIContext) (func(cmd *cobra.Command, args []string
 			return err
 		}
 
-		json, err := getSignatureJSON(cdc, newTx, cliCtx.Indent, generateSignatureOnly)
+		json, err := getSignatureJSON(cliCtx.JSONMarshaler, newTx, cliCtx.Indent, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -128,12 +128,12 @@ func makeSignCmd(cdc context.CLIContext) (func(cmd *cobra.Command, args []string
 	}
 }
 
-func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
 	switch generateSignatureOnly {
 	case true:
 		switch indent {
 		case true:
-			return cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+			return codec.MarshalJSONIndent(cdc, newTx.Signatures[0])
 
 		default:
 			return cdc.MarshalJSON(newTx.Signatures[0])
@@ -141,7 +141,7 @@ func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, indent, generateSigna
 	default:
 		switch indent {
 		case true:
-			return cdc.MarshalJSONIndent(newTx, "", "  ")
+			return codec.MarshalJSONIndent(cdc, newTx)
 
 		default:
 			return cdc.MarshalJSON(newTx)

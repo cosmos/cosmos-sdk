@@ -1,9 +1,8 @@
 package ante
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/crypto/multisig"
+	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,14 +15,10 @@ type ProtoSigVerificationDecorator struct {
 	handler types.SignModeHandler
 }
 
-func NewProtoSigVerificationDecorator(ak AccountKeeper, signModeHandlers []types.SignModeHandler) ProtoSigVerificationDecorator {
-	handlerMap := make(map[types.SignMode]types.SignModeHandler)
-	for _, h := range signModeHandlers {
-		handlerMap[h.Modes()] = h
-	}
+func NewProtoSigVerificationDecorator(ak AccountKeeper, signModeHandler types.SignModeHandler) ProtoSigVerificationDecorator {
 	return ProtoSigVerificationDecorator{
-		ak:               ak,
-		signModeHandlers: handlerMap,
+		ak:      ak,
+		handler: signModeHandler,
 	}
 }
 
@@ -87,7 +82,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 			}
 
 			if !simulate {
-				multiSigs, err := multisig.DecodeMultisignatures(sig)
+				multiSigs, err := types2.DecodeMultisignatures(sig)
 				if err != nil {
 					return ctx, sdkerrors.Wrap(err, "cannot decode MultiSignature")
 				}
@@ -114,10 +109,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 }
 
 func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, single *types.ModeInfo_Single, signerAcc auth.AccountI, sigTx types.ProtoTx) ([]byte, error) {
-	verifier, found := svd.signModeHandlers[single.Mode]
-	if !found {
-		return nil, fmt.Errorf("can't verify sign mode %s", single.Mode.String())
-	}
+	verifier := svd.handler
 	genesis := ctx.BlockHeight() == 0
 	var accNum uint64
 	if !genesis {

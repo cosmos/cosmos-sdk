@@ -1,6 +1,10 @@
 package types
 
-import "github.com/tendermint/tendermint/crypto"
+import (
+	"fmt"
+
+	"github.com/tendermint/tendermint/crypto"
+)
 
 // PublicKey specifies a public key
 type PublicKey struct {
@@ -23,4 +27,16 @@ type PublicKey struct {
 // This will only be set if the PublicKeyCodec is cache-wrapped using CacheWrapCodec
 func (pk PublicKey) GetCachedPubKey() crypto.PubKey {
 	return pk.cachedValue
+}
+
+func DecodeMultisignatures(bz []byte) ([][]byte, error) {
+	multisig := MultiSignature{}
+	err := multisig.Unmarshal(bz)
+	if err != nil {
+		return nil, err
+	}
+	if len(multisig.XXX_unrecognized) > 0 {
+		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
+	}
+	return multisig.Signatures, nil
 }

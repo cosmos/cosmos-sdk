@@ -3,15 +3,14 @@ package ante
 import (
 	"fmt"
 
-	types2 "github.com/cosmos/cosmos-sdk/x/auth/ante/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
-	_ types2.FeeTx = (*types.StdTx)(nil) // assert StdTx implements FeeTx
+	_ txtypes.FeeTx = (*types.StdTx)(nil) // assert StdTx implements FeeTx
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
@@ -27,7 +26,7 @@ func NewMempoolFeeDecorator() MempoolFeeDecorator {
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(types2.FeeTx)
+	feeTx, ok := tx.(txtypes.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
@@ -76,7 +75,7 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper) DeductFeeDecor
 }
 
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(types2.FeeTx)
+	feeTx, ok := tx.(txtypes.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}

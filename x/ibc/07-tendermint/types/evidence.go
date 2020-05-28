@@ -7,6 +7,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -71,13 +72,13 @@ func (ev Evidence) ValidateBasic() error {
 	}
 
 	// ValidateBasic on both validators
-	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header1.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
-	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header2.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
@@ -87,15 +88,26 @@ func (ev Evidence) ValidateBasic() error {
 	if ev.Header1.GetHeight() != ev.Header2.GetHeight() {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.GetHeight(), ev.Header2.GetHeight())
 	}
+
+	blockID1, err := tmtypes.BlockIDFromProto(&ev.Header1.SignedHeader.Commit.BlockID)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid block ID from header 1: %s", err.Error())
+	}
+
+	blockID2, err := tmtypes.BlockIDFromProto(&ev.Header2.SignedHeader.Commit.BlockID)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid block ID from header 2: %s", err.Error())
+	}
+
 	// Ensure that Commit Hashes are different
-	if ev.Header1.SignedHeader.Commit.BlockID.Equals(ev.Header2.SignedHeader.Commit.BlockID) {
+	if blockID1.Equals(*blockID2) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
 	}
 	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit, ev.Header1.ValidatorSet); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "invalid header 1 commit")
 	}
 	if err := ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit, ev.Header2.ValidatorSet); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "invalid header 2 commit")
 	}
 	return nil
 }
@@ -105,21 +117,30 @@ func (ev Evidence) ValidateBasic() error {
 // CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
 // This implies that someone tried to submit evidence that wasn't actually committed by the validatorset
 // thus we should return an error here and reject the evidence rather than panicing.
-func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.ValidatorSet) (err error) {
+func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid commit: %v", r)
 		}
 	}()
 
-	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet := tmtypes.CommitToVoteSet(chainID, commit, valSet)
+	tmCommit, err := tmtypes.CommitFromProto(commit)
+	if err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+	}
 
+	tmValset, err := tmtypes.ValidatorSetFromProto(valSet)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid validator set: %s", err.Error())
+	}
+
+	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
+	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, tmValset)
 	blockID, ok := voteSet.TwoThirdsMajority()
 
 	// Check that ValidatorSet did indeed commit to blockID in Commit
-	if !ok || !blockID.Equals(commit.BlockID) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "validator set did not commit to header 1")
+	if !ok || !blockID.Equals(tmCommit.BlockID) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "validator set did not commit to header")
 	}
 
 	return nil

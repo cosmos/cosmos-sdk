@@ -4,6 +4,7 @@ import (
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -87,10 +88,30 @@ func checkValidity(
 		)
 	}
 
+	trustedSignedHeader, err := tmtypes.SignedHeaderFromProto(&clientState.LastHeader.SignedHeader)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidHeader, "invalid last signed header: %s", err.Error())
+	}
+
+	trustedValset, err := tmtypes.ValidatorSetFromProto(clientState.LastHeader.ValidatorSet)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidHeader, "invalid last validator set: %s", err.Error())
+	}
+
+	untrustedSignedHeader, err := tmtypes.SignedHeaderFromProto(&header.SignedHeader)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidHeader, "invalid new signed header: %s", err.Error())
+	}
+
+	untrustedValset, err := tmtypes.ValidatorSetFromProto(header.ValidatorSet)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidHeader, "invalid new validator set: %s", err.Error())
+	}
+
 	// Verify next header with the last header's validatorset as trusted validatorset
-	err := lite.Verify(
-		clientState.GetChainID(), &clientState.LastHeader.SignedHeader,
-		clientState.LastHeader.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
+	err = lite.Verify(
+		clientState.GetChainID(), trustedSignedHeader,
+		trustedValset, untrustedSignedHeader, untrustedValset,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {

@@ -139,7 +139,6 @@ message ConsensusState {
 // Evidence defines two distinct headers at the same hight, chain id and client.
 // It is used to verify and penalize light client misbehaviour.
 message Evidence {
-  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
@@ -166,8 +165,6 @@ message Evidence {
 // Header defines a tendermint signed header and the validator set that
 // corresponds to the header.
 message Header {
-  option (gogoproto.equal) = true;
-
   .tendermint.proto.types.SignedHeader signed_header = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"signed_header\""

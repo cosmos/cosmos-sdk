@@ -58,11 +58,9 @@ func NewClientState(
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header,
 ) ClientState {
-	fraction := Fraction{Numerator: trustLevel.Numerator, Denominator: trustLevel.Denominator}
-
 	return ClientState{
 		ID:              id,
-		TrustLevel:      fraction,
+		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
@@ -121,7 +119,7 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	return cs.LastHeader.ValidateBasic(cs.GetChainID())
+	return cs.LastHeader.ValidateBasic()
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the

@@ -3,7 +3,7 @@ package tendermint
 import (
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -81,19 +81,36 @@ func checkMisbehaviour(
 		)
 	}
 
+	valset, err := tmtypes.ValidatorSetFromProto(consensusState.ValidatorSet)
+	if err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+	}
+
+	signedHeader1, err := tmtypes.SignedHeaderFromProto(&evidence.Header1.SignedHeader)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid signed header 1: %s", err.Error())
+	}
+
+	signedHeader2, err := tmtypes.SignedHeaderFromProto(&evidence.Header2.SignedHeader)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid signed header 2: %s", err.Error())
+	}
+
 	// TODO: Evidence must be within trusting period
 	// Blocked on https://github.com/cosmos/ics/issues/379
 
-	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
+	// - ValidatorSet must have (1-trustLevel) similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
-		evidence.ChainID, evidence.Header1.SignedHeader.Commit, lite.DefaultTrustLevel,
+	if err := valset.VerifyCommitTrusting(
+		evidence.ChainID, signedHeader1.Commit.BlockID, signedHeader1.Height,
+		signedHeader1.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
-	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
-		evidence.ChainID, evidence.Header2.SignedHeader.Commit, lite.DefaultTrustLevel,
+	if err := valset.VerifyCommitTrusting(
+		evidence.ChainID, signedHeader2.Commit.BlockID, signedHeader2.Height,
+		signedHeader2.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
 	}

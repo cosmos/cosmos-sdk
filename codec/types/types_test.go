@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/gogo/protobuf/jsonpb"
@@ -143,4 +144,31 @@ func TestAny_ProtoJSON(t *testing.T) {
 	json, err := jm.MarshalToString(any)
 	require.NoError(t, err)
 	require.Equal(t, "{\"@type\":\"/cosmos_sdk.codec.v1.Dog\",\"name\":\"Spot\"}", json)
+
+	registry := NewTestInterfaceRegistry()
+	jum := &jsonpb.Unmarshaler{}
+	var any2 types.Any
+	err = jum.Unmarshal(strings.NewReader(json), &any2)
+	require.NoError(t, err)
+	var animal testdata.Animal
+	err = registry.UnpackAny(&any2, &animal)
+	require.NoError(t, err)
+	require.Equal(t, spot, animal)
+
+	ha := &testdata.HasAnimal{
+		Animal: any,
+	}
+	err = ha.UnpackInterfaces(types.ProtoJSONPacker{JsonMarshaler: jm})
+	require.NoError(t, err)
+	json, err = jm.MarshalToString(ha)
+	require.NoError(t, err)
+	require.Equal(t, "{\"animal\":{\"@type\":\"/cosmos_sdk.codec.v1.Dog\",\"name\":\"Spot\"}}", json)
+
+	require.NoError(t, err)
+	var ha2 testdata.HasAnimal
+	err = jum.Unmarshal(strings.NewReader(json), &ha2)
+	require.NoError(t, err)
+	err = ha2.UnpackInterfaces(registry)
+	require.NoError(t, err)
+	require.Equal(t, spot, ha2.Animal.GetCachedValue())
 }

@@ -1,20 +1,27 @@
 package signing
 
 import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type DirectModeHandler struct{}
 
-var _ SignModeHandler = DirectModeHandler{}
+var _ types.SignModeHandler = DirectModeHandler{}
 
-func (DirectModeHandler) Mode() types.SignMode {
-	return types.SignMode_SIGN_MODE_DIRECT
+func (DirectModeHandler) Modes() []types.SignMode {
+	return []types.SignMode{types.SignMode_SIGN_MODE_DIRECT}
 }
 
-func (DirectModeHandler) GetSignBytes(data SigningData, tx types.ProtoTx) ([]byte, error) {
-	bodyBz := tx.GetBodyBytes()
-	authInfoBz := tx.GetAuthInfoBytes()
+func (DirectModeHandler) GetSignBytes(data types.SigningData, tx sdk.Tx) ([]byte, error) {
+	protoTx, ok := tx.(types.ProtoTx)
+	if !ok {
+		return nil, fmt.Errorf("can only get direct sign bytes for a ProtoTx, got %T", tx)
+	}
+	bodyBz := protoTx.GetBodyBytes()
+	authInfoBz := protoTx.GetAuthInfoBytes()
 	return DirectSignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.AccountSequence)
 }
 

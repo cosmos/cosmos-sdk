@@ -14,6 +14,7 @@ func MakeTxCLIContext() context.CLIContext {
 	return cliCtx.
 		WithJSONMarshaler(aminoCdc).
 		WithTxGenerator(encodingConfig.TxGenerator).
+		WithTxJSONDecoder(encodingConfig.TxJSONDecoder).
 		WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
 		WithCodec(encodingConfig.Amino)
 }

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -79,6 +81,10 @@ type StdTxGenerator struct {
 	Cdc *codec.Codec
 }
 
+func (s StdTxGenerator) SignModeHandler() types.SignModeHandler {
+	return LegacyAminoJSONHandler{}
+}
+
 var _ context.TxGenerator = StdTxGenerator{}
 
 // NewTxBuilder implements TxGenerator.NewTxBuilder
@@ -124,4 +130,28 @@ func (ss *StdSignature) SetPubKey(key crypto.PubKey) error {
 // SetSignature implements ClientSignature.SetSignature
 func (ss *StdSignature) SetSignature(bytes []byte) {
 	ss.Signature = bytes
+}
+
+type LegacyAminoJSONHandler struct{}
+
+var _ types.SignModeHandler = LegacyAminoJSONHandler{}
+
+func (LegacyAminoJSONHandler) Modes() []types.SignMode {
+	return []types.SignMode{types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
+}
+
+func (LegacyAminoJSONHandler) GetSignBytes(data types.SigningData, tx sdk.Tx) ([]byte, error) {
+	feeTx, ok := tx.(types.FeeTx)
+	if !ok {
+		return nil, fmt.Errorf("expected FeeTx, got %T", tx)
+	}
+
+	memoTx, ok := tx.(types.TxWithMemo)
+	if !ok {
+		return nil, fmt.Errorf("expected TxWithMemo, got %T", tx)
+	}
+
+	return StdSignBytes(
+		data.ChainID, data.AccountNumber, data.AccountSequence, StdFee{Amount: feeTx.GetFee(), Gas: feeTx.GetGas()}, tx.GetMsgs(), memoTx.GetMemo(),
+	), nil
 }

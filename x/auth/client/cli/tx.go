@@ -1,15 +1,15 @@
 package cli
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(cdc *codec.Codec) *cobra.Command {
+func GetTxCmd(ctx context.CLIContext) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Auth transaction subcommands",
@@ -18,9 +18,9 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
-		GetMultiSignCommand(cdc),
-		GetSignCommand(cdc),
-		GetValidateSignaturesCommand(cdc),
+		GetMultiSignCommand(ctx),
+		GetSignCommand(ctx),
+		GetValidateSignaturesCommand(ctx),
 	)
 	return txCmd
 }

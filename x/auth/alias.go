@@ -22,7 +22,6 @@ const (
 	DefaultSigVerifyCostSecp256k1 = types.DefaultSigVerifyCostSecp256k1
 	QueryAccount                  = types.QueryAccount
 	QueryParams                   = types.QueryParams
-	MaxGasWanted                  = types.MaxGasWanted
 	Minter                        = types.Minter
 	Burner                        = types.Burner
 	Staking                       = types.Staking

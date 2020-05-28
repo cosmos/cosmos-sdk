@@ -129,7 +129,7 @@ func TestReadStdTxFromFile(t *testing.T) {
 	defer os.Remove(jsonTxFile.Name())
 
 	// Read it back
-	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
+	decodedTx, err := ReadTxFromFile(cdc, jsonTxFile.Name())
 	require.NoError(t, err)
 	require.Equal(t, decodedTx.Memo, "foomemo")
 }

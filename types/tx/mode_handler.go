@@ -1,13 +1,13 @@
-package signing
+package types
 
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	types "github.com/cosmos/cosmos-sdk/types/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type SigningData struct {
-	ModeInfo        *types.ModeInfo_Single
+	ModeInfo        *ModeInfo_Single
 	PublicKey       crypto.PubKey
 	ChainID         string
 	AccountNumber   uint64
@@ -15,6 +15,6 @@ type SigningData struct {
 }
 
 type SignModeHandler interface {
-	Mode() types.SignMode
-	GetSignBytes(data SigningData, tx types.ProtoTx) ([]byte, error)
+	Modes() []SignMode
+	GetSignBytes(data SigningData, tx sdk.Tx) ([]byte, error)
 }

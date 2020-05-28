@@ -56,3 +56,8 @@ func (t TxGenerator) TxEncoder() sdk.TxEncoder {
 		return t.Marshaler.MarshalBinaryBare(ptx)
 	}
 }
+
+func (t TxGenerator) SignModeHandler() types.SignModeHandler {
+	panic("implement me")
+}
+

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -22,7 +23,7 @@ const (
 )
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(codec *codec.Codec) *cobra.Command {
+func GetSignCommand(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -42,7 +43,7 @@ key. It implies --signature-only. Full multisig signed transactions may eventual
 be generated via the 'multisign' command.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeSignCmd(codec),
+		RunE:   makeSignCmd(ctx),
 		Args:   cobra.ExactArgs(1),
 	}
 
@@ -71,9 +72,9 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(cdc context.CLIContext) (func(cmd *cobra.Command, args []string) error) {
 	return func(cmd *cobra.Command, args []string) error {
-		cliCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
+		cliCtx, txBldr, stdTx, err := readTxAndInitContexts(cdc, cmd, args[0])
 		if err != nil {
 			return err
 		}

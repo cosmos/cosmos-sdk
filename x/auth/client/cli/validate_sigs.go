@@ -3,6 +3,9 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -10,13 +13,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func GetValidateSignaturesCommand(codec *codec.Codec) *cobra.Command {
+func GetValidateSignaturesCommand(cliCtx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate-signatures [file]",
 		Short: "Validate transactions signatures",
@@ -29,16 +30,16 @@ given transaction. If the --offline flag is also set, signature validation over 
 transaction will be not be performed as that will require RPC communication with a full node.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeValidateSignaturesCmd(codec),
+		RunE:   makeValidateSignaturesCmd(cliCtx),
 		Args:   cobra.ExactArgs(1),
 	}
 
 	return flags.PostCommands(cmd)[0]
 }
 
-func makeValidateSignaturesCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
+func makeValidateSignaturesCmd(cliCtx context.CLIContext) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		cliCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
+		cliCtx, txBldr, stdTx, err := readTxAndInitContexts(cliCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
@@ -55,17 +56,21 @@ func makeValidateSignaturesCmd(cdc *codec.Codec) func(cmd *cobra.Command, args [
 // expected signers. In addition, if offline has not been supplied, the signature is
 // verified over the transaction sign bytes. Returns false if the validation fails.
 func printAndValidateSigs(
-	cmd *cobra.Command, cliCtx context.CLIContext, chainID string, stdTx types.StdTx, offline bool,
+	cmd *cobra.Command, cliCtx context.CLIContext, chainID string, tx sdk.Tx, offline bool,
 ) bool {
+	sigTx := tx.(txtypes.SigTx)
+	signModeHandler := cliCtx.TxGenerator.SignModeHandler()
+
 	cmd.Println("Signers:")
-	signers := stdTx.GetSigners()
+	signers := sigTx.GetSigners()
 
 	for i, signer := range signers {
 		cmd.Printf("  %v: %v\n", i, signer.String())
 	}
 
 	success := true
-	sigs := stdTx.Signatures
+	sigs := sigTx.GetSignatures()
+	pubKeys := sigTx.GetPubKeys()
 	cmd.Println("")
 	cmd.Println("Signatures:")
 
@@ -75,9 +80,10 @@ func printAndValidateSigs(
 
 	for i, sig := range sigs {
 		var (
+			pubKey = pubKeys[i]
 			multiSigHeader string
 			multiSigMsg    string
-			sigAddr        = sdk.AccAddress(sig.GetPubKey().Address())
+			sigAddr        = sdk.AccAddress(pubKey.Address())
 			sigSanity      = "OK"
 		)
 
@@ -89,27 +95,74 @@ func printAndValidateSigs(
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			acc, err := types.NewAccountRetriever(client.Codec).GetAccount(cliCtx, sigAddr)
+			accNum, accSeq, err := cliCtx.AccountRetriever.GetAccountNumberSequence(cliCtx, sigAddr)
 			if err != nil {
 				cmd.Printf("failed to get account: %s\n", sigAddr)
 				return false
 			}
 
-			sigBytes := types.StdSignBytes(
-				chainID, acc.GetAccountNumber(), acc.GetSequence(),
-				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
-			)
+			signingData := txtypes.SigningData{
+				PublicKey:       pubKey,
+				ChainID:         chainID,
+				AccountNumber:   accNum,
+				AccountSequence: accSeq,
+			}
 
-			if ok := sig.GetPubKey().VerifyBytes(sigBytes, sig.Signature); !ok {
-				sigSanity = "ERROR: signature invalid"
-				success = false
+			if protoTx, ok := tx.(txtypes.ProtoTx); ok {
+				modeInfo := protoTx.GetAuthInfo().SignerInfos[i].ModeInfo
+				switch modeInfo := modeInfo.Sum.(type) {
+				case *txtypes.ModeInfo_Single_:
+					signingData.ModeInfo = modeInfo.Single
+					sigBytes, err := signModeHandler.GetSignBytes(signingData, tx)
+					if err != nil {
+						sigSanity = "ERROR: can't get sign bytes"
+						success = false
+					}
+
+					if ok := pubKey.VerifyBytes(sigBytes, sig); !ok {
+						sigSanity = "ERROR: signature invalid"
+						success = false
+					}
+				case *txtypes.ModeInfo_Multi_:
+					multisigs, err := multisig2.DecodeMultisignatures(sig)
+					if err != nil {
+						sigSanity = "ERROR: can't decoded multisignature"
+						success = false
+					}
+
+					if multiPK, ok := pubKey.(multisig2.MultisigPubKey); ok {
+						multiPK.VerifyMultisignature(func(single *txtypes.ModeInfo_Single) ([]byte, error) {
+							signingData.ModeInfo = single
+							return signModeHandler.GetSignBytes(signingData, tx)
+						}, multisig2.DecodedMultisignature{
+							ModeInfo:   modeInfo.Multi,
+							Signatures: multisigs,
+						})
+					}
+				default:
+					sigSanity = "ERROR: unexpected ModeInfo"
+					success = false
+				}
+			} else {
+				sigBytes, err := signModeHandler.GetSignBytes(signingData, tx)
+				if err != nil {
+					sigSanity = "ERROR: can't get sign bytes"
+					success = false
+				}
+
+				if ok := pubKey.VerifyBytes(sigBytes, sig); !ok {
+					sigSanity = "ERROR: signature invalid"
+					success = false
+				}
 			}
 		}
 
-		multiPK, ok := sig.GetPubKey().(multisig.PubKeyMultisigThreshold)
+		multiPK, ok := pubKey.(multisig.PubKeyMultisigThreshold)
 		if ok {
 			var multiSig multisig.Multisignature
-			cliCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)
+
+			panic("TODO: update this:")
+			cliCtx.Codec.MustUnmarshalBinaryBare(sig, &multiSig)
 
 			var b strings.Builder
 			b.WriteString("\n  MultiSig Signatures:\n")
@@ -133,17 +186,16 @@ func printAndValidateSigs(
 	return success
 }
 
-func readStdTxAndInitContexts(cdc *codec.Codec, cmd *cobra.Command, filename string) (
-	context.CLIContext, types.TxBuilder, types.StdTx, error,
-) {
-	stdTx, err := client.ReadStdTxFromFile(cdc, filename)
+func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filename string) (context.CLIContext, tx.Factory, sdk.Tx, error, ) {
+	stdTx, err := client.ReadTxFromFile(cliCtx, filename)
 	if err != nil {
-		return context.CLIContext{}, types.TxBuilder{}, types.StdTx{}, err
+		return cliCtx, tx.Factory{}, nil, err
 	}
 
-	inBuf := bufio.NewReader(cmd.InOrStdin())
-	cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-	txBldr := types.NewTxBuilderFromCLI(inBuf)
 
-	return cliCtx, txBldr, stdTx, nil
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+	cliCtx = cliCtx.InitWithInput(inBuf)
+	txFactory := tx.NewFactoryFromCLI(inBuf)
+
+	return cliCtx, txFactory, stdTx, nil
 }

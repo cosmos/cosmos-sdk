@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -13,9 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-// MaxGasWanted defines the max gas allowed.
-const MaxGasWanted = uint64((1 << 63) - 1)
 
 // Deprecated: StdFee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
@@ -168,10 +166,10 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 func (tx StdTx) ValidateBasic() error {
 	stdSigs := tx.GetSignatures()
 
-	if tx.Fee.Gas > MaxGasWanted {
+	if tx.Fee.Gas > types.MaxGasWanted {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", tx.Fee.Gas, MaxGasWanted,
+			"invalid gas supplied; %d > %d", tx.Fee.Gas, types.MaxGasWanted,
 		)
 	}
 	if tx.Fee.Amount.IsAnyNegative() {

@@ -8,19 +8,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type ProtoSigVerificationDecorator struct {
-	ak               AccountKeeper
-	signModeHandlers map[types.SignMode]signing.SignModeHandler
+	ak      AccountKeeper
+	handler types.SignModeHandler
 }
 
-func NewProtoSigVerificationDecorator(ak AccountKeeper, signModeHandlers []signing.SignModeHandler) ProtoSigVerificationDecorator {
-	handlerMap := make(map[types.SignMode]signing.SignModeHandler)
+func NewProtoSigVerificationDecorator(ak AccountKeeper, signModeHandlers []types.SignModeHandler) ProtoSigVerificationDecorator {
+	handlerMap := make(map[types.SignMode]types.SignModeHandler)
 	for _, h := range signModeHandlers {
-		handlerMap[h.Mode()] = h
+		handlerMap[h.Modes()] = h
 	}
 	return ProtoSigVerificationDecorator{
 		ak:               ak,
@@ -124,7 +123,7 @@ func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, sin
 	if !genesis {
 		accNum = signerAcc.GetAccountNumber()
 	}
-	data := signing.SigningData{
+	data := types.SigningData{
 		ModeInfo:        single,
 		PublicKey:       signerAcc.GetPubKey(),
 		ChainID:         ctx.ChainID(),

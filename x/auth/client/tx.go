@@ -230,7 +230,7 @@ func SignStdTxWithSignerAddress(
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx, err error) {
+func ReadTxFromFile(ctx context.CLIContext, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
 	if filename == "-" {
@@ -243,11 +243,7 @@ func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx
 		return
 	}
 
-	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
-		return
-	}
-
-	return
+	return ctx.TxJSONDecoder(bytes)
 }
 
 func populateAccountFromState(

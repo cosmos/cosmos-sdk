@@ -28,6 +28,7 @@ type CLIContext struct {
 	Client           rpcclient.Client
 	ChainID          string
 	JSONMarshaler    codec.JSONMarshaler
+	TxJSONDecoder    sdk.TxDecoder
 	Input            io.Reader
 	Keyring          keyring.Keyring
 	Output           io.Writer
@@ -196,6 +197,12 @@ func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 // WithJSONMarshaler returns a copy of the CLIContext with an updated JSONMarshaler.
 func (ctx CLIContext) WithJSONMarshaler(m codec.JSONMarshaler) CLIContext {
 	ctx.JSONMarshaler = m
+	return ctx
+}
+
+// WithTxJSONDecoder returns a copy of the CLIContext with an updated JSONMarshaler.
+func (ctx CLIContext) WithTxJSONDecoder(dec sdk.TxDecoder) CLIContext {
+	ctx.TxJSONDecoder = dec
 	return ctx
 }
 

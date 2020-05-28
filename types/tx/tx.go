@@ -6,15 +6,13 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	antetypes "github.com/cosmos/cosmos-sdk/x/auth/ante/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type ProtoTx interface {
 	sdk.Tx
-	antetypes.FeeTx
-	antetypes.TxWithMemo
-	antetypes.SigTx
+	FeeTx
+	TxWithMemo
+	SigTx
 
 	GetBody() *TxBody
 	GetAuthInfo() *AuthInfo
@@ -47,10 +45,10 @@ func (tx *Tx) GetMsgs() []sdk.Msg {
 func (tx *Tx) ValidateBasic() error {
 	sigs := tx.GetSignatures()
 
-	if tx.GetGas() > auth.MaxGasWanted {
+	if tx.GetGas() > MaxGasWanted {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", tx.GetGas(), auth.MaxGasWanted,
+			"invalid gas supplied; %d > %d", tx.GetGas(), MaxGasWanted,
 		)
 	}
 	if tx.GetFee().IsAnyNegative() {
@@ -154,3 +152,28 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	}
 	return nil
 }
+
+// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
+type FeeTx interface {
+	sdk.Tx
+	GetGas() uint64
+	GetFee() sdk.Coins
+	FeePayer() sdk.AccAddress
+}
+
+// Tx must have GetMemo() method to use ValidateMemoDecorator
+type TxWithMemo interface {
+	sdk.Tx
+	GetMemo() string
+}
+
+type SigTx interface {
+	sdk.Tx
+	GetSignatures() [][]byte
+	GetSigners() []sdk.AccAddress
+	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
+}
+
+// MaxGasWanted defines the max gas allowed.
+const MaxGasWanted = uint64((1 << 63) - 1)
+

@@ -3,6 +3,8 @@ package context
 import (
 	"github.com/tendermint/tendermint/crypto"
 
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,6 +17,7 @@ type (
 		NewFee() ClientFee
 		NewSignature() ClientSignature
 		TxEncoder() sdk.TxEncoder
+		SignModeHandler() types.SignModeHandler
 	}
 
 	ClientFee interface {

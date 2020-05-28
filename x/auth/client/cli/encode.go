@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -20,7 +19,7 @@ func (txr txEncodeRespStr) String() string {
 
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
-func GetEncodeCommand(cdc *codec.Codec) *cobra.Command {
+func GetEncodeCommand(cliCtx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode [file]",
 		Short: "Encode transactions generated offline",
@@ -29,15 +28,15 @@ Read a transaction from <file>, serialize it to the Amino wire protocol, and out
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := cliCtx.Init()
 
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
+			tx, err := client.ReadTxFromFile(cliCtx, args[0])
 			if err != nil {
 				return
 			}
 
-			// re-encode it via the Amino wire protocol
-			txBytes, err := cliCtx.Codec.MarshalBinaryBare(stdTx)
+			// re-encode it
+			txBytes, err := cliCtx.TxGenerator.TxEncoder()(tx)
 			if err != nil {
 				return err
 			}

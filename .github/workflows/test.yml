@@ -59,7 +59,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xaa.txt | xargs go test -mod=readonly -timeout 6m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xaa.txt | xargs go test -mod=readonly -timeout 8m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |

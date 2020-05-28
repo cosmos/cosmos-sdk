@@ -100,6 +100,12 @@ var (
 	// ErrInvalidVersion defines a general error for an invalid version
 	ErrInvalidVersion = Register(RootCodespace, 27, "invalid version")
 
+	// ErrInvalidChainID defines an error when the chain-id is invalid.
+	ErrInvalidChainID = Register(RootCodespace, 28, "invalid chain-id")
+
+	// ErrInvalidType defines an error an invalid type.
+	ErrInvalidType = Register(RootCodespace, 29, "invalid type")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

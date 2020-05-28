@@ -2,7 +2,7 @@ package auth
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // InitGenesis - Init store state from genesis data
@@ -25,9 +25,9 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
 
-	var genAccounts exported.GenesisAccounts
-	ak.IterateAccounts(ctx, func(account exported.Account) bool {
-		genAccount := account.(exported.GenesisAccount)
+	var genAccounts types.GenesisAccounts
+	ak.IterateAccounts(ctx, func(account types.AccountI) bool {
+		genAccount := account.(types.GenesisAccount)
 		genAccounts = append(genAccounts, genAccount)
 		return false
 	})

@@ -96,6 +96,15 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
+
+		// Create account if recipient does not exist.
+		//
+		// NOTE: This should ultimately be removed in favor a more flexible approach
+		// such as delegated fee messages.
+		acc := k.ak.GetAccount(ctx, out.Address)
+		if acc == nil {
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, out.Address))
+		}
 	}
 
 	return nil

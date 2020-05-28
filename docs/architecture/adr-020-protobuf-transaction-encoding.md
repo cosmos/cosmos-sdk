@@ -297,17 +297,19 @@ and messages.
 
 ```go
 type AccountRetriever interface {
-  EnsureExists(addr sdk.AccAddress) error
-  GetAccountNumberSequence(addr sdk.AccAddress) (uint64, uint64, error)
+  EnsureExists(querier NodeQuerier, addr sdk.AccAddress) error
+  GetAccountNumberSequence(querier NodeQuerier, addr sdk.AccAddress) (uint64, uint64, error)
 }
 
 type Generator interface {
-  NewTx() ClientTx
+  NewTx() TxBuilder
+  NewFee() ClientFee
+  NewSignature() ClientSignature
+  MarshalTx(tx types.Tx) ([]byte, error)
 }
 
-type ClientTx interface {
-  sdk.Tx
-  codec.ProtoMarshaler
+type TxBuilder interface {
+  GetTx() sdk.Tx
 
   SetMsgs(...sdk.Msg) error
   GetSignatures() []sdk.Signature
@@ -321,11 +323,29 @@ type ClientTx interface {
 }
 ```
 
-We then update `CLIContext` to have a new field: `Marshaler`.
+We then update `CLIContext` to have new fields: `JSONMarshaler`, `TxGenerator`,
+and `AccountRetriever`, and we update `AppModuleBasic.GetTxCmd` to take
+a `CLIContext` which should have all of these fields pre-populated.
 
-Then, each module's client handler will at the minimum accept a `Marshaler` instead
-of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
-that account fields can be retrieved for signing.
+Each client method should then use one of the `Init` methods to re-initialize
+the pre-populated `CLIContext`. `tx.GenerateOrBroadcastTx` can be used to
+generate or broadcast a transaction. For example:
+
+```go
+import "github.com/spf13/cobra"
+import "github.com/cosmos/cosmos-sdk/client/tx"
+import "github.com/cosmos/cosmos-sdk/client/context"
+
+func NewCmdDoSomething(ctx context.CLIContext) *cobra.Command {
+	return &cobra.Command{
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := ctx.InitWithInput(cmd.InOrStdin())
+			msg := NewSomeMsg{...}
+			tx.GenerateOrBroadcastTx(cliCtx, msg)
+		},
+	}
+}
+```
 
 ## Future Improvements
 

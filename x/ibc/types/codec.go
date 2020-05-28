@@ -24,6 +24,7 @@ func RegisterCodec(cdc *codec.Codec) {
 
 // RegisterInterfaces registers x/ibc interfaces into protobuf Any.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	client.RegisterInterfaces(registry)
 	connection.RegisterInterfaces(registry)
 	channel.RegisterInterfaces(registry)
 	ibctmtypes.RegisterInterfaces(registry)

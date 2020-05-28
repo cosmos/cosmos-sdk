@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 const (
@@ -24,6 +25,10 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateClient{},
+	)
+	registry.RegisterImplementations(
+		(*clientexported.ClientState)(nil),
+		&ClientState{},
 	)
 }
 

@@ -26,6 +26,7 @@ var (
 	NewKeeper                 = keeper.NewKeeper
 	QuerierClients            = keeper.QuerierClients
 	RegisterCodec             = types.RegisterCodec
+	RegisterInterfaces        = types.RegisterInterfaces
 	ErrClientExists           = types.ErrClientExists
 	ErrClientNotFound         = types.ErrClientNotFound
 	ErrClientFrozen           = types.ErrClientFrozen

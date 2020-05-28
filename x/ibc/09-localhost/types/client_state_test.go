@@ -52,9 +52,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	err := clientState.VerifyClientConsensusState(
 		nil, suite.cdc, nil, 0, "chainA", 0, nil, nil, nil,
 	)
-
-	suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-
+	suite.Require().Error(err)
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {

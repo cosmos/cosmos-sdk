@@ -59,7 +59,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if msg.TrustingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
 	}
-	if err := lite.ValidateTrustLevel(msg.TrustLevel); err != nil {
+	if err := lite.ValidateTrustLevel(msg.TrustLevel.ToTendermint()); err != nil {
 		return err
 	}
 	if msg.UnbondingPeriod == 0 {

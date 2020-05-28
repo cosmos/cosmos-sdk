@@ -43,14 +43,14 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 	}
 
 	blockID := MakeBlockID(tmHeader.Hash(), 3, tmhash.Sum([]byte("part_set")))
-	voteSet := tmproto.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)
+	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)
 	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}
 
 	signedHeader := tmproto.SignedHeader{
-		Header: tmHeader.ToProto(),
+		Header: tmHeader,
 		Commit: commit.ToProto(),
 	}
 

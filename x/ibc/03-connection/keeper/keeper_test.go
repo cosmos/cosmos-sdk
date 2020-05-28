@@ -44,7 +44,8 @@ const (
 )
 
 var (
-	timestamp = time.Now() // starting timestamp for the client test chain
+	timestamp         = time.Now() // starting timestamp for the client test chain
+	defaultTrustLevel = ibctmtypes.NewFractionFromTm(lite.DefaultTrustLevel)
 )
 
 type KeeperTestSuite struct {
@@ -130,9 +131,9 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
 	clients := []clientexported.ClientState{
-		ibctmtypes.NewClientState(testClientIDA, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientIDB, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID3, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientIDA, defaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientIDB, defaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID3, defaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
 	}
 
 	for i := range clients {
@@ -246,7 +247,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
 		Header: abci.Header{
-			Time:    client.Header.Time,
+			Time:    client.Header.GetTime(),
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -262,7 +263,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, defaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
 	if err != nil {
 		return err
 	}
@@ -320,7 +321,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
 		Header: abci.Header{
-			Time:    client.Header.Time,
+			Time:    client.Header.GetTime(),
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -329,7 +330,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       client.Header.GetHeight(),
-		Timestamp:    client.Header.Time,
+		Timestamp:    client.Header.GetTime(),
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
@@ -338,7 +339,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, defaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -386,7 +387,7 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(
 		chain.Header.SignedHeader.Header.ChainID,
 		chain.Header.SignedHeader.Header.Height+1,
-		chain.Header.Time.Add(nextTimestamp), chain.Vals, chain.Signers,
+		chain.Header.GetTime().Add(nextTimestamp), chain.Vals, chain.Signers,
 	)
 }
 

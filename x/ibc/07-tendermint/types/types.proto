@@ -178,6 +178,7 @@ message Header {
   ];
 }
 
+// Fraction defines the protobuf message type for tmmath.Fraction
 message Fraction {
   int64 numerator   = 1;
   int64 denominator = 2;

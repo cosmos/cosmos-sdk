@@ -91,7 +91,7 @@ func checkValidity(
 	err := lite.Verify(
 		clientState.GetChainID(), &clientState.LastHeader.SignedHeader,
 		clientState.LastHeader.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
-		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel,
+		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())

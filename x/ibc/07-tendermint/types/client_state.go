@@ -109,7 +109,7 @@ func (cs ClientState) Validate() error {
 	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
 		return err
 	}
-	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
+	if err := lite.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {

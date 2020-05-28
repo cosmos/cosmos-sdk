@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos_sdk.x.ibc.tendermint.v1;
+package cosmos.ibc.tendermint;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
@@ -126,7 +126,7 @@ message ConsensusState {
     (gogoproto.stdtime)  = true
   ];
   // commitment root (i.e app hash)
-  cosmos_sdk.x.ibc.commitment.v1.MerkleRoot root = 2 [
+  cosmos.ibc.commitment.MerkleRoot root = 2 [
     (gogoproto.nullable) = false
   ];
   // height at which the consensus state was stored.

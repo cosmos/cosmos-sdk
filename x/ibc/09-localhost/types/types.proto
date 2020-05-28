@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos_sdk.x.ibc.localhost.v1;
+package cosmos.ibc.localhost.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types";
 

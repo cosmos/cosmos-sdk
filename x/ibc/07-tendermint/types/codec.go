@@ -4,6 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 // RegisterCodec registers the necessary x/ibc/07-tendermint interfaces and concrete types
@@ -18,14 +20,34 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgSubmitClientMisbehaviour{}, "ibc/client/tendermint/MsgSubmitClientMisbehaviour", nil)
 }
 
-// RegisterInterfaces register the ibc interfaces submodule implementations to protobuf
-// Any.
+// RegisterInterfaces registers the tendermint concrete evidence and client-related
+// implementations and interfaces.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateClient{},
 		&MsgUpdateClient{},
 		&MsgSubmitClientMisbehaviour{},
+	)
+	registry.RegisterImplementations(
+		(*clientexported.ClientState)(nil),
+		&ClientState{},
+	)
+	registry.RegisterImplementations(
+		(*clientexported.ConsensusState)(nil),
+		&ConsensusState{},
+	)
+	registry.RegisterImplementations(
+		(*clientexported.Header)(nil),
+		&Header{},
+	)
+	registry.RegisterImplementations(
+		(*clientexported.Misbehaviour)(nil),
+		&Evidence{},
+	)
+	registry.RegisterImplementations(
+		(*evidenceexported.Evidence)(nil),
+		&Evidence{},
 	)
 }
 

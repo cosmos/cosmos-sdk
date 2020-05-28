@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos_sdk.x.ibc.commitment.v1;
+package cosmos.ibc.commitment;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types";
 

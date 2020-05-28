@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos_sdk.x.transfer.v1;
+package cosmos.ibc_transfer;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 

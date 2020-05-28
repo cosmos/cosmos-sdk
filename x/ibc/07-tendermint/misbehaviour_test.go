@@ -18,9 +18,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	suite.Require().NoError(err)
 
 	altVal := tmtypes.NewValidator(altPubKey, 4)
-
 	// Create bothValSet with both suite validator and altVal
-	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal)).
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 

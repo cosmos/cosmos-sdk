@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,7 +30,7 @@ type TendermintTestSuite struct {
 	ctx     sdk.Context
 	cdc     codec.Marshaler
 	privVal tmtypes.PrivValidator
-	valSet  *tmtypes.ValidatorSet
+	valSet  *tmproto.ValidatorSet
 	header  ibctmtypes.Header
 	now     time.Time
 }
@@ -46,7 +47,8 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	val := tmtypes.NewValidator(pubKey, 10)
-	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
+	suite.valSet, err = tmtypes.NewValidatorSet([]*tmtypes.Validator{val}).ToProto()
+	suite.Require().NoError(err)
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1, Time: suite.now})
 }

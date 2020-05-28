@@ -9,11 +9,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-const maxInt = uint32(^uint(0) >> 1)
+const maxInt = int64(^uint(0) >> 1)
 
 // MakeBlockID copied unimported test functions from tmtypes to use them here
-func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
-	return tmtypes.BlockID{
+func MakeBlockID(hash []byte, partSetSize int64, partSetHash []byte) tmproto.BlockID {
+	return tmproto.BlockID{
 		Hash: hash,
 		PartsHeader: tmproto.PartSetHeader{
 			Total: partSetSize,
@@ -23,9 +23,15 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.Bl
 }
 
 // CreateTestHeader creates a mock header for testing only.
-func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
-	vsetHash := valSet.Hash()
-	tmHeader := &tmproto.Header{
+func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet *tmproto.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+	tmValSet, err := tmtypes.ValidatorSetFromProto(valSet)
+	if err != nil {
+		panic(err)
+	}
+
+	vsetHash := tmValSet.Hash()
+
+	header := &tmproto.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
 		ChainID:            chainID,
 		Height:             height,
@@ -42,25 +48,30 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		ProposerAddress:    valSet.Proposer.Address,
 	}
 
+	tmHeader, err := tmtypes.HeaderFromProto(header)
+	if err != nil {
+		panic(err)
+	}
+
 	blockID := MakeBlockID(tmHeader.Hash(), 3, tmhash.Sum([]byte("part_set")))
-	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)
-	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
+	tmBlockID, err := tmtypes.BlockIDFromProto(&blockID)
+	if err != nil {
+		panic(err)
+	}
+
+	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, tmValSet)
+	commit, err := tmtypes.MakeCommit(*tmBlockID, height, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}
 
 	signedHeader := tmproto.SignedHeader{
-		Header: tmHeader,
+		Header: header,
 		Commit: commit.ToProto(),
-	}
-
-	protoValSet, err := valSet.ToProto()
-	if err != nil {
-		panic(err)
 	}
 
 	return Header{
 		SignedHeader: signedHeader,
-		ValidatorSet: protoValSet,
+		ValidatorSet: valSet,
 	}
 }

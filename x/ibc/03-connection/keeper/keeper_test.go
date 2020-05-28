@@ -9,6 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	lite "github.com/tendermint/tendermint/lite2"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -197,7 +198,7 @@ type TestChain struct {
 	ClientID string
 	App      *simapp.SimApp
 	Header   ibctmtypes.Header
-	Vals     *tmtypes.ValidatorSet
+	Vals     *tmproto.ValidatorSet
 	Signers  []tmtypes.PrivValidator
 }
 
@@ -210,7 +211,10 @@ func NewTestChain(clientID string) *TestChain {
 	}
 
 	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	valSet, err := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}).ToProto()
+	if err != nil {
+		panic(err)
+	}
 	signers := []tmtypes.PrivValidator{privVal}
 
 	header := ibctmtypes.CreateTestHeader(clientID, 1, timestamp, valSet, signers)

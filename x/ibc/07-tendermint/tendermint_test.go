@@ -26,7 +26,7 @@ type TendermintTestSuite struct {
 
 	cdc        *codec.Codec
 	privVal    tmtypes.PrivValidator
-	valSet     *tmtypes.ValidatorSet
+	valSet     *tmproto.ValidatorSet
 	header     ibctmtypes.Header
 	now        time.Time
 	clientTime time.Time
@@ -51,7 +51,9 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	val := tmtypes.NewValidator(pubKey, 10)
-	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
+	suite.valSet, err = tmtypes.NewValidatorSet([]*tmtypes.Validator{val}).ToProto()
+	suite.Require().NoError(err)
+
 	// Suite header is intended to be header passed in for initial ClientState
 	// Thus it should have same height and time as ClientState
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.clientTime, suite.valSet, []tmtypes.PrivValidator{suite.privVal})

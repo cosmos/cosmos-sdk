@@ -3,12 +3,13 @@ package types
 import (
 	"time"
 
+	tmproto "github.com/tendermint/tendermint/proto/types"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	tmproto "github.com/tendermint/tendermint/proto/types"
 )
 
 var _ clientexported.ConsensusState = (*ConsensusState)(nil)

@@ -103,7 +103,7 @@ type TestChain struct {
 	ClientID string
 	App      *simapp.SimApp
 	Header   ibctmtypes.Header
-	Vals     *tmtypes.ValidatorSet
+	Vals     *tmproto.ValidatorSet
 	Signers  []tmtypes.PrivValidator
 }
 
@@ -116,7 +116,11 @@ func NewTestChain(clientID string) *TestChain {
 	}
 
 	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	valSet, err := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}).ToProto()
+	if err != nil {
+		panic(err)
+	}
+
 	signers := []tmtypes.PrivValidator{privVal}
 	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 

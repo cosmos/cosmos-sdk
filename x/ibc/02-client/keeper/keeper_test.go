@@ -42,7 +42,7 @@ type KeeperTestSuite struct {
 	keeper         *keeper.Keeper
 	consensusState ibctmtypes.ConsensusState
 	header         ibctmtypes.Header
-	valSet         *tmtypes.ValidatorSet
+	valSet         *tmproto.ValidatorSet
 	privVal        tmtypes.PrivValidator
 	now            time.Time
 }
@@ -62,7 +62,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	validator := tmtypes.NewValidator(pubKey, 1)
-	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.valSet, err = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}).ToProto()
+	if err != nil {
+		panic(err)
+	}
 	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:       testClientHeight,

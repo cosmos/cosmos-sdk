@@ -133,16 +133,16 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
 	}
-	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof init: %s", err.Error())
+
+	proofInit := msg.GetProofInit()
+	proofConsensus := msg.GetProofConsensus()
+
+	if proofInit == nil || proofInit.IsEmpty() {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
-	proofConsensus, err := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof consensus: %s", err.Error())
-	}
-	if proofInit.IsEmpty() || proofConsensus.IsEmpty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+
+	if proofConsensus == nil || proofConsensus.IsEmpty() {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof consensus")
 	}
 	if err := proofInit.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof init failed basic validation")
@@ -170,6 +170,20 @@ func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// GetProofInit returns the cached value from ProofInit. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgConnectionOpenTry) GetProofInit() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	return proof
+}
+
+// GetProofConsensus returns the cached value from ProofConsensus. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgConnectionOpenTry) GetProofConsensus() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -240,16 +254,15 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.Version) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 	}
-	proofTry, err := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof try: %s", err.Error())
+	proofTry := msg.GetProofTry()
+	proofConsensus := msg.GetProofConsensus()
+
+	if proofTry == nil || proofTry.IsEmpty() {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
 	}
-	proofConsensus, err := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof consensus: %s", err.Error())
-	}
-	if proofTry.IsEmpty() || proofConsensus.IsEmpty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+
+	if proofConsensus == nil || proofConsensus.IsEmpty() {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof consensus")
 	}
 	if err := proofTry.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof try failed basic validation")
@@ -277,6 +290,20 @@ func (msg MsgConnectionOpenAck) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// GetProofTry returns the cached value from ProofTry. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgConnectionOpenAck) GetProofTry() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
+	return proof
+}
+
+// GetProofConsensus returns the cached value from ProofConsensus. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgConnectionOpenAck) GetProofConsensus() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -335,12 +362,9 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	proofAck, err := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof ack: %s", err.Error())
-	}
-	if proofAck.IsEmpty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+	proofAck := msg.GetProofAck()
+	if proofAck == nil || proofAck.IsEmpty() {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
 	}
 	if err := proofAck.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack failed basic validation")
@@ -362,6 +386,13 @@ func (msg MsgConnectionOpenConfirm) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// GetProofAck returns the cached value from ProofAck. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgConnectionOpenConfirm) GetProofAck() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

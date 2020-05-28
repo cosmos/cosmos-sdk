@@ -18,6 +18,8 @@ message MsgChannelOpenInit {
 // MsgChannelOpenInit  defines a msg sent by a Relayer to try to open a channel
 // on Chain B.
 message MsgChannelOpenTry {
+  option (gogoproto.goproto_getters) = false;
+
   string              port_id              = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
   string              channel_id           = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
   Channel             channel              = 3 [(gogoproto.nullable) = false];
@@ -31,6 +33,8 @@ message MsgChannelOpenTry {
 // MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
 // the change of channel state to TRYOPEN on Chain B.
 message MsgChannelOpenAck {
+  option (gogoproto.goproto_getters) = false;
+
   string              port_id              = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
   string              channel_id           = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
   string              counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
@@ -43,6 +47,8 @@ message MsgChannelOpenAck {
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of channel state to OPEN on Chain A.
 message MsgChannelOpenConfirm {
+  option (gogoproto.goproto_getters) = false;
+
   string              port_id    = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
   string              channel_id = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
   google.protobuf.Any proof_ack  = 3
@@ -62,6 +68,8 @@ message MsgChannelCloseInit {
 // MsgChannelCloseConfirm defines a msg sent by a Relayer to Chain B
 // to acknowledge the change of channel state to CLOSED on Chain A.
 message MsgChannelCloseConfirm {
+  option (gogoproto.goproto_getters) = false;
+
   string              port_id    = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
   string              channel_id = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
   google.protobuf.Any proof_init = 3
@@ -72,6 +80,8 @@ message MsgChannelCloseConfirm {
 
 // MsgPacket receives incoming IBC packet
 message MsgPacket {
+  option (gogoproto.goproto_getters) = false;
+
   Packet              packet       = 1 [(gogoproto.nullable) = false];
   google.protobuf.Any proof        = 2 [(gogoproto.nullable) = false];
   uint64              proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
@@ -80,6 +90,8 @@ message MsgPacket {
 
 // MsgTimeout receives timed-out packet
 message MsgTimeout {
+  option (gogoproto.goproto_getters) = false;
+
   Packet              packet             = 1 [(gogoproto.nullable) = false];
   google.protobuf.Any proof              = 2 [(gogoproto.nullable) = false];
   uint64              proof_height       = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
@@ -89,6 +101,8 @@ message MsgTimeout {
 
 // MsgAcknowledgement receives incoming IBC acknowledgement
 message MsgAcknowledgement {
+  option (gogoproto.goproto_getters) = false;
+
   Packet              packet          = 1 [(gogoproto.nullable) = false];
   bytes               acknowledgement = 2;
   google.protobuf.Any proof           = 3 [(gogoproto.nullable) = false];

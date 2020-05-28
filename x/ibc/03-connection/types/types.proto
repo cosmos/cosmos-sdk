@@ -9,6 +9,8 @@ import "google/protobuf/any.proto";
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
 message MsgConnectionOpenInit {
+  option (gogoproto.goproto_getters) = false;
+
   string       client_id     = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
   string       connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
@@ -18,6 +20,8 @@ message MsgConnectionOpenInit {
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
 // on Chain B.
 message MsgConnectionOpenTry {
+  option (gogoproto.goproto_getters) = false;
+
   string          client_id             = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
   string          connection_id         = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   Counterparty    counterparty          = 3 [(gogoproto.nullable) = false];
@@ -36,6 +40,8 @@ message MsgConnectionOpenTry {
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
 // the change of connection state to TRYOPEN on Chain B.
 message MsgConnectionOpenAck {
+  option (gogoproto.goproto_getters) = false;
+
   string connection_id = 1 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   string version       = 2;
   // proof of the initialization the connection on Chain B: `UNITIALIZED -> TRYOPEN`
@@ -52,6 +58,8 @@ message MsgConnectionOpenAck {
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of connection state to OPEN on Chain A.
 message MsgConnectionOpenConfirm {
+  option (gogoproto.goproto_getters) = false;
+
   string connection_id = 1 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
   google.protobuf.Any proof_ack = 2

@@ -113,11 +113,8 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof init: %s", err.Error())
-	}
-	if proofInit.IsEmpty() {
+	proofInit := msg.GetProofInit()
+	if proofInit == nil || proofInit.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proofInit.ValidateBasic(); err != nil {
@@ -138,6 +135,13 @@ func (msg MsgChannelOpenTry) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// GetProofInit returns the cached value from ProofInit. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgChannelOpenTry) GetProofInit() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -197,11 +201,8 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	proofTry, err := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof try: %s", err.Error())
-	}
-	if proofTry.IsEmpty() {
+	proofTry := msg.GetProofTry()
+	if proofTry == nil || proofTry.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proofTry.ValidateBasic(); err != nil {
@@ -222,6 +223,13 @@ func (msg MsgChannelOpenAck) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// GetProofTry returns the cached value from ProofTry. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgChannelOpenAck) GetProofTry() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -276,11 +284,8 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	proofAck, err := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof ack: %s", err.Error())
-	}
-	if proofAck.IsEmpty() {
+	proofAck := msg.GetProofAck()
+	if proofAck == nil || proofAck.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proofAck.ValidateBasic(); err != nil {
@@ -301,6 +306,13 @@ func (msg MsgChannelOpenConfirm) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// GetProofAck returns the cached value from ProofAck. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgChannelOpenConfirm) GetProofAck() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -401,11 +413,8 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid proof init: %s", err.Error())
-	}
-	if proofInit.IsEmpty() {
+	proofInit := msg.GetProofInit()
+	if proofInit == nil || proofInit.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proofInit.ValidateBasic(); err != nil {
@@ -426,6 +435,13 @@ func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// GetProofInit returns the cached value from ProofInit. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgChannelCloseConfirm) GetProofInit() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -469,11 +485,8 @@ func (msg MsgPacket) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() error {
-	proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid packet proof: %s", err.Error())
-	}
-	if proof.IsEmpty() {
+	proof := msg.GetProof()
+	if proof == nil || proof.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty packet proof")
 	}
 	if err := proof.ValidateBasic(); err != nil {
@@ -509,6 +522,13 @@ func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 // Type implements sdk.Msg
 func (msg MsgPacket) Type() string {
 	return "ics04/opaque"
+}
+
+// GetProof returns the cached value from Proof. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgPacket) GetProof() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.Proof)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -547,11 +567,8 @@ func (msg MsgTimeout) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
-	proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid timeout proof: %s", err.Error())
-	}
-	if proof.IsEmpty() {
+	proof := msg.GetProof()
+	if proof == nil || proof.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proof.ValidateBasic(); err != nil {
@@ -580,6 +597,13 @@ func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
 // Type implements sdk.Msg
 func (msg MsgTimeout) Type() string {
 	return "ics04/timeout"
+}
+
+// GetProof returns the cached value from Proof. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgTimeout) GetProof() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.Proof)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -618,11 +642,8 @@ func (msg MsgAcknowledgement) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
-	proof, err := commitmenttypes.UnpackAnyProof(&msg.Proof)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "invalid acknowledgement proof: %s", err.Error())
-	}
-	if proof.IsEmpty() {
+	proof := msg.GetProof()
+	if proof == nil || proof.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := proof.ValidateBasic(); err != nil {
@@ -654,6 +675,13 @@ func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 // Type implements sdk.Msg
 func (msg MsgAcknowledgement) Type() string {
 	return "ics04/opaque"
+}
+
+// GetProof returns the cached value from Proof. It returns nil if the value
+// is not cached or if the proof doesn't cast to a commitment Proof.
+func (msg MsgAcknowledgement) GetProof() commitmentexported.Proof {
+	proof, _ := commitmenttypes.UnpackAnyProof(&msg.Proof)
+	return proof
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

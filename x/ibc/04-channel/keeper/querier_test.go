@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// TestQuerier tests all the channel queriers.
+// TestQueryChannels tests singular, muliple, and no connection for
+// correct retrieval of all channels.
 func (suite *KeeperTestSuite) TestQueryChannels() {
 	path := []string{channel.SubModuleName, channel.QueryAllChannels}
 	var (
@@ -121,16 +122,22 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 	}
 }
 
-/*
 // TestQueryConnectionChannel tests querying existing channels on a singular connection.
 func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
+	path := []string{channel.SubModuleName, channel.QueryConnectionChannels}
+
 	var (
 		expRes []byte
+		err    error
 	)
 
+	params := types.NewQueryConnectionChannelsParams(testConnectionIDA, 1, 100)
+	data, err := suite.cdc.MarshalJSON(params)
+	suite.NoError(err)
+
 	query := abci.RequestQuery{
-		Path: []string{channel.SubModuleName, channel.QueryChannel},
-		Data: []byte{},
+		Path: "",
+		Data: data,
 	}
 
 	testCases := []struct {
@@ -140,27 +147,85 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 		{
 			"success with singular connection channels",
 			func() {
-				// create channels on different connections
-				// add to expected result
+				suite.SetupTest()
+				channels := make([]channel.IdentifiedChannel, 0, 2)
+
+				// create channels on singular connections
+				suite.chainA.createConnection(
+					testConnectionIDA, testConnectionIDB,
+					testClientIDA, testClientIDB,
+					connection.OPEN,
+				)
+
+				channels = append(channels,
+					types.NewIdentifiedChannel(testPort1, testChannel1,
+						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
+							channel.OPEN, channel.ORDERED, testConnectionIDA,
+						),
+					),
+				)
+				channels = append(channels,
+					types.NewIdentifiedChannel(testPort2, testChannel2,
+						suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1,
+							channel.OPEN, channel.UNORDERED, testConnectionIDA,
+						),
+					),
+				)
+
+				// set expected result
+				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				suite.NoError(err)
 			},
 		},
 		{
 			"success multiple connection channels",
 			func() {
+				suite.SetupTest()
+				channels := make([]channel.IdentifiedChannel, 0, 1)
+
+				// create channels on different connections
+				suite.chainA.createConnection(
+					testConnectionIDA, testConnectionIDB,
+					testClientIDA, testClientIDB,
+					connection.OPEN,
+				)
+				channels = append(channels,
+					types.NewIdentifiedChannel(testPort1, testChannel1,
+						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
+							channel.OPEN, channel.ORDERED, testConnectionIDA,
+						),
+					),
+				)
+
+				suite.chainA.createConnection(
+					testConnectionIDB, testConnectionIDA,
+					testClientIDB, testClientIDA,
+					connection.OPEN,
+				)
+				suite.chainA.createChannel(
+					testPort2, testChannel2, testPort1, testPort1,
+					channel.OPEN, channel.ORDERED, testConnectionIDB,
+				)
+
+				// set expected result
+				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				suite.NoError(err)
 			},
 		},
 		{
-			"success wrong connection, no channels",
+			"success no channels",
 			func() {
-				expRes = []byte{}
+				suite.SetupTest()
+				expRes, err = codec.MarshalJSONIndent(suite.cdc, []channel.IdentifiedChannel{})
+				suite.NoError(err)
 			},
 		},
 	}
 
-	for i, tc := range cases {
+	for i, tc := range testCases {
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), tc.path, query)
+		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
 
 		suite.NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
@@ -168,6 +233,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 }
 
+/*
 // TestQueryPacketCommitments tests querying packet commitments on a specified channel end.
 func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 	var (

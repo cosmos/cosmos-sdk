@@ -336,12 +336,12 @@ import "github.com/spf13/cobra"
 import "github.com/cosmos/cosmos-sdk/client"
 import "github.com/cosmos/cosmos-sdk/client/tx"
 
-func NewCmdDoSomething(ctx client.Context) *cobra.Command {
+func NewCmdDoSomething(clientCtx client.Context) *cobra.Command {
 	return &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := ctx.InitWithInput(cmd.InOrStdin())
+			clientCtx := ctx.InitWithInput(cmd.InOrStdin())
 			msg := NewSomeMsg{...}
-			tx.GenerateOrBroadcastTx(cliCtx, msg)
+			tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 }

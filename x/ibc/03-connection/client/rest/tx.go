@@ -13,11 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/ibc/connections/open-init", connectionOpenInitHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/connections/open-try", connectionOpenTryHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-ack", RestConnectionID), connectionOpenAckHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-confirm", RestConnectionID), connectionOpenConfirmHandlerFn(cliCtx)).Methods("POST")
+func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/ibc/connections/open-init", connectionOpenInitHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc("/ibc/connections/open-try", connectionOpenTryHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-ack", RestConnectionID), connectionOpenAckHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-confirm", RestConnectionID), connectionOpenConfirmHandlerFn(clientCtx)).Methods("POST")
 }
 
 // connectionOpenInitHandlerFn implements a connection open init handler
@@ -30,10 +30,10 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 // @Success 200 {object} PostConnectionOpenInit "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/open-init [post]
-func connectionOpenInitHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func connectionOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ConnectionOpenInitReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -59,7 +59,7 @@ func connectionOpenInitHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -73,10 +73,10 @@ func connectionOpenInitHandlerFn(cliCtx client.Context) http.HandlerFunc {
 // @Success 200 {object} PostConnectionOpenTry "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/open-try [post]
-func connectionOpenTryHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func connectionOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ConnectionOpenTryReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -104,7 +104,7 @@ func connectionOpenTryHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -120,13 +120,13 @@ func connectionOpenTryHandlerFn(cliCtx client.Context) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/{connection-id}/open-ack [post]
-func connectionOpenAckHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func connectionOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		connectionID := vars[RestConnectionID]
 
 		var req ConnectionOpenAckReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -152,7 +152,7 @@ func connectionOpenAckHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -168,13 +168,13 @@ func connectionOpenAckHandlerFn(cliCtx client.Context) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/{connection-id}/open-confirm [post]
-func connectionOpenConfirmHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func connectionOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		connectionID := vars[RestConnectionID]
 
 		var req ConnectionOpenConfirmReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -199,6 +199,6 @@ func connectionOpenConfirmHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

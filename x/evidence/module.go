@@ -71,25 +71,25 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes registers the evidence module's REST service handlers.
-func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
+func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	evidenceRESTHandlers := make([]rest.EvidenceRESTHandler, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceRESTHandlers[i] = evidenceHandler.RESTHandler(ctx)
+		evidenceRESTHandlers[i] = evidenceHandler.RESTHandler(clientCtx)
 	}
 
-	rest.RegisterRoutes(ctx, rtr, evidenceRESTHandlers)
+	rest.RegisterRoutes(clientCtx, rtr, evidenceRESTHandlers)
 }
 
 // GetTxCmd returns the evidence module's root tx command.
-func (a AppModuleBasic) GetTxCmd(ctx client.Context) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(ctx)
+		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(clientCtx)
 	}
 
-	return cli.GetTxCmd(ctx, evidenceCLIHandlers)
+	return cli.GetTxCmd(clientCtx, evidenceCLIHandlers)
 }
 
 // GetTxCmd returns the evidence module's root query command.

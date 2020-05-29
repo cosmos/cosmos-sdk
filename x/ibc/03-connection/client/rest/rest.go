@@ -14,9 +14,9 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx client.Context, r *mux.Router, queryRoute string) {
-	registerQueryRoutes(cliCtx, r, queryRoute)
-	registerTxRoutes(cliCtx, r)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+	registerQueryRoutes(clientCtx, r, queryRoute)
+	registerTxRoutes(clientCtx, r)
 }
 
 // ConnectionOpenInitReq defines the properties of a connection open init request's body.

@@ -15,17 +15,17 @@ import (
 
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the param
 // change REST handler with a given sub-route.
-func ProposalRESTHandler(cliCtx client.Context) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "param_change",
-		Handler:  postProposalHandlerFn(cliCtx),
+		Handler:  postProposalHandlerFn(clientCtx),
 	}
 }
 
-func postProposalHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req paramscutils.ParamChangeProposalReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -44,6 +44,6 @@ func postProposalHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

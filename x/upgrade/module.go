@@ -46,8 +46,8 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 }
 
 // RegisterRESTRoutes registers all REST query handlers
-func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-	rest.RegisterRoutes(ctx, r)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router) {
+	rest.RegisterRoutes(clientCtx, r)
 }
 
 // GetQueryCmd returns the cli query commands for this module

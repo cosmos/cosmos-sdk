@@ -52,17 +52,17 @@ func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 			return err
 		}
 
-		cliCtx := client.NewContext().WithCodec(cdc)
+		clientCtx := client.NewContext().WithCodec(cdc)
 
 		if hash := args[0]; hash != "" {
-			return queryEvidence(cdc, cliCtx, hash)
+			return queryEvidence(cdc, clientCtx, hash)
 		}
 
-		return queryAllEvidence(cdc, cliCtx)
+		return queryAllEvidence(cdc, clientCtx)
 	}
 }
 
-func queryEvidence(cdc *codec.Codec, cliCtx client.Context, hash string) error {
+func queryEvidence(cdc *codec.Codec, clientCtx client.Context, hash string) error {
 	if _, err := hex.DecodeString(hash); err != nil {
 		return fmt.Errorf("invalid evidence hash: %w", err)
 	}
@@ -74,7 +74,7 @@ func queryEvidence(cdc *codec.Codec, cliCtx client.Context, hash string) error {
 	}
 
 	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryEvidence)
-	res, _, err := cliCtx.QueryWithData(route, bz)
+	res, _, err := clientCtx.QueryWithData(route, bz)
 	if err != nil {
 		return err
 	}
@@ -85,10 +85,10 @@ func queryEvidence(cdc *codec.Codec, cliCtx client.Context, hash string) error {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)
 	}
 
-	return cliCtx.PrintOutput(evidence)
+	return clientCtx.PrintOutput(evidence)
 }
 
-func queryAllEvidence(cdc *codec.Codec, cliCtx client.Context) error {
+func queryAllEvidence(cdc *codec.Codec, clientCtx client.Context) error {
 	params := types.NewQueryAllEvidenceParams(viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
@@ -96,7 +96,7 @@ func queryAllEvidence(cdc *codec.Codec, cliCtx client.Context) error {
 	}
 
 	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllEvidence)
-	res, _, err := cliCtx.QueryWithData(route, bz)
+	res, _, err := clientCtx.QueryWithData(route, bz)
 	if err != nil {
 		return err
 	}
@@ -107,5 +107,5 @@ func queryAllEvidence(cdc *codec.Codec, cliCtx client.Context) error {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)
 	}
 
-	return cliCtx.PrintOutput(evidence)
+	return clientCtx.PrintOutput(evidence)
 }

@@ -13,7 +13,7 @@ import (
 // QueryNextSequenceRecv queries the store to get the next receive sequence and
 // a merkle proof.
 func QueryNextSequenceRecv(
-	cliCtx client.Context, portID, channelID string, prove bool,
+	clientCtx client.Context, portID, channelID string, prove bool,
 ) (channeltypes.RecvResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -21,7 +21,7 @@ func QueryNextSequenceRecv(
 		Prove: prove,
 	}
 
-	res, err := cliCtx.QueryABCI(req)
+	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
 		return channeltypes.RecvResponse{}, err
 	}

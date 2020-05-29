@@ -147,7 +147,7 @@ func TestParseQueryHeight(t *testing.T) {
 		name           string
 		req            *http.Request
 		w              http.ResponseWriter
-		cliCtx         client.Context
+		clientCtx      client.Context
 		expectedHeight int64
 		expectedOk     bool
 	}{
@@ -159,13 +159,13 @@ func TestParseQueryHeight(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(tt.w, tt.cliCtx, tt.req)
+			clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(tt.w, tt.clientCtx, tt.req)
 			if tt.expectedOk {
 				require.True(t, ok)
-				require.Equal(t, tt.expectedHeight, cliCtx.Height)
+				require.Equal(t, tt.expectedHeight, clientCtx.Height)
 			} else {
 				require.False(t, ok)
-				require.Empty(t, tt.expectedHeight, cliCtx.Height)
+				require.Empty(t, tt.expectedHeight, clientCtx.Height)
 			}
 		})
 	}
@@ -312,11 +312,11 @@ func TestPostProcessResponseBare(t *testing.T) {
 	t.Parallel()
 
 	// write bytes
-	ctx := client.Context{}
+	clientCtx := client.Context{}
 	w := httptest.NewRecorder()
 	bs := []byte("text string")
 
-	rest.PostProcessResponseBare(w, ctx, bs)
+	rest.PostProcessResponseBare(w, clientCtx, bs)
 
 	res := w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
@@ -328,14 +328,14 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, "text string", string(got))
 
 	// write struct and indent response
-	ctx = client.Context{Indent: true}.WithCodec(codec.New())
+	clientCtx = client.Context{Indent: true}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data := struct {
 		X int    `json:"x"`
 		S string `json:"s"`
 	}{X: 10, S: "test"}
 
-	rest.PostProcessResponseBare(w, ctx, data)
+	rest.PostProcessResponseBare(w, clientCtx, data)
 
 	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
@@ -350,14 +350,14 @@ func TestPostProcessResponseBare(t *testing.T) {
 }`, string(got))
 
 	// write struct, don't indent response
-	ctx = client.Context{Indent: false}.WithCodec(codec.New())
+	clientCtx = client.Context{Indent: false}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data = struct {
 		X int    `json:"x"`
 		S string `json:"s"`
 	}{X: 10, S: "test"}
 
-	rest.PostProcessResponseBare(w, ctx, data)
+	rest.PostProcessResponseBare(w, clientCtx, data)
 
 	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
@@ -369,11 +369,11 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, `{"x":"10","s":"test"}`, string(got))
 
 	// test marshalling failure
-	ctx = client.Context{Indent: false}.WithCodec(codec.New())
+	clientCtx = client.Context{Indent: false}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data2 := badJSONMarshaller{}
 
-	rest.PostProcessResponseBare(w, ctx, data2)
+	rest.PostProcessResponseBare(w, clientCtx, data2)
 
 	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode)

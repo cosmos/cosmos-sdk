@@ -24,8 +24,8 @@ func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 	cdc := codec.New()
-	ctx := client.Context{}
-	ctx = ctx.WithCodec(cdc)
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithCodec(cdc)
 	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
@@ -35,7 +35,7 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
-	mockAppModuleBasic1.EXPECT().GetTxCmd(ctx).Times(1).Return(nil)
+	mockAppModuleBasic1.EXPECT().GetTxCmd(clientCtx).Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd(cdc).Times(1).Return(nil)
 
 	mm := module.NewBasicManager(mockAppModuleBasic1)
@@ -53,7 +53,7 @@ func TestBasicManager(t *testing.T) {
 	mm.RegisterRESTRoutes(client.Context{}, &mux.Router{})
 
 	mockCmd := &cobra.Command{Use: "root"}
-	mm.AddTxCommands(mockCmd, ctx)
+	mm.AddTxCommands(mockCmd, clientCtx)
 
 	mm.AddQueryCommands(mockCmd, cdc)
 

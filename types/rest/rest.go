@@ -229,27 +229,27 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 
 // ParseQueryHeightOrReturnBadRequest sets the height to execute a query if set by the http request.
 // It returns false if there was an error parsing the height.
-func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx client.Context, r *http.Request) (client.Context, bool) {
+func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, clientCtx client.Context, r *http.Request) (client.Context, bool) {
 	heightStr := r.FormValue("height")
 	if heightStr != "" {
 		height, err := strconv.ParseInt(heightStr, 10, 64)
 		if CheckBadRequestError(w, err) {
-			return cliCtx, false
+			return clientCtx, false
 		}
 
 		if height < 0 {
 			WriteErrorResponse(w, http.StatusBadRequest, "height must be equal or greater than zero")
-			return cliCtx, false
+			return clientCtx, false
 		}
 
 		if height > 0 {
-			cliCtx = cliCtx.WithHeight(height)
+			clientCtx = clientCtx.WithHeight(height)
 		}
 	} else {
-		cliCtx = cliCtx.WithHeight(0)
+		clientCtx = clientCtx.WithHeight(0)
 	}
 
-	return cliCtx, true
+	return clientCtx, true
 }
 
 // PostProcessResponseBare post processes a body similar to PostProcessResponse

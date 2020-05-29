@@ -81,11 +81,11 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		cliCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
+		clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
-		if !cliCtx.Offline {
-			accnum, seq, err := types.NewAccountRetriever(authclient.Codec).GetAccountNumberSequence(cliCtx, multisigInfo.GetAddress())
+		if !clientCtx.Offline {
+			accnum, seq, err := types.NewAccountRetriever(authclient.Codec).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}
@@ -119,11 +119,11 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
 		switch {
-		case sigOnly && cliCtx.Indent:
+		case sigOnly && clientCtx.Indent:
 			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-		case sigOnly && !cliCtx.Indent:
+		case sigOnly && !clientCtx.Indent:
 			json, err = cdc.MarshalJSON(newTx.Signatures[0])
-		case !sigOnly && cliCtx.Indent:
+		case !sigOnly && clientCtx.Indent:
 			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
 		default:
 			json, err = cdc.MarshalJSON(newTx)

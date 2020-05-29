@@ -217,8 +217,8 @@ that routes calls to ABCI queries
 Clients (such as CLI methods) will then be able to call query methods like this:
 
 ```go
-cliCtx := context.NewCLIContext()
-queryClient := types.NewQueryClient(cliCtx.QueryConn())
+clientCtx := context.NewCLIContext()
+queryClient := types.NewQueryClient(clientCtx.QueryConn())
 params := &types.QueryBalanceParams{addr, denom}
 result, err := queryClient.QueryBalance(gocontext.Background(), params)
 ```

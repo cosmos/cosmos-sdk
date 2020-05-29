@@ -31,7 +31,7 @@ func GetDecodeCommand(codec *codec.Codec) *cobra.Command {
 
 func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		cliCtx := client.NewContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
+		clientCtx := client.NewContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
 		var txBytes []byte
 
 		if viper.GetBool(flagHex) {
@@ -44,11 +44,11 @@ func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []strin
 		}
 
 		var stdTx authtypes.StdTx
-		err = cliCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
+		err = clientCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
 		if err != nil {
 			return err
 		}
 
-		return cliCtx.PrintOutput(stdTx)
+		return clientCtx.PrintOutput(stdTx)
 	}
 }

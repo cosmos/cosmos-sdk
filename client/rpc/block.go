@@ -34,9 +34,9 @@ func BlockCommand() *cobra.Command {
 	return cmd
 }
 
-func getBlock(cliCtx client.Context, height *int64) ([]byte, error) {
+func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +49,8 @@ func getBlock(cliCtx client.Context, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	if !cliCtx.TrustNode {
-		check, err := cliCtx.Verify(res.Block.Height)
+	if !clientCtx.TrustNode {
+		check, err := clientCtx.Verify(res.Block.Height)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +64,7 @@ func getBlock(cliCtx client.Context, height *int64) ([]byte, error) {
 		}
 	}
 
-	if cliCtx.Indent {
+	if clientCtx.Indent {
 		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
 
@@ -72,8 +72,8 @@ func getBlock(cliCtx client.Context, height *int64) ([]byte, error) {
 }
 
 // get the current blockchain height
-func GetChainHeight(cliCtx client.Context) (int64, error) {
-	node, err := cliCtx.GetNode()
+func GetChainHeight(clientCtx client.Context) (int64, error) {
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return -1, err
 	}
@@ -115,7 +115,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 // REST
 
 // REST handler to get a block
-func BlockRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func BlockRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -126,7 +126,7 @@ func BlockRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		chainHeight, err := GetChainHeight(cliCtx)
+		chainHeight, err := GetChainHeight(clientCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, "failed to parse chain height")
 			return
@@ -137,23 +137,23 @@ func BlockRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := getBlock(cliCtx, &height)
+		output, err := getBlock(clientCtx, &height)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponseBare(w, cliCtx, output)
+		rest.PostProcessResponseBare(w, clientCtx, output)
 	}
 }
 
 // REST handler to get the latest block
-func LatestBlockRequestHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func LatestBlockRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		output, err := getBlock(cliCtx, nil)
+		output, err := getBlock(clientCtx, nil)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponseBare(w, cliCtx, output)
+		rest.PostProcessResponseBare(w, clientCtx, output)
 	}
 }

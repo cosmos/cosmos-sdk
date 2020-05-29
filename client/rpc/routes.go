@@ -7,6 +7,6 @@ import (
 )
 
 // Register routes
-func RegisterRoutes(cliCtx client.Context, r *mux.Router) {
-	RegisterRPCRoutes(cliCtx, r)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
+	RegisterRPCRoutes(clientCtx, r)
 }

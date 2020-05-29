@@ -57,7 +57,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for account balances by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -84,7 +84,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("failed to marshal params: %w", err)
 			}
 
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -105,7 +105,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 				result = balance
 			}
 
-			return cliCtx.PrintOutput(result)
+			return clientCtx.PrintOutput(result)
 		},
 	}
 
@@ -135,13 +135,13 @@ $ %s query %s total stake
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			if len(args) == 0 {
-				return queryTotalSupply(cliCtx, cdc)
+				return queryTotalSupply(clientCtx, cdc)
 			}
 
-			return querySupplyOf(cliCtx, cdc, args[0])
+			return querySupplyOf(clientCtx, cdc, args[0])
 		},
 	}
 

@@ -97,9 +97,9 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, genesis map[stri
 }
 
 // RegisterRESTRoutes registers all module rest routes
-func (bm BasicManager) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
+func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	for _, b := range bm {
-		b.RegisterRESTRoutes(ctx, rtr)
+		b.RegisterRESTRoutes(clientCtx, rtr)
 	}
 }
 

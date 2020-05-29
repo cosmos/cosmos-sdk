@@ -6,6 +6,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerTxRoutes(cliCtx client.Context, r *mux.Router, handlers []EvidenceRESTHandler) {
+func registerTxRoutes(clientCtx client.Context, r *mux.Router, handlers []EvidenceRESTHandler) {
 	// TODO: Register tx handlers.
 }

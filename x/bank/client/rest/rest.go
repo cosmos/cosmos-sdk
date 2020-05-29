@@ -8,11 +8,11 @@ import (
 
 // RegisterHandlers registers all x/bank transaction and query HTTP REST handlers
 // on the provided mux router.
-func RegisterHandlers(ctx client.Context, r *mux.Router) {
-	r.HandleFunc("/bank/accounts/{address}/transfers", NewSendRequestHandlerFn(ctx)).Methods("POST")
-	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(ctx)).Methods("GET")
-	r.HandleFunc("/bank/total", totalSupplyHandlerFn(ctx)).Methods("GET")
-	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(ctx)).Methods("GET")
+func RegisterHandlers(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/bank/accounts/{address}/transfers", NewSendRequestHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/bank/total", totalSupplyHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(clientCtx)).Methods("GET")
 }
 
 // ---------------------------------------------------------------------------
@@ -22,9 +22,9 @@ func RegisterHandlers(ctx client.Context, r *mux.Router) {
 // ---------------------------------------------------------------------------
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/bank/total", totalSupplyHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(cliCtx)).Methods("GET")
+func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/bank/total", totalSupplyHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(clientCtx)).Methods("GET")
 }

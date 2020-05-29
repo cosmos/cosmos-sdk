@@ -141,13 +141,13 @@ func TestGetPaginatedVotes(t *testing.T) {
 				marshalled[i] = tx
 			}
 			cli := TxSearchMock{txs: marshalled}
-			ctx := client.Context{}.WithCodec(cdc).WithTrustNode(true).WithClient(cli)
+			clientCtx := client.Context{}.WithCodec(cdc).WithTrustNode(true).WithClient(cli)
 
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)
-			votesData, err := QueryVotesByTxQuery(ctx, params)
+			votesData, err := QueryVotesByTxQuery(clientCtx, params)
 			require.NoError(t, err)
 			votes := []types.Vote{}
-			require.NoError(t, ctx.Codec.UnmarshalJSON(votesData, &votes))
+			require.NoError(t, clientCtx.Codec.UnmarshalJSON(votesData, &votes))
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {
 				require.Equal(t, tc.votes[i], votes[i])

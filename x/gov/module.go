@@ -72,23 +72,23 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes registers the REST routes for the gov module.
-func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
+func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	proposalRESTHandlers := make([]rest.ProposalRESTHandler, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx))
+		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(clientCtx))
 	}
 
-	rest.RegisterHandlers(ctx, rtr, proposalRESTHandlers)
+	rest.RegisterHandlers(clientCtx, rtr, proposalRESTHandlers)
 }
 
 // GetTxCmd returns the root tx command for the gov module.
-func (a AppModuleBasic) GetTxCmd(ctx client.Context) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(ctx))
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(clientCtx))
 	}
 
-	return cli.NewTxCmd(ctx, proposalCLIHandlers)
+	return cli.NewTxCmd(clientCtx, proposalCLIHandlers)
 }
 
 // GetQueryCmd returns the root query command for the gov module.

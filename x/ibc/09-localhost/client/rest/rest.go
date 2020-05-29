@@ -8,8 +8,8 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx client.Context, r *mux.Router, queryRoute string) {
-	registerTxRoutes(cliCtx, r)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+	registerTxRoutes(clientCtx, r)
 }
 
 // CreateClientReq defines the properties of a create client request's body.

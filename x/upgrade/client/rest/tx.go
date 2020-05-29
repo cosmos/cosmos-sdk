@@ -20,17 +20,17 @@ import (
 
 // nolint
 func newRegisterTxRoutes(
-	cliCtx client.Context,
+	clientCtx client.Context,
 	txg client.TxGenerator,
 	newMsgFn func() gov.MsgSubmitProposalI,
 	r *mux.Router) {
-	r.HandleFunc("/upgrade/plan", newPostPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
-	r.HandleFunc("/upgrade/cancel", newCancelPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
+	r.HandleFunc("/upgrade/plan", newPostPlanHandler(clientCtx, txg, newMsgFn)).Methods("POST")
+	r.HandleFunc("/upgrade/cancel", newCancelPlanHandler(clientCtx, txg, newMsgFn)).Methods("POST")
 }
 
-func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/upgrade/plan", postPlanHandler(cliCtx)).Methods("POST")
-	r.HandleFunc("/upgrade/cancel", cancelPlanHandler(cliCtx)).Methods("POST")
+func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/upgrade/plan", postPlanHandler(clientCtx)).Methods("POST")
+	r.HandleFunc("/upgrade/cancel", cancelPlanHandler(clientCtx)).Methods("POST")
 }
 
 // PlanRequest defines a proposal for a new upgrade plan.
@@ -53,19 +53,19 @@ type CancelRequest struct {
 	Deposit     sdk.Coins    `json:"deposit" yaml:"deposit"`
 }
 
-func ProposalRESTHandler(cliCtx client.Context) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "upgrade",
-		Handler:  postPlanHandler(cliCtx),
+		Handler:  postPlanHandler(clientCtx),
 	}
 }
 
 // nolint
-func newPostPlanHandler(cliCtx client.Context, txg client.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newPostPlanHandler(clientCtx client.Context, txg client.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -101,16 +101,16 @@ func newPostPlanHandler(cliCtx client.Context, txg client.TxGenerator, newMsgFn 
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
 // nolint
-func newCancelPlanHandler(cliCtx client.Context, txg client.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newCancelPlanHandler(clientCtx client.Context, txg client.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -137,15 +137,15 @@ func newCancelPlanHandler(cliCtx client.Context, txg client.TxGenerator, newMsgF
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
-func postPlanHandler(cliCtx client.Context) http.HandlerFunc {
+func postPlanHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -177,15 +177,15 @@ func postPlanHandler(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
-func cancelPlanHandler(cliCtx client.Context) http.HandlerFunc {
+func cancelPlanHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -208,6 +208,6 @@ func cancelPlanHandler(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

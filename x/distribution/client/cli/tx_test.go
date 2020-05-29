@@ -15,14 +15,14 @@ import (
 )
 
 func Test_splitAndCall_NoMessages(t *testing.T) {
-	ctx := client.Context{}
+	clientCtx := client.Context{}
 
-	err := splitAndApply(nil, ctx, nil, 10)
+	err := splitAndApply(nil, clientCtx, nil, 10)
 	assert.NoError(t, err, "")
 }
 
 func Test_splitAndCall_Splitting(t *testing.T) {
-	ctx := client.Context{}
+	clientCtx := client.Context{}
 
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
@@ -40,10 +40,10 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	callCount := 0
 	err := splitAndApply(
-		func(ctx client.Context, msgs []sdk.Msg) error {
+		func(clientCtx client.Context, msgs []sdk.Msg) error {
 			callCount++
 
-			assert.NotNil(t, ctx)
+			assert.NotNil(t, clientCtx)
 			assert.NotNil(t, msgs)
 
 			if callCount < 3 {
@@ -54,7 +54,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 			return nil
 		},
-		ctx, msgs, chunkSize)
+		clientCtx, msgs, chunkSize)
 
 	assert.NoError(t, err, "")
 	assert.Equal(t, 3, callCount)

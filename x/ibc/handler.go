@@ -182,11 +182,13 @@ func NewHandler(k Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
+			// Perform application logic callback
 			res, err := cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement)
 			if err != nil {
 				return nil, err
 			}
 
+			// Delete packet commitment
 			if err = k.ChannelKeeper.AcknowledgementExecuted(ctx, cap, msg.Packet); err != nil {
 				return nil, err
 			}
@@ -195,7 +197,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgTimeout:
 			// Lookup module by channel capability
-			module, _, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
@@ -205,7 +207,19 @@ func NewHandler(k Keeper) sdk.Handler {
 			if !ok {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
-			return cbs.OnTimeoutPacket(ctx, msg.Packet)
+
+			// Perform application logic callback
+			res, err := cbs.OnTimeoutPacket(ctx, msg.Packet)
+			if err != nil {
+				return nil, err
+			}
+
+			// Delete packet commitment
+			if err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet); err != nil {
+				return nil, err
+			}
+
+			return res, nil
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC message type: %T", msg)

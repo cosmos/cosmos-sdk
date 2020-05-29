@@ -361,17 +361,10 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 
 			ctx := suite.chainB.GetContext()
 			packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
-			packetCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
-				suite.Require().Nil(packetCommitment)
-
-				// check replay attacks
-				packetOut, err = suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
-				suite.Require().Error(err)
-				suite.Require().Nil(packetOut)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
@@ -380,6 +373,54 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
+	sequence := uint64(1)
+	counterparty := types.NewCounterparty(testPort2, testChannel2)
+
+	var (
+		packet  types.Packet
+		chanCap *capability.Capability
+	)
+
+	testCases := []testCase{
+		{"success ORDERED", func() {
+			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), sequence, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), sequence, types.CommitPacket(packet))
+		}, true},
+		{"channel not found", func() {}, false},
+		{"incorrect capability", func() {
+			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), sequence, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
+			chanCap = capability.NewCapability(100)
+		}, false},
+	}
+
+	for i, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
+			suite.SetupTest() // reset
+
+			var err error
+			chanCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
+				suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1),
+			)
+			suite.Require().NoError(err, "could not create capability")
+
+			tc.malleate()
+
+			err = suite.chainA.App.IBCKeeper.ChannelKeeper.AcknowledgementExecuted(suite.chainA.GetContext(), chanCap, packet)
+			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Nil(pc)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
 func (suite *KeeperTestSuite) TestCleanupPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	unorderedPacketKey := host.KeyPacketAcknowledgement(testPort2, testChannel2, 1)

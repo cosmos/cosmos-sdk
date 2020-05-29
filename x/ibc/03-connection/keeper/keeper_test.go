@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmencoding "github.com/tendermint/tendermint/crypto/encoding"
 	lite "github.com/tendermint/tendermint/lite2"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -243,9 +244,11 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
-	)
+	pk, err := tmencoding.PubKeyFromProto(&client.Vals.Validators[0].PubKey)
+	if err != nil {
+		return err
+	}
+	validator := staking.NewValidator(sdk.ValAddress(client.Vals.Validators[0].Address), pk, staking.Description{})
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
 	validators := []staking.Validator{validator}
@@ -268,7 +271,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 
 	// create client
 	clientState := ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
-	_, err := chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
+	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
 	if err != nil {
 		return err
 	}
@@ -314,9 +317,9 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
-	)
+
+	pk, _ := tmencoding.PubKeyFromProto(&client.Vals.Validators[0].PubKey)
+	validator := staking.NewValidator(sdk.ValAddress(client.Vals.Validators[0].Address), pk, staking.Description{})
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000)
 	validators := []staking.Validator{validator}

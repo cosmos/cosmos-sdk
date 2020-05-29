@@ -23,12 +23,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		if !ok {
 			return nil, sdkerrors.Wrap(ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
 		}
-		var err error
-
-		clientState, err = ibctmtypes.InitializeFromMsg(tmMsg)
-		if err != nil {
-			return nil, err
-		}
+		clientState = ibctmtypes.InitializeFromMsg(tmMsg)
 	case exported.Localhost:
 		// msg client id is always "localhost"
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())

@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
 
 			if tc.expPass {
-				suite.Require().NoError(err, err)
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
 
 				expConsensusState := ibctmtypes.ConsensusState{
 					Height:       updateHeader.GetHeight(),
@@ -108,16 +108,26 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				tmConsState, ok := consensusState.(ibctmtypes.ConsensusState)
 				suite.Require().True(ok, "consensus state is not a tendermint consensus state")
+
+				valset, err := tmtypes.ValidatorSetFromProto(tmConsState.ValidatorSet)
+				suite.Require().NoError(err)
+
 				// recalculate cached totalVotingPower field for equality check
-				tmConsState.ValidatorSet.TotalVotingPower()
+				valset.TotalVotingPower()
+				tmConsState.ValidatorSet, err = valset.ToProto()
+				suite.Require().NoError(err)
 
 				tmClientState, ok := updatedClientState.(ibctmtypes.ClientState)
 				suite.Require().True(ok, "client state is not a tendermint client state")
 
-				// recalculate cached totalVotingPower field for equality check
-				tmClientState.LastHeader.ValidatorSet.TotalVotingPower()
+				lastValset, err := tmtypes.ValidatorSetFromProto(tmClientState.LastHeader.ValidatorSet)
+				suite.Require().NoError(err)
 
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
+				// recalculate cached totalVotingPower field for equality check
+				lastValset.TotalVotingPower()
+				tmClientState.LastHeader.ValidatorSet, err = valset.ToProto()
+				suite.Require().NoError(err)
+
 				suite.Require().Equal(updateHeader.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
 				suite.Require().Equal(expConsensusState, consensusState, "consensus state should have been updated on case %s", tc.name)
 				suite.Require().Equal(updatedClientState, tmClientState, "client states don't match")
@@ -145,10 +155,16 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	suite.Require().NoError(err)
 	altVal := tmtypes.NewValidator(altPubKey, 4)
 
+	protoValSet, err := tmtypes.ValidatorSetFromProto(suite.valSet)
+	suite.Require().NoError(err)
+
 	// Create bothValSet with both suite validator and altVal
-	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	bothValSet, err := tmtypes.NewValidatorSet(append(protoValSet.Validators, altVal)).ToProto()
+	suite.Require().NoError(err)
+
 	// Create alternative validator set with only altVal
-	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
+	altValSet, err := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal}).ToProto()
+	suite.Require().NoError(err)
 
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)

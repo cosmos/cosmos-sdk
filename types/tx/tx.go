@@ -26,8 +26,11 @@ var _ ProtoTx = &Tx{}
 
 func NewTx() *Tx {
 	return &Tx{
-		Body:       &TxBody{},
-		AuthInfo:   &AuthInfo{},
+		Body: &TxBody{},
+		AuthInfo: &AuthInfo{
+			SignerInfos: nil,
+			Fee:         &Fee{},
+		},
 		Signatures: nil,
 	}
 }
@@ -172,18 +175,18 @@ type SigTx interface {
 	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignaturesV2() ([]SignatureV2, error)
+	GetSignaturesV2() ([]SignatureData, error)
 }
 
-func (m *Tx) GetSignaturesV2() ([]SignatureV2, error) {
+func (m *Tx) GetSignaturesV2() ([]SignatureData, error) {
 	signerInfos := m.AuthInfo.SignerInfos
 	sigs := m.Signatures
 	n := len(signerInfos)
-	res := make([]SignatureV2, n)
+	res := make([]SignatureData, n)
 
 	for i, si := range signerInfos {
 		var err error
-		res[i], err = ModeInfoToSignatureV2(si.ModeInfo, sigs[i])
+		res[i], err = ModeInfoToSignatureData(si.ModeInfo, sigs[i])
 		if err != nil {
 			return nil, err
 		}

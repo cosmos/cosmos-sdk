@@ -7,14 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	tx "github.com/cosmos/cosmos-sdk/types/tx"
-
 	"github.com/stretchr/testify/require"
 
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var (
@@ -192,7 +191,9 @@ func AddFlags(cmd string, flags []string) string {
 }
 
 type CLITx interface {
-	tx.SigTx
+	txtypes.SigTx
+	txtypes.FeeTx
+	txtypes.TxWithMemo
 
 	SetMemo(string)
 }

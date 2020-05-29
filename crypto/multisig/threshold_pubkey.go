@@ -41,7 +41,7 @@ func (pk ThresholdMultisigPubKey) VerifyBytes([]byte, []byte) bool {
 	return false
 }
 
-func (pk ThresholdMultisigPubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *txtypes.MultiSignature) bool {
+func (pk ThresholdMultisigPubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *txtypes.MultiSignatureData) bool {
 	bitarray := sig.BitArray
 	sigs := sig.Signatures
 	size := bitarray.Size()
@@ -63,7 +63,7 @@ func (pk ThresholdMultisigPubKey) VerifyMultisignature(getSignBytes GetSignBytes
 		if bitarray.GetIndex(i) {
 			si := sig.Signatures[sigIndex]
 			switch si := si.(type) {
-			case *txtypes.SingleSignature:
+			case *txtypes.SingleSignatureData:
 				msg, err := getSignBytes(si.SignMode)
 				if err != nil {
 					return false
@@ -71,7 +71,7 @@ func (pk ThresholdMultisigPubKey) VerifyMultisignature(getSignBytes GetSignBytes
 				if !pk.PubKeys[i].VerifyBytes(msg, si.Signature) {
 					return false
 				}
-			case *txtypes.MultiSignature:
+			case *txtypes.MultiSignatureData:
 				nestedMultisigPk, ok := pk.PubKeys[i].(MultisigPubKey)
 				if !ok {
 					return false

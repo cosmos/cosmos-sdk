@@ -62,7 +62,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 		}
 
 		switch sig := sig.(type) {
-		case *types.SingleSignature:
+		case *types.SingleSignatureData:
 			signBytes, err := svd.getSignBytesSingle(ctx, sig.SignMode, signerAcc, sigTx)
 			if err != nil {
 				return ctx, err
@@ -72,7 +72,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 			if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
 			}
-		case *types.MultiSignature:
+		case *types.MultiSignatureData:
 			multisigPubKey, ok := pubKey.(multisig.MultisigPubKey)
 			if !ok {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "key is not a multisig pubkey, but ModeInfo.Multi is used")

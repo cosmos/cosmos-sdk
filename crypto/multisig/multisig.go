@@ -11,7 +11,7 @@ type GetSignBytesFunc func(mode types.SignMode) ([]byte, error)
 type MultisigPubKey interface {
 	crypto.PubKey
 
-	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *types.MultiSignature) bool
+	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *types.MultiSignatureData) bool
 	GetPubKeys() []crypto.PubKey
 	Threshold() uint32
 }

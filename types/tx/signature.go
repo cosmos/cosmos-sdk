@@ -2,29 +2,29 @@ package types
 
 import "github.com/cosmos/cosmos-sdk/crypto/types"
 
-type SignatureV2 interface {
-	isSignatureV2()
+type SignatureData interface {
+	isSignatureData()
 }
 
-type SingleSignature struct {
+type SingleSignatureData struct {
 	SignMode  SignMode
 	Signature []byte
 }
 
-type MultiSignature struct {
+type MultiSignatureData struct {
 	BitArray   *types.CompactBitArray
-	Signatures []SignatureV2
+	Signatures []SignatureData
 }
 
-var _, _ SignatureV2 = &SingleSignature{}, &MultiSignature{}
+var _, _ SignatureData = &SingleSignatureData{}, &MultiSignatureData{}
 
-func (m *SingleSignature) isSignatureV2() {}
-func (m *MultiSignature) isSignatureV2()  {}
+func (m *SingleSignatureData) isSignatureData() {}
+func (m *MultiSignatureData) isSignatureData()  {}
 
-func ModeInfoToSignatureV2(modeInfo *ModeInfo, sig []byte) (SignatureV2, error) {
+func ModeInfoToSignatureData(modeInfo *ModeInfo, sig []byte) (SignatureData, error) {
 	switch modeInfo := modeInfo.Sum.(type) {
 	case *ModeInfo_Single_:
-		return &SingleSignature{
+		return &SingleSignatureData{
 			SignMode:  modeInfo.Single.Mode,
 			Signature: sig,
 		}, nil
@@ -37,15 +37,15 @@ func ModeInfoToSignatureV2(modeInfo *ModeInfo, sig []byte) (SignatureV2, error) 
 			return nil, err
 		}
 
-		sigv2s := make([]SignatureV2, len(sigs))
+		sigv2s := make([]SignatureData, len(sigs))
 		for i, mi := range multi.ModeInfos {
-			sigv2s[i], err = ModeInfoToSignatureV2(mi, sigs[i])
+			sigv2s[i], err = ModeInfoToSignatureData(mi, sigs[i])
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		return &MultiSignature{
+		return &MultiSignatureData{
 			BitArray:   multi.Bitarray,
 			Signatures: sigv2s,
 		}, nil
@@ -54,4 +54,3 @@ func ModeInfoToSignatureV2(modeInfo *ModeInfo, sig []byte) (SignatureV2, error) 
 		panic("unexpected case")
 	}
 }
-

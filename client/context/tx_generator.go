@@ -14,22 +14,8 @@ type (
 	// implement TxBuilder.
 	TxGenerator interface {
 		NewTxBuilder() TxBuilder
-		NewFee() ClientFee
-		NewSignature() ClientSignature
 		TxEncoder() sdk.TxEncoder
 		SignModeHandler() types.SignModeHandler
-	}
-
-	ClientFee interface {
-		sdk.Fee
-		SetGas(uint64)
-		SetAmount(sdk.Coins)
-	}
-
-	ClientSignature interface {
-		sdk.Signature
-		SetPubKey(crypto.PubKey) error
-		SetSignature([]byte)
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction
@@ -39,16 +25,15 @@ type (
 	TxBuilder interface {
 		GetTx() sdk.Tx
 
-		SetMsgs(...sdk.Msg) error
-		GetSignatures() []sdk.Signature
-		SetSignatures(...ClientSignature) error
-		GetFee() sdk.Fee
-		SetFee(ClientFee) error
-		GetMemo() string
-		SetMemo(string)
+		SetMsgs(msgs ...sdk.Msg) error
+		SetSignatures(signatures ...SignatureBuilder) error
+		SetMemo(memo string)
+		SetFee(amount sdk.Coins)
+		SetGasLimit(limit uint64)
+	}
 
-		// CanonicalSignBytes returns the canonical sign bytes to sign over, given a
-		// chain ID, along with an account and sequence number.
-		CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
+	SignatureBuilder struct {
+		PubKey crypto.PubKey
+		Data   types.SignatureData
 	}
 )

@@ -1,17 +1,19 @@
 package multisig
 
 import (
-	"github.com/tendermint/tendermint/crypto/multisig"
 	"math/rand"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/multisig"
+
 	"github.com/stretchr/testify/require"
 
-	types "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/sr25519"
+
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // This tests multisig functionality, but it expects the first k signatures to be valid
@@ -24,7 +26,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 		pubkeys        []crypto.PubKey
 		signingIndices []int
 		// signatures should be the same size as signingIndices.
-		signatures           []types.SignatureV2
+		signatures           []types.SignatureData
 		passAfterKSignatures []bool
 	}{
 		{
@@ -168,9 +170,9 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	require.Equal(t, multisigKey, pubKey)
 }
 
-func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, signatures []types.SignatureV2) {
+func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, signatures []types.SignatureData) {
 	pubkeys = make([]crypto.PubKey, n)
-	signatures = make([]types.SignatureV2, n)
+	signatures = make([]types.SignatureData, n)
 	for i := 0; i < n; i++ {
 		var privkey crypto.PrivKey
 		switch rand.Int63() % 3 {
@@ -183,7 +185,7 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, s
 		}
 		pubkeys[i] = privkey.PubKey()
 		sig, _ := privkey.Sign(msg)
-		signatures[i] = &types.SingleSignature{Signature: sig}
+		signatures[i] = &types.SingleSignatureData{Signature: sig}
 	}
 	return
 }

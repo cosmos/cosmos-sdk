@@ -3,7 +3,9 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -130,9 +132,11 @@ func TestReadStdTxFromFile(t *testing.T) {
 	defer os.Remove(jsonTxFile.Name())
 
 	// Read it back
-	decodedTx, err := ReadTxFromFile(cdc, jsonTxFile.Name())
+	cliCtx := context.CLIContext{}
+	cliCtx = cliCtx.WithTxJSONDecoder(authtypes.DefaultJSONTxDecoder(cdc))
+	decodedTx, err := ReadTxFromFile(cliCtx, jsonTxFile.Name())
 	require.NoError(t, err)
-	require.Equal(t, decodedTx.Memo, "foomemo")
+	require.Equal(t, decodedTx.(types.TxWithMemo).GetMemo(), "foomemo")
 }
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {

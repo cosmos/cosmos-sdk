@@ -14,10 +14,11 @@ import (
 type TxGenerator struct {
 	Marshaler   codec.Marshaler
 	PubKeyCodec cryptotypes.PublicKeyCodec
+	ModeHandler types.SignModeHandler
 }
 
-func NewTxGenerator(marshaler codec.Marshaler, pubKeyCodec cryptotypes.PublicKeyCodec) *TxGenerator {
-	return &TxGenerator{Marshaler: marshaler, PubKeyCodec: cryptotypes.CacheWrapCodec(pubKeyCodec)}
+func NewTxGenerator(marshaler codec.Marshaler, pubKeyCodec cryptotypes.PublicKeyCodec, handler types.SignModeHandler) *TxGenerator {
+	return &TxGenerator{Marshaler: marshaler, PubKeyCodec: cryptotypes.CacheWrapCodec(pubKeyCodec), ModeHandler: handler}
 }
 
 var _ context.TxGenerator = TxGenerator{}
@@ -27,23 +28,6 @@ func (t TxGenerator) NewTxBuilder() context.TxBuilder {
 		Tx:          types.NewTx(),
 		Marshaler:   t.Marshaler,
 		PubKeyCodec: t.PubKeyCodec,
-	}
-}
-
-func (t TxGenerator) NewFee() context.ClientFee {
-	return &types.Fee{}
-}
-
-func (t TxGenerator) NewSignature() context.ClientSignature {
-	return &ClientSignature{
-		modeInfo: &types.ModeInfo{
-			Sum: &types.ModeInfo_Single_{
-				Single: &types.ModeInfo_Single{
-					Mode: types.SignMode_SIGN_MODE_DIRECT,
-				},
-			},
-		},
-		codec: t.PubKeyCodec,
 	}
 }
 
@@ -58,6 +42,5 @@ func (t TxGenerator) TxEncoder() sdk.TxEncoder {
 }
 
 func (t TxGenerator) SignModeHandler() types.SignModeHandler {
-	panic("implement me")
+	return t.ModeHandler
 }
-

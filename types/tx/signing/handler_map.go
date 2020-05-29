@@ -8,13 +8,14 @@ import (
 )
 
 type HandlerMap struct {
+	defaultMode      types.SignMode
 	modes            []types.SignMode
 	signModeHandlers map[types.SignMode]types.SignModeHandler
 }
 
 var _ types.SignModeHandler = HandlerMap{}
 
-func NewHandlerMap(handlers []types.SignModeHandler) *HandlerMap {
+func NewHandlerMap(defaultMode types.SignMode, handlers []types.SignModeHandler) *HandlerMap {
 	handlerMap := make(map[types.SignMode]types.SignModeHandler)
 	var modes []types.SignMode
 
@@ -29,9 +30,14 @@ func NewHandlerMap(handlers []types.SignModeHandler) *HandlerMap {
 	}
 
 	return &HandlerMap{
+		defaultMode:      defaultMode,
 		modes:            modes,
 		signModeHandlers: handlerMap,
 	}
+}
+
+func (h HandlerMap) DefaultMode() types.SignMode {
+	return h.defaultMode
 }
 
 func (h HandlerMap) Modes() []types.SignMode {

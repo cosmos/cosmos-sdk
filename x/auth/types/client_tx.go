@@ -2,12 +2,13 @@ package types
 
 import (
 	"fmt"
-	types "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // StdTxBuilder wraps StdTx to implement to the context.TxBuilder interface
@@ -28,42 +29,50 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
-// GetSignatures implements TxBuilder.GetSignatures
-func (s StdTxBuilder) GetSignatures() []sdk.Signature {
-	res := make([]sdk.Signature, len(s.Signatures))
-	for i, sig := range s.Signatures {
-		res[i] = sig
+func SignatureDataToSig(data types.SignatureData) []byte {
+	switch data := data.(type) {
+	case *types.SingleSignatureData:
+		return data.Signature
+	case *types.MultiSignatureData:
+		n := len(data.Signatures)
+		sigs := make([][]byte, n)
+		for i, s := range data.Signatures {
+			sigs[i] = SignatureDataToSig(s)
+		}
+		msig := multisig.AminoMultisignature{
+			BitArray: data.BitArray,
+			Sigs:     sigs,
+		}
+		return legacy_global.Cdc.MustMarshalBinaryBare(msig)
+	default:
+		panic("unexpected case")
 	}
-	return res
 }
 
 // SetSignatures implements TxBuilder.SetSignatures
-func (s *StdTxBuilder) SetSignatures(signatures ...context.ClientSignature) error {
+func (s *StdTxBuilder) SetSignatures(signatures ...context.SignatureBuilder) error {
 	sigs := make([]StdSignature, len(signatures))
 	for i, sig := range signatures {
-		pubKey := sig.GetPubKey()
+		pubKey := sig.PubKey
 		var pubKeyBz []byte
 		if pubKey != nil {
 			pubKeyBz = pubKey.Bytes()
 		}
 		sigs[i] = StdSignature{
 			PubKey:    pubKeyBz,
-			Signature: sig.GetSignature(),
+			Signature: SignatureDataToSig(sig.Data),
 		}
 	}
 	s.Signatures = sigs
 	return nil
 }
 
-// GetFee implements TxBuilder.GetFee
-func (s StdTxBuilder) GetFee() sdk.Fee {
-	return s.Fee
+func (s *StdTxBuilder) SetFee(amount sdk.Coins) {
+	s.Fee.Amount = amount
 }
 
-// SetFee implements TxBuilder.SetFee
-func (s *StdTxBuilder) SetFee(fee context.ClientFee) error {
-	s.Fee = StdFee{Amount: fee.GetAmount(), Gas: fee.GetGas()}
-	return nil
+func (s *StdTxBuilder) SetGasLimit(limit uint64) {
+	s.Fee.Gas = limit
 }
 
 // SetMemo implements TxBuilder.SetMemo
@@ -92,49 +101,18 @@ func (s StdTxGenerator) NewTxBuilder() context.TxBuilder {
 	return &StdTxBuilder{}
 }
 
-// NewFee implements TxGenerator.NewFee
-func (s StdTxGenerator) NewFee() context.ClientFee {
-	return &StdFee{}
-}
-
-// NewSignature implements TxGenerator.NewSignature
-func (s StdTxGenerator) NewSignature() context.ClientSignature {
-	return &StdSignature{}
-}
-
 // MarshalTx implements TxGenerator.MarshalTx
 func (s StdTxGenerator) TxEncoder() sdk.TxEncoder {
 	return DefaultTxEncoder(s.Cdc)
 }
 
-var _ context.ClientFee = &StdFee{}
-
-// SetGas implements ClientFee.SetGas
-func (fee *StdFee) SetGas(gas uint64) {
-	fee.Gas = gas
-}
-
-// SetAmount implements ClientFee.SetAmount
-func (fee *StdFee) SetAmount(coins sdk.Coins) {
-	fee.Amount = coins
-}
-
-var _ context.ClientSignature = &StdSignature{}
-
-// SetPubKey implements ClientSignature.SetPubKey
-func (ss *StdSignature) SetPubKey(key crypto.PubKey) error {
-	ss.PubKey = key.Bytes()
-	return nil
-}
-
-// SetSignature implements ClientSignature.SetSignature
-func (ss *StdSignature) SetSignature(bytes []byte) {
-	ss.Signature = bytes
-}
-
 type LegacyAminoJSONHandler struct{}
 
 var _ types.SignModeHandler = LegacyAminoJSONHandler{}
+
+func (h LegacyAminoJSONHandler) DefaultMode() types.SignMode {
+	return types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+}
 
 func (LegacyAminoJSONHandler) Modes() []types.SignMode {
 	return []types.SignMode{types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}

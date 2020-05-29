@@ -3,6 +3,8 @@ package tx
 import (
 	"io"
 
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -26,6 +28,7 @@ type Factory struct {
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	signMode           types.SignMode
 }
 
 func NewFactoryFromCLI(input io.Reader) Factory {

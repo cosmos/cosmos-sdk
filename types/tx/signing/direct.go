@@ -9,6 +9,10 @@ import (
 
 type DirectModeHandler struct{}
 
+func (h DirectModeHandler) DefaultMode() types.SignMode {
+	return types.SignMode_SIGN_MODE_DIRECT
+}
+
 var _ types.SignModeHandler = DirectModeHandler{}
 
 func (DirectModeHandler) Modes() []types.SignMode {

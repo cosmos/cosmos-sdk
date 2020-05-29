@@ -1,10 +1,8 @@
 package signing
 
 import (
-	"fmt"
-
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,41 +28,22 @@ func AminoJSONTxDecoder(aminoJsonMarshaler codec.JSONMarshaler, txGen context.Tx
 		}
 
 		txBuilder.SetMemo(aminoTx.Memo)
-
-		// set fee
-		fee := txGen.NewFee()
-		fee.SetGas(aminoTx.Fee.Gas)
-		fee.SetAmount(aminoTx.Fee.Amount)
-		err = txBuilder.SetFee(fee)
-		if err != nil {
-			return nil, err
-		}
+		txBuilder.SetFee(aminoTx.Fee.Amount)
+		txBuilder.SetGasLimit(aminoTx.Fee.Gas)
 
 		n := len(aminoTx.Signatures)
-		clientSigs := make([]context.ClientSignature, n)
-		pubKeys := aminoTx.GetPubKeys()
-		sigs := aminoTx.GetSignatures()
+		clientSigs := make([]context.SignatureBuilder, n)
+		sigs := aminoTx.Signatures
 
 		for i := 0; i < n; i++ {
-			csig := txGen.NewSignature()
-
-			pubKey := pubKeys[i]
-
-			miSig, ok := csig.(ModeInfoSignature)
-			if !ok {
-				return nil, fmt.Errorf("can't set ModeInfo")
-			}
-			miSig.SetModeInfo(makeAminoModeInfo(pubKey))
-
-			fmt.Printf("amino decoded pubkey: %T\n", pubKey)
-			err = csig.SetPubKey(pubKey)
+			data, err := stdSignatureToSignatureData(sigs[i])
 			if err != nil {
 				return nil, err
 			}
-
-			csig.SetSignature(sigs[i])
-
-			clientSigs[i] = csig
+			clientSigs[i] = context.SignatureBuilder{
+				PubKey: sigs[i].GetPubKey(),
+				Data:   data,
+			}
 		}
 
 		err = txBuilder.SetSignatures(clientSigs...)
@@ -76,24 +55,38 @@ func AminoJSONTxDecoder(aminoJsonMarshaler codec.JSONMarshaler, txGen context.Tx
 	}
 }
 
-func makeAminoModeInfo(pk crypto.PubKey) *types.ModeInfo {
-	if multisigPk, ok := pk.(multisig.PubKeyMultisigThreshold); ok {
-		multi := &types.ModeInfo_Multi{}
-		for i, k := range multisigPk.PubKeys {
-			multi.ModeInfos[i] = makeAminoModeInfo(k)
+func stdSignatureToSignatureData(signature auth.StdSignature) (types.SignatureData, error) {
+	pk := signature.GetPubKey()
+	if multisigPk, ok := pk.(multisig2.MultisigPubKey); ok {
+		pubKeys := multisigPk.GetPubKeys()
+		var sig multisig2.AminoMultisignature
+		err := legacy_global.Cdc.UnmarshalBinaryBare(signature.Signature, &sig)
+		if err != nil {
+			return nil, err
 		}
-		return &types.ModeInfo{
-			Sum: &types.ModeInfo_Multi_{
-				Multi: multi,
-			},
+		n := sig.BitArray.Size()
+		datas := make([]types.SignatureData, n)
+		sigIndex := 0
+		for i := 0; i < n; i++ {
+			if sig.BitArray.GetIndex(i) {
+				datas[sigIndex], err = stdSignatureToSignatureData(auth.StdSignature{
+					PubKey:    pubKeys[i].Bytes(),
+					Signature: sig.Sigs[sigIndex],
+				})
+				if err != nil {
+					return nil, err
+				}
+				sigIndex++
+			}
 		}
+		return &types.MultiSignatureData{
+			BitArray:   sig.BitArray,
+			Signatures: datas[:sigIndex],
+		}, nil
 	} else {
-		return &types.ModeInfo{
-			Sum: &types.ModeInfo_Single_{
-				Single: &types.ModeInfo_Single{
-					Mode: types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-				},
-			},
-		}
+		return &types.SingleSignatureData{
+			SignMode:  types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: signature.Signature,
+		}, nil
 	}
 }

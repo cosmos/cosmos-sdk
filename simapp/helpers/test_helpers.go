@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"time"
 
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -20,34 +22,47 @@ const (
 
 // GenTx generates a signed mock transaction.
 func GenTx(gen context.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) sdk.Tx {
-	fee := gen.NewFee()
-	fee.SetAmount(feeAmt)
-	fee.SetGas(gas)
-
-	sigs := make([]context.ClientSignature, len(priv))
+	sigs := make([]context.SignatureBuilder, len(priv))
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	for i, p := range priv {
-		// use a empty chainID for ease of testing
-		clientSig := gen.NewSignature()
-		clientSig.SetPubKey(p.PubKey())
+	signMode := gen.SignModeHandler().DefaultMode()
 
-		sigs[i] = clientSig
+	for i, p := range priv {
+		sigs[i] = context.SignatureBuilder{
+			PubKey: p.PubKey(),
+			Data: &types.SingleSignatureData{
+				SignMode: signMode,
+			},
+		}
 	}
 
 	tx := gen.NewTxBuilder()
-	tx.SetMsgs(msgs...)
-	tx.SetFee(fee)
-	tx.SetSignatures(sigs...)
+	err := tx.SetMsgs(msgs...)
+	if err != nil {
+		panic(err)
+	}
+	err = tx.SetSignatures(sigs...)
+	if err != nil {
+		panic(err)
+	}
 	tx.SetMemo(memo)
+	tx.SetFee(feeAmt)
+	tx.SetGasLimit(gas)
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing
-		signBytes, err := tx.CanonicalSignBytes(chainID, accnums[i], seq[i])
+		signBytes, err := gen.SignModeHandler().GetSignBytes(types.SigningData{
+			Mode:            0,
+			PublicKey:       nil,
+			ChainID:         chainID,
+			AccountNumber:   accnums[i],
+			AccountSequence: seq[i],
+		}, tx.GetTx())
+
 		if err != nil {
 			panic(err)
 		}
@@ -56,10 +71,13 @@ func GenTx(gen context.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64
 			panic(err)
 		}
 
-		sigs[i].SetSignature(sig)
+		sigs[i].Data.(*types.SingleSignatureData).Signature = sig
 	}
 
-	tx.SetSignatures(sigs...)
+	err = tx.SetSignatures(sigs...)
+	if err != nil {
+		panic(err)
+	}
 
 	return tx.GetTx()
 }

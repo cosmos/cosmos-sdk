@@ -14,7 +14,7 @@ func MakeEncodingConfig() EncodingConfig {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
 	pubKeyCodec := cryptocodec.DefaultPublicKeyCodec{}
-	txGen := signing.NewTxGenerator(marshaler, pubKeyCodec)
+	txGen := signing.NewTxGenerator(marshaler, pubKeyCodec, signing.DefaultSignModeHandler())
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,

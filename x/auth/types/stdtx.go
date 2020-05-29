@@ -279,12 +279,12 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 	return sdk.AccAddress{}
 }
 
-func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureV2 {
+func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureData {
 	switch pk := pk.(type) {
 	case multisig2.MultisigPubKey:
 		var multisignature multisig.Multisignature
 		legacy_global.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
-		sigs := make([]types.SignatureV2, len(multisignature.Sigs))
+		sigs := make([]types.SignatureData, len(multisignature.Sigs))
 		size := multisignature.BitArray.Size()
 		sigIndex := 0
 		pubKeys := pk.GetPubKeys()
@@ -296,7 +296,7 @@ func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureV2 {
 			}
 		}
 
-		return &types.MultiSignature{
+		return &types.MultiSignatureData{
 			BitArray: &types2.CompactBitArray{
 				ExtraBitsStored: uint32(multisignature.BitArray.ExtraBitsStored),
 				Elems:           multisignature.BitArray.Elems,
@@ -304,16 +304,16 @@ func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureV2 {
 			Signatures: sigs,
 		}
 	default:
-		return &types.SingleSignature{
+		return &types.SingleSignatureData{
 			SignMode:  types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: sig,
 		}
 	}
 }
 
-func (tx StdTx) GetSignaturesV2() ([]types.SignatureV2, error) {
+func (tx StdTx) GetSignaturesV2() ([]types.SignatureData, error) {
 	sigs := tx.Signatures
-	res := make([]types.SignatureV2, len(sigs))
+	res := make([]types.SignatureData, len(sigs))
 	for i, sig := range sigs {
 		res[i] = stdSignatureToSignatureV2(sig.GetPubKey(), sig.Signature)
 	}

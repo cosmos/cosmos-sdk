@@ -8,12 +8,13 @@ import (
 	"os"
 	"strings"
 
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/gogo/protobuf/jsonpb"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -108,7 +109,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	txBytes, err := Sign(txf, ctx.GetFromName(), clientkeys.DefaultKeyPass, tx)
+	txBytes, err := Sign(txf, ctx.GetFromName(), tx)
 	if err != nil {
 		return err
 	}
@@ -209,22 +210,16 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (context.TxBuilder, error) {
 		}
 	}
 
-	clientFee := txf.txGenerator.NewFee()
-	clientFee.SetAmount(fees)
-	clientFee.SetGas(txf.gas)
-
 	tx := txf.txGenerator.NewTxBuilder()
-	tx.SetMemo(txf.memo)
-
-	if err := tx.SetFee(clientFee); err != nil {
-		return nil, err
-	}
-
-	if err := tx.SetSignatures(); err != nil {
-		return nil, err
-	}
 
 	if err := tx.SetMsgs(msgs...); err != nil {
+		return nil, err
+	}
+	tx.SetMemo(txf.memo)
+	tx.SetFee(fees)
+	tx.SetGasLimit(txf.gas)
+
+	if err := tx.SetSignatures(); err != nil {
 		return nil, err
 	}
 
@@ -242,7 +237,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
-	sig := txf.txGenerator.NewSignature()
+	sig := context.SignatureBuilder{}
 
 	if err := tx.SetSignatures(sig); err != nil {
 		return nil, err
@@ -312,27 +307,56 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name, passphrase string, tx context.TxBuilder) ([]byte, error) {
+func Sign(txf Factory, name string, tx context.TxBuilder) ([]byte, error) {
 	if txf.keybase == nil {
 		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}
 
-	signBytes, err := tx.CanonicalSignBytes(txf.chainID, txf.accountNumber, txf.sequence)
+	signMode := txf.signMode
+	if signMode == types.SignMode_SIGN_MODE_UNSPECIFIED {
+		signMode = txf.txGenerator.SignModeHandler().DefaultMode()
+	}
+
+	key, err := txf.keybase.Key(name)
 	if err != nil {
 		return nil, err
 	}
 
-	sigBytes, pubkey, err := txf.keybase.Sign(name, signBytes)
+	pubKey := key.GetPubKey()
+
+	sigData := &types.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: nil,
+	}
+	sig := context.SignatureBuilder{
+		PubKey: pubKey,
+		Data:   sigData,
+	}
+
+	err = tx.SetSignatures(sig)
 	if err != nil {
 		return nil, err
 	}
 
-	sig := txf.txGenerator.NewSignature()
-	sig.SetSignature(sigBytes)
-
-	if err := sig.SetPubKey(pubkey); err != nil {
+	signBytes, err := txf.txGenerator.SignModeHandler().GetSignBytes(
+		types.SigningData{
+			Mode:            signMode,
+			PublicKey:       pubKey,
+			ChainID:         txf.chainID,
+			AccountNumber:   txf.accountNumber,
+			AccountSequence: txf.sequence,
+		}, tx.GetTx(),
+	)
+	if err != nil {
 		return nil, err
 	}
+
+	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	sigData.Signature = sigBytes
 
 	if err := tx.SetSignatures(sig); err != nil {
 		return nil, err

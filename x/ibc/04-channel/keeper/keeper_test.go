@@ -51,6 +51,10 @@ const (
 	disabledTimeoutHeight    = 0
 )
 
+var (
+	testPacketCommitment = []byte("packet commitment")
+)
+
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -200,17 +204,63 @@ func (suite *KeeperTestSuite) TestSetSequence() {
 	suite.Equal(nextSeqAck, storedNextSeqAck)
 }
 
-func (suite *KeeperTestSuite) TestPackageCommitment() {
+// TestPacketCommitment does basic verification of setting and getting of packet commitments within
+// the Channel Keeper.
+func (suite *KeeperTestSuite) TestPacketCommitment() {
 	ctx := suite.chainB.GetContext()
 	seq := uint64(10)
-	storedCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
-	suite.Equal([]byte(nil), storedCommitment)
 
-	commitment := []byte("commitment")
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, testPort1, testChannel1, seq, commitment)
+	suite.storePacketCommitment(ctx, testPort1, testChannel1, seq)
+}
 
-	storedCommitment = suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
-	suite.Equal(commitment, storedCommitment)
+// TestGetAllPacketCommitmentsAtChannel verifies that iterator returns all stored packet commitments
+// for a specific channel.
+func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
+	// setup
+	ctx := suite.chainB.GetContext()
+	expectedSeqs := []uint64{}
+
+	seq := uint64(15)
+	maxSeq := uint64(25)
+	suite.Require().Greater(maxSeq, seq)
+
+	// create consecutive commitments
+	for i := uint64(1); i < seq; i++ {
+		suite.storePacketCommitment(ctx, testPort1, testChannel1, i)
+		expectedSeqs = append(expectedSeqs, i)
+	}
+
+	// add non-consecutive commitments
+	for i := seq; i < maxSeq; i += 2 {
+		suite.storePacketCommitment(ctx, testPort1, testChannel1, i)
+		expectedSeqs = append(expectedSeqs, i)
+	}
+
+	// add sequence on different channel/port
+	suite.storePacketCommitment(ctx, testPort2, testChannel2, maxSeq+1)
+
+	commitments := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitmentsAtChannel(ctx, testPort1, testChannel1)
+
+	// verify that all the packet commitments were stored
+	for i, packet := range commitments {
+		suite.Equal(expectedSeqs[i], packet.Sequence)
+		suite.Equal(testPort1, packet.PortID)
+		suite.Equal(testChannel1, packet.ChannelID)
+	}
+}
+
+// storePacketCommitment is a helper function that sets a packet commitment in the Channel Keeper
+// on chainB. The function ensures there is no preexisting packet commitment at the given sequence
+// and verifies that it succeeds in execution.
+func (suite *KeeperTestSuite) storePacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) {
+	// ensure no commitment is stored
+	storedCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, portID, channelID, sequence)
+	suite.Require().Nil(storedCommitment)
+
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, portID, channelID, sequence, testPacketCommitment)
+
+	storedCommitment = suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, portID, channelID, sequence)
+	suite.Equal(testPacketCommitment, storedCommitment)
 }
 
 func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {

@@ -414,7 +414,7 @@ func (k Keeper) AcknowledgePacket(
 // unordered channel by proving that the associated acknowledgement has been
 // written.
 //
-// NOTE: this functionality is not compatible with using calling AcknowledgePacket
+// NOTE: this functionality is not compatible with calling AcknowledgePacket
 // and must be handled at the application level.
 func (k Keeper) CleanupPacket(
 	ctx sdk.Context,

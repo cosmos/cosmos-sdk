@@ -502,6 +502,16 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, cap, packet, proof, proofHeight+1, nextSeqRecv, ack)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
+
+				if ordered {
+					for i := uint64(1); i < nextSeqRecv; i++ {
+						pc := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, i)
+						suite.Require().Nil(pc)
+					}
+				} else {
+					pc := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, packet.GetSequence())
+					suite.Require().Nil(pc)
+				}
 			} else {
 				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, cap, packet, proof, proofHeight, nextSeqRecv, ack)
 				suite.Require().Error(err)

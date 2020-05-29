@@ -67,8 +67,8 @@ func QuerierConnectionChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 	return res, nil
 }
 
-// QuerierPacketCommitments defines the sdk.Querier to query all packet
-// commitments on a specified channel.
+// QuerierPacketCommitments defines the sdk.Querier to query all packet commitments on a
+// specified channel.
 func QuerierPacketCommitments(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryPacketCommitmentsParams
 
@@ -77,8 +77,8 @@ func QuerierPacketCommitments(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 	}
 
 	packetCommitments := k.GetAllPacketCommitmentsAtChannel(ctx, params.PortID, params.ChannelID)
+	sequences := make([]uint64, 0, len(packetCommitments))
 
-	var sequences []uint64
 	for _, pc := range packetCommitments {
 		sequences = append(sequences, pc.Sequence)
 	}
@@ -98,8 +98,8 @@ func QuerierPacketCommitments(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 	return res, nil
 }
 
-// QuerierUnrelayedAcknowledgements defines the sdk.Querier to query all unrelayed
-// acknowledgements for a specified channel end.
+// QuerierUnrelayedAcknowledgements defines the sdk.Querier to query all unrelayed acknowledgements
+// for a specified channel end.
 func QuerierUnrelayedAcknowledgements(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryUnrelayedAcknowledgementsParams
 

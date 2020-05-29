@@ -18,6 +18,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -58,7 +59,8 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
+	cdc     *codec.Codec
+	querier sdk.Querier
 
 	chainA *TestChain
 	chainB *TestChain
@@ -69,6 +71,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainB = NewTestChain(testClientIDB)
 
 	suite.cdc = suite.chainA.App.Codec()
+	suite.querier = ibckeeper.NewQuerier(*suite.chainA.App.IBCKeeper)
 }
 
 func (suite *KeeperTestSuite) TestSetChannel() {

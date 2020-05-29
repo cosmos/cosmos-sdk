@@ -43,7 +43,7 @@ func TestRandStringOfLength(t *testing.T) {
 	}{
 		{"0-size", 0, 0},
 		{"10-size", 10, 10},
-		{"10-size", 1_000_000_000, 1_000_000_000},
+		{"1_000_000-size", 1_000_000, 1_000_000},
 	}
 	for _, tt := range tests {
 		tt := tt

@@ -20,8 +20,8 @@ func TestRandomAccounts(t *testing.T) {
 		want int
 	}{
 		{"0-accounts", 0, 0},
-		{"0-accounts", 1, 1},
-		{"0-accounts", 1_000, 1_000},
+		{"1-accounts", 1, 1},
+		{"100-accounts", 100, 100},
 	}
 	for _, tt := range tests {
 		tt := tt

@@ -373,6 +373,8 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	}
 }
 
+// TestAcknowledgementExectued verifies that packet commitments are deleted after
+// capabilities are verified.
 func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 	sequence := uint64(1)
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
@@ -386,7 +388,7 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 		{"success ORDERED", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), sequence, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
-			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), sequence, types.CommitPacket(packet))
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), sequence, types.CommitPacket(packet))
 		}, true},
 		{"channel not found", func() {}, false},
 		{"incorrect capability", func() {
@@ -413,10 +415,10 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Nil(pc)
+				suite.NoError(err)
+				suite.Nil(pc)
 			} else {
-				suite.Require().Error(err)
+				suite.Error(err)
 			}
 		})
 	}

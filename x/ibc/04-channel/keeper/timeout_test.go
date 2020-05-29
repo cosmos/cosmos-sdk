@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -93,19 +94,62 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 
 			if tc.expPass {
 				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, proof, proofHeight+1, nextSeqRecv)
-				packetCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
-				suite.Require().Nil(packetCommitment)
-
-				// check replay attacks
-				packetOut, err = suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, proof, proofHeight+1, nextSeqRecv)
-				suite.Require().Error(err)
-				suite.Require().Nil(packetOut)
 			} else {
 				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, proof, proofHeight, nextSeqRecv)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
+			}
+		})
+	}
+}
+
+// TestTimeoutExectued verifies that packet commitments are deleted after
+// capabilities are verified.
+func (suite *KeeperTestSuite) TestTimeoutExecuted() {
+	sequence := uint64(1)
+
+	var (
+		packet  types.Packet
+		chanCap *capability.Capability
+	)
+
+	testCases := []testCase{
+		{"success ORDERED", func() {
+			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), sequence, types.CommitPacket(packet))
+		}, true},
+		{"channel not found", func() {}, false},
+		{"incorrect capability", func() {
+			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
+			chanCap = capability.NewCapability(100)
+		}, false},
+	}
+
+	for i, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
+			suite.SetupTest() // reset
+
+			var err error
+			chanCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
+				suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1),
+			)
+			suite.Require().NoError(err, "could not create capability")
+
+			tc.malleate()
+
+			err = suite.chainA.App.IBCKeeper.ChannelKeeper.TimeoutExecuted(suite.chainA.GetContext(), chanCap, packet)
+			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), sequence)
+
+			if tc.expPass {
+				suite.NoError(err)
+				suite.Nil(pc)
+			} else {
+				suite.Error(err)
 			}
 		})
 	}

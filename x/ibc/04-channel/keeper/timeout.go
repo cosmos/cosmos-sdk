@@ -109,13 +109,6 @@ func (k Keeper) TimeoutPacket(
 		return nil, err
 	}
 
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-
-	if channel.Ordering == types.ORDERED {
-		channel.State = types.CLOSED
-		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
-	}
-
 	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out: %v", packet))
 
 	// emit an event marking that we have processed the timeout
@@ -133,6 +126,35 @@ func (k Keeper) TimeoutPacket(
 	})
 
 	return packet, nil
+}
+
+// TimeoutExecuted deletes the commitment send from this chain after it verifies timeout.
+func (k Keeper) TimeoutExecuted(
+	ctx sdk.Context,
+	chanCap *capability.Capability,
+	packet exported.PacketI,
+) error {
+	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	if !found {
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
+	}
+
+	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
+		return sdkerrors.Wrap(
+			types.ErrChannelCapabilityNotFound,
+			"caller does not own capability for channel",
+		)
+	}
+
+	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	if channel.Ordering == types.ORDERED {
+		channel.State = types.CLOSED
+		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
+	}
+
+	return nil
 }
 
 // TimeoutOnClose is called by a module in order to prove that the channel to

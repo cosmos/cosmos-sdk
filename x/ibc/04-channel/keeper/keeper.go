@@ -145,6 +145,8 @@ func (k Keeper) deletePacketCommitment(ctx sdk.Context, portID, channelID string
 }
 
 // deletePacketCommitmentsLTE removes all consecutive packet commitments less than or equal to sequence
+//
+// CONTRACT: this function can only be used for ORDERED channel batch clearing
 func (k Keeper) deletePacketCommitmentsLTE(ctx sdk.Context, portID, channelID string, sequence uint64) {
 	store := ctx.KVStore(k.storeKey)
 	for i := sequence; i > 0; i-- {

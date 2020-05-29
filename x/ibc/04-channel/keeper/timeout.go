@@ -18,7 +18,8 @@ import (
 // packet to a counterparty module, where the timeout height has passed on the
 // counterparty chain without the packet being committed, to prove that the
 // packet can no longer be executed and to allow the calling module to safely
-// perform appropriate state transitions.
+// perform appropriate state transitions. Its intended usage is within the
+// ante handler.
 func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
@@ -114,6 +115,9 @@ func (k Keeper) TimeoutPacket(
 }
 
 // TimeoutExecuted deletes the commitment send from this chain after it verifies timeout.
+// If the timed-out packet came from an ORDERED channel then this channel will be closed.
+//
+// NOTE: this function must be called in the handler
 func (k Keeper) TimeoutExecuted(
 	ctx sdk.Context,
 	chanCap *capability.Capability,

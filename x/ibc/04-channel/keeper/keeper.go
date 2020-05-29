@@ -130,7 +130,7 @@ func (k Keeper) GetPacketCommitment(ctx sdk.Context, portID, channelID string, s
 
 // HasPacketCommitment returns true if the packet commitment exists
 func (k Keeper) HasPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) bool {
-	return k.GetPacketCommitment(ctx, portID, channelID, sequence) != nil
+	return len(k.GetPacketCommitment(ctx, portID, channelID, sequence)) > 0
 }
 
 // SetPacketCommitment sets the packet commitment hash to the store

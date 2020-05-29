@@ -11,6 +11,7 @@ jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v2
       - uses: technote-space/get-diff-action@v1

@@ -111,8 +111,20 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   - TxBuilder.BuildAndSign
   - TxBuilder.Sign
   - TxBuilder.SignStdTx
-* (client) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CLIContext` is renamed to `Context`. `Context` and all related methods have been moved from package context to client. Applications will have to use `client.Context` while migrating
-* (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` is moved from package client to rpc .
+* (client) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CLIContext` is renamed to `Context`. `Context` and all related methods have been moved from package context to client.
+  
+  Migration guide:
+
+  ```go
+  cliCtx := context.CLIContext{} 
+  ```
+
+  Now becomes:
+
+  ```go
+  clientCtx = client.Context{}
+  ```
+* (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` of rpc is moved from package client to rpc .
 
 ### Features
 

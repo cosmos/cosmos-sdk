@@ -49,7 +49,7 @@ At the bare minimum, a `RegisterRoutes()` function should use the SDK client pac
 
 ```go
 func registerRoutes(rs *rest.RestServer) {
-	client.RegisterRoutes(rs.CliCtx, rs.Mux)
+	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	app.ModuleBasics.RegisterRESTRoutes(rs.CliCtx, rs.Mux)
 }
 ```

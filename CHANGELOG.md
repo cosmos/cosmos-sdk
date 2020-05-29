@@ -125,7 +125,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   ```go
   clientCtx = client.Context{}
   ```
-* (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` of rpc is moved from package client to rpc .
+* (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` of rpc is moved from package client to client/rpc and client/rpc.RegisterRPCRoutes is removed.
 
 ### Features
 

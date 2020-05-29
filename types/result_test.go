@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/stretchr/testify/require"
@@ -28,6 +30,7 @@ func TestParseABCILog(t *testing.T) {
 
 func TestABCIMessageLog(t *testing.T) {
 	t.Parallel()
+	cdc := codec.New()
 	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 

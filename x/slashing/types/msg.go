@@ -4,6 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// slashing message types
+const (
+	TypeMsgUnjail = "unjail"
+)
+
 // verify interface at compile time
 var _ sdk.Msg = &MsgUnjail{}
 
@@ -15,7 +20,7 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 }
 
 func (msg MsgUnjail) Route() string { return RouterKey }
-func (msg MsgUnjail) Type() string  { return "unjail" }
+func (msg MsgUnjail) Type() string  { return TypeMsgUnjail }
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
 }

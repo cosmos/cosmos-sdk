@@ -15,7 +15,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/mattn/go-isatty v0.0.12
-	github.com/otiai10/copy v1.1.1
+	github.com/otiai10/copy v1.2.0
 	github.com/pelletier/go-toml v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -30,7 +30,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.13.3
-	github.com/tendermint/tendermint v0.33.4
+	github.com/tendermint/tendermint v0.33.5
 	github.com/tendermint/tm-db v0.5.1
 	gopkg.in/yaml.v2 v2.3.0
 )

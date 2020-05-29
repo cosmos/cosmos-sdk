@@ -1,4 +1,6 @@
-name: Code Coverage
+name: Uint-Tests / Code Coverage
+#  Uint-Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
+#  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
   push:

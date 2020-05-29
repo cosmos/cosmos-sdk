@@ -78,18 +78,17 @@ func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Rout
 		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx))
 	}
 
-	rest.RegisterRoutes(ctx, rtr, proposalRESTHandlers)
+	rest.RegisterHandlers(ctx, rtr, proposalRESTHandlers)
 }
 
 // GetTxCmd returns the root tx command for the gov module.
-func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-
+func (a AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
 	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(cdc))
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(ctx))
 	}
 
-	return cli.GetTxCmd(StoreKey, cdc, proposalCLIHandlers)
+	return cli.NewTxCmd(ctx, proposalCLIHandlers)
 }
 
 // GetQueryCmd returns the root query command for the gov module.

@@ -65,7 +65,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetTxCmd(_ context.CLIContext) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade transaction subcommands",

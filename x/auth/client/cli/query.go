@@ -83,14 +83,14 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			accGetter := types.NewAccountRetriever(authclient.Codec, cliCtx)
+			accGetter := types.NewAccountRetriever(authclient.Codec)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			acc, err := accGetter.GetAccount(key)
+			acc, err := accGetter.GetAccount(cliCtx, key)
 			if err != nil {
 				return err
 			}

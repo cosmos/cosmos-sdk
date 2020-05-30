@@ -117,10 +117,12 @@ A passive relayer does not have to know what kind of channel (version string, or
 
 Introduces different SDK paths for "naive" versus "passive" relayers.  It would be cleaner to have only one code path that accomodated both designs, but that would require breaking compatibility.
 
+Increased event size for IBC messages.
+
 ### Neutral
 
 More IBC events are exposed.
 
 ## References
 
-- {reference link}
+- The Agoric VM's IBC handler currently [accomodates `attemptChanOpenTry`](https://github.com/Agoric/agoric-sdk/blob/904b3a0423222a1b32893453e44bbde598473960/packages/cosmic-swingset/lib/ag-solo/vats/ibc.js#L546)

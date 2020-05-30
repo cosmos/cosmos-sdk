@@ -323,12 +323,12 @@ type TxBuilder interface {
 }
 ```
 
-We then update `CLIContext` to have new fields: `JSONMarshaler`, `TxGenerator`,
+We then update `Context` to have new fields: `JSONMarshaler`, `TxGenerator`,
 and `AccountRetriever`, and we update `AppModuleBasic.GetTxCmd` to take
-a `CLIContext` which should have all of these fields pre-populated.
+a `Context` which should have all of these fields pre-populated.
 
 Each client method should then use one of the `Init` methods to re-initialize
-the pre-populated `CLIContext`. `tx.GenerateOrBroadcastTx` can be used to
+the pre-populated `Context`. `tx.GenerateOrBroadcastTx` can be used to
 generate or broadcast a transaction. For example:
 
 ```go

@@ -125,7 +125,7 @@ The `BaseReq` includes basic information that every request needs to have, simil
 
 ### Request Handlers
 
-Request handlers must be defined for both transaction and query requests. Handlers' arguments include a reference to the application's `codec` and the [`Context`](../interfaces/query-lifecycle.md#clicontext) created in the user interaction.
+Request handlers must be defined for both transaction and query requests. Handlers' arguments include a reference to the application's `codec` and the [`Context`](../interfaces/query-lifecycle.md#context) created in the user interaction.
 
 Here is an example of a request handler for the nameservice module `buyNameReq` request (the same one shown above):
 
@@ -157,9 +157,9 @@ func RegisterRoutes(cliCtx client.Context, r *mux.Router, cdc *codec.Codec, stor
 
 A few things to note:
 
-* The router `r` has already been initialized by the application and is passed in here as an argument - this function is able to add on the nameservice module's routes onto any application's router. The application must also provide a [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) that the querier will need to process user requests and the application [`codec`](../core/encoding.md) for encoding and decoding application-specific types.
+* The router `r` has already been initialized by the application and is passed in here as an argument - this function is able to add on the nameservice module's routes onto any application's router. The application must also provide a [`Context`](../interfaces/query-lifecycle.md#context) that the querier will need to process user requests and the application [`codec`](../core/encoding.md) for encoding and decoding application-specific types.
 * `"/%s/names/{%s}", storeName, restName` is the url for the HTTP request. `storeName` is the name of the module, `restName` is a variable provided by the user to specify what kind of query they are making.
-* `resolveNameHandler` is the query request handler defined by the module developer. It also takes the application `codec` and `CLIContext` passed in from the user side, as well as the `storeName`.
+* `resolveNameHandler` is the query request handler defined by the module developer. It also takes the application `codec` and `Context` passed in from the user side, as well as the `storeName`.
 * `"GET"` is the HTTP Request method. As to be expected, queries are typically GET requests. Transactions are typically POST and PUT requests.
 
 

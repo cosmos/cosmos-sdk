@@ -432,8 +432,10 @@ func (chain *TestChain) createChannel(
 	state types.State, order types.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
+
+	// sets channel with given state
 	channel := types.NewChannel(state, order, counterparty,
-		[]string{connectionID}, "1.0",
+		[]string{connectionID}, testChannelVersion,
 	)
 	ctx := chain.GetContext()
 	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)

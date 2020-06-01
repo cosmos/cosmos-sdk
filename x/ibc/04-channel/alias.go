@@ -109,10 +109,6 @@ var (
 	EventTypeChannelCloseInit    = types.EventTypeChannelCloseInit
 	EventTypeChannelCloseConfirm = types.EventTypeChannelCloseConfirm
 	AttributeValueCategory       = types.AttributeValueCategory
-	State_name                   = types.State_name
-	State_value                  = types.State_value
-	Order_name                   = types.Order_name
-	Order_value                  = types.Order_value
 	ErrInvalidLengthTypes        = types.ErrInvalidLengthTypes
 	ErrIntOverflowTypes          = types.ErrIntOverflowTypes
 	ErrUnexpectedEndOfGroupTypes = types.ErrUnexpectedEndOfGroupTypes

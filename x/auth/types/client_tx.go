@@ -3,7 +3,7 @@ package types
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,7 +13,7 @@ type StdTxBuilder struct {
 	StdTx
 }
 
-var _ context.TxBuilder = &StdTxBuilder{}
+var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
 func (s *StdTxBuilder) GetTx() sdk.Tx {
@@ -36,7 +36,7 @@ func (s StdTxBuilder) GetSignatures() []sdk.Signature {
 }
 
 // SetSignatures implements TxBuilder.SetSignatures
-func (s *StdTxBuilder) SetSignatures(signatures ...context.ClientSignature) error {
+func (s *StdTxBuilder) SetSignatures(signatures ...client.Signature) error {
 	sigs := make([]StdSignature, len(signatures))
 	for i, sig := range signatures {
 		pubKey := sig.GetPubKey()
@@ -59,7 +59,7 @@ func (s StdTxBuilder) GetFee() sdk.Fee {
 }
 
 // SetFee implements TxBuilder.SetFee
-func (s *StdTxBuilder) SetFee(fee context.ClientFee) error {
+func (s *StdTxBuilder) SetFee(fee client.Fee) error {
 	s.Fee = StdFee{Amount: fee.GetAmount(), Gas: fee.GetGas()}
 	return nil
 }
@@ -79,20 +79,20 @@ type StdTxGenerator struct {
 	Cdc *codec.Codec
 }
 
-var _ context.TxGenerator = StdTxGenerator{}
+var _ client.TxGenerator = StdTxGenerator{}
 
 // NewTx implements TxGenerator.NewTx
-func (s StdTxGenerator) NewTx() context.TxBuilder {
+func (s StdTxGenerator) NewTx() client.TxBuilder {
 	return &StdTxBuilder{}
 }
 
 // NewFee implements TxGenerator.NewFee
-func (s StdTxGenerator) NewFee() context.ClientFee {
+func (s StdTxGenerator) NewFee() client.Fee {
 	return &StdFee{}
 }
 
 // NewSignature implements TxGenerator.NewSignature
-func (s StdTxGenerator) NewSignature() context.ClientSignature {
+func (s StdTxGenerator) NewSignature() client.Signature {
 	return &StdSignature{}
 }
 
@@ -101,27 +101,27 @@ func (s StdTxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
 	return DefaultTxEncoder(s.Cdc)(tx)
 }
 
-var _ context.ClientFee = &StdFee{}
+var _ client.Fee = &StdFee{}
 
-// SetGas implements ClientFee.SetGas
+// SetGas implements Fee.SetGas
 func (fee *StdFee) SetGas(gas uint64) {
 	fee.Gas = gas
 }
 
-// SetAmount implements ClientFee.SetAmount
+// SetAmount implements Fee.SetAmount
 func (fee *StdFee) SetAmount(coins sdk.Coins) {
 	fee.Amount = coins
 }
 
-var _ context.ClientSignature = &StdSignature{}
+var _ client.Signature = &StdSignature{}
 
-// SetPubKey implements ClientSignature.SetPubKey
+// SetPubKey implements Signature.SetPubKey
 func (ss *StdSignature) SetPubKey(key crypto.PubKey) error {
 	ss.PubKey = key.Bytes()
 	return nil
 }
 
-// SetSignature implements ClientSignature.SetSignature
+// SetSignature implements Signature.SetSignature
 func (ss *StdSignature) SetSignature(bytes []byte) {
 	ss.Signature = bytes
 }

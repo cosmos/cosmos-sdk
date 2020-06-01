@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client"
+	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
-
-	"github.com/gorilla/mux"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -35,11 +35,11 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the evidence module.
 type AppModuleBasic struct {
-	evidenceHandlers []client.EvidenceHandler // client evidence submission handlers
+	evidenceHandlers []eviclient.EvidenceHandler // eviclient evidence submission handlers
 }
 
 // NewAppModuleBasic crates a AppModuleBasic without the codec.
-func NewAppModuleBasic(evidenceHandlers ...client.EvidenceHandler) AppModuleBasic {
+func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleBasic {
 	return AppModuleBasic{
 		evidenceHandlers: evidenceHandlers,
 	}
@@ -71,25 +71,25 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes registers the evidence module's REST service handlers.
-func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	evidenceRESTHandlers := make([]rest.EvidenceRESTHandler, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceRESTHandlers[i] = evidenceHandler.RESTHandler(ctx)
+		evidenceRESTHandlers[i] = evidenceHandler.RESTHandler(clientCtx)
 	}
 
-	rest.RegisterRoutes(ctx, rtr, evidenceRESTHandlers)
+	rest.RegisterRoutes(clientCtx, rtr, evidenceRESTHandlers)
 }
 
 // GetTxCmd returns the evidence module's root tx command.
-func (a AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(ctx)
+		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(clientCtx)
 	}
 
-	return cli.GetTxCmd(ctx, evidenceCLIHandlers)
+	return cli.GetTxCmd(clientCtx, evidenceCLIHandlers)
 }
 
 // GetTxCmd returns the evidence module's root query command.

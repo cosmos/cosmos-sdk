@@ -35,7 +35,7 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -51,8 +51,8 @@ type AppModuleBasic interface {
 	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
 
 	// client functionality
-	RegisterRESTRoutes(context.CLIContext, *mux.Router)
-	GetTxCmd(context.CLIContext) *cobra.Command
+	RegisterRESTRoutes(client.Context, *mux.Router)
+	GetTxCmd(client.Context) *cobra.Command
 	GetQueryCmd(*codec.Codec) *cobra.Command
 }
 
@@ -97,14 +97,14 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, genesis map[stri
 }
 
 // RegisterRESTRoutes registers all module rest routes
-func (bm BasicManager) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	for _, b := range bm {
-		b.RegisterRESTRoutes(ctx, rtr)
+		b.RegisterRESTRoutes(clientCtx, rtr)
 	}
 }
 
 // AddTxCommands adds all tx commands to the rootTxCmd
-func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx context.CLIContext) {
+func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx client.Context) {
 	for _, b := range bm {
 		if cmd := b.GetTxCmd(ctx); cmd != nil {
 			rootTxCmd.AddCommand(cmd)

@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/client"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // txEncodeRespStr implements a simple Stringer wrapper for a encoded tx.
@@ -29,15 +29,15 @@ Read a transaction from <file>, serialize it to the Amino wire protocol, and out
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
+			stdTx, err := authclient.ReadStdTxFromFile(clientCtx.Codec, args[0])
 			if err != nil {
 				return
 			}
 
 			// re-encode it via the Amino wire protocol
-			txBytes, err := cliCtx.Codec.MarshalBinaryBare(stdTx)
+			txBytes, err := clientCtx.Codec.MarshalBinaryBare(stdTx)
 			if err != nil {
 				return err
 			}
@@ -46,7 +46,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 			txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 			response := txEncodeRespStr(txBytesBase64)
-			return cliCtx.PrintOutput(response)
+			return clientCtx.PrintOutput(response)
 		},
 	}
 

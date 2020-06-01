@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,28 +47,28 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			connectionID := args[0]
 			clientID := args[1]
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(cliCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgConnectionOpenInit(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, cliCtx.GetFromAddress(),
+				counterpartyPrefix, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
@@ -96,7 +96,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).
+			clientCtx := client.NewContextWithInput(inBuf).
 				WithCodec(cdc).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
 
@@ -105,7 +105,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(cliCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
 			if err != nil {
 				return err
 			}
@@ -113,13 +113,13 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 			// TODO: parse strings?
 			counterpartyVersions := args[5]
 
-			proofInit, err := utils.ParseProof(cliCtx.Codec, args[1])
+			proofInit, err := utils.ParseProof(clientCtx.Codec, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofHeight := uint64(cliCtx.Height)
-			consensusHeight, err := lastHeight(cliCtx)
+			proofHeight := uint64(clientCtx.Height)
+			consensusHeight, err := lastHeight(clientCtx)
 			if err != nil {
 				return err
 			}
@@ -127,14 +127,14 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
 				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofInit, proofHeight,
-				consensusHeight, cliCtx.GetFromAddress(),
+				consensusHeight, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
@@ -158,17 +158,17 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			connectionID := args[0]
 
-			proofTry, err := utils.ParseProof(cliCtx.Codec, args[1])
+			proofTry, err := utils.ParseProof(clientCtx.Codec, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofHeight := uint64(cliCtx.Height)
-			consensusHeight, err := lastHeight(cliCtx)
+			proofHeight := uint64(clientCtx.Height)
+			consensusHeight, err := lastHeight(clientCtx)
 			if err != nil {
 				return err
 			}
@@ -177,14 +177,14 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 
 			msg := types.NewMsgConnectionOpenAck(
 				connectionID, proofTry, proofTry, proofHeight,
-				consensusHeight, version, cliCtx.GetFromAddress(),
+				consensusHeight, version, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
@@ -208,31 +208,31 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).
+			clientCtx := client.NewContextWithInput(inBuf).
 				WithCodec(cdc).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
 
 			connectionID := args[0]
 
-			proofAck, err := utils.ParseProof(cliCtx.Codec, args[1])
+			proofAck, err := utils.ParseProof(clientCtx.Codec, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofHeight := uint64(cliCtx.Height)
+			proofHeight := uint64(clientCtx.Height)
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgConnectionOpenConfirm(
-				connectionID, proofAck, proofHeight, cliCtx.GetFromAddress(),
+				connectionID, proofAck, proofHeight, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
@@ -240,8 +240,8 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 }
 
 // lastHeight util function to get the consensus height from the node
-func lastHeight(cliCtx context.CLIContext) (uint64, error) {
-	node, err := cliCtx.GetNode()
+func lastHeight(clientCtx client.Context) (uint64, error) {
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return 0, err
 	}

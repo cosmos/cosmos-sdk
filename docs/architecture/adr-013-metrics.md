@@ -25,7 +25,7 @@ type AppModuleBasic interface {
   ValidateGenesis(json.RawMessage) error
 
   // client functionality
-  RegisterRESTRoutes(context.CLIContext, *mux.Router)
+  RegisterRESTRoutes(client.Context, *mux.Router)
   GetTxCmd(*codec.Codec) *cobra.Command
   GetQueryCmd(*codec.Codec) *cobra.Command
 }

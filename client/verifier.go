@@ -1,4 +1,4 @@
-package context
+package client
 
 import (
 	"path/filepath"
@@ -17,12 +17,12 @@ const (
 	DefaultVerifierCacheSize = 10
 )
 
-// CreateVerifier returns a Tendermint verifier from a CLIContext object and
-// cache size. An error is returned if the CLIContext is missing required values
-// or if the verifier could not be created. A CLIContext must at the very least
-// have the chain ID and home directory set. If the CLIContext has TrustNode
+// CreateVerifier returns a Tendermint verifier from a Context object and
+// cache size. An error is returned if the Context is missing required values
+// or if the verifier could not be created. A Context must at the very least
+// have the chain ID and home directory set. If the Context has TrustNode
 // enabled, no verifier will be created.
-func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
+func CreateVerifier(ctx Context, cacheSize int) (tmlite.Verifier, error) {
 	if ctx.TrustNode {
 		return nil, nil
 	}

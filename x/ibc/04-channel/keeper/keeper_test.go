@@ -54,6 +54,7 @@ const (
 
 var (
 	testPacketCommitment = []byte("packet commitment")
+	testAcknowledgement  = []byte("acknowledgement")
 )
 
 type KeeperTestSuite struct {
@@ -227,7 +228,7 @@ func (suite *KeeperTestSuite) TestPacketCommitment() {
 func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
 	// setup
 	ctx := suite.chainB.GetContext()
-	expectedSeqs := []uint64{}
+	expectedSeqs := make(map[uint64]bool)
 
 	seq := uint64(15)
 	maxSeq := uint64(25)
@@ -236,13 +237,13 @@ func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
 	// create consecutive commitments
 	for i := uint64(1); i < seq; i++ {
 		suite.chainB.storePacketCommitment(ctx, testPort1, testChannel1, i)
-		expectedSeqs = append(expectedSeqs, i)
+		expectedSeqs[i] = true
 	}
 
 	// add non-consecutive commitments
 	for i := seq; i < maxSeq; i += 2 {
 		suite.chainB.storePacketCommitment(ctx, testPort1, testChannel1, i)
-		expectedSeqs = append(expectedSeqs, i)
+		expectedSeqs[i] = true
 	}
 
 	// add sequence on different channel/port
@@ -250,11 +251,17 @@ func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
 
 	commitments := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitmentsAtChannel(ctx, testPort1, testChannel1)
 
+	suite.Equal(len(expectedSeqs), len(commitments))
+	suite.NotEqual(0, len(commitments))
+
 	// verify that all the packet commitments were stored
-	for i, packet := range commitments {
-		suite.Equal(expectedSeqs[i], packet.Sequence)
+	for _, packet := range commitments {
+		suite.True(expectedSeqs[packet.Sequence])
 		suite.Equal(testPort1, packet.PortID)
 		suite.Equal(testChannel1, packet.ChannelID)
+
+		// prevent duplicates from passing checks
+		expectedSeqs[packet.Sequence] = false
 	}
 }
 
@@ -485,11 +492,14 @@ func (chain *TestChain) createChannel(
 	return channel
 }
 
-// storePacketCommitment is a helper function that sets a packet commitment in the Channel Keeper and
-// returns the PacketAckCommitment.
-func (chain *TestChain) storePacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) types.PacketAckCommitment {
+// storePacketCommitment is a helper function that sets a packet commitment in the Channel Keeper.
+func (chain *TestChain) storePacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) {
 	chain.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, portID, channelID, sequence, testPacketCommitment)
-	return types.NewPacketAckCommitment(portID, channelID, sequence, testPacketCommitment)
+}
+
+// storeAcknowledgement is a helper function that sets a packet commitment in the Channel Keeper.
+func (chain *TestChain) storeAcknowledgement(ctx sdk.Context, portID, channelID string, sequence uint64) {
+	chain.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, portID, channelID, sequence, testAcknowledgement)
 }
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {

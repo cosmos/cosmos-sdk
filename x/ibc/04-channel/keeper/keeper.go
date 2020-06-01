@@ -235,7 +235,7 @@ func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) (commitments []types.Pa
 // true, the iterator will close and stop.
 func (k Keeper) IteratePacketCommitmentAtChannel(ctx sdk.Context, portID, channelID string, cb func(_, _ string, sequence uint64, hash []byte) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyPacketCommitmentPrefix+host.ChannelPath(portID, channelID)))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.PacketCommitmentPrefixPath(portID, channelID)))
 	k.iterateHashes(ctx, iterator, cb)
 }
 

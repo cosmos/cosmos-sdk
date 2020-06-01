@@ -315,16 +315,22 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 }
 
-/*
 // TestQueryUnrelayedAcks tests querying unrelayed acknowledgements on a specified channel end.
 func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
+	path := []string{types.SubModuleName, types.QueryUnrelayedAcknowledgements}
+	sequences := []uint64{1, 2, 3, 4, 5}
+
 	var (
 		expRes []byte
 	)
 
+	params := types.NewQueryUnrelayedAcknowledgementsParams(testPort1, testChannel1, sequences, 1, 100)
+	data, err := suite.cdc.MarshalJSON(params)
+	suite.NoError(err)
+
 	query := abci.RequestQuery{
-		Path: []string{channel.SubModuleName, channel.QueryChannel},
-		Data: []byte{},
+		Path: "",
+		Data: data,
 	}
 
 	testCases := []struct {
@@ -334,31 +340,75 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"success",
 			func() {
-				// create channels on different connections
-				// add to expected result
+				suite.SetupTest()
+				ctx := suite.chainA.GetContext()
+				unrelayedAcks := []uint64{}
+
+				// create acknowledgements for first 3 sequences
+				for _, seq := range sequences {
+					if seq < 4 {
+						suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
+					} else {
+						unrelayedAcks = append(unrelayedAcks, seq)
+					}
+				}
+
+				expRes, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				suite.NoError(err)
+
 			},
 		},
 		{
 			"success with multiple channels",
 			func() {
+				suite.SetupTest()
+				ctx := suite.chainA.GetContext()
+				unrelayedAcks := []uint64{}
+
+				// create acknowledgements for first 3 sequences
+				for _, seq := range sequences {
+					if seq < 4 {
+						suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
+					} else {
+						unrelayedAcks = append(unrelayedAcks, seq)
+					}
+				}
+
+				// create acknowledgements for other sequences on different channel/port
+				for _, seq := range sequences {
+					if seq >= 4 {
+						suite.chainA.storeAcknowledgement(ctx, testPort2, testChannel2, seq)
+					}
+				}
+
+				expRes, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				suite.NoError(err)
 			},
 		},
 		{
 			"success no unrelayed acks",
 			func() {
+				suite.SetupTest()
+				ctx := suite.chainA.GetContext()
 
+				// create acknowledgements for all sequences
+				for _, seq := range sequences {
+					suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
+				}
+
+				expRes, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
+				suite.NoError(err)
 			},
 		},
 	}
 
-	for i, tc := range cases {
+	for i, tc := range testCases {
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), tc.path, query)
+		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
 
 		suite.NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
 	}
 
 }
-*/

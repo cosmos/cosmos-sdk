@@ -109,7 +109,7 @@ func QuerierUnrelayedAcknowledgements(ctx sdk.Context, req abci.RequestQuery, k 
 
 	var unrelayedAcks []uint64
 	for _, seq := range params.Sequences {
-		if _, found := k.GetPacketAcknowledgement(ctx, params.PortID, params.ChannelID, seq); found {
+		if _, found := k.GetPacketAcknowledgement(ctx, params.PortID, params.ChannelID, seq); !found {
 			unrelayedAcks = append(unrelayedAcks, seq)
 		}
 	}

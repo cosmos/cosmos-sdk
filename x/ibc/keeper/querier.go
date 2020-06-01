@@ -47,6 +47,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 				res, err = channel.QuerierPacketCommitments(ctx, req, k.ChannelKeeper)
 			case channel.QueryUnrelayedAcknowledgements:
 				res, err = channel.QuerierUnrelayedAcknowledgements(ctx, req, k.ChannelKeeper)
+			case channel.QueryUnrelayedPacketSends:
+				res, err = channel.QuerierUnrelayedPacketSends(ctx, req, k.ChannelKeeper)
 			default:
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channel.SubModuleName)
 			}

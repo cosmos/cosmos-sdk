@@ -16,6 +16,7 @@ const (
 	QueryConnectionChannels        = "connection-channels"
 	QueryPacketCommitments         = "packet-commitments"
 	QueryUnrelayedAcknowledgements = "unrelayed-acknowledgements"
+	QueryUnrelayedPacketSends      = "unrelayed-packet-sends"
 )
 
 // ChannelResponse defines the client query response for a channel which also
@@ -91,9 +92,9 @@ func NewQueryPacketCommitmentsParams(portID, channelID string, page, limit int) 
 	}
 }
 
-// QueryUnrelayedAcknowledgementsParams defines the parameters necessary for querying
+// QueryUnrelayedPacketsParams defines the parameters necessary for querying
 // all unrelayed acknowledgements at an associated port ID and channel ID.
-type QueryUnrelayedAcknowledgementsParams struct {
+type QueryUnrelayedPacketsParams struct {
 	PortID    string   `json:"port_id" yaml:"port_id"`
 	ChannelID string   `json:"channel_id" yaml:"channel_id"`
 	Sequences []uint64 `json:"sequences" yaml:"sequences"`
@@ -101,9 +102,9 @@ type QueryUnrelayedAcknowledgementsParams struct {
 	Limit     int      `json:"limit" yaml:"limit"`
 }
 
-// NewQueryUnrealyedAcknowledgementsParams creates a new QueryPacketCommitmentsParams instance.
-func NewQueryUnrelayedAcknowledgementsParams(portID, channelID string, sequences []uint64, page, limit int) QueryUnrelayedAcknowledgementsParams {
-	return QueryUnrelayedAcknowledgementsParams{
+// NewQueryUnrealyedPacketsParams creates a new QueryPacketCommitmentsParams instance.
+func NewQueryUnrelayedPacketsParams(portID, channelID string, sequences []uint64, page, limit int) QueryUnrelayedPacketsParams {
+	return QueryUnrelayedPacketsParams{
 		PortID:    portID,
 		ChannelID: channelID,
 		Sequences: sequences,

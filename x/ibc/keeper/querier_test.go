@@ -104,6 +104,12 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			"",
 		},
 		{
+			"channel - QuerierUnrelayedPacketSends",
+			[]string{channel.SubModuleName, channel.QueryUnrelayedPacketSends},
+			false,
+			"",
+		},
+		{
 			"channel - invalid query",
 			[]string{channel.SubModuleName, "foo"},
 			true,

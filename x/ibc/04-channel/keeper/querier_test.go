@@ -315,16 +315,19 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 }
 
-// TestQueryUnrelayedAcks tests querying unrelayed acknowledgements on a specified channel end.
+// TestQueryUnrelayedPackets tests querying unrelayed acknowledgements and unrelayed packets sends
+// on a specified channel end.
 func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
-	path := []string{types.SubModuleName, types.QueryUnrelayedAcknowledgements}
+	pathAck := []string{types.SubModuleName, types.QueryUnrelayedAcknowledgements}
+	pathSend := []string{types.SubModuleName, types.QueryUnrelayedPacketSends}
 	sequences := []uint64{1, 2, 3, 4, 5}
 
 	var (
-		expRes []byte
+		expResAck  []byte
+		expResSend []byte
 	)
 
-	params := types.NewQueryUnrelayedAcknowledgementsParams(testPort1, testChannel1, sequences, 1, 100)
+	params := types.NewQueryUnrelayedPacketsParams(testPort1, testChannel1, sequences, 1, 100)
 	data, err := suite.cdc.MarshalJSON(params)
 	suite.NoError(err)
 
@@ -343,17 +346,22 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				suite.SetupTest()
 				ctx := suite.chainA.GetContext()
 				unrelayedAcks := []uint64{}
+				unrelayedSends := []uint64{}
 
 				// create acknowledgements for first 3 sequences
 				for _, seq := range sequences {
 					if seq < 4 {
 						suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
-					} else {
 						unrelayedAcks = append(unrelayedAcks, seq)
+					} else {
+						unrelayedSends = append(unrelayedSends, seq)
 					}
 				}
 
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				suite.NoError(err)
+
+				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
 				suite.NoError(err)
 
 			},
@@ -364,13 +372,15 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				suite.SetupTest()
 				ctx := suite.chainA.GetContext()
 				unrelayedAcks := []uint64{}
+				unrelayedSends := []uint64{}
 
 				// create acknowledgements for first 3 sequences
 				for _, seq := range sequences {
 					if seq < 4 {
 						suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
-					} else {
 						unrelayedAcks = append(unrelayedAcks, seq)
+					} else {
+						unrelayedSends = append(unrelayedSends, seq)
 					}
 				}
 
@@ -381,7 +391,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 					}
 				}
 
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				suite.NoError(err)
+
+				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
 				suite.NoError(err)
 			},
 		},
@@ -396,7 +409,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 					suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
 				}
 
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
+				expResSend, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
+				suite.NoError(err)
+
+				expResAck, err = codec.MarshalJSONIndent(suite.cdc, sequences)
 				suite.NoError(err)
 			},
 		},
@@ -405,10 +421,16 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 	for i, tc := range testCases {
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
+		bz, err := suite.querier(suite.chainA.GetContext(), pathAck, query)
 
 		suite.NoError(err, "test case %d failed: %s", i, tc.name)
-		suite.Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
+		suite.Equal(expResAck, bz, "test case %d failed: %s", i, tc.name)
+
+		bz, err = suite.querier(suite.chainA.GetContext(), pathSend, query)
+
+		suite.NoError(err, "test case %d failed: %s", i, tc.name)
+		suite.Equal(expResSend, bz, "test case %d failed: %s", i, tc.name)
+
 	}
 
 }

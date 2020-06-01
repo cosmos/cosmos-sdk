@@ -61,38 +61,52 @@ These metadata events capture all the "header" information needed to route IBC c
 
 In the case of the passive relayer, when one chain sends a `ChanOpenInit`, the relayer should inform the other chain of this open attempt and allow that chain to decide how (and if) it continues the handshake.  Once both chains have actively approved the channel opening, then the rest of the handshake can happen as it does with the current "naive" relayer.
 
-To implement this behavior, we propose adding a new callback `cbs.OnAttemptChanOpenTry` which explicitly handles the `MsgChannelOpenTry`, usually by resulting in a call to `keeper.ChanOpenTry`.  If the callback is not supplied, then the default behaviour would be to use `channel.HandleMsgChannelOpenTry`, for compatibility with existing chains that expect a "naive" relayer.
+To implement this behavior, we propose replacing the `cbs.OnChanOpenTry` callback with a new `cbs.OnAttemptChanOpenTry` callback which explicitly handles the `MsgChannelOpenTry`, usually by resulting in a call to `keeper.ChanOpenTry`.  The typical implementation, in `x/ibc-transfer/module.go` would be compatible with the current "naive" relayer, as follows:
+
+```go
+func (am AppModule) OnAttemptChanOpenTry(
+  ctx sdk.Context,
+  chanKeeper channel.Keeper,
+  portCap *capability.Capability,
+  msg channel.MsgChannelOpenTry,
+) (*sdk.Result, error) {
+  // Require portID is the portID transfer module is bound to
+  boundPort := am.keeper.GetPort(ctx)
+  if boundPort != msg.PortID {
+    return nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", msg.PortID, boundPort)
+  }
+
+  // BEGIN NEW CODE
+  // Assert our protocol version, overriding the relayer's suggestion.
+  msg.Version = types.Version
+  // Continue the ChanOpenTry.
+  res, chanCap, err := channel.HandleMsgChannelOpenTry(ctx, chanKeeper, portCap, msg)
+  if err != nil {
+    return nil, err
+  }
+  // END OF NEW CODE
+
+  // ... the rest of the callback is similar to the existing OnChanOpenTry
+  // but uses msg.* directly.
+```
 
 Here is how this callback would be used, in the implementation of `x/ibc/handler.go`:
 
 ```go
-// Declare an interface for handling a ChanOpenTry.
-type AttemptChanOpenTryCallback interface {
-  OnAttemptChanOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg types.MsgChannelOpenTry) (*sdk.Result, error)
-}
 // ...
     case channel.MsgChannelOpenTry:
       // Lookup module by port capability
       module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
       if err != nil {
-              return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
+        return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
       }
-      // =======================================
-      // NEW CODE: Check if the module defines an HandleMsgChannelOpenTry callback.
       // Retrieve callbacks from router
       cbs, ok := k.Router.GetRoute(module)
       if !ok {
-              return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+        return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
       }
-      if tryHandler, ok := cbs.(AttemptChanOpenTryCallback); ok {
-        // Allow the port's try handler to override the default OpenTry behaviour.
-        return tryHandler.OnAttemptChanOpenTry(ctx, k.ChannelKeeper, portCap, msg)
-      }
-      // END OF NEW CODE
-      // ======================================
-      // Use the default handshake behaviour.
-      res, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
-      // ...
+      // Delegate to the module's OnAttemptChanOpenTry.
+      return cbs.OnAttemptChanOpenTry(ctx, k.ChannelKeeper, portCap, msg)
 ```
 
 The reason we do not have a more structured interaction between `x/ibc/handler.go` and the port's module (to explicitly negotiate versions, etc) is that we do not wish to constrain the app module to have to finish handling the `MsgChannelOpenTry` during this transaction or even this block.
@@ -114,8 +128,6 @@ Applications have full control over initiating and accepting channels, rather th
 A passive relayer does not have to know what kind of channel (version string, ordering constraints, firewalling logic) the application supports.  These are negotiated directly between applications.
 
 ### Negative
-
-Introduces different SDK paths for "naive" versus "passive" relayers.  It would be cleaner to have only one code path that accomodated both designs, but that would require breaking compatibility.
 
 Increased event size for IBC messages.
 

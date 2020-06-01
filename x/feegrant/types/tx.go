@@ -2,15 +2,12 @@ package types
 
 import (
 	"encoding/json"
-
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
 )
 
 var (
@@ -130,13 +127,13 @@ func (tx FeeGrantTx) GetSignatures() [][]byte {
 func (tx FeeGrantTx) GetPubKeys() []crypto.PubKey {
 	pks := make([]crypto.PubKey, len(tx.Signatures))
 	for i, stdSig := range tx.Signatures {
-		pks[i] = stdSig.PubKey
+		pks[i] = stdSig.GetPubKey()
 	}
 	return pks
 }
 
 // GetSignBytes returns the signBytes of the tx for a given signer
-func (tx FeeGrantTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
+func (tx FeeGrantTx) GetSignBytes(ctx sdk.Context, acc authtypes.AccountI) []byte {
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64

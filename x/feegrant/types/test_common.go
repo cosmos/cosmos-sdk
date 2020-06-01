@@ -19,7 +19,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 			panic(err)
 		}
 
-		sigs[i] = authtypes.StdSignature{PubKey: priv.PubKey(), Signature: sig}
+		sigs[i] = authtypes.StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
 	}
 
 	tx := NewFeeGrantTx(msgs, fee, sigs, "")

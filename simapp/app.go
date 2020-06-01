@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"io"
 	"os"
 
@@ -118,7 +119,7 @@ type SimApp struct {
 	SlashingKeeper   slashing.Keeper
 	MintKeeper       mint.Keeper
 	DistrKeeper      distr.Keeper
-	FeeGrantKeeper feegrant.Keeper
+	FeeGrantKeeper   feegrant.Keeper
 	GovKeeper        gov.Keeper
 	CrisisKeeper     crisis.Keeper
 	UpgradeKeeper    upgrade.Keeper
@@ -154,8 +155,9 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(
 		auth.StoreKey, bank.StoreKey, staking.StoreKey,
 		mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, ibc.StoreKey, upgrade.StoreKey, feegrant.StoreKey,
-		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
+		gov.StoreKey, params.StoreKey, ibc.StoreKey, upgrade.StoreKey,
+		feegrant.StoreKey, evidence.StoreKey, transfer.StoreKey,
+		capability.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
@@ -340,7 +342,7 @@ func NewSimApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
 		ante.NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer,
+			app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)

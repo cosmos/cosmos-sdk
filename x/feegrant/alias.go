@@ -53,7 +53,7 @@ type (
 	BasicFeeAllowance         = types.BasicFeeAllowance
 	ExpiresAt                 = types.ExpiresAt
 	Duration                  = types.Duration
-	FeeAllowance              = types.FeeAllowance
+	FeeAllowance              = types.FeeAllowanceI
 	FeeAllowanceGrant         = types.FeeAllowanceGrant
 	MsgGrantFeeAllowance      = types.MsgGrantFeeAllowance
 	MsgRevokeFeeAllowance     = types.MsgRevokeFeeAllowance
@@ -61,6 +61,5 @@ type (
 	FeeGrantTx                = types.FeeGrantTx
 	GrantedFee                = types.GrantedFee
 	DelegatedSignDoc          = types.DelegatedSignDoc
-	SupplyKeeper              = types.SupplyKeeper
 	Keeper                    = keeper.Keeper
 )

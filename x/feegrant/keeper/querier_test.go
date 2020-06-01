@@ -16,24 +16,16 @@ func (suite *KeeperTestSuite) TestQuery() {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
 
+	basicAllowance := &types.BasicFeeAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
+		Expiration: types.ExpiresAtHeight(334455),
+	}
+	ethAllowance := &types.BasicFeeAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("eth", 123)),
+		Expiration: types.ExpiresAtHeight(334455)}
 	// some helpers
-	grant1 := types.FeeAllowanceGrant{
-		Granter: suite.addr,
-		Grantee: suite.addr3,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
-			Expiration: types.ExpiresAtHeight(334455),
-		},
-		},
-		},
-	}
-	grant2 := types.FeeAllowanceGrant{
-		Granter: suite.addr2,
-		Grantee: suite.addr3,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("eth", 123)),
-			Expiration: types.ExpiresAtHeight(334455)}}},
-	}
+	grant1 := types.NewFeeAllowanceGrant(suite.addr, suite.addr3, basicAllowance)
+	grant2 := types.NewFeeAllowanceGrant(suite.addr2, suite.addr3, ethAllowance)
 	// let's set up some initial state here
 	k.GrantFeeAllowance(ctx, grant1)
 	k.GrantFeeAllowance(ctx, grant2)

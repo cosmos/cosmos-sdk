@@ -67,12 +67,12 @@ func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 	if !found {
 		return nil
 	}
-
-	var feeAll *types.FeeAllowanceI
+	fmt.Printf("this is grant in keeper %v", grant)
+	var feeAll types.FeeAllowanceI
 	if err := k.cdc.UnpackAny(grant.Allowance, feeAll); err != nil {
 		return nil
 	}
-	return feeAll
+	return &feeAll
 }
 
 // GetFeeGrant returns entire grant between both accounts

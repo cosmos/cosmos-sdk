@@ -31,14 +31,14 @@ type GrantedFeeTx interface {
 type DeductGrantedFeeDecorator struct {
 	ak types.AccountKeeper
 	k  keeper.Keeper
-	sk types.SupplyKeeper
+	bk types.BankKeeper
 }
 
-func NewDeductGrantedFeeDecorator(ak types.AccountKeeper, sk types.SupplyKeeper, k keeper.Keeper) DeductGrantedFeeDecorator {
+func NewDeductGrantedFeeDecorator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) DeductGrantedFeeDecorator {
 	return DeductGrantedFeeDecorator{
 		ak: ak,
 		k:  k,
-		sk: sk,
+		bk: bk,
 	}
 }
 
@@ -54,7 +54,7 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}
 
 	// sanity check from DeductFeeDecorator
-	if addr := d.sk.GetModuleAddress(auth.FeeCollectorName); addr == nil {
+	if addr := d.ak.GetModuleAddress(auth.FeeCollectorName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", auth.FeeCollectorName))
 	}
 
@@ -89,7 +89,7 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}
 
 	// deduct fee if non-zero
-	err = auth.DeductFees(d.sk, ctx, feePayerAcc, fee)
+	err = auth.DeductFees(d.bk, ctx, feePayerAcc, fee)
 	if err != nil {
 		return ctx, err
 	}

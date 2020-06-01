@@ -21,7 +21,7 @@ import (
 // in order to allow payment of fees via a grant.
 //
 // This is used for our full-stack tests
-func newAnteHandler(ak authkeeper.AccountKeeper, supplyKeeper authtypes.SupplyKeeper, dk keeper.Keeper, sigGasConsumer authante.SignatureVerificationGasConsumer) sdk.AnteHandler {
+func newAnteHandler(ak authkeeper.AccountKeeper, bk types.BankKeeper, dk keeper.Keeper, sigGasConsumer authante.SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		authante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		authante.NewMempoolFeeDecorator(),
@@ -30,7 +30,7 @@ func newAnteHandler(ak authkeeper.AccountKeeper, supplyKeeper authtypes.SupplyKe
 		authante.NewConsumeGasForTxSizeDecorator(ak),
 		// DeductGrantedFeeDecorator will create an empty account if we sign with no tokens but valid validation
 		// This must be before SetPubKey, ValidateSigCount, SigVerification, which error if account doesn't exist yet
-		ante.NewDeductGrantedFeeDecorator(ak, supplyKeeper, dk),
+		ante.NewDeductGrantedFeeDecorator(ak, bk, dk),
 		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewValidateSigCountDecorator(ak),
 		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
@@ -44,11 +44,11 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app, ctx := createTestApp(true)
 
 	// this just tests our handler
-	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper)
+	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper)
 	ourAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
-	anteHandlerStack := newAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper, SigGasNoConsumer)
+	anteHandlerStack := newAnteHandler(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, SigGasNoConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := authtypes.KeyTestPubAddr()
@@ -67,37 +67,21 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.BankKeeper.SetBalances(ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 
 	// Set grant from addr2 to addr3 (plenty to pay)
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: addr2,
-		Grantee: addr3,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
-		},
-		},
-		},
-	})
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.NewFeeAllowanceGrant(addr2, addr3, &types.BasicFeeAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+	}))
 
 	// Set low grant from addr2 to addr4 (keeper will reject)
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: addr2,
-		Grantee: addr4,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.NewFeeAllowanceGrant(addr2, addr4,
+		&types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
-		},
-		},
-		},
-	})
+		}))
 
 	// Set grant from addr1 to addr4 (cannot cover this )
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: addr2,
-		Grantee: addr3,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.NewFeeAllowanceGrant(addr2, addr3,
+		&types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
-		},
-		},
-		},
-	})
+		}))
 
 	cases := map[string]struct {
 		signerKey  crypto.PrivKey

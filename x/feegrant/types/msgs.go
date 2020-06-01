@@ -1,20 +1,32 @@
 package types
 
 import (
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/gogo/protobuf/proto"
 )
 
-func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowance *FeeAllowance, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
-	return MsgGrantFeeAllowance{
-		Granter:   granter,
-		Grantee:   grantee,
-		Allowance: feeAllowance,
-	}, nil
+func NewMsgGrantFeeAllowance(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (*MsgGrantFeeAllowance, error) {
+	m := &MsgGrantFeeAllowance{
+		Granter: granter,
+		Grantee: grantee,
+	}
+
+	err := m.SetAllowance(feeAllowance)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (msg MsgGrantFeeAllowance) GetFeeGrant() FeeAllowanceI {
-	return msg.Allowance.GetFeeAllowanceI()
+	feeAllowance, ok := msg.Allowance.GetCachedValue().(FeeAllowanceI)
+	if !ok {
+		return nil
+	}
+	return feeAllowance
 }
 
 func (msg MsgGrantFeeAllowance) Route() string {
@@ -42,6 +54,19 @@ func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
 
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Granter}
+}
+
+func (m *MsgGrantFeeAllowance) SetAllowance(FeeAllowanceI interface{}) error {
+	a, ok := FeeAllowanceI.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal %T", a)
+	}
+	any, err := types.NewAnyWithValue(a)
+	if err != nil {
+		return err
+	}
+	m.Allowance = any
+	return nil
 }
 
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {

@@ -93,7 +93,7 @@ func NewQueryPacketCommitmentsParams(portID, channelID string, page, limit int) 
 }
 
 // QueryUnrelayedPacketsParams defines the parameters necessary for querying
-// all unrelayed acknowledgements at an associated port ID and channel ID.
+// unrelayed packets at an associated port ID and channel ID.
 type QueryUnrelayedPacketsParams struct {
 	PortID    string   `json:"port_id" yaml:"port_id"`
 	ChannelID string   `json:"channel_id" yaml:"channel_id"`
@@ -102,7 +102,7 @@ type QueryUnrelayedPacketsParams struct {
 	Limit     int      `json:"limit" yaml:"limit"`
 }
 
-// NewQueryUnrealyedPacketsParams creates a new QueryPacketCommitmentsParams instance.
+// NewQueryUnrealyedPacketsParams creates a new QueryUnrelayedPacketsParams instance.
 func NewQueryUnrelayedPacketsParams(portID, channelID string, sequences []uint64, page, limit int) QueryUnrelayedPacketsParams {
 	return QueryUnrelayedPacketsParams{
 		PortID:    portID,

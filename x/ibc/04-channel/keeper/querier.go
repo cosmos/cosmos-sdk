@@ -111,7 +111,7 @@ func QuerierUnrelayedPacketSends(ctx sdk.Context, req abci.RequestQuery, k Keepe
 }
 
 // helper function to query for unrelayed packets as specified by the isForAcks boolean. If
-// set to true it will return unrelayed acknowledgmenets otherwise it will return unrelayed
+// set to true it will return unrelayed acknowledgements otherwise it will return unrelayed
 // packet sends.
 func queryUnrelayedPackets(ctx sdk.Context, req abci.RequestQuery, k Keeper, isForAcks bool) ([]byte, error) {
 	var params types.QueryUnrelayedPacketsParams

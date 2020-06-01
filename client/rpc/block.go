@@ -2,11 +2,10 @@ package rpc
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"net/http"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"

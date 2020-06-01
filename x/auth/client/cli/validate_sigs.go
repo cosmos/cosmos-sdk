@@ -17,7 +17,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
-func GetValidateSignaturesCommand(cliCtx context.CLIContext) *cobra.Command {
+func GetValidateSignaturesCommand(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate-signatures [file]",
 		Short: "Validate transactions signatures",
@@ -30,16 +30,16 @@ given transaction. If the --offline flag is also set, signature validation over 
 transaction will be not be performed as that will require RPC communication with a full node.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeValidateSignaturesCmd(cliCtx),
+		RunE:   makeValidateSignaturesCmd(clientCtx),
 		Args:   cobra.ExactArgs(1),
 	}
 
 	return flags.PostCommands(cmd)[0]
 }
 
-func makeValidateSignaturesCmd(cliCtx context.CLIContext) func(cmd *cobra.Command, args []string) error {
+func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, txBldr, stdTx, err := readTxAndInitContexts(cliCtx, cmd, args[0])
+		clientCtx, txBldr, stdTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func printAndValidateSigs(
 	cmd *cobra.Command, clientCtx client.Context, chainID string, tx sdk.Tx, offline bool,
 ) bool {
 	sigTx := tx.(txtypes.SigTx)
-	signModeHandler := cliCtx.TxGenerator.SignModeHandler()
+	signModeHandler := clientCtx.TxGenerator.SignModeHandler()
 
 	cmd.Println("Signers:")
 	signers := sigTx.GetSigners()
@@ -98,7 +98,7 @@ func printAndValidateSigs(
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			accNum, accSeq, err := cliCtx.AccountRetriever.GetAccountNumberSequence(cliCtx, sigAddr)
+			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, sigAddr)
 			if err != nil {
 				cmd.Printf("failed to get account: %s\n", sigAddr)
 				return false
@@ -165,14 +165,14 @@ func printAndValidateSigs(
 	return success
 }
 
-func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filename string) (client.Context, tx.Factory, sdk.Tx, error) {
-	stdTx, err := authclient.ReadTxFromFile(cliCtx, filename)
+func readTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filename string) (client.Context, tx.Factory, sdk.Tx, error) {
+	stdTx, err := authclient.ReadTxFromFile(clientCtx, filename)
 	if err != nil {
-		return cliCtx, tx.Factory{}, nil, err
+		return clientCtx, tx.Factory{}, nil, err
 	}
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	cliCtx = cliCtx.InitWithInput(inBuf)
+	clientCtx = clientCtx.InitWithInput(inBuf)
 	txFactory := tx.NewFactoryFromCLI(inBuf)
 
 	return clientCtx, txFactory, stdTx, nil

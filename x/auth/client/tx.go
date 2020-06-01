@@ -181,7 +181,7 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, ms
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(txBldr tx.Factory, clientCtx client.Context, name string, stdTx context.TxBuilder, appendSig bool, offline bool) (authtypes.StdTx, error) {
+func SignStdTx(txBldr tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, appendSig bool, offline bool) (authtypes.StdTx, error) {
 
 	var signedStdTx authtypes.StdTx
 
@@ -230,7 +230,7 @@ func SignStdTxWithSignerAddress(txBldr tx.Factory, clientCtx client.Context, add
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadTxFromFile(ctx context.CLIContext, filename string) (tx sdk.Tx, err error) {
+func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
 	if filename == "-" {
@@ -248,7 +248,7 @@ func ReadTxFromFile(ctx context.CLIContext, filename string) (tx sdk.Tx, err err
 
 func populateAccountFromState(txBldr tx.Factory, clientCtx client.Context, addr sdk.AccAddress) (tx.Factory, error) {
 
-	num, seq, err := cliCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
+	num, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 	if err != nil {
 		return txBldr, err
 	}

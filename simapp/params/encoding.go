@@ -1,7 +1,7 @@
 package params
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +12,6 @@ type EncodingConfig struct {
 	Marshaler         codec.Marshaler
 	TxDecoder         sdk.TxDecoder
 	TxJSONDecoder     sdk.TxDecoder
-	TxGenerator       context.TxGenerator
+	TxGenerator       client.TxGenerator
 	Amino             *codec.Codec
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -19,7 +19,7 @@ type TxBuilder struct {
 	PubKeyCodec cryptotypes.PublicKeyCodec
 }
 
-var _ context.TxBuilder = TxBuilder{}
+var _ client.TxBuilder = TxBuilder{}
 
 func (t TxBuilder) GetTx() types.SigTx {
 	return t.Tx
@@ -84,7 +84,7 @@ func SignatureDataToSignerInfoSig(data types.SignatureData) (*types.ModeInfo, []
 	}
 }
 
-func (t TxBuilder) SetSignatures(signatures ...context.SignatureBuilder) error {
+func (t TxBuilder) SetSignatures(signatures ...client.SignatureBuilder) error {
 	n := len(signatures)
 	signerInfos := make([]*types.SignerInfo, n)
 	rawSigs := make([][]byte, n)

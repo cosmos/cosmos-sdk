@@ -1,12 +1,13 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 )
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(ctx context.CLIContext) *cobra.Command {
+func GetSignCommand(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -66,7 +67,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(cdc context.CLIContext) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(cdc client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		//cliCtx, txBldr, stdTx, err := readTxAndInitContexts(cdc, cmd, args[0])
 		//if err != nil {

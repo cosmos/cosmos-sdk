@@ -26,7 +26,7 @@ import (
 )
 
 // GetSignCommand returns the sign command
-func GetMultiSignCommand(ctx context.CLIContext) *cobra.Command {
+func GetMultiSignCommand(ctx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
@@ -106,7 +106,7 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
-			stdSig, err := readAndUnmarshalStdSignature(cliCtx, args[i])
+			stdSig, err := readAndUnmarshalStdSignature(clientCtx, args[i])
 			if err != nil {
 				return err
 			}
@@ -124,20 +124,20 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			}
 		}
 
-		newStdSig := types.StdSignature{Signature: cliCtx.Codec.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()} //nolint:staticcheck
-		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo())                         //nolint:staticcheck
+		newStdSig := types.StdSignature{Signature: clientCtx.Codec.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()} //nolint:staticcheck
+		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo())                            //nolint:staticcheck
 
 		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
 		switch {
 		case sigOnly && clientCtx.Indent:
-			json, err = codec.MarshalJSONIndent(cliCtx.JSONMarshaler, newTx.Signatures[0])
+			json, err = codec.MarshalJSONIndent(clientCtx.JSONMarshaler, newTx.Signatures[0])
 		case sigOnly && !clientCtx.Indent:
-			json, err = cliCtx.JSONMarshaler.MarshalJSON(newTx.Signatures[0])
+			json, err = clientCtx.JSONMarshaler.MarshalJSON(newTx.Signatures[0])
 		case !sigOnly && clientCtx.Indent:
-			json, err = codec.MarshalJSONIndent(cliCtx.JSONMarshaler, newTx)
+			json, err = codec.MarshalJSONIndent(clientCtx.JSONMarshaler, newTx)
 		default:
-			json, err = cliCtx.JSONMarshaler.MarshalJSON(newTx)
+			json, err = clientCtx.JSONMarshaler.MarshalJSON(newTx)
 		}
 		if err != nil {
 			return err
@@ -162,12 +162,12 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 	}
 }
 
-func readAndUnmarshalStdSignature(cliContext context.CLIContext, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
+func readAndUnmarshalStdSignature(clientCtx client.Context, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return
 	}
-	if err = cliContext.JSONMarshaler.UnmarshalJSON(bytes, &stdSig); err != nil {
+	if err = clientCtx.JSONMarshaler.UnmarshalJSON(bytes, &stdSig); err != nil {
 		return
 	}
 	return

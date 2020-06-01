@@ -1,17 +1,17 @@
 package signing
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func AminoJSONTxDecoder(aminoJsonMarshaler codec.JSONMarshaler, txGen context.TxGenerator) sdk.TxDecoder {
+func AminoJSONTxDecoder(aminoJsonMarshaler codec.JSONMarshaler, txGen client.TxGenerator) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var aminoTx auth.StdTx
 		err := aminoJsonMarshaler.UnmarshalJSON(txBytes, &aminoTx)
@@ -32,7 +32,7 @@ func AminoJSONTxDecoder(aminoJsonMarshaler codec.JSONMarshaler, txGen context.Tx
 		txBuilder.SetGasLimit(aminoTx.Fee.Gas)
 
 		n := len(aminoTx.Signatures)
-		clientSigs := make([]context.SignatureBuilder, n)
+		clientSigs := make([]client.SignatureBuilder, n)
 		sigs := aminoTx.Signatures
 
 		for i := 0; i < n; i++ {
@@ -40,7 +40,7 @@ func AminoJSONTxDecoder(aminoJsonMarshaler codec.JSONMarshaler, txGen context.Tx
 			if err != nil {
 				return nil, err
 			}
-			clientSigs[i] = context.SignatureBuilder{
+			clientSigs[i] = client.SignatureBuilder{
 				PubKey: sigs[i].GetPubKey(),
 				Data:   data,
 			}

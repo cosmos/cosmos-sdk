@@ -237,7 +237,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
-	sig := context.SignatureBuilder{}
+	sig := client.SignatureBuilder{}
 
 	if err := tx.SetSignatures(sig); err != nil {
 		return nil, err
@@ -328,7 +328,7 @@ func Sign(txf Factory, name string, tx client.TxBuilder) ([]byte, error) {
 		SignMode:  signMode,
 		Signature: nil,
 	}
-	sig := context.SignatureBuilder{
+	sig := client.SignatureBuilder{
 		PubKey: pubKey,
 		Data:   sigData,
 	}

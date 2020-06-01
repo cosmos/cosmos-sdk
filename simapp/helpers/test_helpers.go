@@ -4,9 +4,9 @@ import (
 	"math/rand"
 	"time"
 
-	types "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -21,8 +21,8 @@ const (
 )
 
 // GenTx generates a signed mock transaction.
-func GenTx(gen context.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) sdk.Tx {
-	sigs := make([]context.SignatureBuilder, len(priv))
+func GenTx(gen client.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) sdk.Tx {
+	sigs := make([]client.SignatureBuilder, len(priv))
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -32,7 +32,7 @@ func GenTx(gen context.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64
 	signMode := gen.SignModeHandler().DefaultMode()
 
 	for i, p := range priv {
-		sigs[i] = context.SignatureBuilder{
+		sigs[i] = client.SignatureBuilder{
 			PubKey: p.PubKey(),
 			Data: &types.SingleSignatureData{
 				SignMode: signMode,

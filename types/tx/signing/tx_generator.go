@@ -3,9 +3,10 @@ package signing
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
@@ -21,9 +22,9 @@ func NewTxGenerator(marshaler codec.Marshaler, pubKeyCodec cryptotypes.PublicKey
 	return &TxGenerator{Marshaler: marshaler, PubKeyCodec: cryptotypes.CacheWrapCodec(pubKeyCodec), ModeHandler: handler}
 }
 
-var _ context.TxGenerator = TxGenerator{}
+var _ client.TxGenerator = TxGenerator{}
 
-func (t TxGenerator) NewTxBuilder() context.TxBuilder {
+func (t TxGenerator) NewTxBuilder() client.TxBuilder {
 	return TxBuilder{
 		Tx:          types.NewTx(),
 		Marshaler:   t.Marshaler,

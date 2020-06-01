@@ -4,12 +4,13 @@ import (
 	"errors"
 	"strings"
 
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetBroadcastCommand returns the tx broadcast command.
@@ -32,7 +33,7 @@ $ <appcli> tx broadcast ./mytxn.json
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			stdTx, err := client.ReadTxFromFile(clientCtx, args[0])
+			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}

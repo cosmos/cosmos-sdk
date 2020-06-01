@@ -201,7 +201,7 @@ func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 }
 
 // WithTxJSONDecoder returns a copy of the CLIContext with an updated JSONMarshaler.
-func (ctx CLIContext) WithTxJSONDecoder(dec sdk.TxDecoder) CLIContext {
+func (ctx Context) WithTxJSONDecoder(dec sdk.TxDecoder) Context {
 	ctx.TxJSONDecoder = dec
 	return ctx
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -19,7 +19,7 @@ func (txr txEncodeRespStr) String() string {
 
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
-func GetEncodeCommand(cliCtx context.CLIContext) *cobra.Command {
+func GetEncodeCommand(cliCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode [file]",
 		Short: "Encode transactions generated offline",
@@ -45,7 +45,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 			txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 			response := txEncodeRespStr(txBytesBase64)
-			return cliCtx.PrintOutput(response)
+			return clientCtx.PrintOutput(response)
 		},
 	}
 

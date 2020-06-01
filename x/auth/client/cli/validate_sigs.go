@@ -10,11 +10,11 @@ import (
 	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/client"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 func GetValidateSignaturesCommand(cliCtx context.CLIContext) *cobra.Command {
@@ -39,12 +39,12 @@ transaction will be not be performed as that will require RPC communication with
 
 func makeValidateSignaturesCmd(cliCtx context.CLIContext) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		cliCtx, txBldr, stdTx, err := readTxAndInitContexts(cliCtx, cmd, args[0])
+		clientCtx, txBldr, stdTx, err := readTxAndInitContexts(cliCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
 
-		if !printAndValidateSigs(cmd, cliCtx, txBldr.ChainID(), stdTx, cliCtx.Offline) {
+		if !printAndValidateSigs(cmd, clientCtx, txBldr.ChainID(), stdTx, clientCtx.Offline) {
 			return fmt.Errorf("signatures validation failed")
 		}
 
@@ -56,7 +56,7 @@ func makeValidateSignaturesCmd(cliCtx context.CLIContext) func(cmd *cobra.Comman
 // expected signers. In addition, if offline has not been supplied, the signature is
 // verified over the transaction sign bytes. Returns false if the validation fails.
 func printAndValidateSigs(
-	cmd *cobra.Command, cliCtx context.CLIContext, chainID string, tx sdk.Tx, offline bool,
+	cmd *cobra.Command, clientCtx client.Context, chainID string, tx sdk.Tx, offline bool,
 ) bool {
 	sigTx := tx.(txtypes.SigTx)
 	signModeHandler := cliCtx.TxGenerator.SignModeHandler()
@@ -165,8 +165,8 @@ func printAndValidateSigs(
 	return success
 }
 
-func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filename string) (context.CLIContext, tx.Factory, sdk.Tx, error) {
-	stdTx, err := client.ReadTxFromFile(cliCtx, filename)
+func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filename string) (client.Context, tx.Factory, sdk.Tx, error) {
+	stdTx, err := authclient.ReadTxFromFile(cliCtx, filename)
 	if err != nil {
 		return cliCtx, tx.Factory{}, nil, err
 	}
@@ -175,5 +175,5 @@ func readTxAndInitContexts(cliCtx context.CLIContext, cmd *cobra.Command, filena
 	cliCtx = cliCtx.InitWithInput(inBuf)
 	txFactory := tx.NewFactoryFromCLI(inBuf)
 
-	return cliCtx, txFactory, stdTx, nil
+	return clientCtx, txFactory, stdTx, nil
 }

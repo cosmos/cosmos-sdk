@@ -229,11 +229,6 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// no need to increment sequence on RecheckTx
-	if ctx.IsReCheckTx() && !simulate {
-		return next(ctx, tx, simulate)
-	}
-
 	sigTx, ok := tx.(types3.SigTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")

@@ -11,7 +11,7 @@ import (
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -33,8 +33,8 @@ func StatusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
-	node, err := cliCtx.GetNode()
+func getNodeStatus(clientCtx client.Context) (*ctypes.ResultStatus, error) {
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
 	}
@@ -48,14 +48,14 @@ func printNodeStatus(_ *cobra.Command, _ []string) error {
 	// No need to verify proof in getting node status
 	viper.Set(flags.FlagKeyringBackend, flags.DefaultKeyringBackend)
 
-	cliCtx := context.NewCLIContext()
-	status, err := getNodeStatus(cliCtx)
+	clientCtx := client.NewContext()
+	status, err := getNodeStatus(clientCtx)
 	if err != nil {
 		return err
 	}
 
 	var output []byte
-	if cliCtx.Indent {
+	if clientCtx.Indent {
 		output, err = legacy_global.Cdc.MarshalJSONIndent(status, "", "  ")
 	} else {
 		output, err = legacy_global.Cdc.MarshalJSON(status)
@@ -77,9 +77,9 @@ type NodeInfoResponse struct {
 }
 
 // REST handler for node info
-func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeInfoRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		status, err := getNodeStatus(cliCtx)
+		status, err := getNodeStatus(clientCtx)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -88,7 +88,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			DefaultNodeInfo:    status.NodeInfo,
 			ApplicationVersion: version.NewInfo(),
 		}
-		rest.PostProcessResponseBare(w, cliCtx, resp)
+		rest.PostProcessResponseBare(w, clientCtx, resp)
 	}
 }
 
@@ -98,13 +98,13 @@ type SyncingResponse struct {
 }
 
 // REST handler for node syncing
-func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeSyncingRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		status, err := getNodeStatus(cliCtx)
+		status, err := getNodeStatus(clientCtx)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponseBare(w, cliCtx, SyncingResponse{Syncing: status.SyncInfo.CatchingUp})
+		rest.PostProcessResponseBare(w, clientCtx, SyncingResponse{Syncing: status.SyncInfo.CatchingUp})
 	}
 }

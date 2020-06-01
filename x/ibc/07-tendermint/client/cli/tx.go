@@ -16,7 +16,7 @@ import (
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +43,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			clientID := args[0]
 
@@ -91,14 +91,14 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			}
 
 			msg := ibctmtypes.NewMsgCreateClient(
-				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, cliCtx.GetFromAddress(),
+				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
@@ -120,7 +120,7 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			clientID := args[0]
 
@@ -136,12 +136,12 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			msg := ibctmtypes.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
+			msg := ibctmtypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
@@ -162,7 +162,7 @@ func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			var ev evidenceexported.Evidence
 			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
@@ -176,12 +176,12 @@ func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			msg := ibctmtypes.NewMsgSubmitClientMisbehaviour(ev, cliCtx.GetFromAddress())
+			msg := ibctmtypes.NewMsgSubmitClientMisbehaviour(ev, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }

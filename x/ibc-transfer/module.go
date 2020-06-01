@@ -10,7 +10,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,13 +65,13 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes implements AppModuleBasic interface
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // GetTxCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
-	return cli.GetTxCmd(ctx.Codec)
+func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetTxCmd(clientCtx.Codec)
 }
 
 // GetQueryCmd implements AppModuleBasic interface

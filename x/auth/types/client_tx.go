@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"github.com/cosmos/cosmos-sdk/crypto/multisig"
@@ -16,7 +16,7 @@ type StdTxBuilder struct {
 	StdTx
 }
 
-var _ context.TxBuilder = &StdTxBuilder{}
+var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
 func (s *StdTxBuilder) GetTx() types.SigTx {
@@ -54,7 +54,7 @@ func SignatureDataToSig(data types.SignatureData) []byte {
 }
 
 // SetSignatures implements TxBuilder.SetSignatures
-func (s *StdTxBuilder) SetSignatures(signatures ...context.SignatureBuilder) error {
+func (s *StdTxBuilder) SetSignatures(signatures ...client.SignatureBuilder) error {
 	sigs := make([]StdSignature, len(signatures))
 	for i, sig := range signatures {
 		pubKey := sig.PubKey
@@ -98,10 +98,10 @@ func (s StdTxGenerator) SignModeHandler() types.SignModeHandler {
 	return LegacyAminoJSONHandler{}
 }
 
-var _ context.TxGenerator = StdTxGenerator{}
+var _ client.TxGenerator = StdTxGenerator{}
 
 // NewTxBuilder implements TxGenerator.NewTxBuilder
-func (s StdTxGenerator) NewTxBuilder() context.TxBuilder {
+func (s StdTxGenerator) NewTxBuilder() client.TxBuilder {
 	return &StdTxBuilder{}
 }
 

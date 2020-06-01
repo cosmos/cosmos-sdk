@@ -6,7 +6,7 @@ package mocks
 
 import (
 	json "encoding/json"
-	context "github.com/cosmos/cosmos-sdk/client/context"
+	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -94,7 +94,7 @@ func (mr *MockAppModuleBasicMockRecorder) ValidateGenesis(arg0, arg1 interface{}
 }
 
 // RegisterRESTRoutes mocks base method
-func (m *MockAppModuleBasic) RegisterRESTRoutes(arg0 context.CLIContext, arg1 *mux.Router) {
+func (m *MockAppModuleBasic) RegisterRESTRoutes(arg0 client.Context, arg1 *mux.Router) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
 }
@@ -106,7 +106,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterRESTRoutes(arg0, arg1 interfac
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModuleBasic) GetTxCmd(arg0 context.CLIContext) *cobra.Command {
+func (m *MockAppModuleBasic) GetTxCmd(arg0 client.Context) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)
@@ -211,7 +211,7 @@ func (mr *MockAppModuleGenesisMockRecorder) ValidateGenesis(arg0, arg1 interface
 }
 
 // RegisterRESTRoutes mocks base method
-func (m *MockAppModuleGenesis) RegisterRESTRoutes(arg0 context.CLIContext, arg1 *mux.Router) {
+func (m *MockAppModuleGenesis) RegisterRESTRoutes(arg0 client.Context, arg1 *mux.Router) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
 }
@@ -223,7 +223,7 @@ func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interf
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModuleGenesis) GetTxCmd(arg0 context.CLIContext) *cobra.Command {
+func (m *MockAppModuleGenesis) GetTxCmd(arg0 client.Context) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)
@@ -356,7 +356,7 @@ func (mr *MockAppModuleMockRecorder) ValidateGenesis(arg0, arg1 interface{}) *go
 }
 
 // RegisterRESTRoutes mocks base method
-func (m *MockAppModule) RegisterRESTRoutes(arg0 context.CLIContext, arg1 *mux.Router) {
+func (m *MockAppModule) RegisterRESTRoutes(arg0 client.Context, arg1 *mux.Router) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
 }
@@ -368,7 +368,7 @@ func (mr *MockAppModuleMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) 
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModule) GetTxCmd(arg0 context.CLIContext) *cobra.Command {
+func (m *MockAppModule) GetTxCmd(arg0 client.Context) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTxCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)

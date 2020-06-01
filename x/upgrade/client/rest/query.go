@@ -7,22 +7,22 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // RegisterRoutes registers REST routes for the upgrade module under the path specified by routeName.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/upgrade/current", getCurrentPlanHandler(cliCtx)).Methods("GET")
-	r.HandleFunc("/upgrade/applied/{name}", getDonePlanHandler(cliCtx)).Methods("GET")
-	registerTxRoutes(cliCtx, r)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/upgrade/current", getCurrentPlanHandler(clientCtx)).Methods("GET")
+	r.HandleFunc("/upgrade/applied/{name}", getDonePlanHandler(clientCtx)).Methods("GET")
+	registerTxRoutes(clientCtx, r)
 }
 
-func getCurrentPlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, *http.Request) {
+func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, request *http.Request) {
 		// ignore height for now
-		res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
+		res, _, err := clientCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -32,26 +32,26 @@ func getCurrentPlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, 
 		}
 
 		var plan types.Plan
-		err = cliCtx.Codec.UnmarshalBinaryBare(res, &plan)
+		err = clientCtx.Codec.UnmarshalBinaryBare(res, &plan)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, plan)
+		rest.PostProcessResponse(w, clientCtx, plan)
 	}
 }
 
-func getDonePlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, *http.Request) {
+func getDonePlanHandler(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
 		params := types.NewQueryAppliedParams(name)
-		bz, err := cliCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.Codec.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryApplied), bz)
+		res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryApplied), bz)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -66,6 +66,6 @@ func getDonePlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, *ht
 
 		applied := int64(binary.BigEndian.Uint64(res))
 		fmt.Println(applied)
-		rest.PostProcessResponse(w, cliCtx, applied)
+		rest.PostProcessResponse(w, clientCtx, applied)
 	}
 }

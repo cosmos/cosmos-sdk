@@ -6,17 +6,17 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	r.HandleFunc("/ibc/connections", queryConnectionsHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}", RestConnectionID), queryConnectionHandlerFn(cliCtx, queryRoute)).Methods("GET")
-	r.HandleFunc("/ibc/clients/connections", queryClientsConnectionsHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/connections", RestClientID), queryClientConnectionsHandlerFn(cliCtx, queryRoute)).Methods("GET")
+func registerQueryRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+	r.HandleFunc("/ibc/connections", queryConnectionsHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}", RestConnectionID), queryConnectionHandlerFn(clientCtx, queryRoute)).Methods("GET")
+	r.HandleFunc("/ibc/clients/connections", queryClientsConnectionsHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/connections", RestClientID), queryClientConnectionsHandlerFn(clientCtx, queryRoute)).Methods("GET")
 }
 
 // queryConnectionsHandlerFn implements connections querying route
@@ -30,26 +30,26 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections [get]
-func queryClientsConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryClientsConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		connections, height, err := utils.QueryAllConnections(cliCtx, page, limit)
+		connections, height, err := utils.QueryAllConnections(clientCtx, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, connections)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, connections)
 	}
 }
 
@@ -64,25 +64,25 @@ func queryClientsConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFun
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/{connection-id} [get]
-func queryConnectionHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerFunc {
+func queryConnectionHandlerFn(clientCtx client.Context, _ string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		connectionID := vars[RestConnectionID]
 		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		connRes, err := utils.QueryConnection(cliCtx, connectionID, prove)
+		connRes, err := utils.QueryConnection(clientCtx, connectionID, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(int64(connRes.ProofHeight))
-		rest.PostProcessResponse(w, cliCtx, connRes)
+		clientCtx = clientCtx.WithHeight(int64(connRes.ProofHeight))
+		rest.PostProcessResponse(w, clientCtx, connRes)
 	}
 }
 
@@ -97,26 +97,26 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerF
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/connections [get]
-func queryConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		connectionsPaths, height, err := utils.QueryAllClientConnectionPaths(cliCtx, page, limit)
+		connectionsPaths, height, err := utils.QueryAllClientConnectionPaths(clientCtx, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, connectionsPaths)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, connectionsPaths)
 	}
 }
 
@@ -131,24 +131,24 @@ func queryConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/connections [get]
-func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerFunc {
+func queryClientConnectionsHandlerFn(clientCtx client.Context, _ string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
 		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		connPathsRes, err := utils.QueryClientConnections(cliCtx, clientID, prove)
+		connPathsRes, err := utils.QueryClientConnections(clientCtx, clientID, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(int64(connPathsRes.ProofHeight))
-		rest.PostProcessResponse(w, cliCtx, connPathsRes)
+		clientCtx = clientCtx.WithHeight(int64(connPathsRes.ProofHeight))
+		rest.PostProcessResponse(w, clientCtx, connPathsRes)
 	}
 }

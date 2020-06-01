@@ -21,7 +21,7 @@ type TxBuilder struct {
 
 var _ context.TxBuilder = TxBuilder{}
 
-func (t TxBuilder) GetTx() sdk.Tx {
+func (t TxBuilder) GetTx() types.SigTx {
 	return t.Tx
 }
 

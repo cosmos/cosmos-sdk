@@ -19,7 +19,7 @@ type AminoMultisignature struct {
 
 // NewMultisig returns a new MultiSignatureData
 func NewMultisig(n int) *tx.MultiSignatureData {
-	return &tx.MultiSignatureData{BitArray: types.NewCompactBitArray(n), Signatures: make([]tx.SignatureData, n)}
+	return &tx.MultiSignatureData{BitArray: types.NewCompactBitArray(n), Signatures: make([]tx.SignatureData, 0, n)}
 }
 
 // GetIndex returns the index of pk in keys. Returns -1 if not found

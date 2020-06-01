@@ -32,7 +32,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	sigs, err := sigTx.GetSignaturesV2()
+	sigs, err := sigTx.GetSignatureData()
 	if err != nil {
 		return ctx, err
 	}

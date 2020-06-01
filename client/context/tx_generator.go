@@ -23,7 +23,7 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	TxBuilder interface {
-		GetTx() sdk.Tx
+		GetTx() types.SigTx
 
 		SetMsgs(msgs ...sdk.Msg) error
 		SetSignatures(signatures ...SignatureBuilder) error

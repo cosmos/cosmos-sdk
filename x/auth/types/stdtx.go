@@ -311,7 +311,7 @@ func stdSignatureToSignatureV2(pk crypto.PubKey, sig []byte) types.SignatureData
 	}
 }
 
-func (tx StdTx) GetSignaturesV2() ([]types.SignatureData, error) {
+func (tx StdTx) GetSignatureData() ([]types.SignatureData, error) {
 	sigs := tx.Signatures
 	res := make([]types.SignatureData, len(sigs))
 	for i, sig := range sigs {

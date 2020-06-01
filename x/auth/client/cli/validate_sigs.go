@@ -69,7 +69,7 @@ func printAndValidateSigs(
 	}
 
 	success := true
-	sigs, err := sigTx.GetSignaturesV2()
+	sigs, err := sigTx.GetSignatureData()
 	if err != nil {
 		panic(err)
 	}

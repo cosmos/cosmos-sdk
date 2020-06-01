@@ -105,5 +105,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 	tx, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
-	require.Equal(t, []sdk.Signature{}, tx.GetSignatures())
+	sigData, err := tx.GetTx().GetSignatureData()
+	require.NoError(t, err)
+	require.Empty(t, sigData)
 }

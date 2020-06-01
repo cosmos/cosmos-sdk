@@ -19,7 +19,7 @@ type StdTxBuilder struct {
 var _ context.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() sdk.Tx {
+func (s *StdTxBuilder) GetTx() types.SigTx {
 	return s.StdTx
 }
 
@@ -30,6 +30,10 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 }
 
 func SignatureDataToSig(data types.SignatureData) []byte {
+	if data == nil {
+		return nil
+	}
+
 	switch data := data.(type) {
 	case *types.SingleSignatureData:
 		return data.Signature

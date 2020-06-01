@@ -175,10 +175,10 @@ type SigTx interface {
 	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignaturesV2() ([]SignatureData, error)
+	GetSignatureData() ([]SignatureData, error)
 }
 
-func (m *Tx) GetSignaturesV2() ([]SignatureData, error) {
+func (m *Tx) GetSignatureData() ([]SignatureData, error) {
 	signerInfos := m.AuthInfo.SignerInfos
 	sigs := m.Signatures
 	n := len(signerInfos)

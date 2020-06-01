@@ -146,7 +146,7 @@ func NewSimApp(
 	encodingConfig := MakeEncodingConfig()
 	marshaler := encodingConfig.Marshaler
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxDecoder, baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxGenerator.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
 

@@ -62,7 +62,7 @@ func main() {
 		rpc.StatusCommand(),
 		client.ConfigCmd(simapp.DefaultCLIHome),
 		queryCmd(encodingConfig.Amino),
-		txCmd(encodingConfig.Amino),
+		txCmd(),
 		flags.LineBreak,
 		lcd.ServeCommand(encodingConfig.Amino, registerRoutes),
 		flags.LineBreak,
@@ -107,7 +107,7 @@ func queryCmd(cdc *codec.Codec) *cobra.Command {
 	return queryCmd
 }
 
-func txCmd(cdc *codec.Codec) *cobra.Command {
+func txCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -127,7 +127,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		flags.LineBreak,
 		authcmd.GetBroadcastCommand(clientCtx),
 		authcmd.GetEncodeCommand(clientCtx),
-		authcmd.GetDecodeCommand(cdc),
+		authcmd.GetDecodeCommand(clientCtx),
 		flags.LineBreak,
 	)
 

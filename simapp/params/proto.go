@@ -19,8 +19,6 @@ func MakeEncodingConfig() EncodingConfig {
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         marshaler,
-		TxDecoder:         signing.DefaultTxDecoder(marshaler, pubKeyCodec),
-		TxJSONDecoder:     signing.DefaultJSONTxDecoder(marshaler, pubKeyCodec),
 		TxGenerator:       txGen,
 		Amino:             cdc,
 	}

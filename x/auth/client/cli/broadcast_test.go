@@ -17,7 +17,7 @@ import (
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxJSONDecoder(simappparams.MakeEncodingConfig().TxJSONDecoder)
+	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
 	cmd := GetBroadcastCommand(clientCtx)
 
 	viper.Set(flags.FlagOffline, true)
@@ -28,10 +28,7 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 
 func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
-	encodingConfig := simappparams.MakeEncodingConfig()
-	clientCtx = clientCtx.
-		WithTxJSONDecoder(encodingConfig.TxJSONDecoder).
-		WithTxGenerator(encodingConfig.TxGenerator)
+	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
 	cmd := GetBroadcastCommand(clientCtx)
 
 	viper.Set(flags.FlagOffline, false)

@@ -42,6 +42,20 @@ func (t TxGenerator) TxEncoder() sdk.TxEncoder {
 	}
 }
 
+func (t TxGenerator) TxDecoder() sdk.TxDecoder {
+	return DefaultTxDecoder(t.Marshaler, t.PubKeyCodec)
+}
+
+func (t TxGenerator) TxJSONEncoder() sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
+		return t.Marshaler.MarshalJSON(tx)
+	}
+}
+
+func (t TxGenerator) TxJSONDecoder() sdk.TxDecoder {
+	return DefaultJSONTxDecoder(t.Marshaler, t.PubKeyCodec)
+}
+
 func (t TxGenerator) SignModeHandler() types.SignModeHandler {
 	return t.ModeHandler
 }

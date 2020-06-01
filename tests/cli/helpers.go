@@ -199,7 +199,7 @@ type CLITx interface {
 }
 
 func (f Fixtures) UnmarshalTxJSON(s string) CLITx {
-	tx, err := f.EncodingConfig.TxJSONDecoder([]byte(s))
+	tx, err := f.EncodingConfig.TxGenerator.TxJSONDecoder()([]byte(s))
 	require.Nil(f.T, err)
 	sigTx, ok := tx.(CLITx)
 	require.True(f.T, ok, "couldn't decode tx")

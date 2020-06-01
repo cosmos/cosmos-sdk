@@ -4,8 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/multisig"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -133,7 +131,7 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 func TestMultiSigPubKeyEquality(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
 	var unmarshalledMultisig ThresholdMultisigPubKey
 	cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &unmarshalledMultisig)
 	require.True(t, multisigKey.Equals(unmarshalledMultisig))
@@ -143,21 +141,21 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 	copy(pubkeysCpy, pubkeys)
 	pubkeysCpy[4] = pubkeys[3]
 	pubkeysCpy[3] = pubkeys[4]
-	multisigKey2 := multisig.NewPubKeyMultisigThreshold(2, pubkeysCpy)
+	multisigKey2 := NewPubKeyMultisigThreshold(2, pubkeysCpy)
 	require.False(t, multisigKey.Equals(multisigKey2))
 }
 
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
 	require.Len(t, multisigKey.Address().Bytes(), 20)
 }
 
 func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
 
 	ab, err := cdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)

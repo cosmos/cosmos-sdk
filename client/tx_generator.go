@@ -3,8 +3,8 @@ package client
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	types "github.com/cosmos/cosmos-sdk/types/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type (
@@ -14,6 +14,9 @@ type (
 	TxGenerator interface {
 		NewTxBuilder() TxBuilder
 		TxEncoder() sdk.TxEncoder
+		TxDecoder() sdk.TxDecoder
+		TxJSONEncoder() sdk.TxEncoder
+		TxJSONDecoder() sdk.TxDecoder
 		SignModeHandler() types.SignModeHandler
 	}
 

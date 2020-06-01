@@ -110,6 +110,20 @@ func (s StdTxGenerator) TxEncoder() sdk.TxEncoder {
 	return DefaultTxEncoder(s.Cdc)
 }
 
+func (s StdTxGenerator) TxDecoder() sdk.TxDecoder {
+	return DefaultTxDecoder(s.Cdc)
+}
+
+func (s StdTxGenerator) TxJSONEncoder() sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
+		return s.Cdc.MarshalJSON(tx)
+	}
+}
+
+func (s StdTxGenerator) TxJSONDecoder() sdk.TxDecoder {
+	return DefaultJSONTxDecoder(s.Cdc)
+}
+
 type LegacyAminoJSONHandler struct{}
 
 var _ types.SignModeHandler = LegacyAminoJSONHandler{}

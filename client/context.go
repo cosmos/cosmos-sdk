@@ -28,7 +28,6 @@ type Context struct {
 	Client           rpcclient.Client
 	ChainID          string
 	JSONMarshaler    codec.JSONMarshaler
-	TxJSONDecoder    sdk.TxDecoder
 	Input            io.Reader
 	Keyring          keyring.Keyring
 	Output           io.Writer
@@ -197,12 +196,6 @@ func (ctx Context) WithInput(r io.Reader) Context {
 // WithJSONMarshaler returns a copy of the Context with an updated JSONMarshaler.
 func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 	ctx.JSONMarshaler = m
-	return ctx
-}
-
-// WithTxJSONDecoder returns a copy of the CLIContext with an updated JSONMarshaler.
-func (ctx Context) WithTxJSONDecoder(dec sdk.TxDecoder) Context {
-	ctx.TxJSONDecoder = dec
 	return ctx
 }
 

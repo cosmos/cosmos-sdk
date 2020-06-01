@@ -90,6 +90,9 @@ func (m *Tx) FeePayer() sdk.AccAddress {
 }
 
 func (m *Tx) GetMemo() string {
+	if m.Body == nil {
+		return ""
+	}
 	return m.Body.Memo
 }
 

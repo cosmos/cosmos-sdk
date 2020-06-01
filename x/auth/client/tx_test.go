@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
@@ -119,22 +121,25 @@ func TestConfiguredTxEncoder(t *testing.T) {
 	compareEncoders(t, customEncoder, encoder)
 }
 
-func TestReadStdTxFromFile(t *testing.T) {
+func TestReadTxFromFile(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxGenerator(txGen)
 	// Build a test transaction
-	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	txBuilder := txGen.NewTxBuilder()
+	txBuilder.SetGasLimit(50000)
+	txBuilder.SetFee(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	txBuilder.SetMemo("foomemo")
 
 	// Write it to the file
-	encodedTx, _ := cdc.MarshalJSON(stdTx)
+	encodedTx, _ := txGen.TxJSONEncoder()(txBuilder.GetTx())
 	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
 	defer os.Remove(jsonTxFile.Name())
 
 	// Read it back
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxJSONDecoder(authtypes.DefaultJSONTxDecoder(cdc))
 	decodedTx, err := ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
 	require.Equal(t, decodedTx.(types.TxWithMemo).GetMemo(), "foomemo")

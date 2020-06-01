@@ -243,7 +243,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 		return
 	}
 
-	return ctx.TxJSONDecoder(bytes)
+	return ctx.TxGenerator.TxJSONDecoder()(bytes)
 }
 
 func populateAccountFromState(txBldr tx.Factory, clientCtx client.Context, addr sdk.AccAddress) (tx.Factory, error) {

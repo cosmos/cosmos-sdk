@@ -138,7 +138,10 @@ var _ codectypes.UnpackInterfacesMessage = &TxBody{}
 var _ codectypes.UnpackInterfacesMessage = &SignDoc{}
 
 func (m *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return m.Body.UnpackInterfaces(unpacker)
+	if m.Body != nil {
+		return m.Body.UnpackInterfaces(unpacker)
+	}
+	return nil
 }
 
 func (m *SignDoc) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

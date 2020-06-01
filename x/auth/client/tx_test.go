@@ -3,12 +3,13 @@ package client
 import (
 	"encoding/json"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/stretchr/testify/require"
 
@@ -132,9 +133,9 @@ func TestReadStdTxFromFile(t *testing.T) {
 	defer os.Remove(jsonTxFile.Name())
 
 	// Read it back
-	cliCtx := context.CLIContext{}
-	cliCtx = cliCtx.WithTxJSONDecoder(authtypes.DefaultJSONTxDecoder(cdc))
-	decodedTx, err := ReadTxFromFile(cliCtx, jsonTxFile.Name())
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxJSONDecoder(authtypes.DefaultJSONTxDecoder(cdc))
+	decodedTx, err := ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
 	require.Equal(t, decodedTx.(types.TxWithMemo).GetMemo(), "foomemo")
 }

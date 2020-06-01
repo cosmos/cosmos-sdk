@@ -18,11 +18,13 @@ func DefaultJSONTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCod
 		}
 
 		// this decodes pubkeys and makes sure they are cached
-		signerInfos := tx.AuthInfo.SignerInfos
-		for _, si := range signerInfos {
-			_, err := keyCodec.Decode(si.PublicKey)
-			if err != nil {
-				return nil, err
+		if tx.AuthInfo != nil {
+			signerInfos := tx.AuthInfo.SignerInfos
+			for _, si := range signerInfos {
+				_, err := keyCodec.Decode(si.PublicKey)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 

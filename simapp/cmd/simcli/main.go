@@ -125,7 +125,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		authcmd.GetMultiSignCommand(clientCtx),
 		authcmd.GetValidateSignaturesCommand(clientCtx),
 		flags.LineBreak,
-		authcmd.GetBroadcastCommand(cdc),
+		authcmd.GetBroadcastCommand(clientCtx),
 		authcmd.GetEncodeCommand(clientCtx),
 		authcmd.GetDecodeCommand(cdc),
 		flags.LineBreak,

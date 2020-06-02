@@ -58,6 +58,7 @@ type IBCModule interface {
 		channelID string,
 	) error
 
+	// OnRecvPacket must return the acknowledgement bytes
 	OnRecvPacket(
 		ctx sdk.Context,
 		packet channeltypes.Packet,

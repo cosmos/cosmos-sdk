@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	gocontext "context"
 	"fmt"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -33,7 +32,8 @@ func NewGRPCRouter() *GRPCRouter {
 // using gRPC
 type GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
 
-// Route returns the Querier for a given query route path.
+// Route returns the GRPCQueryHandler for a given query route path or nil
+// if not found
 func (qrt *GRPCRouter) Route(path string) GRPCQueryHandler {
 	handler, found := qrt.routes[path]
 	if !found {
@@ -42,14 +42,17 @@ func (qrt *GRPCRouter) Route(path string) GRPCQueryHandler {
 	return handler
 }
 
-// RegisterService implements the grpc Server.RegisterService method
+// RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
+// service description, handler is an object which implements that gRPC service
 func (qrt *GRPCRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	// adds a top-level querier based on the GRPC service name
+	// adds a top-level query handler based on the gRPC service name
 	for _, method := range sd.Methods {
 		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
 		qrt.routes[fqName] = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error) {
+			// call the method handler from the service description with the handler object,
+			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
 				return protoCodec.Unmarshal(req.Data, i)
 			}, nil)
@@ -57,11 +60,13 @@ func (qrt *GRPCRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}
 				return abci.ResponseQuery{}, err
 			}
 
+			// proto marshal the result bytes
 			resBytes, err := protoCodec.Marshal(res)
 			if err != nil {
 				return abci.ResponseQuery{}, err
 			}
 
+			// return the result bytes as the response value
 			return abci.ResponseQuery{
 				Height: req.Height,
 				Value:  resBytes,
@@ -69,44 +74,3 @@ func (qrt *GRPCRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}
 		}
 	}
 }
-
-// QueryServiceTestHelper provides a helper for making grpc query service
-// rpc calls in unit tests. It implements both the grpc Server and ClientConn
-// interfaces needed to register a query service server and create a query
-// service client.
-type QueryServiceTestHelper struct {
-	*GRPCRouter
-	ctx sdk.Context
-}
-
-// NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
-// the provided sdk.Context
-func NewQueryServerTestHelper(ctx sdk.Context) *QueryServiceTestHelper {
-	return &QueryServiceTestHelper{GRPCRouter: NewGRPCRouter(), ctx: ctx}
-}
-
-// Invoke implements the grpc ClientConn.Invoke method
-func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
-	querier := q.Route(method)
-	if querier == nil {
-		return fmt.Errorf("handler not found for %s", method)
-	}
-	reqBz, err := protoCodec.Marshal(args)
-	if err != nil {
-		return err
-	}
-	res, err := querier(q.ctx, abci.RequestQuery{Data: reqBz})
-
-	if err != nil {
-		return err
-	}
-	return protoCodec.Unmarshal(res.Value, reply)
-}
-
-// NewStream implements the grpc ClientConn.NewStream method
-func (q *QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
-}
-
-var _ gogogrpc.Server = &QueryServiceTestHelper{}
-var _ gogogrpc.ClientConn = &QueryServiceTestHelper{}

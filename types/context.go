@@ -230,10 +230,10 @@ type sdkContextKeyType string
 
 const sdkContextKey sdkContextKeyType = "sdk-context"
 
-// WrapSDKContext attaches a Context to that Context's context.Context member
-// and returns that context. It is useful for passing a Context through methods
-// that take a generic context.Context parameter such as generated gRPC
-// methods
+// WrapSDKContext returns a stdlib context.Context with the provided sdk.Context's internal
+// context as a value. It is useful for passing an sdk.Context  through methods that take a
+// stdlib context.Context parameter such as generated gRPC methods. To get the original
+// sdk.Context back, call UnwrapSDKContext.
 func WrapSDKContext(ctx Context) context.Context {
 	return context.WithValue(ctx.ctx, sdkContextKey, ctx)
 }

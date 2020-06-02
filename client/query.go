@@ -242,12 +242,12 @@ func parseQueryStorePath(path string) (storeName string, err error) {
 
 // QueryConn returns a new grpc ClientConn for making grpc query calls that
 // get routed to the node's ABCI query handler
-func (ctx CLIContext) QueryConn() gogogrpc.ClientConn {
+func (ctx Context) QueryConn() gogogrpc.ClientConn {
 	return cliQueryConn{ctx}
 }
 
 type cliQueryConn struct {
-	ctx CLIContext
+	ctx Context
 }
 
 var _ gogogrpc.ClientConn = cliQueryConn{}

@@ -121,7 +121,7 @@ func (mr *MockAppModuleBasicMockRecorder) GetTxCmd(arg0 interface{}) *gomock.Cal
 }
 
 // GetQueryCmd mocks base method
-func (m *MockAppModuleBasic) GetQueryCmd(arg0 *codec.Codec) *cobra.Command {
+func (m *MockAppModuleBasic) GetQueryCmd(arg0 client.Context) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueryCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)
@@ -238,7 +238,7 @@ func (mr *MockAppModuleGenesisMockRecorder) GetTxCmd(arg0 interface{}) *gomock.C
 }
 
 // GetQueryCmd mocks base method
-func (m *MockAppModuleGenesis) GetQueryCmd(arg0 *codec.Codec) *cobra.Command {
+func (m *MockAppModuleGenesis) GetQueryCmd(arg0 client.Context) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueryCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)
@@ -383,7 +383,7 @@ func (mr *MockAppModuleMockRecorder) GetTxCmd(arg0 interface{}) *gomock.Call {
 }
 
 // GetQueryCmd mocks base method
-func (m *MockAppModule) GetQueryCmd(arg0 *codec.Codec) *cobra.Command {
+func (m *MockAppModule) GetQueryCmd(arg0 client.Context) *cobra.Command {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueryCmd", arg0)
 	ret0, _ := ret[0].(*cobra.Command)

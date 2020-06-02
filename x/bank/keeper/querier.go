@@ -10,24 +10,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-type Querier struct {
-	BaseKeeper
-}
+var _ types.QueryServer = BaseKeeper{}
 
-var _ types.QueryServiceServer = Querier{}
-
-func (q Querier) QueryBalance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+func (q BaseKeeper) Balance(ctx context.Context, req *types.BalanceRequest) (*types.BalanceResponse, error) {
 	balance := q.GetBalance(sdk.UnwrapSDKContext(ctx), req.Address, req.Denom)
-	return &types.QueryBalanceResponse{Balance: &balance}, nil
+	return &types.BalanceResponse{Balance: &balance}, nil
 }
 
-func (q Querier) QueryAllBalances(c context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
+func (q BaseKeeper) AllBalances(c context.Context, req *types.AllBalancesRequest) (*types.AllBalancesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(q.storeKey)
 
@@ -52,7 +47,24 @@ func (q Querier) QueryAllBalances(c context.Context, req *types.QueryAllBalances
 		return nil, err
 	}
 
-	return &types.QueryAllBalancesResponse{Balances: balances, Page: pageRes}, nil
+	return &types.AllBalancesResponse{Balances: balances, Page: pageRes}, nil
+}
+
+func (q BaseKeeper) TotalSupply(c context.Context, request *types.TotalSupplyRequest) (*types.TotalSupplyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	// TODO: add pagination once it can be supported properly with supply no longer being stored as a single blob
+	totalSupply := q.GetSupply(ctx).GetTotal()
+
+	return &types.TotalSupplyResponse{Balances: totalSupply}, nil
+}
+
+func (q BaseKeeper) SupplyOf(c context.Context, request *types.SupplyOfRequest) (*types.SupplyOfResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	supply := q.GetSupply(ctx).GetTotal().AmountOf(request.Denom)
+
+	return &types.SupplyOfResponse{Amount: supply}, nil
 }
 
 // NewQuerier returns a new sdk.Keeper instance.
@@ -78,7 +90,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 }
 
 func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryBalanceRequest
+	var params types.BalanceRequest
 
 	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
@@ -95,7 +107,7 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 }
 
 func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryAllBalancesRequest
+	var params types.AllBalancesRequest
 
 	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())

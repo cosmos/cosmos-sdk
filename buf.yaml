@@ -12,6 +12,7 @@ lint:
     - UNARY_RPC
     - COMMENT_FIELD
     - PACKAGE_DIRECTORY_MATCH
+    - SERVICE_SUFFIX
   ignore:
     - third_party
     - codec/testdata

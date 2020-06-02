@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"encoding/json"
+
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
@@ -52,14 +53,14 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd(cdc client.Context) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Querying commands for the upgrade module",
 	}
 	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetPlanCmd(StoreKey, cdc),
-		cli.GetAppliedHeightCmd(StoreKey, cdc),
+		cli.GetPlanCmd(StoreKey, cdc.Codec),
+		cli.GetAppliedHeightCmd(StoreKey, cdc.Codec),
 	)...)
 
 	return queryCmd

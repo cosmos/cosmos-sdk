@@ -3,6 +3,7 @@ package crisis
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
@@ -62,7 +63,7 @@ func (b AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns no root query command for the crisis module.
-func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command { return nil }
 
 //____________________________________________________________________________
 

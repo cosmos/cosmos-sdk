@@ -69,8 +69,8 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns no root query command for the bank module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(cdc)
+func (AppModuleBasic) GetQueryCmd(context client.Context) *cobra.Command {
+	return cli.NewQueryCmd(context)
 }
 
 // RegisterInterfaceTypes registers interfaces and implementations of the bank module.
@@ -89,7 +89,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServiceServer(server, keeper.Querier{Keeper: am.keeper})
+	types.RegisterQueryServer(server, am.keeper)
 }
 
 // NewAppModule creates a new AppModule object

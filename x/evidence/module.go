@@ -3,8 +3,9 @@ package evidence
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogo/protobuf/grpc"
 	"math/rand"
+
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -94,8 +95,8 @@ func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // GetTxCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+func (AppModuleBasic) GetQueryCmd(cdc client.Context) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, cdc.Codec)
 }
 
 func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {

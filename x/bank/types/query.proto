@@ -9,41 +9,73 @@ import "types/query/pagination.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Query provides defines the gRPC querier service
-service QueryService {
-    // QueryBalance queries the balance of a single coin for a single account
-    rpc QueryBalance (QueryBalanceRequest) returns (QueryBalanceResponse) {
+service Query {
+    // Balance queries the balance of a single coin for a single account
+    rpc Balance (BalanceRequest) returns (BalanceResponse) {
         option (google.api.http) = {
-      get: "/cosmos_sdk/x/bank/v1/balance/{address}/{denom}"
-    };
+            get: "/bank/balance/{address}/{denom}"
+        };
     }
 
-    // QueryBalance queries the balance of all coins for a single account
-    rpc QueryAllBalances (QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
+    // AllBalances queries the balance of all coins for a single account
+    rpc AllBalances (AllBalancesRequest) returns (AllBalancesResponse) {
         option (google.api.http) = {
-      get: "/cosmos_sdk/x/bank/v1/balances/{address}"
-    };
+            get: "/bank/balances/{address}"
+        };
+    }
+
+    rpc TotalSupply (TotalSupplyRequest) returns (TotalSupplyResponse) {
+        option (google.api.http) = {
+            get: "/bank/total"
+        };
+    }
+
+    rpc SupplyOf (SupplyOfRequest) returns (SupplyOfResponse) {
+        option (google.api.http) = {
+            get: "/bank/total/{denom}"
+        };
     }
 }
 
 // QueryBalanceParams defines the params for querying an account balance.
-message QueryBalanceRequest {
+message BalanceRequest {
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     string denom = 2;
 }
 
 // QueryBalanceResponse is the response for the QueryBalance rpc method
-message QueryBalanceResponse {
+message BalanceResponse {
     cosmos_sdk.v1.Coin balance = 1;
 }
 
 // QueryAllBalancesParams defines the params for querying all account balances
-message QueryAllBalancesRequest {
+message AllBalancesRequest {
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     cosmos_sdk.query.v1.PageRequest page = 2;
 }
 
 // QueryAllBalancesResponse is the response to the QueryAllBalances rpc method
-message QueryAllBalancesResponse {
+message AllBalancesResponse {
     repeated cosmos_sdk.v1.Coin balances = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
     cosmos_sdk.query.v1.PageResponse page = 2;
+}
+
+message TotalSupplyRequest {
+    // TODO: add pagination once supply is can be supported
+    // cosmos_sdk.query.v1.PageRequest page = 1;
+}
+
+message TotalSupplyResponse {
+    repeated cosmos_sdk.v1.Coin balances = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+    // TODO: add pagination once supply is can be supported
+    // cosmos_sdk.query.v1.PageResponse page = 2;
+}
+
+message SupplyOfRequest {
+    string denom = 1;
+}
+
+message SupplyOfResponse {
+    string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }

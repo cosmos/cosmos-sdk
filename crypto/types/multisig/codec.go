@@ -18,13 +18,17 @@ const (
 var cdc = amino.NewCodec()
 
 func init() {
-	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
-	cdc.RegisterConcrete(PubKey{},
+	RegisterCodec(cdc)
+}
+
+func RegisterCodec(amino *amino.Codec) {
+	amino.RegisterInterface((*crypto.PubKey)(nil), nil)
+	amino.RegisterConcrete(PubKey{},
 		PubKeyAminoRoute, nil)
-	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
+	amino.RegisterConcrete(ed25519.PubKeyEd25519{},
 		ed25519.PubKeyAminoName, nil)
-	cdc.RegisterConcrete(sr25519.PubKeySr25519{},
+	amino.RegisterConcrete(sr25519.PubKeySr25519{},
 		sr25519.PubKeyAminoName, nil)
-	cdc.RegisterConcrete(secp256k1.PubKeySecp256k1{},
+	amino.RegisterConcrete(secp256k1.PubKeySecp256k1{},
 		secp256k1.PubKeyAminoName, nil)
 }

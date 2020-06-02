@@ -7,9 +7,10 @@ import (
 	"math"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -58,7 +59,7 @@ func NewABCIMessageLog(i uint16, log string, events Events) ABCIMessageLog {
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.
 func (logs ABCIMessageLogs) String() (str string) {
 	if logs != nil {
-		raw, err := codec.Cdc.MarshalJSON(logs)
+		raw, err := legacy_global.Cdc.MarshalJSON(logs)
 		if err == nil {
 			str = string(raw)
 		}

@@ -5,12 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -31,7 +32,7 @@ func TestABCIMessageLog(t *testing.T) {
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 
 	msgLogs := sdk.ABCIMessageLogs{msgLog}
-	bz, err := codec.Cdc.MarshalJSON(msgLogs)
+	bz, err := legacy_global.Cdc.MarshalJSON(msgLogs)
 	require.NoError(t, err)
 	require.Equal(t, string(bz), msgLogs.String())
 }

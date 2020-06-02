@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -158,7 +160,7 @@ func writeToNewTempFile(t *testing.T, data string) *os.File {
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	authtypes.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc

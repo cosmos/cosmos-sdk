@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	yaml "gopkg.in/yaml.v2"
@@ -49,7 +51,7 @@ func (fee StdFee) Bytes() []byte {
 		fee.Amount = sdk.NewCoins()
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(fee)
+	bz, err := legacy_global.Cdc.MarshalJSON(fee)
 	if err != nil {
 		panic(err)
 	}
@@ -295,7 +297,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(StdSignDoc{
+	bz, err := legacy_global.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),

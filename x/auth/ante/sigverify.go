@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/hex"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -305,7 +306,7 @@ func DefaultSigVerificationGasConsumer(
 
 	case multisig.PubKeyMultisigThreshold:
 		var multisignature multisig.Multisignature
-		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
+		legacy_global.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
 		ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
 		return nil

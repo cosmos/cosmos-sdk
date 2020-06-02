@@ -5,9 +5,10 @@ package v0_34
 import (
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -131,7 +132,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return codec.Cdc.MarshalJSON(bechValidator{
+	return legacy_global.Cdc.MarshalJSON(bechValidator{
 		OperatorAddress:         v.OperatorAddress,
 		ConsPubKey:              bechConsPubKey,
 		Jailed:                  v.Jailed,
@@ -149,7 +150,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals the validator from JSON using Bech32
 func (v *Validator) UnmarshalJSON(data []byte) error {
 	bv := &bechValidator{}
-	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
+	if err := legacy_global.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
 	consPubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, bv.ConsPubKey)

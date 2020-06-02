@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abciServer "github.com/tendermint/tendermint/abci/server"
@@ -141,6 +143,6 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	return cdc
 }

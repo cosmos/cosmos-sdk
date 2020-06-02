@@ -5,6 +5,8 @@ package server
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
@@ -127,7 +129,7 @@ against which this app has been compiled.
 
 func printlnJSON(v interface{}) error {
 	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
+	legacy_global.RegisterCrypto(cdc)
 	marshalled, err := cdc.MarshalJSON(v)
 	if err != nil {
 		return err

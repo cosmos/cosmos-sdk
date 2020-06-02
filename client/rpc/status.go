@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -11,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
 
@@ -55,9 +56,9 @@ func printNodeStatus(_ *cobra.Command, _ []string) error {
 
 	var output []byte
 	if clientCtx.Indent {
-		output, err = codec.Cdc.MarshalJSONIndent(status, "", "  ")
+		output, err = legacy_global.Cdc.MarshalJSONIndent(status, "", "  ")
 	} else {
-		output, err = codec.Cdc.MarshalJSON(status)
+		output, err = legacy_global.Cdc.MarshalJSON(status)
 	}
 	if err != nil {
 		return err

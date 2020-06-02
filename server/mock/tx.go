@@ -16,7 +16,20 @@ type kvstoreTx struct {
 	bytes []byte
 }
 
+func (tx kvstoreTx) Reset() {
+	panic("implement me")
+}
+
+func (tx kvstoreTx) String() string {
+	panic("implement me")
+}
+
+func (tx kvstoreTx) ProtoMessage() {
+	panic("implement me")
+}
+
 var _ sdk.Tx = kvstoreTx{}
+var _ sdk.Msg = kvstoreTx{}
 
 func NewTx(key, value string) kvstoreTx {
 	bytes := fmt.Sprintf("%s=%s", key, value)

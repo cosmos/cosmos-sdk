@@ -594,6 +594,11 @@ type msgCounter struct {
 	FailOnHandler bool
 }
 
+// Implements proto.Message
+func (msg msgCounter) Reset()         { panic("implement me") }
+func (msg msgCounter) String() string { panic("implement me") }
+func (msg msgCounter) ProtoMessage()  { panic("implement me") }
+
 // Implements Msg
 func (msg msgCounter) Route() string                { return routeMsgCounter }
 func (msg msgCounter) Type() string                 { return "counter1" }
@@ -633,6 +638,11 @@ func (tx msgNoDecode) Route() string { return routeMsgCounter }
 type msgCounter2 struct {
 	Counter int64
 }
+
+// Implements proto.Message
+func (msg msgCounter2) Reset()         { panic("implement me") }
+func (msg msgCounter2) String() string { panic("implement me") }
+func (msg msgCounter2) ProtoMessage()  { panic("implement me") }
 
 // Implements Msg
 func (msg msgCounter2) Route() string                { return routeMsgCounter2 }

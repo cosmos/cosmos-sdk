@@ -2,12 +2,12 @@ package rootmulti
 
 import (
 	"fmt"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	"io"
 	"strings"
 
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"

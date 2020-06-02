@@ -37,6 +37,9 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			_, err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
 		case channel.MsgTimeout:
 			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+		default:
+			// don't emit sender event for other msg types
+			continue
 		}
 
 		attributes := make([]sdk.Attribute, len(msg.GetSigners()))

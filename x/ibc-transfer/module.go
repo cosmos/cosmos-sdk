@@ -285,10 +285,10 @@ func (am AppModule) OnChanCloseConfirm(
 func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
-) (*sdk.Result, error) {
+) (*sdk.Result, []byte, error) {
 	var data FungibleTokenPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 	acknowledgement := FungibleTokenPacketAcknowledgement{
 		Success: true,
@@ -299,10 +299,6 @@ func (am AppModule) OnRecvPacket(
 			Success: false,
 			Error:   err.Error(),
 		}
-	}
-
-	if err := am.keeper.PacketExecuted(ctx, packet, acknowledgement.GetBytes()); err != nil {
-		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -316,7 +312,7 @@ func (am AppModule) OnRecvPacket(
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
-	}, nil
+	}, acknowledgement.GetBytes(), nil
 }
 
 func (am AppModule) OnAcknowledgementPacket(

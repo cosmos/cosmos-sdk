@@ -61,7 +61,7 @@ type IBCModule interface {
 	OnRecvPacket(
 		ctx sdk.Context,
 		packet channeltypes.Packet,
-	) (*sdk.Result, error)
+	) (*sdk.Result, []byte, error)
 
 	OnAcknowledgementPacket(
 		ctx sdk.Context,

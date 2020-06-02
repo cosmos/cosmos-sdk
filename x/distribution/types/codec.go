@@ -15,7 +15,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress", nil)
 	cdc.RegisterConcrete(&MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool", nil)
 	cdc.RegisterConcrete(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
-	cdc.RegisterConcrete(FeePool{}, "cosmos-sdk/FeePool", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {

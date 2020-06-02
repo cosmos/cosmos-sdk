@@ -5,6 +5,8 @@ import (
 	"io"
 	"sync"
 
+	ics23iavl "github.com/confio/ics23-iavl"
+	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -275,31 +277,36 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			break
 		}
 
+		_, res.Value = tree.GetVersioned(key, res.Height)
 		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, res.Height)
-			if err != nil {
-				res.Log = err.Error()
-				break
-			}
-			if proof == nil {
-				// Proof == nil implies that the store is empty.
-				if value != nil {
-					panic("unexpected value for an empty proof")
+			var commitmentProof *ics23.CommitmentProof
+			var err error
+			if res.Value != nil {
+				// Only support query proof from MutableTree for now
+				mtree, ok := tree.(*iavl.MutableTree)
+				if !ok {
+					return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store must contain iavl.MutableTree to return proof"))
+				}
+				// value was found
+				commitmentProof, err = ics23iavl.CreateMembershipProof(mtree, req.Data)
+				if err != nil {
+					panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
+				}
+			} else {
+				// Only support query proof from MutableTree for now
+				mtree, ok := tree.(*iavl.MutableTree)
+				if !ok {
+					return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store must contain iavl.MutableTree to return proof"))
+				}
+				// value wasn't found
+				commitmentProof, err = ics23iavl.CreateNonMembershipProof(mtree, req.Data)
+				if err != nil {
+					panic(fmt.Sprintf("unexpected empty absence proof: %s", err.Error()))
 				}
 			}
-			if value != nil {
-				// value was found
-				res.Value = value
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewValueOp(key, proof).ProofOp()}}
-			} else {
-				// value wasn't found
-				res.Value = nil
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewAbsenceOp(key, proof).ProofOp()}}
-			}
-		} else {
-			_, res.Value = tree.GetVersioned(key, res.Height)
+			op := NewIAVLOp(req.Data, commitmentProof)
+			res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
 		}
-
 	case "/subspace":
 		var KVs []types.KVPair
 

@@ -84,7 +84,7 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 	// commit and create a new block on the counterparty chain to get a fresh CommitID
 	counterparty.App.Commit()
 	commitID := counterparty.App.LastCommitID()
-	counterparty.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(counterparty.Header.GetHeight()), Time: counterparty.Header.Time}})
+	counterparty.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: counterparty.Header.Height, Time: counterparty.Header.Time}})
 
 	// set HistoricalInfo on counterparty chain after Commit
 	ctxCounterparty := counterparty.GetContext()
@@ -100,7 +100,7 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 		},
 		Valset: validators,
 	}
-	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, int64(counterparty.Header.GetHeight()), histInfo)
+	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, counterparty.Header.Height, histInfo)
 
 	// also set staking params
 	stakingParams := stakingtypes.DefaultParams()
@@ -153,7 +153,7 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 	commitID := counterparty.App.LastCommitID()
 
 	counterparty.Header = nextHeader(counterparty)
-	counterparty.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(counterparty.Header.GetHeight()), Time: counterparty.Header.Time}})
+	counterparty.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: counterparty.Header.Height, Time: counterparty.Header.Time}})
 
 	// Set HistoricalInfo on counterparty chain after Commit
 	ctxCounterparty := counterparty.GetContext()
@@ -169,7 +169,7 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 		},
 		Valset: validators,
 	}
-	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, int64(counterparty.Header.GetHeight()), histInfo)
+	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, counterparty.Header.Height, histInfo)
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       counterparty.Header.GetHeight(),

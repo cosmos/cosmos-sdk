@@ -278,35 +278,41 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 
 		_, res.Value = tree.GetVersioned(key, res.Height)
-		if req.Prove {
-			var commitmentProof *ics23.CommitmentProof
-			var err error
-			if res.Value != nil {
-				// Only support query proof from MutableTree for now
-				mtree, ok := tree.(*iavl.MutableTree)
-				if !ok {
-					return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store must contain iavl.MutableTree to return proof"))
-				}
-				// value was found
-				commitmentProof, err = ics23iavl.CreateMembershipProof(mtree, req.Data)
-				if err != nil {
-					panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
-				}
-			} else {
-				// Only support query proof from MutableTree for now
-				mtree, ok := tree.(*iavl.MutableTree)
-				if !ok {
-					return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store must contain iavl.MutableTree to return proof"))
-				}
-				// value wasn't found
-				commitmentProof, err = ics23iavl.CreateNonMembershipProof(mtree, req.Data)
-				if err != nil {
-					panic(fmt.Sprintf("unexpected empty absence proof: %s", err.Error()))
-				}
-			}
-			op := NewIAVLOp(req.Data, commitmentProof)
-			res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
+		if !req.Prove {
+			break
 		}
+		// Continue to prove existence/absence of value
+		var commitmentProof *ics23.CommitmentProof
+		var err error
+
+		// Must convert store.Tree to iavl.MutableTree to use in CreateProof
+		var mtree *iavl.MutableTree
+		switch t := tree.(type) {
+		case *iavl.MutableTree:
+			mtree = t
+		case *immutableTree:
+			mtree = &iavl.MutableTree{
+				ImmutableTree: t.ImmutableTree,
+			}
+		default:
+			return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store must contain iavl.MutableTree or iavl.ImmutableTree to return proof"))
+		}
+
+		if res.Value != nil {
+			// value was found
+			commitmentProof, err = ics23iavl.CreateMembershipProof(mtree, req.Data)
+			if err != nil {
+				panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
+			}
+		} else {
+			// value wasn't found
+			commitmentProof, err = ics23iavl.CreateNonMembershipProof(mtree, req.Data)
+			if err != nil {
+				panic(fmt.Sprintf("unexpected empty absence proof: %s", err.Error()))
+			}
+		}
+		op := NewIAVLOp(req.Data, commitmentProof)
+		res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
 	case "/subspace":
 		var KVs []types.KVPair
 

@@ -285,17 +285,13 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		var commitmentProof *ics23.CommitmentProof
 		var err error
 
-		// Must convert store.Tree to iavl.MutableTree to use in CreateProof
-		var mtree *iavl.MutableTree
-		switch t := tree.(type) {
-		case *iavl.MutableTree:
-			mtree = t
-		case *immutableTree:
-			mtree = &iavl.MutableTree{
-				ImmutableTree: t.ImmutableTree,
-			}
-		default:
-			return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store must contain iavl.MutableTree or iavl.ImmutableTree to return proof"))
+		// Must convert store.Tree to iavl.MutableTree with given version to use in CreateProof
+		iTree, err := tree.GetImmutable(res.Height)
+		if err != nil {
+			panic("value at height was retrieved successfully without corresponding versioned tree in store")
+		}
+		mtree := &iavl.MutableTree{
+			ImmutableTree: iTree,
 		}
 
 		if res.Value != nil {

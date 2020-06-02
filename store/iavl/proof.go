@@ -8,33 +8,33 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
-const ProofOpIAVL = "iavlstore"
+const ProofOpIAVLCommitment = "iavlstore"
 
 // IavlOP implements merkle.ProofOperator by wrapping an ics23 CommitmentProof
 // It also contains a Key field to determine which key the proof is proving.
 // NOTE: CommitmentProof currently can either be ExistenceProof or NonexistenceProof
-type IAVLOp struct {
+type CommitmentOp struct {
 	Key   []byte
 	Proof *ics23.CommitmentProof
 }
 
-var _ merkle.ProofOperator = IAVLOp{}
+var _ merkle.ProofOperator = CommitmentOp{}
 
-func NewIAVLOp(key []byte, proof *ics23.CommitmentProof) IAVLOp {
-	return IAVLOp{
+func NewCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
+	return CommitmentOp{
 		Key:   key,
 		Proof: proof,
 	}
 }
 
-// IAVLOpDecoder takes a merkle.ProofOp and attempt to decode it into a IAVLOp ProofOperator
-// The proofOp.Data is just a marshalled CommitmentProof. The Key of the IAVLOp is extracted
+// CommitmentOpDecoder takes a merkle.ProofOp and attempt to decode it into a CommitmentOp ProofOperator
+// The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof
-func IAVLOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
-	if pop.Type != ProofOpIAVL {
-		return nil, errors.New(fmt.Sprintf("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpIAVL))
+func CommitmentOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
+	if pop.Type != ProofOpIAVLCommitment {
+		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpIAVLCommitment)
 	}
-	var op IAVLOp
+	var op CommitmentOp
 	proof := &ics23.CommitmentProof{}
 	err := proof.Unmarshal(pop.Data)
 	if err != nil {
@@ -48,16 +48,16 @@ func IAVLOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	} else if nonexistProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Nonexist); ok {
 		op.Key = nonexistProof.Nonexist.Key
 	} else {
-		return nil, errors.New("Proof type unsupported")
+		return nil, errors.New("proof type unsupported")
 	}
 	return op, nil
 }
 
-func (op IAVLOp) GetKey() []byte {
+func (op CommitmentOp) GetKey() []byte {
 	return op.Key
 }
 
-func (op IAVLOp) Run(args [][]byte) ([][]byte, error) {
+func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	// Only support an existence proof or nonexistence proof (batch proofs currently unsupported)
 	switch len(args) {
 	case 0:
@@ -80,7 +80,7 @@ func (op IAVLOp) Run(args [][]byte) ([][]byte, error) {
 
 		absent := ics23.VerifyNonMembership(ics23.IavlSpec, root, op.Proof, op.Key)
 		if !absent {
-			return nil, errors.New(fmt.Sprintf("proof did not verify absence of key: %s", string(op.Key)))
+			return nil, fmt.Errorf("proof did not verify absence of key: %s", string(op.Key))
 		}
 
 		return [][]byte{root}, nil
@@ -100,22 +100,22 @@ func (op IAVLOp) Run(args [][]byte) ([][]byte, error) {
 
 		exists := ics23.VerifyMembership(ics23.IavlSpec, root, op.Proof, op.Key, args[0])
 		if !exists {
-			return nil, errors.New(fmt.Sprintf("proof did not verify existence of key %s with given value %x", op.Key, args[0]))
+			return nil, fmt.Errorf("proof did not verify existence of key %s with given value %x", op.Key, args[0])
 		}
 
 		return [][]byte{root}, nil
 	default:
-		return nil, errors.New(fmt.Sprintf("args must be length 0 or 1, got: %d", len(args)))
+		return nil, fmt.Errorf("args must be length 0 or 1, got: %d", len(args))
 	}
 }
 
-func (op IAVLOp) ProofOp() merkle.ProofOp {
+func (op CommitmentOp) ProofOp() merkle.ProofOp {
 	bz, err := op.Proof.Marshal()
 	if err != nil {
 		panic(err.Error())
 	}
 	return merkle.ProofOp{
-		Type: ProofOpIAVL,
+		Type: ProofOpIAVLCommitment,
 		Key:  op.Key,
 		Data: bz,
 	}

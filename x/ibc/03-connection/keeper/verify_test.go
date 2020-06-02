@@ -61,15 +61,15 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			consState := tc.malleate()
 
 			// perform a couple updates of chain B on chain A
-			suite.chainA.updateClient(suite.chainB)
-			suite.chainA.updateClient(suite.chainB)
+			suite.chainA.UpdateClient(suite.chainB)
+			suite.chainA.UpdateClient(suite.chainB)
 
 			// TODO: is this the right consensus height
 			consensusHeight := suite.chainA.Header.GetHeight()
 			consensusKey := prefixedClientKey(testClientIDA, host.KeyConsensusState(consensusHeight))
 
 			// get proof that chainB stored chainA' consensus state
-			proof, proofHeight := queryProof(suite.chainB, consensusKey)
+			proof, proofHeight := suite.chainB.QueryProof(consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
 				suite.chainA.GetContext(), tc.connection, proofHeight+1, consensusHeight, proof, consState,
@@ -117,16 +117,16 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			tc.malleate()
 
 			// create and store connection on chain A
-			expectedConnection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
+			expectedConnection := suite.chainA.CreateConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
 
 			// // create expected connection
 			// TODO: why is this commented
 			// expectedConnection := types.NewConnectionEnd(types.INIT, testClientIDB, counterparty, []string{"1.0.0"})
 
 			// perform a couple updates of chain A on chain B
-			suite.chainB.updateClient(suite.chainA)
-			suite.chainB.updateClient(suite.chainA)
-			proof, proofHeight := queryProof(suite.chainA, connectionKey)
+			suite.chainB.UpdateClient(suite.chainA)
+			suite.chainB.UpdateClient(suite.chainA)
+			proof, proofHeight := suite.chainA.QueryProof(connectionKey)
 			// if invalidProofHeight has been set, use that value instead
 			if invalidProofHeight != 0 {
 				proofHeight = invalidProofHeight
@@ -191,16 +191,16 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 
 			tc.malleate()
 			// Create and store channel on chain A
-			channel := suite.chainA.createChannel(
+			channel := suite.chainA.CreateChannel(
 				testPort1, testChannel1, testPort2, testChannel2,
 				channeltypes.OPEN, channeltypes.ORDERED, testConnectionIDA,
 			)
 
 			// Update chainA client on chainB
-			suite.chainB.updateClient(suite.chainA)
+			suite.chainB.UpdateClient(suite.chainA)
 
 			// Check that Chain B can verify channel is stored on chainA
-			proof, proofHeight := queryProof(suite.chainA, channelKey)
+			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 			// if testcase proofHeight is not 0, replace proofHeight with this value
 			if tc.proofHeight != 0 {
 				proofHeight = tc.proofHeight
@@ -250,14 +250,14 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			tc.malleate()
 
 			// Set PacketCommitment on chainA
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
+			connection := suite.chainA.CreateConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), testPort1, testChannel1, 1, commitmentBz)
 
 			// Update ChainA client on chainB
-			suite.chainB.updateClient(suite.chainA)
+			suite.chainB.UpdateClient(suite.chainA)
 
 			// Check that ChainB can verify PacketCommitment stored in chainA
-			proof, proofHeight := queryProof(suite.chainA, commitmentKey)
+			proof, proofHeight := suite.chainA.QueryProof(commitmentKey)
 			// if testcase proofHeight is not 0, replace proofHeight with this value
 			if tc.proofHeight != 0 {
 				proofHeight = tc.proofHeight
@@ -303,12 +303,12 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
+			connection := suite.chainA.CreateConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort1, testChannel1, 1, channeltypes.CommitAcknowledgement(ack))
-			suite.chainB.updateClient(suite.chainA)
+			suite.chainB.UpdateClient(suite.chainA)
 
 			// TODO check this proof height
-			proof, proofHeight := queryProof(suite.chainA, packetAckKey)
+			proof, proofHeight := suite.chainA.QueryProof(packetAckKey)
 			// if testcase proofHeight is not 0, replace proofHeight with this value
 			if tc.proofHeight != 0 {
 				proofHeight = tc.proofHeight
@@ -353,10 +353,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
-			suite.chainB.updateClient(suite.chainA)
+			connection := suite.chainA.CreateConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
+			suite.chainB.UpdateClient(suite.chainA)
 
-			proof, proofHeight := queryProof(suite.chainA, packetAckKey)
+			proof, proofHeight := suite.chainA.QueryProof(packetAckKey)
 			// if testcase proofHeight is not 0, replace proofHeight with this value
 			if tc.proofHeight != 0 {
 				proofHeight = tc.proofHeight
@@ -401,11 +401,11 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
+			connection := suite.chainA.CreateConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort1, testChannel1, 1)
-			suite.chainB.updateClient(suite.chainA)
+			suite.chainB.UpdateClient(suite.chainA)
 
-			proof, proofHeight := queryProof(suite.chainA, nextSeqRcvKey)
+			proof, proofHeight := suite.chainA.QueryProof(nextSeqRcvKey)
 			// if testcase proofHeight is not 0, replace proofHeight with this value
 			if tc.proofHeight != 0 {
 				proofHeight = tc.proofHeight

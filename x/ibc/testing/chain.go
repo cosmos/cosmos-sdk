@@ -20,11 +20,13 @@ import (
 )
 
 const (
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
+	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
+	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
+	MaxClockDrift   time.Duration = time.Second * 10
 
 	ChannelVersion = "1.0"
+
+	NextTimestamp = time.Minute // used to increment header timestamp
 )
 
 // TestChain is a testing struct that wraps a simapp with the latest Header, Vals and Signers.
@@ -100,11 +102,16 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 	}
 	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, int64(counterparty.Header.GetHeight()), histInfo)
 
+	// also set staking params
+	stakingParams := stakingtypes.DefaultParams()
+	stakingParams.HistoricalEntries = 10
+	counterparty.App.StakingKeeper.SetParams(ctxCounterparty, stakingParams)
+
 	// create target ctx
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(counterparty.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, counterparty.Header)
+	clientState, err := ibctmtypes.Initialize(counterparty.ClientID, lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift, counterparty.Header)
 	if err != nil {
 		return err
 	}
@@ -138,7 +145,7 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 		ctxTarget, counterparty.ClientID,
 	)
 	if !found {
-		return // TODO: change to panic
+		return
 	}
 
 	// commit and begin a new block when updating a client
@@ -175,7 +182,7 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 		ctxTarget, counterparty.ClientID, counterparty.Header.GetHeight(), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(counterparty.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, counterparty.Header),
+		ctxTarget, ibctmtypes.NewClientState(counterparty.ClientID, lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift, counterparty.Header),
 	)
 
 	// TODO: use simapp SignCheckDeliver to update state
@@ -202,6 +209,7 @@ func (chain *TestChain) CreateConnection(
 
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
+		ID:           connID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     connectiontypes.GetCompatibleVersions(),
@@ -232,8 +240,12 @@ func (chain *TestChain) CreateChannel(
 
 // nextHeader increments the header height by 1 and increments the timestamp by 1 minute.
 func nextHeader(chain *TestChain) ibctmtypes.Header {
-	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, int64(chain.Header.GetHeight())+1,
-		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
+	return ibctmtypes.CreateTestHeader(
+		chain.Header.SignedHeader.Header.ChainID,
+		int64(chain.Header.GetHeight())+1,
+		chain.Header.Time.Add(NextTimestamp),
+		chain.Vals, chain.Signers,
+	)
 }
 
 // CommitNBlocks commits n blocks to state and updates the block height by 1 for each commit.

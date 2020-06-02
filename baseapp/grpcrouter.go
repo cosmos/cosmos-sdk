@@ -15,22 +15,26 @@ import (
 
 var protoCodec = encoding.GetCodec(proto.Name)
 
+// GRPCRouter routes ABCI Query requests to GRPC handlers
 type GRPCRouter struct {
-	routes map[string]GRPCHandler
+	routes map[string]GRPCQueryHandler
 }
 
 var _ gogogrpc.Server
 
+// NewGRPCRouter creates a new GRPCRouter
 func NewGRPCRouter() *GRPCRouter {
 	return &GRPCRouter{
-		routes: map[string]GRPCHandler{},
+		routes: map[string]GRPCQueryHandler{},
 	}
 }
 
-type GRPCHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
+// GRPCQueryHandler defines a function type which handles ABCI Query requests
+// using gRPC
+type GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
 
 // Route returns the Querier for a given query route path.
-func (qrt *GRPCRouter) Route(path string) GRPCHandler {
+func (qrt *GRPCRouter) Route(path string) GRPCQueryHandler {
 	handler, found := qrt.routes[path]
 	if !found {
 		return nil

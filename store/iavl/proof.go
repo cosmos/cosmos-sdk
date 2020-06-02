@@ -54,7 +54,7 @@ func (op IAVLOp) GetKey() []byte {
 func (op IAVLOp) Run(args [][]byte) ([][]byte, error) {
 	switch len(args) {
 	case 0:
-		// Args is nil, verify absence of key
+		// Args are nil, so we verify the absence of the key.
 		nonexistProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Nonexist)
 		if !ok {
 			return nil, errors.New("proof is not a nonexistence proof and args is nil")

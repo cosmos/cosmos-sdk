@@ -59,6 +59,7 @@ func (op IAVLOp) Run(args [][]byte) ([][]byte, error) {
 		if !ok {
 			return nil, errors.New("proof is not a nonexistence proof and args is nil")
 		}
+
 		root, err := nonexistProof.Nonexist.Left.Calculate()
 		if err != nil {
 			return nil, errors.New("could not calculate root from nonexistence proof")

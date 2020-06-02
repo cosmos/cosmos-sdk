@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -608,20 +607,12 @@ type storeCore struct {
 	// ... maybe add more state
 }
 
-// Implements merkle.Hasher.
+// Hash is the value we commit to in SimpleHashFromMap
+// Which should equal the root hash of the substore
 func (si storeInfo) Hash() []byte {
 	// Doesn't write Name, since SimpleHashFromMap() will
 	// include them via the keys.
-	bz := si.Core.CommitID.Hash
-	hasher := tmhash.New()
-
-	_, err := hasher.Write(bz)
-	if err != nil {
-		// TODO: Handle with #870
-		panic(err)
-	}
-
-	return hasher.Sum(nil)
+	return si.Core.CommitID.Hash
 }
 
 //----------------------------------------

@@ -113,6 +113,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   - TxBuilder.Sign
   - TxBuilder.SignStdTx
 * (client) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CLIContext` is renamed to `Context`. `Context` and all related methods have been moved from package context to client.
+* (codec) [\#6330](https://github.com/cosmos/cosmos-sdk/pull/6330) the global `codec.Cdc` Amino instance has been deprecated and moved to the `codec/legacy_global` package.
   
   Migration guide:
 

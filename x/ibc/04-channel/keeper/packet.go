@@ -210,12 +210,14 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
+	// NOTE: the remaining code is located in the PacketExecuted function
 	return packet, nil
 }
 
 // PacketExecuted writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
-// CONTRACT: each packet handler function should call WriteAcknowledgement at the end of the execution
+//
+// CONTRACT: this function must be called in the IBC handler
 func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
 	chanCap *capability.Capability,
@@ -237,10 +239,13 @@ func (k Keeper) PacketExecuted(
 
 	capName := host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(types.ErrInvalidChannelCapability, "channel capability failed authentication")
+		return sdkerrors.Wrap(
+			types.ErrInvalidChannelCapability,
+			"channel capability failed authentication",
+		)
 	}
 
-	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
+	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
@@ -388,7 +393,7 @@ func (k Keeper) AcknowledgePacket(
 // AcknowledgementExecuted deletes the packet commitment from this chain.
 // It is assumed that the acknowledgement verification has already occurred.
 //
-// NOTE: this function must be called in the handler
+// CONTRACT: this function must be called in the IBC handler
 func (k Keeper) AcknowledgementExecuted(
 	ctx sdk.Context,
 	chanCap *capability.Capability,

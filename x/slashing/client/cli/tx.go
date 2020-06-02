@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +11,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
-func NewTxCmd(ctx context.CLIContext) *cobra.Command {
+func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Slashing transaction subcommands",
@@ -21,11 +20,11 @@ func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	slashingTxCmd.AddCommand(NewUnjailTxCmd(ctx))
+	slashingTxCmd.AddCommand(NewUnjailTxCmd(clientCtx))
 	return slashingTxCmd
 }
 
-func NewUnjailTxCmd(ctx context.CLIContext) *cobra.Command {
+func NewUnjailTxCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
@@ -35,15 +34,15 @@ func NewUnjailTxCmd(ctx context.CLIContext) *cobra.Command {
 $ <appcli> tx slashing unjail --from mykey
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
+			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
 
-			valAddr := cliCtx.GetFromAddress()
+			valAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, msg)
+			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]

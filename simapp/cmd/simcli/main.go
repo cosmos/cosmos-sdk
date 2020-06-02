@@ -10,7 +10,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
@@ -118,15 +117,15 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cliCtx := context.CLIContext{}
-	cliCtx = cliCtx.
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
 		WithJSONMarshaler(appCodec).
 		WithTxGenerator(types.StdTxGenerator{Cdc: cdc}).
 		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
 		WithCodec(cdc)
 
 	txCmd.AddCommand(
-		bankcmd.NewSendTxCmd(cliCtx),
+		bankcmd.NewSendTxCmd(clientCtx),
 		flags.LineBreak,
 		authcmd.GetSignCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
@@ -139,7 +138,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	)
 
 	// add modules' tx commands
-	simapp.ModuleBasics.AddTxCommands(txCmd, cliCtx)
+	simapp.ModuleBasics.AddTxCommands(txCmd, clientCtx)
 
 	return txCmd
 }
@@ -147,9 +146,9 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 // registerRoutes registers the routes from the different modules for the REST client.
 // NOTE: details on the routes added for each module are in the module documentation
 func registerRoutes(rs *lcd.RestServer) {
-	client.RegisterRoutes(rs.CliCtx, rs.Mux)
-	authrest.RegisterTxRoutes(rs.CliCtx, rs.Mux)
-	simapp.ModuleBasics.RegisterRESTRoutes(rs.CliCtx, rs.Mux)
+	rpc.RegisterRoutes(rs.ClientCtx, rs.Mux)
+	authrest.RegisterTxRoutes(rs.ClientCtx, rs.Mux)
+	simapp.ModuleBasics.RegisterRESTRoutes(rs.ClientCtx, rs.Mux)
 }
 
 func initConfig(cmd *cobra.Command) error {

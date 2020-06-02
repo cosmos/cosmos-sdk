@@ -8,7 +8,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -17,21 +17,21 @@ import (
 
 // QueryAllConnections returns all the connections. It _does not_ return
 // any merkle proof.
-func QueryAllConnections(cliCtx context.CLIContext, page, limit int) ([]types.ConnectionEnd, int64, error) {
+func QueryAllConnections(clientCtx client.Context, page, limit int) ([]types.ConnectionEnd, int64, error) {
 	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := cliCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.Codec.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}
 
 	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllConnections)
-	res, height, err := cliCtx.QueryWithData(route, bz)
+	res, height, err := clientCtx.QueryWithData(route, bz)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	var connections []types.ConnectionEnd
-	err = cliCtx.Codec.UnmarshalJSON(res, &connections)
+	err = clientCtx.Codec.UnmarshalJSON(res, &connections)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
 	}
@@ -41,7 +41,7 @@ func QueryAllConnections(cliCtx context.CLIContext, page, limit int) ([]types.Co
 // QueryConnection queries the store to get a connection end and a merkle
 // proof.
 func QueryConnection(
-	cliCtx context.CLIContext, connectionID string, prove bool,
+	clientCtx client.Context, connectionID string, prove bool,
 ) (types.ConnectionResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -49,13 +49,13 @@ func QueryConnection(
 		Prove: prove,
 	}
 
-	res, err := cliCtx.QueryABCI(req)
+	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
 		return types.ConnectionResponse{}, err
 	}
 
 	var connection types.ConnectionEnd
-	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &connection); err != nil {
+	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &connection); err != nil {
 		return types.ConnectionResponse{}, err
 	}
 
@@ -66,21 +66,21 @@ func QueryConnection(
 
 // QueryAllClientConnectionPaths returns all the client connections paths. It
 // _does not_ return any merkle proof.
-func QueryAllClientConnectionPaths(cliCtx context.CLIContext, page, limit int) ([]types.ConnectionPaths, int64, error) {
+func QueryAllClientConnectionPaths(clientCtx client.Context, page, limit int) ([]types.ConnectionPaths, int64, error) {
 	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := cliCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.Codec.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}
 
 	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllClientConnections)
-	res, height, err := cliCtx.QueryWithData(route, bz)
+	res, height, err := clientCtx.QueryWithData(route, bz)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	var connectionPaths []types.ConnectionPaths
-	err = cliCtx.Codec.UnmarshalJSON(res, &connectionPaths)
+	err = clientCtx.Codec.UnmarshalJSON(res, &connectionPaths)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal client connection paths: %w", err)
 	}
@@ -90,7 +90,7 @@ func QueryAllClientConnectionPaths(cliCtx context.CLIContext, page, limit int) (
 // QueryClientConnections queries the store to get the registered connection paths
 // registered for a particular client and a merkle proof.
 func QueryClientConnections(
-	cliCtx context.CLIContext, clientID string, prove bool,
+	clientCtx client.Context, clientID string, prove bool,
 ) (types.ClientConnectionsResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -98,13 +98,13 @@ func QueryClientConnections(
 		Prove: prove,
 	}
 
-	res, err := cliCtx.QueryABCI(req)
+	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
 		return types.ClientConnectionsResponse{}, err
 	}
 
 	var paths []string
-	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &paths); err != nil {
+	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &paths); err != nil {
 		return types.ClientConnectionsResponse{}, err
 	}
 

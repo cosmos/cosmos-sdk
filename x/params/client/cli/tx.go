@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -17,7 +17,7 @@ import (
 
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
 // a parameter change proposal governance transaction.
-func NewSubmitParamChangeProposalTxCmd(ctx context.CLIContext) *cobra.Command {
+func NewSubmitParamChangeProposalTxCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -57,14 +57,14 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
+			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
 
-			proposal, err := paramscutils.ParseParamChangeProposalJSON(ctx.JSONMarshaler, args[0])
+			proposal, err := paramscutils.ParseParamChangeProposalJSON(clientCtx.JSONMarshaler, args[0])
 			if err != nil {
 				return err
 			}
 
-			from := cliCtx.GetFromAddress()
+			from := clientCtx.GetFromAddress()
 			content := paramproposal.NewParameterChangeProposal(
 				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 			)
@@ -82,7 +82,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, msg)
+			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 

@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,7 +60,7 @@ $ %s query gov proposal 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -70,14 +69,14 @@ $ %s query gov proposal 1
 			}
 
 			// Query the proposal
-			res, err := gcutils.QueryProposalByID(proposalID, cliCtx, queryRoute)
+			res, err := gcutils.QueryProposalByID(proposalID, clientCtx, queryRoute)
 			if err != nil {
 				return err
 			}
 
 			var proposal types.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
-			return cliCtx.PrintOutput(proposal) // nolint:errcheck
+			return clientCtx.PrintOutput(proposal) // nolint:errcheck
 		},
 	}
 }
@@ -141,9 +140,9 @@ $ %s query gov proposals --page=2 --limit=100
 				return err
 			}
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposals", queryRoute), bz)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/proposals", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -158,7 +157,7 @@ $ %s query gov proposals --page=2 --limit=100
 				return fmt.Errorf("no matching proposals found")
 			}
 
-			return cliCtx.PrintOutput(matchingProposals) // nolint:errcheck
+			return clientCtx.PrintOutput(matchingProposals) // nolint:errcheck
 		},
 	}
 
@@ -188,7 +187,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -197,7 +196,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
-			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, queryRoute)
+			_, err = gcutils.QueryProposalByID(proposalID, clientCtx, queryRoute)
 			if err != nil {
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -213,7 +212,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/vote", queryRoute), bz)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/vote", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -226,7 +225,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			_ = cdc.UnmarshalJSON(res, &vote)
 
 			if vote.Empty() {
-				res, err = gcutils.QueryVoteByTxQuery(cliCtx, params)
+				res, err = gcutils.QueryVoteByTxQuery(clientCtx, params)
 				if err != nil {
 					return err
 				}
@@ -236,7 +235,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				}
 			}
 
-			return cliCtx.PrintOutput(vote)
+			return clientCtx.PrintOutput(vote)
 		},
 	}
 }
@@ -258,7 +257,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -276,7 +275,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			}
 
 			// check to see if the proposal is in the store
-			res, err := gcutils.QueryProposalByID(proposalID, cliCtx, queryRoute)
+			res, err := gcutils.QueryProposalByID(proposalID, clientCtx, queryRoute)
 			if err != nil {
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -286,9 +285,9 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 			propStatus := proposal.Status
 			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
-				res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
+				res, err = gcutils.QueryVotesByTxQuery(clientCtx, params)
 			} else {
-				res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/votes", queryRoute), bz)
+				res, _, err = clientCtx.QueryWithData(fmt.Sprintf("custom/%s/votes", queryRoute), bz)
 			}
 
 			if err != nil {
@@ -297,7 +296,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 			var votes types.Votes
 			cdc.MustUnmarshalJSON(res, &votes)
-			return cliCtx.PrintOutput(votes)
+			return clientCtx.PrintOutput(votes)
 		},
 	}
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of votes to to query for")
@@ -322,7 +321,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -331,7 +330,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
-			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, queryRoute)
+			_, err = gcutils.QueryProposalByID(proposalID, clientCtx, queryRoute)
 			if err != nil {
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -347,7 +346,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposit", queryRoute), bz)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/deposit", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -356,14 +355,14 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			cdc.MustUnmarshalJSON(res, &deposit)
 
 			if deposit.Empty() {
-				res, err = gcutils.QueryDepositByTxQuery(cliCtx, params)
+				res, err = gcutils.QueryDepositByTxQuery(clientCtx, params)
 				if err != nil {
 					return err
 				}
 				cdc.MustUnmarshalJSON(res, &deposit)
 			}
 
-			return cliCtx.PrintOutput(deposit)
+			return clientCtx.PrintOutput(deposit)
 		},
 	}
 }
@@ -385,7 +384,7 @@ $ %s query gov deposits 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -400,7 +399,7 @@ $ %s query gov deposits 1
 			}
 
 			// check to see if the proposal is in the store
-			res, err := gcutils.QueryProposalByID(proposalID, cliCtx, queryRoute)
+			res, err := gcutils.QueryProposalByID(proposalID, clientCtx, queryRoute)
 			if err != nil {
 				return fmt.Errorf("failed to fetch proposal with id %d: %s", proposalID, err)
 			}
@@ -410,9 +409,9 @@ $ %s query gov deposits 1
 
 			propStatus := proposal.Status
 			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
-				res, err = gcutils.QueryDepositsByTxQuery(cliCtx, params)
+				res, err = gcutils.QueryDepositsByTxQuery(clientCtx, params)
 			} else {
-				res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
+				res, _, err = clientCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
 			}
 
 			if err != nil {
@@ -421,7 +420,7 @@ $ %s query gov deposits 1
 
 			var dep types.Deposits
 			cdc.MustUnmarshalJSON(res, &dep)
-			return cliCtx.PrintOutput(dep)
+			return clientCtx.PrintOutput(dep)
 		},
 	}
 }
@@ -443,7 +442,7 @@ $ %s query gov tally 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -452,7 +451,7 @@ $ %s query gov tally 1
 			}
 
 			// check to see if the proposal is in the store
-			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, queryRoute)
+			_, err = gcutils.QueryProposalByID(proposalID, clientCtx, queryRoute)
 			if err != nil {
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -465,14 +464,14 @@ $ %s query gov tally 1
 			}
 
 			// Query store
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/tally", queryRoute), bz)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/tally", queryRoute), bz)
 			if err != nil {
 				return err
 			}
 
 			var tally types.TallyResult
 			cdc.MustUnmarshalJSON(res, &tally)
-			return cliCtx.PrintOutput(tally)
+			return clientCtx.PrintOutput(tally)
 		},
 	}
 }
@@ -493,16 +492,16 @@ $ %s query gov params
 		),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			tp, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/tallying", queryRoute), nil)
+			clientCtx := client.NewContext().WithCodec(cdc)
+			tp, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/params/tallying", queryRoute), nil)
 			if err != nil {
 				return err
 			}
-			dp, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/deposit", queryRoute), nil)
+			dp, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/params/deposit", queryRoute), nil)
 			if err != nil {
 				return err
 			}
-			vp, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/voting", queryRoute), nil)
+			vp, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/params/voting", queryRoute), nil)
 			if err != nil {
 				return err
 			}
@@ -514,7 +513,7 @@ $ %s query gov params
 			var votingParams types.VotingParams
 			cdc.MustUnmarshalJSON(vp, &votingParams)
 
-			return cliCtx.PrintOutput(types.NewParams(votingParams, tallyParams, depositParams))
+			return clientCtx.PrintOutput(types.NewParams(votingParams, tallyParams, depositParams))
 		},
 	}
 }
@@ -537,10 +536,10 @@ $ %s query gov param deposit
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// Query store
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/%s", queryRoute, args[0]), nil)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/params/%s", queryRoute, args[0]), nil)
 			if err != nil {
 				return err
 			}
@@ -562,7 +561,7 @@ $ %s query gov param deposit
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
-			return cliCtx.PrintOutput(out)
+			return clientCtx.PrintOutput(out)
 		},
 	}
 }
@@ -583,7 +582,7 @@ $ %s query gov proposer 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// validate that the proposalID is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -591,12 +590,12 @@ $ %s query gov proposer 1
 				return fmt.Errorf("proposal-id %s is not a valid uint", args[0])
 			}
 
-			prop, err := gcutils.QueryProposerByTxQuery(cliCtx, proposalID)
+			prop, err := gcutils.QueryProposerByTxQuery(clientCtx, proposalID)
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(prop)
+			return clientCtx.PrintOutput(prop)
 		},
 	}
 }

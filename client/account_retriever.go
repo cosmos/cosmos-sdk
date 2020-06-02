@@ -1,4 +1,4 @@
-package context
+package client
 
 import "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,4 +18,4 @@ type NodeQuerier interface {
 	QueryWithData(path string, data []byte) ([]byte, int64, error)
 }
 
-var _ NodeQuerier = CLIContext{}
+var _ NodeQuerier = Context{}

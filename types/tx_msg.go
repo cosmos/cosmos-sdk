@@ -74,10 +74,10 @@ type TestMsg struct {
 	signers []AccAddress
 }
 
-// implements proto.Message
-func (msg *TestMsg) Reset()         { panic("implement me") }
-func (msg *TestMsg) String() string { panic("implement me") }
-func (msg *TestMsg) ProtoMessage()  { panic("implement me") }
+// dummy implementation of proto.Message
+func (msg *TestMsg) Reset()         {}
+func (msg *TestMsg) String() string { return "TODO" }
+func (msg *TestMsg) ProtoMessage()  {}
 
 func NewTestMsg(addrs ...AccAddress) *TestMsg {
 	return &TestMsg{

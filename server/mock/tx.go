@@ -16,17 +16,10 @@ type kvstoreTx struct {
 	bytes []byte
 }
 
-func (tx kvstoreTx) Reset() {
-	panic("implement me")
-}
-
-func (tx kvstoreTx) String() string {
-	panic("implement me")
-}
-
-func (tx kvstoreTx) ProtoMessage() {
-	panic("implement me")
-}
+// dummy implementation of proto.Message
+func (msg kvstoreTx) Reset()         {}
+func (msg kvstoreTx) String() string { return "TODO" }
+func (msg kvstoreTx) ProtoMessage()  {}
 
 var _ sdk.Tx = kvstoreTx{}
 var _ sdk.Msg = kvstoreTx{}

@@ -1,25 +1,13 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	lite "github.com/tendermint/tendermint/lite2"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 // define constants used for testing
@@ -38,12 +26,7 @@ const (
 	testChannel2 = "secondchannel"
 	testChannel3 = "thirdchannel"
 
-	testChannelOrder   = types.ORDERED
-	testChannelVersion = "1.0"
-
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
+	testChannelOrder = types.ORDERED
 
 	timeoutHeight            = 100
 	timeoutTimestamp         = 100
@@ -56,13 +39,13 @@ type KeeperTestSuite struct {
 
 	cdc *codec.Codec
 
-	chainA *TestChain
-	chainB *TestChain
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.chainA = NewTestChain(testClientIDA)
-	suite.chainB = NewTestChain(testClientIDB)
+	suite.chainA = ibctesting.NewTestChain(testClientIDA)
+	suite.chainB = ibctesting.NewTestChain(testClientIDB)
 
 	suite.cdc = suite.chainA.App.Codec()
 }
@@ -75,7 +58,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	channel := types.NewChannel(
 		types.INIT, testChannelOrder,
-		counterparty2, []string{testConnectionIDA}, testChannelVersion,
+		counterparty2, []string{testConnectionIDA}, ibctesting.ChannelVersion,
 	)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
 
@@ -92,15 +75,15 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 
 	channel1 := types.NewChannel(
 		types.INIT, testChannelOrder,
-		counterparty3, []string{testConnectionIDA}, testChannelVersion,
+		counterparty3, []string{testConnectionIDA}, ibctesting.ChannelVersion,
 	)
 	channel2 := types.NewChannel(
 		types.INIT, testChannelOrder,
-		counterparty1, []string{testConnectionIDA}, testChannelVersion,
+		counterparty1, []string{testConnectionIDA}, ibctesting.ChannelVersion,
 	)
 	channel3 := types.NewChannel(
 		types.CLOSED, testChannelOrder,
-		counterparty2, []string{testConnectionIDA}, testChannelVersion,
+		counterparty2, []string{testConnectionIDA}, ibctesting.ChannelVersion,
 	)
 
 	expChannels := []types.IdentifiedChannel{
@@ -231,220 +214,6 @@ func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-func commitNBlocks(chain *TestChain, n int) {
-	for i := 0; i < n; i++ {
-		chain.App.Commit()
-		chain.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: chain.App.LastBlockHeight() + 1}})
-	}
-}
-
-// commit current block and start the next block with the provided time
-func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
-	chain.App.Commit()
-	chain.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: chain.App.LastBlockHeight() + 1, Time: time.Unix(timestamp, 0)}})
-}
-
-// nolint: unused
-func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
-	res := chain.App.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
-		Height: chain.App.LastBlockHeight(),
-		Data:   key,
-		Prove:  true,
-	})
-
-	proof := commitmenttypes.MerkleProof{
-		Proof: res.Proof,
-	}
-
-	return proof, uint64(res.Height)
-}
-
-type TestChain struct {
-	ClientID string
-	App      *simapp.SimApp
-	Header   ibctmtypes.Header
-	Vals     *tmtypes.ValidatorSet
-	Signers  []tmtypes.PrivValidator
-}
-
-func NewTestChain(clientID string) *TestChain {
-	privVal := tmtypes.NewMockPV()
-
-	pubKey, err := privVal.GetPubKey()
-	if err != nil {
-		panic(err)
-	}
-
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	signers := []tmtypes.PrivValidator{privVal}
-	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-
-	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
-
-	return &TestChain{
-		ClientID: clientID,
-		App:      simapp.Setup(false),
-		Header:   header,
-		Vals:     valSet,
-		Signers:  signers,
-	}
-}
-
-// Creates simple context for testing purposes
-func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.SignedHeader.Header.ChainID, Height: int64(chain.Header.GetHeight())})
-}
-
-// createClient will create a client for clientChain on targetChain
-func (chain *TestChain) CreateClient(client *TestChain) error {
-	client.Header = nextHeader(client)
-	// Commit and create a new block on appTarget to get a fresh CommitID
-	client.App.Commit()
-	commitID := client.App.LastCommitID()
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.Time}})
-
-	// Set HistoricalInfo on client chain after Commit
-	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
-	)
-	validator.Status = sdk.Bonded
-	validator.Tokens = sdk.NewInt(1000000) // get one voting power
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
-		Header: abci.Header{
-			AppHash: commitID.Hash,
-		},
-		Valset: validators,
-	}
-	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, int64(client.Header.GetHeight()), histInfo)
-
-	// Create target ctx
-	ctxTarget := chain.GetContext()
-
-	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
-	if err != nil {
-		return err
-	}
-	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
-	if err != nil {
-		return err
-	}
-	return nil
-
-	// _, _, err := simapp.SignCheckDeliver(
-	// 	suite.T(),
-	// 	suite.cdc,
-	// 	suite.app.BaseApp,
-	// 	ctx.BlockHeader(),
-	// 	[]sdk.Msg{clienttypes.NewMsgCreateClient(clientID, clientexported.ClientTypeTendermint, consState, accountAddress)},
-	// 	[]uint64{baseAccount.GetAccountNumber()},
-	// 	[]uint64{baseAccount.GetSequence()},
-	// 	true, true, accountPrivKey,
-	// )
-}
-
-func (chain *TestChain) updateClient(client *TestChain) {
-	// Create target ctx
-	ctxTarget := chain.GetContext()
-
-	// if clientState does not already exist, return without updating
-	_, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(
-		ctxTarget, client.ClientID,
-	)
-	if !found {
-		return
-	}
-
-	// always commit when updateClient and begin a new block
-	client.App.Commit()
-	commitID := client.App.LastCommitID()
-
-	client.Header = nextHeader(client)
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.Time}})
-
-	// Set HistoricalInfo on client chain after Commit
-	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
-	)
-	validator.Status = sdk.Bonded
-	validator.Tokens = sdk.NewInt(1000000)
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
-		Header: abci.Header{
-			AppHash: commitID.Hash,
-		},
-		Valset: validators,
-	}
-	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, int64(client.Header.GetHeight()), histInfo)
-
-	consensusState := ibctmtypes.ConsensusState{
-		Height:       client.Header.GetHeight(),
-		Timestamp:    client.Header.Time,
-		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
-		ValidatorSet: client.Vals,
-	}
-
-	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
-	)
-	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
-	)
-
-	// _, _, err := simapp.SignCheckDeliver(
-	// 	suite.T(),
-	// 	suite.cdc,
-	// 	suite.app.BaseApp,
-	// 	ctx.BlockHeader(),
-	// 	[]sdk.Msg{clienttypes.NewMsgUpdateClient(clientID, suite.header, accountAddress)},
-	// 	[]uint64{baseAccount.GetAccountNumber()},
-	// 	[]uint64{baseAccount.GetSequence()},
-	// 	true, true, accountPrivKey,
-	// )
-	// suite.Require().NoError(err)
-}
-
-func (chain *TestChain) createConnection(
-	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state connectiontypes.State,
-) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
-	connection := connectiontypes.ConnectionEnd{
-		State:        state,
-		ClientID:     clientID,
-		Counterparty: counterparty,
-		Versions:     connectiontypes.GetCompatibleVersions(),
-	}
-	ctx := chain.GetContext()
-	chain.App.IBCKeeper.ConnectionKeeper.SetConnection(ctx, connID, connection)
-	return connection
-}
-
-func (chain *TestChain) createChannel(
-	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state types.State, order types.Order, connectionID string,
-) types.Channel {
-	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
-
-	// sets channel with given state
-	channel := types.NewChannel(state, order, counterparty,
-		[]string{connectionID}, testChannelVersion,
-	)
-	ctx := chain.GetContext()
-	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
-	return channel
-}
-
-func nextHeader(chain *TestChain) ibctmtypes.Header {
-	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, int64(chain.Header.GetHeight())+1,
-		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }
 
 // Mocked types

@@ -559,7 +559,7 @@ type commitInfo struct {
 func (ci commitInfo) toMap() map[string][]byte {
 	m := make(map[string][]byte, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
-		m[storeInfo.Name] = storeInfo.Hash()
+		m[storeInfo.Name] = storeInfo.GetHash()
 	}
 	return m
 }
@@ -607,11 +607,14 @@ type storeCore struct {
 	// ... maybe add more state
 }
 
-// Hash is the value we commit to in SimpleHashFromMap
-// Which should equal the root hash of the substore
-func (si storeInfo) Hash() []byte {
-	// Doesn't write Name, since SimpleHashFromMap() will
-	// include them via the keys.
+// GetHash returns the GetHash from the CommitID.
+// This is used in CommitInfo.Hash()
+//
+// When we commit to this in a merkle proof, we create a map of storeInfo.Name -> storeInfo.GetHash()
+// and build a merkle proof from that.
+// This is then chained with the substore proof, so we prove the root hash from the substore before this
+// and need to pass that (unmodified) as the leaf value of the multistore proof.
+func (si storeInfo) GetHash() []byte {
 	return si.Core.CommitID.Hash
 }
 

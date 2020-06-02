@@ -516,7 +516,7 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 				CommitID: store.LastCommitID(),
 				// StoreType: store.GetStoreType(),
 			},
-		}.Hash()
+		}.GetHash()
 	}
 	return SimpleHashFromMap(m)
 }

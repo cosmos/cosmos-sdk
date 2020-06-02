@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"encoding/hex"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"

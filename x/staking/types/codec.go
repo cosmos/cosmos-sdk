@@ -3,7 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
 // RegisterCodec registers the necessary x/staking interfaces and concrete types
@@ -30,6 +30,6 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	codec2.RegisterCrypto(amino)
+	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

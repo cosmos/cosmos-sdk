@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -28,7 +27,7 @@ var (
 func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec2.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	types.RegisterCodec(cdc)
 	return
 }

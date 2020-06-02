@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"

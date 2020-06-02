@@ -5,10 +5,9 @@ package v0_34
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

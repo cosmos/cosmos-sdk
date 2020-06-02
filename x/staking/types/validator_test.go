@@ -6,13 +6,12 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

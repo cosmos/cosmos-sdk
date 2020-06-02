@@ -5,8 +5,6 @@ package server
 import (
 	"fmt"
 
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
@@ -18,6 +16,7 @@ import (
 	tversion "github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -129,7 +128,7 @@ against which this app has been compiled.
 
 func printlnJSON(v interface{}) error {
 	cdc := codec.New()
-	codec2.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	marshalled, err := cdc.MarshalJSON(v)
 	if err != nil {
 		return err

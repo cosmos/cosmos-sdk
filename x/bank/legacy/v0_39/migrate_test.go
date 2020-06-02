@@ -3,9 +3,8 @@ package v039_test
 import (
 	"testing"
 
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
@@ -16,7 +15,7 @@ import (
 
 func TestMigrate(t *testing.T) {
 	v039Codec := codec.New()
-	codec2.RegisterCrypto(v039Codec)
+	cryptocodec.RegisterCrypto(v039Codec)
 	v038auth.RegisterCodec(v039Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))

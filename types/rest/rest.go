@@ -12,12 +12,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

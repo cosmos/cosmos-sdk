@@ -7,13 +7,12 @@ import (
 	"math"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func (gi GasInfo) String() string {

@@ -7,13 +7,12 @@ import (
 	"os"
 	"testing"
 
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -160,7 +159,7 @@ func writeToNewTempFile(t *testing.T, data string) *os.File {
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec2.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	authtypes.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc

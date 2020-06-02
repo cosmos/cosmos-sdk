@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
 var (
@@ -10,6 +10,6 @@ var (
 )
 
 func init() {
-	codec2.RegisterCrypto(amino)
+	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

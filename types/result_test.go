@@ -5,13 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

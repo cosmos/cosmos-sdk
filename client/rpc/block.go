@@ -5,14 +5,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"

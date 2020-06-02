@@ -2,10 +2,11 @@ package exported
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/cosmos-sdk/codec"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
@@ -21,11 +22,11 @@ type ClientState interface {
 	GetLatestHeight() uint64
 	IsFrozen() bool
 	Validate() error
+	GetProofSpecs() []*ics23.ProofSpec
 
 	// State verification functions
 
 	VerifyClientConsensusState(
-		store sdk.KVStore,
 		cdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
@@ -36,8 +37,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
-		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc *codec.Codec,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -46,8 +46,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
-		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc *codec.Codec,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -57,7 +56,6 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(
-		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -68,7 +66,6 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
-		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -79,7 +76,6 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
-		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -89,7 +85,6 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
-		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -188,7 +183,7 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 
 	clientType := ClientTypeFromString(s)
 	if clientType == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid client type '%s'", s)
+		return fmt.Errorf("invalid client type '%s'", s)
 	}
 
 	*ct = clientType

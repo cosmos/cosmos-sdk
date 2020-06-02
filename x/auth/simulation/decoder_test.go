@@ -21,11 +21,12 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
+	app := simapp.Setup(false)
 	cdc, _ := simapp.MakeCodecs()
 	acc := types.NewBaseAccountWithAddress(delAddr1)
-	dec := simulation.NewDecodeStore(cdc)
+	dec := simulation.NewDecodeStore(app.AccountKeeper)
 
-	accBz, err := cdc.MarshalAccount(acc)
+	accBz, err := app.AccountKeeper.MarshalAccount(acc)
 	require.NoError(t, err)
 
 	globalAccNumber := gogotypes.UInt64Value{Value: 10}

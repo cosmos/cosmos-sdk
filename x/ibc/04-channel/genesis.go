@@ -23,6 +23,9 @@ func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 	for _, rs := range gs.RecvSequences {
 		k.SetNextSequenceRecv(ctx, rs.PortID, rs.ChannelID, rs.Sequence)
 	}
+	for _, as := range gs.AckSequences {
+		k.SetNextSequenceAck(ctx, as.PortID, as.ChannelID, as.Sequence)
+	}
 }
 
 // ExportGenesis returns the ibc channel submodule's exported genesis.
@@ -33,5 +36,6 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 		Commitments:      k.GetAllPacketCommitments(ctx),
 		SendSequences:    k.GetAllPacketSendSeqs(ctx),
 		RecvSequences:    k.GetAllPacketRecvSeqs(ctx),
+		AckSequences:     k.GetAllPacketAckSeqs(ctx),
 	}
 }

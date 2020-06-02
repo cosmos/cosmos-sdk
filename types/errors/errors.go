@@ -100,11 +100,17 @@ var (
 	// ErrInvalidVersion defines a general error for an invalid version
 	ErrInvalidVersion = Register(RootCodespace, 27, "invalid version")
 
+	// ErrInvalidChainID defines an error when the chain-id is invalid.
+	ErrInvalidChainID = Register(RootCodespace, 28, "invalid chain-id")
+
+	// ErrInvalidType defines an error an invalid type.
+	ErrInvalidType = Register(RootCodespace, 29, "invalid type")
+
 	// ErrProtoarshal defines an ABCI typed protobuf marshalling error
-	ErrProtoMarshal = Register(RootCodespace, 27, "failed to marshal proto bytes")
+	ErrProtoMarshal = Register(RootCodespace, 30, "failed to marshal proto bytes")
 
 	// ErrProtoUnmarshal defines an ABCI typed protobuf unmarshalling error
-	ErrProtoUnmarshal = Register(RootCodespace, 28, "failed to unmarshal proto bytes")
+	ErrProtoUnmarshal = Register(RootCodespace, 31, "failed to unmarshal proto bytes")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info

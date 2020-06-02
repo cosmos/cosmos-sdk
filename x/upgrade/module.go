@@ -9,13 +9,15 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
+	types "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // module codec
@@ -26,8 +28,9 @@ func init() {
 }
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule       = AppModule{}
+	_ module.AppModuleBasic  = AppModuleBasic{}
+	_ module.InterfaceModule = AppModuleBasic{}
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
@@ -44,8 +47,8 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 }
 
 // RegisterRESTRoutes registers all REST query handlers
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, r *mux.Router) {
-	rest.RegisterRoutes(ctx, r)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router) {
+	rest.RegisterRoutes(clientCtx, r)
 }
 
 // GetQueryCmd returns the cli query commands for this module
@@ -63,13 +66,17 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade transaction subcommands",
 	}
 	txCmd.AddCommand(flags.PostCommands()...)
 	return txCmd
+}
+
+func (b AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // AppModule implements the sdk.AppModule interface

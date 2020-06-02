@@ -80,8 +80,8 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
 }
 
 // NoOpMsg - create a no-operation message
-func NoOpMsg(route string) OperationMsg {
-	return NewOperationMsgBasic(route, "no-operation", "", false, nil)
+func NoOpMsg(route, msgType, comment string) OperationMsg {
+	return NewOperationMsgBasic(route, msgType, comment, false, nil)
 }
 
 // log entry text for this operation msg

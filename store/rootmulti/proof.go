@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/iavl"
 	"github.com/tendermint/tendermint/crypto/merkle"
+
+	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 )
 
 // MultiStoreProof defines a collection of store proofs in a multi-store
@@ -128,8 +129,7 @@ func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	prt = merkle.NewProofRuntime()
 	prt.RegisterOpDecoder(merkle.ProofOpSimpleValue, merkle.SimpleValueOpDecoder)
-	prt.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.ValueOpDecoder)
-	prt.RegisterOpDecoder(iavl.ProofOpIAVLAbsence, iavl.AbsenceOpDecoder)
+	prt.RegisterOpDecoder(iavlstore.ProofOpIAVL, iavlstore.IAVLOpDecoder)
 	prt.RegisterOpDecoder(ProofOpMultiStore, MultiStoreProofOpDecoder)
 	return
 }

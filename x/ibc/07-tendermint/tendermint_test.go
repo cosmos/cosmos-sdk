@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
 
 	"github.com/stretchr/testify/suite"
 
@@ -37,7 +37,7 @@ type TendermintTestSuite struct {
 
 func (suite *TendermintTestSuite) SetupTest() {
 	suite.cdc = codec.New()
-	legacy_global.RegisterCrypto(suite.cdc)
+	codec2.RegisterCrypto(suite.cdc)
 	ibctmtypes.RegisterCodec(suite.cdc)
 	commitmenttypes.RegisterCodec(suite.cdc)
 

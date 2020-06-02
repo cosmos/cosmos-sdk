@@ -2,8 +2,8 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
@@ -45,6 +45,6 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	legacy_global.RegisterCrypto(amino)
+	codec2.RegisterCrypto(amino)
 	amino.Seal()
 }

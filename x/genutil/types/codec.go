@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -18,6 +18,6 @@ func init() {
 	stakingtypes.RegisterCodec(ModuleCdc)
 	authtypes.RegisterCodec(ModuleCdc)
 	sdk.RegisterCodec(ModuleCdc)
-	legacy_global.RegisterCrypto(ModuleCdc)
+	codec2.RegisterCrypto(ModuleCdc)
 	ModuleCdc.Seal()
 }

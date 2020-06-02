@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
 
 	"github.com/stretchr/testify/require"
 
@@ -28,7 +28,7 @@ var (
 func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	legacy_global.RegisterCrypto(cdc)
+	codec2.RegisterCrypto(cdc)
 	types.RegisterCodec(cdc)
 	return
 }

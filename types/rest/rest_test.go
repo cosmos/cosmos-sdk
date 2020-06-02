@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -201,7 +201,7 @@ func TestProcessPostResponse(t *testing.T) {
 
 	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
 	cdc := codec.New()
-	legacy_global.RegisterCrypto(cdc)
+	codec2.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
 	ctx = ctx.WithCodec(cdc)
 

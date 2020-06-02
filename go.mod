@@ -32,9 +32,10 @@ require (
 	github.com/tendermint/iavl v0.13.3
 	github.com/tendermint/tendermint v0.33.5
 	github.com/tendermint/tm-db v0.5.1
+	google.golang.org/grpc v1.28.1
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
 
 go 1.14

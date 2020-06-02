@@ -113,7 +113,6 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   - TxBuilder.Sign
   - TxBuilder.SignStdTx
 * (client) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CLIContext` is renamed to `Context`. `Context` and all related methods have been moved from package context to client.
-* (codec) [\#6330](https://github.com/cosmos/cosmos-sdk/pull/6330) the global `codec.Cdc` Amino instance has been deprecated and moved to the `codec/legacy_global` package. `codec.RegisterCrypto` has been moved to the `crypto/codec` package.
   
   Migration guide:
 
@@ -128,6 +127,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   ```
 * (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` of rpc is moved from package client to client/rpc and client/rpc.RegisterRPCRoutes is removed.
 * (client/lcd) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CliCtx` of struct `RestServer` in package client/lcd has been renamed to `ClientCtx`.
+* (codec) [\#6330](https://github.com/cosmos/cosmos-sdk/pull/6330) `codec.RegisterCrypto` has been moved to the `crypto/codec` package and the global `codec.Cdc` Amino instance has been deprecated and moved to the `codec/legacy_global` package. 
 
 ### Features
 

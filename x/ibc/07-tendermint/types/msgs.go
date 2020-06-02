@@ -39,9 +39,12 @@ type MsgCreateClient struct {
 	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
 }
 
+// this is a constant to satisfy the linter
+const TODO = "TODO"
+
 // dummy implementation of proto.Message
 func (msg MsgCreateClient) Reset()         {}
-func (msg MsgCreateClient) String() string { return "TODO" }
+func (msg MsgCreateClient) String() string { return TODO }
 func (msg MsgCreateClient) ProtoMessage()  {}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -136,7 +139,7 @@ type MsgUpdateClient struct {
 
 // dummy implementation of proto.Message
 func (msg MsgUpdateClient) Reset()         {}
-func (msg MsgUpdateClient) String() string { return "TODO" }
+func (msg MsgUpdateClient) String() string { return TODO }
 func (msg MsgUpdateClient) ProtoMessage()  {}
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
@@ -195,7 +198,7 @@ type MsgSubmitClientMisbehaviour struct {
 
 // dummy implementation of proto.Message
 func (msg MsgSubmitClientMisbehaviour) Reset()         {}
-func (msg MsgSubmitClientMisbehaviour) String() string { return "TODO" }
+func (msg MsgSubmitClientMisbehaviour) String() string { return TODO }
 func (msg MsgSubmitClientMisbehaviour) ProtoMessage()  {}
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour

@@ -19,7 +19,7 @@ func (DirectModeHandler) Modes() []types.SignMode {
 	return []types.SignMode{types.SignMode_SIGN_MODE_DIRECT}
 }
 
-func (DirectModeHandler) GetSignBytes(data types.SigningData, tx sdk.Tx) ([]byte, error) {
+func (DirectModeHandler) GetSignBytes(mode types.SignMode, data types.SigningData, tx sdk.Tx) ([]byte, error) {
 	protoTx, ok := tx.(types.ProtoTx)
 	if !ok {
 		return nil, fmt.Errorf("can only get direct sign bytes for a ProtoTx, got %T", tx)

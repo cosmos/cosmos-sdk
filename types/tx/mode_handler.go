@@ -17,5 +17,5 @@ type SigningData struct {
 type SignModeHandler interface {
 	DefaultMode() SignMode
 	Modes() []SignMode
-	GetSignBytes(data SigningData, tx sdk.Tx) ([]byte, error)
+	GetSignBytes(mode SignMode, data SigningData, tx sdk.Tx) ([]byte, error)
 }

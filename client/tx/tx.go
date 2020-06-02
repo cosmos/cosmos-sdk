@@ -109,7 +109,12 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	txBytes, err := Sign(txf, clientCtx.GetFromName(), tx)
+	err = Sign(txf, clientCtx.GetFromName(), tx)
+	if err != nil {
+		return err
+	}
+
+	txBytes, err := clientCtx.TxGenerator.TxEncoder()(tx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -307,9 +312,9 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name string, tx client.TxBuilder) ([]byte, error) {
+func Sign(txf Factory, name string, tx client.TxBuilder) error {
 	if txf.keybase == nil {
-		return nil, errors.New("keybase must be set prior to signing a transaction")
+		return errors.New("keybase must be set prior to signing a transaction")
 	}
 
 	signMode := txf.signMode
@@ -319,7 +324,7 @@ func Sign(txf Factory, name string, tx client.TxBuilder) ([]byte, error) {
 
 	key, err := txf.keybase.Key(name)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	pubKey := key.GetPubKey()
@@ -335,12 +340,12 @@ func Sign(txf Factory, name string, tx client.TxBuilder) ([]byte, error) {
 
 	err = tx.SetSignatures(sig)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	signBytes, err := txf.txGenerator.SignModeHandler().GetSignBytes(
+		signMode,
 		types.SigningData{
-			Mode:            signMode,
 			PublicKey:       pubKey,
 			ChainID:         txf.chainID,
 			AccountNumber:   txf.accountNumber,
@@ -348,21 +353,21 @@ func Sign(txf Factory, name string, tx client.TxBuilder) ([]byte, error) {
 		}, tx.GetTx(),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	sigData.Signature = sigBytes
 
 	if err := tx.SetSignatures(sig); err != nil {
-		return nil, err
+		return err
 	}
 
-	return txf.txGenerator.TxEncoder()(tx.GetTx())
+	return nil
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

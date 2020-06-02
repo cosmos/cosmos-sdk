@@ -32,6 +32,18 @@ func (t TxGenerator) NewTxBuilder() client.TxBuilder {
 	}
 }
 
+func (t TxGenerator) WrapTxBuilder(tx sdk.Tx) (client.TxBuilder, error) {
+	stdTx, ok := tx.(*types.Tx)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", &types.Tx{}, tx)
+	}
+	return TxBuilder{
+		Tx:          stdTx,
+		Marshaler:   t.Marshaler,
+		PubKeyCodec: t.PubKeyCodec,
+	}, nil
+}
+
 func (t TxGenerator) TxEncoder() sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		ptx, ok := tx.(*types.Tx)

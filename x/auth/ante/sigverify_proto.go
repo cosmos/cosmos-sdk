@@ -1,10 +1,10 @@
 package ante
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -61,57 +61,23 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		switch sig := sig.(type) {
-		case *types.SingleSignatureData:
-			signBytes, err := svd.getSignBytesSingle(ctx, sig.SignMode, signerAcc, sigTx)
-			if err != nil {
-				return ctx, err
-			}
+		genesis := ctx.BlockHeight() == 0
+		var accNum uint64
+		if !genesis {
+			accNum = signerAcc.GetAccountNumber()
+		}
 
-			// verify signature
-			if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
-			}
-		case *types.MultiSignatureData:
-			multisigPubKey, ok := pubKey.(multisig.MultisigPubKey)
-			if !ok {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "key is not a multisig pubkey, but ModeInfo.Multi is used")
-			}
+		data := types.SigningData{
+			PublicKey:       signerAcc.GetPubKey(),
+			ChainID:         ctx.ChainID(),
+			AccountNumber:   accNum,
+			AccountSequence: signerAcc.GetSequence(),
+		}
 
-			if !simulate {
-				if !multisigPubKey.VerifyMultisignature(
-					func(mode types.SignMode) ([]byte, error) {
-						return svd.getSignBytesSingle(ctx, mode, signerAcc, sigTx)
-					}, sig,
-				) {
-					return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
-				}
-			}
-		default:
-			panic("unexpected ModeInfo type")
+		if !signing.VerifySignature(data, sig, tx, svd.handler) {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
 		}
 	}
 
 	return next(ctx, tx, simulate)
-}
-
-func (svd ProtoSigVerificationDecorator) getSignBytesSingle(ctx sdk.Context, signMode types.SignMode, signerAcc auth.AccountI, sigTx types.ProtoTx) ([]byte, error) {
-	verifier := svd.handler
-	genesis := ctx.BlockHeight() == 0
-	var accNum uint64
-	if !genesis {
-		accNum = signerAcc.GetAccountNumber()
-	}
-	data := types.SigningData{
-		Mode:            signMode,
-		PublicKey:       signerAcc.GetPubKey(),
-		ChainID:         ctx.ChainID(),
-		AccountNumber:   accNum,
-		AccountSequence: signerAcc.GetSequence(),
-	}
-	signBytes, err := verifier.GetSignBytes(data, sigTx)
-	if err != nil {
-		return nil, err
-	}
-	return signBytes, nil
 }

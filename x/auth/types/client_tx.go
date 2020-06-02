@@ -105,6 +105,14 @@ func (s StdTxGenerator) NewTxBuilder() client.TxBuilder {
 	return &StdTxBuilder{}
 }
 
+func (s StdTxGenerator) WrapTxBuilder(tx sdk.Tx) (client.TxBuilder, error) {
+	stdTx, ok := tx.(StdTx)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, tx)
+	}
+	return &StdTxBuilder{StdTx: stdTx}, nil
+}
+
 // MarshalTx implements TxGenerator.MarshalTx
 func (s StdTxGenerator) TxEncoder() sdk.TxEncoder {
 	return DefaultTxEncoder(s.Cdc)
@@ -136,7 +144,7 @@ func (LegacyAminoJSONHandler) Modes() []types.SignMode {
 	return []types.SignMode{types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
-func (LegacyAminoJSONHandler) GetSignBytes(data types.SigningData, tx sdk.Tx) ([]byte, error) {
+func (LegacyAminoJSONHandler) GetSignBytes(_ types.SignMode, data types.SigningData, tx sdk.Tx) ([]byte, error) {
 	feeTx, ok := tx.(types.FeeTx)
 	if !ok {
 		return nil, fmt.Errorf("expected FeeTx, got %T", tx)

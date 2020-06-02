@@ -3,9 +3,10 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,11 +15,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/crypto/multisig"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -82,10 +82,10 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
-		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
-		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
+		multisigPub := multisigInfo.GetPubKey().(multisig.MultisigPubKey)
+		multisigSig := multisig.NewMultisig(len(multisigPub.GetPubKeys()))
 		clientCtx := clientCtx.InitWithInput(inBuf)
-		txBldr := tx.NewFactoryFromCLI(inBuf)
+		txFactory := tx.NewFactoryFromCLI(inBuf)
 
 		if !clientCtx.Offline {
 			accnum, seq, err := types.NewAccountRetriever(authclient.Codec).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
@@ -93,7 +93,7 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 				return err
 			}
 
-			txBldr = txBldr.WithAccountNumber(accnum).WithSequence(seq)
+			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
 		feeTx := stdTx.(types2.FeeTx)
@@ -111,15 +111,18 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 				return err
 			}
 
+			signingData := types2.SigningData{
+				PublicKey:       stdSig.PubKey,
+				ChainID:         txFactory.ChainID(),
+				AccountNumber:   txFactory.AccountNumber(),
+				AccountSequence: txFactory.Sequence(),
+			}
+
 			// Validate each signature
-			sigBytes := types.StdSignBytes(
-				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
-				fee, stdTx.GetMsgs(), memoTx.GetMemo(),
-			)
-			if ok := stdSig.GetPubKey().VerifyBytes(sigBytes, stdSig.Signature); !ok {
+			if ok := signing.VerifySignature(signingData, stdSig.Data, stdTx, clientCtx.TxGenerator.SignModeHandler()); !ok {
 				return fmt.Errorf("couldn't verify signature")
 			}
-			if err := multisigSig.AddSignatureFromPubKey(stdSig.Signature, stdSig.GetPubKey(), multisigPub.PubKeys); err != nil {
+			if err := multisig.AddSignatureFromPubKey(multisigSig, stdSig.Data, stdSig.PubKey, multisigPub.GetPubKeys()); err != nil {
 				return err
 			}
 		}
@@ -127,13 +130,29 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 		newStdSig := types.StdSignature{Signature: clientCtx.Codec.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()} //nolint:staticcheck
 		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo())                            //nolint:staticcheck
 
+		txBldr, err := clientCtx.TxGenerator.WrapTxBuilder(stdTx)
+		if err != nil {
+			return err
+		}
+
+		sigBldr := client.SignatureBuilder{
+			PubKey: multisigPub,
+			Data:   multisigSig,
+		}
+
+		err = txBldr.SetSignatures(sigBldr)
+
+		if err != nil {
+			return err
+		}
+
 		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
 		switch {
 		case sigOnly && clientCtx.Indent:
-			json, err = codec.MarshalJSONIndent(clientCtx.JSONMarshaler, newTx.Signatures[0])
+			json, err = getSignatureBuilderJSON(clientCtx.JSONMarshaler, sigBldr, true)
 		case sigOnly && !clientCtx.Indent:
-			json, err = clientCtx.JSONMarshaler.MarshalJSON(newTx.Signatures[0])
+			json, err = getSignatureBuilderJSON(clientCtx.JSONMarshaler, sigBldr, false)
 		case !sigOnly && clientCtx.Indent:
 			json, err = codec.MarshalJSONIndent(clientCtx.JSONMarshaler, newTx)
 		default:
@@ -162,13 +181,14 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 	}
 }
 
-func readAndUnmarshalStdSignature(clientCtx client.Context, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
-	var bytes []byte
-	if bytes, err = ioutil.ReadFile(filename); err != nil {
-		return
-	}
-	if err = clientCtx.JSONMarshaler.UnmarshalJSON(bytes, &stdSig); err != nil {
-		return
-	}
-	return
+func readAndUnmarshalStdSignature(clientCtx client.Context, filename string) (stdSig client.SignatureBuilder, err error) { //nolint:staticcheck
+	//var bytes []byte
+	//if bytes, err = ioutil.ReadFile(filename); err != nil {
+	//	return
+	//}
+	//if err = clientCtx.JSONMarshaler.UnmarshalJSON(bytes, &stdSig); err != nil {
+	//	return
+	//}
+	//return
+	panic("TODO: json signatures")
 }

@@ -105,6 +105,8 @@ message ModeInfo {
   message Single {
     // mode is the signing mode of the single signer
     SignMode mode = 1;
+
+    bytes signature = 2;
   }
 
   // Multi is the mode info for a multisig public key
@@ -148,3 +150,4 @@ message Fee {
   // before an out of gas error occurs
   uint64 gas_limit = 2;
 }
+

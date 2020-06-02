@@ -42,6 +42,15 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		panic(err)
 	}
 
+	signModeStr := viper.GetString(flags.FlagSignMode)
+	signMode := types.SignMode_SIGN_MODE_UNSPECIFIED
+	switch signModeStr {
+	case "direct":
+		signMode = types.SignMode_SIGN_MODE_DIRECT
+	case "amino-json":
+		signMode = types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	}
+
 	f := Factory{
 		keybase:            kb,
 		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
@@ -51,6 +60,7 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		simulateAndExecute: flags.GasFlagVar.Simulate,
 		chainID:            viper.GetString(flags.FlagChainID),
 		memo:               viper.GetString(flags.FlagMemo),
+		signMode:           signMode,
 	}
 
 	f = f.WithFees(viper.GetString(flags.FlagFees))

@@ -181,52 +181,47 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, ms
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(txBldr tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, appendSig bool, offline bool) (authtypes.StdTx, error) {
-
-	var signedStdTx authtypes.StdTx
-
+func SignStdTx(txBldr tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, appendSig bool, offline bool) error {
 	info, err := txBldr.Keybase().Key(name)
 	if err != nil {
-		return signedStdTx, err
+		return err
 	}
 
 	addr := info.GetPubKey().Address()
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetTx().(types.SigTx).GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
 		txBldr, err = populateAccountFromState(txBldr, clientCtx, sdk.AccAddress(addr))
 		if err != nil {
-			return signedStdTx, err
+			return err
 		}
 	}
 
-	//return tx.Sign(txBldr, name, "", stdTx)
-	panic("TODO")
+	return tx.Sign(txBldr, name, stdTx)
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func SignStdTxWithSignerAddress(txBldr tx.Factory, clientCtx client.Context, addr sdk.AccAddress, name string, stdTx sdk.Tx, offline bool) (signedStdTx authtypes.StdTx, err error) {
-	panic("TODO")
+func SignStdTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress, name string, txBuilder client.TxBuilder, offline bool) error {
+	//check whether the address is a signer
+	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
+		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	}
 
-	// check whether the address is a signer
-	//if !isTxSigner(addr, stdTx.GetSigners()) {
-	//	return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
-	//}
-	//
-	//if !offline {
-	//	txBldr, err = populateAccountFromState(txBldr, clientCtx, addr)
-	//	if err != nil {
-	//		return signedStdTx, err
-	//	}
-	//}
-	//
-	//return txBldr.SignStdTx(name, stdTx, false)
+	var err error
+	if !offline {
+		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Sign(txFactory, name, txBuilder)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.

@@ -1,6 +1,8 @@
 package types
 
-import "github.com/cosmos/cosmos-sdk/crypto/types"
+import (
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+)
 
 type SignatureData interface {
 	isSignatureData()

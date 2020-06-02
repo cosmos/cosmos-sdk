@@ -13,6 +13,8 @@ type (
 	// implement TxBuilder.
 	TxGenerator interface {
 		NewTxBuilder() TxBuilder
+		// WrapTxBuilder wraps an existing tx in a TxBuilder or returns an error
+		WrapTxBuilder(tx sdk.Tx) (TxBuilder, error)
 		TxEncoder() sdk.TxEncoder
 		TxDecoder() sdk.TxDecoder
 		TxJSONEncoder() sdk.TxEncoder

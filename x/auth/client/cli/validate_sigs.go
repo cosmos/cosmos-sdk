@@ -113,8 +113,7 @@ func printAndValidateSigs(
 
 			switch sig := sig.(type) {
 			case *txtypes.SingleSignatureData:
-				signingData.Mode = sig.SignMode
-				sigBytes, err := signModeHandler.GetSignBytes(signingData, tx)
+				sigBytes, err := signModeHandler.GetSignBytes(sig.SignMode, signingData, tx)
 				if err != nil {
 					sigSanity = "ERROR: can't get sign bytes"
 					success = false
@@ -129,7 +128,7 @@ func printAndValidateSigs(
 				if ok {
 					if !multiPK.VerifyMultisignature(func(mode txtypes.SignMode) ([]byte, error) {
 						signingData.Mode = mode
-						return signModeHandler.GetSignBytes(signingData, tx)
+						return signModeHandler.GetSignBytes(mode, signingData, tx)
 					}, sig) {
 						sigSanity = "ERROR: signature invalid"
 						success = false

@@ -23,11 +23,32 @@ func TxStakingCreateValidator(f *cli.Fixtures, from, consPubKey string, amount s
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
+// TxStakingEditValidator is simcli tx staking update validator info
+func TxStakingEditValidator(f *cli.Fixtures, from, moniker, website, identity, details string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking edit-validator %v --keyring-backend=test --from=%s", f.SimcliBinary, f.Flags(), from)
+	cmd += fmt.Sprintf(" --moniker=%v --website=%s", moniker, website)
+	cmd += fmt.Sprintf(" --identity=%s --details=%s", identity, details)
+
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
 // TxStakingUnbond is simcli tx staking unbond
 func TxStakingUnbond(f *cli.Fixtures, from, shares string, validator sdk.ValAddress, flags ...string) bool {
 	cmd := fmt.Sprintf("%s tx staking unbond --keyring-backend=test %s %v --from=%s %v",
 		f.SimcliBinary, validator, shares, from, f.Flags())
 	return cli.ExecuteWrite(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxStakingDelegate is simcli tx staking delegate
+func TxStakingDelegate(f *cli.Fixtures, from, valOperAddr string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking delegate %s %v --keyring-backend=test --from=%s %v", f.SimcliBinary, valOperAddr, amount, from, f.Flags())
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxStakingRedelegate is simcli tx staking redelegate
+func TxStakingRedelegate(f *cli.Fixtures, from, srcVal, dstVal string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking redelegate %s %s %v --keyring-backend=test --from=%s %v", f.SimcliBinary, srcVal, dstVal, amount, from, f.Flags())
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
 // QueryStakingValidator is simcli query staking validator
@@ -36,6 +57,19 @@ func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...str
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 
 	var validator staking.Validator
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
+	return validator
+}
+
+// QueryStakingValidators is simcli query staking validators
+func QueryStakingValidators(f *cli.Fixtures, flags ...string) []staking.Validator {
+	cmd := fmt.Sprintf("%s query staking validators %v", f.SimcliBinary, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
+	var validator []staking.Validator
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -93,4 +127,82 @@ func QueryStakingParameters(f *cli.Fixtures, flags ...string) staking.Params {
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 
 	return params
+}
+
+// QueryStakingDelegation is simcli query staking delegation
+func QueryStakingDelegation(f *cli.Fixtures, from string, valAddr sdk.ValAddress, flags ...string) staking.Delegation {
+	cmd := fmt.Sprintf("%s query staking delegation %s %s %v", f.SimcliBinary, from, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
+	var delegation staking.Delegation
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &delegation)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
+	return delegation
+}
+
+// QueryStakingDelegations is simcli query staking delegations
+func QueryStakingDelegations(f *cli.Fixtures, from string, flags ...string) []staking.Delegation {
+	cmd := fmt.Sprintf("%s query staking delegations %s %v", f.SimcliBinary, from, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
+	var delegations []staking.Delegation
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
+	return delegations
+}
+
+// QueryStakingRedelegation is simcli query staking redelegation
+func QueryStakingRedelegation(f *cli.Fixtures, delAdrr, srcVal, dstVal string, flags ...string) []staking.Redelegation {
+	cmd := fmt.Sprintf("%s query staking redelegation %v %v %v %v", f.SimcliBinary, delAdrr, srcVal, dstVal, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
+	var redelegations []staking.Redelegation
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
+	return redelegations
+}
+
+// QueryStakingRedelegations is simcli query staking redelegation
+func QueryStakingRedelegations(f *cli.Fixtures, delAdrr string, flags ...string) []staking.Redelegation {
+	cmd := fmt.Sprintf("%s query staking redelegations %v %v", f.SimcliBinary, delAdrr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
+	var redelegations []staking.Redelegation
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
+	return redelegations
+}
+
+// QueryStakingUnbondingDelegation is simcli query staking redelegation
+func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, flags ...string) staking.UnbondingDelegation {
+	cmd := fmt.Sprintf("%s query staking unbonding-delegation %v %v %v", f.SimcliBinary, delAdrr, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
+	var unbondingDelegation staking.UnbondingDelegation
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &unbondingDelegation)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
+	return unbondingDelegation
+}
+
+// QueryStakingUnbondingDelegations is simcli query staking redelegation
+func QueryStakingUnbondingDelegations(f *cli.Fixtures, delAdrr string, flags ...string) []staking.Redelegation {
+	cmd := fmt.Sprintf("%s query staking unbonding-delegations %v %v", f.SimcliBinary, delAdrr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
+	var redelegations []staking.Redelegation
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
+	return redelegations
 }

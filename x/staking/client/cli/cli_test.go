@@ -26,6 +26,13 @@ func TestCLICreateValidator(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 	barVal := sdk.ValAddress(barAddr)
 
+	// check for the params
+	params := testutil.QueryStakingParameters(f)
+	require.Equal(f.T, params.BondDenom, sdk.DefaultBondDenom)
+
+	pool := testutil.QueryStakingPool(f)
+	require.NotNil(f.T, pool)
+
 	consPubKey := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, ed25519.GenPrivKey().PubKey())
 
 	sendTokens := sdk.TokensFromConsensusPower(10)
@@ -34,7 +41,7 @@ func TestCLICreateValidator(t *testing.T) {
 
 	require.Equal(t, sendTokens, bankclienttestutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
 
-	//Generate a create validator transaction and ensure correctness
+	// Generate a create validator transaction and ensure correctness
 	success, stdout, stderr := testutil.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewInt64Coin(cli.Denom, 2), "--generate-only")
 	require.True(f.T, success)
 	require.Empty(f.T, stderr)
@@ -66,7 +73,38 @@ func TestCLICreateValidator(t *testing.T) {
 	require.Len(t, validatorDelegations, 1)
 	require.NotZero(t, validatorDelegations[0].Shares)
 
+	// Edit validator
+	// params to be changed in edit validator (NOTE: a validator can only change its commission once per day)
+	NewMoniker := "test-moniker"
+	NewWebsite := "https://cosmos.network"
+	NewIdentity := "6A0D65E29A4CBC8D"
+	NewDetails := "To-infinity-and-beyond!"
+
+	// Test --generate-only"
+	success, stdout, stderr = testutil.TxStakingEditValidator(f, barAddr.String(), NewMoniker, NewWebsite, NewIdentity, NewDetails, "--generate-only")
+	require.True(t, success)
+	require.True(f.T, success)
+	require.Empty(f.T, stderr)
+
+	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	require.NotZero(t, msg.Fee.Gas)
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
+
+	success, _, _ = testutil.TxStakingEditValidator(f, cli.KeyBar, NewMoniker, NewWebsite, NewIdentity, NewDetails, "-y")
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	udpatedValidator := testutil.QueryStakingValidator(f, barVal)
+	require.Equal(t, udpatedValidator.Description.Moniker, NewMoniker)
+	require.Equal(t, udpatedValidator.Description.Identity, NewIdentity)
+	require.Equal(t, udpatedValidator.Description.Website, NewWebsite)
+	require.Equal(t, udpatedValidator.Description.Details, NewDetails)
+
 	// unbond a single share
+	validators := testutil.QueryStakingValidators(f)
+	require.Len(t, validators, 2)
+
 	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(1))
 	success = testutil.TxStakingUnbond(f, cli.KeyBar, unbondAmt.String(), barVal, "-y")
 	require.True(t, success)
@@ -83,5 +121,61 @@ func TestCLICreateValidator(t *testing.T) {
 	require.Len(t, validatorUbds[0].Entries, 1)
 	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
 
+	fooAddr := f.KeyAddress(cli.KeyFoo)
+
+	delegateTokens := sdk.TokensFromConsensusPower(2)
+	delegateAmount := sdk.NewCoin(cli.Denom, delegateTokens)
+
+	// Delegate txn
+	// Generate a create validator transaction and ensure correctness
+	success, stdout, stderr = testutil.TxStakingDelegate(f, fooAddr.String(), barVal.String(), delegateAmount, "--generate-only")
+	require.True(f.T, success)
+	require.Empty(f.T, stderr)
+
+	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	require.NotZero(t, msg.Fee.Gas)
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
+
+	// Delegate
+	success, _, err := testutil.TxStakingDelegate(f, cli.KeyFoo, barVal.String(), delegateAmount, "-y")
+	tests.WaitForNextNBlocksTM(1, f.Port)
+	require.Empty(f.T, err)
+	require.True(t, success)
+
+	// Query the delegation from foo address to barval
+	delegation := testutil.QueryStakingDelegation(f, fooAddr.String(), barVal)
+	require.NotZero(t, delegation.Shares)
+
+	// Query the delegation from foo address to barval
+	delegations := testutil.QueryStakingDelegations(f, barAddr.String())
+	require.Equal(t, len(delegations), 1)
+
+	fooVal := sdk.ValAddress(fooAddr)
+
+	// Redelegate
+	success, stdout, stderr = testutil.TxStakingRedelegate(f, fooAddr.String(), barVal.String(), fooVal.String(), delegateAmount, "--generate-only")
+	require.True(f.T, success)
+	require.Empty(f.T, stderr)
+
+	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	require.NotZero(t, msg.Fee.Gas)
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
+
+	success, _, err = testutil.TxStakingRedelegate(f, cli.KeyFoo, barVal.String(), fooVal.String(), delegateAmount, "-y")
+	tests.WaitForNextNBlocksTM(1, f.Port)
+	require.Empty(f.T, err)
+	require.True(t, success)
+
+	// TODO: debug redelegations
+	// redelegation := testutil.QueryStakingRedelegation(f, fooAddr.String(), barVal.String(), fooVal.String())
+	// require.Equal(t, len(redelegation), 1)
+
+	// redelegation := testutil.QueryStakingRedelegations(f, fooAddr.String())
+	// require.Equal(t, len(redelegation), 1)
+
+	// TODO: add unbonding delegation
+	// TODO: add unbonding delegations
 	f.Cleanup()
 }

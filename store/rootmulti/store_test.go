@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/merkle"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
@@ -506,17 +508,15 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 	}
 }
 
+// hashStores mirrors commitInfo.Hash and commitInfo.toMap but with a different input type
 func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
-	m := make(map[string][]byte, len(stores))
-	for key, store := range stores {
-		name := key.Name()
-		m[name] = storeInfo{
-			Name: name,
-			Core: storeCore{
-				CommitID: store.LastCommitID(),
-				// StoreType: store.GetStoreType(),
-			},
-		}.GetHash()
+	if len(stores) == 0 {
+		return nil
 	}
-	return SimpleHashFromMap(m)
+	storeMap := make(map[string][]byte, len(stores))
+	for k, v := range stores {
+		storeMap[k.Name()] = v.LastCommitID().Hash
+	}
+	rootHash, _, _ := merkle.SimpleProofsFromMap(storeMap)
+	return rootHash
 }

@@ -37,9 +37,9 @@ func IAVLOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	op.Proof = proof
 
 	// Get Key from proof for now
-	if existProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Exist); !ok {
+	if existProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Exist); ok {
 		op.Key = existProof.Exist.Key
-	} else if nonexistProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Nonexist); !ok {
+	} else if nonexistProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Nonexist); ok {
 		op.Key = nonexistProof.Nonexist.Key
 	} else {
 		return nil, errors.New("Proof type unsupported")

@@ -1,10 +1,7 @@
 package baseapp
 
 import (
-	"context"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 
 	"github.com/stretchr/testify/require"
 
@@ -32,32 +29,5 @@ func TestQueryRouter(t *testing.T) {
 	// require panic on duplicate route
 	require.Panics(t, func() {
 		qr.AddRoute("testRoute", testQuerier)
-	})
-}
-
-type echoer struct{}
-
-func (e echoer) Echo(_ context.Context, req *testdata.EchoRequest) (*testdata.EchoResponse, error) {
-	return &testdata.EchoResponse{Message: req.Message}, nil
-}
-
-var _ testdata.EchoServiceServer = echoer{}
-
-func TestRegisterQueryService(t *testing.T) {
-	qr := NewQueryRouter()
-	testdata.RegisterEchoServiceServer(qr, echoer{})
-	helper := &QueryServiceTestHelper{
-		QueryRouter: qr,
-		ctx:         sdk.Context{},
-	}
-	client := testdata.NewEchoServiceClient(helper)
-
-	res, err := client.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-	require.Nil(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, "hello", res.Message)
-
-	require.Panics(t, func() {
-		_, _ = client.Echo(context.Background(), nil)
 	})
 }

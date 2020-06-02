@@ -294,6 +294,10 @@ func (app *BaseApp) halt() {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
+	if grpcHandler := app.grpcRouter.Route(req.Path); grpcHandler != nil {
+		return handleQueryGRPC(app, grpcHandler, req)
+	}
+
 	path := splitPath(req.Path)
 	if len(path) == 0 {
 		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"))
@@ -315,6 +319,51 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
+}
+
+func handleQueryGRPC(app *BaseApp, handler GRPCHandler, req abci.RequestQuery) abci.ResponseQuery {
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
+
+	if req.Height <= 1 && req.Prove {
+		return sdkerrors.QueryResult(
+			sdkerrors.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"cannot query with proof when height <= 1; please provide a valid height",
+			),
+		)
+	}
+
+	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+	if err != nil {
+		return sdkerrors.QueryResult(
+			sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"failed to load state at height %d; %s (latest height: %d)", req.Height, err, app.LastBlockHeight(),
+			),
+		)
+	}
+
+	// cache wrap the commit-multistore for safety
+	ctx := sdk.NewContext(
+		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
+	).WithMinGasPrices(app.minGasPrices)
+
+	res, err := handler(ctx, req)
+
+	if err != nil {
+		space, code, log := sdkerrors.ABCIInfo(err, false)
+		return abci.ResponseQuery{
+			Code:      code,
+			Codespace: space,
+			Log:       log,
+			Height:    req.Height,
+		}
+	}
+
+	return res
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

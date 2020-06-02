@@ -2,8 +2,6 @@ package types
 
 import (
 	"regexp"
-
-	"google.golang.org/grpc"
 )
 
 var (
@@ -38,6 +36,4 @@ type Router interface {
 type QueryRouter interface {
 	AddRoute(r string, h Querier) QueryRouter
 	Route(path string) Querier
-	// RegisterService registers a querier which implements the provide grpc service description
-	RegisterService(sd *grpc.ServiceDesc, querier interface{})
 }

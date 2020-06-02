@@ -200,7 +200,7 @@ interfaces. For the `Query` service defined above we would get a `QueryClient`
 interface like:
 
 ```go
-type QueryServiceClient interface {
+type QueryClient interface {
 	QueryBalance(ctx context.Context, in *QueryBalanceParams, opts ...grpc.CallOption) (*types.Coin, error)
 	QueryAllBalances(ctx context.Context, in *QueryAllBalancesParams, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
 }

@@ -2,6 +2,9 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"fmt"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,11 +19,11 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	_, _, addr := authtypes.KeyTestPubAddr()
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServiceServer(queryHelper, keeper.Querier{app.BankKeeper})
-	queryClient := types.NewQueryServiceClient(queryHelper)
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
 
 	req := types.NewQueryBalanceRequest(addr, fooDenom)
-	res, err := queryClient.QueryBalance(gocontext.Background(), req)
+	res, err := queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.True(res.Balance.IsZero())
@@ -31,7 +34,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	app.AccountKeeper.SetAccount(ctx, acc)
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
 
-	res, err = queryClient.QueryBalance(gocontext.Background(), req)
+	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.True(res.Balance.IsEqual(newFooCoin(50)))
@@ -42,15 +45,11 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	_, _, addr := authtypes.KeyTestPubAddr()
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServiceServer(queryHelper, keeper.Querier{app.BankKeeper})
-	queryClient := types.NewQueryServiceClient(queryHelper)
-
-	//res, err := queryClient.QueryAllBalances(nil, nil)
-	//suite.Require().NotNil(err)
-	//suite.Require().Nil(res)
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
 
 	req := types.NewQueryAllBalancesRequest(addr)
-	res, err := queryClient.QueryAllBalances(gocontext.Background(), req)
+	res, err := queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.True(res.Balances.IsZero())
@@ -61,11 +60,10 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	app.AccountKeeper.SetAccount(ctx, acc)
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
 
-	res, err = queryClient.QueryAllBalances(gocontext.Background(), req)
+	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balances))
-	suite.True(balances.IsEqual(origCoins))
+	suite.True(res.Balances.IsEqual(origCoins))
 }
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
@@ -133,5 +131,4 @@ func (suite *IntegrationTestSuite) TestQuerierRouteNotFound() {
 	querier := keeper.NewQuerier(app.BankKeeper)
 	_, err := querier(ctx, []string{"invalid"}, req)
 	suite.Error(err)
-	suite.True(res.Balances.IsEqual(origCoins))
 }

@@ -261,7 +261,13 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter)
 		if module.QuerierRoute() != "" {
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
 		}
-		module.RegisterQueryService(queryRouter)
+	}
+}
+
+// RegisterQueryServices registers all module query services
+func (m *Manager) RegisterQueryServices(router sdk.Router, grpcRouter grpc.Server) {
+	for _, module := range m.Modules {
+		module.RegisterQueryService(grpcRouter)
 	}
 }
 

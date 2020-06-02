@@ -260,7 +260,7 @@ func (c cliQueryConn) Invoke(_ context.Context, method string, args, reply inter
 	if err != nil {
 		return err
 	}
-	resBz, _, err := c.ctx.QueryWithData(fmt.Sprintf("custom%s", method), reqBz)
+	resBz, _, err := c.ctx.QueryWithData(method, reqBz)
 	if err != nil {
 		return err
 	}

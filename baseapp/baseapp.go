@@ -6,6 +6,8 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/gogo/protobuf/grpc"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -48,7 +50,7 @@ type BaseApp struct { // nolint: maligned
 	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
 	router      sdk.Router           // handle any kind of message
 	queryRouter sdk.QueryRouter      // router for redirecting query calls
-	grpcRouter  GRPCRouter           // router for redirecting gRPC query calls
+	grpcRouter  *GRPCRouter          // router for redirecting gRPC query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
@@ -109,6 +111,7 @@ func NewBaseApp(
 		storeLoader:    DefaultStoreLoader,
 		router:         NewRouter(),
 		queryRouter:    NewQueryRouter(),
+		grpcRouter:     NewGRPCRouter(),
 		txDecoder:      txDecoder,
 		fauxMerkleMode: false,
 	}
@@ -282,6 +285,9 @@ func (app *BaseApp) Router() sdk.Router {
 
 // QueryRouter returns the QueryRouter of a BaseApp.
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
+
+// GRPCRouter returns the GRPCRouter of a BaseApp.
+func (app *BaseApp) GRPCRouter() grpc.Server { return app.grpcRouter }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }

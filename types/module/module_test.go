@@ -55,7 +55,7 @@ func TestBasicManager(t *testing.T) {
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd, clientCtx)
 
-	mm.AddQueryCommands(mockCmd, cdc)
+	mm.AddQueryCommands(mockCmd, clientCtx)
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, wantDefaultGenesis))
@@ -155,8 +155,6 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	handler3 := sdk.Querier(nil)
 	mockAppModule1.EXPECT().NewQuerierHandler().Times(1).Return(handler3)
 	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
-	mockAppModule1.EXPECT().RegisterQueryService(queryRouter).Times(1)
-	mockAppModule2.EXPECT().RegisterQueryService(queryRouter).Times(1)
 
 	mm.RegisterRoutes(router, queryRouter)
 }

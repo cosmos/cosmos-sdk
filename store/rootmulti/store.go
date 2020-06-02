@@ -2,6 +2,7 @@ package rootmulti
 
 import (
 	"fmt"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	"io"
 	"strings"
 
@@ -457,13 +458,8 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	// Restore origin path and append proof op.
-	res.Proof.Ops = append(res.Proof.Ops, NewMultiStoreProofOp(
-		[]byte(storeName),
-		NewMultiStoreProof(commitInfo.StoreInfos),
-	).ProofOp())
+	res.Proof.Ops = append(res.Proof.Ops, commitInfo.ProofOp(storeName))
 
-	// TODO: handle in another TM v0.26 update PR
-	// res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
 	return res
 }
 
@@ -561,15 +557,31 @@ type commitInfo struct {
 	StoreInfos []storeInfo
 }
 
-// Hash returns the simple merkle root hash of the stores sorted by name.
-func (ci commitInfo) Hash() []byte {
-	// TODO: cache to ci.hash []byte
+func (ci commitInfo) toMap() map[string][]byte {
 	m := make(map[string][]byte, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
 		m[storeInfo.Name] = storeInfo.Hash()
 	}
+	return m
+}
 
-	return SimpleHashFromMap(m)
+// Hash returns the simple merkle root hash of the stores sorted by name.
+func (ci commitInfo) Hash() []byte {
+	// we need a special case for empty set, as SimpleProofsFromMap requires at least one entry
+	if len(ci.StoreInfos) == 0 {
+		return nil
+	}
+	rootHash, _, _ := merkle.SimpleProofsFromMap(ci.toMap())
+	return rootHash
+}
+
+func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
+	_, proofs, _ := merkle.SimpleProofsFromMap(ci.toMap())
+	proof := proofs[storeName]
+	if proof == nil {
+		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))
+	}
+	return merkle.NewSimpleValueOp([]byte(storeName), proof).ProofOp()
 }
 
 func (ci commitInfo) CommitID() types.CommitID {

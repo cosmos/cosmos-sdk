@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
@@ -15,8 +15,8 @@ const (
 )
 
 // RegisterRoutes - General function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	registerTxRoutes(cliCtx, r)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+	registerTxRoutes(clientCtx, r)
 }
 
 // CreateClientReq defines the properties of a create client request's body.

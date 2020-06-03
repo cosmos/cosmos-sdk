@@ -8,20 +8,37 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
-const ProofOpIAVLCommitment = "iavlstore"
+const ProofOpIAVLCommitment = "ics23:iavl"
+const ProofOpSimpleMerkleCommitment = "ics23:simple"
 
-// IavlOP implements merkle.ProofOperator by wrapping an ics23 CommitmentProof
+// CommitmentOp implements merkle.ProofOperator by wrapping an ics23 CommitmentProof
 // It also contains a Key field to determine which key the proof is proving.
 // NOTE: CommitmentProof currently can either be ExistenceProof or NonexistenceProof
+//
+// Type and Spec are classified by the kind of merkle proof it represents allowing
+// the code to be reused by more types. Spec is never on the wire, but mapped from type in the code.
 type CommitmentOp struct {
+	Type  string
+	Spec  *ics23.ProofSpec
 	Key   []byte
 	Proof *ics23.CommitmentProof
 }
 
 var _ merkle.ProofOperator = CommitmentOp{}
 
-func NewCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
+func NewIavlCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 	return CommitmentOp{
+		Type:  ProofOpIAVLCommitment,
+		Spec:  ics23.IavlSpec,
+		Key:   key,
+		Proof: proof,
+	}
+}
+
+func NewSimpleMerkleCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
+	return CommitmentOp{
+		Type:  ProofOpSimpleMerkleCommitment,
+		Spec:  ics23.TendermintSpec,
 		Key:   key,
 		Proof: proof,
 	}
@@ -31,24 +48,27 @@ func NewCommitmentOp(key []byte, proof *ics23.CommitmentProof) CommitmentOp {
 // The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof
 func CommitmentOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
-	if pop.Type != ProofOpIAVLCommitment {
-		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpIAVLCommitment)
+	var spec *ics23.ProofSpec
+	switch pop.Type {
+	case ProofOpIAVLCommitment:
+		spec = ics23.IavlSpec
+	case ProofOpSimpleMerkleCommitment:
+		spec = ics23.TendermintSpec
+	default:
+		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want supported ics23 subtype", pop.Type)
 	}
-	var op CommitmentOp
+
 	proof := &ics23.CommitmentProof{}
 	err := proof.Unmarshal(pop.Data)
 	if err != nil {
 		return nil, err
 	}
-	op.Proof = proof
 
-	// Get Key from proof for now
-	if existProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Exist); ok {
-		op.Key = existProof.Exist.Key
-	} else if nonexistProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Nonexist); ok {
-		op.Key = nonexistProof.Nonexist.Key
-	} else {
-		return nil, errors.New("proof type unsupported")
+	op := CommitmentOp{
+		Type:  pop.Type,
+		Key:   pop.Key,
+		Spec:  spec,
+		Proof: proof,
 	}
 	return op, nil
 }
@@ -78,7 +98,7 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 			}
 		}
 
-		absent := ics23.VerifyNonMembership(ics23.IavlSpec, root, op.Proof, op.Key)
+		absent := ics23.VerifyNonMembership(op.Spec, root, op.Proof, op.Key)
 		if !absent {
 			return nil, fmt.Errorf("proof did not verify absence of key: %s", string(op.Key))
 		}
@@ -98,7 +118,7 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 			return nil, errors.New("could not calculate root from existence proof")
 		}
 
-		exists := ics23.VerifyMembership(ics23.IavlSpec, root, op.Proof, op.Key, args[0])
+		exists := ics23.VerifyMembership(op.Spec, root, op.Proof, op.Key, args[0])
 		if !exists {
 			return nil, fmt.Errorf("proof did not verify existence of key %s with given value %x", op.Key, args[0])
 		}
@@ -115,7 +135,7 @@ func (op CommitmentOp) ProofOp() merkle.ProofOp {
 		panic(err.Error())
 	}
 	return merkle.ProofOp{
-		Type: ProofOpIAVLCommitment,
+		Type: op.Type,
 		Key:  op.Key,
 		Data: bz,
 	}

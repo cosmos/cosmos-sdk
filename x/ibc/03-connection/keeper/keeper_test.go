@@ -18,8 +18,6 @@ import (
 )
 
 const (
-	storeKey = host.StoreKey
-
 	testClientIDA     = "testclientida" // chainid for chainA also chainB's clientID for A's liteclient
 	testConnectionIDA = "connectionidatob"
 

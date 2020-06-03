@@ -96,6 +96,7 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
+			Time:    counterparty.Header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -165,6 +166,7 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
+			Time:    counterparty.Header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -242,7 +244,7 @@ func (chain *TestChain) CreateChannel(
 func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(
 		chain.Header.SignedHeader.Header.ChainID,
-		int64(chain.Header.GetHeight())+1,
+		chain.Header.Height+1,
 		chain.Header.Time.Add(NextTimestamp),
 		chain.Vals, chain.Signers,
 	)

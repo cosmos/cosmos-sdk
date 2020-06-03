@@ -257,7 +257,7 @@ Finally, when a point release is ready to be made:
 2. Ensure changelog entries are verified
    2. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
 3. Add release version date to the changelog
-4. Push release branch along with the annotated tag
+4. Push release branch along with the annotated tag: **git tag -a**
 5. Create a PR into `master` containing ONLY `CHANGELOG.md` updates
    1. Do not push `RELEASE_CHANGELOG.md` to `master`
 

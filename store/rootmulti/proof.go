@@ -129,7 +129,9 @@ func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	prt = merkle.NewProofRuntime()
 	prt.RegisterOpDecoder(merkle.ProofOpSimpleValue, merkle.SimpleValueOpDecoder)
+	// they both use the same decoder, which can handle any registered spec for ics23 CommitmentProofs
 	prt.RegisterOpDecoder(iavlstore.ProofOpIAVLCommitment, iavlstore.CommitmentOpDecoder)
+	prt.RegisterOpDecoder(iavlstore.ProofOpSimpleMerkleCommitment, iavlstore.CommitmentOpDecoder)
 	prt.RegisterOpDecoder(ProofOpMultiStore, MultiStoreProofOpDecoder)
 	return
 }

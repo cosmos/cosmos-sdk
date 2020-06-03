@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not the currently registered
@@ -19,7 +20,7 @@ func CheckMisbehaviourAndUpdateState(
 ) (clientexported.ClientState, error) {
 
 	// cast the interface to specific types before checking for misbehaviour
-	smClientState, ok := clientState.(ClientState)
+	smClientState, ok := clientState.(types.ClientState)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "client state type %T is not solo machine", clientState)
 	}
@@ -28,7 +29,7 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrapf(clienttypes.ErrClientFrozen, "client is already frozen")
 	}
 
-	evidence, ok := misbehaviour.(Evidence)
+	evidence, ok := misbehaviour.(types.Evidence)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "evidence type %T is not solo machine", misbehaviour)
 	}
@@ -43,7 +44,7 @@ func CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the currently registered public key has signed
 // over two different messages at the same sequence.
-func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
+func checkMisbehaviour(clientState types.ClientState, evidence types.Evidence) error {
 	pubKey := clientState.ConsensusState.PubKey
 
 	// assert that provided signature data are different
@@ -54,14 +55,14 @@ func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
 	data := append(sdk.Uint64ToBigEndian(evidence.Sequence), evidence.SignatureOne.Data...)
 
 	// check first signature
-	if err := CheckSignature(pubKey, data, evidence.SignatureOne.Signature); err != nil {
+	if err := types.CheckSignature(pubKey, data, evidence.SignatureOne.Signature); err != nil {
 		return sdkerrors.Wrap(err, "evidence signature one failed to be verified")
 	}
 
 	data = append(sdk.Uint64ToBigEndian(evidence.Sequence), evidence.SignatureTwo.Data...)
 
 	// check second signature
-	if err := CheckSignature(pubKey, data, evidence.SignatureTwo.Signature); err != nil {
+	if err := types.CheckSignature(pubKey, data, evidence.SignatureTwo.Signature); err != nil {
 		return sdkerrors.Wrap(err, "evidence signature two failed to be verified")
 	}
 

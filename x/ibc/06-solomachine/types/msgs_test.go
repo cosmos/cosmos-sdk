@@ -1,7 +1,7 @@
 package types_test
 
 import (
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestMsgCreateClientValidateBasic() {

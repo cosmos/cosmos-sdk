@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	solomachine "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
@@ -111,10 +112,10 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-			suite.Require().Equal(header.(solomachine.Header).NewPubKey, clientState.(solomachine.ClientState).ConsensusState.PubKey, "valid test case %d failed with wrong updated pubkey: %s", i, tc.name)
-			suite.Require().False(clientState.(solomachine.ClientState).Frozen, "valid test case %d failed with frozen client: %s", i, tc.name)
-			suite.Require().Equal(header.(solomachine.Header).Sequence+1, clientState.(solomachine.ClientState).ConsensusState.Sequence, "valid test case %d failed with wrong updated sequence: %s", i, tc.name)
-			suite.Require().Equal(consensusState, clientState.(solomachine.ClientState).ConsensusState, "valid test case %d failed with non-matching consensus state relative to client state: %s", i, tc.name)
+			suite.Require().Equal(header.(solomachinetypes.Header).NewPubKey, clientState.(solomachinetypes.ClientState).ConsensusState.PubKey, "valid test case %d failed with wrong updated pubkey: %s", i, tc.name)
+			suite.Require().False(clientState.(solomachinetypes.ClientState).Frozen, "valid test case %d failed with frozen client: %s", i, tc.name)
+			suite.Require().Equal(header.(solomachinetypes.Header).Sequence+1, clientState.(solomachinetypes.ClientState).ConsensusState.Sequence, "valid test case %d failed with wrong updated sequence: %s", i, tc.name)
+			suite.Require().Equal(consensusState, clientState.(solomachinetypes.ClientState).ConsensusState, "valid test case %d failed with non-matching consensus state relative to client state: %s", i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.name)

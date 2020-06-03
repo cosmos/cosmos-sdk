@@ -15,7 +15,7 @@ import (
 
 // Name returns the IBC client name.
 func Name() string {
-	return SubModuleName
+	return types.SubModuleName
 }
 
 // RegisterRESTRoutes registers the REST routes for the IBC client

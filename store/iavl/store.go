@@ -307,7 +307,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				panic(fmt.Sprintf("unexpected empty absence proof: %s", err.Error()))
 			}
 		}
-		op := NewIavlCommitmentOp(req.Data, commitmentProof)
+		op := types.NewIavlCommitmentOp(req.Data, commitmentProof)
 		res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
 	case "/subspace":
 		var KVs []types.KVPair

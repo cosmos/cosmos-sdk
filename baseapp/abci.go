@@ -294,7 +294,7 @@ func (app *BaseApp) halt() {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
-	if grpcHandler := app.grpcRouter.Route(req.Path); grpcHandler != nil {
+	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
 		return handleQueryGRPC(app, grpcHandler, req)
 	}
 

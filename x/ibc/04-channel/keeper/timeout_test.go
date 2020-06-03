@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 			proof, proofHeight := suite.chainA.QueryProof(packetKey)
 
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, proof, proofHeight+1, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, proof, proofHeight, nextSeqRecv)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
@@ -262,12 +262,12 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 			suite.Require().NoError(err)
 
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, cap, packet, proof, proofClosed, proofHeight+1, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, cap, packet, proof, proofClosed, proofHeight, nextSeqRecv)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
 				// switch the proofs to invalidate them
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, cap, packet, proofClosed, proof, proofHeight+1, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, cap, packet, proofClosed, proof, proofHeight, nextSeqRecv)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

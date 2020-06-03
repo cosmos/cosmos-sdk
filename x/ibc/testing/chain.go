@@ -153,6 +153,13 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 	counterparty.App.Commit()
 	commitID := counterparty.App.LastCommitID()
 
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       counterparty.Header.GetHeight(),
+		Timestamp:    counterparty.Header.Time,
+		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
+		ValidatorSet: counterparty.Vals,
+	}
+
 	counterparty.Header = nextHeader(counterparty)
 	counterparty.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: counterparty.Header.Height, Time: counterparty.Header.Time}})
 
@@ -171,17 +178,10 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 		},
 		Valset: validators,
 	}
-	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, counterparty.Header.Height, histInfo)
-
-	consensusState := ibctmtypes.ConsensusState{
-		Height:       counterparty.Header.GetHeight(),
-		Timestamp:    counterparty.Header.Time,
-		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
-		ValidatorSet: counterparty.Vals,
-	}
+	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, int64(consensusState.Height), histInfo)
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, counterparty.ClientID, counterparty.Header.GetHeight(), consensusState,
+		ctxTarget, counterparty.ClientID, consensusState.Height, consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
 		ctxTarget, ibctmtypes.NewClientState(counterparty.ClientID, lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift, counterparty.Header),

@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			proof, proofHeight := suite.chainB.QueryProof(consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-				suite.chainA.GetContext(), tc.connection, proofHeight+1, consensusHeight, proof, consState,
+				suite.chainA.GetContext(), tc.connection, proofHeight, consensusHeight, proof, consState,
 			)
 
 			if tc.expPass {
@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			connection := types.NewConnectionEnd(types.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
+				suite.chainB.GetContext(), connection, proofHeight, proof, testConnectionIDA, expectedConnection,
 			)
 
 			if tc.expPass {
@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			}
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyChannelState(
-				suite.chainB.GetContext(), connection, proofHeight+1, proof, testPort1,
+				suite.chainB.GetContext(), connection, proofHeight, proof, testPort1,
 				testChannel1, channel,
 			)
 
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			}
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
-				suite.chainB.GetContext(), connection, proofHeight+1, proof, testPort1,
+				suite.chainB.GetContext(), connection, proofHeight, proof, testPort1,
 				testChannel1, 1, commitmentBz,
 			)
 
@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			}
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
-				suite.chainB.GetContext(), connection, proofHeight+1, proof, testPort1,
+				suite.chainB.GetContext(), connection, proofHeight, proof, testPort1,
 				testChannel1, 1, ack,
 			)
 
@@ -363,7 +363,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			}
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
-				suite.chainB.GetContext(), connection, proofHeight+1, proof, testPort1,
+				suite.chainB.GetContext(), connection, proofHeight, proof, testPort1,
 				testChannel1, 1,
 			)
 
@@ -412,7 +412,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			}
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
-				suite.chainB.GetContext(), connection, proofHeight+1, proof, testPort1,
+				suite.chainB.GetContext(), connection, proofHeight, proof, testPort1,
 				testChannel1, 1,
 			)
 

@@ -26,6 +26,15 @@ const (
 )
 
 // define variables used for testing
+var (
+	addr1 = sdk.AccAddress("testaddr1")
+
+	portid   = "testportid"
+	chanid   = "testchannel"
+	cpportid = "testcpport"
+	cpchanid = "testcpchannel"
+)
+
 type HandlerTestSuite struct {
 	suite.Suite
 
@@ -72,7 +81,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 
 	suite.chainA.CreateChannel(cpportid, cpchanid, portid, chanid, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 	suite.chainB.CreateChannel(portid, chanid, cpportid, cpchanid, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
-	ctx = suite.chainA.GetContext()
+
 	packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := suite.chainB.QueryProof([]byte(packetCommitmentPath))
 	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
@@ -160,13 +169,3 @@ func (packet packetT) GetData() []byte {
 func newPacket(data uint64) packetT {
 	return packetT{data}
 }
-
-// define variables used for testing
-var (
-	addr1 = sdk.AccAddress("testaddr1")
-
-	portid   = "testportid"
-	chanid   = "testchannel"
-	cpportid = "testcpport"
-	cpchanid = "testcpchannel"
-)

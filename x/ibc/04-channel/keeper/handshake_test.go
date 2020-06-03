@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				cap, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.chainA.GetContext(), types.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, portCap, counterparty, ibctesting.ChannelVersion, ibctesting.ChannelVersion,
-					proof, proofHeight+1,
+					proof, proofHeight,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 				suite.Require().NotNil(cap)
@@ -287,13 +287,13 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			if tc.expPass {
 				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
 					suite.chainA.GetContext(), testPort1, testChannel1, channelCap, ibctesting.ChannelVersion,
-					proof, proofHeight+1,
+					proof, proofHeight,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
 					suite.chainA.GetContext(), testPort1, testChannel1, channelCap, ibctesting.ChannelVersion,
-					proof, proofHeight+1,
+					proof, proofHeight,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -408,13 +408,13 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			if tc.expPass {
 				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 					suite.chainB.GetContext(), testPort1, testChannel1,
-					channelCap, proof, proofHeight+1,
+					channelCap, proof, proofHeight,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 					suite.chainB.GetContext(), testPort1, testChannel1, channelCap,
-					proof, proofHeight+1,
+					proof, proofHeight,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -607,12 +607,16 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			if tc.expPass {
 				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 					suite.chainB.GetContext(), testPort2, testChannel2, channelCap,
-					proof, proofHeight+1,
+					proof, proofHeight,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
-					suite.chainB.GetContext(), testPort2, testChannel2, channelCap,
+				// uses wrong port/channel
+				invalidChanCap, err := suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1))
+				suite.Require().NoError(err, "could not create capability")
+
+				err = suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
+					suite.chainB.GetContext(), testPort2, testChannel2, invalidChanCap,
 					proof, proofHeight,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)

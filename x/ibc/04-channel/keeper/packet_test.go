@@ -185,7 +185,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 
 			var err error
 			if tc.expPass {
-				_, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight+1)
+				_, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight)
 				suite.Require().NoError(err)
 			} else {
 				packet, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight)
@@ -360,7 +360,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			proof, proofHeight := suite.chainA.QueryProof(packetKey)
 
 			ctx := suite.chainB.GetContext()
-			packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
+			packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -542,7 +542,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			suite.Require().NoError(err)
 
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, cap, packet, proof, proofHeight+1, nextSeqRecv, ack)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, cap, packet, proof, proofHeight, nextSeqRecv, ack)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 

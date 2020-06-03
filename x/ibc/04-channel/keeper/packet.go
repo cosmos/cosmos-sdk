@@ -241,6 +241,13 @@ func (k Keeper) PacketExecuted(
 	}
 
 	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
+		if _, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()); found {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence (%d) already has been received", packet.GetSequence(),
+			)
+		}
+
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),

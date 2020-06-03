@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -106,7 +105,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 	}
 
 	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(fromName, keys.DefaultKeyPass, msgs)
+	txBytes, err := txBldr.BuildAndSign(fromName, msgs)
 	if err != nil {
 		return err
 	}
@@ -204,7 +203,7 @@ func SignStdTx(
 		}
 	}
 
-	return txBldr.SignStdTx(name, keys.DefaultKeyPass, stdTx, appendSig)
+	return txBldr.SignStdTx(name, stdTx, appendSig)
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
@@ -227,7 +226,7 @@ func SignStdTxWithSignerAddress(
 		}
 	}
 
-	return txBldr.SignStdTx(name, keys.DefaultKeyPass, stdTx, false)
+	return txBldr.SignStdTx(name, stdTx, false)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
@@ -255,7 +254,7 @@ func populateAccountFromState(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
 ) (authtypes.TxBuilder, error) {
 
-	num, seq, err := authtypes.NewAccountRetriever(Codec, cliCtx).GetAccountNumberSequence(addr)
+	num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(cliCtx, addr)
 	if err != nil {
 		return txBldr, err
 	}
@@ -302,8 +301,8 @@ func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (authtypes.TxBuilder, error) {
 	from := cliCtx.GetFromAddress()
 
-	accGetter := authtypes.NewAccountRetriever(Codec, cliCtx)
-	if err := accGetter.EnsureExists(from); err != nil {
+	accGetter := authtypes.NewAccountRetriever(Codec)
+	if err := accGetter.EnsureExists(cliCtx, from); err != nil {
 		return txBldr, err
 	}
 
@@ -311,7 +310,7 @@ func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (au
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
 	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
-		num, seq, err := authtypes.NewAccountRetriever(Codec, cliCtx).GetAccountNumberSequence(from)
+		num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(cliCtx, from)
 		if err != nil {
 			return txBldr, err
 		}

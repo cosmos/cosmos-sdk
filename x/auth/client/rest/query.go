@@ -32,13 +32,13 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 			return
 		}
 
-		accGetter := types.NewAccountRetriever(client.Codec, cliCtx)
+		accGetter := types.NewAccountRetriever(client.Codec)
 
-		account, height, err := accGetter.GetAccountWithHeight(addr)
+		account, height, err := accGetter.GetAccountWithHeight(cliCtx, addr)
 		if err != nil {
 			// TODO: Handle more appropriately based on the error type.
 			// Ref: https://github.com/cosmos/cosmos-sdk/issues/4923
-			if err := accGetter.EnsureExists(addr); err != nil {
+			if err := accGetter.EnsureExists(cliCtx, addr); err != nil {
 				cliCtx = cliCtx.WithHeight(height)
 				rest.PostProcessResponse(w, cliCtx, types.BaseAccount{})
 				return

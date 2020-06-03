@@ -17,7 +17,7 @@ type Header struct {
 	NewPubKey crypto.PubKey `json:"new_pubkey" yaml:"new_pubkey"`
 }
 
-// ClientType defines that the Header is a Solo Machine verficiation algorithm.
+// ClientType defines that the Header is a Solo Machine verification algorithm.
 func (Header) ClientType() clientexported.ClientType {
 	return clientexported.SoloMachine
 }

@@ -1,4 +1,4 @@
-package legacy_global
+package legacy
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

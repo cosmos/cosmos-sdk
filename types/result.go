@@ -11,7 +11,7 @@ import (
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -58,7 +58,7 @@ func NewABCIMessageLog(i uint16, log string, events Events) ABCIMessageLog {
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.
 func (logs ABCIMessageLogs) String() (str string) {
 	if logs != nil {
-		raw, err := legacy_global.Cdc.MarshalJSON(logs)
+		raw, err := legacy.Cdc.MarshalJSON(logs)
 		if err == nil {
 			str = string(raw)
 		}

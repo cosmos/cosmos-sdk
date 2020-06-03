@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/legacy_global"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
 
@@ -55,9 +55,9 @@ func printNodeStatus(_ *cobra.Command, _ []string) error {
 
 	var output []byte
 	if clientCtx.Indent {
-		output, err = legacy_global.Cdc.MarshalJSONIndent(status, "", "  ")
+		output, err = legacy.Cdc.MarshalJSONIndent(status, "", "  ")
 	} else {
-		output, err = legacy_global.Cdc.MarshalJSON(status)
+		output, err = legacy.Cdc.MarshalJSON(status)
 	}
 	if err != nil {
 		return err

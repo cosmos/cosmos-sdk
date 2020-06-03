@@ -15,7 +15,7 @@ var _ clientexported.ConsensusState = ConsensusState{}
 type ConsensusState struct {
 	Sequence uint64 `json:"sequence" yaml:"sequence"`
 
-	PubKey crypto.PubKey `json:"pubkey" yaml: "pubkey"`
+	PubKey crypto.PubKey `json:"pubkey" yaml:"pubkey"`
 }
 
 // ClientType returns Solo Machine type

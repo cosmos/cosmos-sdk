@@ -15,26 +15,37 @@ import (
 // the client state is updated to a frozen status.
 func CheckMisbehaviourAndUpdateState(
 	clientState clientexported.ClientState,
-	_ clientexported.ConsensusState,
+	consensusState clientexported.ConsensusState,
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
 
 	// cast the interface to specific types before checking for misbehaviour
 	smClientState, ok := clientState.(types.ClientState)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "client state type %T is not solo machine", clientState)
+		return nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidClientType,
+			"client state type %T, expected %T", clientState, types.ClientState{},
+		)
+	}
+
+	smConsensusState, ok := consensusState.(ConsensusState)
+	if !ok {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "consensus state type %T, expected %T", consensusState, ConsensusState{})
+	}
+
+	evidence, ok := misbehaviour.(types.Evidence)
+	if !ok {
+		return nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidClientType,
+			"evidence type %T, expected %T", misbehaviour, types.Evidence{},
+		)
 	}
 
 	if smClientState.IsFrozen() {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrClientFrozen, "client is already frozen")
 	}
 
-	evidence, ok := misbehaviour.(types.Evidence)
-	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "evidence type %T is not solo machine", misbehaviour)
-	}
-
-	if err := checkMisbehaviour(smClientState, evidence); err != nil {
+	if err := checkMisbehaviour(smClientState, smConsensusState, evidence); err != nil {
 		return nil, err
 	}
 
@@ -44,8 +55,8 @@ func CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the currently registered public key has signed
 // over two different messages at the same sequence.
-func checkMisbehaviour(clientState types.ClientState, evidence types.Evidence) error {
-	pubKey := clientState.ConsensusState.PubKey
+func checkMisbehaviour(clientState types.ClientState, consensusState ConsensusState, evidence types.Evidence) error {
+	pubKey := ConsensusState.PubKey
 
 	// assert that provided signature data are different
 	if bytes.Equal(evidence.SignatureOne.Data, evidence.SignatureTwo.Data) {

@@ -14,13 +14,13 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case MsgDeposit:
+		case *MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
 
 		case MsgSubmitProposalI:
 			return handleMsgSubmitProposal(ctx, keeper, msg)
 
-		case MsgVote:
+		case *MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
 
 		default:
@@ -63,7 +63,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}, nil
 }
 
-func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) (*sdk.Result, error) {
+func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg *MsgDeposit) (*sdk.Result, error) {
 	votingStarted, err := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) (*sdk.Resu
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) (*sdk.Result, error) {
+func handleMsgVote(ctx sdk.Context, keeper Keeper, msg *MsgVote) (*sdk.Result, error) {
 	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	if err != nil {
 		return nil, err

@@ -390,7 +390,7 @@ func TestInMemoryLanguage(t *testing.T) {
 func TestInMemoryCreateMultisig(t *testing.T) {
 	kb, err := New("keybasename", "memory", "", nil)
 	require.NoError(t, err)
-	multi := multisig.PubKey{
+	multi := multisig.PubKeyMultisigThreshold{
 		K:       1,
 		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
 	}

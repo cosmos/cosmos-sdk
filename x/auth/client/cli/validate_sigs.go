@@ -106,7 +106,7 @@ func printAndValidateSigs(
 			}
 		}
 
-		multiPK, ok := sig.GetPubKey().(multisig.PubKey)
+		multiPK, ok := sig.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		if ok {
 			var multiSig multisig.Multisignature
 			clientCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)

@@ -303,7 +303,7 @@ func DefaultSigVerificationGasConsumer(
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 		return nil
 
-	case multisig.PubKey:
+	case multisig.PubKeyMultisigThreshold:
 		var multisignature multisig.Multisignature
 		legacy_global.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
@@ -317,7 +317,7 @@ func DefaultSigVerificationGasConsumer(
 
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
 func ConsumeMultisignatureVerificationGas(
-	meter sdk.GasMeter, sig multisig.Multisignature, pubkey multisig.PubKey, params types.Params,
+	meter sdk.GasMeter, sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold, params types.Params,
 ) {
 
 	size := sig.BitArray.Size()

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -188,4 +189,8 @@ func (cdc *Codec) MarshalJSONIndent(o interface{}, prefix, indent string) ([]byt
 		panic(err)
 	}
 	return cdc.Amino.MarshalJSONIndent(o, prefix, indent)
+}
+
+func (cdc *Codec) PrintTypes(out io.Writer) error {
+	return cdc.Amino.PrintTypes(out)
 }

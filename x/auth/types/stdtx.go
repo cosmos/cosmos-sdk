@@ -124,7 +124,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
 func CountSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(multisig.PubKey)
+	v, ok := pub.(multisig.PubKeyMultisigThreshold)
 	if !ok {
 		return 1
 	}

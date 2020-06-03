@@ -282,13 +282,16 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			break
 		}
 		// Continue to prove existence/absence of value
-		var commitmentProof *ics23.CommitmentProof
-		var err error
+		var (
+			commitmentProof *ics23.CommitmentProof
+			err             error
+		)
 
 		// Must convert store.Tree to iavl.MutableTree with given version to use in CreateProof
 		iTree, err := tree.GetImmutable(res.Height)
 		if err != nil {
-			panic("value at height was retrieved successfully without corresponding versioned tree in store")
+			// sanity check: If value for given version was retrieved, immutable tree must also be retrievable
+			panic("version exists in store but could not retrieve corresponding versioned tree in store")
 		}
 		mtree := &iavl.MutableTree{
 			ImmutableTree: iTree,
@@ -298,12 +301,14 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			// value was found
 			commitmentProof, err = ics23iavl.CreateMembershipProof(mtree, req.Data)
 			if err != nil {
+				// sanity check: If value was found, membership proof must be creatable
 				panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
 			}
 		} else {
 			// value wasn't found
 			commitmentProof, err = ics23iavl.CreateNonMembershipProof(mtree, req.Data)
 			if err != nil {
+				// sanity check: If value wasn't found, nonmembership proof must be creatable
 				panic(fmt.Sprintf("unexpected empty absence proof: %s", err.Error()))
 			}
 		}

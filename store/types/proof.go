@@ -1,15 +1,16 @@
 package types
 
 import (
-	"errors"
-	"fmt"
-
 	ics23 "github.com/confio/ics23/go"
 	"github.com/tendermint/tendermint/crypto/merkle"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const ProofOpIAVLCommitment = "ics23:iavl"
-const ProofOpSimpleMerkleCommitment = "ics23:simple"
+const (
+	ProofOpIAVLCommitment         = "ics23:iavl"
+	ProofOpSimpleMerkleCommitment = "ics23:simple"
+)
 
 // CommitmentOp implements merkle.ProofOperator by wrapping an ics23 CommitmentProof
 // It also contains a Key field to determine which key the proof is proving.
@@ -55,7 +56,7 @@ func CommitmentOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	case ProofOpSimpleMerkleCommitment:
 		spec = ics23.TendermintSpec
 	default:
-		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want supported ics23 subtype", pop.Type)
+		return nil, sdkerrors.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %v, want supported ics23 subtype", pop.Type)
 	}
 
 	proof := &ics23.CommitmentProof{}
@@ -77,6 +78,15 @@ func (op CommitmentOp) GetKey() []byte {
 	return op.Key
 }
 
+// Run takes in a list of arguments and attempts to run the proof op against these arguments
+// Returns the root wrapped in [][]byte if the proof op succeeds with given args. If not,
+// it will return an error.
+//
+// CommitmentOp will accept args of length 1 or length 0
+// If length 1 args is passed in, then CommitmentOp will attempt to prove the existence of the key
+// with the value provided by args[0] using the embedded CommitmentProof and return the CommitmentRoot of the proof
+// If length 0 args is passed in, then CommitmentOp will attempt to prove the absence of the key
+// in the CommitmentOp and return the CommitmentRoot of the proof
 func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	// Only support an existence proof or nonexistence proof (batch proofs currently unsupported)
 	switch len(args) {
@@ -84,23 +94,35 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 		// Args are nil, so we verify the absence of the key.
 		nonexistProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Nonexist)
 		if !ok {
-			return nil, errors.New("proof is not a nonexistence proof and args is nil")
+			return nil, sdkerrors.Wrap(ErrInvalidProof, "proof is not a nonexistence proof and args is nil")
 		}
 
 		// get root from either left or right existence proof. Note they must have the same root if both exist
 		// and at least one proof must be non-nil
-		root, err := nonexistProof.Nonexist.Left.Calculate()
-		if err != nil {
-			// Left proof may be nil, check right proof
+		var (
+			root []byte
+			err  error
+		)
+		// check left proof to calculate root
+		if nonexistProof.Nonexist.Left != nil {
+			root, err = nonexistProof.Nonexist.Left.Calculate()
+			if err != nil {
+				return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from nonexistence proof")
+			}
+		} else if nonexistProof.Nonexist.Right != nil {
+			// Left proof is nil, check right proof
 			root, err = nonexistProof.Nonexist.Right.Calculate()
 			if err != nil {
-				return nil, errors.New("could not calculate root from nonexistence proof")
+				return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from nonexistence proof")
 			}
+		} else {
+			// both left and right existence proofs are empty, return error
+			return nil, sdkerrors.Wrap(ErrInvalidProof, "nonexistence proof is empty")
 		}
 
 		absent := ics23.VerifyNonMembership(op.Spec, root, op.Proof, op.Key)
 		if !absent {
-			return nil, fmt.Errorf("proof did not verify absence of key: %s", string(op.Key))
+			return nil, sdkerrors.Wrapf(ErrInvalidProof, "proof did not verify absence of key: %s", string(op.Key))
 		}
 
 		return [][]byte{root}, nil
@@ -109,23 +131,23 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 		// Args is length 1, verify existence of key with value args[0]
 		existProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Exist)
 		if !ok {
-			return nil, errors.New("proof is not a existence proof and args is length 1")
+			return nil, sdkerrors.Wrap(ErrInvalidProof, "proof is not a existence proof and args is length 1")
 		}
 		// For subtree verification, we simply calculate the root from the proof and use it to prove
 		// against the value
 		root, err := existProof.Exist.Calculate()
 		if err != nil {
-			return nil, errors.New("could not calculate root from existence proof")
+			return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from existence proof")
 		}
 
 		exists := ics23.VerifyMembership(op.Spec, root, op.Proof, op.Key, args[0])
 		if !exists {
-			return nil, fmt.Errorf("proof did not verify existence of key %s with given value %x", op.Key, args[0])
+			return nil, sdkerrors.Wrapf(ErrInvalidProof, "proof did not verify existence of key %s with given value %x", op.Key, args[0])
 		}
 
 		return [][]byte{root}, nil
 	default:
-		return nil, fmt.Errorf("args must be length 0 or 1, got: %d", len(args))
+		return nil, sdkerrors.Wrapf(ErrInvalidProof, "args must be length 0 or 1, got: %d", len(args))
 	}
 }
 

@@ -56,21 +56,21 @@ func CheckMisbehaviourAndUpdateState(
 // checkMisbehaviour checks if the currently registered public key has signed
 // over two different messages at the same sequence.
 func checkMisbehaviour(clientState types.ClientState, consensusState ConsensusState, evidence types.Evidence) error {
-	pubKey := ConsensusState.PubKey
+	pubKey := consensusState.PubKey
 
 	// assert that provided signature data are different
 	if bytes.Equal(evidence.SignatureOne.Data, evidence.SignatureTwo.Data) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signatures have identical data messages")
 	}
 
-	data := append(sdk.Uint64ToBigEndian(evidence.Sequence), evidence.SignatureOne.Data...)
+	data := EvidenceSignBytes(evidence.Sequence, evidence.SignatureOne.Data)
 
 	// check first signature
 	if err := types.CheckSignature(pubKey, data, evidence.SignatureOne.Signature); err != nil {
 		return sdkerrors.Wrap(err, "evidence signature one failed to be verified")
 	}
 
-	data = append(sdk.Uint64ToBigEndian(evidence.Sequence), evidence.SignatureTwo.Data...)
+	data = EvidenceSignBytes(evidence.Sequence, evidence.SignatureTwo.Data)
 
 	// check second signature
 	if err := types.CheckSignature(pubKey, data, evidence.SignatureTwo.Signature); err != nil {

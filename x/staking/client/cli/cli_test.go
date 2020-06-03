@@ -26,10 +26,11 @@ func TestCLICreateValidator(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 	barVal := sdk.ValAddress(barAddr)
 
-	// check for the params
+	// Check for the params
 	params := testutil.QueryStakingParameters(f)
 	require.Equal(f.T, params.BondDenom, sdk.DefaultBondDenom)
 
+	// Query for the staking pool
 	pool := testutil.QueryStakingPool(f)
 	require.NotNil(f.T, pool)
 
@@ -121,6 +122,14 @@ func TestCLICreateValidator(t *testing.T) {
 	require.Len(t, validatorUbds[0].Entries, 1)
 	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
 
+	// TODO debug QueryStakingUnbondingDelegation
+	// ubd := testutil.QueryStakingUnbondingDelegation(f, barAddr.String(), barVal.String())
+	// fmt.Println("ubd", ubd)
+
+	// Query staking unbonding delegations
+	ubds := testutil.QueryStakingUnbondingDelegations(f, barAddr.String())
+	require.Equal(t, len(ubds), 1)
+
 	fooAddr := f.KeyAddress(cli.KeyFoo)
 
 	delegateTokens := sdk.TokensFromConsensusPower(2)
@@ -168,14 +177,14 @@ func TestCLICreateValidator(t *testing.T) {
 	require.Empty(f.T, err)
 	require.True(t, success)
 
-	// TODO: debug redelegations
-	// redelegation := testutil.QueryStakingRedelegation(f, fooAddr.String(), barVal.String(), fooVal.String())
-	// require.Equal(t, len(redelegation), 1)
+	redelegation := testutil.QueryStakingRedelegation(f, fooAddr.String(), barVal.String(), fooVal.String())
+	require.Equal(t, len(redelegation), 1)
 
-	// redelegation := testutil.QueryStakingRedelegations(f, fooAddr.String())
-	// require.Equal(t, len(redelegation), 1)
+	redelegations := testutil.QueryStakingRedelegations(f, fooAddr.String())
+	require.Equal(t, len(redelegations), 1)
 
-	// TODO: add unbonding delegation
-	// TODO: add unbonding delegations
+	redelegationsFrom := testutil.QueryStakingRedelegationsFrom(f, barVal.String())
+	require.Equal(t, len(redelegationsFrom), 1)
+
 	f.Cleanup()
 }

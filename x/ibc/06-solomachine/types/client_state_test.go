@@ -19,7 +19,8 @@ const (
 )
 
 var (
-	prefix = commitmenttypes.NewSignaturePrefix([]byte("ibc"))
+	invalidProof = []byte("invalid proof bytes")
+	prefix       = commitmenttypes.NewMerklePrefix([]byte("ibc"))
 )
 
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
@@ -73,9 +74,8 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	suite.Require().NoError(err)
 	value = append(value, bz...)
 
-	sig, err := suite.privKey.Sign(value)
+	proof, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
 
 	testCases := []struct {
 		name        string
@@ -94,7 +94,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		{
 			"ApplyPrefix failed",
 			suite.ClientState(),
-			commitmenttypes.SignaturePrefix{},
+			commitmenttypes.MerklePrefix{},
 			proof,
 			false,
 		},
@@ -106,17 +106,17 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 			false,
 		},
 		{
-			"invalid proof type",
+			"proof is nil",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.MerkleProof{},
+			nil,
 			false,
 		},
 		{
 			"proof verification failed",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.SignatureProof{},
+			invalidProof,
 			false,
 		},
 	}
@@ -150,9 +150,8 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	suite.Require().NoError(err)
 	value = append(value, bz...)
 
-	sig, err := suite.privKey.Sign(value)
+	proof, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
 
 	testCases := []struct {
 		name        string
@@ -171,7 +170,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		{
 			"ApplyPrefix failed",
 			suite.ClientState(),
-			commitmenttypes.NewSignaturePrefix([]byte{}),
+			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
@@ -183,17 +182,17 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 			false,
 		},
 		{
-			"invalid proof type",
+			"proof is nil",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.MerkleProof{},
+			nil,
 			false,
 		},
 		{
 			"proof verification failed",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.SignatureProof{},
+			invalidProof,
 			false,
 		},
 	}
@@ -228,9 +227,8 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	suite.Require().NoError(err)
 	value = append(value, bz...)
 
-	sig, err := suite.privKey.Sign(value)
+	proof, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
 
 	testCases := []struct {
 		name        string
@@ -249,7 +247,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		{
 			"ApplyPrefix failed",
 			suite.ClientState(),
-			commitmenttypes.NewSignaturePrefix([]byte{}),
+			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
@@ -261,17 +259,17 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 			false,
 		},
 		{
-			"invalid proof type",
+			"proof is nil",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.MerkleProof{},
+			nil,
 			false,
 		},
 		{
 			"proof verification failed",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.SignatureProof{},
+			invalidProof,
 			false,
 		},
 	}
@@ -302,9 +300,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
 	value = append(value, commitmentBytes...)
 
-	sig, err := suite.privKey.Sign(value)
+	proof, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
 
 	testCases := []struct {
 		name        string
@@ -323,7 +320,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		{
 			"ApplyPrefix failed",
 			suite.ClientState(),
-			commitmenttypes.NewSignaturePrefix([]byte{}),
+			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
@@ -335,17 +332,17 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 			false,
 		},
 		{
-			"invalid proof type",
+			"proof is nil",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.MerkleProof{},
+			nil,
 			false,
 		},
 		{
 			"proof verification failed",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.SignatureProof{},
+			invalidProof,
 			false,
 		},
 	}
@@ -376,9 +373,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
 	value = append(value, ack...)
 
-	sig, err := suite.privKey.Sign(value)
+	proof, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
 
 	testCases := []struct {
 		name        string
@@ -397,7 +393,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		{
 			"ApplyPrefix failed",
 			suite.ClientState(),
-			commitmenttypes.NewSignaturePrefix([]byte{}),
+			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
@@ -409,17 +405,17 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 			false,
 		},
 		{
-			"invalid proof type",
+			"proof is nil",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.MerkleProof{},
+			nil,
 			false,
 		},
 		{
 			"proof verification failed",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.SignatureProof{},
+			invalidProof,
 			false,
 		},
 	}
@@ -448,9 +444,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
 
-	sig, err := suite.privKey.Sign(value)
+	proof, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
 
 	testCases := []struct {
 		name        string
@@ -469,7 +464,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		{
 			"ApplyPrefix failed",
 			suite.ClientState(),
-			commitmenttypes.NewSignaturePrefix([]byte{}),
+			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
@@ -481,17 +476,17 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			false,
 		},
 		{
-			"invalid proof type",
+			"proof is nil",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.MerkleProof{},
+			nil,
 			false,
 		},
 		{
 			"proof verification failed",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.SignatureProof{},
+			invalidProof,
 			false,
 		},
 	}
@@ -522,9 +517,8 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
 	value = append(value, sdk.Uint64ToBigEndian(nextSeqRecv)...)
 
-	sig, err := suite.privKey.Sign(value)
+	proof, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
 
 	testCases := []struct {
 		name        string
@@ -543,7 +537,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		{
 			"ApplyPrefix failed",
 			suite.ClientState(),
-			commitmenttypes.NewSignaturePrefix([]byte{}),
+			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
@@ -555,17 +549,17 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 			false,
 		},
 		{
-			"invalid proof type",
+			"proof is nil",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.MerkleProof{},
+			nil,
 			false,
 		},
 		{
 			"proof verification failed",
 			suite.ClientState(),
 			prefix,
-			commitmenttypes.SignatureProof{},
+			invalidProof,
 			false,
 		},
 	}

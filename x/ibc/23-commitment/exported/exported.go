@@ -52,13 +52,11 @@ type Type byte
 // Registered commitment types
 const (
 	Merkle Type = iota + 1 // 1
-	Signature
 )
 
 // string representation of the commitment types
 const (
-	TypeMerkle    string = "merkle"
-	TypeSignature string = "signature"
+	TypeMerkle string = "merkle"
 )
 
 // String implements the Stringer interface

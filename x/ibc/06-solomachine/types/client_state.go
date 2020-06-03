@@ -84,7 +84,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	_ clientexported.ConsensusState,
 ) error {
 	if err := validateVerificationArgs(cs, sequence, prefix, proof, cs.ConsensusState); err != nil {
@@ -97,15 +97,12 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	// casted type already verified
-	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
-
 	data, err := ConsensusStateSignBytes(cdc, sequence, path, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, signatureProof.Signature); err != nil {
+	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -121,7 +118,7 @@ func (cs ClientState) VerifyConnectionState(
 	cdc codec.Marshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 	_ clientexported.ConsensusState,
@@ -135,15 +132,12 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	// casted type already verified
-	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
-
 	data, err := ConnectionStateSignBytes(cdc, sequence, path, connectionEnd)
 	if err != nil {
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, signatureProof.Signature); err != nil {
+	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -159,7 +153,7 @@ func (cs ClientState) VerifyChannelState(
 	cdc codec.Marshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
@@ -174,15 +168,12 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	// casted type already verified
-	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
-
 	data, err := ChannelStateSignBytes(cdc, sequence, path, channel)
 	if err != nil {
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, signatureProof.Signature); err != nil {
+	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -197,7 +188,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	packetSequence uint64,
@@ -213,12 +204,9 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	// casted type already verified
-	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
-
 	data := PacketCommitmentSignBytes(sequence, path, commitmentBytes)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, signatureProof.Signature); err != nil {
+	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -233,7 +221,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	packetSequence uint64,
@@ -249,12 +237,9 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	// casted type already verified
-	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
-
 	data := PacketAcknowledgementSignBytes(sequence, path, acknowledgement)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, signatureProof.Signature); err != nil {
+	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -270,7 +255,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	packetSequence uint64,
@@ -285,12 +270,9 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	// casted type already verified
-	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
-
 	data := PacketAcknowledgementAbsenceSignBytes(sequence, path)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, signatureProof.Signature); err != nil {
+	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -305,7 +287,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
@@ -320,12 +302,9 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	// casted type already verified
-	signatureProof, _ := proof.(commitmenttypes.SignatureProof)
-
 	data := NextSequenceRecvSignBytes(sequence, path, nextSequenceRecv)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, signatureProof.Signature); err != nil {
+	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 
@@ -340,7 +319,7 @@ func validateVerificationArgs(
 	cs ClientState,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
 	if cs.GetLatestHeight() < sequence {
@@ -358,18 +337,13 @@ func validateVerificationArgs(
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
 	}
 
-	_, ok := prefix.(commitmenttypes.SignaturePrefix)
+	_, ok := prefix.(commitmenttypes.MerklePrefix)
 	if !ok {
-		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected SignaturePrefix", prefix)
+		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
 	}
 
 	if proof == nil {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
-	}
-
-	_, ok = proof.(commitmenttypes.SignatureProof)
-	if !ok {
-		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "invalid proof type %T, expected SignatureProof", proof)
 	}
 
 	if consensusState == nil {

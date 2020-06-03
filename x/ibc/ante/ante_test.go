@@ -100,15 +100,19 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	for i := 0; i < 10; i++ {
 		cctx, write := suite.chainA.GetContext().CacheContext()
 		suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(cctx, cpportid, cpchanid, uint64(i))
+
 		_, err := handler(cctx, suite.newTx(msg), false)
-		if err == nil {
-			// retrieve channelCapability from scopedIBCKeeper and pass into PacketExecuted
-			chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(cctx, host.ChannelCapabilityPath(
-				packet.GetDestPort(), packet.GetDestChannel()),
-			)
-			suite.Require().True(ok, "could not retrieve capability")
-			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, chanCap, packet, packet.Data)
-		}
+		// sequence checks occur in packet executed
+		suite.NoError(err)
+
+		// retrieve channelCapability from scopedIBCKeeper and pass into PacketExecuted
+		chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(cctx, host.ChannelCapabilityPath(
+			packet.GetDestPort(), packet.GetDestChannel()),
+		)
+		suite.Require().True(ok, "could not retrieve capability")
+
+		err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, chanCap, packet, packet.Data)
+
 		if i == 1 {
 			suite.NoError(err, "%d", i) // successfully executed
 			write()

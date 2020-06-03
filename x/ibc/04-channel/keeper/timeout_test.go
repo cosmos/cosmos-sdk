@@ -108,8 +108,6 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 // TestTimeoutExectued verifies that packet commitments are deleted after
 // capabilities are verified.
 func (suite *KeeperTestSuite) TestTimeoutExecuted() {
-	sequence := uint64(1)
-
 	var (
 		packet  types.Packet
 		chanCap *capability.Capability
@@ -118,8 +116,8 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 	testCases := []testCase{
 		{"success ORDERED", func() {
 			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.CreateChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), sequence, types.CommitPacket(packet))
+			suite.chainA.CreateChannel(packet.GetSourcePort(), packet.GetSourceChannel(), testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.Sequence, types.CommitPacket(packet))
 		}, true},
 		{"channel not found", func() {}, false},
 		{"incorrect capability", func() {
@@ -135,15 +133,13 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 			suite.SetupTest() // reset
 
 			var err error
-			chanCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
-				suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1),
-			)
+			chanCap, err = suite.chainA.NewCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
 
 			err = suite.chainA.App.IBCKeeper.ChannelKeeper.TimeoutExecuted(suite.chainA.GetContext(), chanCap, packet)
-			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), sequence)
+			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.Sequence)
 
 			if tc.expPass {
 				suite.NoError(err)
@@ -258,7 +254,7 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 			}
 
 			ctx := suite.chainB.GetContext()
-			cap, err := suite.chainB.App.ScopedIBCKeeper.NewCapability(ctx, host.ChannelCapabilityPath(testPort1, testChannel1))
+			cap, err := suite.chainB.NewCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 			suite.Require().NoError(err)
 
 			if tc.expPass {

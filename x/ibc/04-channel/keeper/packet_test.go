@@ -538,7 +538,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 				proof, proofHeight = suite.chainA.QueryProof(unorderedPacketKey)
 			}
 
-			cap, err := suite.chainB.App.ScopedIBCKeeper.NewCapability(ctx, host.ChannelCapabilityPath(testPort1, testChannel1))
+			cap, err := suite.chainB.NewCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 			suite.Require().NoError(err)
 
 			if tc.expPass {

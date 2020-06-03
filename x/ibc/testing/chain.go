@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -237,7 +238,22 @@ func (chain *TestChain) CreateChannel(
 
 	ctx := chain.GetContext()
 	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
+	chain.NewCapability(portID, channelID)
 	return channel
+}
+
+// NewCapability creates a new capability for the provided port and channel ID
+// if the capability does not already exist.
+func (chain *TestChain) NewCapability(portID, channelID string) (*capabilitytypes.Capability, error) {
+	ctx := chain.GetContext()
+
+	capName := host.ChannelCapabilityPath(portID, channelID)
+	cap, ok := chain.App.ScopedIBCKeeper.GetCapability(ctx, capName)
+	if !ok {
+		return chain.App.ScopedIBCKeeper.NewCapability(ctx, capName)
+	}
+
+	return cap, nil
 }
 
 // nextHeader increments the header height by 1 and increments the timestamp by 1 minute.

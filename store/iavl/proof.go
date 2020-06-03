@@ -49,11 +49,12 @@ func NewSimpleMerkleCommitmentOp(key []byte, proof *ics23.CommitmentProof) Commi
 // from the unmarshalled proof
 func CommitmentOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	var spec *ics23.ProofSpec
-	if pop.Type == ProofOpIAVLCommitment {
+	switch pop.Type {
+	case ProofOpIAVLCommitment:
 		spec = ics23.IavlSpec
-	} else if pop.Type == ProofOpSimpleMerkleCommitment {
+	case ProofOpSimpleMerkleCommitment:
 		spec = ics23.TendermintSpec
-	} else {
+	default:
 		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want supported ics23 subtype", pop.Type)
 	}
 

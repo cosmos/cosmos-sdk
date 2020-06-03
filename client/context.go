@@ -1,4 +1,4 @@
-package context
+package client
 
 import (
 	"bufio"
@@ -21,9 +21,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// CLIContext implements a typical CLI context created in SDK modules for
+// Context implements a typical context created in SDK modules for
 // transaction handling and queries.
-type CLIContext struct {
+type Context struct {
 	FromAddress      sdk.AccAddress
 	Client           rpcclient.Client
 	ChainID          string
@@ -53,40 +53,40 @@ type CLIContext struct {
 	Codec *codec.Codec
 }
 
-// NewCLIContextWithInputAndFrom returns a new initialized CLIContext with parameters from the
+// NewContextWithInputAndFrom returns a new initialized Context with parameters from the
 // command line using Viper. It takes a io.Reader and and key name or address and populates
 // the FromName and  FromAddress field accordingly. It will also create Tendermint verifier
 // using  the chain ID, home directory and RPC URI provided by the command line. If using
-// a CLIContext in tests or any non CLI-based environment, the verifier will not be created
+// a Context in tests or any non CLI-based environment, the verifier will not be created
 // and will be set as nil because FlagTrustNode must be set.
-func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
-	ctx := CLIContext{}
+func NewContextWithInputAndFrom(input io.Reader, from string) Context {
+	ctx := Context{}
 	return ctx.InitWithInputAndFrom(input, from)
 }
 
-// NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
+// NewContextWithFrom returns a new initialized Context with parameters from the
 // command line using Viper. It takes a key name or address and populates the FromName and
 // FromAddress field accordingly. It will also create Tendermint verifier using
 // the chain ID, home directory and RPC URI provided by the command line. If using
-// a CLIContext in tests or any non CLI-based environment, the verifier will not
+// a Context in tests or any non CLI-based environment, the verifier will not
 // be created and will be set as nil because FlagTrustNode must be set.
-func NewCLIContextWithFrom(from string) CLIContext {
-	return NewCLIContextWithInputAndFrom(os.Stdin, from)
+func NewContextWithFrom(from string) Context {
+	return NewContextWithInputAndFrom(os.Stdin, from)
 }
 
-// NewCLIContext returns a new initialized CLIContext with parameters from the
+// NewContext returns a new initialized Context with parameters from the
 // command line using Viper.
-func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom)) }
+func NewContext() Context { return NewContextWithFrom(viper.GetString(flags.FlagFrom)) }
 
-// NewCLIContextWithInput returns a new initialized CLIContext with a io.Reader and parameters
+// NewContextWithInput returns a new initialized Context with a io.Reader and parameters
 // from the command line using Viper.
-func NewCLIContextWithInput(input io.Reader) CLIContext {
-	return NewCLIContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
+func NewContextWithInput(input io.Reader) Context {
+	return NewContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
 }
 
-// InitWithInputAndFrom returns a new CLIContext re-initialized from an existing
-// CLIContext with a new io.Reader and from parameter
-func (ctx CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLIContext {
+// InitWithInputAndFrom returns a new Context re-initialized from an existing
+// Context with a new io.Reader and from parameter
+func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
 	input = bufio.NewReader(input)
 
 	var (
@@ -165,67 +165,67 @@ func (ctx CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLICont
 	return ctx
 }
 
-// InitWithFrom returns a new CLIContext re-initialized from an existing
-// CLIContext with a new from parameter
-func (ctx CLIContext) InitWithFrom(from string) CLIContext {
+// InitWithFrom returns a new Context re-initialized from an existing
+// Context with a new from parameter
+func (ctx Context) InitWithFrom(from string) Context {
 	return ctx.InitWithInputAndFrom(os.Stdin, from)
 }
 
-// Init returns a new CLIContext re-initialized from an existing
-// CLIContext with parameters from the command line using Viper.
-func (ctx CLIContext) Init() CLIContext { return ctx.InitWithFrom(viper.GetString(flags.FlagFrom)) }
+// Init returns a new Context re-initialized from an existing
+// Context with parameters from the command line using Viper.
+func (ctx Context) Init() Context { return ctx.InitWithFrom(viper.GetString(flags.FlagFrom)) }
 
-// InitWithInput returns a new CLIContext re-initialized from an existing
-// CLIContext with a new io.Reader and from parameter
-func (ctx CLIContext) InitWithInput(input io.Reader) CLIContext {
+// InitWithInput returns a new Context re-initialized from an existing
+// Context with a new io.Reader and from parameter
+func (ctx Context) InitWithInput(input io.Reader) Context {
 	return ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
-func (ctx CLIContext) WithKeyring(k keyring.Keyring) CLIContext {
+func (ctx Context) WithKeyring(k keyring.Keyring) Context {
 	ctx.Keyring = k
 	return ctx
 }
 
 // WithInput returns a copy of the context with an updated input.
-func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
+func (ctx Context) WithInput(r io.Reader) Context {
 	ctx.Input = r
 	return ctx
 }
 
-// WithJSONMarshaler returns a copy of the CLIContext with an updated JSONMarshaler.
-func (ctx CLIContext) WithJSONMarshaler(m codec.JSONMarshaler) CLIContext {
+// WithJSONMarshaler returns a copy of the Context with an updated JSONMarshaler.
+func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 	ctx.JSONMarshaler = m
 	return ctx
 }
 
 // WithCodec returns a copy of the context with an updated codec.
 // TODO: Deprecated (remove).
-func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
+func (ctx Context) WithCodec(cdc *codec.Codec) Context {
 	ctx.Codec = cdc
 	return ctx
 }
 
 // WithOutput returns a copy of the context with an updated output writer (e.g. stdout).
-func (ctx CLIContext) WithOutput(w io.Writer) CLIContext {
+func (ctx Context) WithOutput(w io.Writer) Context {
 	ctx.Output = w
 	return ctx
 }
 
 // WithFrom returns a copy of the context with an updated from address or name.
-func (ctx CLIContext) WithFrom(from string) CLIContext {
+func (ctx Context) WithFrom(from string) Context {
 	ctx.From = from
 	return ctx
 }
 
 // WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
+func (ctx Context) WithTrustNode(trustNode bool) Context {
 	ctx.TrustNode = trustNode
 	return ctx
 }
 
 // WithNodeURI returns a copy of the context with an updated node URI.
-func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
+func (ctx Context) WithNodeURI(nodeURI string) Context {
 	ctx.NodeURI = nodeURI
 	client, err := rpchttp.New(nodeURI, "/websocket")
 	if err != nil {
@@ -237,76 +237,76 @@ func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
 }
 
 // WithHeight returns a copy of the context with an updated height.
-func (ctx CLIContext) WithHeight(height int64) CLIContext {
+func (ctx Context) WithHeight(height int64) Context {
 	ctx.Height = height
 	return ctx
 }
 
 // WithClient returns a copy of the context with an updated RPC client
 // instance.
-func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
+func (ctx Context) WithClient(client rpcclient.Client) Context {
 	ctx.Client = client
 	return ctx
 }
 
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
-func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
+func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
 	return ctx
 }
 
 // WithVerifier returns a copy of the context with an updated Verifier.
-func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
+func (ctx Context) WithVerifier(verifier tmlite.Verifier) Context {
 	ctx.Verifier = verifier
 	return ctx
 }
 
 // WithChainID returns a copy of the context with an updated chain ID.
-func (ctx CLIContext) WithChainID(chainID string) CLIContext {
+func (ctx Context) WithChainID(chainID string) Context {
 	ctx.ChainID = chainID
 	return ctx
 }
 
 // WithGenerateOnly returns a copy of the context with updated GenerateOnly value
-func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
+func (ctx Context) WithGenerateOnly(generateOnly bool) Context {
 	ctx.GenerateOnly = generateOnly
 	return ctx
 }
 
 // WithSimulation returns a copy of the context with updated Simulate value
-func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
+func (ctx Context) WithSimulation(simulate bool) Context {
 	ctx.Simulate = simulate
 	return ctx
 }
 
 // WithFromName returns a copy of the context with an updated from account name.
-func (ctx CLIContext) WithFromName(name string) CLIContext {
+func (ctx Context) WithFromName(name string) Context {
 	ctx.FromName = name
 	return ctx
 }
 
 // WithFromAddress returns a copy of the context with an updated from account
 // address.
-func (ctx CLIContext) WithFromAddress(addr sdk.AccAddress) CLIContext {
+func (ctx Context) WithFromAddress(addr sdk.AccAddress) Context {
 	ctx.FromAddress = addr
 	return ctx
 }
 
 // WithBroadcastMode returns a copy of the context with an updated broadcast
 // mode.
-func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
+func (ctx Context) WithBroadcastMode(mode string) Context {
 	ctx.BroadcastMode = mode
 	return ctx
 }
 
 // WithTxGenerator returns the context with an updated TxGenerator
-func (ctx CLIContext) WithTxGenerator(generator TxGenerator) CLIContext {
+func (ctx Context) WithTxGenerator(generator TxGenerator) Context {
 	ctx.TxGenerator = generator
 	return ctx
 }
 
 // WithAccountRetriever returns the context with an updated AccountRetriever
-func (ctx CLIContext) WithAccountRetriever(retriever AccountRetriever) CLIContext {
+func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 	ctx.AccountRetriever = retriever
 	return ctx
 }
@@ -314,7 +314,7 @@ func (ctx CLIContext) WithAccountRetriever(retriever AccountRetriever) CLIContex
 // Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx CLIContext) Println(toPrint interface{}) error {
+func (ctx Context) Println(toPrint interface{}) error {
 	var (
 		out []byte
 		err error
@@ -349,7 +349,7 @@ func (ctx CLIContext) Println(toPrint interface{}) error {
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
+func (ctx Context) PrintOutput(toPrint interface{}) error {
 	var (
 		out []byte
 		err error

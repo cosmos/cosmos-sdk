@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,7 +13,7 @@ import (
 )
 
 // WriteGenerateStdTxResponse writes response for the generate only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext, br rest.BaseReq, msgs []sdk.Msg) {
+func WriteGenerateStdTxResponse(w http.ResponseWriter, clientCtx client.Context, br rest.BaseReq, msgs []sdk.Msg) {
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
 		return
@@ -25,7 +25,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 	}
 
 	txBldr := types.NewTxBuilder(
-		GetTxEncoder(cliCtx.Codec), br.AccountNumber, br.Sequence, gas, gasAdj,
+		GetTxEncoder(clientCtx.Codec), br.AccountNumber, br.Sequence, gas, gasAdj,
 		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
 	)
 
@@ -35,13 +35,13 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 			return
 		}
 
-		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
+		txBldr, err = EnrichWithGas(txBldr, clientCtx, msgs)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, cliCtx.Codec, txBldr.Gas())
+			rest.WriteSimulationResponse(w, clientCtx.Codec, txBldr.Gas())
 			return
 		}
 	}
@@ -51,7 +51,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 		return
 	}
 
-	output, err := cliCtx.Codec.MarshalJSON(types.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
+	output, err := clientCtx.Codec.MarshalJSON(types.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}

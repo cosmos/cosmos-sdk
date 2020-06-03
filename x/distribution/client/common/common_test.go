@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -14,7 +14,7 @@ import (
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	cdc := codec.New()
 	viper.Set(flags.FlagOffline, true)
-	ctx := context.NewCLIContext().WithCodec(cdc)
+	ctx := client.NewContext().WithCodec(cdc)
 	type args struct {
 		delAddr string
 		valAddr string

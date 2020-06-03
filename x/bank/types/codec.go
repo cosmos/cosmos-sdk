@@ -12,8 +12,8 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.SupplyI)(nil), nil)
 	cdc.RegisterConcrete(&Supply{}, "cosmos-sdk/Supply", nil)
-	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/MsgSend", nil)
-	cdc.RegisterConcrete(MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
+	cdc.RegisterConcrete(&MsgSend{}, "cosmos-sdk/MsgSend", nil)
+	cdc.RegisterConcrete(&MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {

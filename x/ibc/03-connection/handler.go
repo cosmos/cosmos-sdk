@@ -6,7 +6,7 @@ import (
 )
 
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
-func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpenInit) (*sdk.Result, error) {
+func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenInit) (*sdk.Result, error) {
 	if err := k.ConnOpenInit(
 		ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty,
 	); err != nil {
@@ -32,7 +32,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 }
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
-func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpenTry) (*sdk.Result, error) {
+func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenTry) (*sdk.Result, error) {
 	if err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
@@ -60,7 +60,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 }
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
-func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpenAck) (*sdk.Result, error) {
+func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenAck) (*sdk.Result, error) {
 	if err := k.ConnOpenAck(
 		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
@@ -85,7 +85,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 }
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
-func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg MsgConnectionOpenConfirm) (*sdk.Result, error) {
+func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenConfirm) (*sdk.Result, error) {
 	if err := k.ConnOpenConfirm(
 		ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight,
 	); err != nil {

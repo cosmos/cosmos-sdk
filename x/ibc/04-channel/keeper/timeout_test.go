@@ -133,13 +133,14 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 			suite.SetupTest() // reset
 
 			var err error
-			chanCap, err = suite.chainA.NewCapability(packet.GetSourcePort(), packet.GetSourceChannel())
+			chanCap, err = suite.chainA.NewCapability(testPort1, testChannel1)
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
 
-			err = suite.chainA.App.IBCKeeper.ChannelKeeper.TimeoutExecuted(suite.chainA.GetContext(), chanCap, packet)
-			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.Sequence)
+			ctx := suite.chainA.GetContext()
+			err = suite.chainA.App.IBCKeeper.ChannelKeeper.TimeoutExecuted(ctx, chanCap, packet)
+			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.Sequence)
 
 			if tc.expPass {
 				suite.NoError(err)

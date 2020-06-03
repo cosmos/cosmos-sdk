@@ -131,7 +131,7 @@ func (k Keeper) TimeoutExecuted(
 	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
 		return sdkerrors.Wrap(
-			types.ErrChannelCapabilityNotFound,
+			types.ErrInvalidChannelCapability,
 			"caller does not own capability for channel",
 		)
 	}

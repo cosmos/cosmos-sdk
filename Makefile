@@ -272,6 +272,7 @@ proto-check-breaking-docker:
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+CONFIO_PROTO_URL = https://raw.githubusercontent.com/confio/ics23/v0.6.0
 
 TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
 TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
@@ -282,6 +283,7 @@ SDK_PROTO_TYPES     = third_party/proto/cosmos-sdk/types
 AUTH_PROTO_TYPES    = third_party/proto/cosmos-sdk/x/auth/types
 VESTING_PROTO_TYPES = third_party/proto/cosmos-sdk/x/auth/vesting/types
 SUPPLY_PROTO_TYPES  = third_party/proto/cosmos-sdk/x/supply/types
+ICS_PROOF_TYPES     = third_party/proto/confio/ics23
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -300,6 +302,9 @@ proto-update-deps:
 
 	@mkdir -p $(TM_MERKLE_TYPES)
 	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
+
+	@mkdir -p $(ICS_PROOF_TYPES)
+	@curl -sSL $(CONFIO_PROTO_URL)/proofs.proto > $(ICS_PROOF_TYPES)/proof.proto
 
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps

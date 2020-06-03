@@ -103,7 +103,11 @@ func queryCmd(cdc *codec.Codec) *cobra.Command {
 	)
 
 	// add modules' query commands
-	simapp.ModuleBasics.AddQueryCommands(queryCmd, cdc)
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithJSONMarshaler(appCodec).
+		WithCodec(cdc)
+	simapp.ModuleBasics.AddQueryCommands(queryCmd, clientCtx)
 
 	return queryCmd
 }

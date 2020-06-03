@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
@@ -125,6 +126,8 @@ func (AppModule) QuerierRoute() string {
 func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(*am.keeper)
 }
+
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the ibc module. It returns
 // no validator updates.

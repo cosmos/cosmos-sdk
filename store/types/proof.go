@@ -44,9 +44,9 @@ func NewSimpleMerkleCommitmentOp(key []byte, proof *ics23.CommitmentProof) Commi
 	}
 }
 
-// CommitmentOpDecoder takes a merkle.ProofOp and attempt to decode it into a CommitmentOp ProofOperator
+// CommitmentOpDecoder takes a merkle.ProofOp and attempts to decode it into a CommitmentOp ProofOperator
 // The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
-// from the unmarshalled proof
+// from the unmarshalled proof.
 func CommitmentOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	var spec *ics23.ProofSpec
 	switch pop.Type {

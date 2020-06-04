@@ -72,10 +72,10 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 
 			denom := viper.GetString(flagDenom)
 			if denom == "" {
-				params = types.NewQueryAllBalancesParams(addr)
+				params = types.NewQueryAllBalancesRequest(addr)
 				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllBalances)
 			} else {
-				params = types.NewQueryBalanceParams(addr, denom)
+				params = types.NewQueryBalanceRequest(addr, denom)
 				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 			}
 

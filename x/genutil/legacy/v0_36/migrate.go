@@ -2,6 +2,7 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v036bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
@@ -19,11 +20,11 @@ import (
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
 func Migrate(appState genutil.AppMap) genutil.AppMap {
 	v034Codec := codec.New()
-	codec.RegisterCrypto(v034Codec)
+	cryptocodec.RegisterCrypto(v034Codec)
 	v034gov.RegisterCodec(v034Codec)
 
 	v036Codec := codec.New()
-	codec.RegisterCrypto(v036Codec)
+	cryptocodec.RegisterCrypto(v036Codec)
 	v036gov.RegisterCodec(v036Codec)
 
 	// migrate genesis accounts state

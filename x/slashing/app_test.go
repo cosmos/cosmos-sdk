@@ -75,7 +75,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := slashing.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
+	unjailMsg := &slashing.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
 
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(addr1), true)
 

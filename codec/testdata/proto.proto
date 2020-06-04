@@ -27,3 +27,24 @@ message HasHasAnimal {
 message HasHasHasAnimal {
   google.protobuf.Any has_has_animal = 1;
 }
+
+service TestService {
+  rpc Echo(EchoRequest) returns (EchoResponse);
+  rpc SayHello(SayHelloRequest) returns (SayHelloResponse);
+}
+
+message EchoRequest {
+  string message = 1;
+}
+
+message EchoResponse {
+  string message = 1;
+}
+
+message SayHelloRequest {
+  string name = 1;
+}
+
+message SayHelloResponse {
+  string greeting = 1;
+}

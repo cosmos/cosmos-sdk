@@ -225,3 +225,22 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 	return cc, cms.Write
 }
+
+type sdkContextKeyType string
+
+const sdkContextKey sdkContextKeyType = "sdk-context"
+
+// WrapSDKContext returns a stdlib context.Context with the provided sdk.Context's internal
+// context as a value. It is useful for passing an sdk.Context  through methods that take a
+// stdlib context.Context parameter such as generated gRPC methods. To get the original
+// sdk.Context back, call UnwrapSDKContext.
+func WrapSDKContext(ctx Context) context.Context {
+	return context.WithValue(ctx.ctx, sdkContextKey, ctx)
+}
+
+// UnwrapSDKContext retrieves a Context from a context.Context instance
+// attached with WrapSDKContext. It panics if a Context was not properly
+// attached
+func UnwrapSDKContext(ctx context.Context) Context {
+	return ctx.Value(sdkContextKey).(Context)
+}

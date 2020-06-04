@@ -108,12 +108,13 @@ break smart contracts/persistent scripts and generally provide a bad UX for
 clients. With protobuf, there should usually be ways to extend existing
 functionality instead of just breaking it.
 
-#### Use Simple Version Suffixes
+#### Omit v1 suffix
 
 Instead of using [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix),
-we can more concisely indicate version 2, 3, etc. of a package with a simple
-package suffix rather than a sub-package, ex. `cosmos.bank2.Send` or `cosmos.bank.Send2`.
-Version 1 should obviously be the non-suffixed version, ex. `cosmos.bank.Send`.
+we can omit `v1` for packages that don't actually have a second version. This
+allows for more concise names for common use cases like `cosmos.bank.Send`.
+Packages that do have a second or third version can indicate that with `.v2`
+or `.v3`.
 
 #### Use `alpha` or `beta` to Denote Non-stable Packages
 

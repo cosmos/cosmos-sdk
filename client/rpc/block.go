@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
@@ -65,10 +65,10 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 	}
 
 	if clientCtx.Indent {
-		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
+		return legacy.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
 
-	return codec.Cdc.MarshalJSON(res)
+	return legacy.Cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height

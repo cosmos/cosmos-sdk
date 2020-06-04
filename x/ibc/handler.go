@@ -24,20 +24,20 @@ func NewHandler(k Keeper) sdk.Handler {
 			return &sdk.Result{}, nil
 
 		// IBC connection  msgs
-		case connection.MsgConnectionOpenInit:
+		case *connection.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)
 
-		case connection.MsgConnectionOpenTry:
+		case *connection.MsgConnectionOpenTry:
 			return connection.HandleMsgConnectionOpenTry(ctx, k.ConnectionKeeper, msg)
 
-		case connection.MsgConnectionOpenAck:
+		case *connection.MsgConnectionOpenAck:
 			return connection.HandleMsgConnectionOpenAck(ctx, k.ConnectionKeeper, msg)
 
-		case connection.MsgConnectionOpenConfirm:
+		case *connection.MsgConnectionOpenConfirm:
 			return connection.HandleMsgConnectionOpenConfirm(ctx, k.ConnectionKeeper, msg)
 
 		// IBC channel msgs
-		case channel.MsgChannelOpenInit:
+		case *channel.MsgChannelOpenInit:
 			// Lookup module by port capability
 			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
 			if err != nil {
@@ -60,7 +60,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 			return res, nil
 
-		case channel.MsgChannelOpenTry:
+		case *channel.MsgChannelOpenTry:
 			// Lookup module by port capability
 			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
 			if err != nil {
@@ -82,7 +82,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 			return res, nil
 
-		case channel.MsgChannelOpenAck:
+		case *channel.MsgChannelOpenAck:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -100,7 +100,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 
-		case channel.MsgChannelOpenConfirm:
+		case *channel.MsgChannelOpenConfirm:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -118,7 +118,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 
-		case channel.MsgChannelCloseInit:
+		case *channel.MsgChannelCloseInit:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -136,7 +136,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, cap, msg)
 
-		case channel.MsgChannelCloseConfirm:
+		case *channel.MsgChannelCloseConfirm:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -155,9 +155,9 @@ func NewHandler(k Keeper) sdk.Handler {
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, cap, msg)
 
 		// IBC packet msgs get routed to the appropriate module callback
-		case channel.MsgPacket:
+		case *channel.MsgPacket:
 			// Lookup module by channel capability
-			module, _, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
@@ -167,23 +167,21 @@ func NewHandler(k Keeper) sdk.Handler {
 			if !ok {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
-			return cbs.OnRecvPacket(ctx, msg.Packet)
 
-		case channel.MsgAcknowledgement:
-			// Lookup module by channel capability
-			module, _, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
+			// Perform application logic callback
+			res, ack, err := cbs.OnRecvPacket(ctx, msg.Packet)
 			if err != nil {
-				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
+				return nil, err
 			}
 
-			// Retrieve callbacks from router
-			cbs, ok := k.Router.GetRoute(module)
-			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			// Set packet acknowledgement
+			if err = k.ChannelKeeper.PacketExecuted(ctx, cap, msg.Packet, ack); err != nil {
+				return nil, err
 			}
-			return cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement)
 
-		case channel.MsgTimeout:
+			return res, nil
+
+		case *channel.MsgAcknowledgement:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if err != nil {
@@ -195,16 +193,45 @@ func NewHandler(k Keeper) sdk.Handler {
 			if !ok {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
+
+			// Perform application logic callback
+			res, err := cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement)
+			if err != nil {
+				return nil, err
+			}
+
+			// Delete packet commitment
+			if err = k.ChannelKeeper.AcknowledgementExecuted(ctx, cap, msg.Packet); err != nil {
+				return nil, err
+			}
+
+			return res, nil
+
+		case *channel.MsgTimeout:
+			// Lookup module by channel capability
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
+			}
+
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+
+			// Perform application logic callback
 			res, err := cbs.OnTimeoutPacket(ctx, msg.Packet)
 			if err != nil {
+				return nil, err
+			}
 
+			// Delete packet commitment
+			if err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet); err != nil {
 				return nil, err
 			}
-			err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet)
-			if err != nil {
-				return nil, err
-			}
-			return res, err
+
+			return res, nil
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC message type: %T", msg)

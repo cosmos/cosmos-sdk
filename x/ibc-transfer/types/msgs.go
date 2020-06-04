@@ -16,8 +16,8 @@ func NewMsgTransfer(
 	sourcePort, sourceChannel string,
 	amount sdk.Coins, sender sdk.AccAddress, receiver string,
 	timeoutHeight, timeoutTimestamp uint64,
-) MsgTransfer {
-	return MsgTransfer{
+) *MsgTransfer {
+	return &MsgTransfer{
 		SourcePort:       sourcePort,
 		SourceChannel:    sourceChannel,
 		Amount:           amount,

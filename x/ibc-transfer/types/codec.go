@@ -10,7 +10,7 @@ import (
 
 // RegisterCodec registers the IBC transfer types
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgTransfer{}, "cosmos-sdk/MsgTransfer", nil)
+	cdc.RegisterConcrete(&MsgTransfer{}, "cosmos-sdk/MsgTransfer", nil)
 	cdc.RegisterConcrete(FungibleTokenPacketData{}, "cosmos-sdk/PacketDataTransfer", nil)
 }
 

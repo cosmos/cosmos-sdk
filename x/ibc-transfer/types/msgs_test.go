@@ -48,7 +48,7 @@ func TestMsgTransferType(t *testing.T) {
 
 // TestMsgTransferValidation tests ValidateBasic for MsgTransfer
 func TestMsgTransferValidation(t *testing.T) {
-	testMsgs := []MsgTransfer{
+	testMsgs := []*MsgTransfer{
 		NewMsgTransfer(validPort, validChannel, coins, addr1, addr2, 10, 0),             // valid msg
 		NewMsgTransfer(invalidShortPort, validChannel, coins, addr1, addr2, 10, 0),      // too short port id
 		NewMsgTransfer(invalidLongPort, validChannel, coins, addr1, addr2, 10, 0),       // too long port id
@@ -64,7 +64,7 @@ func TestMsgTransferValidation(t *testing.T) {
 	}
 
 	testCases := []struct {
-		msg     MsgTransfer
+		msg     *MsgTransfer
 		expPass bool
 		errMsg  string
 	}{

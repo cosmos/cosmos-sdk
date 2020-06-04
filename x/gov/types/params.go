@@ -193,7 +193,7 @@ func validateVotingParams(i interface{}) error {
 type Params struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
 	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
-	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_parmas"`
+	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
 }
 
 func (gp Params) String() string {

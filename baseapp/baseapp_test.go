@@ -10,6 +10,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1504,6 +1506,40 @@ func TestQuery(t *testing.T) {
 	app.Commit()
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
+}
+
+func TestGRPCQuery(t *testing.T) {
+	grpcQueryOpt := func(bapp *BaseApp) {
+		testdata.RegisterTestServiceServer(
+			bapp.GRPCQueryRouter(),
+			testServer{},
+		)
+	}
+
+	app := setupBaseApp(t, grpcQueryOpt)
+
+	app.InitChain(abci.RequestInitChain{})
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+
+	req := testdata.SayHelloRequest{Name: "foo"}
+	reqBz, err := req.Marshal()
+	require.NoError(t, err)
+
+	reqQuery := abci.RequestQuery{
+		Data: reqBz,
+		Path: "/cosmos_sdk.codec.v1.TestService/SayHello",
+	}
+
+	resQuery := app.Query(reqQuery)
+
+	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
+
+	var res testdata.SayHelloResponse
+	err = res.Unmarshal(resQuery.Value)
+	require.NoError(t, err)
+	require.Equal(t, "Hello foo!", res.Greeting)
 }
 
 // Test p2p filter queries

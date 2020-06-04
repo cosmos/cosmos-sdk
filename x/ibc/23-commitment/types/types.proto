@@ -25,7 +25,7 @@ message MerklePrefix {
 message MerklePath {
   option (gogoproto.goproto_stringer) = false;
 
-  KeyPath key_path = 1 [
+  repeated KeyPath key_paths = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"key_path\""
   ];
@@ -38,7 +38,7 @@ message MerklePath {
 message MerkleProof {
   option (gogoproto.equal) = true;
 
-  repeated ics23.CommitmentProof proof = 1;
+  repeated ics23.CommitmentProof proofs = 1;
 }
 
 // KeyPath defines a slice of keys

@@ -3,20 +3,20 @@ package cli
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func queryTotalSupply(cliCtx context.CLIContext, cdc *codec.Codec) error {
+func queryTotalSupply(clientCtx client.Context, cdc *codec.Codec) error {
 	params := types.NewQueryTotalSupplyParams(1, 0) // no pagination
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return err
 	}
 
-	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryTotalSupply), bz)
+	res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryTotalSupply), bz)
 	if err != nil {
 		return err
 	}
@@ -27,17 +27,17 @@ func queryTotalSupply(cliCtx context.CLIContext, cdc *codec.Codec) error {
 		return err
 	}
 
-	return cliCtx.PrintOutput(totalSupply)
+	return clientCtx.PrintOutput(totalSupply)
 }
 
-func querySupplyOf(cliCtx context.CLIContext, cdc *codec.Codec, denom string) error {
+func querySupplyOf(clientCtx client.Context, cdc *codec.Codec, denom string) error {
 	params := types.NewQuerySupplyOfParams(denom)
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return err
 	}
 
-	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySupplyOf), bz)
+	res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySupplyOf), bz)
 	if err != nil {
 		return err
 	}
@@ -48,5 +48,5 @@ func querySupplyOf(cliCtx context.CLIContext, cdc *codec.Codec, denom string) er
 		return err
 	}
 
-	return cliCtx.PrintOutput(supply)
+	return clientCtx.PrintOutput(supply)
 }

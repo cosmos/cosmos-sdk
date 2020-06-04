@@ -594,6 +594,11 @@ type msgCounter struct {
 	FailOnHandler bool
 }
 
+// dummy implementation of proto.Message
+func (msg msgCounter) Reset()         {}
+func (msg msgCounter) String() string { return "TODO" }
+func (msg msgCounter) ProtoMessage()  {}
+
 // Implements Msg
 func (msg msgCounter) Route() string                { return routeMsgCounter }
 func (msg msgCounter) Type() string                 { return "counter1" }
@@ -634,6 +639,11 @@ type msgCounter2 struct {
 	Counter int64
 }
 
+// dummy implementation of proto.Message
+func (msg msgCounter2) Reset()         {}
+func (msg msgCounter2) String() string { return "TODO" }
+func (msg msgCounter2) ProtoMessage()  {}
+
 // Implements Msg
 func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
 func (msg msgCounter2) Type() string                 { return "counter2" }
@@ -664,25 +674,24 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-		newCtx = ctx.WithEventManager(sdk.NewEventManager())
-		store := newCtx.KVStore(capKey)
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
 
 		if txTest.FailOnAnte {
-			return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
-		_, err = incrementingCounter(t, store, storeKey, txTest.Counter)
+		_, err := incrementingCounter(t, store, storeKey, txTest.Counter)
 		if err != nil {
-			return newCtx, err
+			return ctx, err
 		}
 
-		newCtx.EventManager().EmitEvents(
+		ctx.EventManager().EmitEvents(
 			counterEvent("ante_handler", txTest.Counter),
 		)
 
-		return newCtx, nil
+		return ctx, nil
 	}
 }
 
@@ -1323,6 +1332,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err := cdc.MarshalBinaryBare(tx)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx := app.getState(runTxModeDeliver).ctx
@@ -1338,6 +1348,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = app.getState(runTxModeDeliver).ctx
@@ -1353,6 +1364,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.NotEmpty(t, res.Events)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = app.getState(runTxModeDeliver).ctx

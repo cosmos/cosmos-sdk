@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
+	tmjsonrpc "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -184,7 +184,7 @@ func WaitForStart(url string) {
 // Wait for the RPC server to respond to /status
 func WaitForRPC(laddr string) {
 	fmt.Println("LADDR", laddr)
-	client, err := rpcclient.NewJSONRPCClient(laddr)
+	client, err := tmjsonrpc.New(laddr)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Tendermint RPC client: %s", err))
 	}

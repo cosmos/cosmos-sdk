@@ -49,18 +49,18 @@ var (
 
 	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
 
-	multiSendMsg1 = types.MsgMultiSend{
+	multiSendMsg1 = &types.MsgMultiSend{
 		Inputs:  []types.Input{types.NewInput(addr1, coins)},
 		Outputs: []types.Output{types.NewOutput(addr2, coins)},
 	}
-	multiSendMsg2 = types.MsgMultiSend{
+	multiSendMsg2 = &types.MsgMultiSend{
 		Inputs: []types.Input{types.NewInput(addr1, coins)},
 		Outputs: []types.Output{
 			types.NewOutput(addr2, halfCoins),
 			types.NewOutput(addr3, halfCoins),
 		},
 	}
-	multiSendMsg3 = types.MsgMultiSend{
+	multiSendMsg3 = &types.MsgMultiSend{
 		Inputs: []types.Input{
 			types.NewInput(addr1, coins),
 			types.NewInput(addr4, coins),
@@ -70,7 +70,7 @@ var (
 			types.NewOutput(addr3, coins),
 		},
 	}
-	multiSendMsg4 = types.MsgMultiSend{
+	multiSendMsg4 = &types.MsgMultiSend{
 		Inputs: []types.Input{
 			types.NewInput(addr2, coins),
 		},
@@ -78,7 +78,7 @@ var (
 			types.NewOutput(addr1, coins),
 		},
 	}
-	multiSendMsg5 = types.MsgMultiSend{
+	multiSendMsg5 = &types.MsgMultiSend{
 		Inputs: []types.Input{
 			types.NewInput(addr1, coins),
 		},
@@ -128,7 +128,7 @@ func TestSendToModuleAcc(t *testing.T) {
 	tests := []struct {
 		name           string
 		fromBalance    sdk.Coins
-		msg            types.MsgSend
+		msg            *types.MsgSend
 		expSimPass     bool
 		expPass        bool
 		expFromBalance sdk.Coins

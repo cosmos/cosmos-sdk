@@ -73,7 +73,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		cliCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
+		clientCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
 		if err != nil {
 			return err
 		}
@@ -91,19 +91,19 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 				return err
 			}
 			newTx, err = client.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, cliCtx.Offline,
+				txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), stdTx, clientCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, cliCtx.Offline)
+			newTx, err = client.SignStdTx(txBldr, clientCtx, clientCtx.GetFromName(), stdTx, appendSig, clientCtx.Offline)
 		}
 
 		if err != nil {
 			return err
 		}
 
-		json, err := getSignatureJSON(cdc, newTx, cliCtx.Indent, generateSignatureOnly)
+		json, err := getSignatureJSON(cdc, newTx, clientCtx.Indent, generateSignatureOnly)
 		if err != nil {
 			return err
 		}

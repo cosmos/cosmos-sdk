@@ -13,10 +13,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case types.MsgSend:
+		case *types.MsgSend:
 			return handleMsgSend(ctx, k, msg)
 
-		case types.MsgMultiSend:
+		case *types.MsgMultiSend:
 			return handleMsgMultiSend(ctx, k, msg)
 
 		default:
@@ -26,7 +26,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Handle MsgSend.
-func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgSend) (*sdk.Result, error) {
+func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.Result, error) {
 	if !k.GetSendEnabled(ctx) {
 		return nil, types.ErrSendDisabled
 	}
@@ -51,7 +51,7 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgSend) (*sdk.Re
 }
 
 // Handle MsgMultiSend.
-func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgMultiSend) (*sdk.Result, error) {
+func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgMultiSend) (*sdk.Result, error) {
 	// NOTE: totalIn == totalOut should already have been checked
 	if !k.GetSendEnabled(ctx) {
 		return nil, types.ErrSendDisabled

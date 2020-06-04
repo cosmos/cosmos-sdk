@@ -61,20 +61,20 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "transfers are not enabled"), nil, nil
 		}
 
 		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "skip all transfers"), nil, nil
 		}
 
 		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
 		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -85,7 +85,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 // nolint: interfacer
 func sendMsgSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
-	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
+	msg *types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
 	var (
@@ -131,7 +131,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "transfers are not enabled"), nil, nil
 		}
 
 		// random number of inputs/outputs between [1, 3]
@@ -155,7 +155,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			}
 
 			if skip {
-				return simtypes.NoOpMsg(types.ModuleName), nil, nil
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "skip all transfers"), nil, nil
 			}
 
 			// set input address in used address map
@@ -198,14 +198,14 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			}
 		}
 
-		msg := types.MsgMultiSend{
+		msg := &types.MsgMultiSend{
 			Inputs:  inputs,
 			Outputs: outputs,
 		}
 
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -217,7 +217,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 // nolint: interfacer
 func sendMsgMultiSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
-	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
+	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
 	accountNumbers := make([]uint64, len(msg.Inputs))

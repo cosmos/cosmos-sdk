@@ -35,7 +35,7 @@ const (
 var (
 	KeyUnbondingTime     = []byte("UnbondingTime")
 	KeyMaxValidators     = []byte("MaxValidators")
-	KeyMaxEntries        = []byte("KeyMaxEntries")
+	KeyMaxEntries        = []byte("MaxEntries")
 	KeyBondDenom         = []byte("BondDenom")
 	KeyHistoricalEntries = []byte("HistoricalEntries")
 )

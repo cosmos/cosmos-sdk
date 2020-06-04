@@ -8,8 +8,10 @@ import (
 // NewHandler returns sdk.Handler for IBC token transfer module messages
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 		switch msg := msg.(type) {
-		case MsgTransfer:
+		case *MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer message type: %T", msg)
@@ -18,7 +20,7 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 // See createOutgoingPacket in spec:https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result, error) {
+func handleMsgTransfer(ctx sdk.Context, k Keeper, msg *MsgTransfer) (*sdk.Result, error) {
 	if err := k.SendTransfer(
 		ctx, msg.SourcePort, msg.SourceChannel, msg.DestinationHeight, msg.Amount, msg.Sender, msg.Receiver,
 	); err != nil {

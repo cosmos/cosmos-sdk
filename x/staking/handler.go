@@ -18,19 +18,19 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case types.MsgCreateValidator:
+		case *types.MsgCreateValidator:
 			return handleMsgCreateValidator(ctx, msg, k)
 
-		case types.MsgEditValidator:
+		case *types.MsgEditValidator:
 			return handleMsgEditValidator(ctx, msg, k)
 
-		case types.MsgDelegate:
+		case *types.MsgDelegate:
 			return handleMsgDelegate(ctx, msg, k)
 
-		case types.MsgBeginRedelegate:
+		case *types.MsgBeginRedelegate:
 			return handleMsgBeginRedelegate(ctx, msg, k)
 
-		case types.MsgUndelegate:
+		case *types.MsgUndelegate:
 			return handleMsgUndelegate(ctx, msg, k)
 
 		default:
@@ -42,7 +42,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k keeper.Keeper) (*sdk.Result, error) {
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, msg.ValidatorAddress); found {
 		return nil, ErrValidatorOwnerExists
@@ -121,7 +121,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgEditValidator(ctx sdk.Context, msg *types.MsgEditValidator, k keeper.Keeper) (*sdk.Result, error) {
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
@@ -178,7 +178,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper) (*sdk.Result, error) {
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
 		return nil, ErrNoValidatorFound
@@ -210,7 +210,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Keeper) (*sdk.Result, error) {
 	shares, err := k.ValidateUnbondAmount(
 		ctx, msg.DelegatorAddress, msg.ValidatorAddress, msg.Amount.Amount,
 	)
@@ -250,7 +250,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 	return &sdk.Result{Data: completionTimeBz, Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k keeper.Keeper) (*sdk.Result, error) {
 	shares, err := k.ValidateUnbondAmount(
 		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.Amount.Amount,
 	)

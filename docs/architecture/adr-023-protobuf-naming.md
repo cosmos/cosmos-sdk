@@ -21,7 +21,7 @@ rationale for our use case.
 The adoption of `google.protobuf.Any` as the recommended approach for encoding
 interface types (as opposed to `oneof`) makes package naming a central part
 of the encoding as fully-qualified message names now appear in encoded
-transactions.
+messages.
 
 ### Current Directory Organization
 
@@ -42,7 +42,7 @@ script binaries.
 
 ## Decision
 
-The goal of this ADR is to provide thoughtful naming conventions that
+The goal of this ADR is to provide thoughtful naming conventions that:
 
 * encourage a good user experience for when users interact directly with
 .proto files and fully-qualified protobuf names

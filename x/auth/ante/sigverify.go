@@ -6,10 +6,10 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -234,11 +234,6 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// no need to increment sequence on RecheckTx
-	if ctx.IsReCheckTx() && !simulate {
-		return next(ctx, tx, simulate)
-	}
-
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -310,7 +305,7 @@ func DefaultSigVerificationGasConsumer(
 
 	case multisig.PubKeyMultisigThreshold:
 		var multisignature multisig.Multisignature
-		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
+		legacy.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
 		ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
 		return nil

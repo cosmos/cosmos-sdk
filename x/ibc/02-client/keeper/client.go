@@ -38,17 +38,6 @@ func (k Keeper) CreateClient(
 	k.SetClientType(ctx, clientID, clientState.ClientType())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetLatestHeight()))
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeCreateClient,
-			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
-
 	return clientState, nil
 }
 

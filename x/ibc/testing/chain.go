@@ -80,12 +80,15 @@ func (chain *TestChain) GetContext() sdk.Context {
 // CreateClient will create a client on the chain using the provided counterparty
 // TestChain.
 func (chain *TestChain) CreateClient(counterparty *TestChain) error {
-	prevHeader := counterparty.Header
-	counterparty.Header = nextHeader(counterparty)
+	// store the current header so we can properly store its info on the counterparty chain and client
+	header := counterparty.Header
 
 	// commit and create a new block on the counterparty chain to get a fresh CommitID
 	counterparty.App.Commit()
 	commitID := counterparty.App.LastCommitID()
+
+	// update counterparty with new header so we can begin a new block
+	counterparty.Header = nextHeader(counterparty)
 	counterparty.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: counterparty.Header.Height, Time: counterparty.Header.Time}})
 
 	// set HistoricalInfo on counterparty chain after Commit
@@ -98,12 +101,12 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
-			Time:    prevHeader.Time,
+			Time:    header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
 	}
-	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, prevHeader.Height, histInfo)
+	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, header.Height, histInfo)
 
 	// also set staking params
 	stakingParams := stakingtypes.DefaultParams()
@@ -114,11 +117,11 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(counterparty.ClientID, lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift, counterparty.Header)
+	clientState, err := ibctmtypes.Initialize(counterparty.ClientID, lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift, header)
 	if err != nil {
 		return err
 	}
-	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, counterparty.Header.ConsensusState())
+	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, header.ConsensusState())
 	if err != nil {
 		return err
 	}
@@ -140,6 +143,9 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 // UpdateClient will update a client on the chain using the provided counterparty
 // TestChain.
 func (chain *TestChain) UpdateClient(counterparty *TestChain) {
+	// store the current header so we can properly store its info on the counterparty chain and client
+	header := counterparty.Header
+
 	// Create target ctx
 	ctxTarget := chain.GetContext()
 
@@ -156,12 +162,13 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 	commitID := counterparty.App.LastCommitID()
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       counterparty.Header.GetHeight(),
-		Timestamp:    counterparty.Header.Time,
+		Height:       header.GetHeight(),
+		Timestamp:    header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: counterparty.Vals,
 	}
 
+	// update counterparty with new header so we can begin a new block
 	counterparty.Header = nextHeader(counterparty)
 	counterparty.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: counterparty.Header.Height, Time: counterparty.Header.Time}})
 
@@ -175,18 +182,18 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
-			Time:    consensusState.Timestamp,
+			Time:    header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
 	}
-	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, int64(consensusState.Height), histInfo)
+	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, int64(header.Height), histInfo)
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
 		ctxTarget, counterparty.ClientID, consensusState.Height, consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(counterparty.ClientID, lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift, counterparty.Header),
+		ctxTarget, ibctmtypes.NewClientState(counterparty.ClientID, lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift, header),
 	)
 
 	// TODO: use simapp SignCheckDeliver to update state

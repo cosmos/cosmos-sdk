@@ -38,8 +38,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		{"verification success", connection1, func() clientexported.ConsensusState {
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
-			consState := suite.chainA.Header.ConsensusState()
-			return consState
+			return suite.chainA.Header.ConsensusState()
 		}, true},
 		{"client state not found", connection1, func() clientexported.ConsensusState {
 			return suite.chainB.Header.ConsensusState()
@@ -60,19 +59,20 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 
 			consState := tc.malleate()
 
+			// perform an update of chain A on chain B to commit consensus state
+			suite.chainB.UpdateClient(suite.chainA)
+
 			// perform a couple updates of chain B on chain A
 			suite.chainA.UpdateClient(suite.chainB)
 			suite.chainA.UpdateClient(suite.chainB)
 
-			// TODO: is this the right consensus height
-			consensusHeight := suite.chainA.Header.GetHeight()
-			consensusKey := prefixedClientKey(testClientIDA, host.KeyConsensusState(consensusHeight))
+			consensusKey := prefixedClientKey(testClientIDA, host.KeyConsensusState(consState.GetHeight()))
 
 			// get proof that chainB stored chainA' consensus state
 			proof, proofHeight := suite.chainB.QueryProof(consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-				suite.chainA.GetContext(), tc.connection, proofHeight, consensusHeight, proof, consState,
+				suite.chainA.GetContext(), tc.connection, proofHeight, consState.GetHeight(), proof, consState,
 			)
 
 			if tc.expPass {

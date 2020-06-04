@@ -122,12 +122,15 @@ func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
 // TestGetTimestampAtHeight verifies if the clients on each chain return the correct timestamp
 // for the other chain.
 func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
+	var expectedTimestamp uint64
+
 	cases := []struct {
 		msg      string
 		malleate func()
 		expPass  bool
 	}{
 		{"verification success", func() {
+			expectedTimestamp = uint64(suite.chainB.Header.Time.UnixNano())
 			suite.chainA.CreateClient(suite.chainB)
 		}, true},
 		{"client state not found", func() {}, false},
@@ -142,12 +145,12 @@ func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
 			connection := suite.chainA.CreateConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
 
 			actualTimestamp, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
-				suite.chainA.GetContext(), connection, uint64(suite.chainB.Header.Height),
+				suite.chainA.GetContext(), connection, uint64(suite.chainB.Header.Height-1),
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().EqualValues(uint64(suite.chainB.Header.Time.UnixNano()), actualTimestamp)
+				suite.Require().EqualValues(expectedTimestamp, actualTimestamp)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

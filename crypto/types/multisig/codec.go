@@ -19,7 +19,7 @@ var cdc = amino.NewCodec()
 
 func init() {
 	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
-	cdc.RegisterConcrete(PubKey{},
+	cdc.RegisterConcrete(PubKeyMultisigThreshold{},
 		PubKeyAminoRoute, nil)
 	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
 		ed25519.PubKeyAminoName, nil)

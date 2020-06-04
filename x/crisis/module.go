@@ -61,7 +61,7 @@ func (b AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns no root query command for the crisis module.
-func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
 
 //____________________________________________________________________________
 

@@ -355,17 +355,17 @@ func handleQueryGRPC(app *BaseApp, handler GRPCQueryHandler, req abci.RequestQue
 
 	res, err := handler(ctx, req)
 
-	if err != nil {
-		space, code, log := sdkerrors.ABCIInfo(err, false)
-		return abci.ResponseQuery{
-			Code:      code,
-			Codespace: space,
-			Log:       log,
-			Height:    req.Height,
-		}
+	if err == nil {
+		return res
 	}
 
-	return res
+	space, code, log := sdkerrors.ABCIInfo(err, false)
+	return abci.ResponseQuery{
+		Code:      code,
+		Codespace: space,
+		Log:       log,
+		Height:    req.Height,
+	}
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

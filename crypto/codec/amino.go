@@ -39,6 +39,7 @@ func RegisterCrypto(cdc *codec.Codec) {
 		secp256k1.PrivKeyAminoName, nil)
 }
 
+// PrivKeyFromBytes unmarshals private key bytes and returns a PrivKey
 func PrivKeyFromBytes(privKeyBytes []byte) (privKey crypto.PrivKey, err error) {
 	err = amino.UnmarshalBinaryBare(privKeyBytes, &privKey)
 	return

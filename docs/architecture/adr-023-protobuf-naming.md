@@ -191,6 +191,12 @@ modules such as CosmWasm. Also, users may use these query paths from tools like
 `/cosmos_sdk.x.bank.v1.QueryService/QueryBalance` to
 `/cosmos.bank.Query/Balance` without losing much useful information.
 
+RPC request and response types _should_ follow the `ServiceNameMethodNameRequest`/
+`ServiceNameMethodNameResponse` naming convention. i.e. for an RPC method named `Balance`
+on the `Query` service, the request and response types would be `QueryBalanceRequest`
+and `QueryBalanceResponse`. This will be more self-explanatory than `BalanceRequest`
+and `BalanceResponse`.
+
 #### Use just `Query` for the query service
 
 Instead of [Buf's default service suffix recommendation](https://github.com/cosmos/cosmos-sdk/pull/6033),

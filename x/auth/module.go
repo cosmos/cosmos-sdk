@@ -68,8 +68,8 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns the root query command for the auth module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(cdc)
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetQueryCmd(clientCtx.Codec)
 }
 
 // RegisterInterfaceTypes registers interfaces and implementations of the auth module.

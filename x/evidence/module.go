@@ -93,8 +93,8 @@ func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // GetTxCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, clientCtx.Codec)
 }
 
 func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {

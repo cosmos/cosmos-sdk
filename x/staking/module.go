@@ -75,8 +75,8 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns no root query command for the staking module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, clientCtx.Codec)
 }
 
 //_____________________________________

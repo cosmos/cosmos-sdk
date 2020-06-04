@@ -66,8 +66,8 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
 
 // GetQueryCmd returns the root query command for the mint module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(cdc)
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetQueryCmd(clientCtx.Codec)
 }
 
 //____________________________________________________________________________

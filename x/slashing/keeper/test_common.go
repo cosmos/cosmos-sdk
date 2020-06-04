@@ -26,7 +26,7 @@ func TestParams() types.Params {
 	return params
 }
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *staking.MsgCreateValidator {
 	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	return staking.NewMsgCreateValidator(
@@ -35,7 +35,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	)
 }
 
-func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
+func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) *staking.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, delAmount)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)
 }

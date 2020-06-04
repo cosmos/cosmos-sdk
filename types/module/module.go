@@ -52,8 +52,8 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
-	GetTxCmd(client.Context) *cobra.Command
-	GetQueryCmd(*codec.Codec) *cobra.Command
+	GetTxCmd(clientCtx client.Context) *cobra.Command
+	GetQueryCmd(clientCtx client.Context) *cobra.Command
 }
 
 // BasicManager is a collection of AppModuleBasic
@@ -113,9 +113,9 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx client.Contex
 }
 
 // AddQueryCommands adds all query commands to the rootQueryCmd
-func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, cdc *codec.Codec) {
+func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, clientCtx client.Context) {
 	for _, b := range bm {
-		if cmd := b.GetQueryCmd(cdc); cmd != nil {
+		if cmd := b.GetQueryCmd(clientCtx); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
 	}

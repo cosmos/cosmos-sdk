@@ -14,16 +14,16 @@ import (
 
 var protoCodec = encoding.GetCodec(proto.Name)
 
-// GRPCRouter routes ABCI Query requests to GRPC handlers
-type GRPCRouter struct {
+// GRPCQueryRouter routes ABCI Query requests to GRPC handlers
+type GRPCQueryRouter struct {
 	routes map[string]GRPCQueryHandler
 }
 
 var _ gogogrpc.Server
 
-// NewGRPCRouter creates a new GRPCRouter
-func NewGRPCRouter() *GRPCRouter {
-	return &GRPCRouter{
+// NewGRPCQueryRouter creates a new GRPCQueryRouter
+func NewGRPCQueryRouter() *GRPCQueryRouter {
+	return &GRPCQueryRouter{
 		routes: map[string]GRPCQueryHandler{},
 	}
 }
@@ -34,7 +34,7 @@ type GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.Respo
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found
-func (qrt *GRPCRouter) Route(path string) GRPCQueryHandler {
+func (qrt *GRPCQueryRouter) Route(path string) GRPCQueryHandler {
 	handler, found := qrt.routes[path]
 	if !found {
 		return nil
@@ -44,7 +44,7 @@ func (qrt *GRPCRouter) Route(path string) GRPCQueryHandler {
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
 // service description, handler is an object which implements that gRPC service
-func (qrt *GRPCRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// adds a top-level query handler based on the gRPC service name
 	for _, method := range sd.Methods {
 		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)

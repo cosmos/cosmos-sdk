@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func NewTestTxGenerator() context.TxGenerator {
+func NewTestTxGenerator() client.TxGenerator {
 	_, cdc := simapp.MakeCodecs()
 	return types.StdTxGenerator{Cdc: cdc}
 }

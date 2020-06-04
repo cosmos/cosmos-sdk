@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -26,7 +26,7 @@ const (
 )
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func NewCmdSubmitUpgradeProposal(ctx context.CLIContext) *cobra.Command {
+func NewCmdSubmitUpgradeProposal(clientCtx client.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
@@ -42,8 +42,8 @@ func NewCmdSubmitUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 				return err
 			}
 
-			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
-			from := cliCtx.GetFromAddress()
+			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
 			if err != nil {
@@ -63,7 +63,7 @@ func NewCmdSubmitUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, msg)
+			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 
@@ -78,15 +78,15 @@ func NewCmdSubmitUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal(ctx context.CLIContext) *cobra.Command {
+func NewCmdSubmitCancelUpgradeProposal(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
-			from := cliCtx.GetFromAddress()
+			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
 			if err != nil {
@@ -119,7 +119,7 @@ func NewCmdSubmitCancelUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, msg)
+			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 

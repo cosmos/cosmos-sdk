@@ -1,4 +1,4 @@
-package context
+package client
 
 import (
 	"fmt"
@@ -32,8 +32,8 @@ func (c MockClient) BroadcastTxSync(tx tmtypes.Tx) (*ctypes.ResultBroadcastTx, e
 	return nil, c.err
 }
 
-func CreateContextWithErrorAndMode(err error, mode string) CLIContext {
-	return CLIContext{
+func CreateContextWithErrorAndMode(err error, mode string) Context {
+	return Context{
 		Client:        MockClient{err: err},
 		BroadcastMode: mode,
 	}

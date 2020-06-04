@@ -1,4 +1,4 @@
-package context
+package client
 
 import (
 	"github.com/tendermint/tendermint/crypto"
@@ -12,18 +12,18 @@ type (
 	// implement TxBuilder.
 	TxGenerator interface {
 		NewTx() TxBuilder
-		NewFee() ClientFee
-		NewSignature() ClientSignature
+		NewFee() Fee
+		NewSignature() Signature
 		MarshalTx(tx types.Tx) ([]byte, error)
 	}
 
-	ClientFee interface {
+	Fee interface {
 		types.Fee
 		SetGas(uint64)
 		SetAmount(types.Coins)
 	}
 
-	ClientSignature interface {
+	Signature interface {
 		types.Signature
 		SetPubKey(crypto.PubKey) error
 		SetSignature([]byte)
@@ -38,9 +38,9 @@ type (
 
 		SetMsgs(...types.Msg) error
 		GetSignatures() []types.Signature
-		SetSignatures(...ClientSignature) error
+		SetSignatures(...Signature) error
 		GetFee() types.Fee
-		SetFee(ClientFee) error
+		SetFee(Fee) error
 		GetMemo() string
 		SetMemo(string)
 

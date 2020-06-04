@@ -85,7 +85,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 // nolint: interfacer
 func sendMsgSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
-	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
+	msg *types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
 	var (
@@ -198,7 +198,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			}
 		}
 
-		msg := types.MsgMultiSend{
+		msg := &types.MsgMultiSend{
 			Inputs:  inputs,
 			Outputs: outputs,
 		}
@@ -217,7 +217,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 // nolint: interfacer
 func sendMsgMultiSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
-	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
+	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
 	accountNumbers := make([]uint64, len(msg.Inputs))

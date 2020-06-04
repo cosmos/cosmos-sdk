@@ -211,14 +211,14 @@ we have tweaked the grpc codegen to use an interface rather than concrete type
 for the generated client struct. This allows us to also reuse the GRPC infrastructure
 for ABCI client queries.
 
-`CLIContext` will receive a new method `QueryConn` that returns a `ClientConn`
+1Context` will receive a new method `QueryConn` that returns a `ClientConn`
 that routes calls to ABCI queries
 
 Clients (such as CLI methods) will then be able to call query methods like this:
 
 ```go
-cliCtx := context.NewCLIContext()
-queryClient := types.NewQueryClient(cliCtx.QueryConn())
+clientCtx := client.NewContext()
+queryClient := types.NewQueryClient(clientCtx.QueryConn())
 params := &types.QueryBalanceParams{addr, denom}
 result, err := queryClient.QueryBalance(gocontext.Background(), params)
 ```

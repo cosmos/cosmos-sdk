@@ -291,7 +291,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		iTree, err := tree.GetImmutable(res.Height)
 		if err != nil {
 			// sanity check: If value for given version was retrieved, immutable tree must also be retrievable
-			panic("version exists in store but could not retrieve corresponding versioned tree in store")
+			panic(fmt.Sprintf("version exists in store but could not retrieve corresponding versioned tree in store, %s", err.Error()))
 		}
 		mtree := &iavl.MutableTree{
 			ImmutableTree: iTree,

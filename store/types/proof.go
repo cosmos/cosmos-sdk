@@ -56,7 +56,7 @@ func CommitmentOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	case ProofOpSimpleMerkleCommitment:
 		spec = ics23.TendermintSpec
 	default:
-		return nil, sdkerrors.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %v, want supported ics23 subtype", pop.Type)
+		return nil, sdkerrors.Wrapf(ErrInvalidProof, "unexpected ProofOp.Type; got %s, want supported ics23 subtypes 'ProofOpIAVLCommitment' or 'ProofOpSimpleMerkleCommitment'", pop.Type)
 	}
 
 	proof := &ics23.CommitmentProof{}

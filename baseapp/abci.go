@@ -323,7 +323,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
 }
 
-func handleQueryGRPC(app *BaseApp, handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
+func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
 	// when a client did not provide a query height, manually inject the latest
 	if req.Height == 0 {
 		req.Height = app.LastBlockHeight()

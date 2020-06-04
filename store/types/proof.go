@@ -116,8 +116,9 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 				return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from nonexistence proof")
 			}
 		} else {
-			// both left and right existence proofs are empty, return error
-			return nil, sdkerrors.Wrap(ErrInvalidProof, "nonexistence proof is empty")
+			// both left and right existence proofs are empty
+			// this only proves absence against a nil root (empty store)
+			return [][]byte{nil}, nil
 		}
 
 		absent := ics23.VerifyNonMembership(op.Spec, root, op.Proof, op.Key)

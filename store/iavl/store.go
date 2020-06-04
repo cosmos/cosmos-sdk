@@ -309,7 +309,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			commitmentProof, err = ics23iavl.CreateNonMembershipProof(mtree, req.Data)
 			if err != nil {
 				// sanity check: If value wasn't found, nonmembership proof must be creatable
-				panic(fmt.Sprintf("unexpected empty absence proof: %s", err.Error()))
+				panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
 			}
 		}
 		op := types.NewIavlCommitmentOp(req.Data, commitmentProof)

@@ -281,12 +281,8 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		if !req.Prove {
 			break
 		}
-		// Continue to prove existence/absence of value
-		var (
-			commitmentProof *ics23.CommitmentProof
-			err             error
-		)
 
+		// Continue to prove existence/absence of value
 		// Must convert store.Tree to iavl.MutableTree with given version to use in CreateProof
 		iTree, err := tree.GetImmutable(res.Height)
 		if err != nil {
@@ -297,23 +293,9 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			ImmutableTree: iTree,
 		}
 
-		if res.Value != nil {
-			// value was found
-			commitmentProof, err = ics23iavl.CreateMembershipProof(mtree, req.Data)
-			if err != nil {
-				// sanity check: If value was found, membership proof must be creatable
-				panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
-			}
-		} else {
-			// value wasn't found
-			commitmentProof, err = ics23iavl.CreateNonMembershipProof(mtree, req.Data)
-			if err != nil {
-				// sanity check: If value wasn't found, nonmembership proof must be creatable
-				panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
-			}
-		}
-		op := types.NewIavlCommitmentOp(req.Data, commitmentProof)
-		res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
+		// get proof from tree and convert to merkle.Proof before adding to result
+		res.Proof = getProofFromTree(mtree, req.Data, res.Value != nil)
+
 	case "/subspace":
 		var KVs []types.KVPair
 
@@ -333,6 +315,34 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	}
 
 	return res
+}
+
+// Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
+// appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
+// Thus, it will panic on error rather than returning it
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
+	var (
+		commitmentProof *ics23.CommitmentProof
+		err             error
+	)
+
+	if exists {
+		// value was found
+		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
+		if err != nil {
+			// sanity check: If value was found, membership proof must be creatable
+			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
+		}
+	} else {
+		// value wasn't found
+		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
+		if err != nil {
+			// sanity check: If value wasn't found, nonmembership proof must be creatable
+			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
+		}
+	}
+	op := types.NewIavlCommitmentOp(key, commitmentProof)
+	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
 }
 
 //----------------------------------------

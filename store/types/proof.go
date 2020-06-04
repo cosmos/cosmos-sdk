@@ -103,19 +103,20 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 			root []byte
 			err  error
 		)
+		switch {
 		// check left proof to calculate root
-		if nonexistProof.Nonexist.Left != nil {
+		case nonexistProof.Nonexist.Left != nil:
 			root, err = nonexistProof.Nonexist.Left.Calculate()
 			if err != nil {
 				return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from nonexistence proof")
 			}
-		} else if nonexistProof.Nonexist.Right != nil {
+		case nonexistProof.Nonexist.Right != nil:
 			// Left proof is nil, check right proof
 			root, err = nonexistProof.Nonexist.Right.Calculate()
 			if err != nil {
 				return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from nonexistence proof")
 			}
-		} else {
+		default:
 			// both left and right existence proofs are empty
 			// this only proves absence against a nil root (empty store)
 			return [][]byte{nil}, nil
@@ -152,6 +153,9 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	}
 }
 
+// ProofOp implements ProofOperator interface and converts a CommitmentOp
+// into a merkle.ProofOp format that can later be decoded by CommitmentOpDecoder
+// back into a CommitmentOp for proof verification
 func (op CommitmentOp) ProofOp() merkle.ProofOp {
 	bz, err := op.Proof.Marshal()
 	if err != nil {

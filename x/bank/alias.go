@@ -66,8 +66,8 @@ type (
 	MsgMultiSend            = types.MsgMultiSend
 	Input                   = types.Input
 	Output                  = types.Output
-	BalanceRequest          = types.BalanceRequest
-	AllBalancesRequest      = types.AllBalancesRequest
+	QueryBalanceRequest     = types.QueryBalanceRequest
+	QueryAllBalancesRequest = types.QueryAllBalancesRequest
 	GenesisBalancesIterator = types.GenesisBalancesIterator
 	Keeper                  = keeper.Keeper
 	GenesisState            = types.GenesisState

@@ -13,13 +13,13 @@ const (
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
-func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *BalanceRequest {
-	return &BalanceRequest{Address: addr, Denom: denom}
+func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequest {
+	return &QueryBalanceRequest{Address: addr, Denom: denom}
 }
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
-func NewQueryAllBalancesRequest(addr sdk.AccAddress) *AllBalancesRequest {
-	return &AllBalancesRequest{Address: addr}
+func NewQueryAllBalancesRequest(addr sdk.AccAddress) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr}
 }
 
 // QueryTotalSupply defines the params for the following queries:

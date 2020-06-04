@@ -21,7 +21,7 @@ rationale for our use case.
 The adoption of `google.protobuf.Any` as the recommended approach for encoding
 interface types (as opposed to `oneof`) makes package naming a central part
 of the encoding as fully-qualified message names now appear in encoded
-transactions.
+messages.
 
 ### Current Directory Organization
 

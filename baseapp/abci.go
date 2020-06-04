@@ -297,7 +297,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
-		return handleQueryGRPC(app, grpcHandler, req)
+		return app.handleQueryGRPC(grpcHandler, req)
 	}
 
 	path := splitPath(req.Path)
@@ -351,7 +351,6 @@ func (app *BaseApp) createQueryContext(req abci.RequestQuery) (sdk.Context, erro
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			)
-		)
 	}
 
 	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
@@ -361,7 +360,6 @@ func (app *BaseApp) createQueryContext(req abci.RequestQuery) (sdk.Context, erro
 				sdkerrors.ErrInvalidRequest,
 				"failed to load state at height %d; %s (latest height: %d)", req.Height, err, app.LastBlockHeight(),
 			)
-		)
 	}
 
 	// cache wrap the commit-multistore for safety

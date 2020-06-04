@@ -25,11 +25,11 @@ func (e testServer) SayHello(_ context.Context, request *testdata.SayHelloReques
 var _ testdata.TestServiceServer = testServer{}
 
 func TestGRPCRouter(t *testing.T) {
-	qr := NewGRPCRouter()
+	qr := NewGRPCQueryRouter()
 	testdata.RegisterTestServiceServer(qr, testServer{})
 	helper := &QueryServiceTestHelper{
-		GRPCRouter: qr,
-		ctx:        sdk.Context{},
+		GRPCQueryRouter: qr,
+		ctx:             sdk.Context{},
 	}
 	client := testdata.NewTestServiceClient(helper)
 

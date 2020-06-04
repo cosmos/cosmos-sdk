@@ -21,7 +21,7 @@ service Query {
     rpc SupplyOf (QuerySupplyOfRequest) returns (QuerySupplyOfResponse) { }
 }
 
-// QueryBalanceRequest is the request type for the Query.Balance RPC method
+// QueryBalanceRequest is the request type for the Query/Balance RPC method
 message QueryBalanceRequest {
     // address is the address to query balances for
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -30,40 +30,40 @@ message QueryBalanceRequest {
     string denom = 2;
 }
 
-// QueryBalanceResponse is the response type for the Query.Balance RPC method
+// QueryBalanceResponse is the response type for the Query/Balance RPC method
 message QueryBalanceResponse {
 
     // balance is the balance of the coin
     cosmos_sdk.v1.Coin balance = 1;
 }
 
-// QueryBalanceRequest is the request type for the Query.AllBalances RPC method
+// QueryBalanceRequest is the request type for the Query/AllBalances RPC method
 message QueryAllBalancesRequest {
     // address is the address to query balances for
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
-// QueryAllBalancesResponse is the response type for the Query.AllBalances RPC method
+// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method
 message QueryAllBalancesResponse {
     // balances is the balances of the coins
     repeated cosmos_sdk.v1.Coin balances = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// QueryTotalSupplyRequest is the request type for the Query.TotalSupply RPC method
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method
 message QueryTotalSupplyRequest { }
 
-// QueryTotalSupplyResponse is the response type for the Query.TotalSupply RPC method
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method
 message QueryTotalSupplyResponse {
     // supply is the supply of the coins
     repeated cosmos_sdk.v1.Coin supply = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// QuerySupplyOfRequest is the request type for the Query.SupplyOf RPC method
+// QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method
 message QuerySupplyOfRequest {
     string denom = 1;
 }
 
-// QuerySupplyOfResponse is the response type for the Query.SupplyOf RPC method
+// QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method
 message QuerySupplyOfResponse {
     // amount is the supply of the coin
     string amount = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];

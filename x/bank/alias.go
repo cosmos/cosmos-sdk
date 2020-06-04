@@ -43,8 +43,8 @@ var (
 	NewOutput                   = types.NewOutput
 	ValidateInputsOutputs       = types.ValidateInputsOutputs
 	ParamKeyTable               = types.ParamKeyTable
-	NewQueryBalanceParams       = types.NewQueryBalanceRequest
-	NewQueryAllBalancesParams   = types.NewQueryAllBalancesRequest
+	NewQueryBalanceRequest      = types.NewQueryBalanceRequest
+	NewQueryAllBalancesRequest  = types.NewQueryAllBalancesRequest
 	ModuleCdc                   = types.ModuleCdc
 	ParamStoreKeySendEnabled    = types.ParamStoreKeySendEnabled
 	BalancesPrefix              = types.BalancesPrefix

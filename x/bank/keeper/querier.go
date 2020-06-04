@@ -14,11 +14,13 @@ import (
 
 var _ types.QueryServer = BaseKeeper{}
 
+// Balance implements the Query/Balance gRPC method
 func (q BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
 	balance := q.GetBalance(sdk.UnwrapSDKContext(ctx), req.Address, req.Denom)
 	return &types.QueryBalanceResponse{Balance: &balance}, nil
 }
 
+// AllBalances implements the Query/AllBalances gRPC method
 func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -27,6 +29,7 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 	return &types.QueryAllBalancesResponse{Balances: balances}, nil
 }
 
+// TotalSupply implements the Query/TotalSupply gRPC method
 func (q BaseKeeper) TotalSupply(c context.Context, request *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -36,6 +39,7 @@ func (q BaseKeeper) TotalSupply(c context.Context, request *types.QueryTotalSupp
 	return &types.QueryTotalSupplyResponse{Supply: totalSupply}, nil
 }
 
+// SupplyOf implements the Query/SupplyOf gRPC method
 func (q BaseKeeper) SupplyOf(c context.Context, request *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 

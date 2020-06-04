@@ -12,12 +12,13 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/client"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
@@ -28,16 +29,17 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
 type AppModuleBasic struct {
-	cdc              Codec
-	proposalHandlers []client.ProposalHandler // proposal handlers which live in governance cli and rest
+	cdc              codec.Marshaler
+	proposalHandlers []govclient.ProposalHandler // proposal handlers which live in governance cli and rest
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic object
-func NewAppModuleBasic(proposalHandlers ...client.ProposalHandler) AppModuleBasic {
+func NewAppModuleBasic(proposalHandlers ...govclient.ProposalHandler) AppModuleBasic {
 	return AppModuleBasic{
 		proposalHandlers: proposalHandlers,
 	}
@@ -70,29 +72,33 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes registers the REST routes for the gov module.
-func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	proposalRESTHandlers := make([]rest.ProposalRESTHandler, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx))
+		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(clientCtx))
 	}
 
-	rest.RegisterRoutes(ctx, rtr, proposalRESTHandlers)
+	rest.RegisterHandlers(clientCtx, rtr, proposalRESTHandlers)
 }
 
 // GetTxCmd returns the root tx command for the gov module.
-func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-
+func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(cdc))
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(clientCtx))
 	}
 
-	return cli.GetTxCmd(StoreKey, cdc, proposalCLIHandlers)
+	return cli.NewTxCmd(clientCtx, proposalCLIHandlers)
 }
 
 // GetQueryCmd returns the root query command for the gov module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetQueryCmd(StoreKey, clientCtx.Codec)
+}
+
+// RegisterInterfaceTypes implements InterfaceModule.RegisterInterfaceTypes
+func (a AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 //____________________________________________________________________________
@@ -107,7 +113,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc Codec, keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

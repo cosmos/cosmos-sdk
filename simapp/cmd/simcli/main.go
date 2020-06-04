@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,11 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
@@ -81,7 +82,7 @@ func main() {
 	}
 }
 
-func queryCmd(cdc *amino.Codec) *cobra.Command {
+func queryCmd(cdc *codec.Codec) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -102,12 +103,16 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 	)
 
 	// add modules' query commands
-	simapp.ModuleBasics.AddQueryCommands(queryCmd, cdc)
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithJSONMarshaler(appCodec).
+		WithCodec(cdc)
+	simapp.ModuleBasics.AddQueryCommands(queryCmd, clientCtx)
 
 	return queryCmd
 }
 
-func txCmd(cdc *amino.Codec) *cobra.Command {
+func txCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -116,8 +121,15 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithJSONMarshaler(appCodec).
+		WithTxGenerator(types.StdTxGenerator{Cdc: cdc}).
+		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
+		WithCodec(cdc)
+
 	txCmd.AddCommand(
-		bankcmd.SendTxCmd(cdc),
+		bankcmd.NewSendTxCmd(clientCtx),
 		flags.LineBreak,
 		authcmd.GetSignCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
@@ -130,7 +142,7 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 	)
 
 	// add modules' tx commands
-	simapp.ModuleBasics.AddTxCommands(txCmd, cdc)
+	simapp.ModuleBasics.AddTxCommands(txCmd, clientCtx)
 
 	return txCmd
 }
@@ -138,9 +150,9 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 // registerRoutes registers the routes from the different modules for the REST client.
 // NOTE: details on the routes added for each module are in the module documentation
 func registerRoutes(rs *lcd.RestServer) {
-	client.RegisterRoutes(rs.CliCtx, rs.Mux)
-	authrest.RegisterTxRoutes(rs.CliCtx, rs.Mux)
-	simapp.ModuleBasics.RegisterRESTRoutes(rs.CliCtx, rs.Mux)
+	rpc.RegisterRoutes(rs.ClientCtx, rs.Mux)
+	authrest.RegisterTxRoutes(rs.ClientCtx, rs.Mux)
+	simapp.ModuleBasics.RegisterRESTRoutes(rs.ClientCtx, rs.Mux)
 }
 
 func initConfig(cmd *cobra.Command) error {

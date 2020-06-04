@@ -1,4 +1,4 @@
-package context
+package client
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ import (
 
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
-func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
+func (ctx Context) GetNode() (rpcclient.Client, error) {
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client is defined in offline mode")
 	}
@@ -31,34 +31,34 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 // Query performs a query to a Tendermint node with the provided path.
 // It returns the result and height of the query upon success or an error if
 // the query fails.
-func (ctx CLIContext) Query(path string) ([]byte, int64, error) {
+func (ctx Context) Query(path string) ([]byte, int64, error) {
 	return ctx.query(path, nil)
 }
 
 // QueryWithData performs a query to a Tendermint node with the provided path
 // and a data payload. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryWithData(path string, data []byte) ([]byte, int64, error) {
+func (ctx Context) QueryWithData(path string, data []byte) ([]byte, int64, error) {
 	return ctx.query(path, data)
 }
 
 // QueryStore performs a query to a Tendermint node with the provided key and
 // store name. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryStore(key tmbytes.HexBytes, storeName string) ([]byte, int64, error) {
+func (ctx Context) QueryStore(key tmbytes.HexBytes, storeName string) ([]byte, int64, error) {
 	return ctx.queryStore(key, storeName, "key")
 }
 
 // QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
 // It returns the ResultQuery obtained from the query.
-func (ctx CLIContext) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
+func (ctx Context) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
 	return ctx.queryABCI(req)
 }
 
 // QuerySubspace performs a query to a Tendermint node with the provided
 // store name and subspace. It returns key value pair and height of the query
 // upon success or an error if the query fails.
-func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, height int64, err error) {
+func (ctx Context) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, height int64, err error) {
 	resRaw, height, err := ctx.queryStore(subspace, storeName, "subspace")
 	if err != nil {
 		return res, height, err
@@ -69,16 +69,16 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx CLIContext) GetFromAddress() sdk.AccAddress {
+func (ctx Context) GetFromAddress() sdk.AccAddress {
 	return ctx.FromAddress
 }
 
 // GetFromName returns the key name for the current context.
-func (ctx CLIContext) GetFromName() string {
+func (ctx Context) GetFromName() string {
 	return ctx.FromName
 }
 
-func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
+func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return abci.ResponseQuery{}, err
@@ -115,7 +115,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 // or an error if the query fails. In addition, it will verify the returned
 // proof if TrustNode is disabled. If proof verification fails or the query
 // height is invalid, an error will be returned.
-func (ctx CLIContext) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
+func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
 		Path: path,
 		Data: key,
@@ -128,7 +128,7 @@ func (ctx CLIContext) query(path string, key tmbytes.HexBytes) ([]byte, int64, e
 }
 
 // Verify verifies the consensus proof at given height.
-func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
+func (ctx Context) Verify(height int64) (tmtypes.SignedHeader, error) {
 	if ctx.Verifier == nil {
 		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
 	}
@@ -146,7 +146,7 @@ func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
 }
 
 // verifyProof perform response proof verification.
-func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) error {
+func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error {
 	if ctx.Verifier == nil {
 		return fmt.Errorf("missing valid certifier to verify data from distrusted node")
 	}
@@ -157,7 +157,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 		return err
 	}
 
-	// TODO: Instead of reconstructing, stash on CLIContext field?
+	// TODO: Instead of reconstructing, stash on Context field?
 	prt := rootmulti.DefaultProofRuntime()
 
 	// TODO: Better convention for path?
@@ -188,7 +188,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 // queryStore performs a query to a Tendermint node with the provided a store
 // name and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) queryStore(key tmbytes.HexBytes, storeName, endPath string) ([]byte, int64, error) {
+func (ctx Context) queryStore(key tmbytes.HexBytes, storeName, endPath string) ([]byte, int64, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

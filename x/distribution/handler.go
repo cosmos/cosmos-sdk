@@ -13,16 +13,16 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case types.MsgSetWithdrawAddress:
+		case *types.MsgSetWithdrawAddress:
 			return handleMsgModifyWithdrawAddress(ctx, msg, k)
 
-		case types.MsgWithdrawDelegatorReward:
+		case *types.MsgWithdrawDelegatorReward:
 			return handleMsgWithdrawDelegatorReward(ctx, msg, k)
 
-		case types.MsgWithdrawValidatorCommission:
+		case *types.MsgWithdrawValidatorCommission:
 			return handleMsgWithdrawValidatorCommission(ctx, msg, k)
 
-		case types.MsgFundCommunityPool:
+		case *types.MsgFundCommunityPool:
 			return handleMsgFundCommunityPool(ctx, msg, k)
 
 		default:
@@ -33,7 +33,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // These functions assume everything has been authenticated (ValidateBasic passed, and signatures checked)
 
-func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAddress, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg *types.MsgSetWithdrawAddress, k keeper.Keeper) (*sdk.Result, error) {
 	err := k.SetWithdrawAddr(ctx, msg.DelegatorAddress, msg.WithdrawAddress)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAdd
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDelegatorReward, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg *types.MsgWithdrawDelegatorReward, k keeper.Keeper) (*sdk.Result, error) {
 	_, err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddress, msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDele
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdrawValidatorCommission, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg *types.MsgWithdrawValidatorCommission, k keeper.Keeper) (*sdk.Result, error) {
 	_, err := k.WithdrawValidatorCommission(ctx, msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgFundCommunityPool(ctx sdk.Context, msg types.MsgFundCommunityPool, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgFundCommunityPool(ctx sdk.Context, msg *types.MsgFundCommunityPool, k keeper.Keeper) (*sdk.Result, error) {
 	if err := k.FundCommunityPool(ctx, msg.Amount, msg.Depositor); err != nil {
 		return nil, err
 	}

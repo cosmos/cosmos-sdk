@@ -8,13 +8,21 @@ import (
 )
 
 const (
-	// DefaultPacketTimeoutHeight is the default packet timeout height relative
+	// DefaultRelativePacketTimeoutHeight is the default packet timeout height (in blocks) relative
 	// to the current block height. The timeout is disabled when set to 0.
-	DefaultPacketTimeoutHeight = 1000 // NOTE: in blocks
+	DefaultRelativePacketTimeoutHeight = 1000
 
-	// DefaultPacketTimeoutTimestamp is the default packet timeout timestamp relative
-	// to the current block timestamp. The timeout is disabled when set to 0.
-	DefaultPacketTimeoutTimestamp = 0 // NOTE: in nanoseconds
+	// DefaultRelativePacketTimeoutTimestamp is the default packet timeout timestamp (in nanoseconds)
+	// relative to the current block timestamp. The timeout is disabled when set to 0.
+	DefaultRelativePacketTimeoutTimestamp = 0
+
+	// DefaultAbsolutePacketTimeoutHeight is the default packet timeout in blocks.
+	// The timeout is disabled when set to 0.
+	DefaultAbsolutePacketTimeoutHeight = 0
+
+	// DefaultAbsolutePacketTimeoutTimestamp is the default packet timeout timestamp (in nanoseconds)
+	// relative to the current block timestamp. The timeout is disabled when set to 0.
+	DefaultAbsolutePacketTimeoutTimestamp = 0
 )
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance

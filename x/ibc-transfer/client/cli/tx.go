@@ -57,7 +57,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultPacketTimeoutHeight, "Timeout height relative to the current block height. The timeout is disabled when set to 0.")
-	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultPacketTimeoutTimestamp, "Timeout timestamp (in nanoseconds) relative to the current block timestamp. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultAbsolutePacketTimeoutHeight, "Absolute timeout block height. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultAbsolutePacketTimeoutTimestamp, "Absolute timeout timestamp in nanoseconds. The timeout is disabled when set to 0.")
 	return cmd
 }

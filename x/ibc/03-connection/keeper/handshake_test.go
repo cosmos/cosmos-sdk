@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			suite.chainA.UpdateClient(suite.chainB)
 			suite.chainB.UpdateClient(suite.chainA)
 			suite.chainA.UpdateClient(suite.chainB)
-			return suite.chainB.Header.GetHeight() - 1
+			return suite.chainA.Header.GetHeight() - 1
 		}, true},
 		{"consensus height > latest height", func() uint64 {
 			return 0

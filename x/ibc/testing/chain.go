@@ -80,6 +80,7 @@ func (chain *TestChain) GetContext() sdk.Context {
 // CreateClient will create a client on the chain using the provided counterparty
 // TestChain.
 func (chain *TestChain) CreateClient(counterparty *TestChain) error {
+	prevHeader := counterparty.Header
 	counterparty.Header = nextHeader(counterparty)
 
 	// commit and create a new block on the counterparty chain to get a fresh CommitID
@@ -97,12 +98,12 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) error {
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
-			Time:    counterparty.Header.Time,
+			Time:    prevHeader.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
 	}
-	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, counterparty.Header.Height, histInfo)
+	counterparty.App.StakingKeeper.SetHistoricalInfo(ctxCounterparty, prevHeader.Height, histInfo)
 
 	// also set staking params
 	stakingParams := stakingtypes.DefaultParams()
@@ -174,7 +175,7 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
-			Time:    counterparty.Header.Time,
+			Time:    consensusState.Timestamp,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,

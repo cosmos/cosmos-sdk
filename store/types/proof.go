@@ -142,8 +142,7 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 			return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from existence proof")
 		}
 
-		exists := ics23.VerifyMembership(op.Spec, root, op.Proof, op.Key, args[0])
-		if !exists {
+		if !ics23.VerifyMembership(op.Spec, root, op.Proof, op.Key, args[0]) {
 			return nil, sdkerrors.Wrapf(ErrInvalidProof, "proof did not verify existence of key %s with given value %x", op.Key, args[0])
 		}
 

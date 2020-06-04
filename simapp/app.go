@@ -305,7 +305,7 @@ func NewSimApp(
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
-	// add test gRPC service to for testing gRPC queries in isolation
+	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations

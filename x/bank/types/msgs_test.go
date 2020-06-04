@@ -31,7 +31,7 @@ func TestMsgSendValidation(t *testing.T) {
 
 	cases := []struct {
 		valid bool
-		tx    MsgSend
+		tx    *MsgSend
 	}{
 		{true, NewMsgSend(addr1, addr2, atom123)},       // valid send
 		{true, NewMsgSend(addr1, addr2, atom123eth123)}, // valid send with multiple coins

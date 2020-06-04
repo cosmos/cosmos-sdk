@@ -17,22 +17,22 @@ const (
 )
 
 var (
-	_ sdk.Msg                       = MsgSubmitEvidence{}
+	_ sdk.Msg                       = &MsgSubmitEvidence{}
 	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
-	_ exported.MsgSubmitEvidence    = MsgSubmitEvidence{}
+	_ exported.MsgSubmitEvidence    = &MsgSubmitEvidence{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
-func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (MsgSubmitEvidence, error) {
+func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEvidence, error) {
 	msg, ok := evi.(proto.Message)
 	if !ok {
-		return MsgSubmitEvidence{}, fmt.Errorf("cannot proto marshal %T", evi)
+		return nil, fmt.Errorf("cannot proto marshal %T", evi)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		return MsgSubmitEvidence{Submitter: s}, err
+		return nil, err
 	}
-	return MsgSubmitEvidence{Submitter: s, Evidence: any}, nil
+	return &MsgSubmitEvidence{Submitter: s, Evidence: any}, nil
 }
 
 // Route returns the MsgSubmitEvidence's route.

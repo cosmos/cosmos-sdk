@@ -42,7 +42,7 @@ script binaries.
 
 ## Decision
 
-The goal of this ADR is to provide thoughtful naming conventions that
+The goal of this ADR is to provide thoughtful naming conventions that:
 
 * encourage a good user experience for when users interact directly with
 .proto files and fully-qualified protobuf names

@@ -6,7 +6,6 @@ import (
 	"runtime/debug"
 
 	"github.com/gogo/protobuf/jsonpb"
-
 	"github.com/gogo/protobuf/proto"
 
 	amino "github.com/tendermint/go-amino"
@@ -185,7 +184,7 @@ func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 	return err
 }
 
-// ProtoJSONPacker is an AnyUnpacker provided for compatibility with pbjson
+// ProtoJSONPacker is an AnyUnpacker provided for compatibility with jsonpb
 type ProtoJSONPacker struct {
 	JSONPBMarshaler *jsonpb.Marshaler
 }

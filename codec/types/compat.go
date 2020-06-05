@@ -187,7 +187,7 @@ func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 
 // ProtoJSONPacker is an AnyUnpacker provided for compatibility with pbjson
 type ProtoJSONPacker struct {
-	JsonMarshaler *jsonpb.Marshaler
+	JSONPBMarshaler *jsonpb.Marshaler
 }
 
 var _ AnyUnpacker = ProtoJSONPacker{}
@@ -204,7 +204,7 @@ func (a ProtoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 		}
 	}
 
-	bz, err := a.JsonMarshaler.MarshalToString(any)
+	bz, err := a.JSONPBMarshaler.MarshalToString(any)
 	any.compat = &anyCompat{
 		jsonBz: []byte(bz),
 		err:    err,

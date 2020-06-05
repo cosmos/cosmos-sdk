@@ -158,7 +158,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	ha := &testdata.HasAnimal{
 		Animal: any,
 	}
-	err = ha.UnpackInterfaces(types.ProtoJSONPacker{JsonMarshaler: jm})
+	err = ha.UnpackInterfaces(types.ProtoJSONPacker{JSONPBMarshaler: jm})
 	require.NoError(t, err)
 	json, err = jm.MarshalToString(ha)
 	require.NoError(t, err)

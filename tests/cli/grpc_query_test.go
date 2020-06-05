@@ -21,8 +21,7 @@ func TestCliQueryConn(t *testing.T) {
 	t.Cleanup(func() { proc.Stop(false) })
 
 	ctx := client.NewContext()
-	queryConn := ctx.QueryConn()
-	testClient := testdata.NewTestServiceClient(queryConn)
+	testClient := testdata.NewTestServiceClient(ctx)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	require.NoError(t, err)
 	require.Equal(t, "hello", res.Message)

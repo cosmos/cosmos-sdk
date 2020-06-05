@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
@@ -34,9 +34,9 @@ func BlockCommand() *cobra.Command {
 	return cmd
 }
 
-func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
+func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +49,8 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	if !cliCtx.TrustNode {
-		check, err := cliCtx.Verify(res.Block.Height)
+	if !clientCtx.TrustNode {
+		check, err := clientCtx.Verify(res.Block.Height)
 		if err != nil {
 			return nil, err
 		}
@@ -64,16 +64,16 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	if cliCtx.Indent {
-		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
+	if clientCtx.Indent {
+		return legacy.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
 
-	return codec.Cdc.MarshalJSON(res)
+	return legacy.Cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height
-func GetChainHeight(cliCtx context.CLIContext) (int64, error) {
-	node, err := cliCtx.GetNode()
+func GetChainHeight(clientCtx client.Context) (int64, error) {
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return -1, err
 	}
@@ -103,7 +103,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getBlock(context.NewCLIContext(), height)
+	output, err := getBlock(client.NewContext(), height)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 // REST
 
 // REST handler to get a block
-func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func BlockRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -126,7 +126,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		chainHeight, err := GetChainHeight(cliCtx)
+		chainHeight, err := GetChainHeight(clientCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, "failed to parse chain height")
 			return
@@ -137,23 +137,23 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := getBlock(cliCtx, &height)
+		output, err := getBlock(clientCtx, &height)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponseBare(w, cliCtx, output)
+		rest.PostProcessResponseBare(w, clientCtx, output)
 	}
 }
 
 // REST handler to get the latest block
-func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func LatestBlockRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		output, err := getBlock(cliCtx, nil)
+		output, err := getBlock(clientCtx, nil)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponseBare(w, cliCtx, output)
+		rest.PostProcessResponseBare(w, clientCtx, output)
 	}
 }

@@ -9,16 +9,16 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ sdk.Msg = MsgConnectionOpenInit{}
+var _ sdk.Msg = &MsgConnectionOpenInit{}
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
 	signer sdk.AccAddress,
-) MsgConnectionOpenInit {
+) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
-	return MsgConnectionOpenInit{
+	return &MsgConnectionOpenInit{
 		ConnectionID: connectionID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
@@ -60,7 +60,7 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenTry{}
+var _ sdk.Msg = &MsgConnectionOpenTry{}
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
@@ -68,9 +68,9 @@ func NewMsgConnectionOpenTry(
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
 	counterpartyVersions []string, proofInit, proofConsensus commitmenttypes.MerkleProof,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
-) MsgConnectionOpenTry {
+) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
-	return MsgConnectionOpenTry{
+	return &MsgConnectionOpenTry{
 		ConnectionID:         connectionID,
 		ClientID:             clientID,
 		Counterparty:         counterparty,
@@ -140,15 +140,15 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenAck{}
+var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
 	connectionID string, proofTry, proofConsensus commitmenttypes.MerkleProof,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
-) MsgConnectionOpenAck {
-	return MsgConnectionOpenAck{
+) *MsgConnectionOpenAck {
+	return &MsgConnectionOpenAck{
 		ConnectionID:    connectionID,
 		ProofTry:        proofTry,
 		ProofConsensus:  proofConsensus,
@@ -208,14 +208,14 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenConfirm{}
+var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
 	connectionID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgConnectionOpenConfirm {
-	return MsgConnectionOpenConfirm{
+) *MsgConnectionOpenConfirm {
+	return &MsgConnectionOpenConfirm{
 		ConnectionID: connectionID,
 		ProofAck:     proofAck,
 		ProofHeight:  proofHeight,

@@ -10,16 +10,16 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ sdk.Msg = MsgChannelOpenInit{}
+var _ sdk.Msg = &MsgChannelOpenInit{}
 
 // NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
 func NewMsgChannelOpenInit(
 	portID, channelID string, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
-) MsgChannelOpenInit {
+) *MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
-	return MsgChannelOpenInit{
+	return &MsgChannelOpenInit{
 		PortID:    portID,
 		ChannelID: channelID,
 		Channel:   channel,
@@ -59,17 +59,17 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenTry{}
+var _ sdk.Msg = &MsgChannelOpenTry{}
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress,
-) MsgChannelOpenTry {
+) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
-	return MsgChannelOpenTry{
+	return &MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,
 		Channel:             channel,
@@ -124,14 +124,14 @@ func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenAck{}
+var _ sdk.Msg = &MsgChannelOpenAck{}
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
 	portID, channelID string, cpv string, proofTry commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelOpenAck {
-	return MsgChannelOpenAck{
+) *MsgChannelOpenAck {
+	return &MsgChannelOpenAck{
 		PortID:              portID,
 		ChannelID:           channelID,
 		CounterpartyVersion: cpv,
@@ -185,14 +185,14 @@ func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenConfirm{}
+var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
 	portID, channelID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelOpenConfirm {
-	return MsgChannelOpenConfirm{
+) *MsgChannelOpenConfirm {
+	return &MsgChannelOpenConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofAck:    proofAck,
@@ -242,13 +242,13 @@ func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelCloseInit{}
+var _ sdk.Msg = &MsgChannelCloseInit{}
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
 func NewMsgChannelCloseInit(
 	portID string, channelID string, signer sdk.AccAddress,
-) MsgChannelCloseInit {
-	return MsgChannelCloseInit{
+) *MsgChannelCloseInit {
+	return &MsgChannelCloseInit{
 		PortID:    portID,
 		ChannelID: channelID,
 		Signer:    signer,
@@ -287,14 +287,14 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelCloseConfirm{}
+var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
 	portID, channelID string, proofInit commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelCloseConfirm {
-	return MsgChannelCloseConfirm{
+) *MsgChannelCloseConfirm {
+	return &MsgChannelCloseConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofInit:   proofInit,
@@ -344,14 +344,14 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgPacket{}
+var _ sdk.Msg = &MsgPacket{}
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(
 	packet Packet, proof commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgPacket {
-	return MsgPacket{
+) *MsgPacket {
+	return &MsgPacket{
 		Packet:      packet,
 		Proof:       proof,
 		ProofHeight: proofHeight,
@@ -404,14 +404,14 @@ func (msg MsgPacket) Type() string {
 	return "ics04/opaque"
 }
 
-var _ sdk.Msg = MsgTimeout{}
+var _ sdk.Msg = &MsgTimeout{}
 
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof commitmenttypes.MerkleProof,
 	proofHeight uint64, signer sdk.AccAddress,
-) MsgTimeout {
-	return MsgTimeout{
+) *MsgTimeout {
+	return &MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
 		Proof:            proof,
@@ -458,12 +458,12 @@ func (msg MsgTimeout) Type() string {
 	return "ics04/timeout"
 }
 
-var _ sdk.Msg = MsgAcknowledgement{}
+var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
-	return MsgAcknowledgement{
+	packet Packet, ack []byte, proof commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress) *MsgAcknowledgement {
+	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
 		Proof:           proof,

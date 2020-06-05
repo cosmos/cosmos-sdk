@@ -10,10 +10,10 @@ func NewHandler(k Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case MsgGrantFeeAllowance:
+		case *MsgGrantFeeAllowance:
 			return handleGrantFee(ctx, k, msg)
 
-		case MsgRevokeFeeAllowance:
+		case *MsgRevokeFeeAllowance:
 			return handleRevokeFee(ctx, k, msg)
 
 		default:
@@ -22,14 +22,14 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleGrantFee(ctx sdk.Context, k Keeper, msg MsgGrantFeeAllowance) (*sdk.Result, error) {
-	feegrant := FeeAllowanceGrant(msg)
+func handleGrantFee(ctx sdk.Context, k Keeper, msg *MsgGrantFeeAllowance) (*sdk.Result, error) {
+	feegrant := FeeAllowanceGrant(*msg)
 
 	k.GrantFeeAllowance(ctx, feegrant)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleRevokeFee(ctx sdk.Context, k Keeper, msg MsgRevokeFeeAllowance) (*sdk.Result, error) {
+func handleRevokeFee(ctx sdk.Context, k Keeper, msg *MsgRevokeFeeAllowance) (*sdk.Result, error) {
 	k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

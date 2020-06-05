@@ -36,7 +36,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addr2 = mustAddr("cosmos1rjxwm0rwyuldsg00qf5lt26wxzzppjzxs2efdw")
 	suite.addr3 = mustAddr("cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x")
 	suite.addr4 = mustAddr("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")
-
 }
 
 func mustAddr(acc string) sdk.AccAddress {

@@ -10,7 +10,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -63,19 +63,19 @@ func (a AppModuleBasic) getValidatedGenesis(cdc codec.JSONMarshaler, bz json.Raw
 }
 
 // RegisterRESTRoutes registers the REST routes for the feegrant module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
 	// TODO
 	// rest.RegisterRoutes(ctx, rtr)
 }
 
 // GetTxCmd returns the root tx command for the feegrant module.
-func (AppModuleBasic) GetTxCmd(context.CLIContext) *cobra.Command {
+func (AppModuleBasic) GetTxCmd(client.Context) *cobra.Command {
 	// TODO
 	return nil
 }
 
 // GetQueryCmd returns no root query command for the feegrant module.
-func (AppModuleBasic) GetQueryCmd(*codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	// TODO
 	return nil
 }

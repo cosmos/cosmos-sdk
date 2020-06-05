@@ -18,6 +18,12 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
+	_, err := queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{})
+	suite.Require().Error(err)
+
+	_, err = queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{Address: addr})
+	suite.Require().Error(err)
+
 	req := types.NewQueryBalanceRequest(addr, fooDenom)
 	res, err := queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -43,6 +49,9 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
+
+	_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
+	suite.Require().Error(err)
 
 	req := types.NewQueryAllBalancesRequest(addr)
 	res, err := queryClient.AllBalances(gocontext.Background(), req)
@@ -90,9 +99,8 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	suite.Require().Panics(func() {
-		_, _ = queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
-	})
+	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
+	suite.Require().Error(err)
 
 	res, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{Denom: test1Supply.Denom})
 	suite.Require().NoError(err)

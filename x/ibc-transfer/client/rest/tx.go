@@ -56,10 +56,11 @@ func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		msg := types.NewMsgTransfer(
 			portID,
 			channelID,
-			req.DestHeight,
 			req.Amount,
 			fromAddr,
 			req.Receiver,
+			req.TimeoutHeight,
+			req.TimeoutTimestamp,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {

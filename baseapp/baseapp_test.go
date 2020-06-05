@@ -1305,6 +1305,49 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 }
 
+// Test custom panic handling within app.DeliverTx method
+func TestCustomRunTxPanicHandler(t *testing.T) {
+	const customPanicMsg = "test panic"
+	anteErr := sdkerrors.Register("fakeModule", 100500, "fakeError")
+
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
+			return
+		})
+	}
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			return &sdk.Result{}, nil
+		})
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
+
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	app.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
+		err, ok := recoveryObj.(error)
+		if !ok {
+			return nil
+		}
+
+		if anteErr.Is(err) {
+			panic(customPanicMsg)
+		} else {
+			return nil
+		}
+	})
+
+	// Transaction should panic with custom handler above
+	{
+		tx := newTxCounter(0, 0)
+
+		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(tx) })
+	}
+}
+
 func TestBaseAppAnteHandler(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *BaseApp) {

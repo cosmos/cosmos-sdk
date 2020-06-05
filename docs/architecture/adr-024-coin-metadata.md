@@ -32,13 +32,8 @@ UX and remove the requirement for making any assumptions on the unit of denomina
 ## Decision
 
 The `x/bank` module will be updated to store and index metadata by `denom`, specifically the "base" or
-smallest unit -- the unit the Cosmos SDK state-machine works with. The metadata should ideally be
-extensible and serve the needs of many external consumers and even other modules (e.g. `x/ibc` or `x/nft`).
-At a minimum, the metadata type should include all units and a potential list of denomination aliases.
-
-To provide a means of extensibility, metadata may include a non-zero length list of `extensions`,
-which are simply key/value pairs. In addition, metadata may also include a non-zero length list of
-`aliases` with regard to the origin chain (e.g. `["ETH", "ether"]`). Both `extensions` and `aliases`
+smallest unit -- the unit the Cosmos SDK state-machine works with. Metadata may also include a non-zero
+length list of `aliases` with regard to the origin chain (e.g. `["ETH", "ether"]`). A token's `aliases`
 may be changed via governance.
 
 As a result, we can define the type as follows:
@@ -50,17 +45,11 @@ message DenomUnit {
   repeated string aliases = 3;
 }
 
-message Extension {
-  key string = 1;
-  value string = 2;
-}
-
 message Metadata {
   string description = 1;
   string base = 2;
   repeated DenomUnit denom_units = 3;
   repeated string aliases = 4;
-  repeated Extension extensions = 5;
 }
 ```
 
@@ -85,20 +74,6 @@ As an example, the ATOM's metadata can be defined as follows:
   ],
   "aliases": [
     "microatom"
-  ],
-  "extensions": [
-    {
-      "key": "total_supply",
-      "value": "543578243452349991"
-    },
-    {
-      "key": "max_supply",
-      "value": "999999999999999999"
-    },
-    {
-      "key": "source_chain",
-      "value": "gaia"
-    }
   ]
 }
 ```

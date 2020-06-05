@@ -74,16 +74,15 @@ keep names concise, without going overboard. The general rule of thumb should
 be if a shorter name would convey more or else the same thing, pick the shorter
 name.
 
-For instance, `cosmos.bank.Send` (16 bytes) conveys roughly the same information
-as `cosmos_sdk.x.bank.v1.MsgSend` (28 bytes) but is notably shorter.
-If we needed version 2 of bank, we could just write `cosmos.bank2.Send`.
+For instance, `cosmos.bank.MsgSend` (19 bytes) conveys roughly the same information
+as `cosmos_sdk.x.bank.v1.MsgSend` (28 bytes) but is more concise.
 
 Such conciseness makes names both more pleasant to work with and take up less
 space within transactions and on the wire.
 
 We should also resist the temptation to over-optimize, by making names
 cryptically short with abbreviations. For instance, we shouldn't try to
-reduce `cosmos.bank.Send` to `csm.bk.Snd` just to save six bytes.
+reduce `cosmos.bank.MsgSend` to `csm.bk.MSnd` just to save a few bytes.
 
 The goal is to make names **_concise but not cryptic_**.
 
@@ -155,31 +154,9 @@ go package names, i.e. the `cosmos.bank` protobuf package will still live in
 
 ### Message Naming
 
-#### Use simple verbs for transaction messages
-
-This is likely one of the most controversial recommendations here as it will
-change legacy go struct names.
-
-Historically all transaction messages in the SDK have been prefixed with `Msg`
-which is a shortening of msssage. To begin with "message", not being an action
-word, does not clearly indicate the concept of transaction or operation. So
-understanding that `Msg` indicates transaction likely requires knowledge of
-Cosmos SDK conventions. Once someone understands that `Msg` means transaction,
-however, it still is likely redundant information as the type name usually
-includes an action verb such as "send", "create" or "submit".
-
-Going forward, for both conciseness and clarity, transaction messages should
-simply use a descriptive action verb to indicate that this is a type which
-performs an action in a transaction. This should also be made clear in the
-documentation.
-
-To maintain compatibility with existing names in go code, an alias can be
-introduced for legacy type names.
-
-#### Use simple nouns for state types
-
-Nouns should be used for other types which are used in state, queries and as
-arguments to some transaction messages. Ex. `Coin`, `Proposal` and `Delegation`.
+Message type names should be as concise possible without losing clarity. `sdk.Msg`
+types which are used in transactions will retain the `Msg` prefix as that provides
+helpful context.
 
 ### Service and RPC Naming
 
@@ -223,8 +200,7 @@ community-based governance.
 ### Positive
 
 * names will be more concise and easier to read and type
-* all transactions using `Any` will be at least 12 bytes shorter
-(`_sdk.x`, `.v1`, `Msg` will be removed from `sdk.Msg` message names)
+* all transactions using `Any` will be at shorter (`_sdk.x` and `.v1` will be removed)
 * `.proto` file imports will be more standard (without `"third_party/proto"` in
 the path)
 * code generation will be easier for clients because .proto files will be
@@ -232,10 +208,6 @@ in a single `proto/` directory which can be copied rather than scattered
 throughout the SDK
 
 ### Negative
-
-* some legacy go struct names will change (ex. `MsgSend` vs `Send`), but we can
-make it effectively non-API breaking with aliases (i.e. `type MsgSend = Send`).
-Note also that legacy Amino type names will not change
 
 ### Neutral
 

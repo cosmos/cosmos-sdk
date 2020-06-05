@@ -147,7 +147,7 @@ type AppModule interface {
 	QuerierRoute() string
 	// Deprecated: use RegisterQueryService
 	NewQuerierHandler() sdk.Querier
-	// RegisterQueryService allows a module to register a query service grpc
+	// RegisterQueryService allows a module to register a gRPC query service
 	RegisterQueryService(grpc.Server)
 
 	// ABCI

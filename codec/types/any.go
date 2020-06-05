@@ -49,7 +49,7 @@ type Any struct {
 
 	cachedValue interface{}
 
-	aminoCompat *aminoCompat
+	compat *anyCompat
 }
 
 // NewAnyWithValue constructs a new Any packed with the value provided or

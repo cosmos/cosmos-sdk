@@ -5,60 +5,61 @@ import (
 	"reflect"
 	"runtime/debug"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 
 	amino "github.com/tendermint/go-amino"
 )
 
-type aminoCompat struct {
-	bz     []byte
-	jsonBz []byte
-	err    error
+type anyCompat struct {
+	aminoBz []byte
+	jsonBz  []byte
+	err     error
 }
 
-var Debug = false
+var Debug = true
 
-func aminoCompatError(errType string, x interface{}) error {
+func anyCompatError(errType string, x interface{}) error {
 	if Debug {
 		debug.PrintStack()
 	}
 	return fmt.Errorf(
-		"amino %s Any marshaling error for %+v, this is likely because "+
+		"%s marshaling error for %+v, this is likely because "+
 			"amino is being used directly (instead of codec.Codec which is preferred) "+
 			"or UnpackInterfacesMessage is not defined for some type which contains "+
 			"a protobuf Any either directly or via one of its members. To see a "+
 			"stacktrace of where the error is coming from, set the var Debug = true "+
-			"in codec/types/amino_compat.go",
+			"in codec/types/compat.go",
 		errType, x,
 	)
 }
 
 func (any Any) MarshalAmino() ([]byte, error) {
-	ac := any.aminoCompat
+	ac := any.compat
 	if ac == nil {
-		return nil, aminoCompatError("binary unmarshal", any)
+		return nil, anyCompatError("amino binary unmarshal", any)
 	}
-	return ac.bz, ac.err
+	return ac.aminoBz, ac.err
 }
 
 func (any *Any) UnmarshalAmino(bz []byte) error {
-	any.aminoCompat = &aminoCompat{
-		bz:  bz,
-		err: nil,
+	any.compat = &anyCompat{
+		aminoBz: bz,
+		err:     nil,
 	}
 	return nil
 }
 
 func (any Any) MarshalJSON() ([]byte, error) {
-	ac := any.aminoCompat
+	ac := any.compat
 	if ac == nil {
-		return nil, aminoCompatError("JSON marshal", any)
+		return nil, anyCompatError("JSON marshal", any)
 	}
 	return ac.jsonBz, ac.err
 }
 
 func (any *Any) UnmarshalJSON(bz []byte) error {
-	any.aminoCompat = &aminoCompat{
+	any.compat = &anyCompat{
 		jsonBz: bz,
 		err:    nil,
 	}
@@ -74,11 +75,11 @@ type AminoUnpacker struct {
 var _ AnyUnpacker = AminoUnpacker{}
 
 func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
-	ac := any.aminoCompat
+	ac := any.compat
 	if ac == nil {
-		return aminoCompatError("binary unmarshal", reflect.TypeOf(iface))
+		return anyCompatError("amino binary unmarshal", reflect.TypeOf(iface))
 	}
-	err := a.Cdc.UnmarshalBinaryBare(ac.bz, iface)
+	err := a.Cdc.UnmarshalBinaryBare(ac.aminoBz, iface)
 	if err != nil {
 		return err
 	}
@@ -98,7 +99,7 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 
 	// this is necessary for tests that use reflect.DeepEqual and compare
 	// proto vs amino marshaled values
-	any.aminoCompat = nil
+	any.compat = nil
 
 	return nil
 }
@@ -117,9 +118,9 @@ func (a AminoPacker) UnpackAny(any *Any, _ interface{}) error {
 		return err
 	}
 	bz, err := a.Cdc.MarshalBinaryBare(any.cachedValue)
-	any.aminoCompat = &aminoCompat{
-		bz:  bz,
-		err: err,
+	any.compat = &anyCompat{
+		aminoBz: bz,
+		err:     err,
 	}
 	return err
 }
@@ -133,9 +134,9 @@ type AminoJSONUnpacker struct {
 var _ AnyUnpacker = AminoJSONUnpacker{}
 
 func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
-	ac := any.aminoCompat
+	ac := any.compat
 	if ac == nil {
-		return aminoCompatError("JSON unmarshal", reflect.TypeOf(iface))
+		return anyCompatError("JSON unmarshal", reflect.TypeOf(iface))
 	}
 	err := a.Cdc.UnmarshalJSON(ac.jsonBz, iface)
 	if err != nil {
@@ -157,7 +158,7 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 
 	// this is necessary for tests that use reflect.DeepEqual and compare
 	// proto vs amino marshaled values
-	any.aminoCompat = nil
+	any.compat = nil
 
 	return nil
 }
@@ -176,9 +177,37 @@ func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 		return err
 	}
 	bz, err := a.Cdc.MarshalJSON(any.cachedValue)
-	any.aminoCompat = &aminoCompat{
+	any.compat = &anyCompat{
 		jsonBz: bz,
 		err:    err,
 	}
+	return err
+}
+
+// ProtoJSONPacker is an AnyUnpacker provided for compatibility with jsonpb
+type ProtoJSONPacker struct {
+	JSONPBMarshaler *jsonpb.Marshaler
+}
+
+var _ AnyUnpacker = ProtoJSONPacker{}
+
+func (a ProtoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
+	if any == nil {
+		return nil
+	}
+
+	if any.cachedValue != nil {
+		err := UnpackInterfaces(any.cachedValue, a)
+		if err != nil {
+			return err
+		}
+	}
+
+	bz, err := a.JSONPBMarshaler.MarshalToString(any)
+	any.compat = &anyCompat{
+		jsonBz: []byte(bz),
+		err:    err,
+	}
+
 	return err
 }

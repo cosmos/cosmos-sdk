@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -32,17 +32,17 @@ $ %s query ibc client states
 		),
 		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			clientStates, height, err := utils.QueryAllClientStates(cliCtx, page, limit)
+			clientStates, height, err := utils.QueryAllClientStates(clientCtx, page, limit)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(clientStates)
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(clientStates)
 		},
 	}
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
@@ -65,7 +65,7 @@ $ %s query ibc client state [client-id]
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
@@ -73,13 +73,13 @@ $ %s query ibc client state [client-id]
 
 			prove := viper.GetBool(flags.FlagProve)
 
-			clientStateRes, err := utils.QueryClientState(cliCtx, clientID, prove)
+			clientStateRes, err := utils.QueryClientState(clientCtx, clientID, prove)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(clientStateRes.ProofHeight))
-			return cliCtx.PrintOutput(clientStateRes)
+			clientCtx = clientCtx.WithHeight(int64(clientStateRes.ProofHeight))
+			return clientCtx.PrintOutput(clientStateRes)
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
@@ -96,7 +96,7 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.ClientName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
@@ -109,13 +109,13 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 
 			prove := viper.GetBool(flags.FlagProve)
 
-			csRes, err := utils.QueryConsensusState(cliCtx, clientID, height, prove)
+			csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(csRes.ProofHeight))
-			return cliCtx.PrintOutput(csRes)
+			clientCtx = clientCtx.WithHeight(int64(csRes.ProofHeight))
+			return clientCtx.PrintOutput(csRes)
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
@@ -130,15 +130,15 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 		Long:    "Query the latest Tendermint header of the running chain",
 		Example: fmt.Sprintf("%s query ibc client header", version.ClientName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			header, height, err := utils.QueryTendermintHeader(cliCtx)
+			header, height, err := utils.QueryTendermintHeader(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(header)
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(header)
 		},
 	}
 }
@@ -158,15 +158,15 @@ $ %s query ibc client node-state
 		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			state, height, err := utils.QueryNodeConsensusState(cliCtx)
+			state, height, err := utils.QueryNodeConsensusState(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(state)
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(state)
 		},
 	}
 }
@@ -177,9 +177,9 @@ func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 		Use:   "path",
 		Short: "Query the commitment path of the running chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
+			clienCtx := client.NewContext().WithCodec(cdc)
 			path := commitmenttypes.NewMerklePrefix([]byte("ibc"))
-			return ctx.PrintOutput(path)
+			return clienCtx.PrintOutput(path)
 		},
 	}
 }

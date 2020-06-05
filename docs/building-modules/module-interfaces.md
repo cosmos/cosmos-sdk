@@ -30,10 +30,10 @@ This getter function creates the command for the Buy Name transaction. It does t
   + **Short and Long:** A description for the function is provided here. A `Short` description is expected, and `Long` can be used to provide a more detailed description when a user uses the `--help` flag to ask for more information.
   + **RunE:** Defines a function that can return an error, called when the command is executed. Using `Run` would do the same thing, but would not allow for errors to be returned.
 - **`RunE` Function Body:** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new transaction that is ready to be relayed to nodes.
-  + The function should first initialize a [`TxBuilder`](../core/transactions.md#txbuilder) with the application `codec`'s `TxEncoder`, as well as a new [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) with the `codec` and `AccountDecoder`. These contexts contain all the information provided by the user and will be used to transfer this user-specific information between processes. To learn more about how contexts are used in a transaction, click [here](../core/transactions.md#transaction-generation).
+  + The function should first initialize a [`TxBuilder`](../core/transactions.md#txbuilder) with the application `codec`'s `TxEncoder`, as well as a new [`Context`](../interfaces/query-lifecycle.md#context) with the `codec` and `AccountDecoder`. These contexts contain all the information provided by the user and will be used to transfer this user-specific information between processes. To learn more about how contexts are used in a transaction, click [here](../core/transactions.md#transaction-generation).
   + If applicable, the command's arguments are parsed. Here, the `amount` given by the user is parsed into a denomination of `coins`.
-  + If applicable, the `CLIContext` is used to retrieve any parameters such as the transaction originator's address to be used in the transaction. Here, the `from` address is retrieved by calling `cliCtx.getFromAddress()`.
-  + A [message](./messages-and-queries.md) is created using all parameters parsed from the command arguments and `CLIContext`. The constructor function of the specific message type is called directly. It is good practice to call `ValidateBasic()` on the newly created message to run a sanity check and check for invalid arguments.
+  + If applicable, the `Context` is used to retrieve any parameters such as the transaction originator's address to be used in the transaction. Here, the `from` address is retrieved by calling `cliCtx.getFromAddress()`.
+  + A [message](./messages-and-queries.md) is created using all parameters parsed from the command arguments and `Context`. The constructor function of the specific message type is called directly. It is good practice to call `ValidateBasic()` on the newly created message to run a sanity check and check for invalid arguments.
   + Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastMsgs()`.
 - **Flags.** Add any [flags](#flags) to the command. No flags were specified here, but all transaction commands have flags to provide additional information from the user (e.g. amount of fees they are willing to pay). These *persistent* [transaction flags](../interfaces/cli.md#flags) can be added to a higher-level command so that they apply to all transaction commands.
 
@@ -54,11 +54,11 @@ This query returns the address that owns a particular name. The getter function 
 - **`codec` and `queryRoute`.** In addition to taking in the application `codec`, query command getters also take a `queryRoute` used to construct a path [Baseapp](../core/baseapp.md#query-routing) uses to route the query in the application.
 - **Construct the command.** Read the [Cobra Documentation](https://github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `whois` and provide the `name` they are querying for as the only argument.
 - **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
-  + The function should first initialize a new [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) with the application `codec`.
-  + If applicable, the `CLIContext` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `CLIContext` parameters in this case because the query does not involve any information about the user.
+  + The function should first initialize a new [`Context`](../interfaces/query-lifecycle.md#context) with the application `codec`.
+  + If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
   + The `queryRoute` is used to construct a `path` [`baseapp`](../core/baseapp.md) will use to route the query to the appropriate [querier](./querier.md). The expected format for a query `path` is "queryCategory/queryRoute/queryType/arg1/arg2/...", where `queryCategory` can be `p2p`, `store`, `app`, or `custom`, `queryRoute` is the name of the module, and `queryType` is the name of the query type defined within the module. [`baseapp`](../core/baseapp.md) can handle each type of `queryCategory` by routing it to a module querier or retrieving results directly from stores and functions for querying peer nodes. Module queries are `custom` type queries (some SDK modules have exceptions, such as `auth` and `gov` module queries).
-  + The `CLIContext` `QueryWithData()` function is used to relay the query to a node and retrieve the response. It requires the `path`. It returns the result and height of the query upon success or an error if the query fails. In addition, it will verify the returned proof if `TrustNode` is disabled. If proof verification fails or the query height is invalid, an error will be returned.
-  + The `codec` is used to nmarshal the response and the `CLIContext` is used to print the output back to the user.
+  + The `Context` `QueryWithData()` function is used to relay the query to a node and retrieve the response. It requires the `path`. It returns the result and height of the query upon success or an error if the query fails. In addition, it will verify the returned proof if `TrustNode` is disabled. If proof verification fails or the query height is invalid, an error will be returned.
+  + The `codec` is used to nmarshal the response and the `Context` is used to print the output back to the user.
 - **Flags.** Add any [flags](#flags) to the command.
 
 
@@ -125,7 +125,7 @@ The `BaseReq` includes basic information that every request needs to have, simil
 
 ### Request Handlers
 
-Request handlers must be defined for both transaction and query requests. Handlers' arguments include a reference to the application's `codec` and the [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) created in the user interaction.
+Request handlers must be defined for both transaction and query requests. Handlers' arguments include a reference to the application's `codec` and the [`Context`](../interfaces/query-lifecycle.md#context) created in the user interaction.
 
 Here is an example of a request handler for the nameservice module `buyNameReq` request (the same one shown above):
 
@@ -135,7 +135,7 @@ The request handler can be broken down as follows:
 
 * **Parse Request:** The request handler first attempts to parse the request, and then run `Sanitize` and `ValidateBasic` on the underlying `BaseReq` to check the validity of the request. Next, it attempts to parse the arguments `Buyer` and `Amount` to the types `AccountAddress` and `Coins` respectively.
 * **Message:** Then, a [message](./messages-and-queries.md) of the type `MsgBuyName` (defined by the module developer to trigger the state changes for this transaction) is created from the values and another sanity check, `ValidateBasic` is run on it.
-* **Generate Transaction:** Finally, the HTTP `ResponseWriter`, application [`codec`](../core/encoding.md), [`CLIContext`](../interfaces/query-lifecycle.md#clicontext), request [`BaseReq`](../interfaces/rest.md#basereq), and message is passed to `WriteGenerateStdTxResponse` to further process the request.
+* **Generate Transaction:** Finally, the HTTP `ResponseWriter`, application [`codec`](../core/encoding.md), [`Context`](../interfaces/query-lifecycle.md#context), request [`BaseReq`](../interfaces/rest.md#basereq), and message is passed to `WriteGenerateStdTxResponse` to further process the request.
 
 To read more about how a transaction is generated, visit the transactions documentation [here](../core/transactions.md#transaction-generation).
 
@@ -149,7 +149,7 @@ The router used by the SDK is [Gorilla Mux](https://github.com/gorilla/mux). The
 Here is a `registerRoutes` function with one query route example from the [nameservice tutorial](https://cosmos.network/docs/tutorial/rest.html):
 
 ``` go
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
+func RegisterRoutes(cliCtx client.Context, r *mux.Router, cdc *codec.Codec, storeName string) {
   // ResolveName Query
   r.HandleFunc(fmt.Sprintf("/%s/names/{%s}", storeName, restName), resolveNameHandler(cdc, cliCtx, storeName)).Methods("GET")
 }
@@ -157,9 +157,9 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 
 A few things to note:
 
-* The router `r` has already been initialized by the application and is passed in here as an argument - this function is able to add on the nameservice module's routes onto any application's router. The application must also provide a [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) that the querier will need to process user requests and the application [`codec`](../core/encoding.md) for encoding and decoding application-specific types.
+* The router `r` has already been initialized by the application and is passed in here as an argument - this function is able to add on the nameservice module's routes onto any application's router. The application must also provide a [`Context`](../interfaces/query-lifecycle.md#context) that the querier will need to process user requests and the application [`codec`](../core/encoding.md) for encoding and decoding application-specific types.
 * `"/%s/names/{%s}", storeName, restName` is the url for the HTTP request. `storeName` is the name of the module, `restName` is a variable provided by the user to specify what kind of query they are making.
-* `resolveNameHandler` is the query request handler defined by the module developer. It also takes the application `codec` and `CLIContext` passed in from the user side, as well as the `storeName`.
+* `resolveNameHandler` is the query request handler defined by the module developer. It also takes the application `codec` and `Context` passed in from the user side, as well as the `storeName`.
 * `"GET"` is the HTTP Request method. As to be expected, queries are typically GET requests. Transactions are typically POST and PUT requests.
 
 

@@ -1,4 +1,4 @@
-package context_test
+package client_test
 
 import (
 	"os"
@@ -10,20 +10,20 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
-func TestCLIContext_WithOffline(t *testing.T) {
+func TestContext_WithOffline(t *testing.T) {
 	viper.Set(flags.FlagOffline, true)
 	viper.Set(flags.FlagNode, "tcp://localhost:26657")
 
-	ctx := context.NewCLIContext()
+	ctx := client.NewContext()
 	require.True(t, ctx.Offline)
 	require.Nil(t, ctx.Client)
 }
 
-func TestCLIContext_WithGenOnly(t *testing.T) {
+func TestContext_WithGenOnly(t *testing.T) {
 	viper.Set(flags.FlagGenerateOnly, true)
 
 	validFromAddr := "cosmos1q7380u26f7ntke3facjmynajs4umlr329vr4ja"
@@ -53,7 +53,7 @@ func TestCLIContext_WithGenOnly(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.NewCLIContextWithFrom(tt.from)
+			ctx := client.NewContextWithFrom(tt.from)
 
 			require.Equal(t, tt.expectedFromAddr, ctx.FromAddress)
 			require.Equal(t, tt.expectedFromName, ctx.FromName)
@@ -61,9 +61,9 @@ func TestCLIContext_WithGenOnly(t *testing.T) {
 	}
 }
 
-func TestCLIContext_WithKeyring(t *testing.T) {
+func TestContext_WithKeyring(t *testing.T) {
 	viper.Set(flags.FlagGenerateOnly, true)
-	ctx := context.NewCLIContextWithFrom("cosmos1q7380u26f7ntke3facjmynajs4umlr329vr4ja")
+	ctx := client.NewContextWithFrom("cosmos1q7380u26f7ntke3facjmynajs4umlr329vr4ja")
 	require.NotNil(t, ctx.Keyring)
 	kr := ctx.Keyring
 	ctx = ctx.WithKeyring(nil)

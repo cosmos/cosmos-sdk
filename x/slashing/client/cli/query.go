@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +47,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, args[0])
 			if err != nil {
@@ -58,7 +57,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			consAddr := sdk.ConsAddress(pk.Address())
 			key := types.ValidatorSigningInfoKey(consAddr)
 
-			res, _, err := cliCtx.QueryStore(key, storeName)
+			res, _, err := clientCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -73,7 +72,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 				return err
 			}
 
-			return cliCtx.PrintOutput(signingInfo)
+			return clientCtx.PrintOutput(signingInfo)
 		},
 	}
 }
@@ -89,17 +88,17 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 $ <appcli> query slashing params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
-			res, _, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
 			var params types.Params
 			cdc.MustUnmarshalJSON(res, &params)
-			return cliCtx.PrintOutput(params)
+			return clientCtx.PrintOutput(params)
 		},
 	}
 }

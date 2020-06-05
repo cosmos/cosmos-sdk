@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,7 +51,7 @@ var ProposalFlags = []string{
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(
-	ctx context.CLIContext,
+	ctx client.Context,
 	pcmds []*cobra.Command,
 ) *cobra.Command {
 	govTxCmd := &cobra.Command{
@@ -78,7 +77,7 @@ func NewTxCmd(
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
-func NewCmdSubmitProposal(ctx context.CLIContext) *cobra.Command {
+func NewCmdSubmitProposal(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -106,7 +105,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
+			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
 
 			proposal, err := parseSubmitProposalFlags()
 			if err != nil {
@@ -120,7 +119,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg, err := types.NewMsgSubmitProposal(content, amount, cliCtx.FromAddress)
+			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.FromAddress)
 			if err != nil {
 				return err
 			}
@@ -129,7 +128,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, msg)
+			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 
@@ -143,7 +142,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
-func NewCmdDeposit(ctx context.CLIContext) *cobra.Command {
+func NewCmdDeposit(clientCtx client.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
@@ -159,7 +158,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
+			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -168,7 +167,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 			}
 
 			// Get depositor address
-			from := cliCtx.GetFromAddress()
+			from := clientCtx.GetFromAddress()
 
 			// Get amount of coins
 			amount, err := sdk.ParseCoins(args[1])
@@ -182,13 +181,13 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, msg)
+			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 }
 
 // NewCmdVote implements creating a new vote command.
-func NewCmdVote(ctx context.CLIContext) *cobra.Command {
+func NewCmdVote(clientCtx client.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
@@ -205,10 +204,10 @@ $ %s tx gov vote 1 yes --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
+			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
 
 			// Get voting address
-			from := cliCtx.GetFromAddress()
+			from := clientCtx.GetFromAddress()
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -229,7 +228,7 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, msg)
+			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 }

@@ -13,7 +13,7 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,14 +43,14 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			result, err := GetValidators(cliCtx, height, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
+			result, err := GetValidators(clientCtx, height, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(result)
+			return clientCtx.PrintOutput(result)
 		},
 	}
 
@@ -119,9 +119,9 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 }
 
 // GetValidators from client
-func GetValidators(cliCtx context.CLIContext, height *int64, page, limit int) (ResultValidatorsOutput, error) {
+func GetValidators(clientCtx client.Context, height *int64, page, limit int) (ResultValidatorsOutput, error) {
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
@@ -131,8 +131,8 @@ func GetValidators(cliCtx context.CLIContext, height *int64, page, limit int) (R
 		return ResultValidatorsOutput{}, err
 	}
 
-	if !cliCtx.TrustNode {
-		check, err := cliCtx.Verify(validatorsRes.BlockHeight)
+	if !clientCtx.TrustNode {
+		check, err := clientCtx.Verify(validatorsRes.BlockHeight)
 		if err != nil {
 			return ResultValidatorsOutput{}, err
 		}
@@ -160,7 +160,7 @@ func GetValidators(cliCtx context.CLIContext, height *int64, page, limit int) (R
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func ValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
 		if err != nil {
@@ -175,7 +175,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		chainHeight, err := GetChainHeight(cliCtx)
+		chainHeight, err := GetChainHeight(clientCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, "failed to parse chain height")
 			return
@@ -185,16 +185,16 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(cliCtx, &height, page, limit)
+		output, err := GetValidators(clientCtx, &height, page, limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, output)
+		rest.PostProcessResponse(w, clientCtx, output)
 	}
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func LatestValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
 		if err != nil {
@@ -202,11 +202,11 @@ func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		output, err := GetValidators(cliCtx, nil, page, limit)
+		output, err := GetValidators(clientCtx, nil, page, limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, output)
+		rest.PostProcessResponse(w, clientCtx, output)
 	}
 }

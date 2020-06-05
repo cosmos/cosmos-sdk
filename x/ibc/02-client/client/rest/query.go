@@ -7,18 +7,18 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/clients", queryAllClientStatesFn(cliCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")
+func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/ibc/clients", queryAllClientStatesFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(clientCtx)).Methods("GET")
 }
 
 // queryAllClientStatesFn queries all available light clients
@@ -32,7 +32,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients [get]
-func queryAllClientStatesFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryAllClientStatesFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if err != nil {
@@ -40,19 +40,19 @@ func queryAllClientStatesFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		clients, height, err := utils.QueryAllClientStates(cliCtx, page, limit)
+		clients, height, err := utils.QueryAllClientStates(clientCtx, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, clients)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, clients)
 	}
 }
 
@@ -67,25 +67,25 @@ func queryAllClientStatesFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/client-state [get]
-func queryClientStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryClientStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
 		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		clientStateRes, err := utils.QueryClientState(cliCtx, clientID, prove)
+		clientStateRes, err := utils.QueryClientState(clientCtx, clientID, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(int64(clientStateRes.ProofHeight))
-		rest.PostProcessResponse(w, cliCtx, clientStateRes)
+		clientCtx = clientCtx.WithHeight(int64(clientStateRes.ProofHeight))
+		rest.PostProcessResponse(w, clientCtx, clientStateRes)
 	}
 }
 
@@ -101,7 +101,7 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/consensus-state [get]
-func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryConsensusStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
@@ -113,19 +113,19 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		csRes, err := utils.QueryConsensusState(cliCtx, clientID, height, prove)
+		csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(int64(csRes.ProofHeight))
-		rest.PostProcessResponse(w, cliCtx, csRes)
+		clientCtx = clientCtx.WithHeight(int64(csRes.ProofHeight))
+		rest.PostProcessResponse(w, clientCtx, csRes)
 	}
 }
 
@@ -137,17 +137,17 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} QueryHeader "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/header [get]
-func queryHeaderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryHeaderHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		header, height, err := utils.QueryTendermintHeader(cliCtx)
+		header, height, err := utils.QueryTendermintHeader(clientCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		res := cliCtx.Codec.MustMarshalJSON(header)
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
+		res := clientCtx.Codec.MustMarshalJSON(header)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
 	}
 }
 
@@ -159,15 +159,15 @@ func queryHeaderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} QueryNodeConsensusState "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/node-state [get]
-func queryNodeConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryNodeConsensusStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		state, height, err := utils.QueryNodeConsensusState(cliCtx)
+		state, height, err := utils.QueryNodeConsensusState(clientCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		}
 
-		res := cliCtx.Codec.MustMarshalJSON(state)
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
+		res := clientCtx.Codec.MustMarshalJSON(state)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
 	}
 }

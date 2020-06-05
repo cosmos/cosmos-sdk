@@ -9,7 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -49,13 +49,13 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes registers the REST routes for the genutil module.
-func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
+func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // GetTxCmd returns no root tx command for the genutil module.
-func (AppModuleBasic) GetTxCmd(_ context.CLIContext) *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
 
 // GetQueryCmd returns no root query command for the genutil module.
-func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
 
 //____________________________________________________________________________
 

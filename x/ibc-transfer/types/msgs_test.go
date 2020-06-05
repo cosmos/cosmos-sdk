@@ -34,37 +34,37 @@ var (
 
 // TestMsgTransferRoute tests Route for MsgTransfer
 func TestMsgTransferRoute(t *testing.T) {
-	msg := NewMsgTransfer(validPort, validChannel, 10, coins, addr1, addr2)
+	msg := NewMsgTransfer(validPort, validChannel, coins, addr1, addr2, 10, 0)
 
 	require.Equal(t, RouterKey, msg.Route())
 }
 
 // TestMsgTransferType tests Type for MsgTransfer
 func TestMsgTransferType(t *testing.T) {
-	msg := NewMsgTransfer(validPort, validChannel, 10, coins, addr1, addr2)
+	msg := NewMsgTransfer(validPort, validChannel, coins, addr1, addr2, 10, 0)
 
 	require.Equal(t, "transfer", msg.Type())
 }
 
 // TestMsgTransferValidation tests ValidateBasic for MsgTransfer
 func TestMsgTransferValidation(t *testing.T) {
-	testMsgs := []MsgTransfer{
-		NewMsgTransfer(validPort, validChannel, 10, coins, addr1, addr2),             // valid msg
-		NewMsgTransfer(invalidShortPort, validChannel, 10, coins, addr1, addr2),      // too short port id
-		NewMsgTransfer(invalidLongPort, validChannel, 10, coins, addr1, addr2),       // too long port id
-		NewMsgTransfer(invalidPort, validChannel, 10, coins, addr1, addr2),           // port id contains non-alpha
-		NewMsgTransfer(validPort, invalidShortChannel, 10, coins, addr1, addr2),      // too short channel id
-		NewMsgTransfer(validPort, invalidLongChannel, 10, coins, addr1, addr2),       // too long channel id
-		NewMsgTransfer(validPort, invalidChannel, 10, coins, addr1, addr2),           // channel id contains non-alpha
-		NewMsgTransfer(validPort, validChannel, 10, invalidDenomCoins, addr1, addr2), // invalid amount
-		NewMsgTransfer(validPort, validChannel, 10, negativeCoins, addr1, addr2),     // amount contains negative coin
-		NewMsgTransfer(validPort, validChannel, 10, coins, emptyAddr, addr2),         // missing sender address
-		NewMsgTransfer(validPort, validChannel, 10, coins, addr1, ""),                // missing recipient address
-		NewMsgTransfer(validPort, validChannel, 10, sdk.Coins{}, addr1, addr2),       // not possitive coin
+	testMsgs := []*MsgTransfer{
+		NewMsgTransfer(validPort, validChannel, coins, addr1, addr2, 10, 0),             // valid msg
+		NewMsgTransfer(invalidShortPort, validChannel, coins, addr1, addr2, 10, 0),      // too short port id
+		NewMsgTransfer(invalidLongPort, validChannel, coins, addr1, addr2, 10, 0),       // too long port id
+		NewMsgTransfer(invalidPort, validChannel, coins, addr1, addr2, 10, 0),           // port id contains non-alpha
+		NewMsgTransfer(validPort, invalidShortChannel, coins, addr1, addr2, 10, 0),      // too short channel id
+		NewMsgTransfer(validPort, invalidLongChannel, coins, addr1, addr2, 10, 0),       // too long channel id
+		NewMsgTransfer(validPort, invalidChannel, coins, addr1, addr2, 10, 0),           // channel id contains non-alpha
+		NewMsgTransfer(validPort, validChannel, invalidDenomCoins, addr1, addr2, 10, 0), // invalid amount
+		NewMsgTransfer(validPort, validChannel, negativeCoins, addr1, addr2, 10, 0),     // amount contains negative coin
+		NewMsgTransfer(validPort, validChannel, coins, emptyAddr, addr2, 10, 0),         // missing sender address
+		NewMsgTransfer(validPort, validChannel, coins, addr1, "", 10, 0),                // missing recipient address
+		NewMsgTransfer(validPort, validChannel, sdk.Coins{}, addr1, addr2, 10, 0),       // not possitive coin
 	}
 
 	testCases := []struct {
-		msg     MsgTransfer
+		msg     *MsgTransfer
 		expPass bool
 		errMsg  string
 	}{
@@ -93,16 +93,16 @@ func TestMsgTransferValidation(t *testing.T) {
 
 // TestMsgTransferGetSignBytes tests GetSignBytes for MsgTransfer
 func TestMsgTransferGetSignBytes(t *testing.T) {
-	msg := NewMsgTransfer(validPort, validChannel, 10, coins, addr1, addr2)
+	msg := NewMsgTransfer(validPort, validChannel, coins, addr1, addr2, 110, 10)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgTransfer","value":{"amount":[{"amount":"100","denom":"atom"}],"destination_height":"10","receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"cosmos1w3jhxarpv3j8yvg4ufs4x","source_channel":"testchannel","source_port":"testportid"}}`
+	expected := `{"type":"cosmos-sdk/MsgTransfer","value":{"amount":[{"amount":"100","denom":"atom"}],"receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"cosmos1w3jhxarpv3j8yvg4ufs4x","source_channel":"testchannel","source_port":"testportid","timeout_height":"110","timeout_timestamp":"10"}}`
 	require.Equal(t, expected, string(res))
 }
 
 // TestMsgTransferGetSigners tests GetSigners for MsgTransfer
 func TestMsgTransferGetSigners(t *testing.T) {
-	msg := NewMsgTransfer(validPort, validChannel, 10, coins, addr1, addr2)
+	msg := NewMsgTransfer(validPort, validChannel, coins, addr1, addr2, 10, 0)
 	res := msg.GetSigners()
 
 	expected := "[746573746164647231]"

@@ -48,13 +48,17 @@ mocks: $(MOCKS_DIR)
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
-distclean:
+distclean: clean
 	rm -rf \
     gitian-build-darwin/ \
     gitian-build-linux/ \
     gitian-build-windows/ \
     .gitian-builder-cache/
-.PHONY: distclean
+
+clean:
+	rm -rf $(BUILDDIR)/
+
+.PHONY: distclean clean
 
 ###############################################################################
 ###                          Tools & Dependencies                           ###

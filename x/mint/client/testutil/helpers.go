@@ -42,6 +42,6 @@ func QueryAnnualProvisions(f *cli.Fixtures, flags ...string) sdk.Dec {
 
 	var annualProvisions sdk.Dec
 	err := f.Cdc.UnmarshalJSON([]byte(out), &annualProvisions)
-	require.NoError(f.T, err, "out1 %v\n, err1 %v", out, err)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return annualProvisions
 }

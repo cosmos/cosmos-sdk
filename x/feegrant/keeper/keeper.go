@@ -33,7 +33,6 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	store.Set(key, bz)
-
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSetFeeGrant,
@@ -68,11 +67,11 @@ func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 		return nil
 	}
 	fmt.Printf("this is grant in keeper %v", grant)
-	var feeAll types.FeeAllowanceI
+	var feeAll *types.FeeAllowanceI
 	if err := k.cdc.UnpackAny(grant.Allowance, feeAll); err != nil {
 		return nil
 	}
-	return &feeAll
+	return feeAll
 }
 
 // GetFeeGrant returns entire grant between both accounts

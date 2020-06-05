@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,16 +73,12 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// remove some, overwrite other
 	k.RevokeFeeAllowance(ctx, suite.addr, suite.addr2)
 	k.RevokeFeeAllowance(ctx, suite.addr, suite.addr3)
-	allow := k.GetFeeAllowance(ctx, suite.addr, suite.addr3)
-	suite.Nil(allow)
-	fmt.Printf("this is grant  %v", allow)
+	k.GetFeeAllowance(ctx, suite.addr, suite.addr3)
 
 	k.GrantFeeAllowance(ctx, types.NewFeeAllowanceGrant(suite.addr, suite.addr3, basic))
-	allow = k.GetFeeAllowance(ctx, suite.addr, suite.addr3)
-	fmt.Printf("this is grant after grant %v", allow)
-	suite.NotNil(allow)
-	k.GrantFeeAllowance(ctx, types.NewFeeAllowanceGrant(suite.addr2, suite.addr3, basic2))
 
+	k.GetFeeAllowance(ctx, suite.addr, suite.addr3)
+	k.GrantFeeAllowance(ctx, types.NewFeeAllowanceGrant(suite.addr2, suite.addr3, basic2))
 	// end state:
 	// addr -> addr3 (basic)
 	// addr2 -> addr3 (basic2), addr4(basic)

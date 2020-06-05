@@ -15,6 +15,7 @@ func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, allowance FeeAllowanc
 		Granter: granter,
 		Grantee: grantee,
 	}
+
 	err := a.SetAllowance(allowance)
 	if err != nil {
 		return FeeAllowanceGrant{}
@@ -57,7 +58,7 @@ func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64
 	return a
 }
 
-func (a FeeAllowanceGrant) SetAllowance(FeeAllowanceI interface{}) error {
+func (a *FeeAllowanceGrant) SetAllowance(FeeAllowanceI interface{}) error {
 	allowance, ok := FeeAllowanceI.(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", a)

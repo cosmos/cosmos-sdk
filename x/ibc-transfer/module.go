@@ -285,10 +285,10 @@ func (am AppModule) OnChanCloseConfirm(
 func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
-) (*sdk.Result, error) {
+) (*sdk.Result, []byte, error) {
 	var data FungibleTokenPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 	acknowledgement := FungibleTokenPacketAcknowledgement{
 		Success: true,
@@ -301,14 +301,10 @@ func (am AppModule) OnRecvPacket(
 		}
 	}
 
-	if err := am.keeper.PacketExecuted(ctx, packet, acknowledgement.GetBytes()); err != nil {
-		return nil, err
-	}
-
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			EventTypePacket,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
 			sdk.NewAttribute(AttributeKeyReceiver, data.Receiver),
 			sdk.NewAttribute(AttributeKeyValue, data.Amount.String()),
 		),
@@ -316,7 +312,7 @@ func (am AppModule) OnRecvPacket(
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
-	}, nil
+	}, acknowledgement.GetBytes(), nil
 }
 
 func (am AppModule) OnAcknowledgementPacket(
@@ -340,7 +336,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			EventTypePacket,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
 			sdk.NewAttribute(AttributeKeyReceiver, data.Receiver),
 			sdk.NewAttribute(AttributeKeyValue, data.Amount.String()),
 			sdk.NewAttribute(AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success)),
@@ -379,7 +375,7 @@ func (am AppModule) OnTimeoutPacket(
 			EventTypeTimeout,
 			sdk.NewAttribute(AttributeKeyRefundReceiver, data.Sender),
 			sdk.NewAttribute(AttributeKeyRefundValue, data.Amount.String()),
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
 		),
 	)
 

@@ -3,7 +3,8 @@ package keeper
 import (
 	"context"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -14,15 +15,15 @@ var _ types.QueryServer = BaseKeeper{}
 // Balance implements the Query/Balance gRPC method
 func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
 	if req == nil {
-		return nil, sdkerrors.ErrInvalidRequest
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	if len(req.Address) == 0 {
-		return nil, sdkerrors.ErrInvalidAddress
+		return nil, status.Errorf(codes.InvalidArgument, "invalid address")
 	}
 
 	if req.Denom == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -34,11 +35,11 @@ func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (
 // AllBalances implements the Query/AllBalances gRPC method
 func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	if req == nil {
-		return nil, sdkerrors.ErrInvalidRequest
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	if len(req.Address) == 0 {
-		return nil, sdkerrors.ErrInvalidAddress
+		return nil, status.Errorf(codes.InvalidArgument, "invalid address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -58,11 +59,11 @@ func (q BaseKeeper) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequ
 // SupplyOf implements the Query/SupplyOf gRPC method
 func (q BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
 	if req == nil {
-		return nil, sdkerrors.ErrInvalidRequest
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Denom == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

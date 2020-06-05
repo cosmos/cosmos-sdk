@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 )
@@ -25,6 +27,11 @@ func MarshalIndentFromJSON(bz []byte) ([]byte, error) {
 // bytes of a message.
 func ProtoMarshalJSON(msg proto.Message) ([]byte, error) {
 	jm := &jsonpb.Marshaler{EmitDefaults: false, OrigName: false}
+	err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
+	if err != nil {
+		return nil, err
+	}
+
 	buf := new(bytes.Buffer)
 
 	if err := jm.Marshal(buf, msg); err != nil {
@@ -38,6 +45,11 @@ func ProtoMarshalJSON(msg proto.Message) ([]byte, error) {
 // JSON encoded bytes of a message.
 func ProtoMarshalJSONIndent(msg proto.Message) ([]byte, error) {
 	jm := &jsonpb.Marshaler{EmitDefaults: false, OrigName: false, Indent: "  "}
+	err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
+	if err != nil {
+		return nil, err
+	}
+
 	buf := new(bytes.Buffer)
 
 	if err := jm.Marshal(buf, msg); err != nil {

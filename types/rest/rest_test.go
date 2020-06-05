@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -199,7 +200,7 @@ func TestProcessPostResponse(t *testing.T) {
 
 	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
 	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
 	ctx = ctx.WithCodec(cdc)
 

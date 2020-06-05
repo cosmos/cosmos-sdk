@@ -4,6 +4,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
@@ -26,7 +27,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 func queryParams(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QuerySubspaceParams
 
-	if err := codec.Cdc.UnmarshalJSON(req.Data, &params); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
@@ -38,7 +39,7 @@ func queryParams(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, erro
 	rawValue := ss.GetRaw(ctx, []byte(params.Key))
 	resp := types.NewSubspaceParamsResponse(params.Subspace, params.Key, string(rawValue))
 
-	bz, err := codec.MarshalJSONIndent(codec.Cdc, resp)
+	bz, err := codec.MarshalJSONIndent(legacy.Cdc, resp)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

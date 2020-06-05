@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
-	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	yaml "gopkg.in/yaml.v2"
 
+	tmamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 

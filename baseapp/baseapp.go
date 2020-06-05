@@ -6,6 +6,8 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/gogo/protobuf/grpc"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -41,14 +43,15 @@ type (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { // nolint: maligned
 	// initialized on creation
-	logger      log.Logger
-	name        string               // application name from abci.Info
-	db          dbm.DB               // common DB backend
-	cms         sdk.CommitMultiStore // Main (uncached) state
-	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router      sdk.Router           // handle any kind of message
-	queryRouter sdk.QueryRouter      // router for redirecting query calls
-	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	logger          log.Logger
+	name            string               // application name from abci.Info
+	db              dbm.DB               // common DB backend
+	cms             sdk.CommitMultiStore // Main (uncached) state
+	storeLoader     StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
+	router          sdk.Router           // handle any kind of message
+	queryRouter     sdk.QueryRouter      // router for redirecting query calls
+	grpcQueryRouter *GRPCQueryRouter     // router for redirecting gRPC query calls
+	txDecoder       sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -101,15 +104,16 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:         logger,
-		name:           name,
-		db:             db,
-		cms:            store.NewCommitMultiStore(db),
-		storeLoader:    DefaultStoreLoader,
-		router:         NewRouter(),
-		queryRouter:    NewQueryRouter(),
-		txDecoder:      txDecoder,
-		fauxMerkleMode: false,
+		logger:          logger,
+		name:            name,
+		db:              db,
+		cms:             store.NewCommitMultiStore(db),
+		storeLoader:     DefaultStoreLoader,
+		router:          NewRouter(),
+		queryRouter:     NewQueryRouter(),
+		grpcQueryRouter: NewGRPCQueryRouter(),
+		txDecoder:       txDecoder,
+		fauxMerkleMode:  false,
 	}
 
 	for _, option := range options {
@@ -281,6 +285,9 @@ func (app *BaseApp) Router() sdk.Router {
 
 // QueryRouter returns the QueryRouter of a BaseApp.
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
+
+// GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
+func (app *BaseApp) GRPCQueryRouter() grpc.Server { return app.grpcQueryRouter }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }

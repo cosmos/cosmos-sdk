@@ -304,6 +304,7 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
+	app.mm.RegisterQueryServices(app.GRPCQueryRouter())
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//

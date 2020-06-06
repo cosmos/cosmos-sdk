@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -85,6 +87,8 @@ type AppModule struct {
 	keeper        Keeper
 	accountKeeper types.AccountKeeper
 }
+
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Marshaler, keeper Keeper, accountKeeper types.AccountKeeper) AppModule {

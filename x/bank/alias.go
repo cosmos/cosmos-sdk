@@ -28,7 +28,6 @@ var (
 	NewBaseKeeper               = keeper.NewBaseKeeper
 	NewBaseSendKeeper           = keeper.NewBaseSendKeeper
 	NewBaseViewKeeper           = keeper.NewBaseViewKeeper
-	NewQuerier                  = keeper.NewQuerier
 	RegisterCodec               = types.RegisterCodec
 	ErrNoInputs                 = types.ErrNoInputs
 	ErrNoOutputs                = types.ErrNoOutputs
@@ -44,8 +43,8 @@ var (
 	NewOutput                   = types.NewOutput
 	ValidateInputsOutputs       = types.ValidateInputsOutputs
 	ParamKeyTable               = types.ParamKeyTable
-	NewQueryBalanceParams       = types.NewQueryBalanceParams
-	NewQueryAllBalancesParams   = types.NewQueryAllBalancesParams
+	NewQueryBalanceRequest      = types.NewQueryBalanceRequest
+	NewQueryAllBalancesRequest  = types.NewQueryAllBalancesRequest
 	ModuleCdc                   = types.ModuleCdc
 	ParamStoreKeySendEnabled    = types.ParamStoreKeySendEnabled
 	BalancesPrefix              = types.BalancesPrefix
@@ -67,8 +66,8 @@ type (
 	MsgMultiSend            = types.MsgMultiSend
 	Input                   = types.Input
 	Output                  = types.Output
-	QueryBalanceParams      = types.QueryBalanceParams
-	QueryAllBalancesParams  = types.QueryAllBalancesParams
+	QueryBalanceRequest     = types.QueryBalanceRequest
+	QueryAllBalancesRequest = types.QueryAllBalancesRequest
 	GenesisBalancesIterator = types.GenesisBalancesIterator
 	Keeper                  = keeper.Keeper
 	GenesisState            = types.GenesisState

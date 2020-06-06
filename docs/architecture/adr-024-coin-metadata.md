@@ -32,9 +32,17 @@ UX and remove the requirement for making any assumptions on the unit of denomina
 ## Decision
 
 The `x/bank` module will be updated to store and index metadata by `denom`, specifically the "base" or
-smallest unit -- the unit the Cosmos SDK state-machine works with. Metadata may also include a non-zero
-length list of `aliases` with regard to the origin chain (e.g. `["ETH", "ether"]`). A token's `aliases`
-may be changed via governance.
+smallest unit -- the unit the Cosmos SDK state-machine works with.
+
+Metadata may also include a non-zero length list of denominations. Each entry containts the name of
+the denomination `denom`, the exponent to the base and a list of aliases. An entry is to be
+interpreted as `1 denom = 10^exponent base_denom` (e.g. `1 ETH = 10^18 wei` and `1 uatom = 10^0 uatom`).
+
+There are two denominations that are of high importance for clients: the `base`, which is the smallest
+possible unit and the `display`, which is the unit that is commonly referred to in human communication
+and on exchanges. The values in those fields link to an entry in the list of denominations.
+
+The list in `denom_units` and the `display` entry may be changed via governance.
 
 As a result, we can define the type as follows:
 
@@ -47,9 +55,9 @@ message DenomUnit {
 
 message Metadata {
   string description = 1;
-  string base = 2;
-  repeated DenomUnit denom_units = 3;
-  repeated string aliases = 4;
+  repeated DenomUnit denom_units = 2;
+  string base = 3;
+  string display = 4;
 }
 ```
 
@@ -58,8 +66,14 @@ As an example, the ATOM's metadata can be defined as follows:
 ```json
 {
   "description": "The native staking token of the Cosmos Hub.",
-  "base": "uatom",
   "denom_units": [
+    {
+      "denom": "uatom",
+      "exponent": 0,
+      "aliases": [
+        "microatom"
+      ],
+    },
     {
       "denom": "matom",
       "exponent": 3,
@@ -72,13 +86,17 @@ As an example, the ATOM's metadata can be defined as follows:
       "exponent": 6,
     }
   ],
-  "aliases": [
-    "microatom"
-  ]
+  "base": "uatom",
+  "display": "atom",
 }
 ```
 
-> Given the above metadata, a client may infer that 4.3atom = 4.3 * (10^6) = 4,300,000uatom.
+Given the above metadata, a client may infer the following things:
+- 4.3atom = 4.3 * (10^6) = 4,300,000uatom
+- The string "atom" can be used as a display name in a list of tokens.
+- The balance 4300000 can be displayed as 4,300,000uatom or 4,300matom or 4.3atom.
+  The `display` denomination 4.3atom is a good default if the authors of the client don't make
+  an explicit decision to choose a different representation.
 
 A client should be able to query for metadata by denom both via the CLI and REST interfaces. In
 addition, we will add handlers to these interfaces to convert from any unit to another given unit,

@@ -240,7 +240,7 @@ func (k Keeper) PacketExecuted(
 		return sdkerrors.Wrap(types.ErrInvalidChannelCapability, "channel capability failed authentication")
 	}
 
-	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
+	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
 		if _, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()); found {
 			return sdkerrors.Wrapf(
 				types.ErrInvalidPacket,

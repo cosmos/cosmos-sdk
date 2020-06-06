@@ -9,6 +9,7 @@ import (
 
 var (
 	RegisterCodec                  = types.RegisterCodec
+	RegisterInterfaces             = types.RegisterInterfaces
 	NewBaseVestingAccount          = types.NewBaseVestingAccount
 	NewContinuousVestingAccountRaw = types.NewContinuousVestingAccountRaw
 	NewContinuousVestingAccount    = types.NewContinuousVestingAccount

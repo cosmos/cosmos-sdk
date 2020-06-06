@@ -13,7 +13,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // Message types for the IBC client
@@ -24,9 +23,9 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient     = MsgCreateClient{}
-	_ clientexported.MsgUpdateClient     = MsgUpdateClient{}
-	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
+	_ clientexported.MsgCreateClient     = &MsgCreateClient{}
+	_ clientexported.MsgUpdateClient     = &MsgUpdateClient{}
+	_ evidenceexported.MsgSubmitEvidence = &MsgSubmitClientMisbehaviour{}
 )
 
 // MsgCreateClient defines a message to create an IBC client
@@ -39,6 +38,14 @@ type MsgCreateClient struct {
 	MaxClockDrift   time.Duration   `json:"max_clock_drift" yaml:"max_clock_drift"`
 	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
 }
+
+// this is a constant to satisfy the linter
+const TODO = "TODO"
+
+// dummy implementation of proto.Message
+func (msg MsgCreateClient) Reset()         {}
+func (msg MsgCreateClient) String() string { return TODO }
+func (msg MsgCreateClient) ProtoMessage()  {}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
@@ -59,7 +66,7 @@ func NewMsgCreateClient(
 
 // Route implements sdk.Msg
 func (msg MsgCreateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -88,7 +95,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -130,6 +137,11 @@ type MsgUpdateClient struct {
 	Signer   sdk.AccAddress `json:"address" yaml:"address"`
 }
 
+// dummy implementation of proto.Message
+func (msg MsgUpdateClient) Reset()         {}
+func (msg MsgUpdateClient) String() string { return TODO }
+func (msg MsgUpdateClient) ProtoMessage()  {}
+
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
 	return MsgUpdateClient{
@@ -141,7 +153,7 @@ func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpda
 
 // Route implements sdk.Msg
 func (msg MsgUpdateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -154,7 +166,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -184,6 +196,11 @@ type MsgSubmitClientMisbehaviour struct {
 	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
 }
 
+// dummy implementation of proto.Message
+func (msg MsgSubmitClientMisbehaviour) Reset()         {}
+func (msg MsgSubmitClientMisbehaviour) String() string { return TODO }
+func (msg MsgSubmitClientMisbehaviour) ProtoMessage()  {}
+
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
 func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
@@ -191,7 +208,7 @@ func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddres
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
-func (msg MsgSubmitClientMisbehaviour) Route() string { return ibctypes.RouterKey }
+func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
 func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }

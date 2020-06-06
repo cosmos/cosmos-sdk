@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/rest"
@@ -28,6 +28,6 @@ func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
 }
 
 // RegisterRESTRoutes registers the REST routes for the IBC connections.
-func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, queryRoute string) {
-	rest.RegisterRoutes(ctx, rtr, fmt.Sprintf("%s/%s", queryRoute, SubModuleName))
+func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router, queryRoute string) {
+	rest.RegisterRoutes(clientCtx, rtr, fmt.Sprintf("%s/%s", queryRoute, SubModuleName))
 }

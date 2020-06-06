@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -45,7 +45,7 @@ func TestSlashingMsgs(t *testing.T) {
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
 	}
-	accs := authexported.GenesisAccounts{acc1}
+	accs := authtypes.GenesisAccounts{acc1}
 	balances := []bank.Balance{
 		{
 			Address: addr1,
@@ -75,7 +75,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := slashing.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
+	unjailMsg := &slashing.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
 
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(addr1), true)
 

@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // MaxGasWanted defines the max gas allowed.
@@ -49,7 +50,7 @@ func (fee StdFee) Bytes() []byte {
 		fee.Amount = sdk.NewCoins()
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(fee)
+	bz, err := legacy.Cdc.MarshalJSON(fee)
 	if err != nil {
 		panic(err)
 	}
@@ -186,7 +187,7 @@ func (tx StdTx) ValidateBasic() error {
 	if len(stdSigs) != len(tx.GetSigners()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", tx.GetSigners(), len(stdSigs),
+			"wrong number of signers; expected %d, got %d", len(tx.GetSigners()), len(stdSigs),
 		)
 	}
 
@@ -245,7 +246,7 @@ func (tx StdTx) GetPubKeys() []crypto.PubKey {
 }
 
 // GetSignBytes returns the signBytes of the tx for a given signer
-func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
+func (tx StdTx) GetSignBytes(ctx sdk.Context, acc AccountI) []byte {
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
@@ -295,7 +296,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(StdSignDoc{
+	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),
@@ -342,4 +343,16 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryBare(tx)
 	}
+}
+
+var _ codectypes.UnpackInterfacesMessage = StdTx{}
+
+func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, m := range tx.Msgs {
+		err := codectypes.UnpackInterfaces(m, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

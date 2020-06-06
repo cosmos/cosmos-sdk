@@ -42,8 +42,8 @@ func TestCLISend(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
-	require.Equal(t, sendTokens, testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
-	require.Equal(t, startTokens.Sub(sendTokens), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, sendTokens.String(), testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom).String())
+	require.Equal(t, startTokens.Sub(sendTokens).String(), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom).String())
 
 	// Test --dry-run
 	success, _, _ = testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--dry-run")

@@ -27,9 +27,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -74,13 +74,13 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:           nil,
-		distr.ModuleName:                nil,
-		mint.ModuleName:                 {auth.Minter},
-		staking.BondedPoolName:          {auth.Burner, auth.Staking},
-		staking.NotBondedPoolName:       {auth.Burner, auth.Staking},
-		gov.ModuleName:                  {auth.Burner},
-		transfer.GetModuleAccountName(): {auth.Minter, auth.Burner},
+		auth.FeeCollectorName:     nil,
+		distr.ModuleName:          nil,
+		mint.ModuleName:           {auth.Minter},
+		staking.BondedPoolName:    {auth.Burner, auth.Staking},
+		staking.NotBondedPoolName: {auth.Burner, auth.Staking},
+		gov.ModuleName:            {auth.Burner},
+		transfer.ModuleName:       {auth.Minter, auth.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -304,6 +304,7 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
+	app.mm.RegisterQueryServices(app.GRPCQueryRouter())
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -320,6 +321,8 @@ func NewSimApp(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		ibc.NewAppModule(app.IBCKeeper),
+		transferModule,
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -365,7 +368,7 @@ func NewSimApp(
 func MakeCodecs() (*std.Codec, *codec.Codec) {
 	cdc := std.MakeCodec(ModuleBasics)
 	interfaceRegistry := types.NewInterfaceRegistry()
-	sdk.RegisterInterfaces(interfaceRegistry)
+	std.RegisterInterfaces(interfaceRegistry)
 	ModuleBasics.RegisterInterfaceModules(interfaceRegistry)
 	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
 	return appCodec, cdc

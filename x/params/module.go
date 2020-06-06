@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -21,6 +24,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the params module.
@@ -44,13 +48,17 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage { re
 func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ json.RawMessage) error { return nil }
 
 // RegisterRESTRoutes registers the REST routes for the params module.
-func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
+func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // GetTxCmd returns no root tx command for the params module.
-func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
 
 // GetQueryCmd returns no root query command for the params module.
-func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
+
+func (am AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
+	proposal.RegisterInterfaces(registry)
+}
 
 //____________________________________________________________________________
 
@@ -90,6 +98,8 @@ func (AppModule) QuerierRoute() string { return QuerierRoute }
 func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
+
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.

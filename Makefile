@@ -42,6 +42,7 @@ mocks: $(MOCKS_DIR)
 	mockgen -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
 	mockgen -source=types/router.go -package mocks -destination tests/mocks/types_router.go
 	mockgen -source=types/handler.go -package mocks -destination tests/mocks/types_handler.go
+	mockgen -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
 .PHONY: mocks
 
 $(MOCKS_DIR):

@@ -12,13 +12,11 @@ are the most critical to review.
 
 closes: #XXXX
 
+---
+
 Before we can merge this PR, please make sure that all the following items have been
 checked off. If any of the checklist items are not applicable, please leave them but
 write a little note why.
-
----
-
-For contributor use:
 
 - [ ] Targeted PR against correct branch (see [CONTRIBUTING.md](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
 - [ ] Linked to Github issue with discussion and accepted design OR link to spec that describes this work.

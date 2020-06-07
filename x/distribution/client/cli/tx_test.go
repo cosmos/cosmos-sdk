@@ -9,40 +9,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
-func createFakeTxBuilder() auth.TxBuilder {
-	cdc := codec.New()
-	return auth.NewTxBuilder(
-		authclient.GetTxEncoder(cdc),
-		123,
-		9876,
-		0,
-		1.2,
-		false,
-		"test_chain",
-		"hello",
-		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
-		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
-	)
-}
-
 func Test_splitAndCall_NoMessages(t *testing.T) {
-	ctx := context.CLIContext{}
-	txBldr := createFakeTxBuilder()
+	clientCtx := client.Context{}
 
-	err := splitAndApply(nil, ctx, txBldr, nil, 10)
+	err := splitAndApply(nil, clientCtx, nil, 10)
 	assert.NoError(t, err, "")
 }
 
 func Test_splitAndCall_Splitting(t *testing.T) {
-	ctx := context.CLIContext{}
-	txBldr := createFakeTxBuilder()
+	clientCtx := client.Context{}
 
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
@@ -60,11 +40,10 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	callCount := 0
 	err := splitAndApply(
-		func(ctx context.CLIContext, txBldr auth.TxBuilder, msgs []sdk.Msg) error {
+		func(clientCtx client.Context, msgs []sdk.Msg) error {
 			callCount++
 
-			assert.NotNil(t, ctx)
-			assert.NotNil(t, txBldr)
+			assert.NotNil(t, clientCtx)
 			assert.NotNil(t, msgs)
 
 			if callCount < 3 {
@@ -75,7 +54,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 			return nil
 		},
-		ctx, txBldr, msgs, chunkSize)
+		clientCtx, msgs, chunkSize)
 
 	assert.NoError(t, err, "")
 	assert.Equal(t, 3, callCount)

@@ -1,8 +1,6 @@
 package tendermint
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
@@ -11,7 +9,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
@@ -67,7 +64,7 @@ func checkMisbehaviour(
 	// check if provided height matches the headers' height
 	if height > uint64(evidence.GetHeight()) {
 		return sdkerrors.Wrapf(
-			ibctypes.ErrInvalidHeight,
+			sdkerrors.ErrInvalidHeight,
 			"height > evidence header height (%d > %d)", height, evidence.GetHeight(),
 		)
 	}
@@ -77,7 +74,11 @@ func checkMisbehaviour(
 
 	// assert that the timestamp is not from more than an unbonding period ago
 	if currentTimestamp.Sub(consensusState.Timestamp) >= clientState.UnbondingPeriod {
-		return errors.New("unbonding period since last consensus state timestamp is over")
+		return sdkerrors.Wrapf(
+			types.ErrUnbondingPeriodExpired,
+			"current timestamp minus the latest consensus state timestamp is greater than or equal to the unbonding period (%s >= %s)",
+			currentTimestamp.Sub(consensusState.Timestamp), clientState.UnbondingPeriod,
+		)
 	}
 
 	// TODO: Evidence must be within trusting period
@@ -89,14 +90,14 @@ func checkMisbehaviour(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
 		evidence.Header1.Commit, lite.DefaultTrustLevel,
 	); err != nil {
-		return fmt.Errorf("validator set in header 1 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
 		evidence.Header2.Commit, lite.DefaultTrustLevel,
 	); err != nil {
-		return fmt.Errorf("validator set in header 2 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
 	}
 
 	return nil

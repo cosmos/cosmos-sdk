@@ -8,19 +8,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-var _ sdk.Msg = MsgChannelOpenInit{}
+var _ sdk.Msg = &MsgChannelOpenInit{}
 
 // NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
 func NewMsgChannelOpenInit(
-	portID, channelID string, version string, channelOrder ibctypes.Order, connectionHops []string,
+	portID, channelID string, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
-) MsgChannelOpenInit {
+) *MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(ibctypes.INIT, channelOrder, counterparty, connectionHops, version)
-	return MsgChannelOpenInit{
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
+	return &MsgChannelOpenInit{
 		PortID:    portID,
 		ChannelID: channelID,
 		Channel:   channel,
@@ -30,7 +29,7 @@ func NewMsgChannelOpenInit(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenInit) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -40,10 +39,10 @@ func (msg MsgChannelOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenInit) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	// Signer can be empty
@@ -60,17 +59,17 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenTry{}
+var _ sdk.Msg = &MsgChannelOpenTry{}
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 func NewMsgChannelOpenTry(
-	portID, channelID, version string, channelOrder ibctypes.Order, connectionHops []string,
+	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress,
-) MsgChannelOpenTry {
+) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(ibctypes.INIT, channelOrder, counterparty, connectionHops, version)
-	return MsgChannelOpenTry{
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
+	return &MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,
 		Channel:             channel,
@@ -83,7 +82,7 @@ func NewMsgChannelOpenTry(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenTry) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -93,10 +92,10 @@ func (msg MsgChannelOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenTry) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
@@ -109,7 +108,7 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()
@@ -125,14 +124,14 @@ func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenAck{}
+var _ sdk.Msg = &MsgChannelOpenAck{}
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
 	portID, channelID string, cpv string, proofTry commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelOpenAck {
-	return MsgChannelOpenAck{
+) *MsgChannelOpenAck {
+	return &MsgChannelOpenAck{
 		PortID:              portID,
 		ChannelID:           channelID,
 		CounterpartyVersion: cpv,
@@ -144,7 +143,7 @@ func NewMsgChannelOpenAck(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenAck) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -154,10 +153,10 @@ func (msg MsgChannelOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenAck) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
@@ -170,7 +169,7 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof try cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -186,14 +185,14 @@ func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelOpenConfirm{}
+var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
 	portID, channelID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelOpenConfirm {
-	return MsgChannelOpenConfirm{
+) *MsgChannelOpenConfirm {
+	return &MsgChannelOpenConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofAck:    proofAck,
@@ -204,7 +203,7 @@ func NewMsgChannelOpenConfirm(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenConfirm) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -214,10 +213,10 @@ func (msg MsgChannelOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenConfirm) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofAck.IsEmpty() {
@@ -227,7 +226,7 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -243,13 +242,13 @@ func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelCloseInit{}
+var _ sdk.Msg = &MsgChannelCloseInit{}
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
 func NewMsgChannelCloseInit(
 	portID string, channelID string, signer sdk.AccAddress,
-) MsgChannelCloseInit {
-	return MsgChannelCloseInit{
+) *MsgChannelCloseInit {
+	return &MsgChannelCloseInit{
 		PortID:    portID,
 		ChannelID: channelID,
 		Signer:    signer,
@@ -258,7 +257,7 @@ func NewMsgChannelCloseInit(
 
 // Route implements sdk.Msg
 func (msg MsgChannelCloseInit) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -268,10 +267,10 @@ func (msg MsgChannelCloseInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelCloseInit) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	// Signer can be empty
@@ -288,14 +287,14 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelCloseConfirm{}
+var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
 	portID, channelID string, proofInit commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgChannelCloseConfirm {
-	return MsgChannelCloseConfirm{
+) *MsgChannelCloseConfirm {
+	return &MsgChannelCloseConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofInit:   proofInit,
@@ -306,7 +305,7 @@ func NewMsgChannelCloseConfirm(
 
 // Route implements sdk.Msg
 func (msg MsgChannelCloseConfirm) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -316,10 +315,10 @@ func (msg MsgChannelCloseConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelCloseConfirm) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofInit.IsEmpty() {
@@ -329,7 +328,7 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -345,14 +344,14 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgPacket{}
+var _ sdk.Msg = &MsgPacket{}
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(
 	packet Packet, proof commitmenttypes.MerkleProof, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgPacket {
-	return MsgPacket{
+) *MsgPacket {
+	return &MsgPacket{
 		Packet:      packet,
 		Proof:       proof,
 		ProofHeight: proofHeight,
@@ -362,7 +361,7 @@ func NewMsgPacket(
 
 // Route implements sdk.Msg
 func (msg MsgPacket) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
@@ -374,7 +373,7 @@ func (msg MsgPacket) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -405,14 +404,14 @@ func (msg MsgPacket) Type() string {
 	return "ics04/opaque"
 }
 
-var _ sdk.Msg = MsgTimeout{}
+var _ sdk.Msg = &MsgTimeout{}
 
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof commitmenttypes.MerkleProof,
 	proofHeight uint64, signer sdk.AccAddress,
-) MsgTimeout {
-	return MsgTimeout{
+) *MsgTimeout {
+	return &MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
 		Proof:            proof,
@@ -423,7 +422,7 @@ func NewMsgTimeout(
 
 // Route implements sdk.Msg
 func (msg MsgTimeout) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
@@ -435,7 +434,7 @@ func (msg MsgTimeout) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -459,12 +458,12 @@ func (msg MsgTimeout) Type() string {
 	return "ics04/timeout"
 }
 
-var _ sdk.Msg = MsgAcknowledgement{}
+var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
-	return MsgAcknowledgement{
+	packet Packet, ack []byte, proof commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress) *MsgAcknowledgement {
+	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
 		Proof:           proof,
@@ -475,7 +474,7 @@ func NewMsgAcknowledgement(
 
 // Route implements sdk.Msg
 func (msg MsgAcknowledgement) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
@@ -490,7 +489,7 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

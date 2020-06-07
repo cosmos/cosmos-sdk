@@ -6,13 +6,12 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -41,7 +40,7 @@ type SigVerifiableTx interface {
 	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignBytes(ctx sdk.Context, acc exported.Account) []byte
+	GetSignBytes(ctx sdk.Context, acc types.AccountI) []byte
 }
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
@@ -184,7 +183,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	signerAddrs := sigTx.GetSigners()
-	signerAccs := make([]exported.Account, len(signerAddrs))
+	signerAccs := make([]types.AccountI, len(signerAddrs))
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
@@ -208,7 +207,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 		// verify signature
 		if !simulate && !pubKey.VerifyBytes(signBytes, sig) {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
+			return ctx, sdkerrors.Wrapf(
+				sdkerrors.ErrUnauthorized,
+				"signature verification failed; verify correct account sequence (%d) and chain-id (%s)", signerAccs[i].GetSequence(), ctx.ChainID())
 		}
 	}
 
@@ -235,11 +236,6 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// no need to increment sequence on RecheckTx
-	if ctx.IsReCheckTx() && !simulate {
-		return next(ctx, tx, simulate)
-	}
-
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -311,7 +307,7 @@ func DefaultSigVerificationGasConsumer(
 
 	case multisig.PubKeyMultisigThreshold:
 		var multisignature multisig.Multisignature
-		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
+		legacy.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
 		ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
 		return nil
@@ -339,7 +335,7 @@ func ConsumeMultisignatureVerificationGas(
 
 // GetSignerAcc returns an account for a given address that is expected to sign
 // a transaction.
-func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (exported.Account, error) {
+func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (types.AccountI, error) {
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, nil
 	}

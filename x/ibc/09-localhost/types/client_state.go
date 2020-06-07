@@ -3,14 +3,12 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
@@ -20,7 +18,6 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -69,12 +66,12 @@ func (cs ClientState) IsFrozen() bool {
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainID) == "" {
-		return errors.New("chain id cannot be blank")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
 	if cs.Height <= 0 {
-		return fmt.Errorf("height must be positive: %d", cs.Height)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
 	}
-	return host.DefaultClientIdentifierValidator(cs.ID)
+	return host.ClientIdentifierValidator(cs.ID)
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus
@@ -102,7 +99,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
 	}
 
-	var prevConsensusState exported.ConsensusState
+	var prevConsensusState clientexported.ConsensusState
 	if err := cdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
 		return err
 	}
@@ -129,7 +126,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
 	if err != nil {
 		return err
 	}
@@ -168,7 +165,7 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -207,7 +204,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -240,7 +237,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -273,7 +270,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -298,7 +295,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return err
 	}

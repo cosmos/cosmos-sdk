@@ -55,13 +55,13 @@ Note: module `messages` are not to be confused with [ABCI Messages](https://tend
 
 To learn more about `message`s, click [here](../building-modules/messages-and-queries.md#messages).
 
-While messages contain the information for state transition logic, a transaction's other metadata and relevant information are stored in the `TxBuilder` and `CLIContext`.
+While messages contain the information for state transition logic, a transaction's other metadata and relevant information are stored in the `TxBuilder` and `Context`.
 
 ### Transaction Generation
 
 Transactions are first created by end-users through an `appcli tx` command through the command-line or a POST request to an HTTPS server. For details about transaction creation, click [here](../basics/tx-lifecycle.md#transaction-creation).
 
-[`Contexts`](https://godoc.org/context) are immutable objects that contain all the information needed to process a request. In the process of creating a transaction through the `auth` module (though it is not mandatory to create transactions this way), two contexts are created: the [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) and `TxBuilder`. Both are automatically generated and do not need to be defined by application developers, but do require input from the transaction creator (e.g. using flags through the CLI).
+[`Contexts`](https://godoc.org/context) are immutable objects that contain all the information needed to process a request. In the process of creating a transaction through the `auth` module (though it is not mandatory to create transactions this way), two contexts are created: the [`Context`](../interfaces/query-lifecycle.md#context) and `TxBuilder`. Both are automatically generated and do not need to be defined by application developers, but do require input from the transaction creator (e.g. using flags through the CLI).
 
 The `TxBuilder` contains data closely related with the processing of transactions.
 
@@ -79,9 +79,9 @@ The `TxBuilder` contains data closely related with the processing of transaction
 - `Fees`, the maximum amount the user is willing to pay in fees. Alternative to specifying gas prices.
 - `GasPrices`, the amount per unit of gas the user is willing to pay in fees. Alternative to specifying fees.
 
-The `CLIContext` is initialized using the application's `codec` and data more closely related to the user interaction with the interface, holding data such as the output to the user and the broadcast mode. Read more about `CLIContext` [here](../interfaces/query-lifecycle.md#clicontext).
+The `Context` is initialized using the application's `codec` and data more closely related to the user interaction with the interface, holding data such as the output to the user and the broadcast mode. Read more about `Context` [here](../interfaces/query-lifecycle.md#context).
 
-Every message in a transaction must be signed by the addresses specified by `GetSigners`. The signing process must be handled by a module, and the most widely used one is the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module. Signing is automatically performed when the transaction is created, unless the user choses to generate and sign separately. The `TxBuilder` (namely, the `KeyBase`) is used to perform the signing operations, and the `CLIContext` is used to broadcast transactions.
+Every message in a transaction must be signed by the addresses specified by `GetSigners`. The signing process must be handled by a module, and the most widely used one is the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module. Signing is automatically performed when the transaction is created, unless the user choses to generate and sign separately. The `TxBuilder` (namely, the `KeyBase`) is used to perform the signing operations, and the `Context` is used to broadcast transactions.
 
 ### Handlers
 

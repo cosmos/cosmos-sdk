@@ -6,6 +6,7 @@
 - 2020 March 12: API Updates
 - 2020 April 13: Added details on interface `oneof` handling
 - 2020 April 30: Switch to `Any`
+- 2020 May 14: Describe public key encoding
 
 ## Status
 
@@ -259,6 +260,32 @@ fields with bit 11 set
 This will likely need to be a custom protobuf parser pass that takes message bytes
 and `FileDescriptor`s and returns a boolean result.
 
+### Public Key Encoding
+
+Public keys in the Cosmos SDK implement Tendermint's `crypto.PubKey` interface,
+so a natural solution might be to use `Any` as we are doing for other interfaces.
+There are, however, a limited number of public keys in existence and new ones
+aren't created overnight. The proposed solution is to use a `oneof` that:
+
+* attempts to catalog all known key types even if a given app can't use them all
+* has an `Any` member that can be used when a key type isn't present in the `oneof`
+
+Ex:
+```proto
+message PublicKey {
+    oneof sum {
+        bytes secp256k1 = 1;
+        bytes ed25519 = 2;
+        ...
+        google.protobuf.Any any_pubkey = 15; 
+    }
+}
+```
+
+Apps should only attempt to handle a registered set of public keys that they
+have tested. The provided signature verification ante handler decorators will
+enforce this.
+
 ### CLI & REST
 
 Currently, the REST and CLI handlers encode and decode types and txs via Amino
@@ -270,17 +297,19 @@ and messages.
 
 ```go
 type AccountRetriever interface {
-  EnsureExists(addr sdk.AccAddress) error
-  GetAccountNumberSequence(addr sdk.AccAddress) (uint64, uint64, error)
+  EnsureExists(querier NodeQuerier, addr sdk.AccAddress) error
+  GetAccountNumberSequence(querier NodeQuerier, addr sdk.AccAddress) (uint64, uint64, error)
 }
 
 type Generator interface {
-  NewTx() ClientTx
+  NewTx() TxBuilder
+  NewFee() ClientFee
+  NewSignature() ClientSignature
+  MarshalTx(tx types.Tx) ([]byte, error)
 }
 
-type ClientTx interface {
-  sdk.Tx
-  codec.ProtoMarshaler
+type TxBuilder interface {
+  GetTx() sdk.Tx
 
   SetMsgs(...sdk.Msg) error
   GetSignatures() []sdk.Signature
@@ -294,11 +323,29 @@ type ClientTx interface {
 }
 ```
 
-We then update `CLIContext` to have a new field: `Marshaler`.
+We then update `Context` to have new fields: `JSONMarshaler`, `TxGenerator`,
+and `AccountRetriever`, and we update `AppModuleBasic.GetTxCmd` to take
+a `Context` which should have all of these fields pre-populated.
 
-Then, each module's client handler will at the minimum accept a `Marshaler` instead
-of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
-that account fields can be retrieved for signing.
+Each client method should then use one of the `Init` methods to re-initialize
+the pre-populated `Context`. `tx.GenerateOrBroadcastTx` can be used to
+generate or broadcast a transaction. For example:
+
+```go
+import "github.com/spf13/cobra"
+import "github.com/cosmos/cosmos-sdk/client"
+import "github.com/cosmos/cosmos-sdk/client/tx"
+
+func NewCmdDoSomething(clientCtx client.Context) *cobra.Command {
+	return &cobra.Command{
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := ctx.InitWithInput(cmd.InOrStdin())
+			msg := NewSomeMsg{...}
+			tx.GenerateOrBroadcastTx(clientCtx, msg)
+		},
+	}
+}
+```
 
 ## Future Improvements
 

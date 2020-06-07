@@ -15,7 +15,7 @@ import (
 
 var (
 	validPort   = "validportid"
-	invalidPort = "invalidPortID"
+	invalidPort = "(invalidPortID)"
 )
 
 type KeeperTestSuite struct {

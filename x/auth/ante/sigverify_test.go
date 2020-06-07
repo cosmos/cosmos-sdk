@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -236,11 +236,11 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 		simulate    bool
 		expectedSeq uint64
 	}{
-		{ctx.WithIsReCheckTx(true), false, 0},
-		{ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 1},
 		{ctx.WithIsReCheckTx(true), false, 1},
-		{ctx.WithIsReCheckTx(true), false, 1},
-		{ctx.WithIsReCheckTx(true), true, 2},
+		{ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 2},
+		{ctx.WithIsReCheckTx(true), false, 3},
+		{ctx.WithIsReCheckTx(true), false, 4},
+		{ctx.WithIsReCheckTx(true), true, 5},
 	}
 
 	for i, tc := range testCases {

@@ -13,8 +13,8 @@ func TestCounterpartyValidateBasic(t *testing.T) {
 		expPass      bool
 	}{
 		{"valid counterparty", Counterparty{"portidone", "channelidone"}, true},
-		{"invalid port id", Counterparty{"InvalidPort", "channelidone"}, false},
-		{"invalid channel id", Counterparty{"portidone", "InvalidChannel"}, false},
+		{"invalid port id", Counterparty{"(InvalidPort)", "channelidone"}, false},
+		{"invalid channel id", Counterparty{"portidone", "(InvalidChannel)"}, false},
 	}
 
 	for i, tc := range testCases {

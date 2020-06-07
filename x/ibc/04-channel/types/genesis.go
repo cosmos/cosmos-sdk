@@ -65,12 +65,13 @@ type GenesisState struct {
 	Commitments      []PacketAckCommitment `json:"commitments" yaml:"commitments"`
 	SendSequences    []PacketSequence      `json:"send_sequences" yaml:"send_sequences"`
 	RecvSequences    []PacketSequence      `json:"recv_sequences" yaml:"recv_sequences"`
+	AckSequences     []PacketSequence      `json:"ack_sequences" yaml:"ack_sequences"`
 }
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
 	channels []IdentifiedChannel, acks, commitments []PacketAckCommitment,
-	sendSeqs, recvSeqs []PacketSequence,
+	sendSeqs, recvSeqs, ackSeqs []PacketSequence,
 ) GenesisState {
 	return GenesisState{
 		Channels:         channels,
@@ -78,6 +79,7 @@ func NewGenesisState(
 		Commitments:      commitments,
 		SendSequences:    sendSeqs,
 		RecvSequences:    recvSeqs,
+		AckSequences:     ackSeqs,
 	}
 }
 
@@ -89,6 +91,7 @@ func DefaultGenesisState() GenesisState {
 		Commitments:      []PacketAckCommitment{},
 		SendSequences:    []PacketSequence{},
 		RecvSequences:    []PacketSequence{},
+		AckSequences:     []PacketSequence{},
 	}
 }
 
@@ -125,14 +128,20 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	for i, as := range gs.AckSequences {
+		if err := as.Validate(); err != nil {
+			return fmt.Errorf("invalid acknowledgement sequence %d: %w", i, err)
+		}
+	}
+
 	return nil
 }
 
 func validateGenFields(portID, channelID string, sequence uint64) error {
-	if err := host.DefaultPortIdentifierValidator(portID); err != nil {
+	if err := host.PortIdentifierValidator(portID); err != nil {
 		return err
 	}
-	if err := host.DefaultChannelIdentifierValidator(channelID); err != nil {
+	if err := host.ChannelIdentifierValidator(channelID); err != nil {
 		return err
 	}
 	if sequence == 0 {

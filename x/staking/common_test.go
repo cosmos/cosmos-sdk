@@ -25,13 +25,13 @@ var (
 	PKs = simapp.CreateTestPubKeys(500)
 )
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *staking.MsgCreateValidator {
 	return types.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), staking.Description{}, commissionRates, sdk.OneInt(),
 	)
 }
 
-func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) staking.MsgDelegate {
+func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) *staking.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)
 }

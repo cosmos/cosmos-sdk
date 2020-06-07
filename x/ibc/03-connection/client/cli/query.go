@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -30,17 +30,17 @@ $ %s query ibc connection connections
 		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			connections, height, err := utils.QueryAllConnections(cliCtx, page, limit)
+			connections, height, err := utils.QueryAllConnections(clientCtx, page, limit)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(connections)
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(connections)
 		},
 	}
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
@@ -63,17 +63,17 @@ $ %s query ibc connection end [connection-id]
 		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			connectionID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 
-			connRes, err := utils.QueryConnection(cliCtx, connectionID, prove)
+			connRes, err := utils.QueryConnection(clientCtx, connectionID, prove)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(connRes.ProofHeight))
-			return cliCtx.PrintOutput(connRes)
+			clientCtx = clientCtx.WithHeight(int64(connRes.ProofHeight))
+			return clientCtx.PrintOutput(connRes)
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
@@ -95,17 +95,17 @@ $ %s query ibc connection paths
 		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			connectionPaths, height, err := utils.QueryAllClientConnectionPaths(cliCtx, page, limit)
+			connectionPaths, height, err := utils.QueryAllClientConnectionPaths(clientCtx, page, limit)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(connectionPaths)
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(connectionPaths)
 		},
 	}
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
@@ -128,17 +128,17 @@ $ %s query ibc connection path [client-id]
 		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			clientID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 
-			connPathsRes, err := utils.QueryClientConnections(cliCtx, clientID, prove)
+			connPathsRes, err := utils.QueryClientConnections(clientCtx, clientID, prove)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(connPathsRes.ProofHeight))
-			return cliCtx.PrintOutput(connPathsRes)
+			clientCtx = clientCtx.WithHeight(int64(connPathsRes.ProofHeight))
+			return clientCtx.PrintOutput(connPathsRes)
 		},
 	}
 }

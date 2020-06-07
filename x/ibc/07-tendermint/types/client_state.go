@@ -1,9 +1,11 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"time"
+
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	lite "github.com/tendermint/tendermint/lite2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,9 +19,6 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -68,7 +67,10 @@ func Initialize(
 ) (ClientState, error) {
 
 	if trustingPeriod >= ubdPeriod {
-		return ClientState{}, errors.New("trusting period should be < unbonding period")
+		return ClientState{}, sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", trustingPeriod, ubdPeriod,
+		)
 	}
 
 	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header)
@@ -127,20 +129,20 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
 		return err
 	}
 	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {
-		return errors.New("trusting period cannot be zero")
+		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "trusting period cannot be zero")
 	}
 	if cs.UnbondingPeriod == 0 {
-		return errors.New("unbonding period cannot be zero")
+		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "unbonding period cannot be zero")
 	}
 	if cs.MaxClockDrift == 0 {
-		return errors.New("max clock drift cannot be zero")
+		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }
@@ -158,7 +160,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -192,7 +194,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
 	if err != nil {
 		return err
 	}
@@ -203,7 +205,7 @@ func (cs ClientState) VerifyConnectionState(
 
 	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
 	if !ok {
-		return fmt.Errorf("invalid connection type %T", connectionEnd)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid connection type %T", connectionEnd)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&connection)
@@ -231,7 +233,7 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -242,7 +244,7 @@ func (cs ClientState) VerifyChannelState(
 
 	channelEnd, ok := channel.(channeltypes.Channel)
 	if !ok {
-		return fmt.Errorf("invalid channel type %T", channel)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid channel type %T", channel)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&channelEnd)
@@ -270,7 +272,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -299,7 +301,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -328,7 +330,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -356,7 +358,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -384,7 +386,7 @@ func validateVerificationArgs(
 ) error {
 	if cs.GetLatestHeight() < height {
 		return sdkerrors.Wrap(
-			ibctypes.ErrInvalidHeight,
+			sdkerrors.ErrInvalidHeight,
 			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height),
 		)
 	}

@@ -3,8 +3,9 @@ package baseapp
 import (
 	"fmt"
 	"reflect"
-	"runtime/debug"
 	"strings"
+
+	"github.com/gogo/protobuf/grpc"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -41,14 +42,15 @@ type (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { // nolint: maligned
 	// initialized on creation
-	logger      log.Logger
-	name        string               // application name from abci.Info
-	db          dbm.DB               // common DB backend
-	cms         sdk.CommitMultiStore // Main (uncached) state
-	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router      sdk.Router           // handle any kind of message
-	queryRouter sdk.QueryRouter      // router for redirecting query calls
-	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	logger          log.Logger
+	name            string               // application name from abci.Info
+	db              dbm.DB               // common DB backend
+	cms             sdk.CommitMultiStore // Main (uncached) state
+	storeLoader     StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
+	router          sdk.Router           // handle any kind of message
+	queryRouter     sdk.QueryRouter      // router for redirecting query calls
+	grpcQueryRouter *GRPCQueryRouter     // router for redirecting gRPC query calls
+	txDecoder       sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -90,6 +92,9 @@ type BaseApp struct { // nolint: maligned
 
 	// application's version string
 	appVersion string
+
+	// recovery handler for app.runTx method
+	runTxRecoveryMiddleware recoveryMiddleware
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -101,15 +106,16 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:         logger,
-		name:           name,
-		db:             db,
-		cms:            store.NewCommitMultiStore(db),
-		storeLoader:    DefaultStoreLoader,
-		router:         NewRouter(),
-		queryRouter:    NewQueryRouter(),
-		txDecoder:      txDecoder,
-		fauxMerkleMode: false,
+		logger:          logger,
+		name:            name,
+		db:              db,
+		cms:             store.NewCommitMultiStore(db),
+		storeLoader:     DefaultStoreLoader,
+		router:          NewRouter(),
+		queryRouter:     NewQueryRouter(),
+		grpcQueryRouter: NewGRPCQueryRouter(),
+		txDecoder:       txDecoder,
+		fauxMerkleMode:  false,
 	}
 
 	for _, option := range options {
@@ -119,6 +125,8 @@ func NewBaseApp(
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
+
+	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	return app
 }
@@ -282,6 +290,9 @@ func (app *BaseApp) Router() sdk.Router {
 // QueryRouter returns the QueryRouter of a BaseApp.
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
+// GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
+func (app *BaseApp) GRPCQueryRouter() grpc.Server { return app.grpcQueryRouter }
+
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }
 
@@ -343,6 +354,13 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	}
 
 	return cp
+}
+
+// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
+func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
+	for _, h := range handlers {
+		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
+	}
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
@@ -489,26 +507,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 
 	defer func() {
 		if r := recover(); r != nil {
-			switch rType := r.(type) {
-			// TODO: Use ErrOutOfGas instead of ErrorOutOfGas which would allow us
-			// to keep the stracktrace.
-			case sdk.ErrorOutOfGas:
-				err = sdkerrors.Wrap(
-					sdkerrors.ErrOutOfGas, fmt.Sprintf(
-						"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
-						rType.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
-					),
-				)
-
-			default:
-				err = sdkerrors.Wrap(
-					sdkerrors.ErrPanic, fmt.Sprintf(
-						"recovered: %v\nstack:\n%v", r, string(debug.Stack()),
-					),
-				)
-			}
-
-			result = nil
+			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
+			err, result = processRecovery(r, recoveryMW), nil
 		}
 
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
@@ -551,6 +551,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
+		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 
 		if !newCtx.IsZero() {

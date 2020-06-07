@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -16,7 +14,7 @@ const (
 	testChannel1 = "firstchannel"
 	testChannel2 = "secondchannel"
 
-	testChannelOrder   = ibctypes.ORDERED
+	testChannelOrder   = ORDERED
 	testChannelVersion = "1.0"
 )
 
@@ -39,12 +37,12 @@ func TestValidateGenesis(t *testing.T) {
 				[]IdentifiedChannel{
 					NewIdentifiedChannel(
 						testPort1, testChannel1, NewChannel(
-							ibctypes.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+							INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 					NewIdentifiedChannel(
 						testPort2, testChannel2, NewChannel(
-							ibctypes.INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
+							INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 				},
@@ -60,6 +58,9 @@ func TestValidateGenesis(t *testing.T) {
 				[]PacketSequence{
 					NewPacketSequence(testPort2, testChannel2, 1),
 				},
+				[]PacketSequence{
+					NewPacketSequence(testPort2, testChannel2, 1),
+				},
 			),
 			expPass: true,
 		},
@@ -68,8 +69,8 @@ func TestValidateGenesis(t *testing.T) {
 			genState: GenesisState{
 				Channels: []IdentifiedChannel{
 					NewIdentifiedChannel(
-						testPort1, "testChannel1", NewChannel(
-							ibctypes.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+						testPort1, "(testChannel1)", NewChannel(
+							INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 				},
@@ -107,7 +108,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid recv seq",
 			genState: GenesisState{
 				RecvSequences: []PacketSequence{
-					NewPacketSequence(testPort1, "testChannel1", 1),
+					NewPacketSequence(testPort1, "(testChannel1)", 1),
 				},
 			},
 			expPass: false,
@@ -116,7 +117,16 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid recv seq 2",
 			genState: GenesisState{
 				RecvSequences: []PacketSequence{
-					NewPacketSequence("testPort1", testChannel1, 1),
+					NewPacketSequence("(testPort1)", testChannel1, 1),
+				},
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid ack seq",
+			genState: GenesisState{
+				AckSequences: []PacketSequence{
+					NewPacketSequence(testPort1, "(testChannel1)", 1),
 				},
 			},
 			expPass: false,

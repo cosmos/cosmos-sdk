@@ -289,34 +289,3 @@ Where proposal.json contains:
 
 	return cmd
 }
-
-type generateOrBroadcastFunc func(client.Context, []sdk.Msg) error
-
-func splitAndApply(
-	generateOrBroadcast generateOrBroadcastFunc,
-	clientCtx client.Context,
-	msgs []sdk.Msg,
-	chunkSize int,
-) error {
-
-	if chunkSize == 0 {
-		return generateOrBroadcast(clientCtx, msgs)
-	}
-
-	// split messages into slices of length chunkSize
-	totalMessages := len(msgs)
-	for i := 0; i < len(msgs); i += chunkSize {
-
-		sliceEnd := i + chunkSize
-		if sliceEnd > totalMessages {
-			sliceEnd = totalMessages
-		}
-
-		msgChunk := msgs[i:sliceEnd]
-		if err := generateOrBroadcast(clientCtx, msgChunk); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}

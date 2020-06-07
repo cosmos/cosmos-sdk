@@ -7,6 +7,7 @@
 - 2020 April 13: Added details on interface `oneof` handling
 - 2020 April 30: Switch to `Any`
 - 2020 May 14: Describe public key encoding
+- 2020 June 07: Store `TxBody` and `AuthInfo` as bytes in `Tx` and `SignDoc`
 
 ## Status
 
@@ -54,8 +55,10 @@ which will be re-used by `SignDoc` below, and `signatures`:
 package cosmos_sdk.v1;
 
 message Tx {
-    TxBody body = 1;
-    AuthInfo auth_info = 2;
+    // A protobuf serialization of a TxBody that matches representation in SignDoc.
+    bytes body = 1;
+    // A protobuf serialization of a AuthInfo that matches representation in SignDoc.
+    bytes auth_info = 2;
     // A list of signatures that matches the length and order of AuthInfo's signer_infos to
     // allow connecting signature meta information like public key and signing mode by position.
     repeated bytes signatures = 3;
@@ -161,14 +164,16 @@ buffers implementation
 subtle differences between the signing and encoding formats which could 
 potentially be exploited by an attacker)
 
-Signatures are structured using the `SignDoc` below which reuses `TxBody` and
-`AuthInfo` and only adds the fields which are needed for signatures:
+Signatures are structured using the `SignDoc` below which reuses the serialization of
+`TxBody` and `AuthInfo` and only adds the fields which are needed for signatures:
 
 ```proto
 // types/types.proto
 message SignDoc {
-    TxBody body = 1;
-    AuthInfo auth_info = 2;
+    // A protobuf serialization of a TxBody that matches representation in Tx.
+    bytes body = 1;
+    // A protobuf serialization of a AuthInfo that matches representation in Tx.
+    bytes auth_info = 2;
     string chain_id = 3;
     uint64 account_number = 4;
     // account_sequence starts at 1 rather than 0 to avoid the case where
@@ -179,36 +184,27 @@ message SignDoc {
 
 In order to sign in the default mode, clients take the following steps:
 
-1. Encode `SignDoc`. (The only requirement of the underlying protobuf
-implementation is that fields are serialized in order).
-2. Sign the encoded `SignDoc` bytes
-3. Build and broadcast `Tx`. (The underlying protobuf implementation must encode
-`TxBody` and `AuthInfo` with the same binary representation as encoded in
-`SignDoc`. If this is a problem for clients, the "raw" types described under
-verification can be used for signing as well.)
+1. Serialize `TxBody` and `AuthInfo` using any valid protobuf serialization
+2. Create a `SignDoc` and encode it. (The only requirement of the underlying
+   protobuf implementation is that fields are serialized in order).
+3. Sign the encoded `SignDoc` bytes
+4. Build and broadcast `Tx`.
 
 Signature verification is based on comparing the raw `TxBody` and `AuthInfo`
 bytes encoded in `Tx` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
 algorithm which creates added complexity for clients in addition to preventing
 some forms of upgradeability (to be addressed later in this document).
 
-Signature verifiers should use a special set of "raw" types to perform this
-binary signature verification rather than attempting to re-encode protobuf
-documents which could result in a different binary encoding:
+Signature verifiers do:
 
-```proto
-message TxRaw {
-    bytes body_bytes = 1;
-    repeated bytes signatures = 2;
-}
-
-message SignDocRaw {
-    bytes body_bytes = 1;
-    string chain_id = 2;
-    uint64 account_number = 3;
-    uint64 account_sequence = 4;
-}
-```
+1. Pull out `body` and `auth_info` from a `Tx` and deserialize them
+3. Create a list of required signer addresses from the messages
+3. For each required signer:
+   - Pull account number and sequence from the state.
+   - Obtain the public key either from state or `AuthInfo`'s `signer_infos`.
+   - Create a `SignDoc` and serialize it. Due to the simplicity of the type it
+     is expected that this matches the serialization used by the signer.
+   - Verify the signature at the the same list position against the serialized `SignDoc`.
 
 #### `SIGN_MODE_LEGACY_AMINO`
 

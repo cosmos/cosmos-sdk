@@ -2,7 +2,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"strings"
 
@@ -195,28 +194,15 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 }
 
 func NewFundCommunityPoolCmd(clientCtx client.Context) *cobra.Command {
-// TODO: Wire this to proposal handler in client/proposal_handler.go
-func NewSubmitProposalCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "community-pool-spend [proposal-file]",
+		Use:   "fund-community-pool [amount]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Submit a community pool spend proposal",
+		Short: "Funds the community pool with the specified amount",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a community pool spend proposal along with an initial deposit.
-The proposal details must be supplied via a JSON file.
+			fmt.Sprintf(`Funds the community pool with the specified amount
 
 Example:
-$ %s tx gov submit-proposal community-pool-spend <path/to/proposal.json> --from=<key_or_address>
-
-Where proposal.json contains:
-
-{
-  "title": "Community Pool Spend",
-  "description": "Pay me some Atoms!",
-  "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
-  "amount": "1000stake",
-  "deposit": "1000stake"
-}
+$ %s tx distribution fund-community-pool 100uatom --from mykey
 `,
 				version.ClientName,
 			),
@@ -241,38 +227,6 @@ Where proposal.json contains:
 
 	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	return cmd
-}
-
-// command to replace a delegator's withdrawal address
-func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "set-withdraw-addr [withdraw-addr]",
-		Short: "change the default withdraw address for rewards associated with an address",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Set the withdraw address for rewards associated with a delegator address.
-
-Example:
-$ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
-`,
-				version.ClientName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-
-			delAddr := cliCtx.GetFromAddress()
-			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
-	}
 }
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
@@ -336,39 +290,33 @@ Where proposal.json contains:
 	return cmd
 }
 
-// GetCmdFundCommunityPool returns a command implementation that supports directly
-// funding the community pool.
-func GetCmdFundCommunityPool(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "fund-community-pool [amount]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Funds the community pool with the specified amount",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Funds the community pool with the specified amount
+type generateOrBroadcastFunc func(client.Context, []sdk.Msg) error
 
-Example:
-$ %s tx distribution fund-community-pool 100uatom --from mykey
-`,
-				version.ClientName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+func splitAndApply(
+	generateOrBroadcast generateOrBroadcastFunc,
+	clientCtx client.Context,
+	msgs []sdk.Msg,
+	chunkSize int,
+) error {
 
-			depositorAddr := cliCtx.GetFromAddress()
-			amount, err := sdk.ParseCoins(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgFundCommunityPool(amount, depositorAddr)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
+	if chunkSize == 0 {
+		return generateOrBroadcast(clientCtx, msgs)
 	}
+
+	// split messages into slices of length chunkSize
+	totalMessages := len(msgs)
+	for i := 0; i < len(msgs); i += chunkSize {
+
+		sliceEnd := i + chunkSize
+		if sliceEnd > totalMessages {
+			sliceEnd = totalMessages
+		}
+
+		msgChunk := msgs[i:sliceEnd]
+		if err := generateOrBroadcast(clientCtx, msgChunk); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

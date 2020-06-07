@@ -156,6 +156,8 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			return newSplitAndApply(tx.GenerateOrBroadcastTx, clientCtx, msgs, chunkSize)
 		},
 	}
+
+	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	return cmd
 }
 
@@ -225,7 +227,6 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 		},
 	}
 
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	return cmd
 }
 

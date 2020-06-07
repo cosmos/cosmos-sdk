@@ -27,7 +27,8 @@ func ParseCommunityPoolSpendProposalJSON(cdc codec.JSONMarshaler, proposalFile s
 		return proposal, err
 	}
 
-	err = cdc.UnmarshalJSON(contents, &proposal)
-
-	return proposal, err
+	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
+		return proposal, err
+	}
+	return proposal, nil
 }

@@ -56,10 +56,18 @@ package cosmos_sdk.v1;
 message Tx {
     TxBody body = 1;
     AuthInfo auth_info = 2;
+    // A list of signatures that matches the length and order of AuthInfo's signer_infos to
+    // allow connecting signature meta information like public key and signing mode by position.
     repeated bytes signatures = 3;
 }
 
 message TxBody {
+    // A list of messages to be executed. The required signers of those messages define
+    // the number and order of elements in AuthInfo's signer_infos and Tx's signatures.
+    // Each required signer address is added to the list only the first time it occurs.
+    //
+    // By convention, the first required signer (usually from the first message) is referred
+    // to as the primary signer and pays the fee for the whole transaction.
     repeated google.protobuf.Any messages = 1;
     string memo = 2;
     int64 timeout_height = 3;
@@ -67,13 +75,17 @@ message TxBody {
 }
 
 message AuthInfo {
+    // This list defines the signing modes for the required signers. The number
+    // and order of elements must match the required signers from TxBody's messages.
+    // The first element is the primary signer and the one which pays the fee.
     repeated SignerInfo signer_infos = 1;
-    // The first signer is the primary signer and the one which pays the fee
+    // The fee can be calculated by looking into the body and the signer infos.
     Fee fee = 2;
 }
 
 message SignerInfo {
-    // PublicKey key is optional for accounts that already exist in state
+    // The public key is optional for accounts that already exist in state. If unset, the
+    // verifier can use the required signer address for this position and lookup the public key.
     PublicKey public_key = 1;
     // ModeInfo describes the signing mode of the signer and is a nested
     // structure to support nested multisig pubkey's

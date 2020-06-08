@@ -24,13 +24,12 @@ type SignModeHandler interface {
 // isn't included in the transaction body itself
 type SigningData struct {
 	// ChainID is the chain that this transaction is targetted
-	ChainID         string
+	ChainID string
 
 	// AccountNumber is the account number of the signer
-	AccountNumber   uint64
+	AccountNumber uint64
 
 	// AccountSequence is the account sequence number of the signer that is used
 	// for replay protection
 	AccountSequence uint64
 }
-

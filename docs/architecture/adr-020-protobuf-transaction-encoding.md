@@ -7,7 +7,7 @@
 - 2020 April 13: Added details on interface `oneof` handling
 - 2020 April 30: Switch to `Any`
 - 2020 May 14: Describe public key encoding
-- 2020 June 07: Store `TxBody` and `AuthInfo` as bytes in `Tx` and `SignDoc`
+- 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
 
 ## Status
 
@@ -55,6 +55,18 @@ which will be re-used by `SignDoc` below, and `signatures`:
 package cosmos_sdk.v1;
 
 message Tx {
+    TxBody body = 1;
+    AuthInfo auth_info = 2;
+    // A list of signatures that matches the length and order of AuthInfo's signer_infos to
+    // allow connecting signature meta information like public key and signing mode by position.
+    repeated bytes signatures = 3;
+}
+
+// A variant of Tx that pins the signer's exact binary represenation of body and
+// auth_info. This is used for signing, broadcasting and verification. The binary
+// `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
+// becomes the "txhash", commonly used as the transaction ID.
+message TxRaw {
     // A protobuf serialization of a TxBody that matches representation in SignDoc.
     bytes body = 1;
     // A protobuf serialization of a AuthInfo that matches representation in SignDoc.
@@ -170,9 +182,9 @@ Signatures are structured using the `SignDoc` below which reuses the serializati
 ```proto
 // types/types.proto
 message SignDoc {
-    // A protobuf serialization of a TxBody that matches representation in Tx.
+    // A protobuf serialization of a TxBody that matches representation in TxRaw.
     bytes body = 1;
-    // A protobuf serialization of a AuthInfo that matches representation in Tx.
+    // A protobuf serialization of a AuthInfo that matches representation in TxRaw.
     bytes auth_info = 2;
     string chain_id = 3;
     uint64 account_number = 4;
@@ -188,16 +200,16 @@ In order to sign in the default mode, clients take the following steps:
 2. Create a `SignDoc` and encode it. (The only requirement of the underlying
    protobuf implementation is that fields are serialized in order).
 3. Sign the encoded `SignDoc` bytes
-4. Build and broadcast `Tx`.
+4. Build a `TxRaw` and serialize it for broadcasting
 
 Signature verification is based on comparing the raw `TxBody` and `AuthInfo`
-bytes encoded in `Tx` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
+bytes encoded in `TxRaw` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
 algorithm which creates added complexity for clients in addition to preventing
 some forms of upgradeability (to be addressed later in this document).
 
 Signature verifiers do:
 
-1. Pull out `body` and `auth_info` from a `Tx` and deserialize them
+1. Pull out `body` and `auth_info` from a `TxRaw` and deserialize them
 3. Create a list of required signer addresses from the messages
 3. For each required signer:
    - Pull account number and sequence from the state.

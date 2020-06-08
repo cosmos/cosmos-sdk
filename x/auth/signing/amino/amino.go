@@ -19,7 +19,7 @@ func (h LegacyAminoJSONHandler) DefaultMode() types.SignMode {
 	return types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
-// DefaultMode implements SignModeHandler.Modes
+// Modes implements SignModeHandler.Modes
 func (LegacyAminoJSONHandler) Modes() []types.SignMode {
 	return []types.SignMode{types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }

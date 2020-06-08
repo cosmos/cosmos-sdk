@@ -1,6 +1,7 @@
-package amino_test
+package signing_test
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,13 +10,21 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
+func MakeTestHandlerMap() signing.SignModeHandler {
+	return signing.NewHandlerMap(
+		txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		[]signing.SignModeHandler{
+			amino.LegacyAminoJSONHandler{},
+		},
+	)
+}
+
+func TestHandlerMap_GetSignBytes(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	priv2 := secp256k1.GenPrivKey()
@@ -23,7 +32,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 
-	fee := auth.StdFee{
+	fee := authtypes.StdFee{
 		Amount: coins,
 		Gas:    10000,
 	}
@@ -36,7 +45,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		},
 	}
 
-	tx := auth.StdTx{
+	tx := authtypes.StdTx{
 		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: nil,
@@ -49,7 +58,9 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		seqNum  uint64 = 7
 	)
 
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := MakeTestHandlerMap()
+	aminoJSONHandler := amino.LegacyAminoJSONHandler{}
+
 	signingData := signing.SigningData{
 		ChainID:         chainId,
 		AccountNumber:   accNum,
@@ -58,21 +69,24 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	signBz, err := handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz := auth.StdSignBytes(chainId, accNum, seqNum, fee, msgs, memo)
+	expectedSignBz, err := aminoJSONHandler.GetSignBytes(txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	require.NoError(t, err)
 
 	require.Equal(t, expectedSignBz, signBz)
 
 	// expect error with wrong sign mode
-	_, err = handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err = aminoJSONHandler.GetSignBytes(txtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 }
 
-func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
+func TestHandlerMap_DefaultMode(t *testing.T) {
+	handler := MakeTestHandlerMap()
 	require.Equal(t, txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
-func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
-	require.Equal(t, []txtypes.SignMode{txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
+func TestHandlerMap_Modes(t *testing.T) {
+	handler := MakeTestHandlerMap()
+	modes := handler.Modes()
+	require.Contains(t, modes, txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	require.Len(t, modes, 1)
 }

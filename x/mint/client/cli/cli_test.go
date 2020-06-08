@@ -18,7 +18,7 @@ func TestCLIMintQueries(t *testing.T) {
 	t.Cleanup(func() { proc.Stop(false) })
 
 	params := testutil.QueryMintingParams(f)
-	require.NotNil(t, params)
+	require.NotEmpty(t, params)
 
 	inflation := testutil.QueryInflation(f)
 	require.False(t, inflation.IsZero())

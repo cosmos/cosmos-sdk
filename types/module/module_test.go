@@ -159,6 +159,25 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	mm.RegisterRoutes(router, queryRouter)
 }
 
+func TestManager_RegisterQueryServices(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
+	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
+	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	queryRouter := mocks.NewMockServer(mockCtrl)
+	mockAppModule1.EXPECT().RegisterQueryService(queryRouter).Times(1)
+	mockAppModule2.EXPECT().RegisterQueryService(queryRouter).Times(1)
+
+	mm.RegisterQueryServices(queryRouter)
+}
+
 func TestManager_InitGenesis(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)

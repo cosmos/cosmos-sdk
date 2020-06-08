@@ -132,6 +132,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		bankcmd.NewSendTxCmd(clientCtx),
 		flags.LineBreak,
 		authcmd.GetSignCommand(cdc),
+		authcmd.GetSignBatchCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
 		authcmd.GetValidateSignaturesCommand(cdc),
 		flags.LineBreak,

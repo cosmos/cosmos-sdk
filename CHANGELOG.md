@@ -271,6 +271,9 @@ functionality that requires an online connection.
 * (simulation) [\#6002](https://github.com/cosmos/cosmos-sdk/pull/6002) Add randomized consensus params into simulation.
 * (x/staking) [\#6059](https://github.com/cosmos/cosmos-sdk/pull/6059) Updated `HistoricalEntries` parameter default to 100.
 * (x/ibc) [\#5948](https://github.com/cosmos/cosmos-sdk/issues/5948) Add `InitGenesis` and `ExportGenesis` functions for `ibc` module.
+* (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add String() method to GasMeter
+* (x/staking) [\#6163](https://github.com/cosmos/cosmos-sdk/pull/6163) CLI and REST call to unbonding delegations and delegations now accept
+pagination.
 * (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add `String()` method to `GasMeter`.
 * (types) [\#6195](https://github.com/cosmos/cosmos-sdk/pull/6195) Add codespace to broadcast(sync/async) response.
 * (baseapp) [\#6053](https://github.com/cosmos/cosmos-sdk/pull/6053) Customizable panic recovery handling added for `app.runTx()` method (as proposed in the [ADR 22](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-022-custom-panic-handling.md)). Adds ability for developers to register custom panic handlers extending standard ones.

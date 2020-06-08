@@ -11,6 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var specs = []string{"ics23:iavl", "simple:v"}
+
 func (suite *MerkleTestSuite) TestVerifyMembership() {
 	suite.iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := suite.store.Commit()
@@ -53,7 +55,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 			root := types.NewMerkleRoot(tc.root)
 			path := types.NewMerklePath(tc.pathArr)
 
-			err := proof.VerifyMembership(&root, path, tc.value)
+			err := proof.VerifyMembership(specs, &root, path, tc.value)
 
 			if tc.shouldPass {
 				// nolint: scopelint
@@ -108,7 +110,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 			root := types.NewMerkleRoot(tc.root)
 			path := types.NewMerklePath(tc.pathArr)
 
-			err := proof.VerifyNonMembership(&root, path)
+			err := proof.VerifyNonMembership(specs, &root, path)
 
 			if tc.shouldPass {
 				// nolint: scopelint

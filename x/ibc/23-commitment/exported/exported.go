@@ -39,8 +39,8 @@ type Path interface {
 // Proofs includes key but value is provided dynamically at the verification time.
 type Proof interface {
 	GetCommitmentType() Type
-	VerifyMembership(Root, Path, []byte) error
-	VerifyNonMembership(Root, Path) error
+	VerifyMembership([]string, Root, Path, []byte) error
+	VerifyNonMembership([]string, Root, Path) error
 	IsEmpty() bool
 
 	ValidateBasic() error

@@ -128,9 +128,17 @@ func (MerkleProof) GetCommitmentType() exported.Type {
 }
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
-func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path, value []byte) error {
+func (proof MerkleProof) VerifyMembership(specs []string, root exported.Root, path exported.Path, value []byte) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	}
+
+	for i, op := range proof.Proof.Ops {
+		if op.Type != specs[i] {
+			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+				"proof does not match expected format at position %d, expected: %s, got: %s",
+				i, specs[i], op.Type)
+		}
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
@@ -138,13 +146,73 @@ func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path
 }
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
-func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.Path) error {
+func (proof MerkleProof) VerifyNonMembership(specs []string, root exported.Root, path exported.Path) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
 	}
 
+	for i, op := range proof.Proof.Ops {
+		if op.Type != specs[i] {
+			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+				"proof does not match expected format at position %d, expected: %s, got: %s",
+				i, specs[i], op.Type)
+		}
+	}
+
 	runtime := rootmulti.DefaultProofRuntime()
 	return runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
+}
+
+// BatchVerifyMembership verifies a group of key value pairs against the given root
+// NOTE: Untested
+func (proof MerkleProof) BatchVerifyMembership(specs []string, root exported.Root, items map[string][]byte) error {
+	if proof.IsEmpty() || root == nil || root.IsEmpty() {
+		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	}
+
+	for i, op := range proof.Proof.Ops {
+		if op.Type != specs[i] {
+			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+				"proof does not match expected format at position %d, expected: %s, got: %s",
+				i, specs[i], op.Type)
+		}
+	}
+
+	// Verify each item seperately against same proof
+	runtime := rootmulti.DefaultProofRuntime()
+	for path, value := range items {
+		if err := runtime.VerifyValue(proof.Proof, root.GetHash(), path, value); err != nil {
+			return sdkerrors.Wrapf(ErrInvalidProof, "verification failed for path: %s, value: %x. Error: %v",
+				path, value, err)
+		}
+	}
+	return nil
+}
+
+// BatchVerifyNonMembership verifies absence of a group of keys against the given root
+// NOTE: Untested
+func (proof MerkleProof) BatchVerifyNonMembership(specs []string, root exported.Root, items []string) error {
+	if proof.IsEmpty() || root == nil || root.IsEmpty() {
+		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	}
+
+	for i, op := range proof.Proof.Ops {
+		if op.Type != specs[i] {
+			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+				"proof does not match expected format at position %d, expected: %s, got: %s",
+				i, specs[i], op.Type)
+		}
+	}
+
+	// Verify each item seperately against same proof
+	runtime := rootmulti.DefaultProofRuntime()
+	for _, path := range items {
+		if err := runtime.VerifyAbsence(proof.Proof, root.GetHash(), path); err != nil {
+			return sdkerrors.Wrapf(ErrInvalidProof, "absence verification failed for path: %s. Error: %v",
+				path, err)
+		}
+	}
+	return nil
 }
 
 // IsEmpty returns true if the root is empty

@@ -17,7 +17,7 @@ type SignModeHandlerMap struct {
 var _ SignModeHandler = SignModeHandlerMap{}
 
 // NewSignModeHandlerMap returns a new SignModeHandlerMap with the provided defaultMode and handlers
-func NewSignModeHandlerMap(defaultMode types.SignMode, handlers []SignModeHandler) *SignModeHandlerMap {
+func NewSignModeHandlerMap(defaultMode types.SignMode, handlers []SignModeHandler) SignModeHandlerMap {
 	handlerMap := make(map[types.SignMode]SignModeHandler)
 	var modes []types.SignMode
 
@@ -31,7 +31,7 @@ func NewSignModeHandlerMap(defaultMode types.SignMode, handlers []SignModeHandle
 		}
 	}
 
-	return &SignModeHandlerMap{
+	return SignModeHandlerMap{
 		defaultMode:      defaultMode,
 		modes:            modes,
 		signModeHandlers: handlerMap,

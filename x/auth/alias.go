@@ -53,7 +53,7 @@ var (
 	NewQueryAccountParams             = types.NewQueryAccountParams
 	NewStdTx                          = types.NewStdTx
 	CountSubKeys                      = types.CountSubKeys
-	NewStdFee                         = types.NewStdFee //nolint:staticheck // this will be removed when proto is ready
+	NewStdFee                         = types.NewStdFee //nolint:staticcheck // this will be removed when proto is ready
 	StdSignBytes                      = types.StdSignBytes
 	DefaultTxDecoder                  = types.DefaultTxDecoder
 	DefaultTxEncoder                  = types.DefaultTxEncoder
@@ -88,9 +88,9 @@ type (
 	QueryAccountParams               = types.QueryAccountParams
 	StdSignMsg                       = types.StdSignMsg
 	StdTx                            = types.StdTx
-	StdFee                           = types.StdFee //nolint:staticheck // this will be removed when proto is ready
+	StdFee                           = types.StdFee //nolint:staticcheck // this will be removed when proto is ready
 	StdSignDoc                       = types.StdSignDoc
-	StdSignature                     = types.StdSignature //nolint:staticheck // this will be removed when proto is ready
+	StdSignature                     = types.StdSignature //nolint:staticcheck // this will be removed when proto is ready
 	TxBuilder                        = types.TxBuilder
 	GenesisAccountIterator           = types.GenesisAccountIterator
 	ModuleAccount                    = types.ModuleAccount

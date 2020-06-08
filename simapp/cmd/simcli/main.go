@@ -102,7 +102,11 @@ func queryCmd(cdc *codec.Codec) *cobra.Command {
 	)
 
 	// add modules' query commands
-	simapp.ModuleBasics.AddQueryCommands(queryCmd, cdc)
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithJSONMarshaler(appCodec).
+		WithCodec(cdc)
+	simapp.ModuleBasics.AddQueryCommands(queryCmd, clientCtx)
 
 	return queryCmd
 }
@@ -122,6 +126,7 @@ func txCmd() *cobra.Command {
 		bankcmd.NewSendTxCmd(clientCtx),
 		flags.LineBreak,
 		authcmd.GetSignCommand(clientCtx),
+		authcmd.GetSignBatchCommand(cdc),
 		authcmd.GetMultiSignCommand(clientCtx),
 		authcmd.GetValidateSignaturesCommand(clientCtx),
 		flags.LineBreak,

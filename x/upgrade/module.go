@@ -3,6 +3,8 @@ package upgrade
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
@@ -51,14 +53,14 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Querying commands for the upgrade module",
 	}
 	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetPlanCmd(StoreKey, cdc),
-		cli.GetAppliedHeightCmd(StoreKey, cdc),
+		cli.GetPlanCmd(StoreKey, clientCtx.Codec),
+		cli.GetAppliedHeightCmd(StoreKey, clientCtx.Codec),
 	)...)
 
 	return queryCmd
@@ -108,6 +110,8 @@ func (AppModule) QuerierRoute() string { return QuerierKey }
 func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
+
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis is ignored, no sense in serializing future upgrades
 func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {

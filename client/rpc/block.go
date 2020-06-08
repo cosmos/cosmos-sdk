@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
@@ -66,7 +67,7 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 	}
 
 	if clientCtx.Indent {
-		return codec.MarshalJSONIndent(clientCtx.JSONMarshaler, res)
+		return legacy.MarshalJSONIndent(clientCtx.JSONMarshaler, res)
 	}
 
 	return clientCtx.JSONMarshaler.MarshalJSON(res)

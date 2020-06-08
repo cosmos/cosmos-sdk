@@ -16,5 +16,6 @@ This repository contains reference documentation on the core concepts of the Cos
 6. [Encoding](./encoding.md)
 7. [Events](./events.md)
 8. [Object-Capabilities](./ocap.md)
+9. [RunTx recovery middleware](./runtx_panics.md)
 
 After reading about the core concepts, head on to the [Building Modules documentation](../building-modules/README.md) to learn more about the process of building modules. 

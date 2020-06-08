@@ -36,7 +36,7 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
 	mockAppModuleBasic1.EXPECT().GetTxCmd(clientCtx).Times(1).Return(nil)
-	mockAppModuleBasic1.EXPECT().GetQueryCmd(cdc).Times(1).Return(nil)
+	mockAppModuleBasic1.EXPECT().GetQueryCmd(clientCtx).Times(1).Return(nil)
 
 	mm := module.NewBasicManager(mockAppModuleBasic1)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
@@ -55,7 +55,7 @@ func TestBasicManager(t *testing.T) {
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd, clientCtx)
 
-	mm.AddQueryCommands(mockCmd, cdc)
+	mm.AddQueryCommands(mockCmd, clientCtx)
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, wantDefaultGenesis))
@@ -157,6 +157,25 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
 
 	mm.RegisterRoutes(router, queryRouter)
+}
+
+func TestManager_RegisterQueryServices(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
+	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
+	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	queryRouter := mocks.NewMockServer(mockCtrl)
+	mockAppModule1.EXPECT().RegisterQueryService(queryRouter).Times(1)
+	mockAppModule2.EXPECT().RegisterQueryService(queryRouter).Times(1)
+
+	mm.RegisterQueryServices(queryRouter)
 }
 
 func TestManager_InitGenesis(t *testing.T) {

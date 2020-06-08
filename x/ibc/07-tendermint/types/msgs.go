@@ -39,17 +39,13 @@ type MsgCreateClient struct {
 	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
 }
 
-func (msg MsgCreateClient) Reset() {
-	panic("implement me")
-}
+// this is a constant to satisfy the linter
+const TODO = "TODO"
 
-func (msg MsgCreateClient) String() string {
-	panic("implement me")
-}
-
-func (msg MsgCreateClient) ProtoMessage() {
-	panic("implement me")
-}
+// dummy implementation of proto.Message
+func (msg MsgCreateClient) Reset()         {}
+func (msg MsgCreateClient) String() string { return TODO }
+func (msg MsgCreateClient) ProtoMessage()  {}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
@@ -141,17 +137,10 @@ type MsgUpdateClient struct {
 	Signer   sdk.AccAddress `json:"address" yaml:"address"`
 }
 
-func (msg MsgUpdateClient) Reset() {
-	panic("implement me")
-}
-
-func (msg MsgUpdateClient) String() string {
-	panic("implement me")
-}
-
-func (msg MsgUpdateClient) ProtoMessage() {
-	panic("implement me")
-}
+// dummy implementation of proto.Message
+func (msg MsgUpdateClient) Reset()         {}
+func (msg MsgUpdateClient) String() string { return TODO }
+func (msg MsgUpdateClient) ProtoMessage()  {}
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
@@ -207,17 +196,10 @@ type MsgSubmitClientMisbehaviour struct {
 	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
 }
 
-func (msg MsgSubmitClientMisbehaviour) Reset() {
-	panic("implement me")
-}
-
-func (msg MsgSubmitClientMisbehaviour) String() string {
-	panic("implement me")
-}
-
-func (msg MsgSubmitClientMisbehaviour) ProtoMessage() {
-	panic("implement me")
-}
+// dummy implementation of proto.Message
+func (msg MsgSubmitClientMisbehaviour) Reset()         {}
+func (msg MsgSubmitClientMisbehaviour) String() string { return TODO }
+func (msg MsgSubmitClientMisbehaviour) ProtoMessage()  {}
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.

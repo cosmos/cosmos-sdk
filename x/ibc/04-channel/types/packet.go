@@ -9,11 +9,11 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// CommitPacket return the hash of commitment bytes
-// TODO: no specification for packet commitment currently,
-// make it spec compatible once we have it
+// CommitPacket returns a packet commitment bytes. The commitment consists of:
+// hash(timeout_timestamp + timeout_height + data) from a given packet.
 func CommitPacket(packet exported.PacketI) []byte {
-	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutHeight())
+	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight())...)
 	buf = append(buf, packet.GetData()...)
 	return tmhash.Sum(buf)
 }

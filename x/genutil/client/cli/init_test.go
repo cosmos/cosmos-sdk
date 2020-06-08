@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -142,6 +143,6 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	legacy_global.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	return cdc
 }

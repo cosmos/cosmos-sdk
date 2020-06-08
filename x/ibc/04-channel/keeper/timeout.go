@@ -117,7 +117,7 @@ func (k Keeper) TimeoutPacket(
 // TimeoutExecuted deletes the commitment send from this chain after it verifies timeout.
 // If the timed-out packet came from an ORDERED channel then this channel will be closed.
 //
-// NOTE: this function must be called in the handler
+// CONTRACT: this function must be called in the IBC handler
 func (k Keeper) TimeoutExecuted(
 	ctx sdk.Context,
 	chanCap *capability.Capability,

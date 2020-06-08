@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -54,7 +54,7 @@ recommended to set such parameters manually.
 	}
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
+	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 
 	// Add the flags here and return the command
 	return flags.PostCommands(cmd)[0]
@@ -162,13 +162,13 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			return err
 		}
 
-		if viper.GetString(flagOutfile) == "" {
+		if viper.GetString(flags.FlagOutputDocument) == "" {
 			fmt.Printf("%s\n", json)
 			return
 		}
 
 		fp, err := os.OpenFile(
-			viper.GetString(flagOutfile), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
+			viper.GetString(flags.FlagOutputDocument), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
 		)
 		if err != nil {
 			return err

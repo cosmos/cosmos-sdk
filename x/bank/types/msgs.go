@@ -58,8 +58,8 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgMultiSend{}
 
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
-func NewMsgMultiSend(in []Input, out []Output) MsgMultiSend {
-	return MsgMultiSend{Inputs: in, Outputs: out}
+func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
+	return &MsgMultiSend{Inputs: in, Outputs: out}
 }
 
 // Route Implements Msg

@@ -41,6 +41,8 @@ type Keeper interface {
 	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
 	MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error)
 	UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error)
+
+	types.QueryServer
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.

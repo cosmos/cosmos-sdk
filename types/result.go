@@ -13,6 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var cdc = codec.New()

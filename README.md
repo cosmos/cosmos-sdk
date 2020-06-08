@@ -17,10 +17,10 @@ parent:
     <img alt="License: Apache-2.0" src="https://img.shields.io/github/license/cosmos/cosmos-sdk.svg" />
   </a>
   <a href="https://pkg.go.dev/github.com/cosmos/cosmos-sdk?tab=doc">
-    <img alt="go doc" src="https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg" />
+    <img alt="GoDoc" src="https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg" />
   </a>
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
-    <img alt="go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
+    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
   <a href="https://codecov.io/gh/cosmos/cosmos-sdk">
     <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg" />
@@ -32,6 +32,9 @@ parent:
   </a>
   <a href="https://discord.gg/AzefAFd">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
+  </a>
+  <a href="https://sourcegraph.com/github.com/cosmos/cosmos-sdk?badge">
+    <img alt="Imported by" src="https://sourcegraph.com/github.com/cosmos/cosmos-sdk/-/badge.svg" />
   </a>
     <img alt="Sims" src="https://github.com/cosmos/cosmos-sdk/workflows/Sims/badge.svg" />
     <img alt="Lint Satus" src="https://github.com/cosmos/cosmos-sdk/workflows/Lint/badge.svg" />

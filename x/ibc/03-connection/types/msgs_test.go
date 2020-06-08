@@ -56,7 +56,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenInit{
+	testMsgs := []*MsgConnectionOpenInit{
 		NewMsgConnectionOpenInit("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, signer),
 		NewMsgConnectionOpenInit("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, signer),
 		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "test/conn1", "clienttotest", prefix, signer),
@@ -67,7 +67,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 	}
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenInit
+		msg     *MsgConnectionOpenInit
 		expPass bool
 		errMsg  string
 	}{
@@ -94,7 +94,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenTry{
+	testMsgs := []*MsgConnectionOpenTry{
 		NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
@@ -110,7 +110,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 	}
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenTry
+		msg     *MsgConnectionOpenTry
 		expPass bool
 		errMsg  string
 	}{
@@ -141,7 +141,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenAck{
+	testMsgs := []*MsgConnectionOpenAck{
 		NewMsgConnectionOpenAck("test/conn1", suite.proof, suite.proof, 10, 10, "1.0.0", signer),
 		NewMsgConnectionOpenAck("ibcconntest", emptyProof, suite.proof, 10, 10, "1.0.0", signer),
 		NewMsgConnectionOpenAck("ibcconntest", suite.proof, emptyProof, 10, 10, "1.0.0", signer),
@@ -152,7 +152,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "1.0.0", signer),
 	}
 	var testCases = []struct {
-		msg     MsgConnectionOpenAck
+		msg     *MsgConnectionOpenAck
 		expPass bool
 		errMsg  string
 	}{
@@ -179,7 +179,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenConfirm{
+	testMsgs := []*MsgConnectionOpenConfirm{
 		NewMsgConnectionOpenConfirm("test/conn1", suite.proof, 10, signer),
 		NewMsgConnectionOpenConfirm("ibcconntest", emptyProof, 10, signer),
 		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 0, signer),
@@ -188,7 +188,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 	}
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenConfirm
+		msg     *MsgConnectionOpenConfirm
 		expPass bool
 		errMsg  string
 	}{

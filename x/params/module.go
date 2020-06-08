@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -52,7 +54,7 @@ func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
 
 // GetQueryCmd returns no root query command for the params module.
-func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
 
 func (am AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	proposal.RegisterInterfaces(registry)
@@ -96,6 +98,8 @@ func (AppModule) QuerierRoute() string { return QuerierRoute }
 func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
+
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.

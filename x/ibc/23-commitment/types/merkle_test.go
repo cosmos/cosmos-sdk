@@ -22,9 +22,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	})
 	require.NotNil(suite.T(), res.Proof)
 
-	proof := types.MerkleProof{
-		Proof: res.Proof,
-	}
+	proof := types.NewMerkleProof(res.Proof)
 	suite.Require().NoError(proof.ValidateBasic())
 	suite.Require().Error(types.MerkleProof{}.ValidateBasic())
 

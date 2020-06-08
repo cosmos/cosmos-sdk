@@ -78,12 +78,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitmenttypes.Merk
 		Prove: true,
 	})
 
-	height = res.Height
-	proof = commitmenttypes.MerkleProof{
-		Proof: res.Proof,
-	}
-
-	return
+	return commitmenttypes.NewMerkleProof(res.Proof), res.Height
 }
 
 func (suite *KeeperTestSuite) TestGetTransferAccount() {

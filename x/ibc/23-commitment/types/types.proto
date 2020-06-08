@@ -38,7 +38,7 @@ message MerklePath {
 message MerkleProof {
   option (gogoproto.equal) = true;
 
-  repeated ics23.CommitmentProof proofs = 1;
+  repeated .ics23.CommitmentProof proofs = 1;
 }
 
 // KeyPath defines a slice of keys

@@ -129,6 +129,13 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 
 var _ exported.Proof = (*MerkleProof)(nil)
 
+// NewMerkleProof constructs a new MerkleProof from ICS23 CommitmentProofs
+func NewMerkleProof(proofs ...*ics23.CommitmentProof) MerkleProof {
+	return MerkleProof{
+		Proofs: proofs,
+	}
+}
+
 // GetCommitmentType implements ProofI
 func (MerkleProof) GetCommitmentType() exported.Type {
 	return exported.Merkle

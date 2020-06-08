@@ -306,11 +306,7 @@ func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint
 		Data:   key,
 		Prove:  true,
 	})
-
-	proof := commitmenttypes.MerkleProof{
-		Proof: res.Proof,
-	}
-
+	proof := types.NewMerkleProof(res.Proof)
 	return proof, uint64(res.Height)
 }
 

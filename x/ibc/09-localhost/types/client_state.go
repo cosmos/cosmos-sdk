@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -61,6 +62,11 @@ func (cs ClientState) GetLatestHeight() uint64 {
 // IsFrozen returns false.
 func (cs ClientState) IsFrozen() bool {
 	return false
+}
+
+// GetProofSpecs an empty ICS23 proof spec.
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return []*ics23.ProofSpec{}
 }
 
 // Validate performs a basic validation of the client state fields.

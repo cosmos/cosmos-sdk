@@ -18,7 +18,7 @@ import (
 
 var (
 	emptyPrefix = commitmenttypes.MerklePrefix{}
-	emptyProof  = commitmenttypes.MerkleProof{Proof: nil}
+	emptyProof  = commitmenttypes.MerkleProof{Proofs: nil}
 )
 
 type MsgTestSuite struct {

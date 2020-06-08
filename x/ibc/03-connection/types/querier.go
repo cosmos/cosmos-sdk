@@ -31,7 +31,7 @@ func NewConnectionResponse(
 ) ConnectionResponse {
 	return ConnectionResponse{
 		Connection:  connection,
-		Proof:       commitmenttypes.MerkleProof{Proof: proof},
+		Proof:       commitmenttypes.NewMerkleProof(proof),
 		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
 	}
@@ -68,7 +68,7 @@ func NewClientConnectionsResponse(
 ) ClientConnectionsResponse {
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
-		Proof:           commitmenttypes.MerkleProof{Proof: proof},
+		Proof:           commitmenttypes.NewMerkleProof(proof),
 		ProofPath:       commitmenttypes.NewMerklePath(strings.Split(host.ClientConnectionsPath(clientID), "/")),
 		ProofHeight:     uint64(height),
 	}

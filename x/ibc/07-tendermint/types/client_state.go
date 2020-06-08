@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -127,6 +128,11 @@ func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
 }
 
+// GetProofSpecs returns ICS23 proof spec for the tendermint client.
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return []*ics23.ProofSpec{ics23.TendermintSpec}
+}
+
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
@@ -175,7 +181,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.GetProofSpecs(), provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -213,7 +219,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.GetProofSpecs(), consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -252,7 +258,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.GetProofSpecs(), consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -281,7 +287,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
+	if err := proof.VerifyMembership(cs.GetProofSpecs(), consensusState.GetRoot(), path, commitmentBytes); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -310,7 +316,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
+	if err := proof.VerifyMembership(cs.GetProofSpecs(), consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -339,7 +345,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	if err := proof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
+	if err := proof.VerifyNonMembership(cs.GetProofSpecs(), consensusState.GetRoot(), path); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -369,7 +375,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.GetProofSpecs(), consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 

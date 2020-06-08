@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
+	ics23 "github.com/confio/ics23/go"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -43,11 +43,11 @@ type StateResponse struct {
 
 // NewClientStateResponse creates a new StateResponse instance.
 func NewClientStateResponse(
-	clientID string, clientState exported.ClientState, proof *merkle.Proof, height int64,
+	clientID string, clientState exported.ClientState, proofs []*ics23.CommitmentProof, height int64,
 ) StateResponse {
 	return StateResponse{
 		ClientState: clientState,
-		Proof:       commitmenttypes.MerkleProof{Proof: proof},
+		Proof:       commitmenttypes.NewMerkleProof(proofs...),
 		ProofPath:   commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(host.ClientStatePath(), "/")...)),
 		ProofHeight: uint64(height),
 	}
@@ -64,11 +64,11 @@ type ConsensusStateResponse struct {
 
 // NewConsensusStateResponse creates a new ConsensusStateResponse instance.
 func NewConsensusStateResponse(
-	clientID string, cs exported.ConsensusState, proof *merkle.Proof, height int64,
+	clientID string, cs exported.ConsensusState, proofs []*ics23.CommitmentProof, height int64,
 ) ConsensusStateResponse {
 	return ConsensusStateResponse{
 		ConsensusState: cs,
-		Proof:          commitmenttypes.MerkleProof{Proof: proof},
+		Proof:          commitmenttypes.NewMerkleProof(proofs...),
 		ProofPath:      commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(host.ClientStatePath(), "/")...)),
 		ProofHeight:    uint64(height),
 	}

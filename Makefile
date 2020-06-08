@@ -273,7 +273,7 @@ proto-check-breaking-docker:
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_PROTO_URL = https://raw.githubusercontent.com/confio/ics23/v0.6.0
+CONFIO_PROTO_URL = https://raw.githubusercontent.com/confio/ics23/6e2c36a74465491ff786bcb32e86c93f13bdb382
 
 TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
 TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle

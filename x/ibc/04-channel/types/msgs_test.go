@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -41,7 +41,7 @@ var (
 	invalidShortConnHops = []string{invalidShortConnection}
 	invalidLongConnHops  = []string{invalidLongConnection}
 
-	proof = commitmenttypes.MerkleProof{Proof: &merkle.Proof{Ops: []merkle.ProofOp{{Type: "proof", Key: []byte("key"), Data: []byte("data")}}}}
+	proof = commitmenttypes.NewMerkleProof(&ics23.CommitmentProof{})
 
 	addr = sdk.AccAddress("testaddr")
 )

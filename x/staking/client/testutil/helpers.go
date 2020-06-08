@@ -54,12 +54,14 @@ func TxStakingRedelegate(f *cli.Fixtures, from, srcVal, dstVal string, amount sd
 // QueryStakingValidator is simcli query staking validator
 func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) staking.Validator {
 	cmd := fmt.Sprintf("%s query staking validator %s %v", f.SimcliBinary, valAddr, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var validator staking.Validator
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return validator
 }
@@ -67,12 +69,14 @@ func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...str
 // QueryStakingValidators is simcli query staking validators
 func QueryStakingValidators(f *cli.Fixtures, flags ...string) []staking.Validator {
 	cmd := fmt.Sprintf("%s query staking validators %v", f.SimcliBinary, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var validator []staking.Validator
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return validator
 }
@@ -80,12 +84,14 @@ func QueryStakingValidators(f *cli.Fixtures, flags ...string) []staking.Validato
 // QueryStakingUnbondingDelegationsFrom is simcli query staking unbonding-delegations-from
 func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegations-from %s %v", f.SimcliBinary, valAddr, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var ubds []staking.UnbondingDelegation
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &ubds)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return ubds
 }
@@ -93,12 +99,14 @@ func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddres
 // QueryStakingDelegationsTo is simcli query staking delegations-to
 func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
 	cmd := fmt.Sprintf("%s query staking delegations-to %s %v", f.SimcliBinary, valAddr, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var delegations []staking.Delegation
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return delegations
 }
@@ -106,12 +114,14 @@ func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ..
 // QueryStakingPool is simcli query staking pool
 func QueryStakingPool(f *cli.Fixtures, flags ...string) staking.Pool {
 	cmd := fmt.Sprintf("%s query staking pool %v", f.SimcliBinary, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var pool staking.Pool
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &pool)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return pool
 }
@@ -119,12 +129,14 @@ func QueryStakingPool(f *cli.Fixtures, flags ...string) staking.Pool {
 // QueryStakingParameters is simcli query staking parameters
 func QueryStakingParameters(f *cli.Fixtures, flags ...string) staking.Params {
 	cmd := fmt.Sprintf("%s query staking params %v", f.SimcliBinary, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var params staking.Params
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return params
 }
@@ -132,12 +144,14 @@ func QueryStakingParameters(f *cli.Fixtures, flags ...string) staking.Params {
 // QueryStakingDelegation is simcli query staking delegation
 func QueryStakingDelegation(f *cli.Fixtures, from string, valAddr sdk.ValAddress, flags ...string) staking.Delegation {
 	cmd := fmt.Sprintf("%s query staking delegation %s %s %v", f.SimcliBinary, from, valAddr, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var delegation staking.Delegation
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &delegation)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return delegation
 }
@@ -145,12 +159,14 @@ func QueryStakingDelegation(f *cli.Fixtures, from string, valAddr sdk.ValAddress
 // QueryStakingDelegations is simcli query staking delegations
 func QueryStakingDelegations(f *cli.Fixtures, from string, flags ...string) []staking.Delegation {
 	cmd := fmt.Sprintf("%s query staking delegations %s %v", f.SimcliBinary, from, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var delegations []staking.Delegation
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return delegations
 }
@@ -158,12 +174,14 @@ func QueryStakingDelegations(f *cli.Fixtures, from string, flags ...string) []st
 // QueryStakingRedelegation is simcli query staking redelegation
 func QueryStakingRedelegation(f *cli.Fixtures, delAdrr, srcVal, dstVal string, flags ...string) []staking.RedelegationResponse {
 	cmd := fmt.Sprintf("%s query staking redelegation %v %v %v %v", f.SimcliBinary, delAdrr, srcVal, dstVal, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var redelegations []staking.RedelegationResponse
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return redelegations
 }
@@ -171,12 +189,14 @@ func QueryStakingRedelegation(f *cli.Fixtures, delAdrr, srcVal, dstVal string, f
 // QueryStakingRedelegations is simcli query staking redelegation
 func QueryStakingRedelegations(f *cli.Fixtures, delAdrr string, flags ...string) []staking.RedelegationResponse {
 	cmd := fmt.Sprintf("%s query staking redelegations %v %v", f.SimcliBinary, delAdrr, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var redelegations []staking.RedelegationResponse
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return redelegations
 }
@@ -184,12 +204,14 @@ func QueryStakingRedelegations(f *cli.Fixtures, delAdrr string, flags ...string)
 // QueryStakingRedelegationsFrom is simcli query staking redelegation
 func QueryStakingRedelegationsFrom(f *cli.Fixtures, valAddr string, flags ...string) []staking.RedelegationResponse {
 	cmd := fmt.Sprintf("%s query staking redelegations-from %v %v", f.SimcliBinary, valAddr, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var redelegations []staking.RedelegationResponse
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return redelegations
 }
@@ -211,12 +233,14 @@ func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, f
 // QueryStakingUnbondingDelegations is simcli query staking redelegation
 func QueryStakingUnbondingDelegations(f *cli.Fixtures, delAdrr string, flags ...string) []staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegations %v %v", f.SimcliBinary, delAdrr, f.Flags())
-	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
 	var ubds []staking.UnbondingDelegation
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &ubds)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return ubds
 }

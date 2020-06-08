@@ -62,7 +62,8 @@ func QueryParameters(f *cli.Fixtures, flags ...string) distribution.Params {
 
 	var params distribution.Params
 	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 	return params
 }
 
@@ -74,19 +75,21 @@ func QueryCommission(f *cli.Fixtures, valAddr string, flags ...string) distribut
 
 	var commission distribution.ValidatorAccumulatedCommission
 	err := f.Cdc.UnmarshalJSON([]byte(out), &commission)
-	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 	return commission
 }
 
 // QuerySlashes returns all slashes of a validator for a given block range.
-func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) distribution.ValidatorSlashEvents {
+func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) []distribution.ValidatorSlashEvent {
 	cmd := fmt.Sprintf("%s query distribution slashes %s 0 5 %v ", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	fmt.Println("errStr---------------->", errStr)
 	require.Empty(f.T, errStr)
 
-	var slashes distribution.ValidatorSlashEvents
-	f.Cdc.MustUnmarshalJSON([]byte(out), &slashes)
-	// require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	var slashes []distribution.ValidatorSlashEvent
+	err := f.Cdc.UnmarshalJSON([]byte(out), &slashes)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 	return slashes
 }

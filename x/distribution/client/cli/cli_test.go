@@ -3,7 +3,6 @@
 package cli_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -43,23 +42,23 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	t.Cleanup(func() { proc.Stop(false) })
 
 	params := testutil.QueryParameters(f)
-	require.NotNil(t, params)
+	require.NotEmpty(t, params)
 
 	fooAddr := f.KeyAddress(cli.KeyFoo)
 	barAddr := f.KeyAddress(cli.KeyBar)
 	fooVal := sdk.ValAddress(fooAddr)
 
-	outstandingRewards := testutil.QueryValidatorOutstandingRewards(f, fooVal.String())
-	require.NotNil(t, outstandingRewards)
-	require.Equal(t, outstandingRewards.Rewards.IsZero(), false)
+	outStandingRewards := testutil.QueryValidatorOutstandingRewards(f, fooVal.String())
+	require.NotEmpty(t, outStandingRewards)
+	require.False(t, outStandingRewards.Rewards.IsZero())
 
 	commission := testutil.QueryCommission(f, fooVal.String())
-	require.NotNil(t, commission)
-	require.Equal(t, commission.Commission.IsZero(), false)
+	require.NotEmpty(t, commission)
+	require.False(t, commission.Commission.IsZero())
 
 	rewards := testutil.QueryRewards(f, fooAddr)
 	require.Equal(t, 1, len(rewards.Rewards))
-	require.NotNil(t, rewards.Total)
+	require.NotEmpty(t, rewards.Total)
 
 	// withdrawing rewards of a delegation for a single validator
 	success := testutil.TxWithdrawRewards(f, fooVal, fooAddr.String(), "-y")
@@ -76,8 +75,8 @@ func TestCLIWithdrawRewards(t *testing.T) {
 
 	msg := cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
 
 	success, _, stderr = testutil.TxSetWithdrawAddress(f, cli.KeyFoo, barAddr.String(), "-y")
 	require.True(f.T, success)
@@ -91,7 +90,7 @@ func TestCLIWithdrawRewards(t *testing.T) {
 
 	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
+	require.Len(t, msg.Msgs, 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	success, _, stderr = testutil.TxWithdrawAllRewards(f, cli.KeyFoo, "-y")
@@ -100,8 +99,7 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	slashes := testutil.QuerySlashes(f, fooVal.String())
-	fmt.Println("slashes", slashes)
-	require.NotNil(t, nil)
+	require.Nil(t, slashes, nil)
 
 	f.Cleanup()
 }

@@ -16,7 +16,7 @@ import (
 )
 
 func MakeTestHandlerMap() signing.SignModeHandler {
-	return signing.NewHandlerMap(
+	return signing.NewSignModeHandlerMap(
 		txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		[]signing.SignModeHandler{
 			amino.LegacyAminoJSONHandler{},

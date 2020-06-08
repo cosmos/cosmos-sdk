@@ -6,18 +6,18 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// HandlerMap is SignModeHandler that aggregates multiple SignModeHandler's into
+// SignModeHandlerMap is SignModeHandler that aggregates multiple SignModeHandler's into
 // a single handler
-type HandlerMap struct {
+type SignModeHandlerMap struct {
 	defaultMode      types.SignMode
 	modes            []types.SignMode
 	signModeHandlers map[types.SignMode]SignModeHandler
 }
 
-var _ SignModeHandler = HandlerMap{}
+var _ SignModeHandler = SignModeHandlerMap{}
 
-// NewHandlerMap returns a new HandlerMap with the provided defaultMode and handlers
-func NewHandlerMap(defaultMode types.SignMode, handlers []SignModeHandler) *HandlerMap {
+// NewSignModeHandlerMap returns a new SignModeHandlerMap with the provided defaultMode and handlers
+func NewSignModeHandlerMap(defaultMode types.SignMode, handlers []SignModeHandler) *SignModeHandlerMap {
 	handlerMap := make(map[types.SignMode]SignModeHandler)
 	var modes []types.SignMode
 
@@ -31,7 +31,7 @@ func NewHandlerMap(defaultMode types.SignMode, handlers []SignModeHandler) *Hand
 		}
 	}
 
-	return &HandlerMap{
+	return &SignModeHandlerMap{
 		defaultMode:      defaultMode,
 		modes:            modes,
 		signModeHandlers: handlerMap,
@@ -39,21 +39,20 @@ func NewHandlerMap(defaultMode types.SignMode, handlers []SignModeHandler) *Hand
 }
 
 // DefaultMode implements SignModeHandler.DefaultMode
-func (h HandlerMap) DefaultMode() types.SignMode {
+func (h SignModeHandlerMap) DefaultMode() types.SignMode {
 	return h.defaultMode
 }
 
 // Modes implements SignModeHandler.Modes
-func (h HandlerMap) Modes() []types.SignMode {
+func (h SignModeHandlerMap) Modes() []types.SignMode {
 	return h.modes
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes
-func (h HandlerMap) GetSignBytes(mode types.SignMode, data SigningData, tx sdk.Tx) ([]byte, error) {
+func (h SignModeHandlerMap) GetSignBytes(mode types.SignMode, data SigningData, tx sdk.Tx) ([]byte, error) {
 	handler, found := h.signModeHandlers[mode]
 	if !found {
 		return nil, fmt.Errorf("can't verify sign mode %s", mode.String())
 	}
 	return handler.GetSignBytes(mode, data, tx)
 }
-

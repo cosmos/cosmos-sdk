@@ -48,3 +48,5 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 020: Protocol Buffer Transaction Encoding](./adr-020-protobuf-transaction-encoding.md)
 - [ADR 021: Protocol Buffer Query Encoding](./adr-021-protobuf-query-encoding.md)
 - [ADR 022: Custom baseapp panic handling](./adr-022-custom-panic-handling.md)
+- [ADR 023: Protocol Buffer Naming and Versioning](./adr-023-protobuf-naming.md)
+- [ADR 024: Coin Metadata](./adr-024-coin-metadata.md)

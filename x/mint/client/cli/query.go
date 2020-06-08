@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,10 +41,10 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current minting parameters",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
-			res, _, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
@@ -55,7 +54,7 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return cliCtx.PrintOutput(params)
+			return clientCtx.PrintOutput(params)
 		},
 	}
 }
@@ -68,10 +67,10 @@ func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current minting inflation value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryInflation)
-			res, _, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
@@ -81,7 +80,7 @@ func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return cliCtx.PrintOutput(inflation)
+			return clientCtx.PrintOutput(inflation)
 		},
 	}
 }
@@ -94,10 +93,10 @@ func GetCmdQueryAnnualProvisions(cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current minting annual provisions value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAnnualProvisions)
-			res, _, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
@@ -107,7 +106,7 @@ func GetCmdQueryAnnualProvisions(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return cliCtx.PrintOutput(inflation)
+			return clientCtx.PrintOutput(inflation)
 		},
 	}
 }

@@ -12,7 +12,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case MsgUnjail:
+		case *MsgUnjail:
 			return handleMsgUnjail(ctx, msg, k)
 
 		default:
@@ -23,7 +23,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // Validators must submit a transaction to unjail itself after
 // having been jailed (and thus unbonded) for downtime
-func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) (*sdk.Result, error) {
+func handleMsgUnjail(ctx sdk.Context, msg *MsgUnjail, k Keeper) (*sdk.Result, error) {
 	err := k.Unjail(ctx, msg.ValidatorAddr)
 	if err != nil {
 		return nil, err

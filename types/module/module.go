@@ -31,11 +31,13 @@ package module
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -51,9 +53,9 @@ type AppModuleBasic interface {
 	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
 
 	// client functionality
-	RegisterRESTRoutes(context.CLIContext, *mux.Router)
-	GetTxCmd(context.CLIContext) *cobra.Command
-	GetQueryCmd(*codec.Codec) *cobra.Command
+	RegisterRESTRoutes(client.Context, *mux.Router)
+	GetTxCmd(clientCtx client.Context) *cobra.Command
+	GetQueryCmd(clientCtx client.Context) *cobra.Command
 }
 
 // BasicManager is a collection of AppModuleBasic
@@ -97,14 +99,14 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, genesis map[stri
 }
 
 // RegisterRESTRoutes registers all module rest routes
-func (bm BasicManager) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	for _, b := range bm {
-		b.RegisterRESTRoutes(ctx, rtr)
+		b.RegisterRESTRoutes(clientCtx, rtr)
 	}
 }
 
 // AddTxCommands adds all tx commands to the rootTxCmd
-func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx context.CLIContext) {
+func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx client.Context) {
 	for _, b := range bm {
 		if cmd := b.GetTxCmd(ctx); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
@@ -113,9 +115,9 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx context.CLICo
 }
 
 // AddQueryCommands adds all query commands to the rootQueryCmd
-func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, cdc *codec.Codec) {
+func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, clientCtx client.Context) {
 	for _, b := range bm {
-		if cmd := b.GetQueryCmd(cdc); cmd != nil {
+		if cmd := b.GetQueryCmd(clientCtx); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
 	}
@@ -141,8 +143,12 @@ type AppModule interface {
 	// routes
 	Route() string
 	NewHandler() sdk.Handler
+	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
+	// Deprecated: use RegisterQueryService
 	NewQuerierHandler() sdk.Querier
+	// RegisterQueryService allows a module to register a gRPC query service
+	RegisterQueryService(grpc.Server)
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -177,6 +183,8 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
 // NewQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
+
+func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
@@ -253,6 +261,13 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter)
 		if module.QuerierRoute() != "" {
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
 		}
+	}
+}
+
+// RegisterQueryServices registers all module query services
+func (m *Manager) RegisterQueryServices(grpcRouter grpc.Server) {
+	for _, module := range m.Modules {
+		module.RegisterQueryService(grpcRouter)
 	}
 }
 

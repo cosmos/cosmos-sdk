@@ -112,7 +112,7 @@ func ValidateGenesis(genesisState GenesisState) error {
 		}
 
 		// TODO: abstract back to staking
-		if _, ok := msgs[0].(stakingtypes.MsgCreateValidator); !ok {
+		if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
 			return fmt.Errorf(
 				"genesis transaction %v does not contain a MsgCreateValidator", i)
 		}

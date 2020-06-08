@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			tc.malleate()
 
 			err = suite.chainA.App.TransferKeeper.SendTransfer(
-				suite.chainA.GetContext(), testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2.String(),
+				suite.chainA.GetContext(), testPort1, testChannel1, tc.amount, testAddr1, testAddr2.String(), 110, 0,
 			)
 
 			if tc.expPass {

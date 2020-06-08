@@ -7,6 +7,7 @@
     - [Updating Documentation](#updating-documentation)
   - [Forking](#forking)
   - [Dependencies](#dependencies)
+  - [Protobuf](#protobuf)
   - [Testing](#testing)
   - [Branching Model and Release](#branching-model-and-release)
     - [PR Targeting](#pr-targeting)
@@ -14,6 +15,7 @@
     - [Pull Merge Procedure](#pull-merge-procedure)
     - [Release Procedure](#release-procedure)
     - [Point Release Procedure](#point-release-procedure)
+  - [Code Owner Membership](#code-owner-membership)
 
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
@@ -228,23 +230,39 @@ only pull requests targeted directly against master.
 
 ### Point Release Procedure
 
-At the moment, only a single major release will be supported, so all point
-releases will be based off of that release.
+At the moment, only a single major release will be supported, so all point releases will be based
+off of that release.
 
-- start on `vX.XX.X`
-- checkout a new branch `rcN/vX.X.X`
-- cherry pick the desired changes from `master`
-  - these changes should be small and NON-BREAKING (both API and state machine)
-- create a `RELEASE_CHANGELOG.md`, add entires.
-  - this is needed so the bot knows which entries to add to the release page on github.
-- checkout a new branch `release/vX.X.X` based off of the previous release
-- create a PR merging `rcN/vX.X.X` into `release/vX.X.X`
-- run tests and simulations (noted in [Release Procedure](#release-procedure))
-- after tests and simulation have successfully completed, merge the `RC` branch into `release/vX.X.X`
-  - Make sure to delete the `RC` branch
-- create a PR into `master` containing ONLY CHANGELOG.md updates
-  - Do not push `RELEASE_CHANGELOG.md` to master
-- tag (use `git tag -a`) then push the tags (`git push --tags`)
+In order to alleviate the burden for a single person to have to cherry-pick and handle merge conflicts
+of all desired backporting PRs to a point release, we instead maintain a living backport branch, where
+all desired features and bug fixes are merged into as separate PRs.
+
+Example:
+
+Current release is `v0.38.4`. We then maintain a (living) branch `backport/release/v0.38.x`. As PRs
+are merged into master, if they wish to be backported into the next `v0.38.x` point release, the
+author must:
+
+1. Add `backport` label
+2. Pull latest changes on the desired `backport/release/v*.*.x` branch
+3. Create a 2nd PR merging the respective backport PR into `backport/release/v*.*.x`
+
+This means it is the authors responsibility to fix any merge conflicts, update changelog entries, and
+ensure CI passes. If a PR originates from an external contributor, it may be a team members responsibility
+to perform this process instead of the original author.
+
+Finally, when a point release is ready to be made:
+
+1. Create `release/v*.*.x` branch
+2. Ensure changelog entries are verified
+   2. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
+3. Add release version date to the changelog
+4. Push release branch along with the annotated tag: **git tag -a**
+5. Create a PR into `master` containing ONLY `CHANGELOG.md` updates
+   1. Do not push `RELEASE_CHANGELOG.md` to `master`
+
+Note, although we aim to support only a single release at a time, the process stated above could be
+used for multiple previous versions.
 
 ## Code Owner Membership
 

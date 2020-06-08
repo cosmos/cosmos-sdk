@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -125,7 +126,7 @@ $ %s query staking validators
 
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
 func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "unbonding-delegations-from [validator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
 		Long: strings.TrimSpace(
@@ -146,7 +147,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit)))
 			if err != nil {
 				return err
 			}
@@ -162,6 +163,11 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 			return clientCtx.PrintOutput(ubds)
 		},
 	}
+
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of unbonding delegations to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
+
+	return cmd
 }
 
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations
@@ -306,7 +312,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
 func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
 		Long: strings.TrimSpace(
@@ -327,7 +333,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit)))
 			if err != nil {
 				return err
 			}
@@ -346,6 +352,11 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of delegations to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of delegations to query for")
+
+	return cmd
 }
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single

@@ -21,7 +21,11 @@ func (LegacyAminoJSONHandler) Modes() []types.SignMode {
 	return []types.SignMode{types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
-func (LegacyAminoJSONHandler) GetSignBytes(_ types.SignMode, data signing.SigningData, tx sdk.Tx) ([]byte, error) {
+func (LegacyAminoJSONHandler) GetSignBytes(mode types.SignMode, data signing.SigningData, tx sdk.Tx) ([]byte, error) {
+	if mode != types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+		return nil, fmt.Errorf("expected %s, got %s", types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
+	}
+
 	feeTx, ok := tx.(ante.FeeTx)
 	if !ok {
 		return nil, fmt.Errorf("expected FeeTx, got %T", tx)

@@ -2,7 +2,7 @@ package amino_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/cosmos-sdk/types/tx"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestLegacyAminoJSONHandler(t *testing.T) {
+func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	priv2 := secp256k1.GenPrivKey()
@@ -48,16 +48,29 @@ func TestLegacyAminoJSONHandler(t *testing.T) {
 	)
 
 	handler := amino.LegacyAminoJSONHandler{}
-	signBz, err := handler.GetSignBytes(types2.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SigningData{
+	signingData := signing.SigningData{
 		ChainID:         chainId,
 		AccountNumber:   accNum,
 		AccountSequence: seqNum,
-		PublicKey:       priv1.PubKey(),
-	}, tx)
+	}
+	signBz, err := handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
 	expectedSignBz := types.StdSignBytes(chainId, accNum, seqNum, fee, msgs, memo)
 
 	require.Equal(t, expectedSignBz, signBz)
 
+	// expect error with wrong sign mode
+	_, err = handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	require.Error(t, err)
+}
+
+func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
+	handler := amino.LegacyAminoJSONHandler{}
+	require.Equal(t, txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
+}
+
+func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
+	handler := amino.LegacyAminoJSONHandler{}
+	require.Equal(t, []txtypes.SignMode{txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.DefaultMode())
 }

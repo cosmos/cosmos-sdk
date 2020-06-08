@@ -61,7 +61,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	handler := MakeTestHandlerMap()
 	aminoJSONHandler := amino.LegacyAminoJSONHandler{}
 
-	signingData := signing.SigningData{
+	signingData := signing.SignerData{
 		ChainID:         chainId,
 		AccountNumber:   accNum,
 		AccountSequence: seqNum,

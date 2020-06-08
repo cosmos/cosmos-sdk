@@ -50,7 +50,7 @@ func (h SignModeHandlerMap) Modes() []types.SignMode {
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes
-func (h SignModeHandlerMap) GetSignBytes(mode types.SignMode, data SigningData, tx sdk.Tx) ([]byte, error) {
+func (h SignModeHandlerMap) GetSignBytes(mode types.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
 	handler, found := h.signModeHandlers[mode]
 	if !found {
 		return nil, fmt.Errorf("can't verify sign mode %s", mode.String())

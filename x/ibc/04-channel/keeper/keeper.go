@@ -230,7 +230,7 @@ func (k Keeper) GetAllPacketAckSeqs(ctx sdk.Context) (seqs []types.PacketSequenc
 }
 
 // IteratePacketCommitment provides an iterator over all PacketCommitment objects. For each
-// aknowledgement, cb will be called. If the cb returns true, the iterator will close
+// packet commitment, cb will be called. If the cb returns true, the iterator will close
 // and stop.
 func (k Keeper) IteratePacketCommitment(ctx sdk.Context, cb func(portID, channelID string, sequence uint64, hash []byte) bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -241,6 +241,26 @@ func (k Keeper) IteratePacketCommitment(ctx sdk.Context, cb func(portID, channel
 // GetAllPacketCommitments returns all stored PacketCommitments objects.
 func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) (commitments []types.PacketAckCommitment) {
 	k.IteratePacketCommitment(ctx, func(portID, channelID string, sequence uint64, hash []byte) bool {
+		pc := types.NewPacketAckCommitment(portID, channelID, sequence, hash)
+		commitments = append(commitments, pc)
+		return false
+	})
+	return commitments
+}
+
+// IteratePacketCommitmentAtChannel provides an iterator over all PacketCommmitment objects
+// at a specified channel. For each packet commitment, cb will be called. If the cb returns
+// true, the iterator will close and stop.
+func (k Keeper) IteratePacketCommitmentAtChannel(ctx sdk.Context, portID, channelID string, cb func(_, _ string, sequence uint64, hash []byte) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.PacketCommitmentPrefixPath(portID, channelID)))
+	k.iterateHashes(ctx, iterator, cb)
+}
+
+// GetAllPacketCommitmentsAtChannel returns all stored PacketCommitments objects for a specified
+// port ID and channel ID.
+func (k Keeper) GetAllPacketCommitmentsAtChannel(ctx sdk.Context, portID, channelID string) (commitments []types.PacketAckCommitment) {
+	k.IteratePacketCommitmentAtChannel(ctx, portID, channelID, func(_, _ string, sequence uint64, hash []byte) bool {
 		pc := types.NewPacketAckCommitment(portID, channelID, sequence, hash)
 		commitments = append(commitments, pc)
 		return false
@@ -306,7 +326,7 @@ func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string)
 	return porttypes.GetModuleOwner(modules), cap, nil
 }
 
-// common functionality for IteratePacketCommitment and IteratePacketAcknowledgemen
+// common functionality for IteratePacketCommitment and IteratePacketAcknowledgement
 func (k Keeper) iterateHashes(_ sdk.Context, iterator db.Iterator, cb func(portID, channelID string, sequence uint64, hash []byte) bool) {
 	defer iterator.Close()
 

@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -315,35 +316,38 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
 func (ctx Context) Println(toPrint interface{}) error {
-	var (
-		out []byte
-		err error
-	)
+	// always output JSON
+	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 
-	switch ctx.OutputFormat {
-	case "text":
-		out, err = yaml.Marshal(&toPrint)
+	// To JSON indent, we re-encode the already encoded JSON given there is no
+	// error. The re-encoded JSON uses the standard library as the initial encoded
+	// JSON should have the correct output produced by ctx.JSONMarshaler.
+	if ctx.Indent && err == nil {
+		out, err = codec.MarshalIndentFromJSON(out)
+	}
 
-	case "json":
-		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
-
-		// To JSON indent, we re-encode the already encoded JSON given there is no
-		// error. The re-encoded JSON uses the standard library as the initial encoded
-		// JSON should have the correct output produced by ctx.JSONMarshaler.
-		if ctx.Indent && err == nil {
-			out, err = codec.MarshalIndentFromJSON(out)
+	// since text is the default, we just check that the format is not json
+	if ctx.OutputFormat != "json" {
+		// handle text format by decoding and re-encoding JSON as YAML
+		var j interface{}
+		err = json.Unmarshal(out, &j)
+		if err != nil {
+			return err
 		}
+		out, err = yaml.Marshal(j)
 	}
 
-	if err != nil {
-		return err
+	writer := ctx.Output
+	// default to stdout
+	if writer == nil {
+		writer = os.Stdout
 	}
 
-	_, err = fmt.Fprintf(ctx.Output, "%s\n", out)
+	_, err = fmt.Fprintf(writer, "%s\n", out)
 	return err
 }
 
-// PrintOutput prints output while respecting output and indent flags
+// Deprecated: PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
 // because this function will panic on marshaling errors.
 //

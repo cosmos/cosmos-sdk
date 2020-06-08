@@ -33,10 +33,8 @@ const (
 	ChannelVersion = "1.0"
 )
 
-// TODO: rework timing of both chains, updating clients must be at least a second difference.
-
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
-// header and the validators of the TestChain.It also contains a field called ClientID. This
+// header and the validators of the TestChain. It also contains a field called ClientID. This
 // is the clientID that *other* chains use to refer to this TestChain. For simplicity's sake
 // it is also the chainID on the TestChain Header. The senderAccount is used for delivering
 // transactions through the application state.
@@ -62,8 +60,8 @@ type TestChain struct {
 // The first block height is committed to state in order to allow for client creations on counterparty
 // chains. The TestChain will return with a block height starting at 2.
 //
-// For each block, time.Now() is used to prevent counterparty chains from falling behind,
-// otherwise client updates may appear to come from the future.
+// Time management is handled by the IBCTestSuite in order to ensure synchrony between chains. Each
+// update of any chain increments the block header time by 5 seconds.
 func NewTestChain(t *testing.T, clientID string) *TestChain {
 	// generate validator private/public key
 	privVal := tmtypes.NewMockPV()
@@ -75,13 +73,11 @@ func NewTestChain(t *testing.T, clientID string) *TestChain {
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
 
-	startTime := time.Now()
-
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false,
 		abci.Header{
 			Height: 1,
-			Time:   startTime,
+			Time:   globalStartTime,
 		},
 	)
 
@@ -95,11 +91,11 @@ func NewTestChain(t *testing.T, clientID string) *TestChain {
 	// create current header and call begin block
 	header := abci.Header{
 		Height: 2,
-		Time:   time.Now(),
+		Time:   globalStartTime.Add(timeIncrement),
 	}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	lastHeader := ibctmtypes.CreateTestHeader(clientID, 1, startTime, valSet, signers)
+	lastHeader := ibctmtypes.CreateTestHeader(clientID, 1, globalStartTime, valSet, signers)
 
 	// create an account to send transactions from
 	return &TestChain{
@@ -121,30 +117,8 @@ func (chain *TestChain) GetContext() sdk.Context {
 	return chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
 }
 
-// CommitNBlocks commits n blocks to state and updates the block height by 1 for each commit.
-func (chain *TestChain) CommitNBlocks(n int) {
-	for i := 0; i < n; i++ {
-		chain.App.Commit()
-		nextBlock(chain)
-	}
-
-}
-
-// CommitBlockWithNewTimestamp commits the current block and starts the next block with the
-// provided timestamp.
-func (chain *TestChain) CommitBlockWithNewTimestamp(timestamp int64) {
-	chain.App.Commit()
-	nextBlock(chain)
-	chain.App.BeginBlock(abci.RequestBeginBlock{
-		Header: abci.Header{
-			Height: chain.CurrentHeader.Height,
-			Time:   time.Unix(timestamp, 0),
-		}},
-	)
-}
-
 // nextBlock sets the last header to the current header and increments the current header to be
-// at the next block height and time.
+// at the next block height. It does not update the time as that is handled by the IBCTestSuite.
 //
 // CONTRACT: this function must only be called after app.Commit() occurs
 func nextBlock(chain *TestChain) {
@@ -159,10 +133,8 @@ func nextBlock(chain *TestChain) {
 	// increment the current header
 	chain.CurrentHeader = abci.Header{
 		Height: chain.CurrentHeader.Height + 1,
-		Time:   time.Now(),
+		Time:   chain.CurrentHeader.Time,
 	}
-
-	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 }
 
 // SendMsg delivers a transaction through the application. It updates the senders sequence
@@ -190,10 +162,6 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) {
 // CreateClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateClient(counterparty *TestChain) {
-	// commit counterparty's state
-	counterparty.CommitNBlocks(1)
-	chain.CommitNBlocks(1)
-
 	// construct MsgCreateClient using counterparty
 	msg := ibctmtypes.NewMsgCreateClient(
 		counterparty.ClientID, counterparty.LastHeader,
@@ -207,10 +175,6 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) {
 // UpdateClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
 // client will be updated on the (target) chain.
 func (chain *TestChain) UpdateClient(counterparty *TestChain) {
-	// commit counterparty's state
-	counterparty.CommitNBlocks(1)
-	chain.CommitNBlocks(1)
-
 	msg := ibctmtypes.NewMsgUpdateClient(
 		counterparty.ClientID, counterparty.LastHeader,
 		chain.senderAccount.GetAddress(),

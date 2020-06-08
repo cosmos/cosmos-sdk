@@ -9,18 +9,22 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// LegacyAminoJSONHandler is a SignModeHandler that handles SIGN_MODE_LEGACY_AMINO_JSON
 type LegacyAminoJSONHandler struct{}
 
 var _ signing.SignModeHandler = LegacyAminoJSONHandler{}
 
+// DefaultMode implements SignModeHandler.DefaultMode
 func (h LegacyAminoJSONHandler) DefaultMode() types.SignMode {
 	return types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
+// DefaultMode implements SignModeHandler.Modes
 func (LegacyAminoJSONHandler) Modes() []types.SignMode {
 	return []types.SignMode{types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
+// DefaultMode implements SignModeHandler.GetSignBytes
 func (LegacyAminoJSONHandler) GetSignBytes(mode types.SignMode, data signing.SigningData, tx sdk.Tx) ([]byte, error) {
 	if mode != types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return nil, fmt.Errorf("expected %s, got %s", types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)

@@ -49,8 +49,8 @@ func TestCLICreateValidator(t *testing.T) {
 
 	msg := cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
 
 	// Test --dry-run
 	newValTokens := sdk.TokensFromConsensusPower(2)
@@ -89,8 +89,8 @@ func TestCLICreateValidator(t *testing.T) {
 
 	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
 
 	success, _, _ = testutil.TxStakingEditValidator(f, cli.KeyBar, NewMoniker, NewWebsite, NewIdentity, NewDetails, "-y")
 	require.True(t, success)
@@ -128,7 +128,7 @@ func TestCLICreateValidator(t *testing.T) {
 
 	// Query staking unbonding delegations
 	ubds := testutil.QueryStakingUnbondingDelegations(f, barAddr.String())
-	require.Equal(t, len(ubds), 1)
+	require.Len(t, ubds, 1)
 
 	fooAddr := f.KeyAddress(cli.KeyFoo)
 
@@ -143,8 +143,8 @@ func TestCLICreateValidator(t *testing.T) {
 
 	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
 
 	// Delegate
 	success, _, err := testutil.TxStakingDelegate(f, cli.KeyFoo, barVal.String(), delegateAmount, "-y")
@@ -158,7 +158,7 @@ func TestCLICreateValidator(t *testing.T) {
 
 	// Query the delegation from foo address to barval
 	delegations := testutil.QueryStakingDelegations(f, barAddr.String())
-	require.Equal(t, len(delegations), 1)
+	require.Len(t, delegations, 1)
 
 	fooVal := sdk.ValAddress(fooAddr)
 
@@ -169,8 +169,8 @@ func TestCLICreateValidator(t *testing.T) {
 
 	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
 
 	success, _, err = testutil.TxStakingRedelegate(f, cli.KeyFoo, barVal.String(), fooVal.String(), delegateAmount, "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
@@ -178,13 +178,13 @@ func TestCLICreateValidator(t *testing.T) {
 	require.True(t, success)
 
 	redelegation := testutil.QueryStakingRedelegation(f, fooAddr.String(), barVal.String(), fooVal.String())
-	require.Equal(t, len(redelegation), 1)
+	require.Len(t, redelegation, 1)
 
 	redelegations := testutil.QueryStakingRedelegations(f, fooAddr.String())
-	require.Equal(t, len(redelegations), 1)
+	require.Len(t, redelegations, 1)
 
 	redelegationsFrom := testutil.QueryStakingRedelegationsFrom(f, barVal.String())
-	require.Equal(t, len(redelegationsFrom), 1)
+	require.Len(t, redelegationsFrom, 1)
 
 	f.Cleanup()
 }

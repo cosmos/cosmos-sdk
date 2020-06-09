@@ -24,20 +24,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// PublicKey specifies a public key
-type PublicKey struct {
-	// sum specifies which type of public key is wrapped
-	//
-	// Types that are valid to be assigned to Sum:
-	//	*PublicKey_Secp256K1
-	//	*PublicKey_Ed25519
-	//	*PublicKey_Sr25519
-	//	*PublicKey_Multisig
-	//	*PublicKey_Secp256R1
-	//	*PublicKey_AnyPubkey
-	Sum isPublicKey_Sum `protobuf_oneof:"sum"`
-}
-
 func (m *PublicKey) Reset()         { *m = PublicKey{} }
 func (m *PublicKey) String() string { return proto.CompactTextString(m) }
 func (*PublicKey) ProtoMessage()    {}
@@ -92,16 +78,20 @@ type PublicKey_Multisig struct {
 type PublicKey_Secp256R1 struct {
 	Secp256R1 []byte `protobuf:"bytes,5,opt,name=secp256r1,proto3,oneof" json:"secp256r1,omitempty"`
 }
+type PublicKey_AminoMultisig struct {
+	AminoMultisig *LegacyAminoPubKeyMultisigThreshold `protobuf:"bytes,6,opt,name=amino_multisig,json=aminoMultisig,proto3,oneof" json:"amino_multisig,omitempty"`
+}
 type PublicKey_AnyPubkey struct {
 	AnyPubkey *types.Any `protobuf:"bytes,15,opt,name=any_pubkey,json=anyPubkey,proto3,oneof" json:"any_pubkey,omitempty"`
 }
 
-func (*PublicKey_Secp256K1) isPublicKey_Sum() {}
-func (*PublicKey_Ed25519) isPublicKey_Sum()   {}
-func (*PublicKey_Sr25519) isPublicKey_Sum()   {}
-func (*PublicKey_Multisig) isPublicKey_Sum()  {}
-func (*PublicKey_Secp256R1) isPublicKey_Sum() {}
-func (*PublicKey_AnyPubkey) isPublicKey_Sum() {}
+func (*PublicKey_Secp256K1) isPublicKey_Sum()     {}
+func (*PublicKey_Ed25519) isPublicKey_Sum()       {}
+func (*PublicKey_Sr25519) isPublicKey_Sum()       {}
+func (*PublicKey_Multisig) isPublicKey_Sum()      {}
+func (*PublicKey_Secp256R1) isPublicKey_Sum()     {}
+func (*PublicKey_AminoMultisig) isPublicKey_Sum() {}
+func (*PublicKey_AnyPubkey) isPublicKey_Sum()     {}
 
 func (m *PublicKey) GetSum() isPublicKey_Sum {
 	if m != nil {
@@ -145,6 +135,13 @@ func (m *PublicKey) GetSecp256R1() []byte {
 	return nil
 }
 
+func (m *PublicKey) GetAminoMultisig() *LegacyAminoPubKeyMultisigThreshold {
+	if x, ok := m.GetSum().(*PublicKey_AminoMultisig); ok {
+		return x.AminoMultisig
+	}
+	return nil
+}
+
 func (m *PublicKey) GetAnyPubkey() *types.Any {
 	if x, ok := m.GetSum().(*PublicKey_AnyPubkey); ok {
 		return x.AnyPubkey
@@ -160,6 +157,7 @@ func (*PublicKey) XXX_OneofWrappers() []interface{} {
 		(*PublicKey_Sr25519)(nil),
 		(*PublicKey_Multisig)(nil),
 		(*PublicKey_Secp256R1)(nil),
+		(*PublicKey_AminoMultisig)(nil),
 		(*PublicKey_AnyPubkey)(nil),
 	}
 }
@@ -168,7 +166,7 @@ func (*PublicKey) XXX_OneofWrappers() []interface{} {
 // keys and a threshold
 type PubKeyMultisigThreshold struct {
 	K       uint32       `protobuf:"varint,1,opt,name=threshold,proto3" json:"threshold,omitempty" yaml:"threshold"`
-	PubKeys []*PublicKey `protobuf:"bytes,2,rep,name=pubkeys,proto3" json:"pubkeys,omitempty" yaml:"pubkeys"`
+	PubKeys []*PublicKey `protobuf:"bytes,2,rep,name=public_keys,json=publicKeys,proto3" json:"public_keys,omitempty" yaml:"pubkeys"`
 }
 
 func (m *PubKeyMultisigThreshold) Reset()         { *m = PubKeyMultisigThreshold{} }
@@ -222,7 +220,8 @@ func (m *PubKeyMultisigThreshold) GetPubKeys() []*PublicKey {
 // See cosmos_sdk.tx.v1.ModeInfo.Multi for how to specify which signers signed
 // and with which modes
 type MultiSignature struct {
-	Sigs [][]byte `protobuf:"bytes,1,rep,name=sigs,proto3" json:"sigs,omitempty"`
+	Signatures       [][]byte `protobuf:"bytes,1,rep,name=signatures,proto3" json:"signatures,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *MultiSignature) Reset()         { *m = MultiSignature{} }
@@ -258,9 +257,9 @@ func (m *MultiSignature) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MultiSignature proto.InternalMessageInfo
 
-func (m *MultiSignature) GetSigs() [][]byte {
+func (m *MultiSignature) GetSignatures() [][]byte {
 	if m != nil {
-		return m.Sigs
+		return m.Signatures
 	}
 	return nil
 }
@@ -320,49 +319,110 @@ func (m *CompactBitArray) GetElems() []byte {
 	return nil
 }
 
+// LegacyAminoPubKeyMultisigThreshold specifies a PubKeyMultisigThreshold that
+// uses a legacy amino address which is passed along with the key. This type of
+// key can only be used with existing accounts in state as the address is hard-coded
+type LegacyAminoPubKeyMultisigThreshold struct {
+	Key     *PubKeyMultisigThreshold `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Address []byte                   `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *LegacyAminoPubKeyMultisigThreshold) Reset()         { *m = LegacyAminoPubKeyMultisigThreshold{} }
+func (m *LegacyAminoPubKeyMultisigThreshold) String() string { return proto.CompactTextString(m) }
+func (*LegacyAminoPubKeyMultisigThreshold) ProtoMessage()    {}
+func (*LegacyAminoPubKeyMultisigThreshold) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2165b2a1badb1b0c, []int{4}
+}
+func (m *LegacyAminoPubKeyMultisigThreshold) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *LegacyAminoPubKeyMultisigThreshold) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_LegacyAminoPubKeyMultisigThreshold.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *LegacyAminoPubKeyMultisigThreshold) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LegacyAminoPubKeyMultisigThreshold.Merge(m, src)
+}
+func (m *LegacyAminoPubKeyMultisigThreshold) XXX_Size() int {
+	return m.Size()
+}
+func (m *LegacyAminoPubKeyMultisigThreshold) XXX_DiscardUnknown() {
+	xxx_messageInfo_LegacyAminoPubKeyMultisigThreshold.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LegacyAminoPubKeyMultisigThreshold proto.InternalMessageInfo
+
+func (m *LegacyAminoPubKeyMultisigThreshold) GetKey() *PubKeyMultisigThreshold {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *LegacyAminoPubKeyMultisigThreshold) GetAddress() []byte {
+	if m != nil {
+		return m.Address
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*PublicKey)(nil), "cosmos_sdk.crypto.v1.PublicKey")
 	proto.RegisterType((*PubKeyMultisigThreshold)(nil), "cosmos_sdk.crypto.v1.PubKeyMultisigThreshold")
 	proto.RegisterType((*MultiSignature)(nil), "cosmos_sdk.crypto.v1.MultiSignature")
 	proto.RegisterType((*CompactBitArray)(nil), "cosmos_sdk.crypto.v1.CompactBitArray")
+	proto.RegisterType((*LegacyAminoPubKeyMultisigThreshold)(nil), "cosmos_sdk.crypto.v1.LegacyAminoPubKeyMultisigThreshold")
 }
 
 func init() { proto.RegisterFile("crypto/types/types.proto", fileDescriptor_2165b2a1badb1b0c) }
 
 var fileDescriptor_2165b2a1badb1b0c = []byte{
-	// 501 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x52, 0xcd, 0x6a, 0xdb, 0x40,
-	0x18, 0x94, 0xec, 0xb8, 0x8e, 0x37, 0x69, 0xdc, 0x2e, 0x86, 0x2a, 0x86, 0x4a, 0x46, 0x94, 0xe2,
-	0x16, 0x22, 0x61, 0x17, 0xb7, 0x34, 0xb7, 0x28, 0x97, 0x80, 0x29, 0x18, 0xa5, 0x87, 0x52, 0x28,
-	0x42, 0x3f, 0x5b, 0x79, 0xb1, 0xa4, 0x15, 0xbb, 0xab, 0xd2, 0x7d, 0x89, 0xd2, 0x63, 0x8f, 0xe9,
-	0xbd, 0x0f, 0xd2, 0x63, 0x8e, 0x3d, 0x99, 0x22, 0xbf, 0x41, 0x9e, 0xa0, 0x44, 0x2b, 0xc5, 0xa1,
-	0x24, 0x17, 0x69, 0xf7, 0x9b, 0xf9, 0x46, 0x33, 0xdf, 0x27, 0xa0, 0x85, 0x54, 0xe4, 0x9c, 0xd8,
-	0x5c, 0xe4, 0x88, 0xc9, 0xa7, 0x95, 0x53, 0xc2, 0x09, 0x1c, 0x84, 0x84, 0xa5, 0x84, 0x79, 0x2c,
-	0x5a, 0x59, 0x92, 0x64, 0x7d, 0x99, 0x0c, 0x9f, 0xf3, 0x25, 0xa6, 0x91, 0x97, 0xfb, 0x94, 0x0b,
-	0xbb, 0x22, 0xda, 0x31, 0x89, 0xc9, 0xf6, 0x24, 0xbb, 0x87, 0x87, 0x31, 0x21, 0x71, 0x82, 0x24,
-	0x25, 0x28, 0x3e, 0xdb, 0x7e, 0x26, 0x24, 0x64, 0x7e, 0x6b, 0x81, 0xde, 0xa2, 0x08, 0x12, 0x1c,
-	0xce, 0x91, 0x80, 0x3a, 0xe8, 0x31, 0x14, 0xe6, 0xd3, 0xd9, 0xeb, 0xd5, 0x44, 0x53, 0x47, 0xea,
-	0x78, 0xff, 0x4c, 0x71, 0xb7, 0x25, 0x38, 0x04, 0x5d, 0x14, 0x4d, 0x67, 0xb3, 0xc9, 0x5b, 0xad,
-	0x55, 0xa3, 0x4d, 0xe1, 0x1a, 0x63, 0x54, 0x62, 0xed, 0x06, 0xab, 0x0b, 0x70, 0x0e, 0x76, 0xd3,
-	0x22, 0xe1, 0x98, 0xe1, 0x58, 0xdb, 0x19, 0xa9, 0xe3, 0xbd, 0xe9, 0x91, 0x75, 0x57, 0x22, 0x6b,
-	0x51, 0x04, 0x73, 0x24, 0xde, 0xd5, 0xdc, 0xf7, 0x4b, 0x8a, 0xd8, 0x92, 0x24, 0xd1, 0x99, 0xe2,
-	0xde, 0x08, 0xdc, 0x32, 0x49, 0x27, 0x5a, 0xe7, 0x3f, 0x93, 0x74, 0x02, 0x67, 0x00, 0xf8, 0x99,
-	0xf0, 0xf2, 0x22, 0x58, 0x21, 0xa1, 0xf5, 0xab, 0xcf, 0x0d, 0x2c, 0x39, 0x02, 0xab, 0x19, 0x81,
-	0x75, 0x92, 0x89, 0xeb, 0x36, 0x3f, 0x13, 0x8b, 0x8a, 0xe8, 0x74, 0x40, 0x9b, 0x15, 0xa9, 0xf9,
-	0x4b, 0x05, 0x4f, 0xee, 0x71, 0x01, 0xdf, 0x80, 0x1e, 0x6f, 0x2e, 0xd5, 0x78, 0x1e, 0x3a, 0x87,
-	0xe5, 0xda, 0x50, 0xe7, 0x57, 0x6b, 0xe3, 0x91, 0xf0, 0xd3, 0xe4, 0xd8, 0xbc, 0xc1, 0x4d, 0x77,
-	0xcb, 0x85, 0x1f, 0x40, 0x57, 0xda, 0x61, 0x5a, 0x6b, 0xd4, 0x1e, 0xef, 0x4d, 0x8d, 0x7b, 0xe3,
-	0xcb, 0x4d, 0x38, 0x4f, 0xcb, 0xb5, 0xd1, 0x95, 0x3e, 0xd8, 0xd5, 0xda, 0x38, 0x90, 0xea, 0xb5,
-	0x88, 0xe9, 0x36, 0x72, 0xe6, 0x33, 0x70, 0x50, 0xf9, 0x3c, 0xc7, 0x71, 0xe6, 0xf3, 0x82, 0x22,
-	0x08, 0xc1, 0x0e, 0xc3, 0x31, 0xd3, 0xd4, 0x51, 0x7b, 0xbc, 0xef, 0x56, 0x67, 0xf3, 0x13, 0xe8,
-	0x9f, 0x92, 0x34, 0xf7, 0x43, 0xee, 0x60, 0x7e, 0x42, 0xa9, 0x2f, 0xe0, 0x4b, 0xf0, 0x18, 0x7d,
-	0xe5, 0xd4, 0xf7, 0x02, 0xcc, 0x99, 0xc7, 0x38, 0xa1, 0xa8, 0xce, 0xe4, 0xf6, 0x2b, 0xc0, 0xc1,
-	0x9c, 0x9d, 0x57, 0x65, 0x38, 0x00, 0x1d, 0x94, 0xa0, 0x94, 0xc9, 0xa5, 0xbb, 0xf2, 0x72, 0xbc,
-	0xfb, 0xe3, 0xc2, 0x50, 0x2e, 0x7e, 0x1a, 0x8a, 0x73, 0xfa, 0xbb, 0xd4, 0xd5, 0xcb, 0x52, 0x57,
-	0xff, 0x96, 0xba, 0xfa, 0x7d, 0xa3, 0x2b, 0x97, 0x1b, 0x5d, 0xf9, 0xb3, 0xd1, 0x95, 0x8f, 0x2f,
-	0x62, 0xcc, 0x97, 0x45, 0x60, 0x85, 0x24, 0xb5, 0x65, 0xe2, 0xfa, 0x75, 0xc4, 0xa2, 0x95, 0x7d,
-	0xfb, 0x77, 0x0f, 0x1e, 0x54, 0xab, 0x79, 0xf5, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x1e, 0xd7, 0x43,
-	0xb2, 0x05, 0x03, 0x00, 0x00,
+	// 582 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0x4d, 0x8b, 0xd3, 0x4e,
+	0x1c, 0x4e, 0xb6, 0xfb, 0x3a, 0xfb, 0xf6, 0xff, 0x0f, 0x0b, 0x66, 0x17, 0x4c, 0x4a, 0x0e, 0x52,
+	0x85, 0x4d, 0x68, 0xa5, 0xab, 0xf6, 0x22, 0x9b, 0xbd, 0x2c, 0x54, 0xa1, 0x64, 0x3d, 0x09, 0x12,
+	0x26, 0xc9, 0x98, 0x86, 0x26, 0x99, 0x30, 0x33, 0x11, 0xe7, 0xe4, 0x57, 0xf0, 0xe8, 0x71, 0xfb,
+	0x19, 0xfc, 0x12, 0x1e, 0x7b, 0xf4, 0x54, 0xa4, 0xfd, 0x02, 0xb2, 0x17, 0xaf, 0xd2, 0x4c, 0xd3,
+	0x16, 0xd9, 0x22, 0x78, 0x49, 0xf2, 0xfb, 0x3d, 0xcf, 0xcc, 0xf3, 0xfc, 0x5e, 0x02, 0xb4, 0x80,
+	0x8a, 0x9c, 0x13, 0x9b, 0x8b, 0x1c, 0x33, 0xf9, 0xb4, 0x72, 0x4a, 0x38, 0x81, 0x27, 0x01, 0x61,
+	0x29, 0x61, 0x1e, 0x0b, 0x07, 0x96, 0x24, 0x59, 0x1f, 0x9a, 0x67, 0x8f, 0x78, 0x3f, 0xa6, 0xa1,
+	0x97, 0x23, 0xca, 0x85, 0x5d, 0x12, 0xed, 0x88, 0x44, 0x64, 0xf9, 0x25, 0x4f, 0x9f, 0x9d, 0x46,
+	0x84, 0x44, 0x09, 0x96, 0x14, 0xbf, 0x78, 0x6f, 0xa3, 0x4c, 0x48, 0xc8, 0xfc, 0xb5, 0x01, 0xf6,
+	0x7a, 0x85, 0x9f, 0xc4, 0x41, 0x17, 0x0b, 0xa8, 0x83, 0x3d, 0x86, 0x83, 0xbc, 0xd5, 0xbe, 0x18,
+	0x34, 0x35, 0xb5, 0xae, 0x36, 0x0e, 0xae, 0x15, 0x77, 0x99, 0x82, 0x67, 0x60, 0x07, 0x87, 0xad,
+	0x76, 0xbb, 0xf9, 0x42, 0xdb, 0x98, 0xa3, 0x55, 0x62, 0x86, 0x31, 0x2a, 0xb1, 0x5a, 0x85, 0xcd,
+	0x13, 0xb0, 0x0b, 0x76, 0xd3, 0x22, 0xe1, 0x31, 0x8b, 0x23, 0x6d, 0xb3, 0xae, 0x36, 0xf6, 0x5b,
+	0xe7, 0xd6, 0x7d, 0x15, 0x59, 0xbd, 0xc2, 0xef, 0x62, 0xf1, 0x7a, 0xce, 0x7d, 0xd3, 0xa7, 0x98,
+	0xf5, 0x49, 0x12, 0x5e, 0x2b, 0xee, 0xe2, 0x82, 0x15, 0x93, 0xb4, 0xa9, 0x6d, 0xfd, 0x61, 0x92,
+	0x36, 0x21, 0x02, 0x47, 0x28, 0x8d, 0x33, 0xe2, 0x2d, 0x24, 0xb7, 0x4b, 0xc9, 0xe7, 0xf7, 0x4b,
+	0xbe, 0xc2, 0x11, 0x0a, 0xc4, 0xe5, 0xec, 0xc4, 0x7a, 0xf5, 0xc3, 0xf2, 0xc6, 0x0a, 0x81, 0x6d,
+	0x00, 0x50, 0x26, 0xbc, 0xbc, 0xf0, 0x07, 0x58, 0x68, 0xc7, 0xe5, 0xf5, 0x27, 0x96, 0xec, 0xb2,
+	0x55, 0x75, 0xd9, 0xba, 0xcc, 0xc4, 0xcc, 0x19, 0xca, 0x44, 0xaf, 0x24, 0x76, 0x36, 0x7f, 0x0e,
+	0x0d, 0xc5, 0xd9, 0x02, 0x35, 0x56, 0xa4, 0xe6, 0x57, 0x15, 0x3c, 0x58, 0x23, 0x08, 0x9f, 0x81,
+	0x3d, 0x5e, 0x05, 0xe5, 0x1c, 0x0e, 0x9d, 0xd3, 0xc9, 0xd8, 0x50, 0xbb, 0x77, 0x63, 0xe3, 0x3f,
+	0x81, 0xd2, 0xa4, 0x63, 0x2e, 0x70, 0xd3, 0x5d, 0x72, 0xa1, 0x07, 0xf6, 0xf3, 0x72, 0x9a, 0xde,
+	0x00, 0x0b, 0xa6, 0x6d, 0xd4, 0x6b, 0x8d, 0xfd, 0x96, 0xb1, 0xb6, 0xd7, 0x72, 0xec, 0xce, 0xc3,
+	0xc9, 0xd8, 0xd8, 0x91, 0x5e, 0xd8, 0xdd, 0xd8, 0x38, 0x92, 0x0a, 0xb2, 0x3a, 0x66, 0xba, 0x20,
+	0xaf, 0x98, 0xcc, 0xbc, 0x00, 0x47, 0xa5, 0xdd, 0x9b, 0x38, 0xca, 0x10, 0x2f, 0x28, 0x86, 0x3a,
+	0x00, 0xac, 0x0a, 0x98, 0xa6, 0xd6, 0x6b, 0x8d, 0x03, 0x77, 0x25, 0xd3, 0xd9, 0x1c, 0x0d, 0x0d,
+	0xd5, 0x7c, 0x07, 0x8e, 0xaf, 0x48, 0x9a, 0xa3, 0x80, 0x3b, 0x31, 0xbf, 0xa4, 0x14, 0x09, 0xf8,
+	0x04, 0xfc, 0x8f, 0x3f, 0x72, 0x8a, 0x3c, 0x3f, 0xe6, 0xcc, 0x63, 0x9c, 0x50, 0x3c, 0x2f, 0xd6,
+	0x3d, 0x2e, 0x01, 0x27, 0xe6, 0xec, 0xa6, 0x4c, 0xc3, 0x13, 0xb0, 0x85, 0x13, 0x9c, 0x32, 0xb9,
+	0x76, 0xae, 0x0c, 0x3a, 0xbb, 0x5f, 0x6e, 0x0d, 0xe5, 0x76, 0x68, 0x28, 0xe6, 0x27, 0x60, 0xfe,
+	0x7d, 0x8e, 0xf0, 0x25, 0xa8, 0xcd, 0xe6, 0xa5, 0xfe, 0xc3, 0x06, 0xba, 0xb3, 0x93, 0x50, 0x03,
+	0x3b, 0x28, 0x0c, 0x29, 0x66, 0x95, 0x91, 0x2a, 0x74, 0xae, 0xbe, 0x4d, 0x74, 0x75, 0x34, 0xd1,
+	0xd5, 0x1f, 0x13, 0x5d, 0xfd, 0x3c, 0xd5, 0x95, 0xd1, 0x54, 0x57, 0xbe, 0x4f, 0x75, 0xe5, 0xed,
+	0xe3, 0x28, 0xe6, 0xfd, 0xc2, 0xb7, 0x02, 0x92, 0xda, 0x52, 0x71, 0xfe, 0x3a, 0x67, 0xe1, 0xc0,
+	0x5e, 0xfd, 0xe3, 0xfd, 0xed, 0x72, 0x75, 0x9e, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x3b, 0x56,
+	0xa0, 0xa2, 0x08, 0x04, 0x00, 0x00,
 }
 
 func (m *PublicKey) Marshal() (dAtA []byte, err error) {
@@ -482,6 +542,27 @@ func (m *PublicKey_Secp256R1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
+func (m *PublicKey_AminoMultisig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PublicKey_AminoMultisig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.AminoMultisig != nil {
+		{
+			size, err := m.AminoMultisig.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	return len(dAtA) - i, nil
+}
 func (m *PublicKey_AnyPubkey) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
@@ -565,11 +646,15 @@ func (m *MultiSignature) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Sigs) > 0 {
-		for iNdEx := len(m.Sigs) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Sigs[iNdEx])
-			copy(dAtA[i:], m.Sigs[iNdEx])
-			i = encodeVarintTypes(dAtA, i, uint64(len(m.Sigs[iNdEx])))
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Signatures) > 0 {
+		for iNdEx := len(m.Signatures) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signatures[iNdEx])
+			copy(dAtA[i:], m.Signatures[iNdEx])
+			i = encodeVarintTypes(dAtA, i, uint64(len(m.Signatures[iNdEx])))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -608,6 +693,48 @@ func (m *CompactBitArray) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTypes(dAtA, i, uint64(m.ExtraBitsStored))
 		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *LegacyAminoPubKeyMultisigThreshold) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LegacyAminoPubKeyMultisigThreshold) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *LegacyAminoPubKeyMultisigThreshold) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -695,6 +822,18 @@ func (m *PublicKey_Secp256R1) Size() (n int) {
 	}
 	return n
 }
+func (m *PublicKey_AminoMultisig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.AminoMultisig != nil {
+		l = m.AminoMultisig.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
 func (m *PublicKey_AnyPubkey) Size() (n int) {
 	if m == nil {
 		return 0
@@ -731,11 +870,31 @@ func (m *MultiSignature) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Sigs) > 0 {
-		for _, b := range m.Sigs {
+	if len(m.Signatures) > 0 {
+		for _, b := range m.Signatures {
 			l = len(b)
 			n += 1 + l + sovTypes(uint64(l))
 		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *LegacyAminoPubKeyMultisigThreshold) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
 }
@@ -942,6 +1101,41 @@ func (m *PublicKey) Unmarshal(dAtA []byte) error {
 			copy(v, dAtA[iNdEx:postIndex])
 			m.Sum = &PublicKey_Secp256R1{v}
 			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AminoMultisig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &LegacyAminoPubKeyMultisigThreshold{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &PublicKey_AminoMultisig{v}
+			iNdEx = postIndex
 		case 15:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AnyPubkey", wireType)
@@ -1138,7 +1332,7 @@ func (m *MultiSignature) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sigs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signatures", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -1165,8 +1359,8 @@ func (m *MultiSignature) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Sigs = append(m.Sigs, make([]byte, postIndex-iNdEx))
-			copy(m.Sigs[len(m.Sigs)-1], dAtA[iNdEx:postIndex])
+			m.Signatures = append(m.Signatures, make([]byte, postIndex-iNdEx))
+			copy(m.Signatures[len(m.Signatures)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1183,6 +1377,7 @@ func (m *MultiSignature) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -1272,6 +1467,129 @@ func (m *CompactBitArray) Unmarshal(dAtA []byte) error {
 			m.Elems = append(m.Elems[:0], dAtA[iNdEx:postIndex]...)
 			if m.Elems == nil {
 				m.Elems = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LegacyAminoPubKeyMultisigThreshold) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LegacyAminoPubKeyMultisigThreshold: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LegacyAminoPubKeyMultisigThreshold: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &PubKeyMultisigThreshold{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = append(m.Address[:0], dAtA[iNdEx:postIndex]...)
+			if m.Address == nil {
+				m.Address = []byte{}
 			}
 			iNdEx = postIndex
 		default:

@@ -30,7 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryBalanceRequest is the request type for the Query.Balance RPC method
+// QueryBalanceRequest is the request type for the Query/Balance RPC method
 type QueryBalanceRequest struct {
 	// address is the address to query balances for
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
@@ -85,7 +85,7 @@ func (m *QueryBalanceRequest) GetDenom() string {
 	return ""
 }
 
-// QueryBalanceResponse is the response type for the Query.Balance RPC method
+// QueryBalanceResponse is the response type for the Query/Balance RPC method
 type QueryBalanceResponse struct {
 	// balance is the balance of the coin
 	Balance *types.Coin `protobuf:"bytes,1,opt,name=balance,proto3" json:"balance,omitempty"`
@@ -131,7 +131,7 @@ func (m *QueryBalanceResponse) GetBalance() *types.Coin {
 	return nil
 }
 
-// QueryBalanceRequest is the request type for the Query.AllBalances RPC method
+// QueryBalanceRequest is the request type for the Query/AllBalances RPC method
 type QueryAllBalancesRequest struct {
 	// address is the address to query balances for
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
@@ -177,7 +177,7 @@ func (m *QueryAllBalancesRequest) GetAddress() github_com_cosmos_cosmos_sdk_type
 	return nil
 }
 
-// QueryAllBalancesResponse is the response type for the Query.AllBalances RPC method
+// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method
 type QueryAllBalancesResponse struct {
 	// balances is the balances of the coins
 	Balances github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
@@ -223,7 +223,7 @@ func (m *QueryAllBalancesResponse) GetBalances() github_com_cosmos_cosmos_sdk_ty
 	return nil
 }
 
-// QueryTotalSupplyRequest is the request type for the Query.TotalSupply RPC method
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method
 type QueryTotalSupplyRequest struct {
 }
 
@@ -260,7 +260,7 @@ func (m *QueryTotalSupplyRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTotalSupplyRequest proto.InternalMessageInfo
 
-// QueryTotalSupplyResponse is the response type for the Query.TotalSupply RPC method
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method
 type QueryTotalSupplyResponse struct {
 	// supply is the supply of the coins
 	Supply github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=supply,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"supply"`
@@ -306,7 +306,7 @@ func (m *QueryTotalSupplyResponse) GetSupply() github_com_cosmos_cosmos_sdk_type
 	return nil
 }
 
-// QuerySupplyOfRequest is the request type for the Query.SupplyOf RPC method
+// QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method
 type QuerySupplyOfRequest struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 }
@@ -351,7 +351,7 @@ func (m *QuerySupplyOfRequest) GetDenom() string {
 	return ""
 }
 
-// QuerySupplyOfResponse is the response type for the Query.SupplyOf RPC method
+// QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method
 type QuerySupplyOfResponse struct {
 	// amount is the supply of the coin
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`

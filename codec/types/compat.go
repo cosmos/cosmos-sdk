@@ -17,7 +17,7 @@ type anyCompat struct {
 	err     error
 }
 
-var Debug = true
+var Debug = false
 
 func anyCompatError(errType string, x interface{}) error {
 	if Debug {

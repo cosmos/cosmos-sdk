@@ -61,14 +61,14 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 // GetFeeAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) *types.FeeAllowanceI {
+func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) types.FeeAllowanceI {
 	grant, found := k.GetFeeGrant(ctx, granter, grantee)
 	if !found {
 		return nil
 	}
 	fmt.Printf("this is grant in keeper %v", grant)
-	var feeAll *types.FeeAllowanceI
-	if err := k.cdc.UnpackAny(grant.Allowance, feeAll); err != nil {
+	var feeAll types.FeeAllowanceI
+	if err := k.cdc.UnpackAny(grant.Allowance, &feeAll); err != nil {
 		return nil
 	}
 	return feeAll

@@ -9,7 +9,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,10 +53,10 @@ func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
 $ <appcli> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
-			res, _, err := cliCtx.QueryWithData(route, nil)
+			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
@@ -67,7 +66,7 @@ $ <appcli> query auth params
 				return fmt.Errorf("failed to unmarshal params: %w", err)
 			}
 
-			return cliCtx.PrintOutput(params)
+			return clientCtx.PrintOutput(params)
 		},
 	}
 
@@ -82,7 +81,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for account by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 			accGetter := types.NewAccountRetriever(authclient.Codec)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
@@ -90,12 +89,12 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			acc, err := accGetter.GetAccount(cliCtx, key)
+			acc, err := accGetter.GetAccount(clientCtx, key)
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(acc)
+			return clientCtx.PrintOutput(acc)
 		},
 	}
 
@@ -150,14 +149,14 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit, "")
+			clientCtx := client.NewContext().WithCodec(cdc)
+			txs, err := authclient.QueryTxsByEvents(clientCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}
 
 			var output []byte
-			if cliCtx.Indent {
+			if clientCtx.Indent {
 				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
 			} else {
 				output, err = cdc.MarshalJSON(txs)
@@ -196,9 +195,9 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for a transaction by hash in a committed block",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			output, err := authclient.QueryTx(cliCtx, args[0])
+			output, err := authclient.QueryTx(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
@@ -207,7 +206,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("no transaction found with hash %s", args[0])
 			}
 
-			return cliCtx.PrintOutput(output)
+			return clientCtx.PrintOutput(output)
 		},
 	}
 

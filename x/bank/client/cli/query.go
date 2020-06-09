@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +57,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for account balances by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -73,10 +72,10 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 
 			denom := viper.GetString(flagDenom)
 			if denom == "" {
-				params = types.NewQueryAllBalancesParams(addr)
+				params = types.NewQueryAllBalancesRequest(addr)
 				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllBalances)
 			} else {
-				params = types.NewQueryBalanceParams(addr, denom)
+				params = types.NewQueryBalanceRequest(addr, denom)
 				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 			}
 
@@ -85,7 +84,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("failed to marshal params: %w", err)
 			}
 
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -106,7 +105,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 				result = balance
 			}
 
-			return cliCtx.PrintOutput(result)
+			return clientCtx.PrintOutput(result)
 		},
 	}
 
@@ -136,13 +135,13 @@ $ %s query %s total stake
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			if len(args) == 0 {
-				return queryTotalSupply(cliCtx, cdc)
+				return queryTotalSupply(clientCtx, cdc)
 			}
 
-			return querySupplyOf(cliCtx, cdc, args[0])
+			return querySupplyOf(clientCtx, cdc, args[0])
 		},
 	}
 

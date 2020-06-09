@@ -47,7 +47,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		sdk.NewEvent(
 			EventTypeCreateClient,
 			sdk.NewAttribute(AttributeKeyClientID, msg.GetClientID()),
-			sdk.NewAttribute(AttrbuteKeyClientType, msg.GetClientType()),
+			sdk.NewAttribute(AttributeKeyClientType, msg.GetClientType()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

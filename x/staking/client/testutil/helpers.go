@@ -219,13 +219,14 @@ func QueryStakingRedelegationsFrom(f *cli.Fixtures, valAddr string, flags ...str
 // QueryStakingUnbondingDelegation is simcli query staking redelegation
 func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, flags ...string) staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegation %v %v %v", f.SimcliBinary, delAdrr, valAddr, f.Flags())
-	out, err := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
 
-	fmt.Println("Error staking unbonding", err)
 	var ubd staking.UnbondingDelegation
 
-	err1 := f.Cdc.UnmarshalJSON([]byte(out), &ubd)
-	require.NoError(f.T, err1, "out %v\n, err %v", out, err)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &ubd)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
 
 	return ubd
 }

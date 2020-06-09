@@ -47,6 +47,8 @@ type ClientState struct {
 
 	// Last Header that was stored by client
 	LastHeader Header `json:"last_header" yaml:"last_header"`
+
+	ProofSpecs []string `json:"proof_specs" yaml:"proof_specs"`
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
@@ -54,7 +56,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 	return Initialize(
 		msg.GetClientID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header,
+		msg.Header, msg.ProofSpecs,
 	)
 }
 
@@ -63,7 +65,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 func Initialize(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header,
+	header Header, specs []string,
 ) (ClientState, error) {
 
 	if trustingPeriod >= ubdPeriod {
@@ -73,7 +75,7 @@ func Initialize(
 		)
 	}
 
-	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header)
+	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
 	return clientState, nil
 }
 
@@ -81,7 +83,7 @@ func Initialize(
 func NewClientState(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header,
+	header Header, specs []string,
 ) ClientState {
 	return ClientState{
 		ID:              id,
@@ -91,6 +93,7 @@ func NewClientState(
 		MaxClockDrift:   maxClockDrift,
 		LastHeader:      header,
 		FrozenHeight:    0,
+		ProofSpecs:      specs,
 	}
 }
 
@@ -147,6 +150,12 @@ func (cs ClientState) Validate() error {
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }
 
+// GetProofSpecs returns the format the client expects for proof verification
+// as a string array specifying the proof type for each position in chained proof
+func (cs ClientState) GetProofSpecs() []string {
+	return cs.ProofSpecs
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
@@ -175,7 +184,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -213,7 +222,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -252,7 +261,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -281,7 +290,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, commitmentBytes); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -310,7 +319,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -339,7 +348,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	if err := proof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
+	if err := proof.VerifyNonMembership(cs.ProofSpecs, consensusState.GetRoot(), path); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -369,7 +378,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 

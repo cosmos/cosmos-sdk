@@ -21,6 +21,7 @@ type ClientState interface {
 	GetLatestHeight() uint64
 	IsFrozen() bool
 	Validate() error
+	GetProofSpecs() []string
 
 	// State verification functions
 

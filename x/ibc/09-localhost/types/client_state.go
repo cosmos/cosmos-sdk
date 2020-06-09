@@ -74,6 +74,11 @@ func (cs ClientState) Validate() error {
 	return host.ClientIdentifierValidator(cs.ID)
 }
 
+// GetProofSpecs returns nil since localhost does not have to verify proofs
+func (cs ClientState) GetProofSpecs() []string {
+	return nil
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus
 // state of the loop-back client.
 // VerifyClientConsensusState verifies a proof of the consensus state of the

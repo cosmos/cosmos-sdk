@@ -42,9 +42,9 @@ By default, the Cosmos SDK makes use of two different gas meters, the [main gas 
 
 ### Main Gas Meter
 
-`ctx.GasMeter()` is the main gas meter of the application. The main gas meter is initialized in `BeginBlock` via `setDeliverState`, and then tracks gas consumption during execution sequences that lead to state-transitions, i.e. those originally triggered by [`BeginBlock`](../core/baseapp.md#beginblock), [`DeliverTx`](../core/baseapp.md#delivertx) and [`EndBlock`](../core/baseapp.md#endblock). At the beginning of each `DeliverTx`, the main gas meter **must be set to 0** in the [`AnteHandler`](#antehandler), so that it can track gas comsumption per-transaction. 
+`ctx.GasMeter()` is the main gas meter of the application. The main gas meter is initialized in `BeginBlock` via `setDeliverState`, and then tracks gas consumption during execution sequences that lead to state-transitions, i.e. those originally triggered by [`BeginBlock`](../core/baseapp.md#beginblock), [`DeliverTx`](../core/baseapp.md#delivertx) and [`EndBlock`](../core/baseapp.md#endblock). At the beginning of each `DeliverTx`, the main gas meter **must be set to 0** in the [`AnteHandler`](#antehandler), so that it can track gas consumption per-transaction. 
 
-Gas comsumption can be done manually, generally by the module developer in the [`BeginBlocker`, `EndBlocker`](../building-modules/beginblock-endblock.md) or [`handler`](../building-modules/handler.md), but most of the time it is done automatically whenever there is a read or write to the store. This automatic gas consumption logic is implemented in a special store called [`GasKv`](../core/store.md#gaskv-store). 
+Gas consumption can be done manually, generally by the module developer in the [`BeginBlocker`, `EndBlocker`](../building-modules/beginblock-endblock.md) or [`handler`](../building-modules/handler.md), but most of the time it is done automatically whenever there is a read or write to the store. This automatic gas consumption logic is implemented in a special store called [`GasKv`](../core/store.md#gaskv-store). 
 
 ### Block Gas Meter
 

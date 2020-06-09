@@ -98,6 +98,14 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
+	// Validate ProofSpecs if provided
+	if msg.ProofSpecs != nil {
+		for _, spec := range msg.ProofSpecs {
+			if spec == "" {
+				return sdkerrors.Wrap(ErrInvalidProofSpecs, "Invalid empty spec")
+			}
+		}
+	}
 	return host.ClientIdentifierValidator(msg.ClientID)
 }
 

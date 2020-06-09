@@ -25,17 +25,22 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-const flagTrustLevel = "trust-level"
+const (
+	flagTrustLevel = "trust-level"
+	flagProofSpecs = "proof-specs"
+)
 
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
-		Short:   "create new tendermint client",
-		Long:    "create new tendermint client. Trust level can be a fraction (eg: '1/3') or 'default'",
+		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
+		Short: "create new tendermint client",
+		Long: `create new tendermint client. Trust level can be a fraction (eg: '1/3') or 'default'. 
+				Proof Specs can be a comma-seperated list of strings (eg: 'ics23:simple,ics23:iavl' or 'default'`,
 		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, ibctmtypes.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -59,6 +64,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 
 			var (
 				trustLevel tmmath.Fraction
+				specs      []string
 				err        error
 			)
 
@@ -88,8 +94,16 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			spc := viper.GetString(flagProofSpecs)
+
+			if spc == "default" {
+				specs = commitmenttypes.GetSDKSpecs()
+			} else {
+				specs = strings.Split(spc, ",")
+			}
+
 			msg := ibctmtypes.NewMsgCreateClient(
-				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientCtx.GetFromAddress(),
+				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -100,6 +114,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
+	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
 	return cmd
 }
 

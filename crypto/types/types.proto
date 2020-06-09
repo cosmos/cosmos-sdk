@@ -10,11 +10,11 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/types";
 message PublicKey {
   // sum specifies which type of public key is wrapped
   oneof sum {
-    bytes                              secp256k1       = 1;
-    bytes                              ed25519         = 2;
-    bytes                              sr25519         = 3;
-    PubKeyMultisigThreshold            multisig        = 4;
-    bytes                              secp256r1       = 5;
+    bytes                   secp256k1 = 1;
+    bytes                   ed25519   = 2;
+    bytes                   sr25519   = 3;
+    PubKeyMultisigThreshold multisig  = 4;
+    bytes                   secp256r1 = 5;
 
     // any_pubkey can be used for any pubkey that an app may use which is
     // not explicitly defined in the oneof
@@ -26,15 +26,14 @@ message PublicKey {
 // keys and a threshold
 message PubKeyMultisigThreshold {
   uint32             threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
-  repeated PublicKey public_keys = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
+  repeated PublicKey pubkeys   = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
 }
 
 // MultiSignature wraps the signatures from a PubKeyMultisigThreshold.
 // See cosmos_sdk.tx.v1.ModeInfo.Multi for how to specify which signers signed
 // and with which modes
 message MultiSignature {
-  option (gogoproto.goproto_unrecognized) = true;
-  repeated bytes signatures = 1;
+  repeated bytes sigs = 1;
 }
 
 // CompactBitArray is an implementation of a space efficient bit array.

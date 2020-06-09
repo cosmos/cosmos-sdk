@@ -126,7 +126,7 @@ func (suite *IBCTestSuite) CreateConnection(
 
 	counterparty.ConnectionOpenConfirm(source, counterpartyConnection, sourceConnection)
 	suite.IncrementTime()
-	return
+	return sourceConnection, counterpartyConnection
 }
 
 // CreateChannel constructs and executes channel handshake messages in order to create
@@ -175,5 +175,5 @@ func (suite *IBCTestSuite) CreateChannel(
 
 	counterparty.ChannelOpenConfirm(counterpartyChannel, sourceChannel, connectionID)
 	suite.IncrementTime()
-	return
+	return sourceChannel, counterpartyChannel
 }

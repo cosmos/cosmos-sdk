@@ -15,14 +15,11 @@ message PublicKey {
     bytes                              sr25519         = 3;
     PubKeyMultisigThreshold            multisig        = 4;
     bytes                              secp256r1       = 5;
-    LegacyAminoPubKeyMultisigThreshold amino_multisig  = 6;
 
     // any_pubkey can be used for any pubkey that an app may use which is
     // not explicitly defined in the oneof
     google.protobuf.Any any_pubkey = 15;  // 15 is largest field that occupies one byte
   }
-
-  option (gogoproto.typedecl) = false;
 }
 
 // PubKeyMultisigThreshold specifies a public key type which nests multiple public
@@ -50,12 +47,4 @@ message CompactBitArray {
 
   uint32 extra_bits_stored = 1;
   bytes  elems             = 2;
-}
-
-// LegacyAminoPubKeyMultisigThreshold specifies a PubKeyMultisigThreshold that
-// uses a legacy amino address which is passed along with the key. This type of
-// key can only be used with existing accounts in state as the address is hard-coded
-message LegacyAminoPubKeyMultisigThreshold {
-  PubKeyMultisigThreshold key = 1;
-  bytes address = 2;
 }

@@ -15,16 +15,16 @@ import (
 // Value to the corresponding client type.
 func NewDecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) (string, bool) {
 	switch {
-	case bytes.Equal(kvA.Key, host.KeyClientStorePrefix) && bytes.HasSuffix(kvA.Key, host.KeyClientState()):
+	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.HasSuffix(kvA.Key, host.KeyClientState()):
 		var clientStateA, clientStateB exported.ClientState
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &clientStateA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &clientStateB)
 		return fmt.Sprintf("ClientState A: %v\nClientState B:%v", clientStateA, clientStateB), true
 
-	case bytes.Equal(kvA.Key, host.KeyClientStorePrefix) && bytes.HasSuffix(kvA.Key, host.KeyClientType()):
-		return fmt.Sprintf("Client type A: %v\nClient type B:%v", string(kvA.Value), string(kvB.Value)), true
+	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.HasSuffix(kvA.Key, host.KeyClientType()):
+		return fmt.Sprintf("Client type A: %s\nClient type B:%s", string(kvA.Value), string(kvB.Value)), true
 
-	case bytes.Equal(kvA.Key, host.KeyClientStorePrefix) && bytes.Contains(kvA.Key, []byte("consensusState")):
+	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.Contains(kvA.Key, []byte("consensusState")):
 		var consensusStateA, consensusStateB exported.ConsensusState
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &consensusStateA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &consensusStateB)

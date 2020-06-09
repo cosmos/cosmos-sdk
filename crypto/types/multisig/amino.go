@@ -31,7 +31,8 @@ func init() {
 		secp256k1.PubKeyAminoName, nil)
 }
 
-// AminoMultisignature is used to represent the signature object used in the multisigs.
+// AminoMultisignature is used to represent amino multi-signatures for StdTx's.
+// It is assumed that all signatures were made with SIGN_MODE_LEGACY_AMINO_JSON.
 // Sigs is a list of signatures, sorted by corresponding index.
 type AminoMultisignature struct {
 	BitArray *types.CompactBitArray

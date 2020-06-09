@@ -373,7 +373,7 @@ func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.Sign
 }
 
 func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
-	if multiPK, ok := key.(multisig.MultisigPubKey); ok {
+	if multiPK, ok := key.(multisig.PubKey); ok {
 		var multiSig multisig.AminoMultisignature
 		err := cdc.UnmarshalBinaryBare(sig, &multiSig)
 		if err != nil {

@@ -12,15 +12,11 @@ type PubKeyMultisigThreshold struct {
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 
-func (pk PubKeyMultisigThreshold) Threshold() uint {
-	return pk.K
-}
-
-var _ MultisigPubKey = PubKeyMultisigThreshold{}
+var _ PubKey = PubKeyMultisigThreshold{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
-func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) MultisigPubKey {
+func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) PubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -41,6 +37,7 @@ func (pk PubKeyMultisigThreshold) VerifyBytes([]byte, []byte) bool {
 	return false
 }
 
+// VerifyMultisignature implements the PubKey.VerifyMultisignature method
 func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) bool {
 	bitarray := sig.BitArray
 	sigs := sig.Signatures
@@ -72,7 +69,7 @@ func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytes
 					return false
 				}
 			case *signing.MultiSignatureData:
-				nestedMultisigPk, ok := pk.PubKeys[i].(MultisigPubKey)
+				nestedMultisigPk, ok := pk.PubKeys[i].(PubKey)
 				if !ok {
 					return false
 				}
@@ -88,6 +85,7 @@ func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytes
 	return true
 }
 
+// GetPubKeys implements the PubKey.GetPubKeys method
 func (pk PubKeyMultisigThreshold) GetPubKeys() []crypto.PubKey {
 	return pk.PubKeys
 }

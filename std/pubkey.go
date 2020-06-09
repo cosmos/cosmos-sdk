@@ -57,7 +57,7 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 		}
 		return multisig.NewPubKeyMultisigThreshold(int(key.Multisig.K), resKeys), nil
 	default:
-		return nil, fmt.Errorf("can't encode PubKey of type %T", key)
+		return nil, fmt.Errorf("can't decode PubKey of type %T. Use a custom PublicKeyCodec instead", key)
 	}
 }
 
@@ -85,6 +85,6 @@ func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, er
 			PubKeys: resKeys,
 		}}}, nil
 	default:
-		return nil, fmt.Errorf("can't encode PubKey of type %T", key)
+		return nil, fmt.Errorf("can't encode PubKey of type %T. Use a custom PublicKeyCodec instead", key)
 	}
 }

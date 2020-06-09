@@ -404,12 +404,12 @@ func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signin
 			BitArray:   bitArray,
 			Signatures: sigDatas,
 		}, nil
-	} else {
-		return &signing.SingleSignatureData{
-			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-			Signature: sig,
-		}, nil
 	}
+
+	return &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Signature: sig,
+	}, nil
 }
 
 // MultiSignatureDataToAminoMultisignature converts a MultiSignatureData to an AminoMultisignature.

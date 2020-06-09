@@ -79,8 +79,11 @@ github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGX
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/confio/ics23 v0.6.0 h1:bQsi55t2+xjW6EWDl83IBF1VWurplbUu+OT6pukeiEo=
+github.com/confio/ics23 v0.6.1 h1:8wtb7ZLARolaqyvfafyL6Zl22u3Yr0qAqs8b1xN3brA=
+github.com/confio/ics23 v0.6.1/go.mod h1:3KqkHvDFqGwhMP802HosG2kFI7Jg8R8HvrSJ5okCdkM=
 github.com/confio/ics23-iavl v0.6.0 h1:vVRCuVaP38FCw1kTeEdFuGuiY+2vAGTBQoH7Zxkq/ws=
 github.com/confio/ics23-iavl v0.6.0/go.mod h1:mmXAxD1vWoO0VP8YHu6mM1QHGv71NQqa1iSVm4HeKcY=
+github.com/confio/ics23/go v0.0.0-20190827163309-7909e7dd24d5/go.mod h1:rWOCtymU+x3jM2Uib0aszytidui3pfpffvjCfNwATaE=
 github.com/confio/ics23/go v0.0.0-20200323120010-7d9a00f0a2fa/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=
 github.com/confio/ics23/go v0.0.0-20200325200809-9f53dd0c4212 h1:MgS8JP5m7fPl7kumRm+YyAe5le3JlwQ4n5T/JXvr36s=
 github.com/confio/ics23/go v0.0.0-20200325200809-9f53dd0c4212/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=

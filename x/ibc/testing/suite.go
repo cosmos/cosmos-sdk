@@ -28,7 +28,7 @@ type IBCTestSuite struct {
 func (suite *IBCTestSuite) SetupTest(n uint64) {
 	suite.Chains = make([]*TestChain, n)
 
-	for i, _ := range suite.Chains {
+	for i := range suite.Chains {
 		suite.Chains[i] = NewTestChain(suite.T(), ClientIDPrefix+string(i))
 	}
 }

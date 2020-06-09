@@ -5,6 +5,8 @@ import (
 	"io"
 	"sync"
 
+	ics23iavl "github.com/confio/ics23-iavl"
+	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -275,30 +277,24 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			break
 		}
 
-		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, res.Height)
-			if err != nil {
-				res.Log = err.Error()
-				break
-			}
-			if proof == nil {
-				// Proof == nil implies that the store is empty.
-				if value != nil {
-					panic("unexpected value for an empty proof")
-				}
-			}
-			if value != nil {
-				// value was found
-				res.Value = value
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewValueOp(key, proof).ProofOp()}}
-			} else {
-				// value wasn't found
-				res.Value = nil
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewAbsenceOp(key, proof).ProofOp()}}
-			}
-		} else {
-			_, res.Value = tree.GetVersioned(key, res.Height)
+		_, res.Value = tree.GetVersioned(key, res.Height)
+		if !req.Prove {
+			break
 		}
+
+		// Continue to prove existence/absence of value
+		// Must convert store.Tree to iavl.MutableTree with given version to use in CreateProof
+		iTree, err := tree.GetImmutable(res.Height)
+		if err != nil {
+			// sanity check: If value for given version was retrieved, immutable tree must also be retrievable
+			panic(fmt.Sprintf("version exists in store but could not retrieve corresponding versioned tree in store, %s", err.Error()))
+		}
+		mtree := &iavl.MutableTree{
+			ImmutableTree: iTree,
+		}
+
+		// get proof from tree and convert to merkle.Proof before adding to result
+		res.Proof = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
 		var KVs []types.KVPair
@@ -319,6 +315,34 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	}
 
 	return res
+}
+
+// Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
+// appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
+// Thus, it will panic on error rather than returning it
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
+	var (
+		commitmentProof *ics23.CommitmentProof
+		err             error
+	)
+
+	if exists {
+		// value was found
+		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
+		if err != nil {
+			// sanity check: If value was found, membership proof must be creatable
+			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
+		}
+	} else {
+		// value wasn't found
+		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
+		if err != nil {
+			// sanity check: If value wasn't found, nonmembership proof must be creatable
+			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
+		}
+	}
+	op := types.NewIavlCommitmentOp(key, commitmentProof)
+	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
 }
 
 //----------------------------------------

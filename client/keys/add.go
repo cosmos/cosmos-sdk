@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -169,7 +169,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 				})
 			}
 
-			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+			pk := multisig.NewPubKeyMultisigThreshold(uint32(multisigThreshold), pks)
 			if _, err := kb.SaveMultisig(name, pk); err != nil {
 				return err
 			}

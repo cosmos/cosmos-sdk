@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -355,4 +357,94 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.SignatureV2, error) {
+	pk := sig.GetPubKey()
+	data, err := pubKeySigToSigData(cdc, pk, sig.Signature)
+	if err != nil {
+		return signing.SignatureV2{}, err
+	}
+
+	return signing.SignatureV2{
+		PubKey: pk,
+		Data:   data,
+	}, nil
+}
+
+func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
+	if multiPK, ok := key.(multisig.MultisigPubKey); ok {
+		var multiSig multisig.AminoMultisignature
+		err := cdc.UnmarshalBinaryBare(sig, &multiSig)
+		if err != nil {
+			return nil, err
+		}
+
+		sigs := multiSig.Sigs
+		sigDatas := make([]signing.SignatureData, len(sigs))
+		pubKeys := multiPK.GetPubKeys()
+		bitArray := multiSig.BitArray
+		n := multiSig.BitArray.Size()
+		sigIdx := 0
+
+		for i := 0; i < n; i++ {
+			if bitArray.GetIndex(i) {
+				data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
+				if err != nil {
+					return nil, err
+				}
+
+				sigDatas[sigIdx] = data
+				sigIdx++
+			}
+		}
+
+		return &signing.MultiSignatureData{
+			BitArray:   bitArray,
+			Signatures: sigDatas,
+		}, nil
+	} else {
+		return &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: sig,
+		}, nil
+	}
+}
+
+func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.MultiSignatureData) (multisig.AminoMultisignature, error) {
+	n := len(mSig.Signatures)
+	sigs := make([][]byte, n)
+
+	for i := 0; i < n; i++ {
+		var err error
+		sigs[i], err = SignatureDataToAminoSignature(cdc, mSig.Signatures[i])
+		if err != nil {
+			return multisig.AminoMultisignature{}, err
+		}
+	}
+
+	return multisig.AminoMultisignature{
+		BitArray: mSig.BitArray,
+		Sigs:     sigs,
+	}, nil
+}
+
+func SignatureDataToAminoSignature(cdc *codec.Codec, data signing.SignatureData) ([]byte, error) {
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		if data.SignMode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+			return nil, fmt.Errorf("expected %s, got %s", signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, data.SignMode)
+		}
+
+		return data.Signature, nil
+	case *signing.MultiSignatureData:
+		aminoMSig, err := MultiSignatureDataToAminoMultisignature(cdc, data)
+		if err != nil {
+			return nil, err
+		}
+
+		return cdc.MarshalBinaryBare(aminoMSig)
+	default:
+		return nil, fmt.Errorf("unexpected case")
+	}
 }

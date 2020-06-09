@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -107,7 +107,13 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			if ok := stdSig.GetPubKey().VerifyBytes(sigBytes, stdSig.Signature); !ok {
 				return fmt.Errorf("couldn't verify signature")
 			}
-			if err := multisigSig.AddSignatureFromPubKey(stdSig.Signature, stdSig.GetPubKey(), multisigPub.PubKeys); err != nil {
+
+			sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
+			if err != nil {
+				return nil
+			}
+
+			if err := multisig.AddSignatureV2(multisigSig, sigV2, multisigPub.PubKeys); err != nil {
 				return err
 			}
 		}

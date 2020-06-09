@@ -1,24 +1,29 @@
 package multisig
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/tendermint/tendermint/crypto"
 )
 
 // PubKeyMultisigThreshold implements a K of N threshold multisig.
 type PubKeyMultisigThreshold struct {
-	K       uint            `json:"threshold"`
+	K       uint32          `json:"threshold"`
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 
-var _ crypto.PubKey = PubKeyMultisigThreshold{}
+func (pk PubKeyMultisigThreshold) Threshold() uint32 {
+	return pk.K
+}
+
+var _ MultisigPubKey = PubKeyMultisigThreshold{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
-func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) crypto.PubKey {
+func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) MultisigPubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
-	if len(pubkeys) < k {
+	if len(pubkeys) < int(k) {
 		panic("threshold k of n multisignature: len(pubkeys) < k")
 	}
 	for _, pubkey := range pubkeys {
@@ -26,39 +31,54 @@ func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) crypto.PubKey {
 			panic("nil pubkey")
 		}
 	}
-	return PubKeyMultisigThreshold{uint(k), pubkeys}
+	return PubKeyMultisigThreshold{k, pubkeys}
 }
 
-// VerifyBytes expects sig to be an amino encoded version of a MultiSignature.
-// Returns true iff the multisignature contains k or more signatures
-// for the correct corresponding keys,
-// and all signatures are valid. (Not just k of the signatures)
-// The multisig uses a bitarray, so multiple signatures for the same key is not
-// a concern.
-func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) bool {
-	var sig Multisignature
-	err := cdc.UnmarshalBinaryBare(marshalledSig, &sig)
-	if err != nil {
-		return false
-	}
-	size := sig.BitArray.Size()
+// VerifyBytes should not be used with this PubKeyMultisigThreshold, instead VerifyMultisignature
+// must be used
+func (pk PubKeyMultisigThreshold) VerifyBytes([]byte, []byte) bool {
+	return false
+}
+
+func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) bool {
+	bitarray := sig.BitArray
+	sigs := sig.Signatures
+	size := bitarray.Size()
 	// ensure bit array is the correct size
 	if len(pk.PubKeys) != size {
 		return false
 	}
 	// ensure size of signature list
-	if len(sig.Sigs) < int(pk.K) || len(sig.Sigs) > size {
+	if len(sigs) < int(pk.K) || len(sigs) > size {
 		return false
 	}
 	// ensure at least k signatures are set
-	if sig.BitArray.NumTrueBitsBefore(size) < int(pk.K) {
+	if bitarray.NumTrueBitsBefore(size) < int(pk.K) {
 		return false
 	}
 	// index in the list of signatures which we are concerned with.
 	sigIndex := 0
 	for i := 0; i < size; i++ {
-		if sig.BitArray.GetIndex(i) {
-			if !pk.PubKeys[i].VerifyBytes(msg, sig.Sigs[sigIndex]) {
+		if bitarray.GetIndex(i) {
+			si := sig.Signatures[sigIndex]
+			switch si := si.(type) {
+			case *signing.SingleSignatureData:
+				msg, err := getSignBytes(si.SignMode)
+				if err != nil {
+					return false
+				}
+				if !pk.PubKeys[i].VerifyBytes(msg, si.Signature) {
+					return false
+				}
+			case *signing.MultiSignatureData:
+				nestedMultisigPk, ok := pk.PubKeys[i].(MultisigPubKey)
+				if !ok {
+					return false
+				}
+				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, si) {
+					return false
+				}
+			default:
 				return false
 			}
 			sigIndex++
@@ -67,12 +87,16 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 	return true
 }
 
+func (pk PubKeyMultisigThreshold) GetPubKeys() []crypto.PubKey {
+	return pk.PubKeys
+}
+
 // Bytes returns the amino encoded version of the PubKeyMultisigThreshold
 func (pk PubKeyMultisigThreshold) Bytes() []byte {
 	return cdc.MustMarshalBinaryBare(pk)
 }
 
-// Address returns tmhash(PubKey.Bytes())
+// Address returns tmhash(PubKeyMultisigThreshold.Bytes())
 func (pk PubKeyMultisigThreshold) Address() crypto.Address {
 	return crypto.AddressHash(pk.Bytes())
 }

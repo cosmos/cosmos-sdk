@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -202,7 +202,7 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	return &multiInfo{
 		Name:      name,
 		PubKey:    pub,
-		Threshold: multiPK.K,
+		Threshold: uint(multiPK.K),
 		PubKeys:   pubKeys,
 	}
 }

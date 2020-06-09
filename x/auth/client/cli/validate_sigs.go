@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -108,7 +108,7 @@ func printAndValidateSigs(
 
 		multiPK, ok := sig.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		if ok {
-			var multiSig multisig.Multisignature
+			var multiSig multisig.AminoMultisignature
 			clientCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)
 
 			var b strings.Builder

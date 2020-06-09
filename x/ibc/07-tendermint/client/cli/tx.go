@@ -40,7 +40,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
 		Short: "create new tendermint client",
 		Long: `create new tendermint client. Trust level can be a fraction (eg: '1/3') or 'default'. 
-				Proof Specs can be a comma-seperated list of strings (eg: 'ics23:simple,ics23:iavl' or 'default'`,
+				Proof Specs can be a comma-separated list of strings (eg: 'ics23:simple,ics23:iavl' or 'default'`,
 		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, ibctmtypes.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {

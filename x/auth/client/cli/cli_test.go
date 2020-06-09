@@ -73,6 +73,57 @@ func TestCLIValidateSignatures(t *testing.T) {
 	f.Cleanup()
 }
 
+func TestCLISignBatch(t *testing.T) {
+	t.Parallel()
+	f := cli.InitFixtures(t)
+
+	fooAddr := f.KeyAddress(cli.KeyFoo)
+	barAddr := f.KeyAddress(cli.KeyBar)
+
+	sendTokens := sdk.TokensFromConsensusPower(10)
+	success, generatedStdTx, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
+
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// Write the output to disk
+	batchfile, cleanup1 := tests.WriteToNewTempFile(t, strings.Repeat(generatedStdTx, 3))
+	t.Cleanup(cleanup1)
+
+	// sign-batch file - offline is set but account-number and sequence are not
+	success, _, stderr = testutil.TxSignBatch(f, cli.KeyFoo, batchfile.Name(), "--offline")
+	require.Contains(t, stderr, "required flag(s) \"account-number\", \"sequence\" not set")
+	require.False(t, success)
+
+	// sign-batch file
+	success, stdout, stderr := testutil.TxSignBatch(f, cli.KeyFoo, batchfile.Name())
+	require.True(t, success)
+	require.Empty(t, stderr)
+	require.Equal(t, 3, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+
+	// sign-batch file
+	success, stdout, stderr = testutil.TxSignBatch(f, cli.KeyFoo, batchfile.Name(), "--signature-only")
+	require.True(t, success)
+	require.Empty(t, stderr)
+	require.Equal(t, 3, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+
+	malformedFile, cleanup2 := tests.WriteToNewTempFile(t, fmt.Sprintf("%smalformed", generatedStdTx))
+	t.Cleanup(cleanup2)
+
+	// sign-batch file
+	success, stdout, stderr = testutil.TxSignBatch(f, cli.KeyFoo, malformedFile.Name())
+	require.False(t, success)
+	require.Equal(t, 1, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+	require.Equal(t, "ERROR: cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value\n", stderr)
+
+	// sign-batch file
+	success, stdout, _ = testutil.TxSignBatch(f, cli.KeyFoo, malformedFile.Name(), "--signature-only")
+	require.False(t, success)
+	require.Equal(t, 1, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+
+	f.Cleanup()
+}
+
 func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Parallel()
 	f := cli.InitFixtures(t)

@@ -42,18 +42,23 @@ mocks: $(MOCKS_DIR)
 	mockgen -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
 	mockgen -source=types/router.go -package mocks -destination tests/mocks/types_router.go
 	mockgen -source=types/handler.go -package mocks -destination tests/mocks/types_handler.go
+	mockgen -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
 .PHONY: mocks
 
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
-distclean:
+distclean: clean
 	rm -rf \
     gitian-build-darwin/ \
     gitian-build-linux/ \
     gitian-build-windows/ \
     .gitian-builder-cache/
-.PHONY: distclean
+
+clean:
+	rm -rf $(BUILDDIR)/
+
+.PHONY: distclean clean
 
 ###############################################################################
 ###                          Tools & Dependencies                           ###

@@ -20,22 +20,22 @@ func NewDecodeStore(cdc codec.Marshaler, kvA, kvB tmkv.Pair) (string, bool) {
 		var channelA, channelB types.Channel
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &channelA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &channelB)
-		return fmt.Sprintf("%v\n%v", channelA, channelB), true
+		return fmt.Sprintf("Channel A: %v\nChannel B: %v", channelA, channelB), true
 
 	case bytes.HasPrefix(kvA.Key, []byte(host.KeyNextSeqSendPrefix)):
 		seqA := sdk.BigEndianToUint64(kvA.Value)
 		seqB := sdk.BigEndianToUint64(kvB.Value)
-		return fmt.Sprintf("NextSeqSend A: %d\nNextSeqSend B: %d\n", seqA, seqB), true
+		return fmt.Sprintf("NextSeqSend A: %d\nNextSeqSend B: %d", seqA, seqB), true
 
 	case bytes.HasPrefix(kvA.Key, []byte(host.KeyNextSeqRecvPrefix)):
 		seqA := sdk.BigEndianToUint64(kvA.Value)
 		seqB := sdk.BigEndianToUint64(kvB.Value)
-		return fmt.Sprintf("NextSeqRecv A: %d\nNextSeqRecv B: %d\n", seqA, seqB), true
+		return fmt.Sprintf("NextSeqRecv A: %d\nNextSeqRecv B: %d", seqA, seqB), true
 
 	case bytes.HasPrefix(kvA.Key, []byte(host.KeyNextSeqAckPrefix)):
 		seqA := sdk.BigEndianToUint64(kvA.Value)
 		seqB := sdk.BigEndianToUint64(kvB.Value)
-		return fmt.Sprintf("NextSeqAck A: %d\nNextSeqAck B: %d\n", seqA, seqB), true
+		return fmt.Sprintf("NextSeqAck A: %d\nNextSeqAck B: %d", seqA, seqB), true
 
 	case bytes.HasPrefix(kvA.Key, []byte(host.KeyPacketCommitmentPrefix)):
 		return fmt.Sprintf("CommitmentHash A: %X\nCommitmentHash B: %X", kvA.Value, kvB.Value), true

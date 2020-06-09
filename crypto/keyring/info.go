@@ -202,7 +202,7 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	return &multiInfo{
 		Name:      name,
 		PubKey:    pub,
-		Threshold: uint(multiPK.K),
+		Threshold: multiPK.K,
 		PubKeys:   pubKeys,
 	}
 }

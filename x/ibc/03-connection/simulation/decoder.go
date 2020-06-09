@@ -19,13 +19,13 @@ func NewDecodeStore(cdc codec.Marshaler, kvA, kvB tmkv.Pair) (string, bool) {
 		var clientConnectionsA, clientConnectionsB types.ClientPaths
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &clientConnectionsA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &clientConnectionsB)
-		return fmt.Sprintf("ClientPaths A: %v\nClientPaths B:%v", clientConnectionsA, clientConnectionsB), true
+		return fmt.Sprintf("ClientPaths A: %v\nClientPaths B: %v", clientConnectionsA, clientConnectionsB), true
 
 	case bytes.HasPrefix(kvA.Key, host.KeyConnectionPrefix):
 		var connectionA, connectionB types.ConnectionEnd
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &connectionA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &connectionB)
-		return fmt.Sprintf("ConnectionEnd A: %v\nConnectionEnd B: %v\n", connectionA, connectionB), true
+		return fmt.Sprintf("ConnectionEnd A: %v\nConnectionEnd B: %v", connectionA, connectionB), true
 
 	default:
 		return "", false

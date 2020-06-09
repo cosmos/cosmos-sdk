@@ -52,16 +52,16 @@ func TestDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"ClientState", fmt.Sprintf("ClientState A: %v\nClientState B:%v", clientState, clientState)},
-		{"client type", fmt.Sprintf("Client type A: %s\nClient type B:%s", exported.Tendermint, exported.Tendermint)},
-		{"ConsensusState", fmt.Sprintf("ConsensusState A: %v\nConsensusState B:%v", consState, consState)},
+		{"ClientState", fmt.Sprintf("ClientState A: %v\nClientState B: %v", clientState, clientState)},
+		{"client type", fmt.Sprintf("Client type A: %s\nClient type B: %s", exported.Tendermint, exported.Tendermint)},
+		{"ConsensusState", fmt.Sprintf("ConsensusState A: %v\nConsensusState B: %v", consState, consState)},
 		{"other", ""},
 	}
 
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, found := simulation.NewDecodeStore(app.Codec(), kvPairs[i], kvPairs[i])
+			res, found := simulation.NewDecodeStore(cdc, kvPairs[i], kvPairs[i])
 			if i == len(tests)-1 {
 				require.False(t, found, string(kvPairs[i].Key))
 				require.Empty(t, res, string(kvPairs[i].Key))

@@ -19,16 +19,16 @@ func NewDecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) (string, bool) {
 		var clientStateA, clientStateB exported.ClientState
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &clientStateA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &clientStateB)
-		return fmt.Sprintf("ClientState A: %v\nClientState B:%v", clientStateA, clientStateB), true
+		return fmt.Sprintf("ClientState A: %v\nClientState B: %v", clientStateA, clientStateB), true
 
 	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.HasSuffix(kvA.Key, host.KeyClientType()):
-		return fmt.Sprintf("Client type A: %s\nClient type B:%s", string(kvA.Value), string(kvB.Value)), true
+		return fmt.Sprintf("Client type A: %s\nClient type B: %s", string(kvA.Value), string(kvB.Value)), true
 
 	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.Contains(kvA.Key, []byte("consensusState")):
 		var consensusStateA, consensusStateB exported.ConsensusState
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &consensusStateA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &consensusStateB)
-		return fmt.Sprintf("ConsensusState A: %v\nConsensusState B:%v", consensusStateA, consensusStateB), true
+		return fmt.Sprintf("ConsensusState A: %v\nConsensusState B: %v", consensusStateA, consensusStateB), true
 
 	default:
 		return "", false

@@ -116,15 +116,19 @@ func TestCLICreateValidator(t *testing.T) {
 	validator = testutil.QueryStakingValidator(f, barVal)
 	require.Equal(t, remainingTokens, validator.Tokens)
 
+	// Query for historical info
+	historicalInfo := testutil.QueryStakingHistoricalInfo(f, 1)
+	require.NotEmpty(f.T, historicalInfo)
+
 	// Get unbonding delegations from the validator
 	validatorUbds := testutil.QueryStakingUnbondingDelegationsFrom(f, barVal)
 	require.Len(t, validatorUbds, 1)
 	require.Len(t, validatorUbds[0].Entries, 1)
 	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
 
-	// TODO debug QueryStakingUnbondingDelegation
+	// TODO debug QueryStakingUnbondingDelegation command
 	// ubd := testutil.QueryStakingUnbondingDelegation(f, barAddr.String(), barVal.String())
-	// fmt.Println("ubd", ubd)
+	// require.NotEmpty(t, ubd)
 
 	// Query staking unbonding delegations
 	ubds := testutil.QueryStakingUnbondingDelegations(f, barAddr.String())

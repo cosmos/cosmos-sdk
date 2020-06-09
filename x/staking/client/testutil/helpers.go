@@ -216,6 +216,8 @@ func QueryStakingRedelegationsFrom(f *cli.Fixtures, valAddr string, flags ...str
 	return redelegations
 }
 
+// TODO debug QueryStakingUnbondingDelegation command
+
 // QueryStakingUnbondingDelegation is simcli query staking redelegation
 func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, flags ...string) staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegation %v %v %v", f.SimcliBinary, delAdrr, valAddr, f.Flags())
@@ -244,4 +246,19 @@ func QueryStakingUnbondingDelegations(f *cli.Fixtures, delAdrr string, flags ...
 	require.NoError(f.T, err)
 
 	return ubds
+}
+
+// QueryStakingHistoricalInfo is simcli query staking parameters
+func QueryStakingHistoricalInfo(f *cli.Fixtures, height uint, flags ...string) staking.HistoricalInfo {
+	cmd := fmt.Sprintf("%s query staking historical-info %d %v", f.SimcliBinary, height, f.Flags())
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
+
+	var historicalInfo staking.HistoricalInfo
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &historicalInfo)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
+
+	return historicalInfo
 }

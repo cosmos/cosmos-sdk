@@ -4,12 +4,19 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
+
+// AminoMultisignature is used to represent amino multi-signatures for StdTx's.
+// It is assumed that all signatures were made with SIGN_MODE_LEGACY_AMINO_JSON.
+// Sigs is a list of signatures, sorted by corresponding index.
+type AminoMultisignature struct {
+	BitArray *types.CompactBitArray
+	Sigs     [][]byte
+}
 
 // NewMultisig returns a new MultiSignatureData
 func NewMultisig(n int) *signing.MultiSignatureData {

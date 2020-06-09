@@ -3,8 +3,6 @@ package multisig
 import (
 	amino "github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -29,12 +27,4 @@ func init() {
 		sr25519.PubKeyAminoName, nil)
 	cdc.RegisterConcrete(secp256k1.PubKeySecp256k1{},
 		secp256k1.PubKeyAminoName, nil)
-}
-
-// AminoMultisignature is used to represent amino multi-signatures for StdTx's.
-// It is assumed that all signatures were made with SIGN_MODE_LEGACY_AMINO_JSON.
-// Sigs is a list of signatures, sorted by corresponding index.
-type AminoMultisignature struct {
-	BitArray *types.CompactBitArray
-	Sigs     [][]byte
 }

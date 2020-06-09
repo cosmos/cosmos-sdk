@@ -5,6 +5,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
+//nolint:stylecheck // ignore linting of comment
 // Deprecated: Cdc defines a global generic sealed Amino codec to be used throughout sdk. It
 // has all Tendermint crypto and evidence types registered.
 //

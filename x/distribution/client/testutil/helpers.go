@@ -38,6 +38,7 @@ func QueryRewards(f *cli.Fixtures, delAddr sdk.AccAddress, flags ...string) dist
 
 	var rewards distribution.QueryDelegatorTotalRewardsResponse
 	err := f.Cdc.UnmarshalJSON([]byte(res), &rewards)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", res, err))
 	require.NoError(f.T, err)
 	return rewards
 }
@@ -50,6 +51,7 @@ func QueryValidatorOutstandingRewards(f *cli.Fixtures, valAddr string) distribut
 
 	var outstandingRewards distribution.ValidatorOutstandingRewards
 	err := f.Cdc.UnmarshalJSON([]byte(res), &outstandingRewards)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", res, err))
 	require.NoError(f.T, err)
 	return outstandingRewards
 }

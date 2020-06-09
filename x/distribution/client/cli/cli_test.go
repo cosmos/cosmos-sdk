@@ -57,7 +57,7 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	require.False(t, commission.Commission.IsZero())
 
 	rewards := testutil.QueryRewards(f, fooAddr)
-	require.Equal(t, 1, len(rewards.Rewards))
+	require.Len(t, rewards.Rewards, 1)
 	require.NotEmpty(t, rewards.Total)
 
 	// withdrawing rewards of a delegation for a single validator
@@ -65,7 +65,7 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	require.True(t, success)
 
 	rewards = testutil.QueryRewards(f, fooAddr)
-	require.Equal(t, 1, len(rewards.Rewards))
+	require.Len(t, rewards.Rewards, 1)
 	require.Nil(t, rewards.Total)
 
 	// Setting up a new withdraw address
@@ -91,7 +91,7 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Len(t, msg.Msgs, 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	require.Len(t, msg.GetSignatures(), 0)
 
 	success, _, stderr = testutil.TxWithdrawAllRewards(f, cli.KeyFoo, "-y")
 	require.True(f.T, success)

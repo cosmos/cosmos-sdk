@@ -47,6 +47,7 @@ var (
 // header and the validators of the TestChain. It also contains a field called ChainID. This
 // is the clientID that *other* chains use to refer to this TestChain. The SenderAccount
 // is used for delivering transactions through the application state.
+// NOTE: the actual application uses an empty chain-id for ease of testing.
 type TestChain struct {
 	t *testing.T
 
@@ -170,7 +171,7 @@ func (chain *TestChain) NextBlock() {
 
 // SendMsg delivers a transaction through the application. It updates the senders sequence
 // number and updates the TestChain's headers.
-func (chain *TestChain) SendMsg(msg sdk.Msg) {
+func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,
 		chain.App.Codec(),
@@ -181,13 +182,17 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) {
 		[]uint64{chain.SenderAccount.GetSequence()},
 		true, true, chain.senderPrivKey,
 	)
-	require.NoError(chain.t, err)
+	if err != nil {
+		return err
+	}
 
 	// SignCheckDeliver calls app.Commit()
 	chain.NextBlock()
 
 	// increment sequence for successful transaction execution
 	chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+
+	return nil
 }
 
 // NewClientID appends a new clientID string in the format:
@@ -233,7 +238,7 @@ func (chain *TestChain) NewTestChannel() TestChannel {
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
 // client will be created on the (target) chain.
-func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) {
+func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
 	msg := ibctmtypes.NewMsgCreateClient(
 		clientID, counterparty.LastHeader,
@@ -241,25 +246,25 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 		chain.SenderAccount.GetAddress(),
 	)
 
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
 // client will be updated on the (target) chain.
-func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) {
+func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) error {
 	msg := ibctmtypes.NewMsgUpdateClient(
 		clientID, counterparty.LastHeader,
 		chain.SenderAccount.GetAddress(),
 	)
 
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ConnectionOpenInit will construct and execute a MsgConnectionOpenInit.
 func (chain *TestChain) ConnectionOpenInit(
 	counterparty *TestChain,
 	connection, counterpartyConnection TestConnection,
-) {
+) error {
 	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
 
 	msg := connectiontypes.NewMsgConnectionOpenInit(
@@ -268,14 +273,14 @@ func (chain *TestChain) ConnectionOpenInit(
 		prefix,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ConnectionOpenTry will construct and execute a MsgConnectionOpenTry.
 func (chain *TestChain) ConnectionOpenTry(
 	counterparty *TestChain,
 	connection, counterpartyConnection TestConnection,
-) {
+) error {
 	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
 
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
@@ -293,14 +298,14 @@ func (chain *TestChain) ConnectionOpenTry(
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ConnectionOpenAck will construct and execute a MsgConnectionOpenAck.
 func (chain *TestChain) ConnectionOpenAck(
 	counterparty *TestChain,
 	connection, counterpartyConnection TestConnection,
-) {
+) error {
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
@@ -315,14 +320,14 @@ func (chain *TestChain) ConnectionOpenAck(
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ConnectionOpenConfirm will construct and execute a MsgConnectionOpenConfirm.
 func (chain *TestChain) ConnectionOpenConfirm(
 	counterparty *TestChain,
 	connection, counterpartyConnection TestConnection,
-) {
+) error {
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proof, height := counterparty.QueryProof(connectionKey)
 
@@ -331,7 +336,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ChannelOpenInit will construct and execute a MsgChannelOpenInit.
@@ -339,14 +344,14 @@ func (chain *TestChain) ChannelOpenInit(
 	ch, counterparty TestChannel,
 	order channeltypes.Order,
 	connectionID string,
-) {
+) error {
 	msg := channeltypes.NewMsgChannelOpenInit(
 		ch.PortID, ch.ChannelID,
 		ChannelVersion, order, []string{connectionID},
 		counterparty.PortID, counterparty.ChannelID,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ChannelOpenTry will construct and execute a MsgChannelOpenTry.
@@ -354,7 +359,7 @@ func (chain *TestChain) ChannelOpenTry(
 	ch, counterparty TestChannel,
 	order channeltypes.Order,
 	connectionID string,
-) {
+) error {
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
@@ -365,14 +370,14 @@ func (chain *TestChain) ChannelOpenTry(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ChannelOpenAck will construct and execute a MsgChannelOpenAck.
 func (chain *TestChain) ChannelOpenAck(
 	ch, counterparty TestChannel,
 	connectionID string,
-) {
+) error {
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
 
 	msg := channeltypes.NewMsgChannelOpenAck(
@@ -381,14 +386,14 @@ func (chain *TestChain) ChannelOpenAck(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }
 
 // ChannelOpenConfirm will construct and execute a MsgChannelOpenConfirm.
 func (chain *TestChain) ChannelOpenConfirm(
 	ch, counterparty TestChannel,
 	connectionID string,
-) {
+) error {
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
@@ -396,5 +401,5 @@ func (chain *TestChain) ChannelOpenConfirm(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	chain.SendMsg(msg)
+	return chain.SendMsg(msg)
 }

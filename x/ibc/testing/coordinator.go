@@ -75,29 +75,40 @@ func (coord *Coordinator) CommitNBlocks(chainID string, n uint64) {
 }
 
 // CreateClient creates a counterparty client on the source chain and returns the clientID.
-func (coord *Coordinator) CreateClient(sourceID, counterpartyID string, clientType clientexported.ClientType) string {
+func (coord *Coordinator) CreateClient(
+	sourceID, counterpartyID string,
+	clientType clientexported.ClientType,
+) (clientID string, err error) {
 	coord.CommitBlock(sourceID, counterpartyID)
 
 	source := coord.Chains[sourceID]
 	counterparty := coord.Chains[counterpartyID]
 
-	clientID := source.NewClientID(counterparty.ChainID)
+	clientID = source.NewClientID(counterparty.ChainID)
 
 	switch clientType {
 	case clientexported.Tendermint:
-		source.CreateTMClient(counterparty, clientID)
+		err = source.CreateTMClient(counterparty, clientID)
 
 	default:
-		panic(fmt.Sprintf("client type %s is not supported", clientType))
+		err = fmt.Errorf("client type %s is not supported", clientType)
+	}
+
+	if err != nil {
+		return "", err
 	}
 
 	coord.IncrementTime()
 
-	return clientID
+	return clientID, nil
 }
 
 // UpdateClient updates a counterparty client on the source chain.
-func (coord *Coordinator) UpdateClient(sourceID, counterpartyID, clientID string, clientType clientexported.ClientType) {
+func (coord *Coordinator) UpdateClient(
+	sourceID, counterpartyID,
+	clientID string,
+	clientType clientexported.ClientType,
+) (err error) {
 	coord.CommitBlock(sourceID, counterpartyID)
 
 	source := coord.Chains[sourceID]
@@ -105,18 +116,25 @@ func (coord *Coordinator) UpdateClient(sourceID, counterpartyID, clientID string
 
 	switch clientType {
 	case clientexported.Tendermint:
-		source.UpdateTMClient(counterparty, clientID)
+		err = source.UpdateTMClient(counterparty, clientID)
 
 	default:
-		panic(fmt.Sprintf("client type %s is not supported", clientType))
+		err = fmt.Errorf("client type %s is not supported", clientType)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	coord.IncrementTime()
+
+	return nil
 }
 
 // CreateConnection constructs and executes connection handshake messages in order to create
-// channels on source and counterparty chains with the passed in Connection State. The
-// connectionID's of the source and counterparty are returned.
+// OPEN channels on source and counterparty chains. The connection information of the source
+// and counterparty's are returned within a TestConnection struct. If there is a fault in
+// the connection handshake then an error is returned.
 //
 // NOTE: The counterparty testing connection will be created even if it is not created in the
 // application state.
@@ -124,53 +142,119 @@ func (coord *Coordinator) CreateConnection(
 	sourceID, counterpartyID,
 	clientID, counterpartyClientID string,
 	state connectiontypes.State,
-) (sourceConnection, counterpartyConnection TestConnection) {
+) (TestConnection, TestConnection, error) {
 	source := coord.Chains[sourceID]
 	counterparty := coord.Chains[counterpartyID]
 
-	if state == connectiontypes.UNINITIALIZED {
-		return
+	sourceConnection := source.NewTestConnection(clientID, counterpartyClientID)
+	counterpartyConnection := counterparty.NewTestConnection(counterpartyClientID, clientID)
+
+	if err := coord.CreateConnectionInit(source, counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
 	}
 
-	sourceConnection = source.NewTestConnection(clientID, counterpartyClientID)
-	counterpartyConnection = counterparty.NewTestConnection(counterpartyClientID, clientID)
+	if err := coord.CreateConnectionOpenTry(counterparty, source, counterpartyConnection, sourceConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
 
+	if err := coord.CreateConnectionOpenAck(source, counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+
+	if err := coord.CreateConnectionOpenConfirm(counterparty, source, counterpartyConnection, sourceConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+
+	return sourceConnection, counterpartyConnection, nil
+}
+
+// CreateConenctionInit initializes a connection on the source chain with the state INIT
+func (coord *Coordinator) CreateConnectionInit(
+	source, counterparty *TestChain,
+	sourceConnection, counterpartyConnection TestConnection,
+) error {
 	// initialize connection on source
-	source.ConnectionOpenInit(counterparty, sourceConnection, counterpartyConnection)
+	if err := source.ConnectionOpenInit(counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return err
+	}
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ClientID, clientexported.Tendermint)
-
-	if state == connectiontypes.INIT {
-		return
+	if err := coord.UpdateClient(
+		counterparty.ChainID, source.ChainID,
+		counterpartyConnection.ClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
 	}
 
-	// initialize connection on counterparty
-	counterparty.ConnectionOpenTry(source, counterpartyConnection, sourceConnection)
-	coord.IncrementTime()
+	return nil
+}
 
-	// update counterparty client on source connection
-	coord.UpdateClient(sourceID, counterpartyID, sourceConnection.ClientID, clientexported.Tendermint)
-
-	if state == connectiontypes.TRYOPEN {
-		return
+// CreateConenctionOpenTry initializes a connection on the source chain with the state TRYOPEN.
+func (coord *Coordinator) CreateConnectionOpenTry(
+	source, counterparty *TestChain,
+	sourceConnection, counterpartyConnection TestConnection,
+) error {
+	// initialize TRYOPEN connection on source
+	if err := source.ConnectionOpenTry(counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return err
 	}
-
-	// open connection on both chains
-	source.ConnectionOpenAck(counterparty, sourceConnection, counterpartyConnection)
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ClientID, clientexported.Tendermint)
+	if err := coord.UpdateClient(
+		counterparty.ChainID, source.ChainID,
+		counterpartyConnection.ClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
 
-	counterparty.ConnectionOpenConfirm(source, counterpartyConnection, sourceConnection)
+	return nil
+}
+
+// CreateConnectionOpenAck initializes a connection on the source chain with the state OPEN
+// using the OpenAck handshake call.
+func (coord *Coordinator) CreateConnectionOpenAck(
+	source, counterparty *TestChain,
+	sourceConnection, counterpartyConnection TestConnection,
+) error {
+	// set OPEN connection on source using OpenAck
+	if err := source.ConnectionOpenAck(counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return err
+	}
 	coord.IncrementTime()
 
-	// update counterparty client on source connection
-	coord.UpdateClient(sourceID, counterpartyID, sourceConnection.ClientID, clientexported.Tendermint)
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty.ChainID, source.ChainID,
+		counterpartyConnection.ClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
 
-	return sourceConnection, counterpartyConnection
+	return nil
+}
+
+// CreateConnectionOpenConfirm initializes a connection on the source chain with the state OPEN
+// using the OpenConfirm handshake call.
+func (coord *Coordinator) CreateConnectionOpenConfirm(
+	source, counterparty *TestChain,
+	sourceConnection, counterpartyConnection TestConnection,
+) error {
+	if err := counterparty.ConnectionOpenConfirm(counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		source.ChainID, counterparty.ChainID,
+		sourceConnection.ClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CreateChannel constructs and executes channel handshake messages in order to create

@@ -1,17 +1,18 @@
 package multisig
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // PubKeyMultisigThreshold implements a K of N threshold multisig.
 type PubKeyMultisigThreshold struct {
-	K       uint32          `json:"threshold"`
+	K       uint            `json:"threshold"`
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 
-func (pk PubKeyMultisigThreshold) Threshold() uint32 {
+func (pk PubKeyMultisigThreshold) Threshold() uint {
 	return pk.K
 }
 
@@ -19,11 +20,11 @@ var _ MultisigPubKey = PubKeyMultisigThreshold{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
-func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) MultisigPubKey {
+func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) MultisigPubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
-	if len(pubkeys) < int(k) {
+	if len(pubkeys) < k {
 		panic("threshold k of n multisignature: len(pubkeys) < k")
 	}
 	for _, pubkey := range pubkeys {
@@ -31,7 +32,7 @@ func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) MultisigPubKe
 			panic("nil pubkey")
 		}
 	}
-	return PubKeyMultisigThreshold{k, pubkeys}
+	return PubKeyMultisigThreshold{uint(k), pubkeys}
 }
 
 // VerifyBytes should not be used with this PubKeyMultisigThreshold, instead VerifyMultisignature

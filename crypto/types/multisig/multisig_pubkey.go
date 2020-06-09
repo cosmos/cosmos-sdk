@@ -13,5 +13,5 @@ type MultisigPubKey interface {
 
 	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) bool
 	GetPubKeys() []crypto.PubKey
-	Threshold() uint32
+	Threshold() uint
 }

@@ -1,8 +1,9 @@
 package multisig
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"

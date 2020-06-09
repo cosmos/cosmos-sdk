@@ -20,7 +20,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, []byte{1, 2, 3, 4})
 	cases := []struct {
 		msg            []byte
-		k              uint32
+		k              int
 		pubkeys        []crypto.PubKey
 		signingIndices []int
 		// signatures should be the same size as signingIndices.
@@ -41,7 +41,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 		multisignature := NewMultisig(len(tc.pubkeys))
 		signBytesFn := func(mode signing.SignMode) ([]byte, error) { return tc.msg, nil }
 
-		for i := uint32(0); i < tc.k-1; i++ {
+		for i := 0; i < tc.k-1; i++ {
 			signingIndex := tc.signingIndices[i]
 			require.NoError(
 				t,

@@ -33,9 +33,10 @@ const (
 	ConnectionVersion = "1.0"
 	ChannelVersion    = "1.0"
 
-	ConnectionIDPrefix = "connectionID"
-	ChannelIDPrefix    = "channelID"
-	PortIDPrefix       = "portID"
+	ClientIDPrefix     = "clientFor"
+	ConnectionIDPrefix = "connectionid"
+	ChannelIDPrefix    = "channelid"
+	PortIDPrefix       = "portid"
 )
 
 var (
@@ -43,14 +44,14 @@ var (
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
-// header and the validators of the TestChain. It also contains a field called ClientID. This
-// is the clientID that *other* chains use to refer to this TestChain. For simplicity's sake
-// it is also the chainID on the TestChain Header. The SenderAccount is used for delivering
-// transactions through the application state.
+// header and the validators of the TestChain. It also contains a field called ChainID. This
+// is the clientID that *other* chains use to refer to this TestChain. The SenderAccount
+// is used for delivering transactions through the application state.
 type TestChain struct {
 	t *testing.T
 
 	App           *simapp.SimApp
+	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
 	CurrentHeader abci.Header       // header for current block height
 	Querier       sdk.Querier
@@ -62,20 +63,20 @@ type TestChain struct {
 	SenderAccount authtypes.AccountI
 
 	// IBC specific helpers
-	ClientID      string
-	Connections []string  // track connectionID's created for this chain
-	Channels    []Channel // track portID/channelID's created for this chain
+	ClientIDs   []string         // ClientID's used on this chain
+	Connections []TestConnection // track connectionID's created for this chain
+	Channels    []TestChannel    // track portID/channelID's created for this chain
 }
 
 // NewTestChain initializes a new TestChain instance with a single validator set using a
 // generated private key. It also creates a sender account to be used for delivering transactions.
 //
-// The first block height is committed to state in order to allow for client creations on counterparty
-// chains. The TestChain will return with a block height starting at 2.
+// The first block height is committed to state in order to allow for client creations on
+// counterparty chains. The TestChain will return with a block height starting at 2.
 //
-// Time management is handled by the IBCTestSuite in order to ensure synchrony between chains. Each
-// update of any chain increments the block header time by 5 seconds.
-func NewTestChain(t *testing.T, clientID string) *TestChain {
+// Time management is handled by the Coordinator in order to ensure synchrony between chains.
+// Each update of any chain increments the block header time for all chains by 5 seconds.
+func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// generate validator private/public key
 	privVal := tmtypes.NewMockPV()
 	pubKey, err := privVal.GetPubKey()
@@ -108,12 +109,12 @@ func NewTestChain(t *testing.T, clientID string) *TestChain {
 	}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	lastHeader := ibctmtypes.CreateTestHeader(clientID, 1, globalStartTime, valSet, signers)
+	lastHeader := ibctmtypes.CreateTestHeader(chainID, 1, globalStartTime, valSet, signers)
 
 	// create an account to send transactions from
 	return &TestChain{
 		t:             t,
-		ClientID:      clientID,
+		ChainID:       chainID,
 		App:           app,
 		LastHeader:    lastHeader,
 		CurrentHeader: header,
@@ -147,8 +148,8 @@ func (chain *TestChain) QueryProof(key []byte) (commitmenttypes.MerkleProof, uin
 	return proof, uint64(res.Height)
 }
 
-// nextBlock sets the last header to the current header and increments the current header to be
-// at the next block height. It does not update the time as that is handled by the IBCTestSuite.
+// NextBlock sets the last header to the current header and increments the current header to be
+// at the next block height. It does not update the time as that is handled by the Coordinator.
 //
 // CONTRACT: this function must only be called after app.Commit() occurs
 func (chain *TestChain) NextBlock() {
@@ -189,32 +190,53 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) {
 	chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
 }
 
-// NewConnection appends a new connectionID string in the format:
-// connectionID<index>
-func (chain *TestChain) NewConnection() string {
-	conn := ConnectionIDPrefix + string(len(chain.Connections))
+// NewClientID appends a new clientID string in the format:
+// ClientFor<counterparty-chain-id><index>
+func (chain *TestChain) NewClientID(counterpartyChainID string) string {
+	clientID := ClientIDPrefix + counterpartyChainID + string(len(chain.ClientIDs))
+
+	chain.ClientIDs = append(chain.ClientIDs, clientID)
+	return clientID
+}
+
+// NewConnection appends a new TestConnection which contains references to the connection id,
+// client id and counterparty client id. The connection id format:
+// connectionid<index>
+func (chain *TestChain) NewTestConnection(clientID, counterpartyClientID string) TestConnection {
+	connectionID := ConnectionIDPrefix + string(len(chain.Connections))
+	conn := TestConnection{
+		ID:                   connectionID,
+		ClientID:             clientID,
+		CounterpartyClientID: counterpartyClientID,
+	}
 
 	chain.Connections = append(chain.Connections, conn)
 	return conn
 }
 
-// NewChannel appends a new testing channel which contains references to the port and channel ID
-// used for channel creation and interaction.
-func (chain *TestChain) NewChannel() Channel {
+// NewTestChannel appends a new TestChannel which contains references to the port and channel ID
+// used for channel creation and interaction. The channel id and port id format:
+// channelid<index>
+// portid<index>
+func (chain *TestChain) NewTestChannel() TestChannel {
 	portID := PortIDPrefix + string(len(chain.Channels))
 	channelID := ChannelIDPrefix + string(len(chain.Channels))
-	channel := NewChannel(portID, channelID)
+	channel := TestChannel{
+		PortID:    portID,
+		ChannelID: channelID,
+	}
 
 	chain.Channels = append(chain.Channels, channel)
+
 	return channel
 }
 
-// CreateClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
+// CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
 // client will be created on the (target) chain.
-func (chain *TestChain) CreateClient(counterparty *TestChain) {
+func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) {
 	// construct MsgCreateClient using counterparty
 	msg := ibctmtypes.NewMsgCreateClient(
-		counterparty.ClientID, counterparty.LastHeader,
+		clientID, counterparty.LastHeader,
 		DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -222,11 +244,11 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) {
 	chain.SendMsg(msg)
 }
 
-// UpdateClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
+// UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
 // client will be updated on the (target) chain.
-func (chain *TestChain) UpdateClient(counterparty *TestChain) {
+func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) {
 	msg := ibctmtypes.NewMsgUpdateClient(
-		counterparty.ClientID, counterparty.LastHeader,
+		clientID, counterparty.LastHeader,
 		chain.SenderAccount.GetAddress(),
 	)
 
@@ -236,13 +258,13 @@ func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 // ConnectionOpenInit will construct and execute a MsgConnectionOpenInit.
 func (chain *TestChain) ConnectionOpenInit(
 	counterparty *TestChain,
-	connectionID, counterpartyConnectionID string,
+	connection, counterpartyConnection TestConnection,
 ) {
 	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
 
 	msg := connectiontypes.NewMsgConnectionOpenInit(
-		connectionID, chain.ClientID,
-		counterpartyConnectionID, counterparty.ClientID,
+		connection.ID, connection.ClientID,
+		counterpartyConnection.ID, connection.CounterpartyClientID,
 		prefix,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -252,20 +274,20 @@ func (chain *TestChain) ConnectionOpenInit(
 // ConnectionOpenTry will construct and execute a MsgConnectionOpenTry.
 func (chain *TestChain) ConnectionOpenTry(
 	counterparty *TestChain,
-	connectionID, counterpartyConnectionID string,
+	connection, counterpartyConnection TestConnection,
 ) {
 	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
 
-	connectionKey := host.KeyConnection(counterpartyConnectionID)
+	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
 	consensusHeight := uint64(counterparty.App.LastBlockHeight())
-	consensusKey := prefixedClientKey(chain.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := prefixedClientKey(connection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
-		connectionID, chain.ClientID,
-		counterpartyConnectionID, counterparty.ClientID,
+		connection.ID, connection.ClientID,
+		counterpartyConnection.ID, connection.CounterpartyClientID,
 		prefix, []string{ConnectionVersion},
 		proofInit, proofConsensus,
 		proofHeight, consensusHeight,
@@ -277,17 +299,17 @@ func (chain *TestChain) ConnectionOpenTry(
 // ConnectionOpenAck will construct and execute a MsgConnectionOpenAck.
 func (chain *TestChain) ConnectionOpenAck(
 	counterparty *TestChain,
-	connectionID, counterpartyConnectionID string,
+	connection, counterpartyConnection TestConnection,
 ) {
-	connectionKey := host.KeyConnection(counterpartyConnectionID)
+	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
 	consensusHeight := uint64(counterparty.App.LastBlockHeight())
-	consensusKey := prefixedClientKey(chain.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := prefixedClientKey(connection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
-		connectionID,
+		connection.ID,
 		proofTry, proofConsensus,
 		proofHeight, consensusHeight,
 		ConnectionVersion,
@@ -299,13 +321,13 @@ func (chain *TestChain) ConnectionOpenAck(
 // ConnectionOpenConfirm will construct and execute a MsgConnectionOpenConfirm.
 func (chain *TestChain) ConnectionOpenConfirm(
 	counterparty *TestChain,
-	connectionID, counterpartyConnectionID string,
+	connection, counterpartyConnection TestConnection,
 ) {
-	connectionKey := host.KeyConnection(counterpartyConnectionID)
+	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proof, height := counterparty.QueryProof(connectionKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenConfirm(
-		connectionID,
+		connection.ID,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -314,7 +336,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 
 // ChannelOpenInit will construct and execute a MsgChannelOpenInit.
 func (chain *TestChain) ChannelOpenInit(
-	ch, counterparty Channel,
+	ch, counterparty TestChannel,
 	order channeltypes.Order,
 	connectionID string,
 ) {
@@ -329,7 +351,7 @@ func (chain *TestChain) ChannelOpenInit(
 
 // ChannelOpenTry will construct and execute a MsgChannelOpenTry.
 func (chain *TestChain) ChannelOpenTry(
-	ch, counterparty Channel,
+	ch, counterparty TestChannel,
 	order channeltypes.Order,
 	connectionID string,
 ) {
@@ -348,7 +370,7 @@ func (chain *TestChain) ChannelOpenTry(
 
 // ChannelOpenAck will construct and execute a MsgChannelOpenAck.
 func (chain *TestChain) ChannelOpenAck(
-	ch, counterparty Channel,
+	ch, counterparty TestChannel,
 	connectionID string,
 ) {
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
@@ -364,7 +386,7 @@ func (chain *TestChain) ChannelOpenAck(
 
 // ChannelOpenConfirm will construct and execute a MsgChannelOpenConfirm.
 func (chain *TestChain) ChannelOpenConfirm(
-	ch, counterparty Channel,
+	ch, counterparty TestChannel,
 	connectionID string,
 ) {
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))

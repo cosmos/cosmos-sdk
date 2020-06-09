@@ -1,17 +1,19 @@
 package testing
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 var (
-	ClientIDPrefix  = "clientIDForChain"
+	ChainIDPrefix   = "testchain"
 	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	timeIncrement   = time.Second * 5
 )
@@ -19,15 +21,16 @@ var (
 // Coordinator is a testing struct which contains N TestChain's. It handles keeping all chains
 // in sync with regards to time.
 type Coordinator struct {
-	Chains []*TestChain
+	Chains map[string]*TestChain
 }
 
 // NewCoordinator initializes Coordinator with N TestChain's
-func NewCoordinator(t *testing.T, n uint64) *Coordinator {
-	chains := make([]*TestChain, n)
+func NewCoordinator(t *testing.T, n int) *Coordinator {
+	chains := make(map[string]*TestChain)
 
-	for i := range chains {
-		chains[i] = NewTestChain(t, ClientIDPrefix+string(i))
+	for i := 0; i < n; i++ {
+		chainID := ChainIDPrefix + string(i)
+		chains[chainID] = NewTestChain(t, chainID)
 	}
 	return &Coordinator{
 		Chains: chains,
@@ -50,38 +53,64 @@ func (coord *Coordinator) IncrementTime() {
 // CommitBlock commits a block on the provided indexes and then increments the global time.
 //
 // CONTRACT: the passed in list of indexes must not contain duplicates
-func (coord *Coordinator) CommitBlock(chains ...uint64) {
-	for _, index := range chains {
-		chain := coord.Chains[index]
+func (coord *Coordinator) CommitBlock(chains ...string) {
+	for _, chainID := range chains {
+		chain := coord.Chains[chainID]
 		chain.App.Commit()
-		nextBlock(chain)
+		chain.NextBlock()
 	}
 	coord.IncrementTime()
 }
 
 // CommitNBlocks commits n blocks to state and updates the block height by 1 for each commit.
-func (coord *Coordinator) CommitNBlocks(index, n uint64) {
-	chain := coord.Chains[index]
+func (coord *Coordinator) CommitNBlocks(chainID string, n uint64) {
+	chain := coord.Chains[chainID]
 
 	for i := uint64(0); i < n; i++ {
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 		chain.App.Commit()
-		nextBlock(chain)
+		chain.NextBlock()
 		coord.IncrementTime()
 	}
 }
 
-// CreateClient creates a counterparty client on the source chain.
-func (coord *Coordinator) CreateClient(source, counterparty uint64) {
-	coord.CommitBlock(source, counterparty)
-	coord.Chains[source].CreateClient(coord.Chains[counterparty])
+// CreateClient creates a counterparty client on the source chain and returns the clientID.
+func (coord *Coordinator) CreateClient(sourceID, counterpartyID string, clientType clientexported.ClientType) string {
+	coord.CommitBlock(sourceID, counterpartyID)
+
+	source := coord.Chains[sourceID]
+	counterparty := coord.Chains[counterpartyID]
+
+	clientID := source.NewClientID(counterparty.ChainID)
+
+	switch clientType {
+	case clientexported.Tendermint:
+		source.CreateTMClient(counterparty, clientID)
+
+	default:
+		panic(fmt.Sprintf("client type %s is not supported", clientType))
+	}
+
 	coord.IncrementTime()
+
+	return clientID
 }
 
 // UpdateClient updates a counterparty client on the source chain.
-func (coord *Coordinator) UpdateClient(source, counterparty uint64) {
-	coord.CommitBlock(source, counterparty)
-	coord.Chains[source].UpdateClient(coord.Chains[counterparty])
+func (coord *Coordinator) UpdateClient(sourceID, counterpartyID, clientID string, clientType clientexported.ClientType) {
+	coord.CommitBlock(sourceID, counterpartyID)
+
+	source := coord.Chains[sourceID]
+	counterparty := coord.Chains[counterpartyID]
+
+	switch clientType {
+	case clientexported.Tendermint:
+		source.UpdateTMClient(counterparty, clientID)
+
+	default:
+		panic(fmt.Sprintf("client type %s is not supported", clientType))
+	}
+
 	coord.IncrementTime()
 }
 
@@ -92,41 +121,55 @@ func (coord *Coordinator) UpdateClient(source, counterparty uint64) {
 // NOTE: The counterparty testing connection will be created even if it is not created in the
 // application state.
 func (coord *Coordinator) CreateConnection(
-	sourceIndex, counterpartyIndex uint64,
+	sourceID, counterpartyID,
+	clientID, counterpartyClientID string,
 	state connectiontypes.State,
-) (sourceConnection, counterpartyConnection string) {
-	source := coord.Chains[sourceIndex]
-	counterparty := coord.Chains[counterpartyIndex]
+) (sourceConnection, counterpartyConnection TestConnection) {
+	source := coord.Chains[sourceID]
+	counterparty := coord.Chains[counterpartyID]
 
 	if state == connectiontypes.UNINITIALIZED {
 		return
 	}
 
-	sourceConnection = source.NewConnection()
-	counterpartyConnection = counterparty.NewConnection()
+	sourceConnection = source.NewTestConnection(clientID, counterpartyClientID)
+	counterpartyConnection = counterparty.NewTestConnection(counterpartyClientID, clientID)
 
-	// Initialize connection on source
+	// initialize connection on source
 	source.ConnectionOpenInit(counterparty, sourceConnection, counterpartyConnection)
 	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ClientID, clientexported.Tendermint)
 
 	if state == connectiontypes.INIT {
 		return
 	}
 
-	// Initialize connection on counterparty
+	// initialize connection on counterparty
 	counterparty.ConnectionOpenTry(source, counterpartyConnection, sourceConnection)
 	coord.IncrementTime()
+
+	// update counterparty client on source connection
+	coord.UpdateClient(sourceID, counterpartyID, sourceConnection.ClientID, clientexported.Tendermint)
 
 	if state == connectiontypes.TRYOPEN {
 		return
 	}
 
-	// Open connection on both chains
+	// open connection on both chains
 	source.ConnectionOpenAck(counterparty, sourceConnection, counterpartyConnection)
 	coord.IncrementTime()
 
+	// update source client on counterparty connection
+	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ClientID, clientexported.Tendermint)
+
 	counterparty.ConnectionOpenConfirm(source, counterpartyConnection, sourceConnection)
 	coord.IncrementTime()
+
+	// update counterparty client on source connection
+	coord.UpdateClient(sourceID, counterpartyID, sourceConnection.ClientID, clientexported.Tendermint)
+
 	return sourceConnection, counterpartyConnection
 }
 
@@ -137,42 +180,55 @@ func (coord *Coordinator) CreateConnection(
 // NOTE: The counterparty testing channel will be created even if it is not created in the
 // application state.
 func (coord *Coordinator) CreateChannel(
-	sourceIndex, counterpartyIndex uint64,
-	connectionID, counterpartyConnectionID string,
+	sourceID, counterpartyID string,
+	connection, counterpartyConnection TestConnection,
 	order channeltypes.Order,
 	state channeltypes.State,
-) (sourceChannel, counterpartyChannel Channel) {
-	source := coord.Chains[sourceIndex]
-	counterparty := coord.Chains[counterpartyIndex]
+) (sourceChannel, counterpartyChannel TestChannel) {
+	source := coord.Chains[sourceID]
+	counterparty := coord.Chains[counterpartyID]
 
 	if state == channeltypes.UNINITIALIZED {
 		return
 	}
 
-	sourceChannel = source.NewChannel()
-	counterpartyChannel = counterparty.NewChannel()
+	sourceChannel = source.NewTestChannel()
+	counterpartyChannel = counterparty.NewTestChannel()
 
 	// Initialize channel on source
-	source.ChannelOpenInit(sourceChannel, counterpartyChannel, order, connectionID)
+	source.ChannelOpenInit(sourceChannel, counterpartyChannel, order, connection.ID)
 	coord.IncrementTime()
+
+	// update counterparty client on source
+	coord.UpdateClient(sourceID, counterpartyID, connection.ID, clientexported.Tendermint)
 
 	if state == channeltypes.INIT {
 		return
 	}
 
 	// Initialize channel on counterparty
-	counterparty.ChannelOpenTry(counterpartyChannel, sourceChannel, order, counterpartyConnectionID)
+	counterparty.ChannelOpenTry(counterpartyChannel, sourceChannel, order, counterpartyConnection.ID)
 	coord.IncrementTime()
+
+	// update source client on counterparty
+	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ID, clientexported.Tendermint)
 
 	if state == channeltypes.TRYOPEN {
 		return
 	}
 
 	// Open both channel ends
-	source.ChannelOpenAck(sourceChannel, counterpartyChannel, connectionID)
+	source.ChannelOpenAck(sourceChannel, counterpartyChannel, connection.ID)
 	coord.IncrementTime()
 
-	counterparty.ChannelOpenConfirm(counterpartyChannel, sourceChannel, counterpartyConnectionID)
+	// update counterparty client on source
+	coord.UpdateClient(sourceID, counterpartyID, connection.ID, clientexported.Tendermint)
+
+	counterparty.ChannelOpenConfirm(counterpartyChannel, sourceChannel, counterpartyConnection.ID)
 	coord.IncrementTime()
+
+	// update source client on counterparty
+	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ID, clientexported.Tendermint)
+
 	return sourceChannel, counterpartyChannel
 }

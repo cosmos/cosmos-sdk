@@ -195,7 +195,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 
 func NewFundCommunityPoolCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "community-pool-spend [proposal-file]",
+		Use:   "fund-community-pool [amount]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a community pool spend proposal",
 		Long: strings.TrimSpace(

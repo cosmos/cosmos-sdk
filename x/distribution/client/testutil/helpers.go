@@ -32,7 +32,7 @@ func TxWithdrawAllRewards(f *cli.Fixtures, from string, flags ...string) (bool, 
 
 // TxFundCommunityPool Funds the community pool with the specified amount
 func TxFundCommunityPool(f *cli.Fixtures, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx distribution community-pool-spend %v %v --keyring-backend=test --from=%s", f.SimcliBinary, amount, f.Flags(), from)
+	cmd := fmt.Sprintf("%s tx distribution fund-community-pool %v %v --keyring-backend=test --from=%s", f.SimcliBinary, amount, f.Flags(), from)
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 

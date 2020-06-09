@@ -359,6 +359,7 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return nil
 }
 
+// StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2
 func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.SignatureV2, error) {
 	pk := sig.GetPubKey()
 	data, err := pubKeySigToSigData(cdc, pk, sig.Signature)
@@ -411,6 +412,8 @@ func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signin
 	}
 }
 
+// MultiSignatureDataToAminoMultisignature converts a MultiSignatureData to an AminoMultisignature.
+// Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
 func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.MultiSignatureData) (multisig.AminoMultisignature, error) {
 	n := len(mSig.Signatures)
 	sigs := make([][]byte, n)
@@ -429,6 +432,8 @@ func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.Mul
 	}, nil
 }
 
+// SignatureDataToAminoSignature converts a SignatureData to amino-encoded signature bytes.
+// Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
 func SignatureDataToAminoSignature(cdc *codec.Codec, data signing.SignatureData) ([]byte, error) {
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:

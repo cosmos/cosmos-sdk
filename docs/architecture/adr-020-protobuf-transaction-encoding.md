@@ -94,7 +94,7 @@ message AuthInfo {
     // and order of elements must match the required signers from TxBody's messages.
     // The first element is the primary signer and the one which pays the fee.
     repeated SignerInfo signer_infos = 1;
-    // The fee can be calculated by looking into the body and the signer infos.
+    // The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation.
     Fee fee = 2;
 }
 

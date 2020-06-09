@@ -14,7 +14,8 @@
     - [Development Procedure](#development-procedure)
     - [Pull Merge Procedure](#pull-merge-procedure)
     - [Release Procedure](#release-procedure)
-    - [Point Release Procedure](#point-release-procedure)
+    - [Stable Release Update Procedure](#stable-release-update-procedure)
+    - [Stable Release Updates](#stable-release-updates)
   - [Code Owner Membership](#code-owner-membership)
 
 Thank you for considering making contributions to Cosmos-SDK and related
@@ -228,7 +229,7 @@ only pull requests targeted directly against master.
 - Tag the release (use `git tag -a`) and create a release in Github
 - Delete the `RC` branches
 
-### Point Release Procedure
+### Stable Release Update Procedure
 
 At the moment, only a single major release will be supported, so all point releases will be based
 off of that release.
@@ -263,6 +264,55 @@ Finally, when a point release is ready to be made:
 
 Note, although we aim to support only a single release at a time, the process stated above could be
 used for multiple previous versions.
+
+## Stable Release Updates (SRU)
+
+Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
+and must follow the *Stable Release Update* (or SRU) procedure.
+
+### Rationale
+
+Unlike in-development `master` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
+and by a significantly different demographic of users. During development, changes in the `master` branch 
+affect SDK users, application developers, early adopters, and other advanced users that elect to use
+unstable experimental software at their own risk.
+
+Conversely, stable release users expect a high degree of stability. They build their applications on it, and the
+problems they experience with it could be potentially highly disruptive to their projects and businesses.
+
+Stable release updates are recommended to the vast majority of developers, and so it is crucial to treat them
+with great caution. Hence, when updates are proposed, they must be accompanied by a strong rationale and present
+a low risk of regressions, i.e. even one-line changes could cause unexpected regressions due to side effects or
+poorly tested code. We never assume that any change, no matter how little or non-intrusive, is completely exempt
+of regression risks.
+
+Therefore, the requirements for stable changesets are different than those that are candidate to be merged in
+the `master` branch. When preparing future major releases, our aim to design the most elegant, user-friendly and
+maintainable SDK possible often entails fundamental changes to the SDK's architecture design, rearranging and/or
+renaming packages, reducing code duplication so that we maintain common functions and data structures in one
+place rather than leaving them scattered all over the code base. However, once a release is published, the
+priority is to minimise the risk caused by changes not strictly required to fix qualifying bugs; this tends to
+be correlated with minimising the size of such changes. As such, the same bug may need to be fixed in different
+ways in stable releases and `master` branch.
+
+### What qualifies as SRU
+
+* **High-impact bugs**
+  * Bugs that may directly cause a security vulnerability.
+  * *Severe regressions* from a Cosmos-SDK's previous release. This includes all sort of issues
+    that may cause the core packages or the `x/` modules unusable.
+  * Bugs that may cause **loss of user's data**.
+* Other safe cases:
+  * Bugs which don't fit in the aforementoned categories for which an obvious safe patch is known.
+  * Relatively small yet strictly non-breaking changes that introduce forward-compatible client
+    features to smoothen the migration to successive releases.
+
+### What does not qualify as SRU
+
+* State machine changes.
+* New features that introduces API breakages (e.g. public functions removal/renaming).
+* Cosmetic fixes, such as formatting or linter warning fixes.
+* Documentation fixes.
 
 ## Code Owner Membership
 

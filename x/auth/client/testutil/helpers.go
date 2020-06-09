@@ -44,3 +44,11 @@ func TxMultisign(f *cli.Fixtures, fileName, name string, signaturesFiles []strin
 	)
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags))
 }
+
+func TxSignBatch(f *cli.Fixtures, signer, fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx sign-batch %v --keyring-backend=test --from=%s %v", f.SimcliBinary, f.Flags(), signer, fileName)
+
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// DONTCOVER

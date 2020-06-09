@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -30,13 +29,18 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ChannelVersion = "1.0"
+	ConnectionVersion = "1.0"
+	ChannelVersion    = "1.0"
+
+	ConnectionIDPrefix = "connectionID"
+	ChannelIDPrefix    = "channelID"
+	PortIDPrefix       = "portID"
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
 // header and the validators of the TestChain. It also contains a field called ClientID. This
 // is the clientID that *other* chains use to refer to this TestChain. For simplicity's sake
-// it is also the chainID on the TestChain Header. The senderAccount is used for delivering
+// it is also the chainID on the TestChain Header. The SenderAccount is used for delivering
 // transactions through the application state.
 type TestChain struct {
 	t *testing.T
@@ -51,7 +55,11 @@ type TestChain struct {
 	Signers []tmtypes.PrivValidator
 
 	senderPrivKey crypto.PrivKey
-	senderAccount authtypes.AccountI
+	SenderAccount authtypes.AccountI
+
+	// IBC specific helpers
+	Channels    []Channel // track portID/channelID's created for this chain
+	Connections []string  // track connectionID's created for this chain
 }
 
 // NewTestChain initializes a new TestChain instance with a single validator set using a
@@ -81,7 +89,7 @@ func NewTestChain(t *testing.T, clientID string) *TestChain {
 		},
 	)
 
-	// generate and set senderAccount
+	// generate and set SenderAccount
 	senderPrivKey := secp256k1.GenPrivKey()
 	simapp.AddTestAddrsFromPubKeys(app, ctx, []crypto.PubKey{senderPrivKey.PubKey()}, sdk.NewInt(10000000000))
 	acc := app.AccountKeeper.GetAccount(ctx, sdk.AccAddress(senderPrivKey.PubKey().Address()))
@@ -108,13 +116,30 @@ func NewTestChain(t *testing.T, clientID string) *TestChain {
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
-		senderAccount: acc,
+		SenderAccount: acc,
 	}
 }
 
 // GetContext returns the current context for the application.
 func (chain *TestChain) GetContext() sdk.Context {
 	return chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
+}
+
+// QueryProof performs an abci query with the given key and returns the merkle proof for the query
+// and the height at which the query was performed.
+func (chain *TestChain) QueryProof(key []byte) (commitmenttypes.MerkleProof, uint64) {
+	res := chain.App.Query(abci.RequestQuery{
+		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
+		Height: chain.App.LastBlockHeight(),
+		Data:   key,
+		Prove:  true,
+	})
+
+	proof := commitmenttypes.MerkleProof{
+		Proof: res.Proof,
+	}
+
+	return proof, uint64(res.Height)
 }
 
 // nextBlock sets the last header to the current header and increments the current header to be
@@ -146,8 +171,8 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) {
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		[]sdk.Msg{msg},
-		[]uint64{chain.senderAccount.GetAccountNumber()},
-		[]uint64{chain.senderAccount.GetSequence()},
+		[]uint64{chain.SenderAccount.GetAccountNumber()},
+		[]uint64{chain.SenderAccount.GetSequence()},
 		true, true, chain.senderPrivKey,
 	)
 	require.NoError(chain.t, err)
@@ -156,7 +181,27 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) {
 	nextBlock(chain)
 
 	// increment sequence for successful transaction execution
-	chain.senderAccount.SetSequence(chain.senderAccount.GetSequence() + 1)
+	chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+}
+
+// NewConnection appends a new connectionID string in the format:
+// connectionID<index>
+func (chain *TestChain) NewConnection() string {
+	conn := ConnectionIDPrefix + string(len(chain.Connections))
+
+	chain.Connections = append(chain.Connections, conn)
+	return conn
+}
+
+// NewChannel appends a new testing channel which contains references to the port and channel ID
+// used for channel creation and interaction.
+func (chain *TestChain) NewChannel() Channel {
+	portID := PortIDPrefix + string(len(chain.Channels))
+	channelID := ChannelIDPrefix + string(len(chain.Channels))
+	channel := NewChannel(portID, channelID)
+
+	chain.Channels = append(chain.Channels, channel)
+	return channel
 }
 
 // CreateClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
@@ -166,7 +211,7 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) {
 	msg := ibctmtypes.NewMsgCreateClient(
 		counterparty.ClientID, counterparty.LastHeader,
 		lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-		chain.senderAccount.GetAddress(),
+		chain.SenderAccount.GetAddress(),
 	)
 
 	chain.SendMsg(msg)
@@ -177,86 +222,152 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) {
 func (chain *TestChain) UpdateClient(counterparty *TestChain) {
 	msg := ibctmtypes.NewMsgUpdateClient(
 		counterparty.ClientID, counterparty.LastHeader,
-		chain.senderAccount.GetAddress(),
+		chain.SenderAccount.GetAddress(),
 	)
 
 	chain.SendMsg(msg)
 }
 
-// TODO: update with msg passing
-// CreateConnection creates a connection to the counterparty with the provided state.
-func (chain *TestChain) CreateConnection(
-	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state connectiontypes.State,
-) connectiontypes.ConnectionEnd {
+// ConnectionOpenInit will construct and execute a MsgConnectionOpenInit.
+func (chain *TestChain) ConnectionOpenInit(
+	counterparty *TestChain,
+	connectionID, counterpartyConnectionID string,
+) {
+	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
 
-	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
-
-	counterparty := connectiontypes.NewCounterparty(
-		counterpartyClientID, counterpartyConnID,
-		commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
+	msg := connectiontypes.NewMsgConnectionOpenInit(
+		connectionID, chain.ClientID,
+		counterpartyConnectionID, counterparty.ClientID,
+		prefix,
+		chain.SenderAccount.GetAddress(),
 	)
-
-	connection := connectiontypes.ConnectionEnd{
-		State:        state,
-		ID:           connID,
-		ClientID:     clientID,
-		Counterparty: counterparty,
-		Versions:     connectiontypes.GetCompatibleVersions(),
-	}
-
-	ctx := chain.GetContext()
-	chain.App.IBCKeeper.ConnectionKeeper.SetConnection(ctx, connID, connection)
-	return connection
+	chain.SendMsg(msg)
 }
 
-// TODO: update with msg passing
-// CreateChannel constructs a channel with the given counterparty and connectionID.
-func (chain *TestChain) CreateChannel(
-	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state channeltypes.State, order channeltypes.Order, connectionID string,
-) channeltypes.Channel {
+// ConnectionOpenTry will construct and execute a MsgConnectionOpenTry.
+func (chain *TestChain) ConnectionOpenTry(
+	counterparty *TestChain,
+	connectionID, counterpartyConnectionID string,
+) {
+	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
 
-	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	connectionKey := host.KeyConnection(counterpartyConnectionID)
+	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// sets channel with given state
-	channel := channeltypes.NewChannel(state, order, counterparty,
-		[]string{connectionID}, ChannelVersion,
+	consensusHeight := uint64(counterparty.App.LastBlockHeight())
+	consensusKey := prefixedClientKey(chain.ClientID, host.KeyConsensusState(consensusHeight))
+	proofConsensus, _ := counterparty.QueryProof(consensusKey)
+
+	msg := connectiontypes.NewMsgConnectionOpenTry(
+		connectionID, chain.ClientID,
+		counterpartyConnectionID, counterparty.ClientID,
+		prefix, []string{ConnectionVersion},
+		proofInit, proofConsensus,
+		proofHeight, consensusHeight,
+		chain.SenderAccount.GetAddress(),
 	)
-
-	ctx := chain.GetContext()
-	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
-	chain.NewCapability(portID, channelID)
-	return channel
+	chain.SendMsg(msg)
 }
 
-// NewCapability creates a new capability for the provided port and channel ID
-// if the capability does not already exist.
-func (chain *TestChain) NewCapability(portID, channelID string) (*capabilitytypes.Capability, error) {
-	ctx := chain.GetContext()
+// ConnectionOpenAck will construct and execute a MsgConnectionOpenAck.
+func (chain *TestChain) ConnectionOpenAck(
+	counterparty *TestChain,
+	connectionID, counterpartyConnectionID string,
+) {
+	connectionKey := host.KeyConnection(counterpartyConnectionID)
+	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
-	capName := host.ChannelCapabilityPath(portID, channelID)
-	cap, ok := chain.App.ScopedIBCKeeper.GetCapability(ctx, capName)
-	if !ok {
-		return chain.App.ScopedIBCKeeper.NewCapability(ctx, capName)
-	}
+	consensusHeight := uint64(counterparty.App.LastBlockHeight())
+	consensusKey := prefixedClientKey(chain.ClientID, host.KeyConsensusState(consensusHeight))
+	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
-	return cap, nil
+	msg := connectiontypes.NewMsgConnectionOpenAck(
+		connectionID,
+		proofTry, proofConsensus,
+		proofHeight, consensusHeight,
+		ConnectionVersion,
+		chain.SenderAccount.GetAddress(),
+	)
+	chain.SendMsg(msg)
 }
 
-// QueryProof performs an abci query with the given key and returns the merkle proof for the query
-// and the height at which the query was performed.
-func (chain *TestChain) QueryProof(key []byte) (commitmenttypes.MerkleProof, uint64) {
-	res := chain.App.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
-		Height: chain.App.LastBlockHeight(),
-		Data:   key,
-		Prove:  true,
-	})
+// ConnectionOpenConfirm will construct and execute a MsgConnectionOpenConfirm.
+func (chain *TestChain) ConnectionOpenConfirm(
+	counterparty *TestChain,
+	connectionID, counterpartyConnectionID string,
+) {
+	connectionKey := host.KeyConnection(counterpartyConnectionID)
+	proof, height := counterparty.QueryProof(connectionKey)
 
-	proof := commitmenttypes.MerkleProof{
-		Proof: res.Proof,
-	}
+	msg := connectiontypes.NewMsgConnectionOpenConfirm(
+		connectionID,
+		proof, height,
+		chain.SenderAccount.GetAddress(),
+	)
+	chain.SendMsg(msg)
+}
 
-	return proof, uint64(res.Height)
+// ChannelOpenInit will construct and execute a MsgChannelOpenInit.
+func (chain *TestChain) ChannelOpenInit(
+	ch, counterparty Channel,
+	order channeltypes.Order,
+	connectionID string,
+) {
+	msg := channeltypes.NewMsgChannelOpenInit(
+		ch.GetPortID(), ch.GetChannelID(),
+		ChannelVersion, order, []string{connectionID},
+		counterparty.GetPortID(), counterparty.GetChannelID(),
+		chain.SenderAccount.GetAddress(),
+	)
+	chain.SendMsg(msg)
+}
+
+// ChannelOpenTry will construct and execute a MsgChannelOpenTry.
+func (chain *TestChain) ChannelOpenTry(
+	ch, counterparty Channel,
+	order channeltypes.Order,
+	connectionID string,
+) {
+	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
+
+	msg := channeltypes.NewMsgChannelOpenTry(
+		ch.GetPortID(), ch.GetChannelID(),
+		ChannelVersion, order, []string{connectionID},
+		counterparty.GetPortID(), counterparty.GetChannelID(),
+		ChannelVersion,
+		proof, height,
+		chain.SenderAccount.GetAddress(),
+	)
+	chain.SendMsg(msg)
+}
+
+// ChannelOpenAck will construct and execute a MsgChannelOpenAck.
+func (chain *TestChain) ChannelOpenAck(
+	ch, counterparty Channel,
+	connectionID string,
+) {
+	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
+
+	msg := channeltypes.NewMsgChannelOpenAck(
+		ch.GetPortID(), ch.GetChannelID(),
+		ChannelVersion,
+		proof, height,
+		chain.SenderAccount.GetAddress(),
+	)
+	chain.SendMsg(msg)
+}
+
+// ChannelOpenConfirm will construct and execute a MsgChannelOpenConfirm.
+func (chain *TestChain) ChannelOpenConfirm(
+	ch, counterparty Channel,
+	connectionID string,
+) {
+	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
+
+	msg := channeltypes.NewMsgChannelOpenConfirm(
+		ch.GetPortID(), ch.GetChannelID(),
+		proof, height,
+		chain.SenderAccount.GetAddress(),
+	)
+	chain.SendMsg(msg)
 }

@@ -67,9 +67,9 @@ message Tx {
 // `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
 // becomes the "txhash", commonly used as the transaction ID.
 message TxRaw {
-    // A protobuf serialization of a TxBody that matches representation in SignDoc.
+    // A protobuf serialization of a TxBody that matches the representation in SignDoc.
     bytes body = 1;
-    // A protobuf serialization of a AuthInfo that matches representation in SignDoc.
+    // A protobuf serialization of an AuthInfo that matches the representation in SignDoc.
     bytes auth_info = 2;
     // A list of signatures that matches the length and order of AuthInfo's signer_infos to
     // allow connecting signature meta information like public key and signing mode by position.
@@ -182,9 +182,9 @@ Signatures are structured using the `SignDoc` below which reuses the serializati
 ```proto
 // types/types.proto
 message SignDoc {
-    // A protobuf serialization of a TxBody that matches representation in TxRaw.
+    // A protobuf serialization of a TxBody that matches the representation in TxRaw.
     bytes body = 1;
-    // A protobuf serialization of a AuthInfo that matches representation in TxRaw.
+    // A protobuf serialization of an AuthInfo that matches the representation in TxRaw.
     bytes auth_info = 2;
     string chain_id = 3;
     uint64 account_number = 4;
@@ -196,11 +196,11 @@ message SignDoc {
 
 In order to sign in the default mode, clients take the following steps:
 
-1. Serialize `TxBody` and `AuthInfo` using any valid protobuf serialization
+1. Serialize `TxBody` and `AuthInfo` using any valid protobuf implementation.
 2. Create a `SignDoc` and encode it. (The only requirement of the underlying
    protobuf implementation is that fields are serialized in order).
-3. Sign the encoded `SignDoc` bytes
-4. Build a `TxRaw` and serialize it for broadcasting
+3. Sign the encoded `SignDoc` bytes.
+4. Build a `TxRaw` and serialize it for broadcasting.
 
 Signature verification is based on comparing the raw `TxBody` and `AuthInfo`
 bytes encoded in `TxRaw` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
@@ -209,8 +209,8 @@ some forms of upgradeability (to be addressed later in this document).
 
 Signature verifiers do:
 
-1. Pull out `body` and `auth_info` from a `TxRaw` and deserialize them
-3. Create a list of required signer addresses from the messages
+1. Deserialize a `TxRaw` and pull out `body` and `auth_info`.
+2. Create a list of required signer addresses from the messages.
 3. For each required signer:
    - Pull account number and sequence from the state.
    - Obtain the public key either from state or `AuthInfo`'s `signer_infos`.

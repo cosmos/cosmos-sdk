@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -21,6 +22,8 @@ var (
 // Coordinator is a testing struct which contains N TestChain's. It handles keeping all chains
 // in sync with regards to time.
 type Coordinator struct {
+	t *testing.T
+
 	Chains map[string]*TestChain
 }
 
@@ -33,6 +36,7 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 		chains[chainID] = NewTestChain(t, chainID)
 	}
 	return &Coordinator{
+		t:      t,
 		Chains: chains,
 	}
 }
@@ -50,12 +54,20 @@ func (coord *Coordinator) IncrementTime() {
 	}
 }
 
+// GetChain returns the TestChain using the given chainID and returns an error if it does
+// not exist.
+func (coord *Coordinator) GetChain(chainID string) *TestChain {
+	chain, found := coord.Chains[chainID]
+	require.True(coord.t, found, fmt.Sprintf("%s chain does not exist", chainID))
+	return chain
+}
+
 // CommitBlock commits a block on the provided indexes and then increments the global time.
 //
 // CONTRACT: the passed in list of indexes must not contain duplicates
 func (coord *Coordinator) CommitBlock(chains ...string) {
 	for _, chainID := range chains {
-		chain := coord.Chains[chainID]
+		chain := coord.GetChain(chainID)
 		chain.App.Commit()
 		chain.NextBlock()
 	}
@@ -64,7 +76,7 @@ func (coord *Coordinator) CommitBlock(chains ...string) {
 
 // CommitNBlocks commits n blocks to state and updates the block height by 1 for each commit.
 func (coord *Coordinator) CommitNBlocks(chainID string, n uint64) {
-	chain := coord.Chains[chainID]
+	chain := coord.GetChain(chainID)
 
 	for i := uint64(0); i < n; i++ {
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
@@ -81,8 +93,8 @@ func (coord *Coordinator) CreateClient(
 ) (clientID string, err error) {
 	coord.CommitBlock(sourceID, counterpartyID)
 
-	source := coord.Chains[sourceID]
-	counterparty := coord.Chains[counterpartyID]
+	source := coord.GetChain(sourceID)
+	counterparty := coord.GetChain(counterpartyID)
 
 	clientID = source.NewClientID(counterparty.ChainID)
 
@@ -111,8 +123,8 @@ func (coord *Coordinator) UpdateClient(
 ) (err error) {
 	coord.CommitBlock(sourceID, counterpartyID)
 
-	source := coord.Chains[sourceID]
-	counterparty := coord.Chains[counterpartyID]
+	source := coord.GetChain(sourceID)
+	counterparty := coord.GetChain(counterpartyID)
 
 	switch clientType {
 	case clientexported.Tendermint:
@@ -143,8 +155,8 @@ func (coord *Coordinator) CreateConnection(
 	clientID, counterpartyClientID string,
 	state connectiontypes.State,
 ) (TestConnection, TestConnection, error) {
-	source := coord.Chains[sourceID]
-	counterparty := coord.Chains[counterpartyID]
+	source := coord.GetChain(sourceID)
+	counterparty := coord.GetChain(counterpartyID)
 
 	sourceConnection := source.NewTestConnection(clientID, counterpartyClientID)
 	counterpartyConnection := counterparty.NewTestConnection(counterpartyClientID, clientID)
@@ -271,8 +283,8 @@ func (coord *Coordinator) CreateChannel(
 	order channeltypes.Order,
 	state channeltypes.State,
 ) (TestChannel, TestChannel, error) {
-	source := coord.Chains[sourceID]
-	counterparty := coord.Chains[counterpartyID]
+	source := coord.GetChain(sourceID)
+	counterparty := coord.GetChain(counterpartyID)
 
 	sourceChannel := source.NewTestChannel()
 	counterpartyChannel := counterparty.NewTestChannel()

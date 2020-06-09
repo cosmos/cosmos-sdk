@@ -146,7 +146,7 @@ func (chain *TestChain) QueryProof(key []byte) (commitmenttypes.MerkleProof, uin
 // at the next block height. It does not update the time as that is handled by the IBCTestSuite.
 //
 // CONTRACT: this function must only be called after app.Commit() occurs
-func nextBlock(chain *TestChain) {
+func (chain *TestChain) NextBlock() {
 	// set the last header to the current header
 	chain.LastHeader = ibctmtypes.CreateTestHeader(
 		chain.CurrentHeader.ChainID,
@@ -178,7 +178,7 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) {
 	require.NoError(chain.t, err)
 
 	// SignCheckDeliver calls app.Commit()
-	nextBlock(chain)
+	chain.NextBlock()
 
 	// increment sequence for successful transaction execution
 	chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)

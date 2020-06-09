@@ -12,14 +12,14 @@ import (
 	"github.com/tendermint/tendermint/crypto/sr25519"
 )
 
-// StdPublicKeyCodec implements the standard PublicKeyCodec for the SDK which
+// DefaultPublicKeyCodec implements the standard PublicKeyCodec for the SDK which
 // supports a standard set of public key types
-type StdPublicKeyCodec struct{}
+type DefaultPublicKeyCodec struct{}
 
-var _ types.PublicKeyCodec = StdPublicKeyCodec{}
+var _ types.PublicKeyCodec = DefaultPublicKeyCodec{}
 
 // Decode implements the PublicKeyCodec.Decode method
-func (cdc StdPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error) {
+func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error) {
 	switch key := key.Sum.(type) {
 	case *types.PublicKey_Secp256K1:
 		n := len(key.Secp256K1)
@@ -62,7 +62,7 @@ func (cdc StdPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error)
 }
 
 // Encode implements the PublicKeyCodec.Encode method
-func (cdc StdPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
+func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
 	switch key := key.(type) {
 	case secp256k1.PubKeySecp256k1:
 		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key[:]}}, nil

@@ -15,7 +15,7 @@ import (
 )
 
 func roundTripTest(t *testing.T, pubKey crypto.PubKey) {
-	cdc := std.StdPublicKeyCodec{}
+	cdc := std.DefaultPublicKeyCodec{}
 
 	pubKeyEnc, err := cdc.Encode(pubKey)
 	require.NoError(t, err)
@@ -24,7 +24,7 @@ func roundTripTest(t *testing.T, pubKey crypto.PubKey) {
 	require.Equal(t, pubKey, pubKeyDec)
 }
 
-func TestStdPublicKeyCodec(t *testing.T) {
+func TestDefaultPublicKeyCodec(t *testing.T) {
 	pubKeySecp256k1 := secp256k1.GenPrivKey().PubKey()
 	roundTripTest(t, pubKeySecp256k1)
 

@@ -1,8 +1,6 @@
 package client
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -19,7 +17,6 @@ type (
 		TxDecoder() sdk.TxDecoder
 		TxJSONEncoder() sdk.TxEncoder
 		TxJSONDecoder() sdk.TxDecoder
-		SignModeHandler() types.SignModeHandler
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction
@@ -30,14 +27,9 @@ type (
 		GetTx() types.SigTx
 
 		SetMsgs(msgs ...sdk.Msg) error
-		SetSignatures(signatures ...SignatureBuilder) error
+		SetSignatures(signatures ...types.SignatureV2) error
 		SetMemo(memo string)
 		SetFee(amount sdk.Coins)
 		SetGasLimit(limit uint64)
-	}
-
-	SignatureBuilder struct {
-		PubKey crypto.PubKey
-		Data   types.SignatureData
 	}
 )

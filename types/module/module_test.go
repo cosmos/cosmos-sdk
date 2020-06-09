@@ -146,8 +146,8 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	mockAppModule2.EXPECT().Route().Times(2).Return("route2")
 	mockAppModule1.EXPECT().NewHandler().Times(1).Return(handler1)
 	mockAppModule2.EXPECT().NewHandler().Times(1).Return(handler2)
-	router.EXPECT().AddRoute(gomock.Eq("route1"), gomock.Eq(handler1)).Times(1)
-	router.EXPECT().AddRoute(gomock.Eq("route2"), gomock.Eq(handler2)).Times(1)
+	router.EXPECT().AddRoute(gomock.Eq(sdk.NewRoute("route1", handler1))).Times(1)
+	router.EXPECT().AddRoute(gomock.Eq(sdk.NewRoute("route2", handler2))).Times(1)
 
 	queryRouter := mocks.NewMockQueryRouter(mockCtrl)
 	mockAppModule1.EXPECT().QuerierRoute().Times(2).Return("querierRoute1")

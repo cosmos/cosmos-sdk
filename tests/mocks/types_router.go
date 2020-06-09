@@ -34,17 +34,17 @@ func (m *MockRouter) EXPECT() *MockRouterMockRecorder {
 }
 
 // AddRoute mocks base method
-func (m *MockRouter) AddRoute(r string, h types.Handler) types.Router {
+func (m *MockRouter) AddRoute(r types.Route) types.Router {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddRoute", r, h)
+	ret := m.ctrl.Call(m, "AddRoute", r)
 	ret0, _ := ret[0].(types.Router)
 	return ret0
 }
 
 // AddRoute indicates an expected call of AddRoute
-func (mr *MockRouterMockRecorder) AddRoute(r, h interface{}) *gomock.Call {
+func (mr *MockRouterMockRecorder) AddRoute(r interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRoute", reflect.TypeOf((*MockRouter)(nil).AddRoute), r, h)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRoute", reflect.TypeOf((*MockRouter)(nil).AddRoute), r)
 }
 
 // Route mocks base method
@@ -59,6 +59,57 @@ func (m *MockRouter) Route(ctx types.Context, path string) types.Handler {
 func (mr *MockRouterMockRecorder) Route(ctx, path interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Route", reflect.TypeOf((*MockRouter)(nil).Route), ctx, path)
+}
+
+// MockRoute is a mock of Route interface
+type MockRoute struct {
+	ctrl     *gomock.Controller
+	recorder *MockRouteMockRecorder
+}
+
+// MockRouteMockRecorder is the mock recorder for MockRoute
+type MockRouteMockRecorder struct {
+	mock *MockRoute
+}
+
+// NewMockRoute creates a new mock instance
+func NewMockRoute(ctrl *gomock.Controller) *MockRoute {
+	mock := &MockRoute{ctrl: ctrl}
+	mock.recorder = &MockRouteMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockRoute) EXPECT() *MockRouteMockRecorder {
+	return m.recorder
+}
+
+// Route mocks base method
+func (m *MockRoute) Route() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Route")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Route indicates an expected call of Route
+func (mr *MockRouteMockRecorder) Route() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Route", reflect.TypeOf((*MockRoute)(nil).Route))
+}
+
+// Handler mocks base method
+func (m *MockRoute) Handler() types.Handler {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Handler")
+	ret0, _ := ret[0].(types.Handler)
+	return ret0
+}
+
+// Handler indicates an expected call of Handler
+func (mr *MockRouteMockRecorder) Handler() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Handler", reflect.TypeOf((*MockRoute)(nil).Handler))
 }
 
 // MockQueryRouter is a mock of QueryRouter interface

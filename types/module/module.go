@@ -256,7 +256,8 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
 	for _, module := range m.Modules {
 		if module.Route() != "" {
-			router.AddRoute(module.Route(), module.NewHandler())
+			r := sdk.NewRoute(module.Route(), module.NewHandler())
+			router.AddRoute(r)
 		}
 		if module.QuerierRoute() != "" {
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())

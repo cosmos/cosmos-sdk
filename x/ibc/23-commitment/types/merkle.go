@@ -178,7 +178,7 @@ func (proof MerkleProof) BatchVerifyMembership(specs []string, root exported.Roo
 		}
 	}
 
-	// Verify each item seperately against same proof
+	// Verify each item separately against same proof
 	runtime := rootmulti.DefaultProofRuntime()
 	for path, value := range items {
 		if err := runtime.VerifyValue(proof.Proof, root.GetHash(), path, value); err != nil {
@@ -204,7 +204,7 @@ func (proof MerkleProof) BatchVerifyNonMembership(specs []string, root exported.
 		}
 	}
 
-	// Verify each item seperately against same proof
+	// Verify each item separately against same proof
 	runtime := rootmulti.DefaultProofRuntime()
 	for _, path := range items {
 		if err := runtime.VerifyAbsence(proof.Proof, root.GetHash(), path); err != nil {

@@ -118,8 +118,13 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			}
 		}
 
-		newStdSig := types.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()} //nolint:staticcheck
-		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo())           //nolint:staticcheck
+		sigBz, err := types.SignatureDataToAminoSignature(cdc, multisigSig)
+		if err != nil {
+			return err
+		}
+
+		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                        //nolint:staticcheck
+		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo()) //nolint:staticcheck
 
 		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte

@@ -133,6 +133,12 @@ func (proof MerkleProof) VerifyMembership(specs []string, root exported.Root, pa
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
 	}
 
+	if len(specs) != len(proof.Proof.Ops) {
+		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+			"length of specs: %d not equal to length of proof: %d",
+			len(specs), len(proof.Proof.Ops))
+	}
+
 	for i, op := range proof.Proof.Ops {
 		if op.Type != specs[i] {
 			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
@@ -149,6 +155,12 @@ func (proof MerkleProof) VerifyMembership(specs []string, root exported.Root, pa
 func (proof MerkleProof) VerifyNonMembership(specs []string, root exported.Root, path exported.Path) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	}
+
+	if len(specs) != len(proof.Proof.Ops) {
+		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+			"length of specs: %d not equal to length of proof: %d",
+			len(specs), len(proof.Proof.Ops))
 	}
 
 	for i, op := range proof.Proof.Ops {
@@ -168,6 +180,12 @@ func (proof MerkleProof) VerifyNonMembership(specs []string, root exported.Root,
 func (proof MerkleProof) BatchVerifyMembership(specs []string, root exported.Root, items map[string][]byte) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	}
+
+	if len(specs) != len(proof.Proof.Ops) {
+		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+			"length of specs: %d not equal to length of proof: %d",
+			len(specs), len(proof.Proof.Ops))
 	}
 
 	for i, op := range proof.Proof.Ops {
@@ -194,6 +212,12 @@ func (proof MerkleProof) BatchVerifyMembership(specs []string, root exported.Roo
 func (proof MerkleProof) BatchVerifyNonMembership(specs []string, root exported.Root, items []string) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	}
+
+	if len(specs) != len(proof.Proof.Ops) {
+		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+			"length of specs: %d not equal to length of proof: %d",
+			len(specs), len(proof.Proof.Ops))
 	}
 
 	for i, op := range proof.Proof.Ops {

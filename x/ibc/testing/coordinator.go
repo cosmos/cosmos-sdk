@@ -169,6 +169,7 @@ func (coord *Coordinator) CreateConnection(
 }
 
 // CreateConenctionInit initializes a connection on the source chain with the state INIT
+// using the OpenInit handshake call.
 func (coord *Coordinator) CreateConnectionInit(
 	source, counterparty *TestChain,
 	sourceConnection, counterpartyConnection TestConnection,
@@ -190,7 +191,8 @@ func (coord *Coordinator) CreateConnectionInit(
 	return nil
 }
 
-// CreateConenctionOpenTry initializes a connection on the source chain with the state TRYOPEN.
+// CreateConenctionOpenTry initializes a connection on the source chain with the state TRYOPEN
+// using the OpenTry handshake call.
 func (coord *Coordinator) CreateConnectionOpenTry(
 	source, counterparty *TestChain,
 	sourceConnection, counterpartyConnection TestConnection,
@@ -268,51 +270,130 @@ func (coord *Coordinator) CreateChannel(
 	connection, counterpartyConnection TestConnection,
 	order channeltypes.Order,
 	state channeltypes.State,
-) (sourceChannel, counterpartyChannel TestChannel) {
+) (TestChannel, TestChannel, error) {
 	source := coord.Chains[sourceID]
 	counterparty := coord.Chains[counterpartyID]
 
-	if state == channeltypes.UNINITIALIZED {
-		return
+	sourceChannel := source.NewTestChannel()
+	counterpartyChannel := counterparty.NewTestChannel()
+
+	if err := coord.CreateChannelInit(source, counterparty, sourceChannel, counterpartyChannel, connection, order); err != nil {
+		return sourceChannel, counterpartyChannel, err
 	}
 
-	sourceChannel = source.NewTestChannel()
-	counterpartyChannel = counterparty.NewTestChannel()
-
-	// Initialize channel on source
-	source.ChannelOpenInit(sourceChannel, counterpartyChannel, order, connection.ID)
-	coord.IncrementTime()
-
-	// update counterparty client on source
-	coord.UpdateClient(sourceID, counterpartyID, connection.ID, clientexported.Tendermint)
-
-	if state == channeltypes.INIT {
-		return
+	if err := coord.CreateChannelOpenTry(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection, order); err != nil {
+		return sourceChannel, counterpartyChannel, err
 	}
 
-	// Initialize channel on counterparty
-	counterparty.ChannelOpenTry(counterpartyChannel, sourceChannel, order, counterpartyConnection.ID)
-	coord.IncrementTime()
-
-	// update source client on counterparty
-	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ID, clientexported.Tendermint)
-
-	if state == channeltypes.TRYOPEN {
-		return
+	if err := coord.CreateChannelOpenAck(source, counterparty, sourceChannel, counterpartyChannel, connection); err != nil {
+		return sourceChannel, counterpartyChannel, err
 	}
 
-	// Open both channel ends
-	source.ChannelOpenAck(sourceChannel, counterpartyChannel, connection.ID)
+	if err := coord.CreateChannelOpenConfirm(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection); err != nil {
+		return sourceChannel, counterpartyChannel, err
+	}
+
+	return sourceChannel, counterpartyChannel, nil
+}
+
+// CreateChannelInit initializes a channel on the source chain with the state INIT
+// using the OpenInit handshake call.
+func (coord *Coordinator) CreateChannelInit(
+	source, counterparty *TestChain,
+	sourceChannel, counterpartyChannel TestChannel,
+	connection TestConnection,
+	order channeltypes.Order,
+) error {
+
+	// initialize channel on source
+	if err := source.ChannelOpenInit(sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
+		return err
+	}
 	coord.IncrementTime()
 
-	// update counterparty client on source
-	coord.UpdateClient(sourceID, counterpartyID, connection.ID, clientexported.Tendermint)
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty.ChainID, source.ChainID,
+		connection.CounterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
 
-	counterparty.ChannelOpenConfirm(counterpartyChannel, sourceChannel, counterpartyConnection.ID)
+	return nil
+}
+
+// CreateChannelOpenTry initializes a channel on the source chain with the state TRYOPEN
+// using the OpenTry handshake call.
+func (coord *Coordinator) CreateChannelOpenTry(
+	source, counterparty *TestChain,
+	sourceChannel, counterpartyChannel TestChannel,
+	connection TestConnection,
+	order channeltypes.Order,
+) error {
+
+	// initialize channel on source
+	if err := source.ChannelOpenTry(sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
+		return err
+	}
 	coord.IncrementTime()
 
-	// update source client on counterparty
-	coord.UpdateClient(counterpartyID, sourceID, counterpartyConnection.ID, clientexported.Tendermint)
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty.ChainID, source.ChainID,
+		connection.CounterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
 
-	return sourceChannel, counterpartyChannel
+	return nil
+}
+
+// CreateChannelOpenAck initializes a channel on the source chain with the state OPEN
+// using the OpenAck handshake call.
+func (coord *Coordinator) CreateChannelOpenAck(
+	source, counterparty *TestChain,
+	sourceChannel, counterpartyChannel TestChannel,
+	connection TestConnection,
+) error {
+
+	// initialize channel on source
+	if err := source.ChannelOpenAck(sourceChannel, counterpartyChannel, connection.ID); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty.ChainID, source.ChainID,
+		connection.CounterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateChannelOpenConfirm initializes a channel on the source chain with the state OPEN
+// using the OpenConfirm handshake call.
+func (coord *Coordinator) CreateChannelOpenConfirm(
+	source, counterparty *TestChain,
+	sourceChannel, counterpartyChannel TestChannel,
+	connection TestConnection,
+) error {
+
+	// initialize channel on source
+	if err := source.ChannelOpenConfirm(sourceChannel, counterpartyChannel, connection.ID); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty.ChainID, source.ChainID,
+		connection.CounterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }

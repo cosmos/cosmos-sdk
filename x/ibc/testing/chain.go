@@ -45,7 +45,6 @@ const (
 type TestChain struct {
 	t *testing.T
 
-	ClientID      string
 	App           *simapp.SimApp
 	LastHeader    ibctmtypes.Header // header for last block height committed
 	CurrentHeader abci.Header       // header for current block height
@@ -58,8 +57,9 @@ type TestChain struct {
 	SenderAccount authtypes.AccountI
 
 	// IBC specific helpers
-	Channels    []Channel // track portID/channelID's created for this chain
+	ClientID      string
 	Connections []string  // track connectionID's created for this chain
+	Channels    []Channel // track portID/channelID's created for this chain
 }
 
 // NewTestChain initializes a new TestChain instance with a single validator set using a

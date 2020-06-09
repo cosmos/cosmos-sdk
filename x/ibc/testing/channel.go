@@ -14,13 +14,3 @@ func NewChannel(portID, channelID string) Channel {
 		ChannelID: channelID,
 	}
 }
-
-// GetPortID returns the PortID.
-func (ch Channel) GetPortID() string {
-	return ch.PortID
-}
-
-// GetChannelID returns the ChannelID.
-func (ch Channel) GetChannelID() string {
-	return ch.ChannelID
-}

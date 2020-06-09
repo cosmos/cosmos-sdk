@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -35,6 +36,10 @@ const (
 	ConnectionIDPrefix = "connectionID"
 	ChannelIDPrefix    = "channelID"
 	PortIDPrefix       = "portID"
+)
+
+var (
+	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -210,7 +215,7 @@ func (chain *TestChain) CreateClient(counterparty *TestChain) {
 	// construct MsgCreateClient using counterparty
 	msg := ibctmtypes.NewMsgCreateClient(
 		counterparty.ClientID, counterparty.LastHeader,
-		lite.DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
+		DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 		chain.SenderAccount.GetAddress(),
 	)
 
@@ -314,9 +319,9 @@ func (chain *TestChain) ChannelOpenInit(
 	connectionID string,
 ) {
 	msg := channeltypes.NewMsgChannelOpenInit(
-		ch.GetPortID(), ch.GetChannelID(),
+		ch.PortID, ch.ChannelID,
 		ChannelVersion, order, []string{connectionID},
-		counterparty.GetPortID(), counterparty.GetChannelID(),
+		counterparty.PortID, counterparty.ChannelID,
 		chain.SenderAccount.GetAddress(),
 	)
 	chain.SendMsg(msg)
@@ -331,9 +336,9 @@ func (chain *TestChain) ChannelOpenTry(
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
-		ch.GetPortID(), ch.GetChannelID(),
+		ch.PortID, ch.ChannelID,
 		ChannelVersion, order, []string{connectionID},
-		counterparty.GetPortID(), counterparty.GetChannelID(),
+		counterparty.PortID, counterparty.ChannelID,
 		ChannelVersion,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
@@ -349,7 +354,7 @@ func (chain *TestChain) ChannelOpenAck(
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
 
 	msg := channeltypes.NewMsgChannelOpenAck(
-		ch.GetPortID(), ch.GetChannelID(),
+		ch.PortID, ch.ChannelID,
 		ChannelVersion,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
@@ -365,7 +370,7 @@ func (chain *TestChain) ChannelOpenConfirm(
 	proof, height := chain.QueryProof(host.KeyConnection(connectionID))
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
-		ch.GetPortID(), ch.GetChannelID(),
+		ch.PortID, ch.ChannelID,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)

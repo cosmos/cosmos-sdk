@@ -51,7 +51,8 @@ func (msg MsgCreateClient) ProtoMessage()  {}
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, header Header, trustLevel tmmath.Fraction,
-	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration, signer sdk.AccAddress,
+	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
+	specs []string, signer sdk.AccAddress,
 ) MsgCreateClient {
 
 	return MsgCreateClient{
@@ -61,6 +62,7 @@ func NewMsgCreateClient(
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
 		MaxClockDrift:   maxClockDrift,
+		ProofSpecs:      specs,
 		Signer:          signer,
 	}
 }

@@ -26,7 +26,7 @@ func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, allowance FeeAllowanc
 
 // ValidateBasic performs basic validation on
 // FeeAllowanceGrant
-func (a FeeAllowanceGrant) ValidateBasic() error {
+func (a *FeeAllowanceGrant) ValidateBasic() error {
 	if a.Granter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
@@ -40,11 +40,13 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 	return a.GetFeeGrant().ValidateBasic()
 }
 
-func (a FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
+func (a *FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
+	fmt.Printf("this is a %v", a.Allowance.GetCachedValue())
 	feeAllowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
 		return nil
 	}
+
 	return feeAllowance
 }
 

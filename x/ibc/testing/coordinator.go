@@ -1,9 +1,9 @@
 package testing
 
 import (
+	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -16,20 +16,21 @@ var (
 	timeIncrement   = time.Second * 5
 )
 
-// IBCTestSuite is a testing struct which wraps the testing suite with N TestChain's. It handles
-// keeping all chains in time-sync.
-type IBCTestSuite struct {
-	suite.Suite
-
+// Coordinator is a testing struct which contains N TestChain's. It handles keeping all chains
+// in sync with regards to time.
+type Coordinator struct {
 	Chains []*TestChain
 }
 
-// SetupTest initializes IBCTestSuite with N TestChain's
-func (suite *IBCTestSuite) SetupTest(n uint64) {
-	suite.Chains = make([]*TestChain, n)
+// NewCoordinator initializes Coordinator with N TestChain's
+func NewCoordinator(t *testing.T, n uint64) *Coordinator {
+	chains := make([]*TestChain, n)
 
-	for i := range suite.Chains {
-		suite.Chains[i] = NewTestChain(suite.T(), ClientIDPrefix+string(i))
+	for i := range chains {
+		chains[i] = NewTestChain(t, ClientIDPrefix+string(i))
+	}
+	return &Coordinator{
+		Chains: chains,
 	}
 }
 
@@ -37,8 +38,8 @@ func (suite *IBCTestSuite) SetupTest(n uint64) {
 // by 5 seconds.
 //
 // CONTRACT: this function must be called after every commit on any TestChain.
-func (suite *IBCTestSuite) IncrementTime() {
-	for _, chain := range suite.Chains {
+func (coord *Coordinator) IncrementTime() {
+	for _, chain := range coord.Chains {
 		chain.CurrentHeader = abci.Header{
 			Height: chain.CurrentHeader.Height,
 			Time:   chain.CurrentHeader.Time.Add((timeIncrement)),
@@ -49,39 +50,39 @@ func (suite *IBCTestSuite) IncrementTime() {
 // CommitBlock commits a block on the provided indexes and then increments the global time.
 //
 // CONTRACT: the passed in list of indexes must not contain duplicates
-func (suite *IBCTestSuite) CommitBlock(chains ...uint64) {
+func (coord *Coordinator) CommitBlock(chains ...uint64) {
 	for _, index := range chains {
-		chain := suite.Chains[index]
+		chain := coord.Chains[index]
 		chain.App.Commit()
 		nextBlock(chain)
 	}
-	suite.IncrementTime()
+	coord.IncrementTime()
 }
 
 // CommitNBlocks commits n blocks to state and updates the block height by 1 for each commit.
-func (suite *IBCTestSuite) CommitNBlocks(index, n uint64) {
-	chain := suite.Chains[index]
+func (coord *Coordinator) CommitNBlocks(index, n uint64) {
+	chain := coord.Chains[index]
 
 	for i := uint64(0); i < n; i++ {
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 		chain.App.Commit()
 		nextBlock(chain)
-		suite.IncrementTime()
+		coord.IncrementTime()
 	}
 }
 
 // CreateClient creates a counterparty client on the source chain.
-func (suite *IBCTestSuite) CreateClient(source, counterparty uint64) {
-	suite.CommitBlock(source, counterparty)
-	suite.Chains[source].CreateClient(suite.Chains[counterparty])
-	suite.IncrementTime()
+func (coord *Coordinator) CreateClient(source, counterparty uint64) {
+	coord.CommitBlock(source, counterparty)
+	coord.Chains[source].CreateClient(coord.Chains[counterparty])
+	coord.IncrementTime()
 }
 
 // UpdateClient updates a counterparty client on the source chain.
-func (suite *IBCTestSuite) UpdateClient(source, counterparty uint64) {
-	suite.CommitBlock(source, counterparty)
-	suite.Chains[source].UpdateClient(suite.Chains[counterparty])
-	suite.IncrementTime()
+func (coord *Coordinator) UpdateClient(source, counterparty uint64) {
+	coord.CommitBlock(source, counterparty)
+	coord.Chains[source].UpdateClient(coord.Chains[counterparty])
+	coord.IncrementTime()
 }
 
 // CreateConnection constructs and executes connection handshake messages in order to create
@@ -90,12 +91,12 @@ func (suite *IBCTestSuite) UpdateClient(source, counterparty uint64) {
 //
 // NOTE: The counterparty testing connection will be created even if it is not created in the
 // application state.
-func (suite *IBCTestSuite) CreateConnection(
+func (coord *Coordinator) CreateConnection(
 	sourceIndex, counterpartyIndex uint64,
 	state connectiontypes.State,
 ) (sourceConnection, counterpartyConnection string) {
-	source := suite.Chains[sourceIndex]
-	counterparty := suite.Chains[counterpartyIndex]
+	source := coord.Chains[sourceIndex]
+	counterparty := coord.Chains[counterpartyIndex]
 
 	if state == connectiontypes.UNINITIALIZED {
 		return
@@ -106,7 +107,7 @@ func (suite *IBCTestSuite) CreateConnection(
 
 	// Initialize connection on source
 	source.ConnectionOpenInit(counterparty, sourceConnection, counterpartyConnection)
-	suite.IncrementTime()
+	coord.IncrementTime()
 
 	if state == connectiontypes.INIT {
 		return
@@ -114,7 +115,7 @@ func (suite *IBCTestSuite) CreateConnection(
 
 	// Initialize connection on counterparty
 	counterparty.ConnectionOpenTry(source, counterpartyConnection, sourceConnection)
-	suite.IncrementTime()
+	coord.IncrementTime()
 
 	if state == connectiontypes.TRYOPEN {
 		return
@@ -122,10 +123,10 @@ func (suite *IBCTestSuite) CreateConnection(
 
 	// Open connection on both chains
 	source.ConnectionOpenAck(counterparty, sourceConnection, counterpartyConnection)
-	suite.IncrementTime()
+	coord.IncrementTime()
 
 	counterparty.ConnectionOpenConfirm(source, counterpartyConnection, sourceConnection)
-	suite.IncrementTime()
+	coord.IncrementTime()
 	return sourceConnection, counterpartyConnection
 }
 
@@ -135,14 +136,14 @@ func (suite *IBCTestSuite) CreateConnection(
 //
 // NOTE: The counterparty testing channel will be created even if it is not created in the
 // application state.
-func (suite *IBCTestSuite) CreateChannel(
-	sourceIndex, counterpartyIndex,
-	connection uint64,
+func (coord *Coordinator) CreateChannel(
+	sourceIndex, counterpartyIndex uint64,
+	connectionID, counterpartyConnectionID string,
 	order channeltypes.Order,
 	state channeltypes.State,
 ) (sourceChannel, counterpartyChannel Channel) {
-	source := suite.Chains[sourceIndex]
-	counterparty := suite.Chains[counterpartyIndex]
+	source := coord.Chains[sourceIndex]
+	counterparty := coord.Chains[counterpartyIndex]
 
 	if state == channeltypes.UNINITIALIZED {
 		return
@@ -151,19 +152,17 @@ func (suite *IBCTestSuite) CreateChannel(
 	sourceChannel = source.NewChannel()
 	counterpartyChannel = counterparty.NewChannel()
 
-	connectionID := source.Connections[connection]
-
 	// Initialize channel on source
 	source.ChannelOpenInit(sourceChannel, counterpartyChannel, order, connectionID)
-	suite.IncrementTime()
+	coord.IncrementTime()
 
 	if state == channeltypes.INIT {
 		return
 	}
 
 	// Initialize channel on counterparty
-	counterparty.ChannelOpenTry(counterpartyChannel, sourceChannel, order, connectionID)
-	suite.IncrementTime()
+	counterparty.ChannelOpenTry(counterpartyChannel, sourceChannel, order, counterpartyConnectionID)
+	coord.IncrementTime()
 
 	if state == channeltypes.TRYOPEN {
 		return
@@ -171,9 +170,9 @@ func (suite *IBCTestSuite) CreateChannel(
 
 	// Open both channel ends
 	source.ChannelOpenAck(sourceChannel, counterpartyChannel, connectionID)
-	suite.IncrementTime()
+	coord.IncrementTime()
 
-	counterparty.ChannelOpenConfirm(counterpartyChannel, sourceChannel, connectionID)
-	suite.IncrementTime()
+	counterparty.ChannelOpenConfirm(counterpartyChannel, sourceChannel, counterpartyConnectionID)
+	coord.IncrementTime()
 	return sourceChannel, counterpartyChannel
 }

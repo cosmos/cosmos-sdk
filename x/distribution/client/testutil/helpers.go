@@ -24,9 +24,15 @@ func TxSetWithdrawAddress(f *cli.Fixtures, from, withDrawAddr string, flags ...s
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxWithdrawAllRewards raises a txn to withdraw rewards
+// TxWithdrawAllRewards raises a txn to withdraw all rewards of a delegator address
 func TxWithdrawAllRewards(f *cli.Fixtures, from string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx distribution withdraw-all-rewards %v --keyring-backend=test --from=%s", f.SimcliBinary, f.Flags(), from)
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxFundCommunityPool Funds the community pool with the specified amount
+func TxFundCommunityPool(f *cli.Fixtures, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx distribution community-pool-spend %v %v --keyring-backend=test --from=%s", f.SimcliBinary, amount, f.Flags(), from)
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
@@ -86,7 +92,6 @@ func QueryCommission(f *cli.Fixtures, valAddr string, flags ...string) distribut
 func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) []distribution.ValidatorSlashEvent {
 	cmd := fmt.Sprintf("%s query distribution slashes %s 0 5 %v ", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
-	fmt.Println("errStr---------------->", errStr)
 	require.Empty(f.T, errStr)
 
 	var slashes []distribution.ValidatorSlashEvent
@@ -94,4 +99,17 @@ func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) []distributi
 	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
 	require.NoError(f.T, err)
 	return slashes
+}
+
+// QueryCommunityPool returns the amount of coins in the community pool
+func QueryCommunityPool(f *cli.Fixtures, flags ...string) sdk.DecCoins {
+	cmd := fmt.Sprintf("%s query distribution community-pool %v ", f.SimcliBinary, f.Flags())
+	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+	require.Empty(f.T, errStr)
+
+	var amount sdk.DecCoins
+	err := f.Cdc.UnmarshalJSON([]byte(out), &amount)
+	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	require.NoError(f.T, err)
+	return amount
 }

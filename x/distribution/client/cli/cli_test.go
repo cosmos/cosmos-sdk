@@ -98,6 +98,26 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	require.Empty(f.T, stderr)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
+	newTokens := sdk.NewCoin(cli.Denom, sdk.TokensFromConsensusPower(1))
+
+	// Withdraw all delegation rewards from all validators
+	success, stdout, stderr = testutil.TxFundCommunityPool(f, fooAddr.String(), newTokens, "--generate-only")
+	require.True(f.T, success)
+	require.Empty(f.T, stderr)
+
+	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	require.NotZero(t, msg.Fee.Gas)
+	require.Len(t, msg.Msgs, 1)
+	require.Len(t, msg.GetSignatures(), 0)
+
+	success, _, stderr = testutil.TxFundCommunityPool(f, cli.KeyFoo, newTokens, "-y")
+	require.True(f.T, success)
+	require.Empty(f.T, stderr)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	amount := testutil.QueryCommunityPool(f)
+	require.False(f.T, amount.IsZero())
+
 	slashes := testutil.QuerySlashes(f, fooVal.String())
 	require.Nil(t, slashes, nil)
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -20,10 +20,10 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 		Long:  "Gets the currently scheduled upgrade plan, if one exists",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			// ignore height for now
-			res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
+			res, _, err := clientCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
 			if err != nil {
 				return err
 			}
@@ -37,7 +37,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return cliCtx.PrintOutput(plan)
+			return clientCtx.PrintOutput(plan)
 		},
 	}
 }
@@ -51,16 +51,16 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			"This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			name := args[0]
 			params := types.NewQueryAppliedParams(name)
-			bz, err := cliCtx.Codec.MarshalJSON(params)
+			bz, err := clientCtx.Codec.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryApplied), bz)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryApplied), bz)
 			if err != nil {
 				return err
 			}
@@ -74,7 +74,7 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			applied := int64(binary.BigEndian.Uint64(res))
 
 			// we got the height, now let's return the headers
-			node, err := cliCtx.GetNode()
+			node, err := clientCtx.GetNode()
 			if err != nil {
 				return err
 			}

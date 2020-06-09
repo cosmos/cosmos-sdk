@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,14 +60,14 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			addr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, _, err := cliCtx.QueryStore(types.GetValidatorKey(addr), storeName)
+			res, _, err := clientCtx.QueryStore(types.GetValidatorKey(addr), storeName)
 			if err != nil {
 				return err
 			}
@@ -81,7 +81,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 				return err
 			}
 
-			return cliCtx.PrintOutput(validator)
+			return clientCtx.PrintOutput(validator)
 		},
 	}
 }
@@ -102,9 +102,9 @@ $ %s query staking validators
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			resKVs, _, err := cliCtx.QuerySubspace(types.ValidatorsKey, storeName)
+			resKVs, _, err := clientCtx.QuerySubspace(types.ValidatorsKey, storeName)
 			if err != nil {
 				return err
 			}
@@ -119,14 +119,14 @@ $ %s query staking validators
 				validators = append(validators, validator)
 			}
 
-			return cliCtx.PrintOutput(validators)
+			return clientCtx.PrintOutput(validators)
 		},
 	}
 }
 
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
 func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "unbonding-delegations-from [validator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
 		Long: strings.TrimSpace(
@@ -140,29 +140,34 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit)))
 			if err != nil {
 				return err
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorUnbondingDelegations)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
 			var ubds types.UnbondingDelegations
 			cdc.MustUnmarshalJSON(res, &ubds)
-			return cliCtx.PrintOutput(ubds)
+			return clientCtx.PrintOutput(ubds)
 		},
 	}
+
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of unbonding delegations to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
+
+	return cmd
 }
 
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations
@@ -182,7 +187,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -195,7 +200,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -205,7 +210,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -226,7 +231,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -244,7 +249,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegation)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -254,7 +259,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -276,7 +281,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -289,7 +294,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorDelegations)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -299,7 +304,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -307,7 +312,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
 func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
 		Long: strings.TrimSpace(
@@ -321,20 +326,20 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit)))
 			if err != nil {
 				return err
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorDelegations)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -344,9 +349,14 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of delegations to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of delegations to query for")
+
+	return cmd
 }
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single
@@ -366,7 +376,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
@@ -384,7 +394,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryUnbondingDelegation)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -394,7 +404,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			return cliCtx.PrintOutput(ubd)
+			return clientCtx.PrintOutput(ubd)
 		},
 	}
 }
@@ -416,7 +426,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -429,7 +439,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorUnbondingDelegations)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -439,7 +449,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			return cliCtx.PrintOutput(ubds)
+			return clientCtx.PrintOutput(ubds)
 		},
 	}
 }
@@ -461,7 +471,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -484,7 +494,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -494,7 +504,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -516,7 +526,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -529,7 +539,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -539,7 +549,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -560,7 +570,7 @@ $ %s query staking historical-info 5
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			height, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil || height < 0 {
@@ -573,7 +583,7 @@ $ %s query staking historical-info 5
 			}
 
 			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryHistoricalInfo)
-			res, _, err := cliCtx.QueryWithData(route, bz)
+			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -583,7 +593,7 @@ $ %s query staking historical-info 5
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
 }
@@ -604,9 +614,9 @@ $ %s query staking pool
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
-			bz, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/pool", storeName), nil)
+			bz, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/pool", storeName), nil)
 			if err != nil {
 				return err
 			}
@@ -616,7 +626,7 @@ $ %s query staking pool
 				return err
 			}
 
-			return cliCtx.PrintOutput(pool)
+			return clientCtx.PrintOutput(pool)
 		},
 	}
 }
@@ -637,17 +647,17 @@ $ %s query staking params
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", storeName, types.QueryParameters)
-			bz, _, err := cliCtx.QueryWithData(route, nil)
+			bz, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
 			var params types.Params
 			cdc.MustUnmarshalJSON(bz, &params)
-			return cliCtx.PrintOutput(params)
+			return clientCtx.PrintOutput(params)
 		},
 	}
 }

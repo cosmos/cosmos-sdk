@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -16,17 +16,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-const (
-	// DefaultPacketTimeoutHeight is the default packet timeout height relative
-	// to the current block height. The timeout is disabled when set to 0.
-	DefaultPacketTimeoutHeight = 1000 // NOTE: in blocks
-
-	// DefaultPacketTimeoutTimestamp is the default packet timeout timestamp relative
-	// to the current block timestamp. The timeout is disabled when set to 0.
-	DefaultPacketTimeoutTimestamp = 0 // NOTE: in nanoseconds
-)
-
-// Keeper defines the IBC transfer keeper
+// Keeper defines the IBC fungible transfer keeper
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.Marshaler
@@ -63,11 +53,11 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.ModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s-%s", host.ModuleName, types.ModuleName))
 }
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
-func (k Keeper) GetTransferAccount(ctx sdk.Context) authexported.ModuleAccountI {
+func (k Keeper) GetTransferAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 

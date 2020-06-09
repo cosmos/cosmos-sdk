@@ -9,85 +9,44 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
-type (
-	// Generator defines an interface a client can utilize to generate an
-	// application-defined concrete transaction type. The type returned must
-	// implement ClientTx.
-	Generator interface {
-		NewTx() ClientTx
-		NewFee() ClientFee
-		NewSignature() ClientSignature
-	}
-
-	ClientFee interface {
-		sdk.Fee
-		SetGas(uint64)
-		SetAmount(sdk.Coins)
-	}
-
-	ClientSignature interface {
-		sdk.Signature
-		SetPubKey(crypto.PubKey) error
-		SetSignature([]byte)
-	}
-
-	// ClientTx defines an interface which an application-defined concrete transaction
-	// type must implement. Namely, it must be able to set messages, generate
-	// signatures, and provide canonical bytes to sign over. The transaction must
-	// also know how to encode itself.
-	ClientTx interface {
-		sdk.Tx
-		codec.ProtoMarshaler
-
-		SetMsgs(...sdk.Msg) error
-		GetSignatures() []sdk.Signature
-		SetSignatures(...ClientSignature) error
-		GetFee() sdk.Fee
-		SetFee(ClientFee) error
-		GetMemo() string
-		SetMemo(string)
-
-		// CanonicalSignBytes returns the canonical JSON bytes to sign over, given a
-		// chain ID, along with an account and sequence number. The JSON encoding
-		// ensures all field names adhere to their proto definition, default values
-		// are omitted, and follows the JSON Canonical Form.
-		CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
-	}
-)
-
 // GenerateOrBroadcastTx will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
-	if ctx.GenerateOnly {
-		return GenerateTx(ctx, txf, msgs...)
+func GenerateOrBroadcastTx(clientCtx client.Context, msgs ...sdk.Msg) error {
+	txf := NewFactoryFromCLI(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
+}
+
+// GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
+// or sign it and broadcast it returning an error upon failure.
+func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+	if clientCtx.GenerateOnly {
+		return GenerateTx(clientCtx, txf, msgs...)
 	}
 
-	return BroadcastTx(ctx, txf, msgs...)
+	return BroadcastTx(clientCtx, txf, msgs...)
 }
 
 // GenerateTx will generate an unsigned transaction and print it to the writer
 // specified by ctx.Output. If simulation was requested, the gas will be
 // simulated and also printed to the same writer before the transaction is
 // printed.
-func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	if txf.SimulateAndExecute() {
-		if ctx.Offline {
+		if clientCtx.Offline {
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -101,20 +60,20 @@ func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return ctx.Println(tx)
+	return clientCtx.Println(tx.GetTx())
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
-	txf, err := PrepareFactory(ctx, txf)
+func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+	txf, err := PrepareFactory(clientCtx, txf)
 	if err != nil {
 		return err
 	}
 
-	if txf.SimulateAndExecute() || ctx.Simulate {
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+	if txf.SimulateAndExecute() || clientCtx.Simulate {
+		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -123,7 +82,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
 	}
 
-	if ctx.Simulate {
+	if clientCtx.Simulate {
 		return nil
 	}
 
@@ -132,8 +91,8 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	if !ctx.SkipConfirm {
-		out, err := ctx.Marshaler.MarshalJSON(tx)
+	if !clientCtx.SkipConfirm {
+		out, err := clientCtx.JSONMarshaler.MarshalJSON(tx)
 		if err != nil {
 			return err
 		}
@@ -149,25 +108,25 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	txBytes, err := Sign(txf, ctx.GetFromName(), clientkeys.DefaultKeyPass, tx)
+	txBytes, err := Sign(txf, clientCtx.GetFromName(), clientkeys.DefaultKeyPass, tx)
 	if err != nil {
 		return err
 	}
 
 	// broadcast to a Tendermint node
-	res, err := ctx.BroadcastTx(txBytes)
+	res, err := clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		return err
 	}
 
-	return ctx.Println(res)
+	return clientCtx.Println(res)
 }
 
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
 func WriteGeneratedTxResponse(
-	ctx context.CLIContext, w http.ResponseWriter, txg Generator, br rest.BaseReq, msgs ...sdk.Msg,
+	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
@@ -186,7 +145,8 @@ func WriteGeneratedTxResponse(
 		WithGasAdjustment(gasAdj).
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
-		WithSimulateAndExecute(br.Simulate)
+		WithSimulateAndExecute(br.Simulate).
+		WithTxGenerator(ctx.TxGenerator)
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
@@ -202,7 +162,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.Marshaler, txf.Gas())
+			rest.WriteSimulationResponse(w, ctx.JSONMarshaler, txf.Gas())
 			return
 		}
 	}
@@ -212,7 +172,7 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	output, err := ctx.Marshaler.MarshalJSON(tx)
+	output, err := ctx.JSONMarshaler.MarshalJSON(tx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -225,7 +185,7 @@ func WriteGeneratedTxResponse(
 // BuildUnsignedTx builds a transaction to be signed given a set of messages. The
 // transaction is initially created via the provided factory's generator. Once
 // created, the fee, memo, and messages are set.
-func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
+func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	if txf.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
@@ -288,7 +248,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return tx.Marshal()
+	return txf.txGenerator.MarshalTx(tx.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
@@ -318,16 +278,16 @@ func CalculateGas(
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory. A new Factory with
 // the updated fields will be returned.
-func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
-	from := ctx.GetFromAddress()
+func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
+	from := clientCtx.GetFromAddress()
 
-	if err := txf.accountRetriever.EnsureExists(from); err != nil {
+	if err := txf.accountRetriever.EnsureExists(clientCtx, from); err != nil {
 		return txf, err
 	}
 
 	initNum, initSeq := txf.accountNumber, txf.sequence
 	if initNum == 0 || initSeq == 0 {
-		num, seq, err := txf.accountRetriever.GetAccountNumberSequence(from)
+		num, seq, err := txf.accountRetriever.GetAccountNumberSequence(clientCtx, from)
 		if err != nil {
 			return txf, err
 		}
@@ -352,7 +312,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
+func Sign(txf Factory, name, passphrase string, tx client.TxBuilder) ([]byte, error) {
 	if txf.keybase == nil {
 		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -378,7 +338,7 @@ func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 		return nil, err
 	}
 
-	return tx.Marshal()
+	return txf.txGenerator.MarshalTx(tx.GetTx())
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

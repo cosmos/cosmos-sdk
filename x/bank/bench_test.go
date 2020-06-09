@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -22,7 +22,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	}
 
 	// construct genesis state
-	genAccs := []authexported.GenesisAccount{&acc}
+	genAccs := []types.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, abci.Header{})
 
@@ -62,7 +62,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	}
 
 	// Construct genesis state
-	genAccs := []authexported.GenesisAccount{&acc}
+	genAccs := []types.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, abci.Header{})
 

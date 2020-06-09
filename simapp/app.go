@@ -4,8 +4,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -13,6 +11,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -304,6 +304,10 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
+	app.mm.RegisterQueryServices(app.GRPCQueryRouter())
+
+	// add test gRPC service for testing gRPC queries in isolation
+	testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -367,7 +371,7 @@ func NewSimApp(
 func MakeCodecs() (*std.Codec, *codec.Codec) {
 	cdc := std.MakeCodec(ModuleBasics)
 	interfaceRegistry := types.NewInterfaceRegistry()
-	sdk.RegisterInterfaces(interfaceRegistry)
+	std.RegisterInterfaces(interfaceRegistry)
 	ModuleBasics.RegisterInterfaceModules(interfaceRegistry)
 	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
 	return appCodec, cdc

@@ -4,12 +4,16 @@ import (
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 )
+
+// var representing the proofspecs for a SDK chain
+var sdkSpecs = []string{storetypes.ProofOpIAVLCommitment, merkle.ProofOpSimpleValue}
 
 // ICS 023 Merkle Types Implementation
 //
@@ -18,6 +22,11 @@ import (
 // Merkle proof implementation of the Proof interface
 // Applied on SDK-based IBC implementation
 var _ exported.Root = (*MerkleRoot)(nil)
+
+// GetSDKSpecs is a getter function for the proofspecs of an sdk chain
+func GetSDKSpecs() []string {
+	return sdkSpecs
+}
 
 // NewMerkleRoot constructs a new MerkleRoot
 func NewMerkleRoot(hash []byte) MerkleRoot {

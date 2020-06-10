@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	testClientID  = "gaia"
+	testClientID  = "gaiachain"
 	testClientID2 = "ethbridge"
 	testClientID3 = "ethermint"
 

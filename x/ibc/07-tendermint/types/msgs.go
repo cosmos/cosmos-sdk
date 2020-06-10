@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"time"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
@@ -98,12 +99,14 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
-	// Validate ProofSpecs if provided
-	if msg.ProofSpecs != nil {
-		for _, spec := range msg.ProofSpecs {
-			if strings.TrimSpace(spec) == "" {
-				return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be blank")
-			}
+
+	// Validate ProofSpecs
+	if msg.ProofSpecs == nil {
+		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil")
+	}
+	for _, spec := range msg.ProofSpecs {
+		if strings.TrimSpace(spec) == "" {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be blank")
 		}
 	}
 	return host.ClientIdentifierValidator(msg.ClientID)

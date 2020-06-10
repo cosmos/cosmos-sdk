@@ -138,22 +138,8 @@ func (MerkleProof) GetCommitmentType() exported.Type {
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
 func (proof MerkleProof) VerifyMembership(specs []string, root exported.Root, path exported.Path, value []byte) error {
-	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
-		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
-	}
-
-	if len(specs) != len(proof.Proof.Ops) {
-		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-			"length of specs: %d not equal to length of proof: %d",
-			len(specs), len(proof.Proof.Ops))
-	}
-
-	for i, op := range proof.Proof.Ops {
-		if op.Type != specs[i] {
-			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-				"proof does not match expected format at position %d, expected: %s, got: %s",
-				i, specs[i], op.Type)
-		}
+	if err := proof.validateVerificationArgs(specs, root); err != nil {
+		return err
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
@@ -162,22 +148,8 @@ func (proof MerkleProof) VerifyMembership(specs []string, root exported.Root, pa
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
 func (proof MerkleProof) VerifyNonMembership(specs []string, root exported.Root, path exported.Path) error {
-	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
-		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
-	}
-
-	if len(specs) != len(proof.Proof.Ops) {
-		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-			"length of specs: %d not equal to length of proof: %d",
-			len(specs), len(proof.Proof.Ops))
-	}
-
-	for i, op := range proof.Proof.Ops {
-		if op.Type != specs[i] {
-			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-				"proof does not match expected format at position %d, expected: %s, got: %s",
-				i, specs[i], op.Type)
-		}
+	if err := proof.validateVerificationArgs(specs, root); err != nil {
+		return err
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
@@ -187,22 +159,8 @@ func (proof MerkleProof) VerifyNonMembership(specs []string, root exported.Root,
 // BatchVerifyMembership verifies a group of key value pairs against the given root
 // NOTE: Untested
 func (proof MerkleProof) BatchVerifyMembership(specs []string, root exported.Root, items map[string][]byte) error {
-	if proof.IsEmpty() || root == nil || root.IsEmpty() {
-		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
-	}
-
-	if len(specs) != len(proof.Proof.Ops) {
-		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-			"length of specs: %d not equal to length of proof: %d",
-			len(specs), len(proof.Proof.Ops))
-	}
-
-	for i, op := range proof.Proof.Ops {
-		if op.Type != specs[i] {
-			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-				"proof does not match expected format at position %d, expected: %s, got: %s",
-				i, specs[i], op.Type)
-		}
+	if err := proof.validateVerificationArgs(specs, root); err != nil {
+		return err
 	}
 
 	// Verify each item separately against same proof
@@ -219,22 +177,8 @@ func (proof MerkleProof) BatchVerifyMembership(specs []string, root exported.Roo
 // BatchVerifyNonMembership verifies absence of a group of keys against the given root
 // NOTE: Untested
 func (proof MerkleProof) BatchVerifyNonMembership(specs []string, root exported.Root, items []string) error {
-	if proof.IsEmpty() || root == nil || root.IsEmpty() {
-		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
-	}
-
-	if len(specs) != len(proof.Proof.Ops) {
-		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-			"length of specs: %d not equal to length of proof: %d",
-			len(specs), len(proof.Proof.Ops))
-	}
-
-	for i, op := range proof.Proof.Ops {
-		if op.Type != specs[i] {
-			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
-				"proof does not match expected format at position %d, expected: %s, got: %s",
-				i, specs[i], op.Type)
-		}
+	if err := proof.validateVerificationArgs(specs, root); err != nil {
+		return err
 	}
 
 	// Verify each item separately against same proof
@@ -257,6 +201,28 @@ func (proof MerkleProof) IsEmpty() bool {
 func (proof MerkleProof) ValidateBasic() error {
 	if proof.IsEmpty() {
 		return ErrInvalidProof
+	}
+	return nil
+}
+
+// validateVerificationArgs verifies the proof arguments are valid
+func (proof MerkleProof) validateVerificationArgs(specs []string, root exported.Root) error {
+	if proof.IsEmpty() || root == nil || root.IsEmpty() {
+		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	}
+
+	if len(specs) != len(proof.Proof.Ops) {
+		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+			"length of specs: %d not equal to length of proof: %d",
+			len(specs), len(proof.Proof.Ops))
+	}
+
+	for i, op := range proof.Proof.Ops {
+		if op.Type != specs[i] {
+			return sdkerrors.Wrapf(ErrInvalidMerkleProof,
+				"proof does not match expected format at position %d, expected: %s, got: %s",
+				i, specs[i], op.Type)
+		}
 	}
 	return nil
 }

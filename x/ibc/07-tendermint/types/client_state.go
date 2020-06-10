@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
@@ -67,15 +68,11 @@ func Initialize(
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header, specs []string,
 ) (ClientState, error) {
-
-	if trustingPeriod >= ubdPeriod {
-		return ClientState{}, sdkerrors.Wrapf(
-			ErrInvalidTrustingPeriod,
-			"trusting period (%s) should be < unbonding period (%s)", trustingPeriod, ubdPeriod,
-		)
-	}
-
 	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
+
+	if err := clientState.Validate(); err != nil {
+		return ClientState{}, err
+	}
 	return clientState, nil
 }
 
@@ -147,6 +144,22 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
+	if cs.TrustingPeriod >= cs.UnbondingPeriod {
+		return sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
+		)
+	}
+	// Validate ProofSpecs
+	if cs.ProofSpecs == nil {
+		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
+	}
+	for _, spec := range cs.ProofSpecs {
+		if strings.TrimSpace(spec) == "" {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be blank")
+		}
+	}
+
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }
 

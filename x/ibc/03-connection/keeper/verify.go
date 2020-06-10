@@ -31,7 +31,7 @@ func (k Keeper) VerifyClientConsensusState(
 	}
 
 	return clientState.VerifyClientConsensusState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.aminoCdc, targetConsState.GetRoot(), height,
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, k.aminoCdc, targetConsState.GetRoot(), height,
 		connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
 }
@@ -131,7 +131,7 @@ func (k Keeper) VerifyPacketCommitment(
 	}
 
 	return clientState.VerifyPacketCommitment(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, commitmentBytes, consensusState,
 	)
@@ -166,7 +166,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	}
 
 	return clientState.VerifyPacketAcknowledgement(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, acknowledgement, consensusState,
 	)
@@ -201,7 +201,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	}
 
 	return clientState.VerifyPacketAcknowledgementAbsence(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, consensusState,
 	)
@@ -235,7 +235,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	}
 
 	return clientState.VerifyNextSequenceRecv(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		nextSequenceRecv, consensusState,
 	)

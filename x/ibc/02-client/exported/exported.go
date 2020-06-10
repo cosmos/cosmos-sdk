@@ -26,7 +26,8 @@ type ClientState interface {
 
 	VerifyClientConsensusState(
 		store sdk.KVStore,
-		cdc *codec.Codec,
+		cdc codec.Marshaler,
+		aminoCdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
 		counterpartyClientIdentifier string,
@@ -58,6 +59,7 @@ type ClientState interface {
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -69,6 +71,7 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -80,6 +83,7 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -90,6 +94,7 @@ type ClientState interface {
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,

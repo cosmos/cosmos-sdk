@@ -4,18 +4,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // NewSoftwareUpgradeProposalHandler creates a governance handler to manage new proposal types.
 // It enables SoftwareUpgradeProposal to propose an Upgrade, and CancelSoftwareUpgradeProposal
 // to abort a previously voted upgrade.
-func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
+func NewSoftwareUpgradeProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case *SoftwareUpgradeProposal:
+		case *types.SoftwareUpgradeProposal:
 			return handleSoftwareUpgradeProposal(ctx, k, c)
 
-		case *CancelSoftwareUpgradeProposal:
+		case *types.CancelSoftwareUpgradeProposal:
 			return handleCancelSoftwareUpgradeProposal(ctx, k, c)
 
 		default:
@@ -24,11 +26,11 @@ func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
 	}
 }
 
-func handleSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p *SoftwareUpgradeProposal) error {
+func handleSoftwareUpgradeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SoftwareUpgradeProposal) error {
 	return k.ScheduleUpgrade(ctx, p.Plan)
 }
 
-func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, _ *CancelSoftwareUpgradeProposal) error {
+func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k keeper.Keeper, _ *types.CancelSoftwareUpgradeProposal) error {
 	k.ClearUpgradePlan(ctx)
 	return nil
 }

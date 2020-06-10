@@ -150,7 +150,8 @@ func (cs ClientState) Validate() error {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	_ sdk.KVStore,
-	cdc *codec.Codec,
+	cdc codec.Marshaler,
+	aminoCdc *codec.Codec,
 	provingRoot commitmentexported.Root,
 	height uint64,
 	counterpartyClientIdentifier string,
@@ -159,22 +160,18 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
+	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	if err != nil {
+		return err
+	}
+
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
 	}
 
-	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
-	if err != nil {
-		return err
-	}
-
-	if err = cdc.UnmarshalBinaryBare(proof, &merkleProof); err != nil {
-		return err
-	}
-
-	bz, err := cdc.MarshalBinaryBare(consensusState)
+	bz, err := aminoCdc.MarshalBinaryBare(consensusState)
 	if err != nil {
 		return err
 	}
@@ -198,12 +195,12 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
+	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
 	if err != nil {
 		return err
 	}
 
-	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
 	if err != nil {
 		return err
 	}
@@ -238,12 +235,12 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
+	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
 	if err != nil {
 		return err
 	}
 
-	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -269,6 +266,7 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	_ sdk.KVStore,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -278,12 +276,12 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
+	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
 	if err != nil {
 		return err
 	}
 
-	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -299,6 +297,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	_ sdk.KVStore,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -308,12 +307,12 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
+	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
 	if err != nil {
 		return err
 	}
 
-	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -330,6 +329,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	_ sdk.KVStore,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -338,12 +338,12 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
+	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
 	if err != nil {
 		return err
 	}
 
-	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -359,6 +359,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	_ sdk.KVStore,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -367,12 +368,12 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
+	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
 	if err != nil {
 		return err
 	}
 
-	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -389,8 +390,10 @@ func (cs ClientState) VerifyNextSequenceRecv(
 // sanitizeVerificationArgs perfoms the basic checks on the arguments that are
 // shared between the verification functions.
 func sanitizeVerificationArgs(
+	cdc codec.Marshaler,
 	cs ClientState,
 	height uint64,
+	prefix commitmentexported.Prefix,
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) (merkleProof *commitmenttypes.MerkleProof, err error) {
@@ -405,6 +408,15 @@ func sanitizeVerificationArgs(
 		return nil, clienttypes.ErrClientFrozen
 	}
 
+	if prefix == nil {
+		return nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
+	}
+
+	_, ok := prefix.(*commitmenttypes.MerklePrefix)
+	if !ok {
+		return nil, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected *MerklePrefix", prefix)
+	}
+
 	if proof == nil {
 		return nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
@@ -415,6 +427,11 @@ func sanitizeVerificationArgs(
 
 	if consensusState == nil {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+	}
+
+	_, ok = consensusState.(ConsensusState)
+	if !ok {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
 	}
 
 	return merkleProof, nil

@@ -21,13 +21,19 @@ message Tx {
   repeated bytes signatures = 3;
 }
 
-// SignDoc is the standard type used for signing transaction in SIGN_MODE_DIRECT
-message SignDoc {
-  // body is the TxBody from Tx
-  TxBody body = 1;
+message TxRaw {
+  bytes body_bytes = 1;
 
-  // auth_info is the AuthInfo from Tx
-  AuthInfo auth_info = 2;
+  bytes auth_info_bytes = 2;
+
+  // signatures are the raw binary signatures of signers specified by body and auth_info
+  repeated bytes signatures = 3;
+}
+
+message SignDoc {
+  bytes body_bytes = 1;
+
+  bytes auth_info_bytes = 2;
 
   // chain_id is the unique identifier of the chain this transaction targets.
   // It prevents signed transactions from being used on another chain by an
@@ -81,7 +87,7 @@ message AuthInfo {
 message SignerInfo {
   // public_key is the public key of the signer. It is optional for accounts
   // that already exist in state
-  google.protobuf.Any public_key = 1;
+  cosmos_sdk.crypto.v1.PublicKey public_key = 1;
 
   // mode_info describes the signing mode of the signer and is a nested
   // structure to support nested multisig pubkey's

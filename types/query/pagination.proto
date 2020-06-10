@@ -11,21 +11,23 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/query";
 //          PageRequest page = 2;
 //  }
 message PageRequest {
-    // page_key is a value returned in PageResponse.next_page_key to begin
-    // querying the next page most efficiently
-    bytes page_key = 1;
+    // key is a value returned in PageResponse.next_key to begin
+    // querying the next page most efficiently. Only one of offset or key
+    // should be set.
+    bytes key = 1;
 
-    // page_num is a page number that can be used when PageResponse.next_page_key
-    // is unavailable. It is less efficient than using page_key. page_num 0
-    // is the first page and page_num n indicates the page starting from result
-    // n * limit
-    uint64 page_num = 2;
+    // offset is a numeric offset that can be used when key is unavailable.
+    // It is less efficient than using key. Only one of offset or key should
+    // be set.
+    uint64 offset = 2;
 
-    // limit is the total number of results to be returned in the result page
+    // limit is the total number of results to be returned in the result page.
+    // If left empty it will default to a value to be set by each app.
     uint64 limit = 3;
 
     // count_total is set to true  to indicate that the result set should include
-    // a count of the total number of items available for pagination in UIs
+    // a count of the total number of items available for pagination in UIs. count_total
+    // is only respected when offset is used. It is ignored when key is set.
     bool count_total = 4;
 }
 
@@ -37,9 +39,9 @@ message PageRequest {
 //          PageResponse page = 2;
 //  }
 message PageResponse {
-    // next_page_key is the key to be passed to PageRequest.page_key to
+    // next_key is the key to be passed to PageRequest.key to
     // query the next page most efficiently
-    bytes next_page_key = 1;
+    bytes next_key = 1;
 
     // total is total number of results available if PageRequest.count_total
     // was set, its value is undefined otherwise

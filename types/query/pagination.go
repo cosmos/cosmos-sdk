@@ -21,50 +21,20 @@ func Paginate(
 	req *PageRequest,
 	onResult func(key []byte, value []byte) error,
 ) (*PageResponse, error) {
-	pageNum := req.PageNum
+	offset := req.Offset
+	key := req.Key
 	limit := req.Limit
 
-	if pageNum >= 1 {
-		iterator := prefixStore.Iterator(req.PageKey, nil)
-		defer iterator.Close()
-
-		pageStart := pageNum * limit
-		pageEnd := pageStart + limit
-		var count uint64
-		var nextPageKey []byte
-
-		for ; iterator.Valid(); iterator.Next() {
-			count++
-
-			if count < pageStart {
-				continue
-			} else if count <= pageEnd {
-				err := onResult(iterator.Key(), iterator.Value())
-				if err != nil {
-					return nil, err
-				}
-			} else if !req.CountTotal {
-				nextPageKey = iterator.Key()
-				break
-			}
-		}
-
-		res := &PageResponse{NextPageKey: nextPageKey}
-		if req.CountTotal {
-			res.Total = count
-		}
-
-		return res, nil
-	} else {
-		iterator := prefixStore.Iterator(req.PageKey, nil)
+	if len(key) != 0 {
+		iterator := prefixStore.Iterator(key, nil)
 		defer iterator.Close()
 
 		var count uint64
-		var nextPageKey []byte
+		var nextKey []byte
 
 		for ; iterator.Valid(); iterator.Next() {
 			if count == limit {
-				nextPageKey = iterator.Key()
+				nextKey = iterator.Key()
 				break
 			}
 
@@ -77,7 +47,37 @@ func Paginate(
 		}
 
 		return &PageResponse{
-			NextPageKey: nextPageKey,
+			NextKey: nextKey,
 		}, nil
+	} else {
+		iterator := prefixStore.Iterator(nil, nil)
+		defer iterator.Close()
+
+		end := offset + limit
+		var count uint64
+		var nextKey []byte
+
+		for ; iterator.Valid(); iterator.Next() {
+			count++
+
+			if count < offset {
+				continue
+			} else if count <= end {
+				err := onResult(iterator.Key(), iterator.Value())
+				if err != nil {
+					return nil, err
+				}
+			} else if !req.CountTotal {
+				nextKey = iterator.Key()
+				break
+			}
+		}
+
+		res := &PageResponse{NextKey: nextKey}
+		if req.CountTotal {
+			res.Total = count
+		}
+
+		return res, nil
 	}
 }

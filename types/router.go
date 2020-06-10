@@ -26,30 +26,24 @@ var (
 
 // Router provides handlers for each transaction type.
 type Router interface {
-	AddRoute(r Route) Router
+	AddRoute(r *Route) Router
 	Route(ctx Context, path string) Handler
 }
 
-// Route represents a Route used by the Router.
-type Route interface {
-	Path() string
-	Handler() Handler
-}
-
-type route struct {
+type Route struct {
 	path    string
 	handler Handler
 }
 
-func NewRoute(p string, h Handler) Route {
-	return &route{path: p, handler: h}
+func NewRoute(p string, h Handler) *Route {
+	return &Route{path: p, handler: h}
 }
 
-func (r route) Path() string {
+func (r Route) Path() string {
 	return r.path
 }
 
-func (r route) Handler() Handler {
+func (r Route) Handler() Handler {
 	return r.handler
 }
 

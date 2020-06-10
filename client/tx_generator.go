@@ -14,7 +14,11 @@ type (
 		NewTx() TxBuilder
 		NewFee() Fee
 		NewSignature() Signature
-		MarshalTx(tx types.Tx) ([]byte, error)
+
+		TxEncoder() types.TxEncoder
+		TxDecoder() types.TxDecoder
+		TxJSONEncoder() types.TxEncoder
+		TxJSONDecoder() types.TxDecoder
 	}
 
 	Fee interface {

@@ -37,16 +37,16 @@ type Route interface {
 }
 
 type route struct {
-	route   string
+	path    string
 	handler Handler
 }
 
-func NewRoute(r string, h Handler) Route {
-	return &route{route: r, handler: h}
+func NewRoute(p string, h Handler) Route {
+	return &route{path: p, handler: h}
 }
 
 func (r route) Path() string {
-	return r.route
+	return r.path
 }
 
 func (r route) Handler() Handler {

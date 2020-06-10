@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"time"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
@@ -160,13 +159,13 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
-	if err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, consensusState); err != nil {
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	if err != nil {
 		return err
 	}
 
@@ -194,12 +193,12 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
-	if err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, consensusState); err != nil {
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
+	if err != nil {
 		return err
 	}
 
@@ -233,12 +232,12 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
-	if err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, consensusState); err != nil {
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
+	if err != nil {
 		return err
 	}
 
@@ -272,12 +271,12 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
-	if err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, consensusState); err != nil {
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
+	if err != nil {
 		return err
 	}
 
@@ -301,12 +300,12 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
-	if err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, consensusState); err != nil {
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
+	if err != nil {
 		return err
 	}
 
@@ -330,12 +329,12 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
-	if err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, consensusState); err != nil {
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
+	if err != nil {
 		return err
 	}
 
@@ -358,12 +357,12 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
-	if err != nil {
+	if err := validateVerificationArgs(cs, height, prefix, proof, consensusState); err != nil {
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
+	if err != nil {
 		return err
 	}
 
@@ -381,13 +380,14 @@ func (cs ClientState) VerifyNextSequenceRecv(
 func validateVerificationArgs(
 	cs ClientState,
 	height uint64,
+	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
 	if cs.GetLatestHeight() < height {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height),
+			"client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height,
 		)
 	}
 
@@ -395,12 +395,31 @@ func validateVerificationArgs(
 		return clienttypes.ErrClientFrozen
 	}
 
+	if prefix == nil {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
+	}
+
+	_, ok := prefix.(*commitmenttypes.MerklePrefix)
+	if !ok {
+		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected *MerklePrefix", prefix)
+	}
+
 	if proof == nil {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
+	_, ok = proof.(commitmenttypes.MerkleProof)
+	if !ok {
+		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "invalid proof type %T, expected MerkleProof", proof)
+	}
+
 	if consensusState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+	}
+
+	_, ok = consensusState.(ConsensusState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
 	}
 
 	return nil

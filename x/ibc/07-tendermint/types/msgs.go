@@ -211,7 +211,9 @@ func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddres
 func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
-func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }
+func (msg MsgSubmitClientMisbehaviour) Type() string {
+	return TypeMsgSubmitClientMisbehaviour
+}
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {

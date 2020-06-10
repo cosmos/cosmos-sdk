@@ -95,13 +95,10 @@ func (am AppModule) Name() string {
 }
 
 // Route returns the capability module's message routing key.
-func (AppModule) Route() string { return "" }
+func (AppModule) Route() *sdk.Route { return nil }
 
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return "" }
-
-// NewHandler returns the capability module's message Handler.
-func (am AppModule) NewHandler() sdk.Handler { return nil }
 
 // NewQuerierHandler returns the capability module's Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }

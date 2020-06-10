@@ -108,13 +108,8 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route returns the message routing key for the ibc module.
-func (AppModule) Route() string {
-	return RouterKey
-}
-
-// NewHandler returns an sdk.Handler for the ibc module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(*am.keeper)
+func (am AppModule) Route() *sdk.Route {
+	return sdk.NewRoute(RouterKey, NewHandler(*am.keeper))
 }
 
 // QuerierRoute returns the ibc module's querier route name.
@@ -178,9 +173,8 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for ibc module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-	// TODO: in a following PR
-	// sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.NewDecodeStore(am.keeper.Codecs())
 }
 
 // WeightedOperations returns the all the ibc module operations with their respective weights.

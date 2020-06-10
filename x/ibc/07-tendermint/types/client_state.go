@@ -69,9 +69,6 @@ func Initialize(
 ) (ClientState, error) {
 	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
 
-	if err := clientState.Validate(); err != nil {
-		return ClientState{}, err
-	}
 	return clientState, nil
 }
 

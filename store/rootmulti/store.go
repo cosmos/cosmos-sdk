@@ -587,7 +587,7 @@ func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
 	// convert merkle.SimpleProof to CommitmentProof
 	existProof, err := ics23tendermint.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
 	if err != nil {
-		panic("could not convert simple proof to existence proof")
+		panic(fmt.Errorf("could not convert simple proof to existence proof: %w", err))
 	}
 	commitmentProof := &ics23.CommitmentProof{
 		Proof: &ics23.CommitmentProof_Exist{

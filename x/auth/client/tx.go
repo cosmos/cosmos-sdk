@@ -285,7 +285,7 @@ func populateAccountFromState(
 	txBldr authtypes.TxBuilder, clientCtx client.Context, addr sdk.AccAddress,
 ) (authtypes.TxBuilder, error) {
 
-	num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(clientCtx, addr)
+	num, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 	if err != nil {
 		return txBldr, err
 	}
@@ -332,7 +332,7 @@ func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (authtypes.TxBuilder, error) {
 	from := clientCtx.GetFromAddress()
 
-	accGetter := authtypes.NewAccountRetriever(Codec)
+	accGetter := clientCtx.AccountRetriever
 	if err := accGetter.EnsureExists(clientCtx, from); err != nil {
 		return txBldr, err
 	}

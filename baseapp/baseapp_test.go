@@ -1555,7 +1555,7 @@ func TestGRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *BaseApp) {
 		testdata.RegisterTestServiceServer(
 			bapp.GRPCQueryRouter(),
-			testServer{},
+			testdata.TestServiceImpl{},
 		)
 	}
 

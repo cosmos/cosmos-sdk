@@ -78,3 +78,19 @@ message SimulationResponse {
   GasInfo gas_info = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
   Result  result   = 2;
 }
+
+// MsgData defines the data returned in a Result object during message execution.
+message MsgData {
+  option (gogoproto.stringer) = true;
+
+  string msg_type = 1;
+  bytes  data     = 2;
+}
+
+// TxData defines a list of MsgData. A transaction will have a MsgData object for
+// each message.
+message TxData {
+  option (gogoproto.stringer) = true;
+
+  repeated MsgData data = 1;
+}

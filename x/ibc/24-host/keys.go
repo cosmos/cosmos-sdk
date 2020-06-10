@@ -40,6 +40,12 @@ func KeyPrefixBytes(prefix int) []byte {
 	return []byte(fmt.Sprintf("%d/", prefix))
 }
 
+// FullKeyClientPath returns the full path of specific client path in the format:
+// "clients/{clientID}/{path}".
+func FullKeyClientPath(clientID string, path []byte) []byte {
+	return append(KeyClientStorePrefix, append([]byte("/"+clientID+"/"), path...)...)
+}
+
 // ICS02
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#path-space
 
@@ -139,6 +145,11 @@ func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/", KeyPacketCommitmentPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
 }
 
+// PacketCommitmentPrefixPath defines the prefix for commitments to packet data fields store path.
+func PacketCommitmentPrefixPath(portID, channelID string) string {
+	return fmt.Sprintf("%s/", KeyPacketCommitmentPrefix) + channelPath(portID, channelID)
+}
+
 // PacketAcknowledgementPath defines the packet acknowledgement store path
 func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
@@ -186,12 +197,7 @@ func channelPath(portID, channelID string) string {
 // ICS05
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#store-paths
 
-// PortPath defines the path under which ports paths are stored
+// PortPath defines the path under which ports paths are stored on the capability module
 func PortPath(portID string) string {
 	return fmt.Sprintf("ports/%s", portID)
-}
-
-// KeyPort returns the store key for a particular port
-func KeyPort(portID string) []byte {
-	return []byte(PortPath(portID))
 }

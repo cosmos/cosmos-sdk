@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -15,7 +17,10 @@ import (
 func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
 	clientType := exported.ClientTypeFromString(msg.GetClientType())
 
-	var clientState exported.ClientState
+	var (
+		clientState     exported.ClientState
+		consensusHeight uint64
+	)
 
 	switch clientType {
 	case exported.Tendermint:
@@ -29,9 +34,11 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		if err != nil {
 			return nil, err
 		}
+		consensusHeight = msg.GetConsensusState().GetHeight()
 	case exported.Localhost:
 		// msg client id is always "localhost"
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+		consensusHeight = uint64(ctx.BlockHeight())
 	default:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	}
@@ -48,6 +55,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 			EventTypeCreateClient,
 			sdk.NewAttribute(AttributeKeyClientID, msg.GetClientID()),
 			sdk.NewAttribute(AttributeKeyClientType, msg.GetClientType()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

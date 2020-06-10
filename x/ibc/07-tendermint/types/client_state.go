@@ -421,7 +421,7 @@ func sanitizeVerificationArgs(
 		return nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
-	if err = cdc.UnmarshalBinaryBare(proof, &merkleProof); err != nil {
+	if err = cdc.UnmarshalBinaryBare(proof, merkleProof); err != nil {
 		return nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "failed to unmarshal proof into commitment merkle proof")
 	}
 

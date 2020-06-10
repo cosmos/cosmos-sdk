@@ -1,4 +1,4 @@
-package types
+package tx
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -248,6 +249,40 @@ func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx
 	}
 
 	return
+}
+
+// NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
+func NewBatchScanner(cdc *codec.Codec, r io.Reader) *BatchScanner {
+	return &BatchScanner{Scanner: bufio.NewScanner(r), cdc: cdc}
+}
+
+// BatchScanner provides a convenient interface for reading batch data such as a file
+// of newline-delimited JSON encoded StdTx.
+type BatchScanner struct {
+	*bufio.Scanner
+	stdTx        authtypes.StdTx
+	cdc          *codec.Codec
+	unmarshalErr error
+}
+
+// StdTx returns the most recent StdTx unmarshalled by a call to Scan.
+func (bs BatchScanner) StdTx() authtypes.StdTx { return bs.stdTx }
+
+// UnmarshalErr returns the first unmarshalling error that was encountered by the scanner.
+func (bs BatchScanner) UnmarshalErr() error { return bs.unmarshalErr }
+
+// Scan advances the Scanner to the next line.
+func (bs *BatchScanner) Scan() bool {
+	if !bs.Scanner.Scan() {
+		return false
+	}
+
+	if err := bs.cdc.UnmarshalJSON(bs.Bytes(), &bs.stdTx); err != nil && bs.unmarshalErr == nil {
+		bs.unmarshalErr = err
+		return false
+	}
+
+	return true
 }
 
 func populateAccountFromState(

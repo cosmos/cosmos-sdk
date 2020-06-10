@@ -22,10 +22,10 @@ func GetCmdQueryNextSequence(cdc *codec.Codec, queryRoute string) *cobra.Command
 		Long: strings.TrimSpace(fmt.Sprintf(`Query an IBC channel end
 		
 Example:
-$ %s query ibc channel next-recv [port-id] [channel-id]
+$ %s query ibc-transfer next-recv [port-id] [channel-id]
 		`, version.ClientName),
 		),
-		Example: fmt.Sprintf("%s query ibc channel next-recv [port-id] [channel-id]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc-transfer next-recv [port-id] [channel-id]", version.ClientName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.NewContext().WithCodec(cdc)

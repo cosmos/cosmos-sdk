@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
@@ -126,6 +127,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(*am.keeper)
 }
 
+func (am AppModule) RegisterQueryService(grpc.Server) {}
+
 // InitGenesis performs genesis initialization for the ibc module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
@@ -175,9 +178,8 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for ibc module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-	// TODO: in a following PR
-	// sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.NewDecodeStore(am.keeper.Codecs())
 }
 
 // WeightedOperations returns the all the ibc module operations with their respective weights.

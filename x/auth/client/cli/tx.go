@@ -21,6 +21,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		GetMultiSignCommand(cdc),
 		GetSignCommand(cdc),
 		GetValidateSignaturesCommand(cdc),
+		GetSignBatchCommand(cdc),
 	)
 	return txCmd
 }

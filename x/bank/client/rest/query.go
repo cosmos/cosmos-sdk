@@ -49,10 +49,10 @@ func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		denom := r.FormValue("denom")
 		if denom == "" {
-			params = types.NewQueryAllBalancesParams(addr)
+			params = types.NewQueryAllBalancesRequest(addr)
 			route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllBalances)
 		} else {
-			params = types.NewQueryBalanceParams(addr, denom)
+			params = types.NewQueryBalanceRequest(addr, denom)
 			route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 		}
 

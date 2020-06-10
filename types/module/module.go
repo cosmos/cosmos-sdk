@@ -31,6 +31,8 @@ package module
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -141,8 +143,12 @@ type AppModule interface {
 	// routes
 	Route() string
 	NewHandler() sdk.Handler
+	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
+	// Deprecated: use RegisterQueryService
 	NewQuerierHandler() sdk.Querier
+	// RegisterQueryService allows a module to register a gRPC query service
+	RegisterQueryService(grpc.Server)
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -177,6 +183,8 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
 // NewQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
+
+func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
@@ -253,6 +261,13 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter)
 		if module.QuerierRoute() != "" {
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
 		}
+	}
+}
+
+// RegisterQueryServices registers all module query services
+func (m *Manager) RegisterQueryServices(grpcRouter grpc.Server) {
+	for _, module := range m.Modules {
+		module.RegisterQueryService(grpcRouter)
 	}
 }
 

@@ -17,7 +17,7 @@ import (
 func Test_splitAndCall_NoMessages(t *testing.T) {
 	clientCtx := client.Context{}
 
-	err := splitAndApply(nil, clientCtx, nil, 10)
+	err := newSplitAndApply(nil, clientCtx, nil, 10)
 	assert.NoError(t, err, "")
 }
 
@@ -39,8 +39,8 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 	const chunkSize = 2
 
 	callCount := 0
-	err := splitAndApply(
-		func(clientCtx client.Context, msgs []sdk.Msg) error {
+	err := newSplitAndApply(
+		func(clientCtx client.Context, msgs ...sdk.Msg) error {
 			callCount++
 
 			assert.NotNil(t, clientCtx)

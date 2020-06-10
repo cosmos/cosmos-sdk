@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,25 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type testServer struct{}
-
-func (e testServer) Echo(_ context.Context, req *testdata.EchoRequest) (*testdata.EchoResponse, error) {
-	return &testdata.EchoResponse{Message: req.Message}, nil
-}
-
-func (e testServer) SayHello(_ context.Context, request *testdata.SayHelloRequest) (*testdata.SayHelloResponse, error) {
-	greeting := fmt.Sprintf("Hello %s!", request.Name)
-	return &testdata.SayHelloResponse{Greeting: greeting}, nil
-}
-
-var _ testdata.TestServiceServer = testServer{}
-
 func TestGRPCRouter(t *testing.T) {
-	qr := NewGRPCRouter()
-	testdata.RegisterTestServiceServer(qr, testServer{})
+	qr := NewGRPCQueryRouter()
+	testdata.RegisterTestServiceServer(qr, testdata.TestServiceImpl{})
 	helper := &QueryServiceTestHelper{
-		GRPCRouter: qr,
-		ctx:        sdk.Context{},
+		GRPCQueryRouter: qr,
+		ctx:             sdk.Context{},
 	}
 	client := testdata.NewTestServiceClient(helper)
 

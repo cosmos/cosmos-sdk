@@ -111,6 +111,11 @@ func queryValidator(clientCtx client.Context, endpoint string) http.HandlerFunc 
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["validatorAddr"]
 
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -121,7 +126,7 @@ func queryValidator(clientCtx client.Context, endpoint string) http.HandlerFunc 
 			return
 		}
 
-		params := types.NewQueryValidatorParams(validatorAddr)
+		params := types.NewQueryValidatorParams(validatorAddr, page, limit)
 
 		bz, err := clientCtx.Codec.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {

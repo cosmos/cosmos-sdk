@@ -101,8 +101,8 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	// Validate ProofSpecs if provided
 	if msg.ProofSpecs != nil {
 		for _, spec := range msg.ProofSpecs {
-			if spec == "" {
-				return sdkerrors.Wrap(ErrInvalidProofSpecs, "Invalid empty spec")
+			if strings.TrimSpace(spec) == "" {
+				return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be blank")
 			}
 		}
 	}

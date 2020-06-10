@@ -21,12 +21,18 @@ func (DirectModeHandler) Modes() []types.SignMode {
 }
 
 func (DirectModeHandler) GetSignBytes(mode types.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+	if mode != types.SignMode_SIGN_MODE_DIRECT {
+		return nil, fmt.Errorf("expected %s, got %s", types.SignMode_SIGN_MODE_DIRECT, mode)
+	}
+
 	protoTx, ok := tx.(types.ProtoTx)
 	if !ok {
 		return nil, fmt.Errorf("can only get direct sign bytes for a ProtoTx, got %T", tx)
 	}
+
 	bodyBz := protoTx.GetBodyBytes()
 	authInfoBz := protoTx.GetAuthInfoBytes()
+
 	return DirectSignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.AccountSequence)
 }
 

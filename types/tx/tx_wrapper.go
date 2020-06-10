@@ -11,26 +11,24 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type txWrapper struct {
-	tx          *Tx
-	bodyBz      []byte
-	authInfoBz  []byte
-	pubKeys     []crypto.PubKey
-	marshaler   codec.Marshaler
-	pubkeyCodec types.PublicKeyCodec
-}
-
+// TxWrapper defines a type that is to be used for building, signing and verifying
+// protobuf transactions. The protobuf Tx type is not used directly because a) protobuf
+// SIGN_MODE_DIRECT signing uses raw body and auth_info bytes and b) Tx does does not retain
+// crypto.PubKey instances.
 type TxWrapper interface {
 	sdk.Tx
+
 	ProtoTx
 
-	WithTxBody(*TxBody) TxWrapper
-	WithAuthInfo(*AuthInfo) TxWrapper
-	WithSignatures([][]byte) TxWrapper
+	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
+
+	SetBody(*TxBody)
+	SetAuthInfo(*AuthInfo)
+	SetSignatures([][]byte)
 }
 
 func NewTxWrapper(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) TxWrapper {
-	return txWrapper{
+	return &txWrapper{
 		tx: &Tx{
 			Body:     &TxBody{},
 			AuthInfo: &AuthInfo{},
@@ -40,10 +38,26 @@ func NewTxWrapper(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) T
 	}
 }
 
-var (
-	_ sdk.Tx  = txWrapper{}
-	_ ProtoTx = txWrapper{}
-)
+type txWrapper struct {
+	tx *Tx
+
+	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
+	// from the client using TxRaw if the tx was decoded from the wire
+	bodyBz []byte
+
+	// authInfoBz represents the protobuf encoding of TxBody. This should be encoding
+	// from the client using TxRaw if the tx was decoded from the wire
+	authInfoBz []byte
+
+	// pubKeys represents the cached crypto.PubKey's that were set either from tx decoding
+	// or decoded from AuthInfo when GetPubKey's was called
+	pubKeys []crypto.PubKey
+
+	marshaler   codec.Marshaler
+	pubkeyCodec types.PublicKeyCodec
+}
+
+var _ TxWrapper = &txWrapper{}
 
 func (t txWrapper) GetMsgs() []sdk.Msg {
 	anys := t.tx.Body.Messages
@@ -109,11 +123,27 @@ func (t txWrapper) ValidateBasic() error {
 	return nil
 }
 
-func (t txWrapper) GetBodyBytes() []byte {
+func (t *txWrapper) GetBodyBytes() []byte {
+	if len(t.bodyBz) == 0 {
+		// if bodyBz is empty, then marshal the body. bodyBz will generally
+		// be set to nil whenever SetBody is called so the result of calling
+		// this method should always return the correct bytes. Note that after
+		// decoding bodyBz is derived from TxRaw so that it matches what was
+		// transmitted over the wire
+		t.bodyBz = t.marshaler.MustMarshalBinaryBare(t.tx.Body)
+	}
 	return t.bodyBz
 }
 
-func (t txWrapper) GetAuthInfoBytes() []byte {
+func (t *txWrapper) GetAuthInfoBytes() []byte {
+	if len(t.authInfoBz) == 0 {
+		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
+		// be set to nil whenever SetAuthInfo is called so the result of calling
+		// this method should always return the correct bytes. Note that after
+		// decoding authInfoBz is derived from TxRaw so that it matches what was
+		// transmitted over the wire
+		t.authInfoBz = t.marshaler.MustMarshalBinaryBare(t.tx.AuthInfo)
+	}
 	return t.authInfoBz
 }
 
@@ -133,19 +163,42 @@ func (t txWrapper) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-func (t txWrapper) WithTxBody(body *TxBody) TxWrapper {
+func (t txWrapper) GetPubKeys() []crypto.PubKey {
+	if t.pubKeys == nil {
+		signerInfos := t.tx.AuthInfo.SignerInfos
+		pubKeys := make([]crypto.PubKey, len(signerInfos))
+
+		for i, si := range signerInfos {
+			var err error
+			pk := si.PublicKey
+			if pk != nil {
+				pubKeys[i], err = t.pubkeyCodec.Decode(si.PublicKey)
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+
+		t.pubKeys = pubKeys
+	}
+
+	return t.pubKeys
+}
+
+func (t *txWrapper) SetBody(body *TxBody) {
 	t.tx.Body = body
-	t.bodyBz = t.marshaler.MustMarshalBinaryBare(body)
-	return t
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	t.bodyBz = nil
 }
 
-func (t txWrapper) WithAuthInfo(info *AuthInfo) TxWrapper {
+func (t *txWrapper) SetAuthInfo(info *AuthInfo) {
 	t.tx.AuthInfo = info
-	t.authInfoBz = t.marshaler.MustMarshalBinaryBare(info)
-	return t
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	t.authInfoBz = nil
+	// set cached pubKeys to nil because they no longer match tx.AuthInfo
+	t.pubKeys = nil
 }
 
-func (t txWrapper) WithSignatures(sigs [][]byte) TxWrapper {
+func (t *txWrapper) SetSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
-	return t
 }

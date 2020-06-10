@@ -154,8 +154,8 @@ func (cs ClientState) Validate() error {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}
 	for _, spec := range cs.ProofSpecs {
-		if strings.TrimSpace(spec) == "" {
-			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be blank")
+		if !strings.HasPrefix(spec, "ics23:") {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec must be an ics23 spec")
 		}
 	}
 

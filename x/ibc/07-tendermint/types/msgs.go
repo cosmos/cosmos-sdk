@@ -105,8 +105,8 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil")
 	}
 	for _, spec := range msg.ProofSpecs {
-		if strings.TrimSpace(spec) == "" {
-			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be blank")
+		if !strings.HasPrefix(spec, "ics23:") {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec must be an ics23 spec")
 		}
 	}
 	return host.ClientIdentifierValidator(msg.ClientID)

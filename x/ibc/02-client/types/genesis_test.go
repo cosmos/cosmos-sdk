@@ -6,11 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
 	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -25,8 +23,6 @@ const (
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 	maxClockDrift  time.Duration = time.Second * 10
 )
-
-var specs = []string{storetypes.ProofOpIAVLCommitment, merkle.ProofOpSimpleValue}
 
 func TestValidateGenesis(t *testing.T) {
 	privVal := tmtypes.NewMockPV()
@@ -54,7 +50,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
 					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
@@ -75,7 +71,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid client",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
 					localhosttypes.NewClientState("chaindID", 0),
 				},
 				nil,
@@ -87,7 +83,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
 					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
@@ -108,7 +104,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
 					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{

@@ -13,7 +13,7 @@ import (
 )
 
 // var representing the proofspecs for a SDK chain
-var sdkSpecs = []string{storetypes.ProofOpIAVLCommitment, merkle.ProofOpSimpleValue}
+var sdkSpecs = []string{storetypes.ProofOpIAVLCommitment, storetypes.ProofOpSimpleMerkleCommitment}
 
 // ICS 023 Merkle Types Implementation
 //

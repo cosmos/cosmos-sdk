@@ -8,6 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
@@ -118,22 +122,28 @@ func TestConfiguredTxEncoder(t *testing.T) {
 
 func TestReadStdTxFromFile(t *testing.T) {
 	t.Parallel()
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
+
+	encodingConfig := simappparams.MakeEncodingConfig()
+	sdk.RegisterCodec(encodingConfig.Amino)
+
+	txGen := encodingConfig.TxGenerator
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxGenerator(txGen)
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
 
 	// Write it to the file
-	encodedTx, _ := cdc.MarshalJSON(stdTx)
+	encodedTx, err := txGen.TxJSONEncoder()(stdTx)
+	require.NoError(t, err)
 	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
 	defer os.Remove(jsonTxFile.Name())
 
 	// Read it back
-	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
+	decodedTx, err := ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
-	require.Equal(t, decodedTx.Memo, "foomemo")
+	require.Equal(t, decodedTx.(authtypes.StdTx).Memo, "foomemo")
 }
 
 func TestBatchScanner_Scan(t *testing.T) {

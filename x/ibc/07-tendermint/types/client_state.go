@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"time"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
@@ -349,7 +348,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	if err := proof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
+	if err := merkleProof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -380,7 +379,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 

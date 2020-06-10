@@ -12,20 +12,20 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ sdk.Msg = MsgConnectionOpenInit{}
+var _ sdk.Msg = &MsgConnectionOpenInit{}
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmentexported.Prefix,
 	signer sdk.AccAddress,
-) (MsgConnectionOpenInit, error) {
+) (*MsgConnectionOpenInit, error) {
 	counterparty, err := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	if err != nil {
-		return MsgConnectionOpenInit{}, err
+		return nil, err
 	}
 
-	return MsgConnectionOpenInit{
+	return &MsgConnectionOpenInit{
 		ConnectionID: connectionID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
@@ -68,8 +68,8 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 }
 
 var (
-	_ sdk.Msg                          = MsgConnectionOpenTry{}
-	_ cdctypes.UnpackInterfacesMessage = MsgConnectionOpenTry{}
+	_ sdk.Msg                          = &MsgConnectionOpenTry{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgConnectionOpenTry{}
 )
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
@@ -78,23 +78,23 @@ func NewMsgConnectionOpenTry(
 	counterpartyClientID string, counterpartyPrefix commitmentexported.Prefix,
 	counterpartyVersions []string, proofInit, proofConsensus commitmentexported.Proof,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
-) (MsgConnectionOpenTry, error) {
+) (*MsgConnectionOpenTry, error) {
 	counterparty, err := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	if err != nil {
-		return MsgConnectionOpenTry{}, err
+		return nil, err
 	}
 
 	proofInitAny, err := proofInit.PackAny()
 	if err != nil {
-		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "invalid proof init")
+		return nil, sdkerrors.Wrap(err, "invalid proof init")
 	}
 
 	proofConsensusAny, err := proofConsensus.PackAny()
 	if err != nil {
-		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "invalid proof consensus")
+		return nil, sdkerrors.Wrap(err, "invalid proof consensus")
 	}
 
-	return MsgConnectionOpenTry{
+	return &MsgConnectionOpenTry{
 		ConnectionID:         connectionID,
 		ClientID:             clientID,
 		Counterparty:         counterparty,
@@ -205,8 +205,8 @@ func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) 
 }
 
 var (
-	_ sdk.Msg                          = MsgConnectionOpenAck{}
-	_ cdctypes.UnpackInterfacesMessage = MsgConnectionOpenAck{}
+	_ sdk.Msg                          = &MsgConnectionOpenAck{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgConnectionOpenAck{}
 )
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
@@ -214,18 +214,18 @@ func NewMsgConnectionOpenAck(
 	connectionID string, proofTry, proofConsensus commitmentexported.Proof,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
-) (MsgConnectionOpenAck, error) {
+) (*MsgConnectionOpenAck, error) {
 	proofTryAny, err := proofTry.PackAny()
 	if err != nil {
-		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "invalid proof try")
+		return nil, sdkerrors.Wrap(err, "invalid proof try")
 	}
 
 	proofConsensusAny, err := proofConsensus.PackAny()
 	if err != nil {
-		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "invalid proof consensus")
+		return nil, sdkerrors.Wrap(err, "invalid proof consensus")
 	}
 
-	return MsgConnectionOpenAck{
+	return &MsgConnectionOpenAck{
 		ConnectionID:    connectionID,
 		ProofTry:        *proofTryAny,
 		ProofConsensus:  *proofConsensusAny,
@@ -325,21 +325,21 @@ func (msg MsgConnectionOpenAck) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) 
 }
 
 var (
-	_ sdk.Msg                          = MsgConnectionOpenConfirm{}
-	_ cdctypes.UnpackInterfacesMessage = MsgConnectionOpenConfirm{}
+	_ sdk.Msg                          = &MsgConnectionOpenConfirm{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgConnectionOpenConfirm{}
 )
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
 	connectionID string, proofAck commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
-) (MsgConnectionOpenConfirm, error) {
+) (*MsgConnectionOpenConfirm, error) {
 	proofAckAny, err := proofAck.PackAny()
 	if err != nil {
-		return MsgConnectionOpenConfirm{}, sdkerrors.Wrap(err, "invalid proof ack")
+		return nil, sdkerrors.Wrap(err, "invalid proof ack")
 	}
 
-	return MsgConnectionOpenConfirm{
+	return &MsgConnectionOpenConfirm{
 		ConnectionID: connectionID,
 		ProofAck:     *proofAckAny,
 		ProofHeight:  proofHeight,

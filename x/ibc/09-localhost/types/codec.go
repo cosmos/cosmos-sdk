@@ -15,7 +15,7 @@ var SubModuleCdc *codec.Codec
 // RegisterCodec registers the localhost types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ClientState{}, "ibc/client/localhost/ClientState", nil)
-	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/client/localhost/MsgCreateClient", nil)
+	cdc.RegisterConcrete(&MsgCreateClient{}, "ibc/client/localhost/MsgCreateClient", nil)
 	SetSubModuleCodec(cdc)
 }
 

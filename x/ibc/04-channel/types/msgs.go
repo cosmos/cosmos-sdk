@@ -13,16 +13,16 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ sdk.Msg = MsgChannelOpenInit{}
+var _ sdk.Msg = &MsgChannelOpenInit{}
 
 // NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
 func NewMsgChannelOpenInit(
 	portID, channelID string, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
-) MsgChannelOpenInit {
+) *MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
-	return MsgChannelOpenInit{
+	return &MsgChannelOpenInit{
 		PortID:    portID,
 		ChannelID: channelID,
 		Channel:   channel,
@@ -63,8 +63,8 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 }
 
 var (
-	_ sdk.Msg                          = MsgChannelOpenTry{}
-	_ cdctypes.UnpackInterfacesMessage = MsgChannelOpenTry{}
+	_ sdk.Msg                          = &MsgChannelOpenTry{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgChannelOpenTry{}
 )
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
@@ -72,16 +72,16 @@ func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress,
-) (MsgChannelOpenTry, error) {
+) (*MsgChannelOpenTry, error) {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 
 	proofInitAny, err := proofInit.PackAny()
 	if err != nil {
-		return MsgChannelOpenTry{}, sdkerrors.Wrap(err, "invalid proof init")
+		return nil, sdkerrors.Wrap(err, "invalid proof init")
 	}
 
-	return MsgChannelOpenTry{
+	return &MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,
 		Channel:             channel,
@@ -156,21 +156,21 @@ func (msg MsgChannelOpenTry) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) err
 }
 
 var (
-	_ sdk.Msg                          = MsgChannelOpenAck{}
-	_ cdctypes.UnpackInterfacesMessage = MsgChannelOpenAck{}
+	_ sdk.Msg                          = &MsgChannelOpenAck{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgChannelOpenAck{}
 )
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
 	portID, channelID string, cpv string, proofTry commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
-) (MsgChannelOpenAck, error) {
+) (*MsgChannelOpenAck, error) {
 	proofTryAny, err := proofTry.PackAny()
 	if err != nil {
-		return MsgChannelOpenAck{}, sdkerrors.Wrap(err, "invalid proof try")
+		return nil, sdkerrors.Wrap(err, "invalid proof try")
 	}
 
-	return MsgChannelOpenAck{
+	return &MsgChannelOpenAck{
 		PortID:              portID,
 		ChannelID:           channelID,
 		CounterpartyVersion: cpv,
@@ -244,20 +244,20 @@ func (msg MsgChannelOpenAck) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) err
 }
 
 var (
-	_ sdk.Msg                          = MsgChannelOpenConfirm{}
-	_ cdctypes.UnpackInterfacesMessage = MsgChannelOpenConfirm{}
+	_ sdk.Msg                          = &MsgChannelOpenConfirm{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgChannelOpenConfirm{}
 )
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
 	portID, channelID string, proofAck commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
-) (MsgChannelOpenConfirm, error) {
+) (*MsgChannelOpenConfirm, error) {
 	proofAckAny, err := proofAck.PackAny()
 	if err != nil {
-		return MsgChannelOpenConfirm{}, sdkerrors.Wrap(err, "invalid proof ack")
+		returnnil, sdkerrors.Wrap(err, "invalid proof ack")
 	}
-	return MsgChannelOpenConfirm{
+	return &MsgChannelOpenConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofAck:    *proofAckAny,
@@ -326,13 +326,13 @@ func (msg MsgChannelOpenConfirm) UnpackInterfaces(unpacker cdctypes.AnyUnpacker)
 	return nil
 }
 
-var _ sdk.Msg = MsgChannelCloseInit{}
+var _ sdk.Msg = &MsgChannelCloseInit{}
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
 func NewMsgChannelCloseInit(
 	portID string, channelID string, signer sdk.AccAddress,
-) MsgChannelCloseInit {
-	return MsgChannelCloseInit{
+) *MsgChannelCloseInit {
+	return &MsgChannelCloseInit{
 		PortID:    portID,
 		ChannelID: channelID,
 		Signer:    signer,
@@ -372,21 +372,21 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 }
 
 var (
-	_ sdk.Msg                          = MsgChannelCloseConfirm{}
-	_ cdctypes.UnpackInterfacesMessage = MsgChannelCloseConfirm{}
+	_ sdk.Msg                          = &MsgChannelCloseConfirm{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgChannelCloseConfirm{}
 )
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
 	portID, channelID string, proofInit commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
-) (MsgChannelCloseConfirm, error) {
+) (*MsgChannelCloseConfirm, error) {
 	proofInitAny, err := proofInit.PackAny()
 	if err != nil {
-		return MsgChannelCloseConfirm{}, sdkerrors.Wrap(err, "invalid proof init")
+		return nil, sdkerrors.Wrap(err, "invalid proof init")
 	}
 
-	return MsgChannelCloseConfirm{
+	return &MsgChannelCloseConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofInit:   *proofInitAny,
@@ -456,21 +456,21 @@ func (msg MsgChannelCloseConfirm) UnpackInterfaces(unpacker cdctypes.AnyUnpacker
 }
 
 var (
-	_ sdk.Msg                          = MsgPacket{}
-	_ cdctypes.UnpackInterfacesMessage = MsgPacket{}
+	_ sdk.Msg                          = &MsgPacket{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgPacket{}
 )
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(
 	packet Packet, proof commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
-) (MsgPacket, error) {
+) *(MsgPacket, error) {
 	proofAny, err := proof.PackAny()
 	if err != nil {
-		return MsgPacket{}, sdkerrors.Wrap(err, "invalid packet proof")
+		return nil, sdkerrors.Wrap(err, "invalid packet proof")
 	}
 
-	return MsgPacket{
+	return &MsgPacket{
 		Packet:      packet,
 		Proof:       *proofAny,
 		ProofHeight: proofHeight,
@@ -538,20 +538,20 @@ func (msg MsgPacket) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 var (
-	_ sdk.Msg                          = MsgTimeout{}
-	_ cdctypes.UnpackInterfacesMessage = MsgTimeout{}
+	_ sdk.Msg                          = &MsgTimeout{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgTimeout{}
 )
 
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof commitmentexported.Proof,
 	proofHeight uint64, signer sdk.AccAddress,
-) (MsgTimeout, error) {
+) (*MsgTimeout, error) {
 	proofAny, err := proof.PackAny()
 	if err != nil {
-		return MsgTimeout{}, sdkerrors.Wrap(err, "invalid timeout proof")
+		return nil, sdkerrors.Wrap(err, "invalid timeout proof")
 	}
-	return MsgTimeout{
+	return &MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
 		Proof:            *proofAny,
@@ -613,20 +613,20 @@ func (msg MsgTimeout) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 var (
-	_ sdk.Msg                          = MsgAcknowledgement{}
-	_ cdctypes.UnpackInterfacesMessage = MsgAcknowledgement{}
+	_ sdk.Msg                          = &MsgAcknowledgement{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgAcknowledgement{}
 )
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
 	packet Packet, ack []byte, proof commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress,
-) (MsgAcknowledgement, error) {
+) (*MsgAcknowledgement, error) {
 	proofAny, err := proof.PackAny()
 	if err != nil {
-		return MsgAcknowledgement{}, sdkerrors.Wrap(err, "invalid packet proof")
+		return nil, sdkerrors.Wrap(err, "invalid packet proof")
 	}
 
-	return MsgAcknowledgement{
+	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
 		Proof:           *proofAny,

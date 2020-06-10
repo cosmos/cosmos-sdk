@@ -8,7 +8,7 @@ import (
 )
 
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
-func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpenInit) (*sdk.Result, error) {
+func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenInit) (*sdk.Result, error) {
 	if err := k.ConnOpenInit(
 		ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty,
 	); err != nil {
@@ -34,7 +34,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 }
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
-func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpenTry) (*sdk.Result, error) {
+func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenTry) (*sdk.Result, error) {
 	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid proof init")
@@ -72,7 +72,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 }
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
-func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpenAck) (*sdk.Result, error) {
+func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenAck) (*sdk.Result, error) {
 	proofTry, err := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid proof try")
@@ -107,7 +107,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 }
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
-func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg MsgConnectionOpenConfirm) (*sdk.Result, error) {
+func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg *MsgConnectionOpenConfirm) (*sdk.Result, error) {
 	proofAck, err := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid proof ack")

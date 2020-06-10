@@ -79,7 +79,7 @@ func TestMsgTestSuite(t *testing.T) {
 
 // TestMsgChannelOpenInit tests ValidateBasic for MsgChannelOpenInit
 func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
-	testMsgs := []MsgChannelOpenInit{
+	testMsgs := []*MsgChannelOpenInit{
 		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                      // valid msg
 		NewMsgChannelOpenInit(invalidShortPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                  // too short port id
 		NewMsgChannelOpenInit(invalidLongPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                   // too long port id
@@ -98,7 +98,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
 	}
 
 	testCases := []struct {
-		msg     MsgChannelOpenInit
+		msg     *MsgChannelOpenInit
 		expPass bool
 		errMsg  string
 	}{
@@ -167,7 +167,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 	suite.Require().NoError(err)
 
 	testCases := []struct {
-		msg     MsgChannelOpenTry
+		msg     *MsgChannelOpenTry
 		expPass bool
 		errMsg  string
 	}{
@@ -224,7 +224,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 	suite.Require().NoError(err)
 
 	testCases := []struct {
-		msg     MsgChannelOpenAck
+		msg     *MsgChannelOpenAck
 		expPass bool
 		errMsg  string
 	}{
@@ -272,7 +272,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenConfirm() {
 	suite.Require().NoError(err)
 
 	testCases := []struct {
-		msg     MsgChannelOpenConfirm
+		msg     *MsgChannelOpenConfirm
 		expPass bool
 		errMsg  string
 	}{
@@ -299,7 +299,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenConfirm() {
 
 // TestMsgChannelCloseInit tests ValidateBasic for MsgChannelCloseInit
 func (suite *MsgTestSuite) TestMsgChannelCloseInit() {
-	testMsgs := []MsgChannelCloseInit{
+	testMsgs := []*MsgChannelCloseInit{
 		NewMsgChannelCloseInit("testportid", "testchannel", addr),       // valid msg
 		NewMsgChannelCloseInit(invalidShortPort, "testchannel", addr),   // too short port id
 		NewMsgChannelCloseInit(invalidLongPort, "testchannel", addr),    // too long port id
@@ -310,7 +310,7 @@ func (suite *MsgTestSuite) TestMsgChannelCloseInit() {
 	}
 
 	testCases := []struct {
-		msg     MsgChannelCloseInit
+		msg     *MsgChannelCloseInit
 		expPass bool
 		errMsg  string
 	}{
@@ -355,7 +355,7 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 	suite.Require().NoError(err)
 
 	testCases := []struct {
-		msg     MsgChannelCloseConfirm
+		msg     *MsgChannelCloseConfirm
 		expPass bool
 		errMsg  string
 	}{
@@ -428,7 +428,7 @@ func TestMsgPacketValidation(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := []struct {
-		msg     MsgPacket
+		msg     *MsgPacket
 		expPass bool
 		errMsg  string
 	}{
@@ -488,7 +488,7 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 	suite.Require().NoError(err)
 
 	testCases := []struct {
-		msg     MsgTimeout
+		msg     *MsgTimeout
 		expPass bool
 		errMsg  string
 	}{
@@ -525,7 +525,7 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 	suite.Require().NoError(err)
 
 	testCases := []struct {
-		msg     MsgAcknowledgement
+		msg     *MsgAcknowledgement
 		expPass bool
 		errMsg  string
 	}{

@@ -31,12 +31,15 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		switch msg := msg.(type) {
 		case clientexported.MsgUpdateClient:
 			_, err = pvr.clientKeeper.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
-		case channel.MsgPacket:
-			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.GetProof(), msg.ProofHeight)
-		case channel.MsgAcknowledgement:
-			_, err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.GetProof(), msg.ProofHeight)
-		case channel.MsgTimeout:
-			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.GetProof(), msg.ProofHeight, msg.NextSequenceRecv)
+		case *channel.MsgPacket:
+			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
+		case *channel.MsgAcknowledgement:
+			_, err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+		case *channel.MsgTimeout:
+			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+		default:
+			// don't emit sender event for other msg types
+			continue
 		}
 
 		attributes := make([]sdk.Attribute, len(msg.GetSigners()))

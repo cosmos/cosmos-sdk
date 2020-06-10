@@ -24,9 +24,9 @@ var (
 // and two signatures over different messages at that sequence.
 type Evidence struct {
 	ClientID     string           `json:"client_id" yaml:"client_id"`
-	Sequence     uint64           `json:"sequence" yaml:"sequnce"`
+	Sequence     uint64           `json:"sequence" yaml:"sequence"`
 	SignatureOne SignatureAndData `json:"signature_one" yaml:"signature_one"`
-	SignatureTwo SignatureAndData `json:"signature_one" yam;:"signature_two"`
+	SignatureTwo SignatureAndData `json:"signature_two" yam;:"signature_two"`
 }
 
 // ClientType is a Solo Machine light client.
@@ -112,7 +112,7 @@ func (sd SignatureAndData) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "signature cannot be empty")
 	}
 	if len(sd.Data) == 0 {
-		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "data for signature cannot be emtpy")
+		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "data for signature cannot be empty")
 	}
 
 	return nil

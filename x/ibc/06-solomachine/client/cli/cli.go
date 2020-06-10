@@ -6,12 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 // GetTxCmd returns the transaction commands for IBC clients
 func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 	ics06SoloMachineTxCmd := &cobra.Command{
-		Use:                        "solomachine",
+		Use:                        types.SubModuleName,
 		Short:                      "Solo Machine transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,

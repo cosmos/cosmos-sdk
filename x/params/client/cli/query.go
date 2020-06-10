@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
@@ -35,7 +34,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 		Short: "Query for raw parameters by subspace and key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithJSONMarshaler(m)
+			clientCtx := client.NewContext().WithJSONMarshaler(m)
 
 			params := types.NewQuerySubspaceParams(args[0], args[1])
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
@@ -45,7 +44,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 				return fmt.Errorf("failed to marshal params: %w", err)
 			}
 
-			bz, _, err = cliCtx.QueryWithData(route, bz)
+			bz, _, err = clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
@@ -55,7 +54,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 				return err
 			}
 
-			return cliCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(resp)
 		},
 	}
 

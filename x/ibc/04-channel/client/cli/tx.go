@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -32,7 +32,7 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			portID := args[0]
 			channelID := args[1]
@@ -44,13 +44,13 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 
 			msg := types.NewMsgChannelOpenInit(
 				portID, channelID, version, order, hops,
-				counterpartyPortID, counterpartyChannelID, cliCtx.GetFromAddress(),
+				counterpartyPortID, counterpartyChannelID, clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
@@ -69,7 +69,7 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			portID := args[0]
 			channelID := args[1]
@@ -79,7 +79,7 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 			order := channelOrder()
 			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
 
-			proofInit, err := connectionutils.ParseProof(cliCtx.Codec, args[5])
+			proofInit, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
 				return err
 			}
@@ -92,7 +92,7 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 			msg, err := types.NewMsgChannelOpenTry(
 				portID, channelID, version, order, hops,
 				counterpartyPortID, counterpartyChannelID, version,
-				proofInit, uint64(proofHeight), cliCtx.GetFromAddress(),
+				proofInit, uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err != nil {
 				return err
@@ -102,7 +102,7 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
@@ -120,13 +120,13 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			portID := args[0]
 			channelID := args[1]
 			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
 
-			proofTry, err := connectionutils.ParseProof(cliCtx.Codec, args[5])
+			proofTry, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
 				return err
 			}
@@ -137,7 +137,7 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			msg, err := types.NewMsgChannelOpenAck(
-				portID, channelID, version, proofTry, uint64(proofHeight), cliCtx.GetFromAddress(),
+				portID, channelID, version, proofTry, uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err != nil {
 				return err
@@ -147,7 +147,7 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
@@ -163,12 +163,12 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			portID := args[0]
 			channelID := args[1]
 
-			proofAck, err := connectionutils.ParseProof(cliCtx.Codec, args[5])
+			proofAck, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
 				return err
 			}
@@ -179,7 +179,7 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 			}
 
 			msg, err := types.NewMsgChannelOpenConfirm(
-				portID, channelID, proofAck, uint64(proofHeight), cliCtx.GetFromAddress(),
+				portID, channelID, proofAck, uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err != nil {
 				return err
@@ -189,7 +189,7 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
@@ -203,17 +203,17 @@ func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			portID := args[0]
 			channelID := args[1]
 
-			msg := types.NewMsgChannelCloseInit(portID, channelID, cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelCloseInit(portID, channelID, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
@@ -227,12 +227,12 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			portID := args[0]
 			channelID := args[1]
 
-			proofInit, err := connectionutils.ParseProof(cliCtx.Codec, args[5])
+			proofInit, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
 				return err
 			}
@@ -243,7 +243,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 			}
 
 			msg, err := types.NewMsgChannelCloseConfirm(
-				portID, channelID, proofInit, uint64(proofHeight), cliCtx.GetFromAddress(),
+				portID, channelID, proofInit, uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err != nil {
 				return err
@@ -253,7 +253,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }

@@ -72,7 +72,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 	suite.Require().NoError(err)
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenInit
+		msg     *MsgConnectionOpenInit
 		expPass bool
 		errMsg  string
 	}{
@@ -125,7 +125,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 	suite.Require().NoError(err)
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenTry
+		msg     *MsgConnectionOpenTry
 		expPass bool
 		errMsg  string
 	}{
@@ -174,7 +174,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	suite.Require().NoError(err)
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenAck
+		msg     *MsgConnectionOpenAck
 		expPass bool
 		errMsg  string
 	}{
@@ -213,7 +213,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 	suite.Require().NoError(err)
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenConfirm
+		msg     *MsgConnectionOpenConfirm
 		expPass bool
 		errMsg  string
 	}{

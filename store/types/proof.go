@@ -91,7 +91,7 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	// calculate root from proof
 	root, err := op.Proof.Calculate()
 	if err != nil {
-		return nil, sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof: %v", err)
+		return nil, sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof: %w", err)
 	}
 	// Only support an existence proof or nonexistence proof (batch proofs currently unsupported)
 	switch len(args) {

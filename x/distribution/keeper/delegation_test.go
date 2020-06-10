@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCalculateRewardsBasic(t *testing.T) {
@@ -22,9 +23,9 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(
-		valAddrs[0], valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt(),
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(
+		valAddrs[0], valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt(),
 	)
 
 	res, err := sh(ctx, msg)
@@ -84,11 +85,11 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	sh := staking.NewHandler(app.StakingKeeper)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	valPower := int64(100)
 	valTokens := sdk.TokensFromConsensusPower(valPower)
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
@@ -155,9 +156,9 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// create validator with 50% commission
 	power := int64(100)
 	valTokens := sdk.TokensFromConsensusPower(power)
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
@@ -235,9 +236,9 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
@@ -259,7 +260,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// second delegation
-	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
+	msg2 := stakingtypes.NewMsgDelegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
 
 	res, err = sh(ctx, msg2)
 	require.NoError(t, err)
@@ -317,11 +318,11 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	// create validator with 50% commission
 	power := int64(100)
 	valTokens := sdk.TokensFromConsensusPower(power)
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(
 		valAddrs[0], valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-		staking.Description{}, commission, sdk.OneInt(),
+		stakingtypes.Description{}, commission, sdk.OneInt(),
 	)
 
 	res, err := sh(ctx, msg)
@@ -391,9 +392,9 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	// create validator with 50% commission
 	power := int64(100)
 	valTokens := sdk.TokensFromConsensusPower(power)
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
@@ -463,11 +464,11 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	power := int64(100)
 	valTokens := sdk.TokensFromConsensusPower(power)
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
@@ -495,7 +496,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// second delegation
 	delTokens := sdk.TokensFromConsensusPower(100)
-	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valAddrs[1]), valAddrs[0],
+	msg2 := stakingtypes.NewMsgDelegate(sdk.AccAddress(valAddrs[1]), valAddrs[0],
 		sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
 
 	res, err = sh(ctx, msg2)
@@ -560,9 +561,9 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
@@ -585,7 +586,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// second delegation
-	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
+	msg2 := stakingtypes.NewMsgDelegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
 	res, err = sh(ctx, msg2)
 	require.NoError(t, err)
 	require.NotNil(t, res)

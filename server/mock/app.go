@@ -36,8 +36,8 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
-	// Set a handler Route.
-	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
+	// Set a Route.
+	baseApp.Router().AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(); err != nil {

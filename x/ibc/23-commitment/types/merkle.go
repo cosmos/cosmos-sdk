@@ -142,6 +142,14 @@ func (proof MerkleProof) VerifyMembership(specs []string, root exported.Root, pa
 		return err
 	}
 
+	// VerifyMembership specific argument validation
+	if path == nil || path.IsEmpty() {
+		return sdkerrors.Wrap(ErrInvalidProof, "empty path")
+	}
+	if len(value) == 0 {
+		return sdkerrors.Wrap(ErrInvalidProof, "empty value in membership proof")
+	}
+
 	runtime := rootmulti.DefaultProofRuntime()
 	return runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
 }
@@ -150,6 +158,11 @@ func (proof MerkleProof) VerifyMembership(specs []string, root exported.Root, pa
 func (proof MerkleProof) VerifyNonMembership(specs []string, root exported.Root, path exported.Path) error {
 	if err := proof.validateVerificationArgs(specs, root); err != nil {
 		return err
+	}
+
+	// VerifyNonMembership specific argument validation
+	if path == nil || path.IsEmpty() {
+		return sdkerrors.Wrap(ErrInvalidProof, "empty path")
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
@@ -166,6 +179,11 @@ func (proof MerkleProof) BatchVerifyMembership(specs []string, root exported.Roo
 	// Verify each item separately against same proof
 	runtime := rootmulti.DefaultProofRuntime()
 	for path, value := range items {
+		// check value is not empty
+		if len(value) == 0 {
+			return sdkerrors.Wrap(ErrInvalidProof, "empty value in batched membership proof")
+		}
+
 		if err := runtime.VerifyValue(proof.Proof, root.GetHash(), path, value); err != nil {
 			return sdkerrors.Wrapf(ErrInvalidProof, "verification failed for path: %s, value: %x. Error: %v",
 				path, value, err)

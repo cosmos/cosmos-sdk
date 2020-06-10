@@ -3,13 +3,12 @@ package amino_test
 import (
 	"testing"
 
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"

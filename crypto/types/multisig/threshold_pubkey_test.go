@@ -47,7 +47,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 				t,
 				AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
 			)
-			require.False(
+			require.Error(
 				t,
 				multisigKey.VerifyMultisignature(signBytesFn, multisignature),
 				"multisig passed when i < k, tc %d, i %d", tcIndex, i,
@@ -58,12 +58,12 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 			)
 			require.Equal(
 				t,
-				int(i+1),
+				i+1,
 				len(multisignature.Signatures),
 				"adding a signature for the same pubkey twice increased signature count by 2, tc %d", tcIndex,
 			)
 		}
-		require.False(
+		require.Error(
 			t,
 			multisigKey.VerifyMultisignature(signBytesFn, multisignature),
 			"multisig passed with k - 1 sigs, tc %d", tcIndex,
@@ -77,13 +77,13 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 				tc.pubkeys,
 			),
 		)
-		require.True(
+		require.NoError(
 			t,
 			multisigKey.VerifyMultisignature(signBytesFn, multisignature),
 			"multisig failed after k good signatures, tc %d", tcIndex,
 		)
 
-		for i := int(tc.k) + 1; i < len(tc.signingIndices); i++ {
+		for i := tc.k + 1; i < len(tc.signingIndices); i++ {
 			signingIndex := tc.signingIndices[i]
 
 			require.NoError(
@@ -92,7 +92,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 			)
 			require.Equal(
 				t,
-				tc.passAfterKSignatures[i-int(tc.k)-1],
+				tc.passAfterKSignatures[i-(tc.k)-1],
 				multisigKey.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
 					return tc.msg, nil
 				}, multisignature),
@@ -120,11 +120,11 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 	multisignature := NewMultisig(5)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
-	require.False(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
+	require.Error(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
 	AddSignatureFromPubKey(multisignature, sigs[0], pubkeys[0], pubkeys)
 	// Add second signature manually
 	multisignature.Signatures = append(multisignature.Signatures, sigs[0])
-	require.False(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
+	require.Error(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
 }
 
 // TODO: Fully replace this test with table driven tests
@@ -168,6 +168,26 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	require.Equal(t, multisigKey, pubKey)
 }
 
+func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
+	pkSet, sigs := generatePubKeysAndSignatures(5, []byte{1, 2, 3, 4})
+	multisignature := NewMultisig(5)
+
+	//verify no error is returned with all non-nil values
+	err := AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
+	require.NoError(t, err)
+	//verify error is returned when key value is nil
+	err = AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], nil)
+	require.Error(t, err)
+	//verify error is returned when pubkey value is nil
+	err = AddSignatureFromPubKey(multisignature, sigs[0], nil, pkSet)
+	require.Error(t, err)
+	//verify error is returned when signature value is nil
+	err = AddSignatureFromPubKey(multisignature, nil, pkSet[0], pkSet)
+	require.Error(t, err)
+	//verify error is returned when multisignature value is nil
+	err = AddSignatureFromPubKey(nil, sigs[0], pkSet[0], pkSet)
+	require.Error(t, err)
+}
 func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, signatures []signing.SignatureData) {
 	pubkeys = make([]crypto.PubKey, n)
 	signatures = make([]signing.SignatureData, n)

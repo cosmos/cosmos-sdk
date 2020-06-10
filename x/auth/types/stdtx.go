@@ -374,41 +374,40 @@ func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.Sign
 }
 
 func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
-	if multiPK, ok := key.(multisig.PubKey); ok {
-		var multiSig multisig.AminoMultisignature
-		err := cdc.UnmarshalBinaryBare(sig, &multiSig)
-		if err != nil {
-			return nil, err
-		}
-
-		sigs := multiSig.Sigs
-		sigDatas := make([]signing.SignatureData, len(sigs))
-		pubKeys := multiPK.GetPubKeys()
-		bitArray := multiSig.BitArray
-		n := multiSig.BitArray.Size()
-		sigIdx := 0
-
-		for i := 0; i < n; i++ {
-			if bitArray.GetIndex(i) {
-				data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
-				if err != nil {
-					return nil, err
-				}
-
-				sigDatas[sigIdx] = data
-				sigIdx++
-			}
-		}
-
-		return &signing.MultiSignatureData{
-			BitArray:   bitArray,
-			Signatures: sigDatas,
+	multiPK, ok := key.(multisig.PubKey)
+	if !ok {
+		return &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: sig,
 		}, nil
 	}
+	var multiSig multisig.AminoMultisignature
+	err := cdc.UnmarshalBinaryBare(sig, &multiSig)
+	if err != nil {
+		return nil, err
+	}
 
-	return &signing.SingleSignatureData{
-		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-		Signature: sig,
+	sigs := multiSig.Sigs
+	sigDatas := make([]signing.SignatureData, len(sigs))
+	pubKeys := multiPK.GetPubKeys()
+	bitArray := multiSig.BitArray
+	n := multiSig.BitArray.Size()
+	sigIdx := 0
+	for i := 0; i < n; i++ {
+		if bitArray.GetIndex(i) {
+			data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
+			if err != nil {
+				return nil, sdkerrors.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
+			}
+
+			sigDatas[sigIdx] = data
+			sigIdx++
+		}
+	}
+
+	return &signing.MultiSignatureData{
+		BitArray:   bitArray,
+		Signatures: sigDatas,
 	}, nil
 }
 
@@ -422,7 +421,7 @@ func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.Mul
 		var err error
 		sigs[i], err = SignatureDataToAminoSignature(cdc, mSig.Signatures[i])
 		if err != nil {
-			return multisig.AminoMultisignature{}, err
+			return multisig.AminoMultisignature{}, sdkerrors.Wrapf(err, "Unable to convert Signature Data to signature %d", i)
 		}
 	}
 
@@ -450,6 +449,6 @@ func SignatureDataToAminoSignature(cdc *codec.Codec, data signing.SignatureData)
 
 		return cdc.MarshalBinaryBare(aminoMSig)
 	default:
-		return nil, fmt.Errorf("unexpected case")
+		return nil, fmt.Errorf("unexpected signature data %T", data)
 	}
 }

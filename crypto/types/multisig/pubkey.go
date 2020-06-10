@@ -13,7 +13,7 @@ type PubKey interface {
 
 	// VerifyMultisignature verifies the provide multi-signature represented by MultiSignatureData
 	// using getSignBytes to retrieve the sign bytes to verify against for the provided mode.
-	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) bool
+	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) error
 
 	// GetPubKeys returns the crypto.PubKey's nested within the multi-sig PubKey
 	GetPubKeys() []crypto.PubKey

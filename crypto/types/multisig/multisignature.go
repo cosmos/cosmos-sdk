@@ -58,6 +58,16 @@ func AddSignature(mSig *signing.MultiSignatureData, sig signing.SignatureData, i
 // AddSignatureFromPubKey adds a signature to the multisig, at the index in
 // keys corresponding to the provided pubkey.
 func AddSignatureFromPubKey(mSig *signing.MultiSignatureData, sig signing.SignatureData, pubkey crypto.PubKey, keys []crypto.PubKey) error {
+	if mSig == nil {
+		return fmt.Errorf("value of mSig is nil %v", mSig)
+	}
+	if sig == nil {
+		return fmt.Errorf("value of sig is nil %v", mSig)
+	}
+
+	if pubkey == nil || keys == nil {
+		return fmt.Errorf("pubkey or keys can't be nil %v %v", pubkey, keys)
+	}
 	index := getIndex(pubkey, keys)
 	if index == -1 {
 		keysStr := make([]string, len(keys))

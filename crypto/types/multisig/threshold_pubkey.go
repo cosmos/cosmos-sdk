@@ -1,6 +1,7 @@
 package multisig
 
 import (
+	"fmt"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -73,21 +74,21 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 }
 
 // VerifyMultisignature implements the PubKey.VerifyMultisignature method
-func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) bool {
+func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) error {
 	bitarray := sig.BitArray
 	sigs := sig.Signatures
 	size := bitarray.Size()
 	// ensure bit array is the correct size
 	if len(pk.PubKeys) != size {
-		return false
+		return fmt.Errorf("bit array size is incorrect %d", len(pk.PubKeys))
 	}
 	// ensure size of signature list
 	if len(sigs) < int(pk.K) || len(sigs) > size {
-		return false
+		return fmt.Errorf("signature size is incorrect %d", len(sigs))
 	}
 	// ensure at least k signatures are set
 	if bitarray.NumTrueBitsBefore(size) < int(pk.K) {
-		return false
+		return fmt.Errorf("")
 	}
 	// index in the list of signatures which we are concerned with.
 	sigIndex := 0
@@ -98,26 +99,26 @@ func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytes
 			case *signing.SingleSignatureData:
 				msg, err := getSignBytes(si.SignMode)
 				if err != nil {
-					return false
+					return err
 				}
 				if !pk.PubKeys[i].VerifyBytes(msg, si.Signature) {
-					return false
+					return err
 				}
 			case *signing.MultiSignatureData:
 				nestedMultisigPk, ok := pk.PubKeys[i].(PubKey)
 				if !ok {
-					return false
+					return fmt.Errorf("unable to parse pubkey of index %d", i)
 				}
-				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, si) {
-					return false
+				if err := nestedMultisigPk.VerifyMultisignature(getSignBytes, si); err != nil {
+					return err
 				}
 			default:
-				return false
+				return fmt.Errorf("improper signature data type for index %d", sigIndex)
 			}
 			sigIndex++
 		}
 	}
-	return true
+	return nil
 }
 
 // GetPubKeys implements the PubKey.GetPubKeys method

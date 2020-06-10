@@ -10,6 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+var _ types.UnpackInterfacesMessage = &FeeAllowanceGrant{}
+
 func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, allowance FeeAllowanceI) FeeAllowanceGrant {
 	a := &FeeAllowanceGrant{
 		Granter: granter,
@@ -71,4 +73,10 @@ func (a *FeeAllowanceGrant) SetAllowance(FeeAllowanceI interface{}) error {
 	}
 	a.Allowance = any
 	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (a FeeAllowanceGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var allowance FeeAllowanceI
+	return unpacker.UnpackAny(a.Allowance, &allowance)
 }

@@ -608,7 +608,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
 	txData := &sdk.TxData{
-		Data: make([]*sdk.MsgData, len(msgs)),
+		Data: make([]*sdk.MsgData, 0, len(msgs)),
 	}
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
@@ -641,7 +641,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txData.Data[i] = &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data}
+		txData.Data = append(txData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), msgResult.Log, msgEvents))
 	}
 

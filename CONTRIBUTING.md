@@ -285,8 +285,8 @@ and by a significantly different demographic of users. During development, chang
 affect SDK users, application developers, early adopters, and other advanced users that elect to use
 unstable experimental software at their own risk.
 
-Conversely, stable release users expect a high degree of stability. They build their applications on it, and the
-problems they experience with it could be potentially highly disruptive to their projects and businesses.
+Conversely, users of a stable release expect a high degree of stability. They build their applications on it, and the
+problems they experience with it could be potentially highly disruptive to their projects.
 
 Stable release updates are recommended to the vast majority of developers, and so it is crucial to treat them
 with great caution. Hence, when updates are proposed, they must be accompanied by a strong rationale and present

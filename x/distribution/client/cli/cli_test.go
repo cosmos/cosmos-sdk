@@ -70,53 +70,53 @@ func TestCLIWithdrawRewards(t *testing.T) {
 
 	// Setting up a new withdraw address
 	success, stdout, stderr := testutil.TxSetWithdrawAddress(f, fooAddr.String(), barAddr.String(), "--generate-only")
-	require.True(f.T, success)
-	require.Empty(f.T, stderr)
+	require.True(t, success)
+	require.Empty(t, stderr)
 
-	msg := cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Len(t, msg.Msgs, 1)
 	require.Len(t, msg.GetSignatures(), 0)
 
 	success, _, stderr = testutil.TxSetWithdrawAddress(f, cli.KeyFoo, barAddr.String(), "-y")
-	require.True(f.T, success)
-	require.Empty(f.T, stderr)
+	require.True(t, success)
+	require.Empty(t, stderr)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Withdraw all delegation rewards from all validators
 	success, stdout, stderr = testutil.TxWithdrawAllRewards(f, fooAddr.String(), "--generate-only")
-	require.True(f.T, success)
-	require.Empty(f.T, stderr)
+	require.True(t, success)
+	require.Empty(t, stderr)
 
-	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Len(t, msg.Msgs, 1)
 	require.Len(t, msg.GetSignatures(), 0)
 
 	success, _, stderr = testutil.TxWithdrawAllRewards(f, cli.KeyFoo, "-y")
-	require.True(f.T, success)
-	require.Empty(f.T, stderr)
+	require.True(t, success)
+	require.Empty(t, stderr)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	newTokens := sdk.NewCoin(cli.Denom, sdk.TokensFromConsensusPower(1))
 
 	// Withdraw all delegation rewards from all validators
 	success, stdout, stderr = testutil.TxFundCommunityPool(f, fooAddr.String(), newTokens, "--generate-only")
-	require.True(f.T, success)
-	require.Empty(f.T, stderr)
+	require.True(t, success)
+	require.Empty(t, stderr)
 
-	msg = cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Len(t, msg.Msgs, 1)
 	require.Len(t, msg.GetSignatures(), 0)
 
 	success, _, stderr = testutil.TxFundCommunityPool(f, cli.KeyFoo, newTokens, "-y")
-	require.True(f.T, success)
-	require.Empty(f.T, stderr)
+	require.True(t, success)
+	require.Empty(t, stderr)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	amount := testutil.QueryCommunityPool(f)
-	require.False(f.T, amount.IsZero())
+	require.False(t, amount.IsZero())
 
 	slashes := testutil.QuerySlashes(f, fooVal.String())
 	require.Nil(t, slashes, nil)

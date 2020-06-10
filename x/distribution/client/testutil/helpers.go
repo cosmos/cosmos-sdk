@@ -44,7 +44,7 @@ func QueryRewards(f *cli.Fixtures, delAddr sdk.AccAddress, flags ...string) dist
 
 	var rewards distribution.QueryDelegatorTotalRewardsResponse
 	err := f.Cdc.UnmarshalJSON([]byte(res), &rewards)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", res, err))
+	f.T.Logf("\n out %v\n err %v", res, err)
 	require.NoError(f.T, err)
 	return rewards
 }
@@ -57,7 +57,7 @@ func QueryValidatorOutstandingRewards(f *cli.Fixtures, valAddr string) distribut
 
 	var outstandingRewards distribution.ValidatorOutstandingRewards
 	err := f.Cdc.UnmarshalJSON([]byte(res), &outstandingRewards)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", res, err))
+	f.T.Logf("\n out %v\n err %v", res, err)
 	require.NoError(f.T, err)
 	return outstandingRewards
 }
@@ -70,7 +70,7 @@ func QueryParameters(f *cli.Fixtures, flags ...string) distribution.Params {
 
 	var params distribution.Params
 	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	f.T.Logf("\n out %v\n err %v", out, err)
 	require.NoError(f.T, err)
 	return params
 }
@@ -83,7 +83,7 @@ func QueryCommission(f *cli.Fixtures, valAddr string, flags ...string) distribut
 
 	var commission distribution.ValidatorAccumulatedCommission
 	err := f.Cdc.UnmarshalJSON([]byte(out), &commission)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	f.T.Logf("\n out %v\n err %v", out, err)
 	require.NoError(f.T, err)
 	return commission
 }
@@ -96,7 +96,7 @@ func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) []distributi
 
 	var slashes []distribution.ValidatorSlashEvent
 	err := f.Cdc.UnmarshalJSON([]byte(out), &slashes)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	f.T.Logf("\n out %v\n err %v", out, err)
 	require.NoError(f.T, err)
 	return slashes
 }
@@ -109,7 +109,7 @@ func QueryCommunityPool(f *cli.Fixtures, flags ...string) sdk.DecCoins {
 
 	var amount sdk.DecCoins
 	err := f.Cdc.UnmarshalJSON([]byte(out), &amount)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
+	f.T.Logf("\n out %v\n err %v", out, err)
 	require.NoError(f.T, err)
 	return amount
 }

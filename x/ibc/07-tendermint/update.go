@@ -75,7 +75,7 @@ func checkValidity(
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header blocktime ≤ latest client state block time (%s ≤ %s)",
-			header.Time.String(), clientState.GetLatestTimestamp().String(),
+			header.Time.UTC(), clientState.GetLatestTimestamp().UTC(),
 		)
 	}
 

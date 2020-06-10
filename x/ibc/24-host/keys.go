@@ -40,6 +40,12 @@ func KeyPrefixBytes(prefix int) []byte {
 	return []byte(fmt.Sprintf("%d/", prefix))
 }
 
+// FullKeyClientPath returns the full path of specific client path in the format:
+// "clients/{clientID}/{path}".
+func FullKeyClientPath(clientID string, path []byte) []byte {
+	return append(KeyClientStorePrefix, append([]byte("/"+clientID+"/"), path...)...)
+}
+
 // ICS02
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#path-space
 

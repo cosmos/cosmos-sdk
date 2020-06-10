@@ -42,7 +42,7 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{
-			Key:   append(host.KeyClientStorePrefix, append([]byte("/"+clientID+"/"), host.KeyClientState()...)...),
+			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
 			Value: aminoCdc.MustMarshalBinaryBare(clientState),
 		},
 		tmkv.Pair{

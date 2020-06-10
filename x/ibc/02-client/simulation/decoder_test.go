@@ -32,15 +32,15 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{
-			Key:   append(host.KeyClientStorePrefix, append([]byte("/"+clientID+"/"), host.KeyClientState()...)...),
+			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
 			Value: cdc.MustMarshalBinaryBare(clientState),
 		},
 		tmkv.Pair{
-			Key:   append(host.KeyClientStorePrefix, append([]byte("/"+clientID+"/"), host.KeyClientType()...)...),
+			Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
 			Value: []byte(exported.Tendermint.String()),
 		},
 		tmkv.Pair{
-			Key:   append(host.KeyClientStorePrefix, append([]byte("/"+clientID+"/"), host.KeyConsensusState(10)...)...),
+			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
 			Value: cdc.MustMarshalBinaryBare(consState),
 		},
 		tmkv.Pair{

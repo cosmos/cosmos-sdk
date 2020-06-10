@@ -32,7 +32,7 @@ type Router interface {
 
 // Route represents a Route used by the Router.
 type Route interface {
-	Route() string
+	Path() string
 	Handler() Handler
 }
 
@@ -45,7 +45,7 @@ func NewRoute(r string, h Handler) Route {
 	return &route{route: r, handler: h}
 }
 
-func (r route) Route() string {
+func (r route) Path() string {
 	return r.route
 }
 

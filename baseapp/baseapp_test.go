@@ -1651,7 +1651,7 @@ type testCustomRouter struct {
 }
 
 func (rtr *testCustomRouter) AddRoute(route sdk.Route) sdk.Router {
-	rtr.routes.Store(route.Route(), route.Handler())
+	rtr.routes.Store(route.Path(), route.Handler())
 	return rtr
 }
 

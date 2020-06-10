@@ -84,18 +84,18 @@ func (m *MockRoute) EXPECT() *MockRouteMockRecorder {
 	return m.recorder
 }
 
-// Route mocks base method
-func (m *MockRoute) Route() string {
+// Path mocks base method
+func (m *MockRoute) Path() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Route")
+	ret := m.ctrl.Call(m, "Path")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Route indicates an expected call of Route
-func (mr *MockRouteMockRecorder) Route() *gomock.Call {
+// Path indicates an expected call of Path
+func (mr *MockRouteMockRecorder) Path() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Route", reflect.TypeOf((*MockRoute)(nil).Route))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Path", reflect.TypeOf((*MockRoute)(nil).Path))
 }
 
 // Handler mocks base method

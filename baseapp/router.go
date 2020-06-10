@@ -22,14 +22,14 @@ func NewRouter() *Router {
 // AddRoute adds a route path to the router with a given handler. The route must
 // be alphanumeric.
 func (rtr *Router) AddRoute(route sdk.Route) sdk.Router {
-	if !sdk.IsAlphaNumeric(route.Route()) {
+	if !sdk.IsAlphaNumeric(route.Path()) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
-	if rtr.routes[route.Route()] != nil {
-		panic(fmt.Sprintf("route %s has already been initialized", route.Route()))
+	if rtr.routes[route.Path()] != nil {
+		panic(fmt.Sprintf("route %s has already been initialized", route.Path()))
 	}
 
-	rtr.routes[route.Route()] = route.Handler()
+	rtr.routes[route.Path()] = route.Handler()
 	return rtr
 }
 

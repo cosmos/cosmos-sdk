@@ -157,7 +157,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
@@ -166,7 +166,12 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	if err != nil {
+		return err
+	}
+
+	if err = cdc.UnmarshalBinaryBare(proof, &merkleProof); err != nil {
 		return err
 	}
 
@@ -175,7 +180,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -189,7 +194,7 @@ func (cs ClientState) VerifyConnectionState(
 	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
@@ -199,7 +204,8 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	if err != nil {
 		return err
 	}
 
@@ -213,7 +219,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -227,7 +233,7 @@ func (cs ClientState) VerifyChannelState(
 	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
@@ -238,7 +244,8 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	if err != nil {
 		return err
 	}
 
@@ -252,7 +259,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -265,7 +272,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -277,11 +284,12 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	if err != nil {
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
+	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -294,7 +302,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -306,11 +314,12 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	if err != nil {
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
+	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -324,7 +333,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -335,7 +344,8 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	if err != nil {
 		return err
 	}
 
@@ -352,7 +362,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
@@ -363,7 +373,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+	merkleProof, err := sanitizeVerificationArgs(cs, height, proof, consensusState)
+	if err != nil {
 		return err
 	}
 
@@ -376,32 +387,36 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	return nil
 }
 
-// validateVerificationArgs perfoms the basic checks on the arguments that are
+// sanitizeVerificationArgs perfoms the basic checks on the arguments that are
 // shared between the verification functions.
-func validateVerificationArgs(
+func sanitizeVerificationArgs(
 	cs ClientState,
 	height uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	consensusState clientexported.ConsensusState,
-) error {
+) (merkleProof *commitmenttypes.MerkleProof, err error) {
 	if cs.GetLatestHeight() < height {
-		return sdkerrors.Wrap(
+		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height),
+			"client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height,
 		)
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienttypes.ErrClientFrozen
+		return nil, clienttypes.ErrClientFrozen
 	}
 
 	if proof == nil {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
+		return nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
+	}
+
+	if err = cdc.UnmarshalBinaryBare(proof, &merkleProof); err != nil {
+		return nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "failed to unmarshal proof into commitment merkle proof")
 	}
 
 	if consensusState == nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	return nil
+	return merkleProof, nil
 }

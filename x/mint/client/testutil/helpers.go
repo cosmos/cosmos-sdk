@@ -17,8 +17,7 @@ func QueryMintingParams(f *cli.Fixtures, flags ...string) types.Params {
 	require.Empty(f.T, errStr)
 
 	var params types.Params
-	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &params))
 	return params
 }
 
@@ -29,8 +28,7 @@ func QueryInflation(f *cli.Fixtures, flags ...string) sdk.Dec {
 	require.Empty(f.T, errStr)
 
 	var inflation sdk.Dec
-	err := f.Cdc.UnmarshalJSON([]byte(out), &inflation)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &inflation))
 	return inflation
 }
 
@@ -41,7 +39,6 @@ func QueryAnnualProvisions(f *cli.Fixtures, flags ...string) sdk.Dec {
 	require.Empty(f.T, errStr)
 
 	var annualProvisions sdk.Dec
-	err := f.Cdc.UnmarshalJSON([]byte(out), &annualProvisions)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &annualProvisions))
 	return annualProvisions
 }

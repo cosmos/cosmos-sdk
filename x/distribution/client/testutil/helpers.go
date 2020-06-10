@@ -55,8 +55,7 @@ func QueryValidatorOutstandingRewards(f *cli.Fixtures, valAddr string) distribut
 	require.Empty(f.T, errStr)
 
 	var outstandingRewards distribution.ValidatorOutstandingRewards
-	err := f.Cdc.UnmarshalJSON([]byte(res), &outstandingRewards)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(res), &outstandingRewards))
 	return outstandingRewards
 }
 
@@ -67,8 +66,7 @@ func QueryParameters(f *cli.Fixtures, flags ...string) distribution.Params {
 	require.Empty(f.T, errStr)
 
 	var params distribution.Params
-	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &params))
 	return params
 }
 
@@ -79,8 +77,7 @@ func QueryCommission(f *cli.Fixtures, valAddr string, flags ...string) distribut
 	require.Empty(f.T, errStr)
 
 	var commission distribution.ValidatorAccumulatedCommission
-	err := f.Cdc.UnmarshalJSON([]byte(out), &commission)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &commission))
 	return commission
 }
 
@@ -91,8 +88,7 @@ func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) []distributi
 	require.Empty(f.T, errStr)
 
 	var slashes []distribution.ValidatorSlashEvent
-	err := f.Cdc.UnmarshalJSON([]byte(out), &slashes)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &slashes))
 	return slashes
 }
 
@@ -103,7 +99,6 @@ func QueryCommunityPool(f *cli.Fixtures, flags ...string) sdk.DecCoins {
 	require.Empty(f.T, errStr)
 
 	var amount sdk.DecCoins
-	err := f.Cdc.UnmarshalJSON([]byte(out), &amount)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &amount))
 	return amount
 }

@@ -48,9 +48,9 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 	fooVal := sdk.ValAddress(fooAddr)
 
-	outStandingRewards := testutil.QueryValidatorOutstandingRewards(f, fooVal.String())
-	require.NotEmpty(t, outStandingRewards)
-	require.False(t, outStandingRewards.Rewards.IsZero())
+	outstandingRewards := testutil.QueryValidatorOutstandingRewards(f, fooVal.String())
+	require.NotEmpty(t, outstandingRewards)
+	require.False(t, outstandingRewards.Rewards.IsZero())
 
 	commission := testutil.QueryCommission(f, fooVal.String())
 	require.NotEmpty(t, commission)

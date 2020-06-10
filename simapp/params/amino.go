@@ -6,8 +6,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// TODO this file will add a "+build test_amino" flag in the future for #6190
-
+// MakeEncodingConfig creates an EncodingConfig for an amino based test configuration.
+//
+// TODO: this file should add a "+build test_amino" flag for #6190 and a proto.go file with a protobuf configuration
 func MakeEncodingConfig() EncodingConfig {
 	cdc := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()

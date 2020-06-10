@@ -18,15 +18,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // module codec
 var moduleCdc = codec.New()
 
 func init() {
-	upgradetypes.RegisterCodec(moduleCdc)
+	types.RegisterCodec(moduleCdc)
 }
 
 var (
@@ -40,12 +40,12 @@ type AppModuleBasic struct{}
 
 // Name returns the ModuleName
 func (AppModuleBasic) Name() string {
-	return upgradetypes.ModuleName
+	return types.ModuleName
 }
 
 // RegisterCodec registers the upgrade types on the amino codec
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	upgradetypes.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // RegisterRESTRoutes registers all REST query handlers
@@ -60,8 +60,8 @@ func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		Short: "Querying commands for the upgrade module",
 	}
 	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetPlanCmd(upgradetypes.StoreKey, clientCtx.Codec),
-		cli.GetAppliedHeightCmd(upgradetypes.StoreKey, clientCtx.Codec),
+		cli.GetPlanCmd(types.StoreKey, clientCtx.Codec),
+		cli.GetAppliedHeightCmd(types.StoreKey, clientCtx.Codec),
 	)...)
 
 	return queryCmd
@@ -78,17 +78,17 @@ func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 }
 
 func (b AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
-	upgradetypes.RegisterInterfaces(registry)
+	types.RegisterInterfaces(registry)
 }
 
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper upgradekeeper.Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper upgradekeeper.Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -105,11 +105,11 @@ func (AppModule) Route() string { return "" }
 func (am AppModule) NewHandler() sdk.Handler { return nil }
 
 // QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return upgradetypes.QuerierKey }
+func (AppModule) QuerierRoute() string { return types.QuerierKey }
 
 // NewQuerierHandler registers a query handler to respond to the module-specific queries
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return upgradekeeper.NewQuerier(am.keeper)
+	return keeper.NewQuerier(am.keeper)
 }
 
 func (am AppModule) RegisterQueryService(grpc.Server) {}

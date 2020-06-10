@@ -105,13 +105,8 @@ func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route implements the AppModule interface
-func (AppModule) Route() string {
-	return RouterKey
-}
-
-// NewHandler implements the AppModule interface
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+func (am AppModule) Route() *sdk.Route {
+	return sdk.NewRoute(RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute implements the AppModule interface

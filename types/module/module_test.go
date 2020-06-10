@@ -69,9 +69,8 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 	mockInvariantRegistry := mocks.NewMockInvariantRegistry(mockCtrl)
 	goam := module.NewGenesisOnlyAppModule(mockModule)
 
-	require.Empty(t, goam.Route())
+	require.Nil(t, goam.Route())
 	require.Empty(t, goam.QuerierRoute())
-	require.Nil(t, goam.NewHandler())
 	require.Nil(t, goam.NewQuerierHandler())
 
 	// no-op
@@ -142,12 +141,10 @@ func TestManager_RegisterRoutes(t *testing.T) {
 
 	router := mocks.NewMockRouter(mockCtrl)
 	handler1, handler2 := sdk.Handler(nil), sdk.Handler(nil)
-	mockAppModule1.EXPECT().Route().Times(2).Return("route1")
-	mockAppModule2.EXPECT().Route().Times(2).Return("route2")
-	mockAppModule1.EXPECT().NewHandler().Times(1).Return(handler1)
-	mockAppModule2.EXPECT().NewHandler().Times(1).Return(handler2)
-	router.EXPECT().AddRoute(gomock.Eq("route1"), gomock.Eq(handler1)).Times(1)
-	router.EXPECT().AddRoute(gomock.Eq("route2"), gomock.Eq(handler2)).Times(1)
+	mockAppModule1.EXPECT().Route().Times(2).Return(sdk.NewRoute("route1", handler1))
+	mockAppModule2.EXPECT().Route().Times(2).Return(sdk.NewRoute("route2", handler2))
+	router.EXPECT().AddRoute(gomock.Eq(sdk.NewRoute("route1", handler1))).Times(1)
+	router.EXPECT().AddRoute(gomock.Eq(sdk.NewRoute("route2", handler2))).Times(1)
 
 	queryRouter := mocks.NewMockQueryRouter(mockCtrl)
 	mockAppModule1.EXPECT().QuerierRoute().Times(2).Return("querierRoute1")

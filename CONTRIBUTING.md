@@ -235,26 +235,34 @@ At the moment, only a single major release will be supported, so all point relea
 off of that release.
 
 In order to alleviate the burden for a single person to have to cherry-pick and handle merge conflicts
-of all desired backporting PRs to a point release, we instead maintain a living backport branch, where
+of all desired backporting PRs to a point release, we instead maintain a living SRU branch, where
 all desired features and bug fixes are merged into as separate PRs.
 
 Example:
 
-Current release is `v0.38.4`. We then maintain a (living) branch `backport/release/v0.38.x`. As PRs
-are merged into master, if they wish to be backported into the next `v0.38.x` point release, the
-author must:
+Current release is `v0.38.4`. We then maintain a (living) branch `sru/release/v0.38.N`, given N as
+the next patch release number (currently `0.38.5`) for the `0.38` release series. As bugs are fixed
+and PRs are merged into `master`, if a contributor wishes the PR to be released as SRU into the
+`v0.38.N` point release, the contributor must:
 
-1. Add `backport` label
-2. Pull latest changes on the desired `backport/release/v*.*.x` branch
-3. Create a 2nd PR merging the respective backport PR into `backport/release/v*.*.x`
+1. Add `0.38-sru` label
+2. Pull latest changes on the desired `sru/release/v0.38.N` branch
+3. Create a 2nd PR merging the respective SRU PR into `sru/release/v0.38.N`
+4. Update the PR's description and ensure it contains the following information:
+   - **[Impact]** Explanation of how the bug affects users or developers.
+   - **[Test Case]** section with detailed instructions on how to reproduce the bug.
+   - **[Regression Potential]** section with a discussion how regressions are most likely to manifest, or might
+   manifest even if it's unlikely, as a result of the change. **It is assumed that any SRU candidate PR is
+   well-tested before it is merged in and has an overall low risk of regression**.
 
-This means it is the authors responsibility to fix any merge conflicts, update changelog entries, and
-ensure CI passes. If a PR originates from an external contributor, it may be a team members responsibility
-to perform this process instead of the original author.
+It is the PR's author's responsibility to fix merge conflicts, update changelog entries, and
+ensure CI passes. If a PR originates from an external contributor, it may be a core team member's
+responsibility to perform this process instead of the original author.
+Lastly, it is core team's responsibility to ensure that the PR meets all the SRU criteria.
 
 Finally, when a point release is ready to be made:
 
-1. Create `release/v*.*.x` branch
+1. Create `release/v0.38.N` branch
 2. Ensure changelog entries are verified
    2. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
 3. Add release version date to the changelog

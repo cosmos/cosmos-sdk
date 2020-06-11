@@ -1,10 +1,11 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -13,21 +14,21 @@ func TestValidateGenesis(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		genState GenesisState
+		genState types.GenesisState
 		expPass  bool
 	}{
 		{
 			name:     "default",
-			genState: DefaultGenesisState(),
+			genState: types.DefaultGenesisState(),
 			expPass:  true,
 		},
 		{
 			name: "valid genesis",
-			genState: NewGenesisState(
-				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+			genState: types.NewGenesisState(
+				[]types.ConnectionEnd{
+					types.NewConnectionEnd(types.INIT, connectionID, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
-				[]ConnectionPaths{
+				[]types.ConnectionPaths{
 					{clientID, []string{host.ConnectionPath(connectionID)}},
 				},
 			),
@@ -35,11 +36,11 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			name: "invalid connection",
-			genState: NewGenesisState(
-				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, "(CLIENTIDONE)", Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+			genState: types.NewGenesisState(
+				[]types.ConnectionEnd{
+					types.NewConnectionEnd(types.INIT, connectionID, "(CLIENTIDONE)", types.Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
-				[]ConnectionPaths{
+				[]types.ConnectionPaths{
 					{clientID, []string{host.ConnectionPath(connectionID)}},
 				},
 			),
@@ -47,11 +48,11 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			name: "invalid client id",
-			genState: NewGenesisState(
-				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+			genState: types.NewGenesisState(
+				[]types.ConnectionEnd{
+					types.NewConnectionEnd(types.INIT, connectionID, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
-				[]ConnectionPaths{
+				[]types.ConnectionPaths{
 					{"(CLIENTIDONE)", []string{host.ConnectionPath(connectionID)}},
 				},
 			),
@@ -59,11 +60,11 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			name: "invalid path",
-			genState: NewGenesisState(
-				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+			genState: types.NewGenesisState(
+				[]types.ConnectionEnd{
+					types.NewConnectionEnd(types.INIT, connectionID, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
-				[]ConnectionPaths{
+				[]types.ConnectionPaths{
 					{clientID, []string{connectionID}},
 				},
 			),

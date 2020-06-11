@@ -16,12 +16,6 @@ var (
 	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
 )
 
-// MsgCreateClient defines a message to create an IBC client
-type MsgCreateClient struct {
-	ClientID       string         `json:"client_id" yaml:"client_id"`
-	ConsensusState ConsensusState `json:"consensus_state" yaml:"consensus_state"`
-}
-
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(id string, consensusState ConsensusState) MsgCreateClient {
 	return MsgCreateClient{
@@ -74,12 +68,6 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	return msg.ConsensusState
 }
 
-// MsgUpdateClient defines a message to update an IBC client
-type MsgUpdateClient struct {
-	ClientID string `json:"client_id" yaml:"client_id"`
-	Header   Header `json:"header" yaml:"header"`
-}
-
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header) MsgUpdateClient {
 	return MsgUpdateClient{
@@ -124,13 +112,6 @@ func (msg MsgUpdateClient) GetClientID() string {
 // GetHeader implements clientexported.MsgUpdateClient
 func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 	return msg.Header
-}
-
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
-// Evidence for client misbehaviour.
-type MsgSubmitClientMisbehaviour struct {
-	Evidence  evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
-	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
 }
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour

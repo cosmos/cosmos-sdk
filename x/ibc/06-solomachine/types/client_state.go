@@ -78,7 +78,8 @@ func (cs ClientState) Validate() error {
 // Solo Machine client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
-	cdc *codec.Codec,
+	_ codec.Marshaler,
+	aminoCdc *codec.Codec,
 	root commitmentexported.Root,
 	sequence uint64,
 	counterpartyClientIdentifier string,
@@ -97,7 +98,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	data, err := ConsensusStateSignBytes(cdc, sequence, path, cs.ConsensusState)
+	data, err := ConsensusStateSignBytes(aminoCdc, sequence, path, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -186,6 +187,7 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -219,6 +221,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -253,6 +256,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -285,6 +289,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,

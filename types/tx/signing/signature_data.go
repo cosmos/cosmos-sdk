@@ -20,7 +20,7 @@ type SingleSignatureData struct {
 	Signature []byte
 }
 
-// SingleSignatureData represents the nested SignatureData of a multisig signature
+// MultiSignatureData represents the nested SignatureData of a multisig signature
 type MultiSignatureData struct {
 	// BitArray is a compact way of indicating which signers from the multisig key
 	// have signed

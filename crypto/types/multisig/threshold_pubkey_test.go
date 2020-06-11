@@ -1,6 +1,7 @@
 package multisig
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"math/rand"
 	"testing"
 
@@ -168,6 +169,17 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	require.Equal(t, multisigKey, pubKey)
 }
 
+func TestMultiSignature(t *testing.T) {
+	msg := []byte{1, 2, 3, 4}
+	pkSet, sigs := generatePubKeysAndMultiSignatures(2, msg)
+	multisignature := NewMultisig(1)
+	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
+	t.Logf("this is multisignature %v", multisignature)
+	multisigKey := NewPubKeyMultisigThreshold(1, pkSet)
+	err := multisigKey.VerifyMultisignature(signBytesFn, &sigs[0])
+	require.NoError(t, err)
+}
+
 func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
 	pkSet, sigs := generatePubKeysAndSignatures(5, []byte{1, 2, 3, 4})
 	multisignature := NewMultisig(5)
@@ -188,6 +200,7 @@ func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
 	err = AddSignatureFromPubKey(nil, sigs[0], pkSet[0], pkSet)
 	require.Error(t, err)
 }
+
 func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, signatures []signing.SignatureData) {
 	pubkeys = make([]crypto.PubKey, n)
 	signatures = make([]signing.SignatureData, n)
@@ -204,6 +217,30 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, s
 		pubkeys[i] = privkey.PubKey()
 		sig, _ := privkey.Sign(msg)
 		signatures[i] = &signing.SingleSignatureData{Signature: sig}
+	}
+	return
+}
+
+func generatePubKeysAndMultiSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, signatures []signing.MultiSignatureData) {
+	pubkeys = make([]crypto.PubKey, n)
+	signatures = make([]signing.MultiSignatureData, n)
+	for i := 0; i < n; i++ {
+		var privkey crypto.PrivKey
+		switch rand.Int63() % 3 {
+		case 0:
+			privkey = ed25519.GenPrivKey()
+		case 1:
+			privkey = secp256k1.GenPrivKey()
+		case 2:
+			privkey = sr25519.GenPrivKey()
+		}
+		pubkeys[i] = privkey.PubKey()
+		sig, _ := privkey.Sign(msg)
+		var multisignature signing.SignatureData
+		cdc.UnmarshalBinaryBare(sig, &multisignature)
+		signatures[i].BitArray = types.NewCompactBitArray(n)
+		signatures[i].BitArray.SetIndex(i, true)
+		signatures[i].Signatures = append(signatures[i].Signatures, multisignature)
 	}
 	return
 }

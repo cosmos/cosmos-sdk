@@ -117,7 +117,7 @@ type Exporter interface {
 // Option overrides keyring configuration options.
 type Option func(options *Options)
 
-// Options define the options of the Keyring
+// Options define the options of the Keyring.
 type Options struct {
 	// supported signing algorithms for keyring
 	SupportedAlgos SigningAlgoList

@@ -60,7 +60,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1")
+		_ = kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
 	key1, err := kb.Key("keyname1")
@@ -92,7 +92,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(flags.FlagUseLedger, true)
 
-	/// Test Text
+	// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// set algo flag value to the default
 	viper.Set(flagKeyAlgo, string(hd.Secp256k1Type))
@@ -106,7 +106,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1")
+		_ = kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
 	key1, err := kb.Key("keyname1")

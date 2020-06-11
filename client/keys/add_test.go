@@ -17,8 +17,8 @@ import (
 
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
-
 	require.NotNil(t, cmd)
+
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)

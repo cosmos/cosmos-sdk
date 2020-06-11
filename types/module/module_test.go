@@ -69,7 +69,7 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 	mockInvariantRegistry := mocks.NewMockInvariantRegistry(mockCtrl)
 	goam := module.NewGenesisOnlyAppModule(mockModule)
 
-	require.True(t, goam.Route().Nil())
+	require.True(t, goam.Route().Empty())
 	require.Empty(t, goam.QuerierRoute())
 	require.Nil(t, goam.NewQuerierHandler())
 

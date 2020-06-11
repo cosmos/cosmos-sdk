@@ -50,8 +50,8 @@ func (r Route) Handler() Handler {
 	return r.handler
 }
 
-// Nil returns true only if both handler and path are not empty.
-func (r Route) Nil() bool {
+// Empty returns true only if both handler and path are not empty.
+func (r Route) Empty() bool {
 	return r.handler == nil || r.path == ""
 }
 

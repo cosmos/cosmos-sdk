@@ -160,6 +160,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
 
 ### Bug Fixes
 
+* (client) [\#6402](https://github.com/cosmos/cosmos-sdk/issues/6402) Fix `keys add` `--algo` flag which only worked for Tendermint's `secp256k1` default key signing algorithm.
 * (x/bank) [\#6283](https://github.com/cosmos/cosmos-sdk/pull/6283) Create account if recipient does not exist on handing `MsgMultiSend`.
 * (x/distribution) [\#6210](https://github.com/cosmos/cosmos-sdk/pull/6210) Register `MsgFundCommunityPool` in distribution amino codec.
 * (x/staking) [\#6061](https://github.com/cosmos/cosmos-sdk/pull/6061) Allow a validator to immediately unjail when no signing info is present due to

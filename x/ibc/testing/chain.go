@@ -31,8 +31,8 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ConnectionVersion = "1.0"
-	ChannelVersion    = "1.0"
+	ConnectionVersion = "1.0.0"
+	ChannelVersion    = "1.0.0"
 
 	ConnectionIDPrefix = "connectionid"
 )

@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // TestSetChannel create clients and connections on both chains. It tests for the non-existence
-// and existence of a channel in INIT on chainB.
+// and existence of a channel in INIT on chainA.
 func (suite *KeeperTestSuite) TestSetChannel() {
 	chainA := suite.coordinator.GetChain(suite.chainA)
 	chainB := suite.coordinator.GetChain(suite.chainB)
@@ -43,19 +43,21 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	_, _, connA, connB := suite.coordinator.CreateClientsAndConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 
 	// check for channel to be created on chainB
-	channelB := connB.NextTestChannel()
-	_, found := chainB.App.IBCKeeper.ChannelKeeper.GetChannel(chainB.GetContext(), channelB.PortID, channelB.ChannelID)
+	channelA := connA.NextTestChannel()
+	_, found := chainA.App.IBCKeeper.ChannelKeeper.GetChannel(chainA.GetContext(), channelA.PortID, channelA.ChannelID)
 	suite.False(found)
 
 	// init channel
-	channelA, channelB, err := suite.coordinator.CreateChannelInit(chainB, chainA, connB, connA, channeltypes.ORDERED)
+	channelA, channelB, err := suite.coordinator.CreateChannelInit(chainA, chainB, connA, connB, channeltypes.ORDERED)
 	suite.NoError(err)
 
-	storedChannel, found := chainB.App.IBCKeeper.ChannelKeeper.GetChannel(chainB.GetContext(), channelB.PortID, channelB.ChannelID)
+	storedChannel, found := chainA.App.IBCKeeper.ChannelKeeper.GetChannel(chainA.GetContext(), channelA.PortID, channelA.ChannelID)
+	expectedCounterparty := channeltypes.NewCounterparty(channelB.PortID, channelB.ChannelID)
+
 	suite.True(found)
 	suite.Equal(channeltypes.INIT, storedChannel.State)
 	suite.Equal(channeltypes.ORDERED, storedChannel.Ordering)
-	suite.Equal(channeltypes.NewCounterparty(channelA.PortID, channelA.ChannelID), storedChannel.Counterparty)
+	suite.Equal(expectedCounterparty, storedChannel.Counterparty)
 }
 
 /*

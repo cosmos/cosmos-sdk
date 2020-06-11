@@ -52,7 +52,7 @@ func (r Route) Handler() Handler {
 
 // Nil returns true only if both handler and path are not empty.
 func (r Route) Nil() bool {
-	return r.handler == nil || r.path == ""
+	return r.handler == nil || strings.TrimSpace(r.path) == ""
 }
 
 // QueryRouter provides queryables for each query path.

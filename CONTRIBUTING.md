@@ -246,7 +246,7 @@ and PRs are merged into `master`, if a contributor wishes the PR to be released 
 `v0.38.N` point release, the contributor must:
 
 1. Add `0.38-sru` label
-2. Pull latest changes on the desired `sru/release/v0.38.N` branch
+2. Pull latest changes on the desired `sru/release/vX.X.N` branch
 3. Create a 2nd PR merging the respective SRU PR into `sru/release/v0.38.N`
 4. Update the PR's description and ensure it contains the following information:
    - **[Impact]** Explanation of how the bug affects users or developers.

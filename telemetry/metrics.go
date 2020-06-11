@@ -32,13 +32,15 @@ type Config struct {
 	EnableServiceLabel bool `mapstructure:"enable-service-label"`
 
 	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
+	// It defines the retention duration in seconds.
 	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows
 // metrics to be gathered at any point in time. When creating a Metrics object,
 // internally, a global metrics is registered with a set of sinks as configured
-// by the operator.
+// by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
+// dump of formatted recent metrics will be sent to STDERR.
 type Metrics struct {
 	memSink           *metrics.InmemSink
 	prometheusEnabled bool
@@ -67,7 +69,7 @@ func New(cfg Config) (*Metrics, error) {
 	if cfg.PrometheusRetentionTime > 0 {
 		m.prometheusEnabled = true
 		prometheusOpts := metricsprom.PrometheusOpts{
-			Expiration: time.Duration(cfg.PrometheusRetentionTime),
+			Expiration: time.Duration(cfg.PrometheusRetentionTime) * time.Second,
 		}
 
 		promSink, err := metricsprom.NewPrometheusSinkFrom(prometheusOpts)

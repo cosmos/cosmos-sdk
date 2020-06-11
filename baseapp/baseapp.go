@@ -7,7 +7,6 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"

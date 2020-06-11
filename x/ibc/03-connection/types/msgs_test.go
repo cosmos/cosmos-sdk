@@ -26,7 +26,7 @@ var (
 type MsgTestSuite struct {
 	suite.Suite
 
-	proof commitmenttypes.MerkleProof
+	proof []byte
 }
 
 func (suite *MsgTestSuite) SetupTest() {
@@ -49,7 +49,7 @@ func (suite *MsgTestSuite) SetupTest() {
 	})
 
 	merkleProof := commitmenttypes.MerkleProof{Proof: res.Proof}
-	proof, err := app.cdc.MarshalBinaryBare(merkleProof)
+	proof, err := app.AppCodec().MarshalBinaryBare(&merkleProof)
 	suite.NoError(err)
 
 	suite.proof = proof

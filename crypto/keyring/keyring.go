@@ -523,7 +523,7 @@ func (ks keystore) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-// SupportedAlgorithms retuns the keystore Options' supported signing algorithm
+// SupportedAlgorithms returns the keystore Options' supported signing algorithm.
 // for the keyring and Ledger.
 func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 	return ks.options.SupportedAlgos, ks.options.SupportedAlgosLedger

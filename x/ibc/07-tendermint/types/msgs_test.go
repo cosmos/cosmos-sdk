@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	ics23 "github.com/confio/ics23/go"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
@@ -31,7 +32,7 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), nil), false, "Empty address passed"},
 		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, ibctmtypes.Header{}, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
 		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, invalidHeader, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "invalid header"},
-		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, []string{"", "spec"}, signer), false, "invalid proof specs"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, []*ics23.ProofSpec{nil}, signer), false, "invalid proof specs"},
 	}
 
 	for i, tc := range cases {

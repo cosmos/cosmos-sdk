@@ -1,6 +1,7 @@
 package direct
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -45,6 +46,7 @@ func TestDirectModeHandler(t *testing.T) {
 	tx.SetFee(fee)
 	tx.SetSignerInfos(signerInfo)
 
+	t.Log("verify modes and default-mode")
 	var directModeHandler DirectModeHandler
 	require.Equal(t, directModeHandler.DefaultMode(), types.SignMode_SIGN_MODE_DIRECT)
 	require.Len(t, directModeHandler.Modes(), 1)
@@ -60,11 +62,35 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
 
+	authInfo := &types.AuthInfo{
+		Fee: &fee,
+		SignerInfos: signerInfo,
+	}
+
+	authInfoBytes := app.AppCodec().Marshaler.MustMarshalBinaryBare(authInfo)
+
+	anys := make([]*codectypes.Any, len(msgs))
+
+	for i, msg := range msgs {
+		var err error
+		anys[i], err = codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	txBody := &types.TxBody{
+		Memo: memo,
+		Messages: anys,
+	}
+	bodyBytes := app.AppCodec().Marshaler.MustMarshalBinaryBare(txBody)
+
+	t.Log("verify GetSignBytes with generating sign bytes by marshaling SignDoc")
 	signDoc := types.SignDoc{
 		AccountNumber: 1,
 		AccountSequence: 1,
-		AuthInfoBytes: tx.GetAuthInfoBytes(),
-		BodyBytes: tx.GetBodyBytes(),
+		AuthInfoBytes: authInfoBytes,
+		BodyBytes: bodyBytes,
 		ChainId: "test-chain",
 	}
 
@@ -72,6 +98,20 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, signDocBytes, signBytes)
 
+	t.Log("verify GetSignBytes using default methods from txWrapper")
+	signDoc = types.SignDoc{
+		AccountNumber: 1,
+		AccountSequence: 1,
+		AuthInfoBytes: tx.GetAuthInfoBytes(),
+		BodyBytes: tx.GetBodyBytes(),
+		ChainId: "test-chain",
+	}
+
+	signDocBytes, err = signDoc.Marshal()
+	require.NoError(t, err)
+	require.Equal(t, signDocBytes, signBytes)
+
+	t.Log("verify GetSignBytes with false txBody data")
 	signDoc.BodyBytes = []byte("dfafdasfds")
 	signDocBytes, err = signDoc.Marshal()
 	require.NoError(t, err)

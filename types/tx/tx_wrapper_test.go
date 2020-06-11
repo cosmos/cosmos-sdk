@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"encoding/json"
 	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -36,9 +35,14 @@ func TestTxWrapper(t *testing.T) {
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{types.NewTestMsg(addr)}
 
-	var pk types2.PublicKey
-	err := json.Unmarshal(pubkey, pk)
-	require.NoError(t, err)
+	pk := types2.PublicKey{
+		Sum: &types2.PublicKey_Ed25519{
+			Ed25519: pubkey,
+		},
+	}
+
+	//err := cdc.UnmarshalBinaryBare(pubkey, &pk)
+	//require.NoError(t, err)
 
 	var signerInfo []*SignerInfo
 	signerInfo = append(signerInfo, &SignerInfo{
@@ -52,15 +56,15 @@ func TestTxWrapper(t *testing.T) {
 		},
 	})
 
-	fee := &Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
+	//fee := &Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
 	tx.SetMsgs(msgs)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 0, len(tx.GetPubKeys()))
 
 	tx.SetMemo(memo)
-	tx.SetFee(fee.Amount)
-	tx.SetGas(fee.GasLimit)
+	//tx.SetFee(fee.Amount)
+	//tx.SetGas(fee.GasLimit)
 
 	tx.SetSignerInfos(signerInfo)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))

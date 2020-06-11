@@ -1,6 +1,9 @@
 package types
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 var (
 	// IsAlphaNumeric defines a regular expression for matching against alpha-numeric
@@ -52,7 +55,7 @@ func (r Route) Handler() Handler {
 
 // Empty returns true only if both handler and path are not empty.
 func (r Route) Empty() bool {
-	return r.handler == nil || r.path == ""
+	return r.handler == nil || r.path == strings.TrimSpace("")
 }
 
 // QueryRouter provides queryables for each query path.

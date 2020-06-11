@@ -48,10 +48,10 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 # MetricsEnabled enables the application telemetry functionality. When enabled,
 # an in-memory sink is also enabled by default. Operators may also enabled
 # other sinks such as Prometheus.
-MetricsEnabled = {{ .BaseConfig.MetricsEnabled }}
+metrics-enabled = {{ .BaseConfig.MetricsEnabled }}
 
 # PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
-PrometheusRetentionTime = {{ .BaseConfig.PrometheusRetentionTime }}
+prometheus-retention-time = {{ .BaseConfig.PrometheusRetentionTime }}
 `
 
 var configTemplate *template.Template

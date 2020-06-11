@@ -108,7 +108,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 		if strings.TrimSpace(version) == "" {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
-	
+	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
@@ -174,7 +174,6 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.Version) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 	}
-
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
 	}

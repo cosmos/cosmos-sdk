@@ -101,7 +101,6 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}

@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -318,9 +319,27 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 	case "custom":
 		return handleQueryCustom(app, path, req)
+
+	case "metrics":
+		return app.handleMetricsQuery()
 	}
 
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
+}
+
+func (app *BaseApp) handleMetricsQuery() abci.ResponseQuery {
+	if app.metrics == nil {
+		return sdkerrors.QueryResult(errors.New("metrics not enabled"))
+	}
+
+	gr, err := app.metrics.Gather()
+	if err != nil {
+		return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to gather metrics"))
+	}
+
+	return abci.ResponseQuery{
+		Value: gr.Metrics,
+	}
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {

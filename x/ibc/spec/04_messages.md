@@ -116,7 +116,7 @@ This message is expected to fail if:
 - `ProofInit` does not prove that the counterparty connection is in state INIT
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message creates a connection for the given ID with an INIT State.
+The message creates a connection for the given ID with an TRYOPEN State.
 
 ### MsgConnectionOpenAck
 
@@ -189,5 +189,140 @@ type MsgChannelOpenInit struct {
 ```
 
 This message is expected to fail if:
+- `PortID` is invalid (see naming requirements)
+- `ChannelID` is invalid (see naming requirements)
+- `Channel` is empty
+- `Signer` is empty
+- A Channel End exists for the given Channel ID and Port ID
+
+The message creates a channel on chain A with an INIT state for the given Channel ID 
+and Port ID.
+
+### MsgChannelOpenTry
+
+A channel handshake initialization attempt is acknowledged by a chain B using 
+the `MsgChannelOpenTry` message.
+
+```go
+type MsgChannelOpenTry struct {
+	PortID              string    
+	ChannelID           string   
+	Channel             Channel 
+	CounterpartyVersion string 
+	ProofInit           []byte
+	ProofHeight         uint64
+	Signer              sdk.AccAddress 
+}
+```
+
+This message is expected to fail if:
+- `PortID` is invalid (see naming requirements)
+- `ChannelID` is invalid (see naming requirements)
+- `Channel` is empty
+- `CounterpartyVersion` is empty
+- `ProofInit` is empty
+- `ProofHeight` is zero
+- `Signer` is empty
+- A Channel End exists for the given Channel and Port ID
+- `ProofInit` does not prove that the counterparty's Channel state is in INIT
+
+The message creates a channel on chain B with an TRYOPEN state for the given Channel ID 
+and Port ID.
+
+### MsgChannelOpenAck
+
+A channel handshake is opened by a chain A using the `MsgChannelOpenAck` message.
+
+```go
+type MsgChannelOpenAck struct {
+	PortID              string    
+	ChannelID           string   
+	CounterpartyVersion string 
+	ProofTry            []byte
+	ProofHeight         uint64
+	Signer              sdk.AccAddress 
+}
+```
+
+This message is expected to fail if:
+- `PortID` is invalid (see naming requirements)
+- `ChannelID` is invalid (see naming requirements)
+- `CounterpartyVersion` is empty
+- `ProofTry` is empty
+- `ProofHeight` is zero
+- `Signer` is empty
+- `ProofTry` does not prove that the counterparty's Channel state is in TRYOPEN
+
+The message sets a channel on chain A to state OPEN for the given Channel ID and Port ID.
+
+### MsgChannelOpenConfirm
+
+A channel handshake is confirmed and opened by a chain B using the `MsgChannelOpenConfirm`
+message.
+
+```go
+type MsgChannelOpenConfirm struct {
+	PortID              string    
+	ChannelID           string   
+	ProofAck            []byte
+	ProofHeight         uint64
+	Signer              sdk.AccAddress 
+}
+```
+
+This message is expected to fail if:
+- `PortID` is invalid (see naming requirements)
+- `ChannelID` is invalid (see naming requirements)
+- `ProofAck` is empty
+- `ProofHeight` is zero
+- `Signer` is empty
+- `ProofAck` does not prove that the counterparty's Channel state is in OPEN
+
+The message sets a channel on chain B to state OPEN for the given Channel ID and Port ID.
+
+### MsgChannelCloseInit
+
+A channel is closed on chain A using the `MsgChannelCloseInit`.
+
+```go
+type MsgChannelCloseInit struct {
+	PortID    string   
+	ChannelID string  
+	Signer    sdk.AccAddress 
+}
+```
+
+This message is expected to fail if:
+- `PortID` is invalid (see naming requirements)
+- `ChannelID` is invalid (see naming requirements)
+- `Signer` is empty
+- A Channel for the given Port ID and Channel ID does not exist or is already closed
+
+The message closes a channel on chain A for the given Port ID and Channel ID.
+
+### MsgChannelCloseConfirm
+
+A channel is closed on chain B using the `MsgChannelCloseConfirm`.
+
+```go
+type MsgChannelCloseConfirm struct {
+	PortID      string 
+	ChannelID   string   
+	ProofInit   []byte  
+	ProofHeight uint64 
+	Signer      sdk.AccAddress 
+}
+```
+
+This message is expected to fail if:
+- `PortID` is invalid (see naming requirements)
+- `ChannelID` is invalid (see naming requirements)
+- `ProofInit` is empty
+- `ProofHeight` is zero
+- `Signer` is empty
+- A Channel for the given Port ID and Channel ID does not exist or is already closed
+- `ProofInit` does not prove that the counterparty set its channel to state CLOSED
+
+The message closes a channel on chain B for the given Port ID and Channel ID.
 
 ## ICS 20 - Fungible Token Transfer

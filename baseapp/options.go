@@ -7,6 +7,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -31,6 +32,12 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.
 func SetHaltHeight(blockHeight uint64) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.setHaltHeight(blockHeight) }
+}
+
+// SetMetrics returns a BaseApp option function that sets the metrics object.
+// When provided, the BaseApp will be able to service application metrics queries.
+func SetMetrics(m *telemetry.Metrics) func(*BaseApp) {
+	return func(bap *BaseApp) { bap.setMetrics(m) }
 }
 
 // SetHaltTime returns a BaseApp option function that sets the halt block time.

@@ -175,6 +175,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 		types.NewMsgChannelOpenTry("testportid", "testchannel", "", types.UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                       // empty channel version
 		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, connHops, invalidPort, "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid counterparty port id
 		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, connHops, "testcpport", invalidChannel, "1.0", suite.proof, 1, addr),                     // invalid counterparty channel id
+		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", emptyProof, 1, addr),                     // empty proof
 	}
 
 	testCases := []struct {
@@ -199,6 +200,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 		{testMsgs[14], false, "empty channel version"},
 		{testMsgs[15], false, "invalid counterparty port id"},
 		{testMsgs[16], false, "invalid counterparty channel id"},
+		{testMsgs[17], false, "empty proof"},
 	}
 
 	for i, tc := range testCases {

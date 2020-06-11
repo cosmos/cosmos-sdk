@@ -1,5 +1,6 @@
 package keeper_test
 
+/*
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -434,3 +435,4 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 	}
 
 }
+*/

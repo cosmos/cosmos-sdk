@@ -1,5 +1,6 @@
 package keeper_test
 
+/*
 import (
 	"fmt"
 
@@ -284,3 +285,4 @@ func newMockTimeoutPacket() mockTimeoutPacket {
 
 // GetBytes returns the serialised packet data (without timeout)
 func (mp mockTimeoutPacket) GetBytes() []byte { return []byte("THIS IS A TIMEOUT PACKET") }
+*/

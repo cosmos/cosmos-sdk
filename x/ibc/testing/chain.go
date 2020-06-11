@@ -2,6 +2,7 @@ package testing
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -33,10 +34,7 @@ const (
 	ConnectionVersion = "1.0"
 	ChannelVersion    = "1.0"
 
-	ClientIDPrefix     = "clientFor"
 	ConnectionIDPrefix = "connectionid"
-	ChannelIDPrefix    = "channelid"
-	PortIDPrefix       = "portid"
 )
 
 var (
@@ -66,7 +64,6 @@ type TestChain struct {
 	// IBC specific helpers
 	ClientIDs   []string         // ClientID's used on this chain
 	Connections []TestConnection // track connectionID's created for this chain
-	Channels    []TestChannel    // track portID/channelID's created for this chain
 }
 
 // NewTestChain initializes a new TestChain instance with a single validator set using a
@@ -124,6 +121,8 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
 		SenderAccount: acc,
+		ClientIDs:     make([]string, 0),
+		Connections:   make([]TestConnection, 0),
 	}
 }
 
@@ -167,6 +166,8 @@ func (chain *TestChain) NextBlock() {
 		Height: chain.CurrentHeader.Height + 1,
 		Time:   chain.CurrentHeader.Time,
 	}
+	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
+
 }
 
 // SendMsg delivers a transaction through the application. It updates the senders sequence
@@ -198,8 +199,7 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 // NewClientID appends a new clientID string in the format:
 // ClientFor<counterparty-chain-id><index>
 func (chain *TestChain) NewClientID(counterpartyChainID string) string {
-	clientID := ClientIDPrefix + counterpartyChainID + string(len(chain.ClientIDs))
-
+	clientID := "client" + strconv.Itoa(len(chain.ClientIDs)) + "For" + counterpartyChainID
 	chain.ClientIDs = append(chain.ClientIDs, clientID)
 	return clientID
 }
@@ -208,7 +208,7 @@ func (chain *TestChain) NewClientID(counterpartyChainID string) string {
 // client id and counterparty client id. The connection id format:
 // connectionid<index>
 func (chain *TestChain) NewTestConnection(clientID, counterpartyClientID string) TestConnection {
-	connectionID := ConnectionIDPrefix + string(len(chain.Connections))
+	connectionID := ConnectionIDPrefix + strconv.Itoa(len(chain.Connections))
 	conn := TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
@@ -217,23 +217,6 @@ func (chain *TestChain) NewTestConnection(clientID, counterpartyClientID string)
 
 	chain.Connections = append(chain.Connections, conn)
 	return conn
-}
-
-// NewTestChannel appends a new TestChannel which contains references to the port and channel ID
-// used for channel creation and interaction. The channel id and port id format:
-// channelid<index>
-// portid<index>
-func (chain *TestChain) NewTestChannel() TestChannel {
-	portID := PortIDPrefix + string(len(chain.Channels))
-	channelID := ChannelIDPrefix + string(len(chain.Channels))
-	channel := TestChannel{
-		PortID:    portID,
-		ChannelID: channelID,
-	}
-
-	chain.Channels = append(chain.Channels, channel)
-
-	return channel
 }
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty

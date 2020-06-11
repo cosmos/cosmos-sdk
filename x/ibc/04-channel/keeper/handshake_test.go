@@ -1,5 +1,6 @@
 package keeper_test
 
+/*
 import (
 	"fmt"
 
@@ -625,3 +626,4 @@ type testCase = struct {
 	malleate func()
 	expPass  bool
 }
+*/

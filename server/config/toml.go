@@ -13,6 +13,10 @@ const defaultConfigTemplate = `# This is a TOML config file.
 
 ##### main base config options #####
 
+###############################################################################
+###                           Base Configuration                            ###
+###############################################################################
+
 # The minimum gas prices a validator is willing to accept for processing a
 # transaction. A transaction's fees must meet the minimum of any denomination
 # specified in this config (e.g. 0.25token1;0.0001token2).
@@ -45,13 +49,31 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
-# MetricsEnabled enables the application telemetry functionality. When enabled,
+###############################################################################
+###                         Telemetry Configuration                         ###
+###############################################################################
+
+[telemetry]
+
+# Prefixed with keys to separate services
+service-name = {{ .Telemetry.ServiceName }}
+
+# Enabled enables the application telemetry functionality. When enabled,
 # an in-memory sink is also enabled by default. Operators may also enabled
 # other sinks such as Prometheus.
-metrics-enabled = {{ .BaseConfig.MetricsEnabled }}
+enabled = {{ .Telemetry.Enabled }}
+
+# Enable prefixing gauge values with hostname
+enable-hostname = {{ .Telemetry.EnableHostname }}
+
+# Enable adding hostname to labels
+enable-hostname-label = {{ .Telemetry.EnableHostnameLabel }}
+
+# Enable adding service to labels
+enable-service-label = {{ .Telemetry.EnableServiceLabel }}
 
 # PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
-prometheus-retention-time = {{ .BaseConfig.PrometheusRetentionTime }}
+prometheus-retention-time = {{ .Telemetry.PrometheusRetentionTime }}
 `
 
 var configTemplate *template.Template

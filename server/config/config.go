@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -39,13 +40,8 @@ type BaseConfig struct {
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 
-	// MetricsEnabled enables the application telemetry functionality. When enabled,
-	// an in-memory sink is also enabled by default. Operators may also enabled
-	// other sinks such as Prometheus.
-	MetricsEnabled bool `mapstructure:"metrics-enabled"`
-
-	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
-	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
+	// Telemetry defines the application telemetry configuration
+	Telemetry telemetry.Config `mapstructure:"telemetry"`
 }
 
 // Config defines the server's top level configuration

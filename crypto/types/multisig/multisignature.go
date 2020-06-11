@@ -62,7 +62,7 @@ func AddSignatureFromPubKey(mSig *signing.MultiSignatureData, sig signing.Signat
 		return fmt.Errorf("value of mSig is nil %v", mSig)
 	}
 	if sig == nil {
-		return fmt.Errorf("value of sig is nil %v", mSig)
+		return fmt.Errorf("value of sig is nil %v", sig)
 	}
 
 	if pubkey == nil || keys == nil {

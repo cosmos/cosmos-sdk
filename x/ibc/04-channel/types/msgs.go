@@ -101,7 +101,7 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	if msg.ProofInit.IsEmpty() {
+	if msg.ProofInit.Empty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofInit.ValidateBasic(); err != nil {
@@ -162,7 +162,7 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	if msg.ProofTry.IsEmpty() {
+	if msg.ProofTry.Empty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofTry.ValidateBasic(); err != nil {
@@ -219,7 +219,7 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if msg.ProofAck.IsEmpty() {
+	if msg.ProofAck.Empty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofAck.ValidateBasic(); err != nil {
@@ -321,7 +321,7 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if msg.ProofInit.IsEmpty() {
+	if msg.ProofInit.Empty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofInit.ValidateBasic(); err != nil {
@@ -366,7 +366,7 @@ func (msg MsgPacket) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() error {
-	if msg.Proof.IsEmpty() {
+	if msg.Proof.Empty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.Proof.ValidateBasic(); err != nil {
@@ -427,7 +427,7 @@ func (msg MsgTimeout) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
-	if msg.Proof.IsEmpty() {
+	if msg.Proof.Empty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.Proof.ValidateBasic(); err != nil {
@@ -479,7 +479,7 @@ func (msg MsgAcknowledgement) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
-	if msg.Proof.IsEmpty() {
+	if msg.Proof.Empty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.Proof.ValidateBasic(); err != nil {

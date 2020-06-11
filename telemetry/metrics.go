@@ -1,10 +1,15 @@
 package telemetry
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/armon/go-metrics"
-	"github.com/armon/go-metrics/prometheus"
+	metricsprom "github.com/armon/go-metrics/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/expfmt"
 )
 
 // Config defines the configuration options for application telemetry.
@@ -39,6 +44,11 @@ type Metrics struct {
 	prometheusEnabled bool
 }
 
+type GatherResponse struct {
+	Metrics     []byte
+	ContentType string
+}
+
 func New(cfg Config) (*Metrics, error) {
 	if !cfg.Enabled {
 		return nil, nil
@@ -56,11 +66,11 @@ func New(cfg Config) (*Metrics, error) {
 
 	if cfg.PrometheusRetentionTime > 0 {
 		m.prometheusEnabled = true
-		prometheusOpts := prometheus.PrometheusOpts{
+		prometheusOpts := metricsprom.PrometheusOpts{
 			Expiration: time.Duration(cfg.PrometheusRetentionTime),
 		}
 
-		promSink, err := prometheus.NewPrometheusSinkFrom(prometheusOpts)
+		promSink, err := metricsprom.NewPrometheusSinkFrom(prometheusOpts)
 		if err != nil {
 			return nil, err
 		}
@@ -73,4 +83,48 @@ func New(cfg Config) (*Metrics, error) {
 	}
 
 	return m, nil
+}
+
+// Gather collects all registered metrics and returns a GatherResponse where the
+// metrics are encoded depending on the type. Metrics are either encoded via
+// Prometheus or JSON if in-memory.
+func (m *Metrics) Gather() (GatherResponse, error) {
+	if m.prometheusEnabled {
+		return m.gatherPrometheus()
+	}
+
+	return m.gatherGeneric()
+}
+
+func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
+	metricsFamilies, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return GatherResponse{}, fmt.Errorf("failed to gather prometheus metrics: %w", err)
+	}
+
+	buf := &bytes.Buffer{}
+	defer buf.Reset()
+
+	e := expfmt.NewEncoder(buf, expfmt.FmtText)
+	for _, mf := range metricsFamilies {
+		if err := e.Encode(mf); err != nil {
+			return GatherResponse{}, fmt.Errorf("failed to encode prometheus metrics: %w", err)
+		}
+	}
+
+	return GatherResponse{ContentType: string(expfmt.FmtText), Metrics: buf.Bytes()}, nil
+}
+
+func (m *Metrics) gatherGeneric() (GatherResponse, error) {
+	summary, err := m.memSink.DisplayMetrics(nil, nil)
+	if err != nil {
+		return GatherResponse{}, fmt.Errorf("failed to gather in-memory metrics: %w", err)
+	}
+
+	content, err := json.Marshal(summary)
+	if err != nil {
+		return GatherResponse{}, fmt.Errorf("failed to encode in-memory metrics: %w", err)
+	}
+
+	return GatherResponse{ContentType: "application/json", Metrics: content}, nil
 }

@@ -388,7 +388,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 }
 
 // sanitizeVerificationArgs perfoms the basic checks on the arguments that are
-// shared between the verification functions.
+// shared between the verification functions and returns the unmarshalled
+// merkle proof and an error if one occurred.
 func sanitizeVerificationArgs(
 	cdc codec.Marshaler,
 	cs ClientState,

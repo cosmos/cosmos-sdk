@@ -399,8 +399,8 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			ubd, err := types.UnmarshalUBD(types.ModuleCdc, res)
-			if err != nil {
+			var ubd types.UnbondingDelegation
+			if err = cdc.UnmarshalJSON(res, &ubd); err != nil {
 				return err
 			}
 

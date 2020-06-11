@@ -9,7 +9,6 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -92,7 +91,7 @@ func (k Keeper) ChanOpenTry(
 	counterparty types.Counterparty,
 	version,
 	counterpartyVersion string,
-	proofInit commitmentexported.Proof,
+	proofInit []byte,
 	proofHeight uint64,
 ) (*capability.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
@@ -170,7 +169,7 @@ func (k Keeper) ChanOpenAck(
 	channelID string,
 	chanCap *capability.Capability,
 	counterpartyVersion string,
-	proofTry commitmentexported.Proof,
+	proofTry []byte,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -237,7 +236,7 @@ func (k Keeper) ChanOpenConfirm(
 	portID,
 	channelID string,
 	chanCap *capability.Capability,
-	proofAck commitmentexported.Proof,
+	proofAck []byte,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -348,7 +347,7 @@ func (k Keeper) ChanCloseConfirm(
 	portID,
 	channelID string,
 	chanCap *capability.Capability,
-	proofInit commitmentexported.Proof,
+	proofInit []byte,
 	proofHeight uint64,
 ) error {
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {

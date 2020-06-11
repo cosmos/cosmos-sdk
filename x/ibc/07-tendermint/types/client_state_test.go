@@ -78,7 +78,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		clientState    ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
+		proof          []byte
 		expPass        bool
 	}{
 		// FIXME: uncomment
@@ -126,7 +126,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 				ValidatorSet: suite.valSet,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
+			proof:   []byte{},
 			expPass: false,
 		},
 	}
@@ -135,7 +135,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			nil, suite.aminoCdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
+			nil, suite.cdc, suite.aminoCdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -156,7 +156,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		connection     connection.End
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
+		proof          []byte
 		expPass        bool
 	}{
 		// FIXME: uncomment
@@ -209,7 +209,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 				ValidatorSet: suite.valSet,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
+			proof:   []byte{},
 			expPass: false,
 		},
 	}
@@ -239,7 +239,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		channel        channel.Channel
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
+		proof          []byte
 		expPass        bool
 	}{
 		// FIXME: uncomment
@@ -292,7 +292,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 				ValidatorSet: suite.valSet,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
+			proof:   []byte{},
 			expPass: false,
 		},
 	}
@@ -319,7 +319,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		commitment     []byte
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
+		proof          []byte
 		expPass        bool
 	}{
 		// FIXME: uncomment
@@ -372,7 +372,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 				ValidatorSet: suite.valSet,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
+			proof:   []byte{},
 			expPass: false,
 		},
 	}
@@ -381,7 +381,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			nil, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, tc.consensusState,
+			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -399,7 +399,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		ack            []byte
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
+		proof          []byte
 		expPass        bool
 	}{
 		// FIXME: uncomment
@@ -452,7 +452,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 				ValidatorSet: suite.valSet,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
+			proof:   []byte{},
 			expPass: false,
 		},
 	}
@@ -461,7 +461,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			nil, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, tc.consensusState,
+			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -478,7 +478,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		clientState    ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
+		proof          []byte
 		expPass        bool
 	}{
 		// FIXME: uncomment
@@ -527,7 +527,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 				ValidatorSet: suite.valSet,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
+			proof:   []byte{},
 			expPass: false,
 		},
 	}
@@ -536,7 +536,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			nil, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
+			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -553,7 +553,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		clientState    ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
+		proof          []byte
 		expPass        bool
 	}{
 		// FIXME: uncomment
@@ -602,7 +602,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 				ValidatorSet: suite.valSet,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
+			proof:   []byte{},
 			expPass: false,
 		},
 	}
@@ -611,7 +611,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			nil, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
+			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
 		)
 
 		if tc.expPass {

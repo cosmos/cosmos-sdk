@@ -62,6 +62,7 @@ older clients.
 
 ### API Breaking Changes
 
+* [\#6409](https://github.com/cosmos/cosmos-sdk/pull/6409) Rename all IsEmpty methods to Empty across the codebase and enforce consistency.
 * [\#6231](https://github.com/cosmos/cosmos-sdk/pull/6231) Simplify `AppModule` interface, `Route` and `NewHandler` methods become only `Route`
 and returns a new `Route` type.
 * [\#6212](https://github.com/cosmos/cosmos-sdk/pull/6212) Remove `Get*` prefixes from key construction functions
@@ -163,6 +164,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
 
 ### Bug Fixes
 
+* (client) [\#6402](https://github.com/cosmos/cosmos-sdk/issues/6402) Fix `keys add` `--algo` flag which only worked for Tendermint's `secp256k1` default key signing algorithm.
 * (x/bank) [\#6283](https://github.com/cosmos/cosmos-sdk/pull/6283) Create account if recipient does not exist on handing `MsgMultiSend`.
 * (x/distribution) [\#6210](https://github.com/cosmos/cosmos-sdk/pull/6210) Register `MsgFundCommunityPool` in distribution amino codec.
 * (x/staking) [\#6061](https://github.com/cosmos/cosmos-sdk/pull/6061) Allow a validator to immediately unjail when no signing info is present due to

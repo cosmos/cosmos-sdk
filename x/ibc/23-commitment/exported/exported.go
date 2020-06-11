@@ -16,7 +16,7 @@ import ics23 "github.com/confio/ics23/go"
 type Root interface {
 	GetCommitmentType() Type
 	GetHash() []byte
-	IsEmpty() bool
+	Empty() bool
 }
 
 // Prefix implements spec:CommitmentPrefix.
@@ -24,7 +24,7 @@ type Root interface {
 type Prefix interface {
 	GetCommitmentType() Type
 	Bytes() []byte
-	IsEmpty() bool
+	Empty() bool
 }
 
 // Path implements spec:CommitmentPath.
@@ -32,7 +32,7 @@ type Prefix interface {
 type Path interface {
 	GetCommitmentType() Type
 	String() string
-	IsEmpty() bool
+	Empty() bool
 }
 
 // Proof implements spec:CommitmentProof.
@@ -43,7 +43,7 @@ type Proof interface {
 	GetCommitmentType() Type
 	VerifyMembership([]*ics23.ProofSpec, Root, Path, []byte) error
 	VerifyNonMembership([]*ics23.ProofSpec, Root, Path) error
-	IsEmpty() bool
+	Empty() bool
 
 	ValidateBasic() error
 }

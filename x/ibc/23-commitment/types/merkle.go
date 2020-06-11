@@ -45,8 +45,8 @@ func (MerkleRoot) GetCommitmentType() exported.Type {
 	return exported.Merkle
 }
 
-// IsEmpty returns true if the root is empty
-func (mr MerkleRoot) IsEmpty() bool {
+// Empty returns true if the root is empty
+func (mr MerkleRoot) Empty() bool {
 	return len(mr.GetHash()) == 0
 }
 
@@ -69,8 +69,8 @@ func (mp MerklePrefix) Bytes() []byte {
 	return mp.KeyPrefix
 }
 
-// IsEmpty returns true if the prefix is empty
-func (mp MerklePrefix) IsEmpty() bool {
+// Empty returns true if the prefix is empty
+func (mp MerklePrefix) Empty() bool {
 	return len(mp.Bytes()) == 0
 }
 
@@ -107,8 +107,8 @@ func (mp MerklePath) Pretty() string {
 	return path
 }
 
-// IsEmpty returns true if the path is empty
-func (mp MerklePath) IsEmpty() bool {
+// Empty returns true if the path is empty
+func (mp MerklePath) Empty() bool {
 	return len(mp.KeyPath.Keys) == 0
 }
 
@@ -123,7 +123,7 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 		return MerklePath{}, err
 	}
 
-	if prefix == nil || prefix.IsEmpty() {
+	if prefix == nil || prefix.Empty() {
 		return MerklePath{}, sdkerrors.Wrap(ErrInvalidPrefix, "prefix can't be empty")
 	}
 	return NewMerklePath([]string{string(prefix.Bytes()), path}), nil
@@ -363,14 +363,14 @@ func convertProofs(mproof MerkleProof) ([]*ics23.CommitmentProof, error) {
 	return proofs, nil
 }
 
-// IsEmpty returns true if the root is empty
-func (proof MerkleProof) IsEmpty() bool {
+// Empty returns true if the root is empty
+func (proof MerkleProof) Empty() bool {
 	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
 }
 
 // ValidateBasic checks if the proof is empty.
 func (proof MerkleProof) ValidateBasic() error {
-	if proof.IsEmpty() {
+	if proof.Empty() {
 		return ErrInvalidProof
 	}
 	return nil
@@ -378,7 +378,7 @@ func (proof MerkleProof) ValidateBasic() error {
 
 // validateVerificationArgs verifies the proof arguments are valid
 func (proof MerkleProof) validateVerificationArgs(specs []*ics23.ProofSpec, root exported.Root) error {
-	if proof.IsEmpty() || root == nil || root.IsEmpty() {
+	if proof.Empty() || root == nil || root.Empty() {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
 	}
 

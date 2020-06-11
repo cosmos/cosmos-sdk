@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // nolint: unused
-func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
+func queryProof(chain *TestChain, key []byte) ([]byte, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),
 		Height: chain.App.LastBlockHeight(),
@@ -75,9 +75,11 @@ func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint
 		Prove:  true,
 	})
 
-	proof := commitmenttypes.MerkleProof{
+	merkleProof := commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
+
+	proof, _ := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 
 	return proof, uint64(res.Height)
 }

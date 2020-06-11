@@ -28,13 +28,14 @@ type ClientState interface {
 
 	VerifyClientConsensusState(
 		store sdk.KVStore,
-		cdc *codec.Codec,
+		cdc codec.Marshaler,
+		aminoCdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
 		counterpartyClientIdentifier string,
 		consensusHeight uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
@@ -42,7 +43,7 @@ type ClientState interface {
 		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
 		consensusState ConsensusState,
@@ -52,7 +53,7 @@ type ClientState interface {
 		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
@@ -60,9 +61,10 @@ type ClientState interface {
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -71,9 +73,10 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -82,9 +85,10 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -92,9 +96,10 @@ type ClientState interface {
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,

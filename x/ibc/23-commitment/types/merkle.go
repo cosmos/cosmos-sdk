@@ -36,8 +36,8 @@ func (MerkleRoot) GetCommitmentType() exported.Type {
 	return exported.Merkle
 }
 
-// IsEmpty returns true if the root is empty
-func (mr MerkleRoot) IsEmpty() bool {
+// Empty returns true if the root is empty
+func (mr MerkleRoot) Empty() bool {
 	return len(mr.GetHash()) == 0
 }
 
@@ -60,8 +60,8 @@ func (mp MerklePrefix) Bytes() []byte {
 	return mp.KeyPrefix
 }
 
-// IsEmpty returns true if the prefix is empty
-func (mp MerklePrefix) IsEmpty() bool {
+// Empty returns true if the prefix is empty
+func (mp MerklePrefix) Empty() bool {
 	return len(mp.Bytes()) == 0
 }
 
@@ -98,8 +98,8 @@ func (mp MerklePath) Pretty() string {
 	return path
 }
 
-// IsEmpty returns true if the path is empty
-func (mp MerklePath) IsEmpty() bool {
+// Empty returns true if the path is empty
+func (mp MerklePath) Empty() bool {
 	return len(mp.KeyPath.Keys) == 0
 }
 
@@ -114,7 +114,7 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 		return MerklePath{}, err
 	}
 
-	if prefix == nil || prefix.IsEmpty() {
+	if prefix == nil || prefix.Empty() {
 		return MerklePath{}, sdkerrors.Wrap(ErrInvalidPrefix, "prefix can't be empty")
 	}
 	return NewMerklePath([]string{string(prefix.Bytes()), path}), nil
@@ -129,7 +129,7 @@ func (MerkleProof) GetCommitmentType() exported.Type {
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
 func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path, value []byte) error {
-	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
+	if proof.Empty() || root == nil || root.Empty() || path == nil || path.Empty() || len(value) == 0 {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
 	}
 
@@ -139,7 +139,7 @@ func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
 func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.Path) error {
-	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
+	if proof.Empty() || root == nil || root.Empty() || path == nil || path.Empty() {
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
 	}
 
@@ -147,14 +147,14 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 	return runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
 }
 
-// IsEmpty returns true if the root is empty
-func (proof MerkleProof) IsEmpty() bool {
+// Empty returns true if the root is empty
+func (proof MerkleProof) Empty() bool {
 	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
 }
 
 // ValidateBasic checks if the proof is empty.
 func (proof MerkleProof) ValidateBasic() error {
-	if proof.IsEmpty() {
+	if proof.Empty() {
 		return ErrInvalidProof
 	}
 	return nil

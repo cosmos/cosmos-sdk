@@ -60,19 +60,21 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectiontypes.OPEN)
 }
 
-func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof, height int64) {
+func queryProof(chain *TestChain, key string) ([]byte, int64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", host.StoreKey),
 		Data:  []byte(key),
 		Prove: true,
 	})
 
-	height = res.Height
-	proof = commitmenttypes.MerkleProof{
+	height := res.Height
+	merkleProof := commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
 
-	return
+	proof, _ := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
+
+	return proof, height
 }
 
 func (suite *HandlerTestSuite) newTx(msg sdk.Msg) sdk.Tx {
@@ -93,7 +95,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	cctx, _ := ctx.CacheContext()
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, packet.SourcePort, packet.SourceChannel, 1)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet))
-	msg := channel.NewMsgPacket(packet, commitmenttypes.MerkleProof{}, 0, addr1)
+	msg := channel.NewMsgPacket(packet, []byte{}, 0, addr1)
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
 

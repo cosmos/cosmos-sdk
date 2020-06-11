@@ -79,14 +79,12 @@ func NewAppModule(k Keeper) AppModule {
 
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-func (am AppModule) NewHandler() sdk.Handler { return nil }
-
 // InitGenesis performs a no-op.
 func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
-func (AppModule) Route() string { return "" }
+func (AppModule) Route() *sdk.Route { return nil }
 
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}

@@ -100,10 +100,7 @@ func (AppModule) Name() string {
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the mint module.
-func (AppModule) Route() string { return "" }
-
-// NewHandler returns an sdk.Handler for the mint module.
-func (am AppModule) NewHandler() sdk.Handler { return nil }
+func (AppModule) Route() *sdk.Route { return nil }
 
 // QuerierRoute returns the mint module's querier route name.
 func (AppModule) QuerierRoute() string {

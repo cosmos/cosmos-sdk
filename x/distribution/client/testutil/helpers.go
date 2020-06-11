@@ -43,8 +43,7 @@ func QueryRewards(f *cli.Fixtures, delAddr sdk.AccAddress, flags ...string) dist
 	require.Empty(f.T, errStr)
 
 	var rewards distribution.QueryDelegatorTotalRewardsResponse
-	err := f.Cdc.UnmarshalJSON([]byte(res), &rewards)
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(res), &rewards))
 	return rewards
 }
 

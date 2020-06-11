@@ -20,9 +20,9 @@ func TestTxWrapper(t *testing.T) {
 
 	tx := NewTxWrapper(codec.New(), std.DefaultPublicKeyCodec{})
 
-	txBody := TxBody{}
-	tx.SetBody(&txBody)
 	memo := "memo"
+	txBody := TxBody{Memo: memo}
+	tx.SetBody(&txBody)
 	protoTx, ok := tx.(types.ProtoTx)
 
 	if !ok {

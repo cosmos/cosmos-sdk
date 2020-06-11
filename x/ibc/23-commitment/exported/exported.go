@@ -14,7 +14,7 @@ package exported
 type Root interface {
 	GetCommitmentType() Type
 	GetHash() []byte
-	IsEmpty() bool
+	Empty() bool
 }
 
 // Prefix implements spec:CommitmentPrefix.
@@ -22,7 +22,7 @@ type Root interface {
 type Prefix interface {
 	GetCommitmentType() Type
 	Bytes() []byte
-	IsEmpty() bool
+	Empty() bool
 }
 
 // Path implements spec:CommitmentPath.
@@ -30,7 +30,7 @@ type Prefix interface {
 type Path interface {
 	GetCommitmentType() Type
 	String() string
-	IsEmpty() bool
+	Empty() bool
 }
 
 // Proof implements spec:CommitmentProof.
@@ -41,7 +41,7 @@ type Proof interface {
 	GetCommitmentType() Type
 	VerifyMembership(Root, Path, []byte) error
 	VerifyNonMembership(Root, Path) error
-	IsEmpty() bool
+	Empty() bool
 
 	ValidateBasic() error
 }

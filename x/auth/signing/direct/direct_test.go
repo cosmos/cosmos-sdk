@@ -100,19 +100,6 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, signDocBytes, signBytes)
 
-	t.Log("verify GetSignBytes using default methods from txWrapper")
-	signDoc = types.SignDoc{
-		AccountNumber: 1,
-		AccountSequence: 1,
-		AuthInfoBytes: tx.GetAuthInfoBytes(),
-		BodyBytes: tx.GetBodyBytes(),
-		ChainId: "test-chain",
-	}
-
-	signDocBytes, err = signDoc.Marshal()
-	require.NoError(t, err)
-	require.Equal(t, signDocBytes, signBytes)
-
 	t.Log("verify GetSignBytes with false txBody data")
 	signDoc.BodyBytes = []byte("dfafdasfds")
 	signDocBytes, err = signDoc.Marshal()

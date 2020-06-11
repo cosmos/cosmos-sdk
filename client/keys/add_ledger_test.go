@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,8 +46,10 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	viper.Set(flagIndex, "0")
 	viper.Set(flagCoinType, "330")
 
-	/// Test Text
+	// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
+	// set algo flag value to the default
+	viper.Set(flagKeyAlgo, string(hd.Secp256k1Type))
 	// Now enter password
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
@@ -57,7 +60,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1")
+		_ = kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
 	key1, err := kb.Key("keyname1")
@@ -89,8 +92,10 @@ func Test_runAddCmdLedger(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(flags.FlagUseLedger, true)
 
-	/// Test Text
+	// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
+	// set algo flag value to the default
+	viper.Set(flagKeyAlgo, string(hd.Secp256k1Type))
 	// Now enter password
 	mockIn.Reset("test1234\ntest1234\n")
 	viper.Set(flagCoinType, sdk.CoinType)
@@ -101,7 +106,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1")
+		_ = kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
 	key1, err := kb.Key("keyname1")

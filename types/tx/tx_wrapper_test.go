@@ -1,7 +1,6 @@
 package tx
 
 import (
-	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -15,10 +14,10 @@ import (
 )
 
 var (
-	priv = ed25519.GenPrivKey()
-	pubkey = priv.PubKey().Bytes()
+	priv          = ed25519.GenPrivKey()
+	pubkey        = priv.PubKey()
 	pubKeyAddr, _ = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
-	addr = sdk.AccAddress(priv.PubKey().Address())
+	addr          = sdk.AccAddress(priv.PubKey().Address())
 )
 
 func TestTxWrapper(t *testing.T) {
@@ -29,24 +28,20 @@ func TestTxWrapper(t *testing.T) {
 	//   - verify that calling the SetBody results in the correct GetBodyBytes
 	//   - verify that calling the SetAuthInfo results in the correct GetAuthInfoBytes and GetPubKeys
 	//   - verify no nil panics
-	cdc := std.NewAppCodec(codec.New(), codectypes.NewInterfaceRegistry())
-	tx := NewTxWrapper(cdc.Marshaler, std.DefaultPublicKeyCodec{})
+	appCodec := std.NewAppCodec(codec.New(), codectypes.NewInterfaceRegistry())
+	tx := NewTxWrapper(appCodec.Marshaler, std.DefaultPublicKeyCodec{})
+
+	cdc := std.DefaultPublicKeyCodec{}
 
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{types.NewTestMsg(addr)}
 
-	pk := types2.PublicKey{
-		Sum: &types2.PublicKey_Ed25519{
-			Ed25519: pubkey,
-		},
-	}
-
-	//err := cdc.UnmarshalBinaryBare(pubkey, &pk)
-	//require.NoError(t, err)
+	pk, err := cdc.Encode(pubkey)
+	require.NoError(t, err)
 
 	var signerInfo []*SignerInfo
 	signerInfo = append(signerInfo, &SignerInfo{
-		PublicKey: &pk,
+		PublicKey: pk,
 		ModeInfo: &ModeInfo{
 			Sum: &ModeInfo_Single_{
 				Single: &ModeInfo_Single{
@@ -69,7 +64,6 @@ func TestTxWrapper(t *testing.T) {
 	tx.SetSignerInfos(signerInfo)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 1, len(tx.GetPubKeys()))
-
 
 	//bodyBz := tx.GetBodyBytes()
 }

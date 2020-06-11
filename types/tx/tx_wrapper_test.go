@@ -1,12 +1,19 @@
 package tx
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	types "github.com/cosmos/cosmos-sdk/types/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+)
+
+var (
+	priv = ed25519.GenPrivKey()
+	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
 func TestTxWrapper(t *testing.T) {
@@ -17,18 +24,26 @@ func TestTxWrapper(t *testing.T) {
 	//   - verify that calling the SetBody results in the correct GetBodyBytes
 	//   - verify that calling the SetAuthInfo results in the correct GetAuthInfoBytes and GetPubKeys
 	//   - verify no nil panics
+	cdc := std.NewAppCodec(codec.New(), codectypes.NewInterfaceRegistry())
 
-	tx := NewTxWrapper(codec.New(), std.DefaultPublicKeyCodec{})
+	tx := NewTxWrapper(cdc.Marshaler, std.DefaultPublicKeyCodec{})
 
-	memo := "memo"
-	txBody := TxBody{Memo: memo}
-	tx.SetBody(&txBody)
-	protoTx, ok := tx.(types.ProtoTx)
+	memo := "sometestmemo"
+	msgs := []sdk.Msg{types.NewTestMsg(addr)}
 
-	if !ok {
-		return nil, fmt.Errorf("can only get direct sign bytes for a ProtoTx, got %T", tx)
+	txBody := TxBody{
+		Messages: msgs,
+		Memo:     memo,
 	}
 
-	bodyBz := protoTx.GetBodyBytes()
-	// facing import cycle error
+	authInfo := AuthInfo{
+		SignerInfos: make([]*SignerInfo, 0),
+		Fee:         &Fee{Amount: sdk.NewCoins(sdk.NewCoin("test, 0")), GasLimit: 20000},
+	}
+
+	tx.SetBody(&txBody)
+
+	tx.SetAuthInfo(&authInfo)
+
+	bodyBz := tx.GetBodyBytes()
 }

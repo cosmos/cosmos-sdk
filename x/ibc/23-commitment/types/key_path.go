@@ -36,5 +36,5 @@ func (pth *KeyPath) String() string {
 func (pth *KeyPath) GetKey(i int) []byte {
 	total := len(pth.Keys)
 	index := (total + i) % total
-	return []byte(pth.Keys[index].name)
+	return pth.Keys[index].name
 }

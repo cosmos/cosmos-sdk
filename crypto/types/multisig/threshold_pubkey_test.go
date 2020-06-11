@@ -1,14 +1,16 @@
-package multisig
+package multisig_test
 
 import (
 	"math/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -39,15 +41,15 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 		},
 	}
 	for tcIndex, tc := range cases {
-		multisigKey := NewPubKeyMultisigThreshold(tc.k, tc.pubkeys)
-		multisignature := NewMultisig(len(tc.pubkeys))
+		multisigKey := multisig.NewPubKeyMultisigThreshold(tc.k, tc.pubkeys)
+		multisignature := multisig.NewMultisig(len(tc.pubkeys))
 		signBytesFn := func(mode signing.SignMode) ([]byte, error) { return tc.msg, nil }
 
 		for i := 0; i < tc.k-1; i++ {
 			signingIndex := tc.signingIndices[i]
 			require.NoError(
 				t,
-				AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
+				multisig.AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
 			)
 			require.Error(
 				t,
@@ -56,7 +58,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 			)
 			require.NoError(
 				t,
-				AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
+				multisig.AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
 			)
 			require.Equal(
 				t,
@@ -72,7 +74,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 		)
 		require.NoError(
 			t,
-			AddSignatureFromPubKey(
+			multisig.AddSignatureFromPubKey(
 				multisignature,
 				tc.signatures[tc.signingIndices[tc.k]],
 				tc.pubkeys[tc.signingIndices[tc.k]],
@@ -90,7 +92,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 
 			require.NoError(
 				t,
-				AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
+				multisig.AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
 			)
 			require.Equal(
 				t,
@@ -102,7 +104,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 			)
 			require.NoError(
 				t,
-				AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
+				multisig.AddSignatureFromPubKey(multisignature, tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
 			)
 			require.Equal(
 				t,
@@ -118,12 +120,12 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 	msg := []byte{1, 2, 3, 4, 5}
 	pubkeys, sigs := generatePubKeysAndSignatures(5, msg)
-	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
-	multisignature := NewMultisig(5)
+	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisignature := multisig.NewMultisig(5)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
 	require.Error(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
-	AddSignatureFromPubKey(multisignature, sigs[0], pubkeys[0], pubkeys)
+	multisig.AddSignatureFromPubKey(multisignature, sigs[0], pubkeys[0], pubkeys)
 	// Add second signature manually
 	multisignature.Signatures = append(multisignature.Signatures, sigs[0])
 	require.Error(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
@@ -133,9 +135,9 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 func TestMultiSigPubKeyEquality(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
-	var unmarshalledMultisig PubKeyMultisigThreshold
-	cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &unmarshalledMultisig)
+	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	var unmarshalledMultisig multisig.PubKeyMultisigThreshold
+	multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &unmarshalledMultisig)
 	require.True(t, multisigKey.Equals(unmarshalledMultisig))
 
 	// Ensure that reordering pubkeys is treated as a different pubkey
@@ -143,28 +145,28 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 	copy(pubkeysCpy, pubkeys)
 	pubkeysCpy[4] = pubkeys[3]
 	pubkeysCpy[3] = pubkeys[4]
-	multisigKey2 := NewPubKeyMultisigThreshold(2, pubkeysCpy)
+	multisigKey2 := multisig.NewPubKeyMultisigThreshold(2, pubkeysCpy)
 	require.False(t, multisigKey.Equals(multisigKey2))
 }
 
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
 	require.Len(t, multisigKey.Address().Bytes(), 20)
 }
 
 func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
 
-	ab, err := cdc.MarshalBinaryLengthPrefixed(multisigKey)
+	ab, err := multisig.Cdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)
 	// like other crypto.Pubkey implementations (e.g. ed25519.PubKeyMultisigThreshold),
 	// PubKeyMultisigThreshold should be deserializable into a crypto.PubKeyMultisigThreshold:
 	var pubKey crypto.PubKey
-	err = cdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
+	err = multisig.Cdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
 	require.NoError(t, err)
 
 	require.Equal(t, multisigKey, pubKey)
@@ -178,24 +180,47 @@ func TestMultiSignature(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestMultiSigMigration(t *testing.T) {
+	msg := []byte{1, 2, 3, 4}
+	pkSet, sigs := generatePubKeysAndSignatures(2, msg)
+	multisignature := multisig.NewMultisig(2)
+
+	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
+	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
+
+	cdc := codec.New()
+
+	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
+
+	// create a StdSignature for msg, and convert it to sigV2
+	sig := authtypes.StdSignature{PubKey: pkSet[1].Bytes(), Signature: msg}
+	sigV2, err := authtypes.StdSignatureToSignatureV2(cdc, sig)
+	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
+
+	require.NoError(t, err)
+	require.NotNil(t, sigV2)
+
+	require.NoError(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
+}
+
 func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
 	pkSet, sigs := generatePubKeysAndSignatures(5, []byte{1, 2, 3, 4})
-	multisignature := NewMultisig(5)
+	multisignature := multisig.NewMultisig(5)
 
 	//verify no error is returned with all non-nil values
-	err := AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
+	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
 	require.NoError(t, err)
 	//verify error is returned when key value is nil
-	err = AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], nil)
+	err = multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], nil)
 	require.Error(t, err)
 	//verify error is returned when pubkey value is nil
-	err = AddSignatureFromPubKey(multisignature, sigs[0], nil, pkSet)
+	err = multisig.AddSignatureFromPubKey(multisignature, sigs[0], nil, pkSet)
 	require.Error(t, err)
 	//verify error is returned when signature value is nil
-	err = AddSignatureFromPubKey(multisignature, nil, pkSet[0], pkSet)
+	err = multisig.AddSignatureFromPubKey(multisignature, nil, pkSet[0], pkSet)
 	require.Error(t, err)
 	//verify error is returned when multisignature value is nil
-	err = AddSignatureFromPubKey(nil, sigs[0], pkSet[0], pkSet)
+	err = multisig.AddSignatureFromPubKey(nil, sigs[0], pkSet[0], pkSet)
 	require.Error(t, err)
 }
 
@@ -219,7 +244,7 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, s
 	return
 }
 
-func generateNestedMultiSignature(n int, msg []byte) (PubKey, *signing.MultiSignatureData) {
+func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
 	pubkeys := make([]crypto.PubKey, n)
 	signatures := make([]signing.SignatureData, n)
 	bitArray := types.NewCompactBitArray(n)
@@ -234,10 +259,10 @@ func generateNestedMultiSignature(n int, msg []byte) (PubKey, *signing.MultiSign
 			Signatures: nestedSigs,
 		}
 		signatures[i] = nestedSig
-		pubkeys[i] = NewPubKeyMultisigThreshold(5, nestedPks)
+		pubkeys[i] = multisig.NewPubKeyMultisigThreshold(5, nestedPks)
 		bitArray.SetIndex(i, true)
 	}
-	return NewPubKeyMultisigThreshold(n, pubkeys), &signing.MultiSignatureData{
+	return multisig.NewPubKeyMultisigThreshold(n, pubkeys), &signing.MultiSignatureData{
 		BitArray:   bitArray,
 		Signatures: signatures,
 	}

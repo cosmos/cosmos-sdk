@@ -89,7 +89,7 @@ func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytes
 	}
 	// ensure at least k signatures are set
 	if bitarray.NumTrueBitsBefore(size) < int(pk.K) {
-		return fmt.Errorf("minimum number of signatures not set %d", int(pk.K))
+		return fmt.Errorf("minimum number of signatures not set, have %d, expected %d", bitarray.NumTrueBitsBefore(size), int(pk.K))
 	}
 	// index in the list of signatures which we are concerned with.
 	sigIndex := 0

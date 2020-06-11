@@ -1,9 +1,10 @@
 package multisig
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"math/rand"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
@@ -171,12 +172,9 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 
 func TestMultiSignature(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
-	pkSet, sigs := generatePubKeysAndMultiSignatures(2, msg)
-	multisignature := NewMultisig(1)
+	pk, sig := generateNestedMultiSignature(3, msg)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
-	t.Logf("this is multisignature %v", multisignature)
-	multisigKey := NewPubKeyMultisigThreshold(1, pkSet)
-	err := multisigKey.VerifyMultisignature(signBytesFn, &sigs[0])
+	err := pk.VerifyMultisignature(signBytesFn, sig)
 	require.NoError(t, err)
 }
 
@@ -221,26 +219,26 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, s
 	return
 }
 
-func generatePubKeysAndMultiSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, signatures []signing.MultiSignatureData) {
-	pubkeys = make([]crypto.PubKey, n)
-	signatures = make([]signing.MultiSignatureData, n)
+func generateNestedMultiSignature(n int, msg []byte) (PubKey, *signing.MultiSignatureData) {
+	pubkeys := make([]crypto.PubKey, n)
+	signatures := make([]signing.SignatureData, n)
+	bitArray := types.NewCompactBitArray(n)
 	for i := 0; i < n; i++ {
-		var privkey crypto.PrivKey
-		switch rand.Int63() % 3 {
-		case 0:
-			privkey = ed25519.GenPrivKey()
-		case 1:
-			privkey = secp256k1.GenPrivKey()
-		case 2:
-			privkey = sr25519.GenPrivKey()
+		nestedPks, nestedSigs := generatePubKeysAndSignatures(5, msg)
+		nestedBitArray := types.NewCompactBitArray(5)
+		for j := 0; j < 5; j++ {
+			nestedBitArray.SetIndex(j, true)
 		}
-		pubkeys[i] = privkey.PubKey()
-		sig, _ := privkey.Sign(msg)
-		var multisignature signing.SignatureData
-		cdc.UnmarshalBinaryBare(sig, &multisignature)
-		signatures[i].BitArray = types.NewCompactBitArray(n)
-		signatures[i].BitArray.SetIndex(i, true)
-		signatures[i].Signatures = append(signatures[i].Signatures, multisignature)
+		nestedSig := &signing.MultiSignatureData{
+			BitArray:   nestedBitArray,
+			Signatures: nestedSigs,
+		}
+		signatures[i] = nestedSig
+		pubkeys[i] = NewPubKeyMultisigThreshold(5, nestedPks)
+		bitArray.SetIndex(i, true)
 	}
-	return
+	return NewPubKeyMultisigThreshold(n, pubkeys), &signing.MultiSignatureData{
+		BitArray:   bitArray,
+		Signatures: signatures,
+	}
 }

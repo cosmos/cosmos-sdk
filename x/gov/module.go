@@ -135,13 +135,8 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route returns the message routing key for the gov module.
-func (AppModule) Route() string {
-	return RouterKey
-}
-
-// NewHandler returns an sdk.Handler for the gov module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+func (am AppModule) Route() *sdk.Route {
+	return sdk.NewRoute(RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the gov module's querier route name.

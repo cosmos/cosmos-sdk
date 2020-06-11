@@ -253,6 +253,7 @@ Buffers for state serialization instead of Amino.
 
 ### Improvements
 
+* (code hygiene) [\#6409](https://github.com/cosmos/cosmos-sdk/pull/6409) Rename all IsEmpty methods to Empty in all codebase for consistency.
 * (baseapp) [\#6186](https://github.com/cosmos/cosmos-sdk/issues/6186) Support emitting events during `AnteHandler` execution.
 * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) Add parameter querying support for `x/auth`.
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.

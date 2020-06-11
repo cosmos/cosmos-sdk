@@ -20,7 +20,7 @@ func NewSigningAlgoFromString(str string, algoList SigningAlgoList) (SignatureAl
 			return algo, nil
 		}
 	}
-	return nil, fmt.Errorf("provided algorithm `%s` is not supported", str)
+	return nil, fmt.Errorf("provided algorithm '%s' is not supported", str)
 }
 
 // SigningAlgoList is a slice of signature algorithms
@@ -40,7 +40,11 @@ func (sal SigningAlgoList) Contains(algo SignatureAlgo) bool {
 // String returns a comma separated string of the signature algorithm names in the list.
 func (sal SigningAlgoList) String() string {
 	str := ""
-	for _, algo := range sal {
+	for i, algo := range sal {
+		if i == 0 {
+			str = string(algo.Name())
+			continue
+		}
 		str = str + "," + string(algo.Name())
 	}
 

@@ -25,6 +25,7 @@ type TxWrapper interface {
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
 
 	SetMsgs([]sdk.Msg)
+	SetMemo(string)
 	SetGas(uint64)
 	SetFee(sdk.Coins)
 	// TODO: replace SetSignerInfos with SetSignaturesV2 once SignatureV2 from #6373 is merged in
@@ -202,6 +203,13 @@ func (t *txWrapper) SetMsgs(msgs []sdk.Msg) {
 	}
 
 	t.tx.Body.Messages = anys
+
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	t.bodyBz = nil
+}
+
+func (t *txWrapper) SetMemo(memo string) {
+	t.tx.Body.Memo = memo
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	t.bodyBz = nil

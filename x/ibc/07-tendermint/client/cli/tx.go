@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -65,7 +66,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 
 			var (
 				trustLevel tmmath.Fraction
-				specs      []string
+				specs      []*ics23.ProofSpec
 				err        error
 			)
 
@@ -97,10 +98,14 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 
 			spc := viper.GetString(flagProofSpecs)
 
-			if spc == "default" {
+			// Currently supports SDK chain or simple kvstore tendermint chain
+			switch spc {
+			case "default":
 				specs = commitmenttypes.GetSDKSpecs()
-			} else {
-				specs = strings.Split(spc, ",")
+			case "simple":
+				specs = []*ics23.ProofSpec{ics23.TendermintSpec}
+			default:
+				return fmt.Errorf("Proof Spec: %s not supported", spc)
 			}
 
 			msg := ibctmtypes.NewMsgCreateClient(

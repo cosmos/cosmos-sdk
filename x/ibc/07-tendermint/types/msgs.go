@@ -1,9 +1,9 @@
 package types
 
 import (
-	"strings"
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -31,14 +31,14 @@ var (
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID        string          `json:"client_id" yaml:"client_id"`
-	Header          Header          `json:"header" yaml:"header"`
-	TrustLevel      tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
-	TrustingPeriod  time.Duration   `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration   `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration   `json:"max_clock_drift" yaml:"max_clock_drift"`
-	ProofSpecs      []string        `json:"proof_specs" yaml:"proof_specs"`
-	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
+	ClientID        string             `json:"client_id" yaml:"client_id"`
+	Header          Header             `json:"header" yaml:"header"`
+	TrustLevel      tmmath.Fraction    `json:"trust_level" yaml:"trust_level"`
+	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
+	ProofSpecs      []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
+	Signer          sdk.AccAddress     `json:"address" yaml:"address"`
 }
 
 // this is a constant to satisfy the linter
@@ -53,7 +53,7 @@ func (msg MsgCreateClient) ProtoMessage()  {}
 func NewMsgCreateClient(
 	id string, header Header, trustLevel tmmath.Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
-	specs []string, signer sdk.AccAddress,
+	specs []*ics23.ProofSpec, signer sdk.AccAddress,
 ) MsgCreateClient {
 
 	return MsgCreateClient{
@@ -110,8 +110,8 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil")
 	}
 	for _, spec := range msg.ProofSpecs {
-		if !strings.HasPrefix(spec, "ics23:") {
-			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec must be an ics23 spec")
+		if spec == nil {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
 		}
 	}
 	return host.ClientIdentifierValidator(msg.ClientID)

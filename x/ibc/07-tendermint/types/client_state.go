@@ -1,9 +1,9 @@
 package types
 
 import (
-	"strings"
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -48,7 +48,7 @@ type ClientState struct {
 	// Last Header that was stored by client
 	LastHeader Header `json:"last_header" yaml:"last_header"`
 
-	ProofSpecs []string `json:"proof_specs" yaml:"proof_specs"`
+	ProofSpecs []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
@@ -65,7 +65,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 func Initialize(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header, specs []string,
+	header Header, specs []*ics23.ProofSpec,
 ) (ClientState, error) {
 	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
 
@@ -76,7 +76,7 @@ func Initialize(
 func NewClientState(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header, specs []string,
+	header Header, specs []*ics23.ProofSpec,
 ) ClientState {
 	return ClientState{
 		ID:              id,
@@ -151,8 +151,8 @@ func (cs ClientState) Validate() error {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}
 	for _, spec := range cs.ProofSpecs {
-		if !strings.HasPrefix(spec, "ics23:") {
-			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec must be an ics23 spec")
+		if spec == nil {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
 		}
 	}
 
@@ -161,7 +161,7 @@ func (cs ClientState) Validate() error {
 
 // GetProofSpecs returns the format the client expects for proof verification
 // as a string array specifying the proof type for each position in chained proof
-func (cs ClientState) GetProofSpecs() []string {
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return cs.ProofSpecs
 }
 

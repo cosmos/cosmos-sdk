@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -75,7 +76,7 @@ func (cs ClientState) Validate() error {
 }
 
 // GetProofSpecs returns nil since localhost does not have to verify proofs
-func (cs ClientState) GetProofSpecs() []string {
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 

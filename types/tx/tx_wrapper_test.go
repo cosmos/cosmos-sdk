@@ -1,10 +1,9 @@
 package tx
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	"testing"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,11 +13,7 @@ import (
 )
 
 func TestTxWrapper(t *testing.T) {
-	var (
-		priv          = ed25519.GenPrivKey()
-		pubkey        = priv.PubKey()
-		addr          = sdk.AccAddress(priv.PubKey().Address())
-	)
+	_, pubkey, addr := authtypes.KeyTestPubAddr()
 
 	// TODO:
 	// - verify that body and authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be
@@ -63,5 +58,5 @@ func TestTxWrapper(t *testing.T) {
 	tx.SetSignerInfos(signerInfo)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 1, len(tx.GetPubKeys()))
-	require.Equal(t, pk, &tx.GetPubKeys()[0])
+	require.Equal(t, pubkey.Bytes(), tx.GetPubKeys()[0].Bytes())
 }

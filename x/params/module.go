@@ -84,7 +84,7 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.Raw
 	return []abci.ValidatorUpdate{}
 }
 
-func (AppModule) Route() *sdk.Route { return nil }
+func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}

@@ -52,8 +52,8 @@ func TestTxWrapper(t *testing.T) {
 	require.Equal(t, 0, len(tx.GetPubKeys()))
 
 	tx.SetMemo(memo)
-
-	tx.SetFee(fee)
+	tx.SetFee(fee.Amount)
+	tx.SetGas(fee.GasLimit)
 
 	tx.SetSignerInfos(signerInfo)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))

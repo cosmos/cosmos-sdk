@@ -43,7 +43,9 @@ func TestDirectModeHandler(t *testing.T) {
 
 	tx.SetMsgs(msgs)
 	tx.SetMemo(memo)
-	tx.SetFee(fee)
+	tx.SetFee(fee.Amount)
+	tx.SetGas(fee.GasLimit)
+
 	tx.SetSignerInfos(signerInfo)
 
 	t.Log("verify modes and default-mode")

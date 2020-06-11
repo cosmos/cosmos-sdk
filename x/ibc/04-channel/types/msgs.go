@@ -65,7 +65,7 @@ var _ sdk.Msg = &MsgChannelOpenTry{}
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
-	proofInit commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress,
+	proofInit []byte, proofHeight uint64, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
@@ -101,11 +101,8 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	if msg.ProofInit.Empty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.ProofInit.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof init cannot be nil")
+	if len(msg.ProofInit) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -128,7 +125,7 @@ var _ sdk.Msg = &MsgChannelOpenAck{}
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
-	portID, channelID string, cpv string, proofTry commitmenttypes.MerkleProof, proofHeight uint64,
+	portID, channelID string, cpv string, proofTry []byte, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgChannelOpenAck {
 	return &MsgChannelOpenAck{
@@ -162,11 +159,8 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
-	if msg.ProofTry.Empty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.ProofTry.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof try cannot be nil")
+	if len(msg.ProofTry) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -189,7 +183,7 @@ var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
-	portID, channelID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
+	portID, channelID string, proofAck []byte, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgChannelOpenConfirm {
 	return &MsgChannelOpenConfirm{
@@ -219,11 +213,8 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if msg.ProofAck.Empty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.ProofAck.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	if len(msg.ProofAck) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -291,7 +282,7 @@ var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
-	portID, channelID string, proofInit commitmenttypes.MerkleProof, proofHeight uint64,
+	portID, channelID string, proofInit []byte, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgChannelCloseConfirm {
 	return &MsgChannelCloseConfirm{
@@ -321,11 +312,8 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if msg.ProofInit.Empty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.ProofInit.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof init cannot be nil")
+	if len(msg.ProofInit) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -348,7 +336,7 @@ var _ sdk.Msg = &MsgPacket{}
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(
-	packet Packet, proof commitmenttypes.MerkleProof, proofHeight uint64,
+	packet Packet, proof []byte, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgPacket {
 	return &MsgPacket{
@@ -366,11 +354,8 @@ func (msg MsgPacket) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() error {
-	if msg.Proof.Empty() {
+	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.Proof.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -408,7 +393,7 @@ var _ sdk.Msg = &MsgTimeout{}
 
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
-	packet Packet, nextSequenceRecv uint64, proof commitmenttypes.MerkleProof,
+	packet Packet, nextSequenceRecv uint64, proof []byte,
 	proofHeight uint64, signer sdk.AccAddress,
 ) *MsgTimeout {
 	return &MsgTimeout{
@@ -427,11 +412,8 @@ func (msg MsgTimeout) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
-	if msg.Proof.Empty() {
+	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.Proof.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -462,7 +444,7 @@ var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress) *MsgAcknowledgement {
+	packet Packet, ack []byte, proof []byte, proofHeight uint64, signer sdk.AccAddress) *MsgAcknowledgement {
 	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
@@ -479,11 +461,8 @@ func (msg MsgAcknowledgement) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
-	if msg.Proof.Empty() {
+	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.Proof.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if len(msg.Acknowledgement) > 100 {
 		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")

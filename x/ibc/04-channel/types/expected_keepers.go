@@ -7,7 +7,6 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientKeeper expected account IBC client keeper
@@ -27,7 +26,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		channel exported.ChannelI,
@@ -36,7 +35,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -46,7 +45,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -56,7 +55,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -65,7 +64,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,

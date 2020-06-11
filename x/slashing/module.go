@@ -110,7 +110,7 @@ func (AppModule) Name() string {
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the slashing module.
-func (am AppModule) Route() *sdk.Route {
+func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(RouterKey, NewHandler(am.keeper))
 }
 

@@ -437,10 +437,10 @@ func (mr *MockAppModuleMockRecorder) RegisterInvariants(arg0 interface{}) *gomoc
 }
 
 // Route mocks base method
-func (m *MockAppModule) Route() string {
+func (m *MockAppModule) Route() *types.Route {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Route")
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*types.Route)
 	return ret0
 }
 
@@ -448,20 +448,6 @@ func (m *MockAppModule) Route() string {
 func (mr *MockAppModuleMockRecorder) Route() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Route", reflect.TypeOf((*MockAppModule)(nil).Route))
-}
-
-// NewHandler mocks base method
-func (m *MockAppModule) NewHandler() types.Handler {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewHandler")
-	ret0, _ := ret[0].(types.Handler)
-	return ret0
-}
-
-// NewHandler indicates an expected call of NewHandler
-func (mr *MockAppModuleMockRecorder) NewHandler() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewHandler", reflect.TypeOf((*MockAppModule)(nil).NewHandler))
 }
 
 // QuerierRoute mocks base method

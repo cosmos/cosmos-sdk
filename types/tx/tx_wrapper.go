@@ -3,6 +3,8 @@ package tx
 import (
 	"fmt"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,8 +24,11 @@ type TxWrapper interface {
 
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
 
-	SetBody(*TxBody)
-	SetAuthInfo(*AuthInfo)
+	SetMsgs([]sdk.Msg)
+	SetGas(uint64)
+	SetFee(sdk.Coins)
+	// TODO: replace SetSignerInfos with SetSignaturesV2 once SignatureV2 from #6373 is merged in
+	SetSignerInfos([]*SignerInfo)
 	SetSignatures([][]byte)
 }
 
@@ -185,14 +190,39 @@ func (t txWrapper) GetPubKeys() []crypto.PubKey {
 	return t.pubKeys
 }
 
-func (t *txWrapper) SetBody(body *TxBody) {
-	t.tx.Body = body
+func (t *txWrapper) SetMsgs(msgs []sdk.Msg) {
+	anys := make([]*codectypes.Any, len(msgs))
+
+	for i, msg := range msgs {
+		var err error
+		anys[i], err = codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	t.tx.Body.Messages = anys
+
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	t.bodyBz = nil
 }
 
-func (t *txWrapper) SetAuthInfo(info *AuthInfo) {
-	t.tx.AuthInfo = info
+func (t *txWrapper) SetGas(limit uint64) {
+	t.tx.AuthInfo.Fee.GasLimit = limit
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	t.authInfoBz = nil
+}
+
+func (t *txWrapper) SetFee(coins sdk.Coins) {
+	t.tx.AuthInfo.Fee.Amount = coins
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	t.authInfoBz = nil
+}
+
+func (t *txWrapper) SetSignerInfos(infos []*SignerInfo) {
+	t.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil
 	// set cached pubKeys to nil because they no longer match tx.AuthInfo

@@ -41,9 +41,6 @@ func TestTxWrapper(t *testing.T) {
 		},
 	}
 
-	//err := cdc.UnmarshalBinaryBare(pubkey, &pk)
-	//require.NoError(t, err)
-
 	var signerInfo []*SignerInfo
 	signerInfo = append(signerInfo, &SignerInfo{
 		PublicKey: &pk,
@@ -69,7 +66,4 @@ func TestTxWrapper(t *testing.T) {
 	tx.SetSignerInfos(signerInfo)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 0, len(tx.GetPubKeys()))
-
-	//tx.SetFee(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
-	//tx.SetGas(20000)
 }

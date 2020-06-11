@@ -14,7 +14,7 @@ type SignatureAlgo interface {
 	Generate() hd.GenerateFn
 }
 
-// NewSigningAlgoFromString creates a supported SignatureAlgo
+// NewSigningAlgoFromString creates a supported SignatureAlgo.
 func NewSigningAlgoFromString(str string, algoList SigningAlgoList) (SignatureAlgo, error) {
 	for _, algo := range algoList {
 		if str == string(algo.Name()) {

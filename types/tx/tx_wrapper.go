@@ -227,7 +227,6 @@ func (t *txWrapper) SetFee(coins sdk.Coins) {
 		t.tx.AuthInfo.Fee = &Fee{}
 	}
 
-	fmt.Println("inside setfee:", t.tx.AuthInfo.Fee, coins)
 	t.tx.AuthInfo.Fee.Amount = coins
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo

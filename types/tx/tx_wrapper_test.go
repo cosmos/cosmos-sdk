@@ -56,20 +56,20 @@ func TestTxWrapper(t *testing.T) {
 		},
 	})
 
-	//fee := &Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
+	fee := Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
 	tx.SetMsgs(msgs)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 0, len(tx.GetPubKeys()))
 
 	tx.SetMemo(memo)
-	//tx.SetFee(fee.Amount)
-	//tx.SetGas(fee.GasLimit)
+
+	tx.SetFee(fee)
 
 	tx.SetSignerInfos(signerInfo)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
-	require.Equal(t, 1, len(tx.GetPubKeys()))
+	require.Equal(t, 0, len(tx.GetPubKeys()))
 
-
-	//bodyBz := tx.GetBodyBytes()
+	//tx.SetFee(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	//tx.SetGas(20000)
 }

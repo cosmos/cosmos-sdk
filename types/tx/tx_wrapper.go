@@ -27,7 +27,7 @@ type TxWrapper interface {
 	SetMsgs([]sdk.Msg)
 	SetMemo(string)
 	SetGas(uint64)
-	SetFee(sdk.Coins)
+	SetFee(Fee)
 	// TODO: replace SetSignerInfos with SetSignaturesV2 once SignatureV2 from #6373 is merged in
 	SetSignerInfos([]*SignerInfo)
 	SetSignatures([][]byte)
@@ -222,8 +222,8 @@ func (t *txWrapper) SetGas(limit uint64) {
 	t.authInfoBz = nil
 }
 
-func (t *txWrapper) SetFee(coins sdk.Coins) {
-	t.tx.AuthInfo.Fee.Amount = coins
+func (t *txWrapper) SetFee(fee Fee) {
+	t.tx.AuthInfo.Fee = &fee
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil

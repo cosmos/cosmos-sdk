@@ -160,7 +160,7 @@ func TestCLICreateValidator(t *testing.T) {
 	delegation := testutil.QueryStakingDelegation(f, fooAddr.String(), barVal)
 	require.NotZero(t, delegation.Shares)
 
-	// Query the delegation from foo address to barval
+	// Query the delegations from foo address to barval
 	delegations := testutil.QueryStakingDelegations(f, barAddr.String())
 	require.Len(t, delegations, 1)
 

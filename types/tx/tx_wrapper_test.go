@@ -13,14 +13,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	priv          = ed25519.GenPrivKey()
-	pubkey        = priv.PubKey()
-	pubKeyAddr, _ = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
-	addr          = sdk.AccAddress(priv.PubKey().Address())
-)
-
 func TestTxWrapper(t *testing.T) {
+	var (
+		priv          = ed25519.GenPrivKey()
+		pubkey        = priv.PubKey()
+		addr          = sdk.AccAddress(priv.PubKey().Address())
+	)
+
 	// TODO:
 	// - verify that body and authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be
 	//   retrieved from GetBodyBytes and GetAuthInfoBytes

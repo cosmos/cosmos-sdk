@@ -132,9 +132,9 @@ func (chain *TestChain) GetContext() sdk.Context {
 	return chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
 }
 
-// QueryProof performs an abci query with the given key and returns the merkle proof for the query
-// and the height at which the query was performed.
-func (chain *TestChain) QueryProof(key []byte) (commitmenttypes.MerkleProof, uint64) {
+// QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
+// for the query and the height at which the query was performed.
+func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight(),
@@ -142,9 +142,12 @@ func (chain *TestChain) QueryProof(key []byte) (commitmenttypes.MerkleProof, uin
 		Prove:  true,
 	})
 
-	proof := commitmenttypes.MerkleProof{
+	merkleProof := commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
+
+	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
+	require.NoError(chain.t, err)
 
 	return proof, uint64(res.Height)
 }

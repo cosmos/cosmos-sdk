@@ -26,8 +26,25 @@ var (
 
 // Router provides handlers for each transaction type.
 type Router interface {
-	AddRoute(r string, h Handler) Router
+	AddRoute(r *Route) Router
 	Route(ctx Context, path string) Handler
+}
+
+type Route struct {
+	path    string
+	handler Handler
+}
+
+func NewRoute(p string, h Handler) *Route {
+	return &Route{path: p, handler: h}
+}
+
+func (r Route) Path() string {
+	return r.path
+}
+
+func (r Route) Handler() Handler {
+	return r.handler
 }
 
 // QueryRouter provides queryables for each query path.

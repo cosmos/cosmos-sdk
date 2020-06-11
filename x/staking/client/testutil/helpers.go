@@ -58,10 +58,7 @@ func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...str
 	require.Empty(f.T, errStr)
 
 	var validator staking.Validator
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &validator))
 
 	return validator
 }
@@ -72,13 +69,10 @@ func QueryStakingValidators(f *cli.Fixtures, flags ...string) []staking.Validato
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
 
-	var validator []staking.Validator
+	var validators []staking.Validator
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &validators))
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
-
-	return validator
+	return validators
 }
 
 // QueryStakingUnbondingDelegationsFrom is simcli query staking unbonding-delegations-from
@@ -88,10 +82,7 @@ func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddres
 	require.Empty(f.T, errStr)
 
 	var ubds []staking.UnbondingDelegation
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &ubds)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &ubds))
 
 	return ubds
 }
@@ -103,10 +94,7 @@ func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ..
 	require.Empty(f.T, errStr)
 
 	var delegations []staking.Delegation
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &delegations))
 
 	return delegations
 }
@@ -118,10 +106,7 @@ func QueryStakingPool(f *cli.Fixtures, flags ...string) staking.Pool {
 	require.Empty(f.T, errStr)
 
 	var pool staking.Pool
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &pool)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &pool))
 
 	return pool
 }
@@ -133,10 +118,7 @@ func QueryStakingParameters(f *cli.Fixtures, flags ...string) staking.Params {
 	require.Empty(f.T, errStr)
 
 	var params staking.Params
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &params))
 
 	return params
 }
@@ -148,10 +130,7 @@ func QueryStakingDelegation(f *cli.Fixtures, from string, valAddr sdk.ValAddress
 	require.Empty(f.T, errStr)
 
 	var delegation staking.Delegation
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &delegation)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &delegation))
 
 	return delegation
 }
@@ -163,10 +142,7 @@ func QueryStakingDelegations(f *cli.Fixtures, from string, flags ...string) []st
 	require.Empty(f.T, errStr)
 
 	var delegations []staking.Delegation
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &delegations))
 
 	return delegations
 }
@@ -178,10 +154,7 @@ func QueryStakingRedelegation(f *cli.Fixtures, delAdrr, srcVal, dstVal string, f
 	require.Empty(f.T, errStr)
 
 	var redelegations []staking.RedelegationResponse
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &redelegations))
 
 	return redelegations
 }
@@ -193,10 +166,7 @@ func QueryStakingRedelegations(f *cli.Fixtures, delAdrr string, flags ...string)
 	require.Empty(f.T, errStr)
 
 	var redelegations []staking.RedelegationResponse
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &redelegations))
 
 	return redelegations
 }
@@ -208,10 +178,7 @@ func QueryStakingRedelegationsFrom(f *cli.Fixtures, valAddr string, flags ...str
 	require.Empty(f.T, errStr)
 
 	var redelegations []staking.RedelegationResponse
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &redelegations)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &redelegations))
 
 	return redelegations
 }
@@ -225,10 +192,7 @@ func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, f
 	require.Empty(f.T, errStr)
 
 	var ubd staking.UnbondingDelegation
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &ubd)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &ubd))
 
 	return ubd
 }
@@ -240,10 +204,7 @@ func QueryStakingUnbondingDelegations(f *cli.Fixtures, delAdrr string, flags ...
 	require.Empty(f.T, errStr)
 
 	var ubds []staking.UnbondingDelegation
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &ubds)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &ubds))
 
 	return ubds
 }
@@ -255,10 +216,7 @@ func QueryStakingHistoricalInfo(f *cli.Fixtures, height uint, flags ...string) s
 	require.Empty(f.T, errStr)
 
 	var historicalInfo staking.HistoricalInfo
-
-	err := f.Cdc.UnmarshalJSON([]byte(out), &historicalInfo)
-	f.T.Log(fmt.Sprintf("\n out %v\n err %v", out, err))
-	require.NoError(f.T, err)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &historicalInfo))
 
 	return historicalInfo
 }

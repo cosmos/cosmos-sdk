@@ -63,4 +63,5 @@ func TestTxWrapper(t *testing.T) {
 	tx.SetSignerInfos(signerInfo)
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 1, len(tx.GetPubKeys()))
+	require.Equal(t, pk, &tx.GetPubKeys()[0])
 }

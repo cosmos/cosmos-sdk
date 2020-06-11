@@ -19,6 +19,10 @@ type BaseConfig struct {
 	// specified in this config (e.g. 0.25token1;0.0001token2).
 	MinGasPrices string `mapstructure:"minimum-gas-prices"`
 
+	Pruning              string `mapstructure:"pruning"`
+	PruningKeepEvery     string `mapstructure:"pruning-keep-every"`
+	PruningSnapshotEvery string `mapstructure:"pruning-snapshot-every"`
+
 	// HaltHeight contains a non-zero block height at which a node will gracefully
 	// halt and shutdown that can be used to assist upgrades and testing.
 	//
@@ -35,9 +39,13 @@ type BaseConfig struct {
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 
-	Pruning              string `mapstructure:"pruning"`
-	PruningKeepEvery     string `mapstructure:"pruning-keep-every"`
-	PruningSnapshotEvery string `mapstructure:"pruning-snapshot-every"`
+	// MetricsEnabled enables the application telemetry functionality. When enabled,
+	// an in-memory sink is also enabled by default. Operators may also enabled
+	// other sinks such as Prometheus.
+	MetricsEnabled bool `mapstructure:"metrics-enabled"`
+
+	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
+	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
 }
 
 // Config defines the server's top level configuration

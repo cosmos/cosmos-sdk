@@ -18,6 +18,17 @@ const defaultConfigTemplate = `# This is a TOML config file.
 # specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
+# Pruning sets the pruning strategy: syncable, nothing, everything, custom
+# syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+# nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
+# everything: all saved states will be deleted, storing only the current state
+# custom: allows fine-grained control through the pruning-keep-every and pruning-snapshot-every options.
+pruning = "{{ .BaseConfig.Pruning }}"
+
+# These are applied if and only if the pruning strategy is custom.
+pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
+pruning-snapshot-every = "{{ .BaseConfig.PruningSnapshotEvery }}"
+
 # HaltHeight contains a non-zero block height at which a node will gracefully
 # halt and shutdown that can be used to assist upgrades and testing.
 #
@@ -34,16 +45,13 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
-# Pruning sets the pruning strategy: syncable, nothing, everything, custom
-# syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
-# nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: all saved states will be deleted, storing only the current state
-# custom: allows fine-grained control through the pruning-keep-every and pruning-snapshot-every options.
-pruning = "{{ .BaseConfig.Pruning }}"
+# MetricsEnabled enables the application telemetry functionality. When enabled,
+# an in-memory sink is also enabled by default. Operators may also enabled
+# other sinks such as Prometheus.
+MetricsEnabled = {{ .BaseConfig.MetricsEnabled }}
 
-# These are applied if and only if the pruning strategy is custom.
-pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
-pruning-snapshot-every = "{{ .BaseConfig.PruningSnapshotEvery }}"
+# PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
+PrometheusRetentionTime = {{ .BaseConfig.PrometheusRetentionTime }}
 `
 
 var configTemplate *template.Template

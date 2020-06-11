@@ -120,9 +120,10 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
-	algo, err := keyring.NewSigningAlgoFromString(viper.GetString(flagKeyAlgo))
+	keyringAlgos, _ := kb.SupportedAlgorithms()
+	algo, err := keyring.NewSigningAlgoFromString(viper.GetString(flagKeyAlgo), keyringAlgos)
 	if err != nil {
-		algo = hd.Secp256k1
+		return err
 	}
 
 	if !viper.GetBool(flags.FlagDryRun) {

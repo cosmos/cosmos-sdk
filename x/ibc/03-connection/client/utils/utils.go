@@ -145,9 +145,5 @@ func ParseProof(cdc *codec.Codec, arg string) ([]byte, error) {
 		}
 	}
 
-	proof, err := cdc.MarshalBinaryBare(&merkleProof)
-	if err != nil {
-		return nil, err
-	}
-	return proof, nil
+	return cdc.MarshalBinaryBare(&merkleProof)
 }

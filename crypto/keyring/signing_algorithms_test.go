@@ -29,7 +29,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			"notsupportedalgo",
 			false,
 			nil,
-			fmt.Errorf("provided algorithm 'notsupportedalgo' is not supported"),
+			fmt.Errorf("provided algorithm \"notsupportedalgo\" is not supported"),
 		},
 	}
 

@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
@@ -39,14 +40,10 @@ func (sal SigningAlgoList) Contains(algo SignatureAlgo) bool {
 
 // String returns a comma separated string of the signature algorithm names in the list.
 func (sal SigningAlgoList) String() string {
-	str := ""
-	for i, algo := range sal {
-		if i == 0 {
-			str = string(algo.Name())
-			continue
-		}
-		str = str + "," + string(algo.Name())
+	names := make([]string, len(sal))
+	for i := range sal {
+		names[i] = string(sal[i].Name())
 	}
 
-	return str
+	return strings.Join(names, ",")
 }

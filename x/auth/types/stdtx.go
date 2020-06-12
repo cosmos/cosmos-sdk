@@ -235,6 +235,20 @@ func (tx StdTx) GetSignatures() [][]byte {
 	return sigs
 }
 
+func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
+	res := make([]signing.SignatureV2, len(tx.Signatures))
+
+	for i, sig := range tx.Signatures {
+		var err error
+		res[i], err = StdSignatureToSignatureV2(legacy.Cdc, sig)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
+}
+
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() []crypto.PubKey {
@@ -245,20 +259,6 @@ func (tx StdTx) GetPubKeys() []crypto.PubKey {
 	}
 
 	return pks
-}
-
-// GetSignBytes returns the signBytes of the tx for a given signer
-func (tx StdTx) GetSignBytes(ctx sdk.Context, acc AccountI) []byte {
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
-	var accNum uint64
-	if !genesis {
-		accNum = acc.GetAccountNumber()
-	}
-
-	return StdSignBytes(
-		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo,
-	)
 }
 
 // GetGas returns the Gas in StdFee

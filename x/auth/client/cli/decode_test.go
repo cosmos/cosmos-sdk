@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/tests"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 )
@@ -31,10 +30,10 @@ func TestGetCommandDecode(t *testing.T) {
 	err := ioutil.WriteFile(txFileName, txContents, 0644)
 	require.NoError(t, err)
 
-	stdTx, err := authclient.ReadTxFromFile(clientCtx, txFileName)
+	txJSONBytes, err := clientCtx.TxGenerator.TxJSONDecoder()(txContents)
 	require.NoError(t, err)
 
-	txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
+	txBytes, err := clientCtx.TxGenerator.TxEncoder()(txJSONBytes)
 
 	txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 

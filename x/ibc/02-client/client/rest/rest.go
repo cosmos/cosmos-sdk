@@ -8,8 +8,7 @@ import (
 
 // REST client flags
 const (
-	RestClientID   = "client-id"
-	RestRootHeight = "height"
+	RestClientID = "client-id"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application

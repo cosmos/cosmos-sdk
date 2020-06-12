@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 
 	params := types.NewQueryAllChannelsParams(1, 100)
 	data, err := suite.cdc.MarshalJSON(params)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 
 				// set expected result
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 		{
@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 
 				// set expected result
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 		{
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 			func() {
 				suite.SetupTest()
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, []types.IdentifiedChannel{})
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 	}
@@ -116,8 +116,8 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 
 		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
 
-		suite.NoError(err, "test case %d failed: %s", i, tc.name)
-		suite.Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
+		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
+		suite.Require().Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
 	}
 }
 
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 	params := types.NewQueryConnectionChannelsParams(testConnectionIDA, 1, 100)
 	data, err := suite.cdc.MarshalJSON(params)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 				// set expected result
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 		{
@@ -208,7 +208,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 				// set expected result
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 		{
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 			func() {
 				suite.SetupTest()
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, []types.IdentifiedChannel{})
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 	}
@@ -226,10 +226,104 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
 
-		suite.NoError(err, "test case %d failed: %s", i, tc.name)
-		suite.Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
+		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
+		suite.Require().Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
+	}
+}
+
+func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
+	path := []string{types.SubModuleName, types.QueryChannelClientState}
+	params := types.NewQueryChannelClientStateParams(testPort1, testChannel1)
+	data, err := suite.cdc.MarshalJSON(params)
+	suite.Require().NoError(err)
+
+	query := abci.RequestQuery{
+		Path: "",
+		Data: data,
 	}
 
+	testCases := []struct {
+		name    string
+		setup   func()
+		expPass bool
+	}{
+		{
+			"channel not found",
+			func() {},
+			false,
+		},
+		{
+			"connection for channel not found",
+			func() {
+				_ = suite.chainA.createChannel(
+					testPort1, testChannel1, testPort2, testChannel2,
+					types.OPEN, types.ORDERED, testConnectionIDA,
+				)
+			},
+			false,
+		},
+		{
+			"client state for channel's connection not found",
+			func() {
+				_ = suite.chainA.createConnection(
+					testConnectionIDA, testConnectionIDB,
+					testClientIDA, testClientIDB,
+					connection.OPEN,
+				)
+				_ = suite.chainA.createChannel(
+					testPort1, testChannel1, testPort2, testChannel2,
+					types.OPEN, types.ORDERED, testConnectionIDA,
+				)
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				err = suite.chainA.CreateClient(suite.chainB)
+				suite.Require().NoError(err)
+				err = suite.chainB.CreateClient(suite.chainA)
+				suite.Require().NoError(err)
+				suite.chainA.createConnection(
+					testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
+					connection.OPEN,
+				)
+				suite.chainB.createConnection(
+					testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
+					connection.OPEN,
+				)
+				suite.chainA.createChannel(
+					testPort1, testChannel1, testPort2, testChannel2, types.INIT,
+					types.ORDERED, testConnectionIDB,
+				)
+				suite.chainB.createChannel(
+					testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
+					types.ORDERED, testConnectionIDA,
+				)
+			},
+			true,
+		},
+	}
+
+	for i, tc := range testCases {
+		tc.setup()
+
+		clientState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), testClientIDB)
+		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
+
+		if tc.expPass {
+			// set expected result
+			expRes, merr := codec.MarshalJSONIndent(suite.cdc, clientState)
+			suite.Require().NoError(merr)
+			suite.Require().True(found)
+			suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
+			suite.Require().Equal(string(expRes), string(bz), "test case %d failed: %s", i, tc.name)
+		} else {
+			suite.Require().False(found)
+			suite.Require().Error(err, "test case %d passed: %s", i, tc.name)
+			suite.Require().Nil(bz, "test case %d passed: %s", i, tc.name)
+		}
+	}
 }
 
 // TestQueryPacketCommitments tests querying packet commitments on a specified channel end.
@@ -242,7 +336,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 	params := types.NewQueryPacketCommitmentsParams(testPort1, testChannel1, 1, 100)
 	data, err := suite.cdc.MarshalJSON(params)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -268,7 +362,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 				}
 
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, commitments)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 		{
@@ -291,7 +385,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 				}
 
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, commitments)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 		{
@@ -299,7 +393,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 			func() {
 				suite.SetupTest()
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 	}
@@ -309,8 +403,8 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
 
-		suite.NoError(err, "test case %d failed: %s", i, tc.name)
-		suite.Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
+		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
+		suite.Require().Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
 	}
 
 }
@@ -329,7 +423,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 
 	params := types.NewQueryUnrelayedPacketsParams(testPort1, testChannel1, sequences, 1, 100)
 	data, err := suite.cdc.MarshalJSON(params)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -359,10 +453,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				}
 
 				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 
 				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 
 			},
 		},
@@ -392,10 +486,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				}
 
 				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 
 				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 		{
@@ -410,10 +504,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				}
 
 				expResSend, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
-				suite.NoError(err)
+				suite.Require().NoError(err)
 
 				expResAck, err = codec.MarshalJSONIndent(suite.cdc, sequences)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			},
 		},
 	}
@@ -423,13 +517,13 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 
 		bz, err := suite.querier(suite.chainA.GetContext(), pathAck, query)
 
-		suite.NoError(err, "test case %d failed: %s", i, tc.name)
-		suite.Equal(expResAck, bz, "test case %d failed: %s", i, tc.name)
+		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
+		suite.Require().Equal(expResAck, bz, "test case %d failed: %s", i, tc.name)
 
 		bz, err = suite.querier(suite.chainA.GetContext(), pathSend, query)
 
-		suite.NoError(err, "test case %d failed: %s", i, tc.name)
-		suite.Equal(expResSend, bz, "test case %d failed: %s", i, tc.name)
+		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
+		suite.Require().Equal(expResSend, bz, "test case %d failed: %s", i, tc.name)
 
 	}
 

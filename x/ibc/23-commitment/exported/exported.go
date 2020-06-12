@@ -1,5 +1,7 @@
 package exported
 
+import ics23 "github.com/confio/ics23/go"
+
 // ICS 023 Types Implementation
 //
 // This file includes types defined under
@@ -39,8 +41,8 @@ type Path interface {
 // Proofs includes key but value is provided dynamically at the verification time.
 type Proof interface {
 	GetCommitmentType() Type
-	VerifyMembership(Root, Path, []byte) error
-	VerifyNonMembership(Root, Path) error
+	VerifyMembership([]*ics23.ProofSpec, Root, Path, []byte) error
+	VerifyNonMembership([]*ics23.ProofSpec, Root, Path) error
 	Empty() bool
 
 	ValidateBasic() error

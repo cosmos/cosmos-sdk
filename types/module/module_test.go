@@ -141,9 +141,9 @@ func TestManager_RegisterRoutes(t *testing.T) {
 
 	router := mocks.NewMockRouter(mockCtrl)
 	handler1, handler2 := sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		return nil,nil
+		return nil, nil
 	}), sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		return nil,nil
+		return nil, nil
 	})
 	route1 := sdk.NewRoute("route1", handler1)
 	route2 := sdk.NewRoute("route2", handler2)

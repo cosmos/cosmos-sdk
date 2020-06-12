@@ -37,6 +37,8 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
@@ -118,7 +120,7 @@ type SimApp struct {
 	BankKeeper       bank.Keeper
 	CapabilityKeeper *capability.Keeper
 	StakingKeeper    staking.Keeper
-	SlashingKeeper   slashing.Keeper
+	SlashingKeeper   slashingkeeper.Keeper
 	MintKeeper       mint.Keeper
 	DistrKeeper      distr.Keeper
 	GovKeeper        gov.Keeper
@@ -155,7 +157,7 @@ func NewSimApp(
 
 	keys := sdk.NewKVStoreKeys(
 		auth.StoreKey, bank.StoreKey, staking.StoreKey,
-		mint.StoreKey, distr.StoreKey, slashing.StoreKey,
+		mint.StoreKey, distr.StoreKey, slashingtypes.StoreKey,
 		gov.StoreKey, paramstypes.StoreKey, ibc.StoreKey, upgradetypes.StoreKey,
 		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
@@ -180,7 +182,7 @@ func NewSimApp(
 	app.subspaces[staking.ModuleName] = app.ParamsKeeper.Subspace(staking.DefaultParamspace)
 	app.subspaces[mint.ModuleName] = app.ParamsKeeper.Subspace(mint.DefaultParamspace)
 	app.subspaces[distr.ModuleName] = app.ParamsKeeper.Subspace(distr.DefaultParamspace)
-	app.subspaces[slashing.ModuleName] = app.ParamsKeeper.Subspace(slashing.DefaultParamspace)
+	app.subspaces[slashingtypes.ModuleName] = app.ParamsKeeper.Subspace(slashingtypes.DefaultParamspace)
 	app.subspaces[gov.ModuleName] = app.ParamsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
 	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
 
@@ -210,8 +212,8 @@ func NewSimApp(
 		appCodec, keys[distr.StoreKey], app.subspaces[distr.ModuleName], app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, auth.FeeCollectorName, app.ModuleAccountAddrs(),
 	)
-	app.SlashingKeeper = slashing.NewKeeper(
-		appCodec, keys[slashing.StoreKey], &stakingKeeper, app.subspaces[slashing.ModuleName],
+	app.SlashingKeeper = slashingkeeper.NewKeeper(
+		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.subspaces[slashingtypes.ModuleName],
 	)
 	app.CrisisKeeper = crisis.NewKeeper(
 		app.subspaces[crisis.ModuleName], invCheckPeriod, app.BankKeeper, auth.FeeCollectorName,
@@ -290,7 +292,7 @@ func NewSimApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, mint.ModuleName, distr.ModuleName, slashing.ModuleName,
+		upgradetypes.ModuleName, mint.ModuleName, distr.ModuleName, slashingtypes.ModuleName,
 		evidence.ModuleName, staking.ModuleName, ibc.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, staking.ModuleName)
@@ -302,7 +304,7 @@ func NewSimApp(
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
 		capability.ModuleName, auth.ModuleName, distr.ModuleName, staking.ModuleName, bank.ModuleName,
-		slashing.ModuleName, gov.ModuleName, mint.ModuleName, crisis.ModuleName,
+		slashingtypes.ModuleName, gov.ModuleName, mint.ModuleName, crisis.ModuleName,
 		ibc.ModuleName, genutil.ModuleName, evidence.ModuleName, transfer.ModuleName,
 	)
 

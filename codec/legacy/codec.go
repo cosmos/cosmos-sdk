@@ -5,11 +5,10 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
-//nolint:stylecheck // ignore linting of comment
-// Deprecated: Cdc defines a global generic sealed Amino codec to be used throughout sdk. It
+// Cdc defines a global generic sealed Amino codec to be used throughout sdk. It
 // has all Tendermint crypto and evidence types registered.
 //
-// TODO: remove this global.
+// TODO: Deprecated - remove this global.
 var Cdc *codec.Codec
 
 func init() {

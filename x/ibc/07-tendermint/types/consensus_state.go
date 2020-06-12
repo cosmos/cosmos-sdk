@@ -54,7 +54,7 @@ func (cs ConsensusState) GetTimestamp() uint64 {
 
 // ValidateBasic defines a basic validation for the tendermint consensus state.
 func (cs ConsensusState) ValidateBasic() error {
-	if cs.Root == nil || cs.Root.IsEmpty() {
+	if cs.Root == nil || cs.Root.Empty() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "root cannot be empty")
 	}
 	if cs.ValidatorSet == nil {

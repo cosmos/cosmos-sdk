@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -30,7 +30,7 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 
 	constantFee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)
 	app.CrisisKeeper.SetConstantFee(ctx, constantFee)
-	app.StakingKeeper.SetParams(ctx, staking.DefaultParams())
+	app.StakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
 
 	app.CrisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichPasses.Route, dummyRouteWhichPasses.Invar)
 	app.CrisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichFails.Route, dummyRouteWhichFails.Invar)

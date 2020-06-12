@@ -7,7 +7,6 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
@@ -17,7 +16,7 @@ func (k Keeper) VerifyClientConsensusState(
 	connection exported.ConnectionI,
 	height uint64,
 	consensusHeight uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
 	clientID := connection.GetClientID()
@@ -32,7 +31,7 @@ func (k Keeper) VerifyClientConsensusState(
 	}
 
 	return clientState.VerifyClientConsensusState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.aminoCdc, targetConsState.GetRoot(), height,
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, k.aminoCdc, targetConsState.GetRoot(), height,
 		connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
 }
@@ -43,7 +42,7 @@ func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	connectionID string,
 	connectionEnd exported.ConnectionI, // opposite connection
 ) error {
@@ -75,7 +74,7 @@ func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
@@ -109,7 +108,7 @@ func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -132,7 +131,7 @@ func (k Keeper) VerifyPacketCommitment(
 	}
 
 	return clientState.VerifyPacketCommitment(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, commitmentBytes, consensusState,
 	)
@@ -144,7 +143,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -167,7 +166,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	}
 
 	return clientState.VerifyPacketAcknowledgement(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, acknowledgement, consensusState,
 	)
@@ -180,7 +179,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -202,7 +201,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	}
 
 	return clientState.VerifyPacketAcknowledgementAbsence(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, consensusState,
 	)
@@ -214,7 +213,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitmentexported.Proof,
+	proof []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
@@ -236,7 +235,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	}
 
 	return clientState.VerifyNextSequenceRecv(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		nextSequenceRecv, consensusState,
 	)

@@ -12,8 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 )
 
-func registerQueryRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}", RestPortID, RestChannelID), queryChannelHandlerFn(clientCtx, queryRoute)).Methods("GET")
+func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}", RestPortID, RestChannelID), queryChannelHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/client_state", RestPortID, RestChannelID), queryChannelClientStateHandlerFn(clientCtx)).Methods("GET")
 }
 
 // queryChannelHandlerFn implements a channel querying route
@@ -28,7 +29,7 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router, queryRoute str
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id} [get]
-func queryChannelHandlerFn(clientCtx client.Context, _ string) http.HandlerFunc {
+func queryChannelHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
@@ -48,5 +49,27 @@ func queryChannelHandlerFn(clientCtx client.Context, _ string) http.HandlerFunc 
 
 		clientCtx = clientCtx.WithHeight(int64(channelRes.ProofHeight))
 		rest.PostProcessResponse(w, clientCtx, channelRes)
+	}
+}
+
+func queryChannelClientStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		portID := vars[RestPortID]
+		channelID := vars[RestChannelID]
+
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
+		if !ok {
+			return
+		}
+
+		clientState, height, err := utils.QueryChannelClientState(clientCtx, portID, channelID)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, clientState)
 	}
 }

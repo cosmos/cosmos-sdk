@@ -14,7 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 )
 
-func checkValidator(t *testing.T, app *simapp.SimApp, _ sdk.AccAddress, expFound bool) staking.Validator {
+func checkValidator(t *testing.T, app *simapp.SimApp, _ sdk.AccAddress, expFound bool) stakingtypes.Validator {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	validator, found := app.StakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.Equal(t, expFound, found)
@@ -56,10 +56,10 @@ func TestSlashingMsgs(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(accs, balances...)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 
-	description := staking.NewDescription("foo_moniker", "", "", "", "")
-	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
+	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
-	createValidatorMsg := staking.NewMsgCreateValidator(
+	createValidatorMsg := stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission, sdk.OneInt(),
 	)
 

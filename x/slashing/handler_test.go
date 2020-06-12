@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
@@ -74,7 +75,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	)
 
 	unbondAmt := sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, sdk.OneInt())
-	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, unbondAmt)
+	undelegateMsg := stakingtypes.NewMsgUndelegate(sdk.AccAddress(addr), addr, unbondAmt)
 	res, err = staking.NewHandler(app.StakingKeeper)(ctx, undelegateMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -127,7 +128,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	unbondAmt := sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, bondAmount)
 
 	// unbond validator total self-delegations (which should jail the validator)
-	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondAmt)
+	msgUndelegate := stakingtypes.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondAmt)
 	res, err = staking.NewHandler(app.StakingKeeper)(ctx, msgUndelegate)
 	require.NoError(t, err)
 	require.NotNil(t, res)

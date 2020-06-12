@@ -1,8 +1,9 @@
 build:
   roots:
-    - .
+    - proto
   excludes:
-    - third_party/proto/google
+    - proto/tendermint
+    - proto/google
 lint:
   use:
     - DEFAULT
@@ -11,8 +12,8 @@ lint:
   except:
     - UNARY_RPC
     - COMMENT_FIELD
-    - PACKAGE_DIRECTORY_MATCH
     - SERVICE_SUFFIX
+    - PACKAGE_VERSION_SUFFIX
   ignore:
     - third_party
     - codec/testdata

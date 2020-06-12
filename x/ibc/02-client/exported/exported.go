@@ -3,6 +3,7 @@ package exported
 import (
 	"encoding/json"
 
+	ics23 "github.com/confio/ics23/go"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -21,6 +22,7 @@ type ClientState interface {
 	GetLatestHeight() uint64
 	IsFrozen() bool
 	Validate() error
+	GetProofSpecs() []*ics23.ProofSpec
 
 	// State verification functions
 

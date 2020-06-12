@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -30,13 +31,14 @@ var (
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID        string          `json:"client_id" yaml:"client_id"`
-	Header          Header          `json:"header" yaml:"header"`
-	TrustLevel      tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
-	TrustingPeriod  time.Duration   `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration   `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration   `json:"max_clock_drift" yaml:"max_clock_drift"`
-	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
+	ClientID        string             `json:"client_id" yaml:"client_id"`
+	Header          Header             `json:"header" yaml:"header"`
+	TrustLevel      tmmath.Fraction    `json:"trust_level" yaml:"trust_level"`
+	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
+	ProofSpecs      []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
+	Signer          sdk.AccAddress     `json:"address" yaml:"address"`
 }
 
 // this is a constant to satisfy the linter
@@ -50,7 +52,8 @@ func (msg MsgCreateClient) ProtoMessage()  {}
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, header Header, trustLevel tmmath.Fraction,
-	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration, signer sdk.AccAddress,
+	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
+	specs []*ics23.ProofSpec, signer sdk.AccAddress,
 ) MsgCreateClient {
 
 	return MsgCreateClient{
@@ -60,6 +63,7 @@ func NewMsgCreateClient(
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
 		MaxClockDrift:   maxClockDrift,
+		ProofSpecs:      specs,
 		Signer:          signer,
 	}
 }
@@ -94,6 +98,21 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	// ValidateBasic of provided header with self-attested chain-id
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
+	}
+	if msg.TrustingPeriod >= msg.UnbondingPeriod {
+		return sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", msg.TrustingPeriod, msg.UnbondingPeriod,
+		)
+	}
+	// Validate ProofSpecs
+	if msg.ProofSpecs == nil {
+		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil")
+	}
+	for _, spec := range msg.ProofSpecs {
+		if spec == nil {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
+		}
 	}
 	return host.ClientIdentifierValidator(msg.ClientID)
 }

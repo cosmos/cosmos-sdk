@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -46,6 +47,8 @@ type ClientState struct {
 
 	// Last Header that was stored by client
 	LastHeader Header `json:"last_header" yaml:"last_header"`
+
+	ProofSpecs []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
@@ -53,7 +56,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 	return Initialize(
 		msg.GetClientID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header,
+		msg.Header, msg.ProofSpecs,
 	)
 }
 
@@ -62,17 +65,10 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 func Initialize(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header,
+	header Header, specs []*ics23.ProofSpec,
 ) (ClientState, error) {
+	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
 
-	if trustingPeriod >= ubdPeriod {
-		return ClientState{}, sdkerrors.Wrapf(
-			ErrInvalidTrustingPeriod,
-			"trusting period (%s) should be < unbonding period (%s)", trustingPeriod, ubdPeriod,
-		)
-	}
-
-	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header)
 	return clientState, nil
 }
 
@@ -80,7 +76,7 @@ func Initialize(
 func NewClientState(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header,
+	header Header, specs []*ics23.ProofSpec,
 ) ClientState {
 	return ClientState{
 		ID:              id,
@@ -90,6 +86,7 @@ func NewClientState(
 		MaxClockDrift:   maxClockDrift,
 		LastHeader:      header,
 		FrozenHeight:    0,
+		ProofSpecs:      specs,
 	}
 }
 
@@ -143,7 +140,29 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
+	if cs.TrustingPeriod >= cs.UnbondingPeriod {
+		return sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
+		)
+	}
+	// Validate ProofSpecs
+	if cs.ProofSpecs == nil {
+		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
+	}
+	for _, spec := range cs.ProofSpecs {
+		if spec == nil {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
+		}
+	}
+
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
+}
+
+// GetProofSpecs returns the format the client expects for proof verification
+// as a string array specifying the proof type for each position in chained proof
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return cs.ProofSpecs
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
@@ -176,7 +195,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(provingRoot, path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -215,7 +234,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -255,7 +274,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -286,7 +305,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, commitmentBytes); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -317,7 +336,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -348,7 +367,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	if err := merkleProof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
+	if err := merkleProof.VerifyNonMembership(cs.ProofSpecs, consensusState.GetRoot(), path); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -380,7 +399,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
-	if err := merkleProof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 

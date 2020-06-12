@@ -11,13 +11,6 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
-// txEncodeRespStr implements a simple Stringer wrapper for a encoded tx.
-type txEncodeRespStr string
-
-func (txr txEncodeRespStr) String() string {
-	return string(txr)
-}
-
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
 func GetEncodeCommand(clientCtx client.Context) *cobra.Command {

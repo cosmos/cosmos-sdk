@@ -10,7 +10,6 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -23,7 +22,7 @@ import (
 func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitmentexported.Proof,
+	proof []byte,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {
@@ -170,7 +169,7 @@ func (k Keeper) TimeoutOnClose(
 	chanCap *capability.Capability,
 	packet exported.PacketI,
 	proof,
-	proofClosed commitmentexported.Proof,
+	proofClosed []byte,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {

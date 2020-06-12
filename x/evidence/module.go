@@ -127,7 +127,7 @@ func (am AppModule) Name() string {
 }
 
 // Route returns the evidence module's message routing key.
-func (am AppModule) Route() *sdk.Route {
+func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(RouterKey, NewHandler(am.keeper))
 }
 

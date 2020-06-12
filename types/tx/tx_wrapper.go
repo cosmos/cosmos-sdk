@@ -3,6 +3,8 @@ package tx
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -28,9 +30,7 @@ type Builder interface {
 	SetMemo(string)
 	SetGas(uint64)
 	SetFee(sdk.Coins)
-	// TODO: replace SetSignerInfos with SetSignaturesV2 once SignatureV2 from #6373 is merged in
-	SetSignerInfos([]*SignerInfo)
-	SetSignatures([][]byte)
+	SetSignaturesV2(...signing.SignatureV2) error
 }
 
 func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Builder {
@@ -239,7 +239,28 @@ func (t *builder) SetFee(coins sdk.Coins) {
 	t.authInfoBz = nil
 }
 
-func (t *builder) SetSignerInfos(infos []*SignerInfo) {
+func (t builder) SetSignaturesV2(signatures ...signing.SignatureV2) error {
+	n := len(signatures)
+	signerInfos := make([]*SignerInfo, n)
+	rawSigs := make([][]byte, n)
+
+	for i, sig := range signatures {
+		var modeInfo *ModeInfo
+		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
+		pk, err := t.pubkeyCodec.Encode(sig.PubKey)
+		if err != nil {
+			return err
+		}
+		signerInfos[i] = &SignerInfo{
+			PublicKey: pk,
+			ModeInfo:  modeInfo,
+		}
+	}
+
+	return nil
+}
+
+func (t *builder) setSignerInfos(infos []*SignerInfo) {
 	t.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil
@@ -247,6 +268,48 @@ func (t *builder) SetSignerInfos(infos []*SignerInfo) {
 	t.pubKeys = nil
 }
 
-func (t *builder) SetSignatures(sigs [][]byte) {
+func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
+}
+
+func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*ModeInfo, []byte) {
+	if data == nil {
+		return nil, nil
+	}
+
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		return &ModeInfo{
+			Sum: &ModeInfo_Single_{
+				Single: &ModeInfo_Single{Mode: data.SignMode},
+			},
+		}, data.Signature
+	case *signing.MultiSignatureData:
+		n := len(data.Signatures)
+		modeInfos := make([]*ModeInfo, n)
+		sigs := make([][]byte, n)
+
+		for i, d := range data.Signatures {
+			modeInfos[i], sigs[i] = SignatureDataToModeInfoAndSig(d)
+		}
+
+		multisig := types.MultiSignature{
+			Signatures: sigs,
+		}
+		sig, err := multisig.Marshal()
+		if err != nil {
+			panic(err)
+		}
+
+		return &ModeInfo{
+			Sum: &ModeInfo_Multi_{
+				Multi: &ModeInfo_Multi{
+					Bitarray:  data.BitArray,
+					ModeInfos: modeInfos,
+				},
+			},
+		}, sig
+	default:
+		panic("unexpected case")
+	}
 }

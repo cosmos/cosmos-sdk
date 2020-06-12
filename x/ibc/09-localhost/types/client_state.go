@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	ics23 "github.com/confio/ics23/go"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

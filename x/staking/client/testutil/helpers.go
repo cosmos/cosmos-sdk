@@ -171,7 +171,7 @@ func QueryStakingRedelegations(f *cli.Fixtures, delAdrr string, flags ...string)
 	return redelegations
 }
 
-// QueryStakingRedelegationsFrom is simcli query staking redelegation
+// QueryStakingRedelegationsFrom is simcli query staking redelegations-from
 func QueryStakingRedelegationsFrom(f *cli.Fixtures, valAddr string, flags ...string) []staking.RedelegationResponse {
 	cmd := fmt.Sprintf("%s query staking redelegations-from %v %v", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
@@ -183,7 +183,7 @@ func QueryStakingRedelegationsFrom(f *cli.Fixtures, valAddr string, flags ...str
 	return redelegations
 }
 
-// QueryStakingUnbondingDelegation is simcli query staking redelegation
+// QueryStakingUnbondingDelegation is simcli query staking unbonding-delegation
 func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, flags ...string) staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegation %v %v %v", f.SimcliBinary, delAdrr, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
@@ -195,7 +195,7 @@ func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, f
 	return ubd
 }
 
-// QueryStakingUnbondingDelegations is simcli query staking redelegation
+// QueryStakingUnbondingDelegations is simcli query staking unbonding-delegations
 func QueryStakingUnbondingDelegations(f *cli.Fixtures, delAdrr string, flags ...string) []staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegations %v %v", f.SimcliBinary, delAdrr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
@@ -207,7 +207,7 @@ func QueryStakingUnbondingDelegations(f *cli.Fixtures, delAdrr string, flags ...
 	return ubds
 }
 
-// QueryStakingHistoricalInfo is simcli query staking parameters
+// QueryStakingHistoricalInfo is simcli query staking historical-info
 func QueryStakingHistoricalInfo(f *cli.Fixtures, height uint, flags ...string) staking.HistoricalInfo {
 	cmd := fmt.Sprintf("%s query staking historical-info %d %v", f.SimcliBinary, height, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")

@@ -7,13 +7,13 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -96,8 +96,6 @@ type BaseApp struct { // nolint: maligned
 
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
-
-	metrics *telemetry.Metrics
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -269,10 +267,6 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 
 func (app *BaseApp) setHaltHeight(haltHeight uint64) {
 	app.haltHeight = haltHeight
-}
-
-func (app *BaseApp) setMetrics(m *telemetry.Metrics) {
-	app.metrics = m
 }
 
 func (app *BaseApp) setHaltTime(haltTime uint64) {

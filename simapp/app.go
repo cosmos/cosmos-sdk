@@ -33,6 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -109,7 +111,7 @@ type SimApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// subspaces
-	subspaces map[string]params.Subspace
+	subspaces map[string]paramstypes.Subspace
 
 	// keepers
 	AccountKeeper    auth.AccountKeeper
@@ -122,7 +124,7 @@ type SimApp struct {
 	GovKeeper        gov.Keeper
 	CrisisKeeper     crisis.Keeper
 	UpgradeKeeper    upgradekeeper.Keeper
-	ParamsKeeper     params.Keeper
+	ParamsKeeper     paramskeeper.Keeper
 	IBCKeeper        *ibc.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper   evidence.Keeper
 	TransferKeeper   transfer.Keeper
@@ -154,10 +156,10 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(
 		auth.StoreKey, bank.StoreKey, staking.StoreKey,
 		mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, ibc.StoreKey, upgradetypes.StoreKey,
+		gov.StoreKey, paramstypes.StoreKey, ibc.StoreKey, upgradetypes.StoreKey,
 		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
 
 	app := &SimApp{
@@ -168,11 +170,11 @@ func NewSimApp(
 		keys:           keys,
 		tkeys:          tkeys,
 		memKeys:        memKeys,
-		subspaces:      make(map[string]params.Subspace),
+		subspaces:      make(map[string]paramstypes.Subspace),
 	}
 
 	// init params keeper and subspaces
-	app.ParamsKeeper = params.NewKeeper(appCodec, keys[params.StoreKey], tkeys[params.TStoreKey])
+	app.ParamsKeeper = paramskeeper.NewKeeper(appCodec, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 	app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.ParamsKeeper.Subspace(staking.DefaultParamspace)
@@ -464,7 +466,7 @@ func (app *SimApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetSubspace(moduleName string) params.Subspace {
+func (app *SimApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	return app.subspaces[moduleName]
 }
 

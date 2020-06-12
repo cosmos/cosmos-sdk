@@ -80,13 +80,14 @@ func (cs ClientState) Validate() error {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
-	cdc *codec.Codec,
+	_ codec.Marshaler,
+	aminoCdc *codec.Codec,
 	_ commitmentexported.Root,
 	height uint64,
 	_ string,
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, consensusStatePath(cs.GetID()))
@@ -100,7 +101,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	}
 
 	var prevConsensusState clientexported.ConsensusState
-	if err := cdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
+	if err := aminoCdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
 		return err
 	}
 
@@ -121,7 +122,7 @@ func (cs ClientState) VerifyConnectionState(
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 	_ clientexported.ConsensusState,
@@ -159,7 +160,7 @@ func (cs ClientState) VerifyChannelState(
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
@@ -195,9 +196,10 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -228,9 +230,10 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -262,9 +265,10 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -287,9 +291,10 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,

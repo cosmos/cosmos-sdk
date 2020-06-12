@@ -105,7 +105,7 @@ func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route implements the AppModule interface
-func (am AppModule) Route() *sdk.Route {
+func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(RouterKey, NewHandler(am.keeper))
 }
 

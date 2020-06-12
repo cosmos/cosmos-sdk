@@ -34,7 +34,7 @@ func (m *MockRouter) EXPECT() *MockRouterMockRecorder {
 }
 
 // AddRoute mocks base method
-func (m *MockRouter) AddRoute(r *types.Route) types.Router {
+func (m *MockRouter) AddRoute(r types.Route) types.Router {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddRoute", r)
 	ret0, _ := ret[0].(types.Router)

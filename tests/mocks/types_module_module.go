@@ -437,10 +437,10 @@ func (mr *MockAppModuleMockRecorder) RegisterInvariants(arg0 interface{}) *gomoc
 }
 
 // Route mocks base method
-func (m *MockAppModule) Route() *types.Route {
+func (m *MockAppModule) Route() types.Route {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Route")
-	ret0, _ := ret[0].(*types.Route)
+	ret0, _ := ret[0].(types.Route)
 	return ret0
 }
 

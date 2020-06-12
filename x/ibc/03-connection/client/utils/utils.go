@@ -129,19 +129,21 @@ func ParsePrefix(cdc *codec.Codec, arg string) (commitmenttypes.MerklePrefix, er
 	return prefix, nil
 }
 
-// ParseProof unmarshals an cmd input argument from a JSON string to a commitment
-// Proof. If the input is not a JSON, it looks for a path to the JSON file.
-func ParseProof(cdc *codec.Codec, arg string) (commitmenttypes.MerkleProof, error) {
-	var proof commitmenttypes.MerkleProof
-	if err := cdc.UnmarshalJSON([]byte(arg), &proof); err != nil {
+// ParseProof unmarshals a cmd input argument from a JSON string to a commitment
+// Proof. If the input is not a JSON, it looks for a path to the JSON file. It
+// then marshals the commitment proof into a proto encoded byte array.
+func ParseProof(cdc *codec.Codec, arg string) ([]byte, error) {
+	var merkleProof commitmenttypes.MerkleProof
+	if err := cdc.UnmarshalJSON([]byte(arg), &merkleProof); err != nil {
 		// check for file path if JSON input is not provided
 		contents, err := ioutil.ReadFile(arg)
 		if err != nil {
-			return commitmenttypes.MerkleProof{}, errors.New("neither JSON input nor path to .json file were provided")
+			return nil, errors.New("neither JSON input nor path to .json file were provided")
 		}
-		if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
-			return commitmenttypes.MerkleProof{}, errors.Wrap(err, "error unmarshalling commitment proof")
+		if err := cdc.UnmarshalJSON(contents, &merkleProof); err != nil {
+			return nil, fmt.Errorf("error unmarshalling commitment proof: %w", err)
 		}
 	}
-	return proof, nil
+
+	return cdc.MarshalBinaryBare(&merkleProof)
 }

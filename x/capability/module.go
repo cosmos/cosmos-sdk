@@ -95,7 +95,7 @@ func (am AppModule) Name() string {
 }
 
 // Route returns the capability module's message routing key.
-func (AppModule) Route() *sdk.Route { return nil }
+func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return "" }

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TxStakingCreateValidator is simcli tx staking create-validator
@@ -52,7 +52,7 @@ func TxStakingRedelegate(f *cli.Fixtures, from, srcVal, dstVal string, amount sd
 }
 
 // QueryStakingValidator is simcli query staking validator
-func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) types.Validator {
+func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) staking.Validator {
 	cmd := fmt.Sprintf("%s query staking validator %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
@@ -76,7 +76,7 @@ func QueryStakingValidators(f *cli.Fixtures, flags ...string) []staking.Validato
 }
 
 // QueryStakingUnbondingDelegationsFrom is simcli query staking unbonding-delegations-from
-func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []types.UnbondingDelegation {
+func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegations-from %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
@@ -88,7 +88,7 @@ func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddres
 }
 
 // QueryStakingDelegationsTo is simcli query staking delegations-to
-func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []types.Delegation {
+func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
 	cmd := fmt.Sprintf("%s query staking delegations-to %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
@@ -100,7 +100,7 @@ func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ..
 }
 
 // QueryStakingPool is simcli query staking pool
-func QueryStakingPool(f *cli.Fixtures, flags ...string) types.Pool {
+func QueryStakingPool(f *cli.Fixtures, flags ...string) staking.Pool {
 	cmd := fmt.Sprintf("%s query staking pool %v", f.SimcliBinary, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
@@ -112,7 +112,7 @@ func QueryStakingPool(f *cli.Fixtures, flags ...string) types.Pool {
 }
 
 // QueryStakingParameters is simcli query staking parameters
-func QueryStakingParameters(f *cli.Fixtures, flags ...string) types.Params {
+func QueryStakingParameters(f *cli.Fixtures, flags ...string) staking.Params {
 	cmd := fmt.Sprintf("%s query staking params %v", f.SimcliBinary, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)

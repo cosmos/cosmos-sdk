@@ -30,7 +30,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						localhosttypes.NewClientState("chaindID", 10),
 					},
 					[]client.ConsensusStates{
@@ -86,7 +86,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						localhosttypes.NewClientState("(chaindID)", 0),
 					},
 					nil,

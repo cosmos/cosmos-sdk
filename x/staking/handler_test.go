@@ -68,7 +68,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// verify that the by power index exists
 	validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	power := staking.GetValidatorsByPowerIndexKey(validator)
+	power := types.GetValidatorsByPowerIndexKey(validator)
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
 
 	// create a second validator keep it bonded
@@ -99,17 +99,17 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// but the new power record should have been created
 	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	power2 := staking.GetValidatorsByPowerIndexKey(validator)
+	power2 := types.GetValidatorsByPowerIndexKey(validator)
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power2))
 
 	// now the new record power index should be the same as the original record
-	power3 := staking.GetValidatorsByPowerIndexKey(validator)
+	power3 := types.GetValidatorsByPowerIndexKey(validator)
 	require.Equal(t, power2, power3)
 
 	// unbond self-delegation
 	totalBond := validator.TokensFromShares(bond.GetShares()).TruncateInt()
 	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, totalBond)
-	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
+	msgUndelegate := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
 
 	res, err = handler(ctx, msgUndelegate)
 	require.NoError(t, err)
@@ -1228,7 +1228,7 @@ func TestMultipleUnbondingDelegationAtUniqueTimes(t *testing.T) {
 	// begin an unbonding delegation
 	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
 	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, valTokens.QuoRaw(2))
-	msgUndelegate := staking.NewMsgUndelegate(selfDelAddr, valAddr, unbondAmt)
+	msgUndelegate := types.NewMsgUndelegate(selfDelAddr, valAddr, unbondAmt)
 	res, err = handler(ctx, msgUndelegate)
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -1436,7 +1436,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 }
 
 func TestInvalidMsg(t *testing.T) {
-	k := staking.Keeper{}
+	k := keeper.Keeper{}
 	h := staking.NewHandler(k)
 
 	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())

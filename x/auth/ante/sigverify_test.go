@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -58,15 +60,21 @@ func TestSetPubKey(t *testing.T) {
 func TestConsumeSignatureVerificationGas(t *testing.T) {
 	params := types.DefaultParams()
 	msg := []byte{1, 2, 3, 4}
+	_, cdc := simapp.MakeCodecs()
 
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
 	multisigKey1 := multisig.NewPubKeyMultisigThreshold(2, pkSet1)
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
-		err := multisignature1.AddSignatureFromPubKey(sigSet1[i], pkSet1[i], pkSet1)
+		stdSig := types.StdSignature{PubKey: pkSet1[i].Bytes(), Signature: sigSet1[i]}
+		sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
+		require.NoError(t, err)
+		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
 		require.NoError(t, err)
 	}
+	aminoMultisignature1, err := types.SignatureDataToAminoSignature(cdc, multisignature1)
+	require.NoError(t, err)
 
 	type args struct {
 		meter  sdk.GasMeter
@@ -82,7 +90,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}{
 		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
 		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostSecp256k1, false},
-		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1.Marshal(), multisigKey1, params}, expectedCost1, false},
+		{"Multisig", args{sdk.NewInfiniteGasMeter(), aminoMultisignature1, multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {

@@ -3,6 +3,8 @@ package direct
 import (
 	"testing"
 
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -33,7 +35,7 @@ func TestDirectModeHandler(t *testing.T) {
 		ModeInfo: &txtypes.ModeInfo{
 			Sum: &txtypes.ModeInfo_Single_{
 				Single: &txtypes.ModeInfo_Single{
-					Mode: txtypes.SignMode_SIGN_MODE_DIRECT,
+					Mode: signingtypes.SignMode_SIGN_MODE_DIRECT,
 				},
 			},
 		},
@@ -50,7 +52,7 @@ func TestDirectModeHandler(t *testing.T) {
 
 	t.Log("verify modes and default-mode")
 	var directModeHandler DirectModeHandler
-	require.Equal(t, directModeHandler.DefaultMode(), txtypes.SignMode_SIGN_MODE_DIRECT)
+	require.Equal(t, directModeHandler.DefaultMode(), signingtypes.SignMode_SIGN_MODE_DIRECT)
 	require.Len(t, directModeHandler.Modes(), 1)
 
 	signingData := signing.SignerData{
@@ -59,7 +61,7 @@ func TestDirectModeHandler(t *testing.T) {
 		AccountSequence: 1,
 	}
 
-	signBytes, err := directModeHandler.GetSignBytes(txtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	signBytes, err := directModeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)

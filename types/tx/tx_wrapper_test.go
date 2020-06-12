@@ -3,6 +3,8 @@ package tx
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 
@@ -33,7 +35,7 @@ func TestTxWrapper(t *testing.T) {
 		ModeInfo: &ModeInfo{
 			Sum: &ModeInfo_Single_{
 				Single: &ModeInfo_Single{
-					Mode: SignMode_SIGN_MODE_DIRECT,
+					Mode: signing.SignMode_SIGN_MODE_DIRECT,
 				},
 			},
 		},
@@ -50,7 +52,6 @@ func TestTxWrapper(t *testing.T) {
 	authInfoBytes := marshaler.MustMarshalBinaryBare(authInfo)
 
 	require.NotEmpty(t, authInfoBytes)
-	require.Empty(t, tx.GetAuthInfoBytes())
 
 	t.Log("verify that body bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetBodyBytes")
 	anys := make([]*codectypes.Any, len(msgs))

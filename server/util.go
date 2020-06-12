@@ -22,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -122,9 +123,9 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 // add server commands
 func AddCommands(
-	ctx *Context, cdc codec.JSONMarshaler,
-	rootCmd *cobra.Command,
-	appCreator AppCreator, appExport AppExporter) {
+	ctx *Context, aminoCdc *codec.Codec, rootCmd *cobra.Command,
+	appCreator AppCreator, appExport AppExporter, register api.RegisterRoutesFn,
+) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
@@ -141,11 +142,11 @@ func AddCommands(
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(ctx, appCreator),
+		StartCmd(ctx, aminoCdc, appCreator, register),
 		UnsafeResetAllCmd(ctx),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(ctx, cdc, appExport),
+		ExportCmd(ctx, aminoCdc, appExport),
 		flags.LineBreak,
 		version.Cmd,
 	)

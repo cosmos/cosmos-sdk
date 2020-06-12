@@ -16,6 +16,10 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
 // Tendermint full-node start flags
@@ -36,7 +40,7 @@ const (
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
+func StartCmd(ctx *Context, cdc *codec.Codec, appCreator AppCreator, register api.RegisterRoutesFn) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -72,7 +76,7 @@ which accepts a path for the resulting pprof file.
 
 			ctx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(ctx, appCreator)
+			err := startInProcess(ctx, cdc, appCreator, register)
 			return err
 		},
 	}
@@ -143,7 +147,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) error {
+func startInProcess(ctx *Context, cdc *codec.Codec, appCreator AppCreator, register api.RegisterRoutesFn) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -182,6 +186,22 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 
 	if err := tmNode.Start(); err != nil {
 		return err
+	}
+
+	if viper.GetBool("listener.enable") {
+		apiSrv := api.New(cdc)
+		listenerCfg := config.ListenerConfig{
+			Address:            viper.GetString("listener.address"),
+			MaxOpenConnections: viper.GetUint("listener.max-open-connections"),
+			RPCReadTimeout:     viper.GetUint("listener.rpc-read-timeout"),
+			RPCWriteTimeout:    viper.GetUint("listener.rpc-write-timeout"),
+			RPCMaxBodyBytes:    viper.GetUint("listener.rpc-max-body-bytes"),
+			EnableUnsafeCORS:   viper.GetBool("listener.enabled-unsafe-cors"),
+		}
+
+		if err := apiSrv.Start(listenerCfg, register); err != nil {
+			return err
+		}
 	}
 
 	var cpuProfileCleanup func()

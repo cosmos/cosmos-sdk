@@ -5,9 +5,10 @@ package cli_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/testutil"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCLIMintQueries(t *testing.T) {

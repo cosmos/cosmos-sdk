@@ -28,7 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -154,7 +154,7 @@ func TestAppImportExport(t *testing.T) {
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
 				stakingtypes.HistoricalInfoKey,
 			}}, // ordering may change but it doesn't matter
-		{app.keys[slashing.StoreKey], newApp.keys[slashing.StoreKey], [][]byte{}},
+		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
 		{app.keys[mint.StoreKey], newApp.keys[mint.StoreKey], [][]byte{}},
 		{app.keys[distr.StoreKey], newApp.keys[distr.StoreKey], [][]byte{}},
 		{app.keys[bank.StoreKey], newApp.keys[bank.StoreKey], [][]byte{bank.BalancesPrefix}},

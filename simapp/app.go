@@ -30,7 +30,7 @@ import (
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
-	ibc24host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -162,7 +162,7 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(
 		auth.StoreKey, bank.StoreKey, stakingtypes.StoreKey,
 		mint.StoreKey, distr.StoreKey, slashingtypes.StoreKey,
-		gov.StoreKey, paramstypes.StoreKey, ibc24host.StoreKey, upgradetypes.StoreKey,
+		gov.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -195,7 +195,7 @@ func NewSimApp(
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey], memKeys[capability.MemStoreKey])
-	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibc24host.ModuleName)
+	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(transfer.ModuleName)
 
 	// add keepers
@@ -245,7 +245,7 @@ func NewSimApp(
 	// TODO: remove amino codec dependency once Tendermint version is upgraded with
 	// protobuf changes
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		app.cdc, appCodec, keys[ibc24host.StoreKey], app.StakingKeeper, scopedIBCKeeper,
+		app.cdc, appCodec, keys[ibchost.StoreKey], app.StakingKeeper, scopedIBCKeeper,
 	)
 
 	// Create Transfer Keepers
@@ -297,7 +297,7 @@ func NewSimApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, mint.ModuleName, distr.ModuleName, slashingtypes.ModuleName,
-		evidence.ModuleName, stakingtypes.ModuleName, ibc24host.ModuleName,
+		evidence.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, stakingtypes.ModuleName)
 
@@ -309,7 +309,7 @@ func NewSimApp(
 	app.mm.SetOrderInitGenesis(
 		capability.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
 		slashingtypes.ModuleName, gov.ModuleName, mint.ModuleName, crisis.ModuleName,
-		ibc24host.ModuleName, genutil.ModuleName, evidence.ModuleName, transfer.ModuleName,
+		ibchost.ModuleName, genutil.ModuleName, evidence.ModuleName, transfer.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

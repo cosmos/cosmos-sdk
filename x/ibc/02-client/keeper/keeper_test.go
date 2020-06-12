@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -71,17 +71,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 		ValidatorSet: suite.valSet,
 	}
 
-	var validators staking.Validators
+	var validators stakingtypes.Validators
 	for i := 1; i < 11; i++ {
 		privVal := tmtypes.NewMockPV()
 		pk, err := privVal.GetPubKey()
 		suite.Require().NoError(err)
-		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
 
-		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
 }
 

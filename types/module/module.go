@@ -141,7 +141,7 @@ type AppModule interface {
 	RegisterInvariants(sdk.InvariantRegistry)
 
 	// routes
-	Route() *sdk.Route
+	Route() sdk.Route
 	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
 	// Deprecated: use RegisterQueryService
@@ -172,7 +172,7 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route empty module message route
-func (GenesisOnlyAppModule) Route() *sdk.Route { return nil }
+func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
 
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
@@ -251,7 +251,7 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterRoutes registers all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
 	for _, module := range m.Modules {
-		if module.Route() != nil {
+		if !module.Route().Empty() {
 			router.AddRoute(module.Route())
 		}
 		if module.QuerierRoute() != "" {

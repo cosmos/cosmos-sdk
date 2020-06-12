@@ -26,3 +26,15 @@ func (pth *KeyPath) String() string {
 	}
 	return res
 }
+
+// GetKey returns the bytes representation of key at given index
+// Passing in a positive index return the key at index in forward order
+// from the highest key to the lowest key
+// Passing in a negative index will return the key at index in reverse order
+// from the lowest key to the highest key. This is the order for proof verification,
+// since we prove lowest key first before moving to key of higher subtrees
+func (pth *KeyPath) GetKey(i int) []byte {
+	total := len(pth.Keys)
+	index := (total + i) % total
+	return pth.Keys[index].name
+}

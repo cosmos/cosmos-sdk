@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type KeeperTestSuite struct {
@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	})
 
 	suite.Require().Panics(func() {
-		_ = suite.keeper.ScopeToModule(staking.ModuleName)
+		_ = suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 	})
 }
 
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestOriginalCapabilityKeeper() {
 
 func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 
 	cap1, err := sk1.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 
 func (suite *KeeperTestSuite) TestClaimCapability() {
 	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 
 	cap, err := sk1.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestClaimCapability() {
 
 func (suite *KeeperTestSuite) TestGetOwners() {
 	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 	sk3 := suite.keeper.ScopeToModule("foo")
 
 	sks := []keeper.ScopedKeeper{sk1, sk2, sk3}
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	suite.Require().NoError(sk2.ClaimCapability(suite.ctx, cap, "transfer"))
 	suite.Require().NoError(sk3.ClaimCapability(suite.ctx, cap, "transfer"))
 
-	expectedOrder := []string{bank.ModuleName, "foo", staking.ModuleName}
+	expectedOrder := []string{bank.ModuleName, "foo", stakingtypes.ModuleName}
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	suite.Require().Nil(err, "could not release capability")
 
 	// new expected order and scoped capabilities
-	expectedOrder = []string{bank.ModuleName, staking.ModuleName}
+	expectedOrder = []string{bank.ModuleName, stakingtypes.ModuleName}
 	sks = []keeper.ScopedKeeper{sk1, sk2}
 
 	// Ensure all scoped keepers can get owners
@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 
 func (suite *KeeperTestSuite) TestReleaseCapability() {
 	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 
 	cap1, err := sk1.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)

@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -163,7 +163,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[evidence.StoreKey], newApp.keys[evidence.StoreKey], [][]byte{}},
 		{app.keys[capability.StoreKey], newApp.keys[capability.StoreKey], [][]byte{}},
 		{app.keys[ibc.StoreKey], newApp.keys[ibc.StoreKey], [][]byte{}},
-		{app.keys[transfer.StoreKey], newApp.keys[transfer.StoreKey], [][]byte{}},
+		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {

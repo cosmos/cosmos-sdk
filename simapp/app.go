@@ -28,6 +28,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
+	ibctransferkeeper "github.com/cosmos/cosmos-sdk/x/ibc-transfer/keeper"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -88,7 +90,7 @@ var (
 		stakingtypes.BondedPoolName:    {auth.Burner, auth.Staking},
 		stakingtypes.NotBondedPoolName: {auth.Burner, auth.Staking},
 		gov.ModuleName:                 {auth.Burner},
-		transfer.ModuleName:            {auth.Minter, auth.Burner},
+		ibctransfertypes.ModuleName:    {auth.Minter, auth.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -131,7 +133,7 @@ type SimApp struct {
 	ParamsKeeper     paramskeeper.Keeper
 	IBCKeeper        *ibc.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper   evidence.Keeper
-	TransferKeeper   transfer.Keeper
+	TransferKeeper   ibctransferkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capability.ScopedKeeper
@@ -161,7 +163,7 @@ func NewSimApp(
 		auth.StoreKey, bank.StoreKey, stakingtypes.StoreKey,
 		mint.StoreKey, distr.StoreKey, slashingtypes.StoreKey,
 		gov.StoreKey, paramstypes.StoreKey, ibc.StoreKey, upgradetypes.StoreKey,
-		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
+		evidence.StoreKey, ibctransfertypes.StoreKey, capability.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
@@ -194,7 +196,7 @@ func NewSimApp(
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey], memKeys[capability.MemStoreKey])
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibc.ModuleName)
-	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(transfer.ModuleName)
+	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
@@ -247,8 +249,8 @@ func NewSimApp(
 	)
 
 	// Create Transfer Keepers
-	app.TransferKeeper = transfer.NewKeeper(
-		appCodec, keys[transfer.StoreKey],
+	app.TransferKeeper = ibctransferkeeper.NewKeeper(
+		appCodec, keys[ibctransfertypes.StoreKey],
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
@@ -256,7 +258,7 @@ func NewSimApp(
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := port.NewRouter()
-	ibcRouter.AddRoute(transfer.ModuleName, transferModule)
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
@@ -307,7 +309,7 @@ func NewSimApp(
 	app.mm.SetOrderInitGenesis(
 		capability.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
 		slashingtypes.ModuleName, gov.ModuleName, mint.ModuleName, crisis.ModuleName,
-		ibc.ModuleName, genutil.ModuleName, evidence.ModuleName, transfer.ModuleName,
+		ibc.ModuleName, genutil.ModuleName, evidence.ModuleName, ibctransfertypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

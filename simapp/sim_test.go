@@ -23,8 +23,8 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
+	ibc24host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -162,7 +162,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 		{app.keys[evidence.StoreKey], newApp.keys[evidence.StoreKey], [][]byte{}},
 		{app.keys[capability.StoreKey], newApp.keys[capability.StoreKey], [][]byte{}},
-		{app.keys[ibc.StoreKey], newApp.keys[ibc.StoreKey], [][]byte{}},
+		{app.keys[ibc24host.StoreKey], newApp.keys[ibc24host.StoreKey], [][]byte{}},
 		{app.keys[transfer.StoreKey], newApp.keys[transfer.StoreKey], [][]byte{}},
 	}
 

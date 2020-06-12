@@ -39,14 +39,14 @@ type BaseConfig struct {
 
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
-
-	// Telemetry defines the application telemetry configuration
-	Telemetry telemetry.Config `mapstructure:"telemetry"`
 }
 
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
+
+	// Telemetry defines the application telemetry configuration
+	Telemetry telemetry.Config `mapstructure:"telemetry"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -79,12 +79,13 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 // DefaultConfig returns server's default configuration.
 func DefaultConfig() *Config {
 	return &Config{
-		BaseConfig{
+		BaseConfig: BaseConfig{
 			MinGasPrices:         defaultMinGasPrices,
 			InterBlockCache:      true,
 			Pruning:              store.PruningStrategySyncable,
 			PruningKeepEvery:     "0",
 			PruningSnapshotEvery: "0",
 		},
+		Telemetry: telemetry.Config{},
 	}
 }

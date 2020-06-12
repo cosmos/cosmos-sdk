@@ -52,7 +52,6 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################
-
 [telemetry]
 
 # Prefixed with keys to separate services

@@ -1,9 +1,10 @@
 package tx
 
 import (
+	"testing"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,8 +16,8 @@ import (
 func TestTxWrapper(t *testing.T) {
 	_, pubkey, addr := authtypes.KeyTestPubAddr()
 
-	appCodec := std.NewAppCodec(codec.New(), codectypes.NewInterfaceRegistry())
-	tx := NewTxWrapper(appCodec.Marshaler, std.DefaultPublicKeyCodec{})
+	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
+	tx := NewBuilder(marshaler, std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}
 
@@ -42,11 +43,11 @@ func TestTxWrapper(t *testing.T) {
 
 	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetAuthInfoBytes")
 	authInfo := &AuthInfo{
-		Fee: &fee,
+		Fee:         &fee,
 		SignerInfos: signerInfo,
 	}
 
-	authInfoBytes := appCodec.Marshaler.MustMarshalBinaryBare(authInfo)
+	authInfoBytes := marshaler.MustMarshalBinaryBare(authInfo)
 
 	require.NotEmpty(t, authInfoBytes)
 	require.Empty(t, tx.GetAuthInfoBytes())
@@ -63,10 +64,10 @@ func TestTxWrapper(t *testing.T) {
 	}
 
 	txBody := &TxBody{
-		Memo: memo,
+		Memo:     memo,
 		Messages: anys,
 	}
-	bodyBytes := appCodec.Marshaler.MustMarshalBinaryBare(txBody)
+	bodyBytes := marshaler.MustMarshalBinaryBare(txBody)
 	require.NotEmpty(t, bodyBytes)
 	require.Empty(t, tx.GetBodyBytes())
 
@@ -79,13 +80,14 @@ func TestTxWrapper(t *testing.T) {
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 0, len(tx.GetPubKeys()))
 
-	t.Log("verify that calling the SetAuthInfo results in the correct GetAuthInfoBytes and GetPubKeys")
+	t.Log("verify that updated AuthInfo  results in the correct GetAuthInfoBytes and GetPubKeys")
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
 	tx.SetFee(fee.Amount)
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
 	tx.SetGas(fee.GasLimit)
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
 	tx.SetSignerInfos(signerInfo)
+	// once fee, gas and signerInfos are all set, AuthInfo bytes should match
 	require.Equal(t, authInfoBytes, tx.GetAuthInfoBytes())
 
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))

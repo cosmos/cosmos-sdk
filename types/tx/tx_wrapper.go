@@ -13,11 +13,11 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TxWrapper defines a type that is to be used for building, signing and verifying
+// Builder defines a type that is to be used for building, signing and verifying
 // protobuf transactions. The protobuf Tx type is not used directly because a) protobuf
 // SIGN_MODE_DIRECT signing uses raw body and auth_info bytes and b) Tx does does not retain
 // crypto.PubKey instances.
-type TxWrapper interface {
+type Builder interface {
 	sdk.Tx
 
 	ProtoTx
@@ -33,18 +33,20 @@ type TxWrapper interface {
 	SetSignatures([][]byte)
 }
 
-func NewTxWrapper(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) TxWrapper {
-	return &txWrapper{
+func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Builder {
+	return &builder{
 		tx: &Tx{
-			Body:     &TxBody{},
-			AuthInfo: &AuthInfo{},
+			Body: &TxBody{},
+			AuthInfo: &AuthInfo{
+				Fee: &Fee{},
+			},
 		},
 		marshaler:   marshaler,
 		pubkeyCodec: pubkeyCodec,
 	}
 }
 
-type txWrapper struct {
+type builder struct {
 	tx *Tx
 
 	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
@@ -63,9 +65,9 @@ type txWrapper struct {
 	pubkeyCodec types.PublicKeyCodec
 }
 
-var _ TxWrapper = &txWrapper{}
+var _ Builder = &builder{}
 
-func (t txWrapper) GetMsgs() []sdk.Msg {
+func (t builder) GetMsgs() []sdk.Msg {
 	anys := t.tx.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
@@ -78,7 +80,7 @@ func (t txWrapper) GetMsgs() []sdk.Msg {
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-func (t txWrapper) ValidateBasic() error {
+func (t builder) ValidateBasic() error {
 	tx := t.tx
 	if tx == nil {
 		return fmt.Errorf("bad Tx")
@@ -129,7 +131,7 @@ func (t txWrapper) ValidateBasic() error {
 	return nil
 }
 
-func (t *txWrapper) GetBodyBytes() []byte {
+func (t *builder) GetBodyBytes() []byte {
 	if len(t.bodyBz) == 0 {
 		// if bodyBz is empty, then marshal the body. bodyBz will generally
 		// be set to nil whenever SetBody is called so the result of calling
@@ -141,7 +143,7 @@ func (t *txWrapper) GetBodyBytes() []byte {
 	return t.bodyBz
 }
 
-func (t *txWrapper) GetAuthInfoBytes() []byte {
+func (t *builder) GetAuthInfoBytes() []byte {
 	if len(t.authInfoBz) == 0 {
 		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
 		// be set to nil whenever SetAuthInfo is called so the result of calling
@@ -153,7 +155,7 @@ func (t *txWrapper) GetAuthInfoBytes() []byte {
 	return t.authInfoBz
 }
 
-func (t txWrapper) GetSigners() []sdk.AccAddress {
+func (t builder) GetSigners() []sdk.AccAddress {
 	var signers []sdk.AccAddress
 	seen := map[string]bool{}
 
@@ -169,7 +171,7 @@ func (t txWrapper) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-func (t txWrapper) GetPubKeys() []crypto.PubKey {
+func (t builder) GetPubKeys() []crypto.PubKey {
 	if t.pubKeys == nil {
 		signerInfos := t.tx.AuthInfo.SignerInfos
 		pubKeys := make([]crypto.PubKey, len(signerInfos))
@@ -191,7 +193,7 @@ func (t txWrapper) GetPubKeys() []crypto.PubKey {
 	return t.pubKeys
 }
 
-func (t *txWrapper) SetMsgs(msgs []sdk.Msg) {
+func (t *builder) SetMsgs(msgs []sdk.Msg) {
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {
@@ -208,21 +210,25 @@ func (t *txWrapper) SetMsgs(msgs []sdk.Msg) {
 	t.bodyBz = nil
 }
 
-func (t *txWrapper) SetMemo(memo string) {
+func (t *builder) SetMemo(memo string) {
 	t.tx.Body.Memo = memo
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	t.bodyBz = nil
 }
 
-func (t *txWrapper) SetGas(limit uint64) {
+func (t *builder) SetGas(limit uint64) {
+	if t.tx.AuthInfo.Fee == nil {
+		t.tx.AuthInfo.Fee = &Fee{}
+	}
+
 	t.tx.AuthInfo.Fee.GasLimit = limit
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil
 }
 
-func (t *txWrapper) SetFee(coins sdk.Coins) {
+func (t *builder) SetFee(coins sdk.Coins) {
 	if t.tx.AuthInfo.Fee == nil {
 		t.tx.AuthInfo.Fee = &Fee{}
 	}
@@ -233,7 +239,7 @@ func (t *txWrapper) SetFee(coins sdk.Coins) {
 	t.authInfoBz = nil
 }
 
-func (t *txWrapper) SetSignerInfos(infos []*SignerInfo) {
+func (t *builder) SetSignerInfos(infos []*SignerInfo) {
 	t.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil
@@ -241,6 +247,6 @@ func (t *txWrapper) SetSignerInfos(infos []*SignerInfo) {
 	t.pubKeys = nil
 }
 
-func (t *txWrapper) SetSignatures(sigs [][]byte) {
+func (t *builder) SetSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }

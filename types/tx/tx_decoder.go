@@ -32,7 +32,7 @@ func DefaultTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) 
 			pks[i] = pk
 		}
 
-		return txWrapper{
+		return builder{
 			tx:          &tx,
 			bodyBz:      raw.BodyBytes,
 			authInfoBz:  raw.AuthInfoBytes,

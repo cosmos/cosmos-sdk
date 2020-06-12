@@ -9,9 +9,9 @@ import (
 
 func DefaultTxEncoder(marshaler codec.Marshaler) types.TxEncoder {
 	return func(tx types.Tx) ([]byte, error) {
-		wrapper, ok := tx.(txWrapper)
+		wrapper, ok := tx.(builder)
 		if !ok {
-			return nil, fmt.Errorf("expected %T, got %T", txWrapper{}, tx)
+			return nil, fmt.Errorf("expected %T, got %T", builder{}, tx)
 		}
 
 		raw := &TxRaw{

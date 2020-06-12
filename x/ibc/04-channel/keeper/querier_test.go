@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// TestQueryChannels tests singular, muliple, and no connection for
+// TestQueryChannels tests singular, multiple, and no connection for
 // correct retrieval of all channels.
 func (suite *KeeperTestSuite) TestQueryChannels() {
 	path := []string{types.SubModuleName, types.QueryAllChannels}

@@ -8,9 +8,9 @@ services:
       - "26656-26657:26656-26657"
     environment:
       - ID=0
-      - LOG=${LOG:-kvd.log}
+      - LOG=${LOG:-simd.log}
     volumes:
-      - ./build:/kvd:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.2
@@ -22,9 +22,9 @@ services:
       - "26659-26660:26656-26657"
     environment:
       - ID=1
-      - LOG=${LOG:-kvd.log}
+      - LOG=${LOG:-simd.log}
     volumes:
-      - ./build:/kvd:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.3
@@ -34,11 +34,11 @@ services:
     image: "cosmos-sdk/simappnode"
     environment:
       - ID=2
-      - LOG=${LOG:-kvd.log}
+      - LOG=${LOG:-simd.log}
     ports:
       - "26661-26662:26656-26657"
     volumes:
-      - ./build:/kvd:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.4
@@ -48,11 +48,11 @@ services:
     image: "cosmos-sdk/simappnode"
     environment:
       - ID=3
-      - LOG=${LOG:-kvd.log}
+      - LOG=${LOG:-simd.log}
     ports:
       - "26663-26664:26656-26657"
     volumes:
-      - ./build:/kvd:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.5

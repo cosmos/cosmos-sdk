@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -72,6 +73,11 @@ func (cs ClientState) Validate() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
 	}
 	return host.ClientIdentifierValidator(cs.ID)
+}
+
+// GetProofSpecs returns nil since localhost does not have to verify proofs
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return nil
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus

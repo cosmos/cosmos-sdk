@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -15,7 +15,6 @@ import (
 // TestNewQuerier tests that the querier paths are correct.
 // NOTE: the actuall testing functionality are located on each ICS querier test.
 func (suite *KeeperTestSuite) TestNewQuerier() {
-
 	query := abci.RequestQuery{
 		Path: "",
 		Data: []byte{},
@@ -28,92 +27,98 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 		errMsg            string
 	}{
 		{"client - QuerierClientState",
-			[]string{client.SubModuleName, client.QueryClientState},
+			[]string{clienttypes.SubModuleName, clienttypes.QueryClientState},
 			false,
 			"",
 		},
 		{"client - QuerierClients",
-			[]string{client.SubModuleName, client.QueryAllClients},
+			[]string{clienttypes.SubModuleName, clienttypes.QueryAllClients},
 			false,
 			"",
 		},
 		{
 			"client - QuerierConsensusState",
-			[]string{client.SubModuleName, client.QueryConsensusState},
+			[]string{clienttypes.SubModuleName, clienttypes.QueryConsensusState},
 			false,
 			"",
 		},
 		{
 			"client - invalid query",
-			[]string{client.SubModuleName, "foo"},
+			[]string{clienttypes.SubModuleName, "foo"},
 			true,
-			fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName),
+			fmt.Sprintf("unknown IBC %s query endpoint", clienttypes.SubModuleName),
 		},
 		{
 			"connection - QuerierConnections",
-			[]string{connection.SubModuleName, connection.QueryAllConnections},
+			[]string{connectiontypes.SubModuleName, connectiontypes.QueryAllConnections},
 			false,
 			"",
 		},
 		{
 			"connection - QuerierAllClientConnections",
-			[]string{connection.SubModuleName, connection.QueryAllClientConnections},
+			[]string{connectiontypes.SubModuleName, connectiontypes.QueryAllClientConnections},
 			false,
 			"",
 		},
 		{
 			"connection - QuerierClientConnections",
-			[]string{connection.SubModuleName, connection.QueryClientConnections},
+			[]string{connectiontypes.SubModuleName, connectiontypes.QueryClientConnections},
 			false,
 			"",
 		},
 		{
 			"connection - invalid query",
-			[]string{connection.SubModuleName, "foo"},
+			[]string{connectiontypes.SubModuleName, "foo"},
 			true,
-			fmt.Sprintf("unknown IBC %s query endpoint", connection.SubModuleName),
+			fmt.Sprintf("unknown IBC %s query endpoint", connectiontypes.SubModuleName),
 		},
 		{
 			"channel - QuerierChannel",
-			[]string{channel.SubModuleName, channel.QueryChannel},
+			[]string{channeltypes.SubModuleName, channeltypes.QueryChannel},
 			false,
 			"",
 		},
 		{
 			"channel - QuerierChannels",
-			[]string{channel.SubModuleName, channel.QueryAllChannels},
+			[]string{channeltypes.SubModuleName, channeltypes.QueryAllChannels},
 			false,
 			"",
 		},
 		{
 			"channel - QuerierConnectionChannels",
-			[]string{channel.SubModuleName, channel.QueryConnectionChannels},
+			[]string{channeltypes.SubModuleName, channeltypes.QueryConnectionChannels},
+			false,
+			"",
+		},
+		{
+			"channel - QuerierChannelClientState",
+			[]string{channeltypes.SubModuleName, channeltypes.QueryChannelClientState},
 			false,
 			"",
 		},
 		{
 			"channel - QuerierPacketCommitments",
-			[]string{channel.SubModuleName, channel.QueryPacketCommitments},
+			[]string{channeltypes.SubModuleName, channeltypes.QueryPacketCommitments},
 			false,
 			"",
 		},
 		{
 			"channel - QuerierUnrelayedAcknowledgements",
-			[]string{channel.SubModuleName, channel.QueryUnrelayedAcknowledgements},
+			[]string{channeltypes.SubModuleName, channeltypes.QueryUnrelayedAcknowledgements},
 			false,
 			"",
 		},
 		{
 			"channel - QuerierUnrelayedPacketSends",
-			[]string{channel.SubModuleName, channel.QueryUnrelayedPacketSends},
+			[]string{channeltypes.SubModuleName, channeltypes.QueryUnrelayedPacketSends},
 			false,
 			"",
 		},
 		{
 			"channel - invalid query",
-			[]string{channel.SubModuleName, "foo"},
+			[]string{channeltypes.SubModuleName, "foo"},
 			true,
-			fmt.Sprintf("unknown IBC %s query endpoint", channel.SubModuleName),
+			fmt.Sprintf("unknown IBC %s query endpoint", channeltypes.SubModuleName),
 		},
 		{
 			"invalid query",

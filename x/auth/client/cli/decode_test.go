@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/base64"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -34,8 +35,11 @@ func TestGetCommandDecode(t *testing.T) {
 	require.NoError(t, err)
 
 	txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
+
+	txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
+
 	require.NoError(t, err)
-	err = cmd.RunE(cmd, []string{string(txBytes)})
+	err = cmd.RunE(cmd, []string{txBytesBase64})
 
 	require.NoError(t, err)
 }

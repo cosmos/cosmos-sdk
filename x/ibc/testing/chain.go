@@ -246,6 +246,49 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 	return chain.SendMsg(msg)
 }
 
+/*
+// CreateTMClientHeader creates a TM header to update the TM client.
+func (chain *TestChain) CreateTMClientHeader() Header {
+	vsetHash := chain.Vals.Hash()
+	tmHeader := tmtypes.Header{
+		Version:            version.Consensus{Block: 2, App: 2},
+		ChainID:            chain.ChainID,
+		Height:             chain.CurrentHeader.Height,
+		Time:               chain.CurrentHeader.Height,
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), maxInt, make([]byte, tmhash.Size)),
+		LastCommitHash:     chain.App.LastCommitID().Hash,
+		DataHash:           tmhash.Sum([]byte("data_hash")),
+		ValidatorsHash:     vsetHash,
+		NextValidatorsHash: vsetHash,
+		ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
+		AppHash:            tmhash.Sum([]byte("app_hash")),
+		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
+		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
+		ProposerAddress:    chain.Vals.Proposer.Address,
+	}
+	hhash := tmHeader.Hash()
+
+	blockID := tmtypes.MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
+
+	voteSet := tmtypes.NewVoteSet(chain.ChainID, height, 1, tmtypes.PrecommitType, chain.Vals)
+
+	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, chain.Signers, chain.CurrentHeader.Time)
+	if err != nil {
+		panic(err)
+	}
+
+	signedHeader := tmtypes.SignedHeader{
+		Header: &tmHeader,
+		Commit: commit,
+	}
+
+	return ibctmtypes.Header{
+		SignedHeader: signedHeader,
+		ValidatorSet: valSet,
+	}
+}
+*/
+
 // ConnectionOpenInit will construct and execute a MsgConnectionOpenInit.
 func (chain *TestChain) ConnectionOpenInit(
 	counterparty *TestChain,
@@ -278,7 +321,7 @@ func (chain *TestChain) ConnectionOpenTry(
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
-		counterpartyConnection.ID, connection.CounterpartyClientID,
+		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		prefix, []string{ConnectionVersion},
 		proofInit, proofConsensus,
 		proofHeight, consensusHeight,

@@ -34,6 +34,7 @@ func TestGetCommandDecode(t *testing.T) {
 	require.NoError(t, err)
 
 	txBytes, err := clientCtx.TxGenerator.TxEncoder()(txJSONBytes)
+	require.NoError(t, err)
 
 	txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 

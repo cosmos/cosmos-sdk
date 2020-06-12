@@ -44,7 +44,7 @@ var (
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func testnetCmd(ctx *server.Context, cdc *codec.Codec,
+func testnetCmd(ctx *server.Context, cdc codec.JSONMarshaler,
 	mbm module.BasicManager, genBalIterator bank.GenesisBalancesIterator,
 ) *cobra.Command {
 
@@ -104,7 +104,7 @@ const nodeDirPerm = 0755
 
 // Initialize the testnet
 func InitTestnet(
-	cmd *cobra.Command, config *tmconfig.Config, cdc *codec.Codec,
+	cmd *cobra.Command, config *tmconfig.Config, cdc codec.JSONMarshaler,
 	mbm module.BasicManager, genBalIterator bank.GenesisBalancesIterator,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
 	nodeCLIHome, startingIPAddress string, numValidators int,
@@ -121,7 +121,6 @@ func InitTestnet(
 	simappConfig := srvconfig.DefaultConfig()
 	simappConfig.MinGasPrices = minGasPrices
 
-	//nolint:prealloc
 	var (
 		genAccounts []authtypes.GenesisAccount
 		genBalances []bank.Balance
@@ -299,7 +298,7 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	cdc *codec.Codec, config *tmconfig.Config, chainID string,
+	cdc codec.JSONMarshaler, config *tmconfig.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
 	genBalIterator bank.GenesisBalancesIterator,

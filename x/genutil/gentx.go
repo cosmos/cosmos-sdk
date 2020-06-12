@@ -18,7 +18,7 @@ import (
 
 // SetGenTxsInAppGenesisState - sets the genesis transactions in the app genesis state
 func SetGenTxsInAppGenesisState(
-	cdc *codec.Codec, appGenesisState map[string]json.RawMessage, genTxs []authtypes.StdTx,
+	cdc codec.JSONMarshaler, appGenesisState map[string]json.RawMessage, genTxs []authtypes.StdTx,
 ) (map[string]json.RawMessage, error) {
 
 	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
@@ -41,7 +41,7 @@ func SetGenTxsInAppGenesisState(
 // balance in the set of genesis accounts.
 func ValidateAccountInGenesis(
 	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
-	addr sdk.Address, coins sdk.Coins, cdc *codec.Codec,
+	addr sdk.Address, coins sdk.Coins, cdc codec.JSONMarshaler,
 ) error {
 
 	var stakingData stakingtypes.GenesisState

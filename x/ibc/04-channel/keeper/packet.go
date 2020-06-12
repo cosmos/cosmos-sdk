@@ -12,7 +12,6 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -141,7 +140,7 @@ func (k Keeper) SendPacket(
 func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitmentexported.Proof,
+	proof []byte,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
@@ -312,7 +311,7 @@ func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	acknowledgement []byte,
-	proof commitmentexported.Proof,
+	proof []byte,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -463,7 +462,7 @@ func (k Keeper) CleanupPacket(
 	ctx sdk.Context,
 	chanCap *capability.Capability,
 	packet exported.PacketI,
-	proof commitmentexported.Proof,
+	proof []byte,
 	proofHeight,
 	nextSequenceRecv uint64,
 	acknowledgement []byte,

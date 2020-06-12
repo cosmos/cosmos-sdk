@@ -92,6 +92,20 @@ func (coord *Coordinator) CommitNBlocks(chainID string, n uint64) {
 	}
 }
 
+// Setup constructs a TM client, conenction, and channel on both chains provided. It fails if
+// any error occurs. The clientID's and TestConnections are returned for both chains.
+func (coord *Coordinator) Setup(
+	sourceID, counterpartyID string,
+) (string, string, TestConnection, TestConnection) {
+	sourceClient, counterpartyClient, sourceConn, counterpartyConn := coord.CreateClientsAndConnections(sourceID, counterpartyID, clientexported.Tendermint)
+
+	// channels can be referenced through the returned connections
+	_, _, err := coord.CreateChannel(sourceID, counterpartyID, sourceConn, counterpartyConn, channeltypes.UNORDERED)
+	require.NoError(coord.t, err)
+
+	return sourceClient, counterpartyClient, sourceConn, counterpartyConn
+}
+
 // CreateClient creates a counterparty client on the source chain and returns the clientID.
 func (coord *Coordinator) CreateClient(
 	sourceID, counterpartyID string,
@@ -308,7 +322,6 @@ func (coord *Coordinator) CreateChannel(
 	sourceID, counterpartyID string,
 	connection, counterpartyConnection TestConnection,
 	order channeltypes.Order,
-	state channeltypes.State,
 ) (TestChannel, TestChannel, error) {
 	source := coord.GetChain(sourceID)
 	counterparty := coord.GetChain(counterpartyID)

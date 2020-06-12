@@ -183,8 +183,6 @@ func QueryStakingRedelegationsFrom(f *cli.Fixtures, valAddr string, flags ...str
 	return redelegations
 }
 
-// TODO debug QueryStakingUnbondingDelegation command
-
 // QueryStakingUnbondingDelegation is simcli query staking redelegation
 func QueryStakingUnbondingDelegation(f *cli.Fixtures, delAdrr, valAddr string, flags ...string) staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegation %v %v %v", f.SimcliBinary, delAdrr, valAddr, f.Flags())

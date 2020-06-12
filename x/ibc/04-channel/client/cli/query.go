@@ -46,3 +46,28 @@ $ %s query ibc channel end [port-id] [channel-id]
 
 	return cmd
 }
+
+// GetCmdQueryChannelClientState defines the command to query a client state from a channel
+func GetCmdQueryChannelClientState(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "client-state [port-id] [channel-id]",
+		Short:   "Query the client state associated with a channel",
+		Long:    "Query the client state associated with a channel, by providing its port and channel identifiers.",
+		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.ClientName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.NewContext().WithCodec(cdc)
+			portID := args[0]
+			channelID := args[1]
+
+			clientStateRes, height, err := utils.QueryChannelClientState(clientCtx, portID, channelID)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(clientStateRes)
+		},
+	}
+	return cmd
+}

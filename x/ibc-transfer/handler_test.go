@@ -23,7 +23,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // define constants used for testing
@@ -172,13 +172,13 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	validator := stakingtypes.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, stakingtypes.Description{},
 	)
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			AppHash: commitID.Hash,
 		},
@@ -190,7 +190,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs())
 	if err != nil {
 		return err
 	}
@@ -234,13 +234,13 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	validator := stakingtypes.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, stakingtypes.Description{},
 	)
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000)
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			AppHash: commitID.Hash,
 		},
@@ -259,7 +259,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		ctxTarget, client.ClientID, uint64(client.Header.SignedHeader.Header.Height), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs()),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

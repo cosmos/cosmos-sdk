@@ -268,6 +268,7 @@ func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
 	suite.Equal(ackHash, storedAckHash)
 }
 
+
 // Mocked types
 
 type mockSuccessPacket struct{}

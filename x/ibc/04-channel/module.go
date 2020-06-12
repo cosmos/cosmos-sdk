@@ -19,7 +19,7 @@ func Name() string {
 
 // RegisterRESTRoutes registers the REST routes for the IBC channel
 func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router, queryRoute string) {
-	rest.RegisterRoutes(clientCtx, rtr, fmt.Sprintf("%s/%s", queryRoute, SubModuleName))
+	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // GetTxCmd returns the root tx command for the IBC connections.

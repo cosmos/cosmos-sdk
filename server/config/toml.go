@@ -55,7 +55,7 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 [telemetry]
 
 # Prefixed with keys to separate services
-service-name = {{ .Telemetry.ServiceName }}
+service-name = "{{ .Telemetry.ServiceName }}"
 
 # Enabled enables the application telemetry functionality. When enabled,
 # an in-memory sink is also enabled by default. Operators may also enabled

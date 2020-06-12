@@ -56,6 +56,7 @@ func main() {
 		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
 		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome),
 		flags.NewCompletionCmd(rootCmd, true),
+		testnetCmd(ctx, cdc, simapp.ModuleBasics, bank.GenesisBalancesIterator{}),
 		debug.Cmd(cdc))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

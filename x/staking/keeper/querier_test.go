@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -43,7 +43,7 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.Error(t, err)
@@ -107,11 +107,11 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParametersPool(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	bondDenom := sdk.DefaultBondDenom
 
-	res, err := querier(ctx, []string{staking.QueryParameters}, abci.RequestQuery{})
+	res, err := querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
 	require.NoError(t, err)
 
 	var params types.Params
@@ -119,7 +119,7 @@ func TestQueryParametersPool(t *testing.T) {
 	require.NoError(t, errRes)
 	require.Equal(t, app.StakingKeeper.GetParams(ctx), params)
 
-	res, err = querier(ctx, []string{staking.QueryPool}, abci.RequestQuery{})
+	res, err = querier(ctx, []string{types.QueryPool}, abci.RequestQuery{})
 	require.NoError(t, err)
 
 	var pool types.Pool
@@ -133,7 +133,7 @@ func TestQueryParametersPool(t *testing.T) {
 func TestQueryValidators(t *testing.T) {
 	cdc, app, ctx := createTestInput()
 	params := app.StakingKeeper.GetParams(ctx)
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
 
@@ -200,7 +200,7 @@ func TestQueryValidators(t *testing.T) {
 func TestQueryDelegation(t *testing.T) {
 	cdc, app, ctx := createTestInput()
 	params := app.StakingKeeper.GetParams(ctx)
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -448,7 +448,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	}
 
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 100, sdk.TokensFromConsensusPower(10000))
 	pubKeys := simapp.CreateTestPubKeys(1)
@@ -532,7 +532,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 
 func TestQueryRedelegations(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -603,7 +603,7 @@ func TestQueryRedelegations(t *testing.T) {
 
 func TestQueryUnbondingDelegation(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -698,7 +698,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 func TestQueryHistoricalInfo(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]

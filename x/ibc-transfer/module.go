@@ -19,7 +19,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
@@ -183,7 +183,7 @@ func (am AppModule) OnChanOpenInit(
 	connectionHops []string,
 	portID string,
 	channelID string,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
@@ -214,7 +214,7 @@ func (am AppModule) OnChanOpenTry(
 	connectionHops []string,
 	portID,
 	channelID string,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version,
 	counterpartyVersion string,

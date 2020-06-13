@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -30,7 +29,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	cdc := app.AppCodec()
 
 	// create new keeper so we can define custom scoping before init and seal
-	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey), app.GetMemKey(capability.MemStoreKey))
+	keeper := keeper.NewKeeper(cdc, app.GetKey(types.StoreKey), app.GetMemKey(types.MemStoreKey))
 
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})

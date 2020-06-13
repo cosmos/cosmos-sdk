@@ -21,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -127,7 +129,7 @@ type SimApp struct {
 	// keepers
 	AccountKeeper    auth.AccountKeeper
 	BankKeeper       bank.Keeper
-	CapabilityKeeper *capability.Keeper
+	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    stakingkeeper.Keeper
 	SlashingKeeper   slashingkeeper.Keeper
 	MintKeeper       mintkeeper.Keeper
@@ -141,8 +143,8 @@ type SimApp struct {
 	TransferKeeper   transfer.Keeper
 
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper      capability.ScopedKeeper
-	ScopedTransferKeeper capability.ScopedKeeper
+	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
 	// the module manager
 	mm *module.Manager
@@ -168,10 +170,10 @@ func NewSimApp(
 		auth.StoreKey, bank.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distr.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
+		evidence.StoreKey, transfer.StoreKey, capabilitytypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &SimApp{
 		BaseApp:        bApp,
@@ -199,7 +201,7 @@ func NewSimApp(
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(std.ConsensusParamsKeyTable()))
 
 	// add capability keeper and ScopeToModule for ibc module
-	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey], memKeys[capability.MemStoreKey])
+	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(transfer.ModuleName)
 
@@ -312,7 +314,7 @@ func NewSimApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		capability.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
+		capabilitytypes.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisis.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidence.ModuleName, transfer.ModuleName,
 	)

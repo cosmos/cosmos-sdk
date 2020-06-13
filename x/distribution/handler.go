@@ -100,7 +100,7 @@ func handleMsgFundCommunityPool(ctx sdk.Context, msg *types.MsgFundCommunityPool
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func NewCommunityPoolSpendProposalHandler(k Keeper) govtypes.Handler {
+func NewCommunityPoolSpendProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.CommunityPoolSpendProposal:

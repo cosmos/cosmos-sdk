@@ -16,6 +16,7 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
+	"github.com/tendermint/tendermint/rpc/client/local"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -197,9 +198,15 @@ func startInProcess(ctx *Context, cdc *codec.Codec, appCreator AppCreator, regis
 			return err
 		}
 
+		// TODO: Since this is running in process, do we need to provide a verifier
+		// and set TrustNode=false? If so, we need to add additional logic that
+		// waits for a block to be committed first before starting the API server.
 		ctx := client.Context{}.
+			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithCodec(cdc)
+			WithCodec(cdc).
+			WithClient(local.New(tmNode)).
+			WithTrustNode(true)
 
 		apiSrv := api.New(ctx)
 		listenerCfg := config.ListenerConfig{

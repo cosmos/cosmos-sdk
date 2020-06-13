@@ -267,6 +267,12 @@ func (ctx Context) WithChainID(chainID string) Context {
 	return ctx
 }
 
+// WithHomeDir returns a copy of the Context with HomeDir set.
+func (ctx Context) WithHomeDir(dir string) Context {
+	ctx.HomeDir = dir
+	return ctx
+}
+
 // WithGenerateOnly returns a copy of the context with updated GenerateOnly value
 func (ctx Context) WithGenerateOnly(generateOnly bool) Context {
 	ctx.GenerateOnly = generateOnly

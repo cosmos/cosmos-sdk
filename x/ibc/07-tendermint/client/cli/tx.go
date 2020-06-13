@@ -105,7 +105,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			case "simple":
 				specs = []*ics23.ProofSpec{ics23.TendermintSpec}
 			default:
-				return fmt.Errorf("proof Spec: %s not supported", spc)
+				return fmt.Errorf("proof spec: %s isn't supported", spc)
 			}
 
 			msg := ibctmtypes.NewMsgCreateClient(

@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
@@ -160,7 +160,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[bank.StoreKey], newApp.keys[bank.StoreKey], [][]byte{bank.BalancesPrefix}},
 		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
 		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
-		{app.keys[evidence.StoreKey], newApp.keys[evidence.StoreKey], [][]byte{}},
+		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
 		{app.keys[capability.StoreKey], newApp.keys[capability.StoreKey], [][]byte{}},
 		{app.keys[ibc.StoreKey], newApp.keys[ibc.StoreKey], [][]byte{}},
 		{app.keys[transfer.StoreKey], newApp.keys[transfer.StoreKey], [][]byte{}},

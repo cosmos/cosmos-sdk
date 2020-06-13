@@ -24,6 +24,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -135,7 +137,7 @@ type SimApp struct {
 	UpgradeKeeper    upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
 	IBCKeeper        *ibc.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	EvidenceKeeper   evidence.Keeper
+	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   transfer.Keeper
 
 	// make scoped keepers public for test purposes
@@ -166,7 +168,7 @@ func NewSimApp(
 		auth.StoreKey, bank.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distr.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibc.StoreKey, upgradetypes.StoreKey,
-		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
+		evidencetypes.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
@@ -265,10 +267,10 @@ func NewSimApp(
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
-	evidenceKeeper := evidence.NewKeeper(
-		appCodec, keys[evidence.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
+	evidenceKeeper := evidencekeeper.NewKeeper(
+		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
 	)
-	evidenceRouter := evidence.NewRouter().
+	evidenceRouter := evidencetypes.NewRouter().
 		AddRoute(ibcclient.RouterKey, ibcclient.HandlerClientMisbehaviour(app.IBCKeeper.ClientKeeper))
 
 	evidenceKeeper.SetRouter(evidenceRouter)
@@ -300,7 +302,7 @@ func NewSimApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, minttypes.ModuleName, distr.ModuleName, slashingtypes.ModuleName,
-		evidence.ModuleName, stakingtypes.ModuleName, ibc.ModuleName,
+		evidencetypes.ModuleName, stakingtypes.ModuleName, ibc.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(crisis.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
 
@@ -312,7 +314,7 @@ func NewSimApp(
 	app.mm.SetOrderInitGenesis(
 		capability.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisis.ModuleName,
-		ibc.ModuleName, genutiltypes.ModuleName, evidence.ModuleName, transfer.ModuleName,
+		ibc.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, transfer.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

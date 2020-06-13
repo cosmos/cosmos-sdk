@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
@@ -55,7 +55,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		AccountNumber:   accNum,
 		AccountSequence: seqNum,
 	}
-	signBz, err := handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
 	expectedSignBz := auth.StdSignBytes(chainId, accNum, seqNum, fee, msgs, memo)
@@ -63,16 +63,16 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Equal(t, expectedSignBz, signBz)
 
 	// expect error with wrong sign mode
-	_, err = handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
 	handler := amino.LegacyAminoJSONHandler{}
-	require.Equal(t, txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
+	require.Equal(t, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
 func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
 	handler := amino.LegacyAminoJSONHandler{}
-	require.Equal(t, []txtypes.SignMode{txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
+	require.Equal(t, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
 }

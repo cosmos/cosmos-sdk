@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -17,7 +17,7 @@ import (
 
 func MakeTestHandlerMap() signing.SignModeHandler {
 	return signing.NewSignModeHandlerMap(
-		txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		[]signing.SignModeHandler{
 			amino.LegacyAminoJSONHandler{},
 		},
@@ -66,27 +66,27 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 		AccountNumber:   accNum,
 		AccountSequence: seqNum,
 	}
-	signBz, err := handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz, err := aminoJSONHandler.GetSignBytes(txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	expectedSignBz, err := aminoJSONHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
 	require.Equal(t, expectedSignBz, signBz)
 
 	// expect error with wrong sign mode
-	_, err = aminoJSONHandler.GetSignBytes(txtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err = aminoJSONHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 }
 
 func TestHandlerMap_DefaultMode(t *testing.T) {
 	handler := MakeTestHandlerMap()
-	require.Equal(t, txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
+	require.Equal(t, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
 func TestHandlerMap_Modes(t *testing.T) {
 	handler := MakeTestHandlerMap()
 	modes := handler.Modes()
-	require.Contains(t, modes, txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	require.Contains(t, modes, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Len(t, modes, 1)
 }

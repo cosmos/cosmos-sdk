@@ -112,7 +112,7 @@ func DefaultConfig() *Config {
 		},
 		Listener: ListenerConfig{
 			Enable:             true,
-			Address:            "127.0.0.1:1317",
+			Address:            "tcp://0.0.0.0:1317",
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,
 			RPCMaxBodyBytes:    1000000,

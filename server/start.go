@@ -17,6 +17,7 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -169,13 +170,15 @@ func startInProcess(ctx *Context, cdc *codec.Codec, appCreator AppCreator, regis
 		return err
 	}
 
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(app),
-		node.DefaultGenesisDocProviderFunc(cfg),
+		genDocProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		ctx.Logger.With("module", "node"),
@@ -189,7 +192,16 @@ func startInProcess(ctx *Context, cdc *codec.Codec, appCreator AppCreator, regis
 	}
 
 	if viper.GetBool("listener.enable") {
-		apiSrv := api.New(cdc)
+		genDoc, err := genDocProvider()
+		if err != nil {
+			return err
+		}
+
+		ctx := client.Context{}.
+			WithChainID(genDoc.ChainID).
+			WithCodec(cdc)
+
+		apiSrv := api.New(ctx)
 		listenerCfg := config.ListenerConfig{
 			Address:            viper.GetString("listener.address"),
 			MaxOpenConnections: viper.GetUint("listener.max-open-connections"),

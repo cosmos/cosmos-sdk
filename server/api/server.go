@@ -13,7 +13,6 @@ import (
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 
 	// unnamed import of statik for swagger UI support
@@ -31,10 +30,10 @@ type Server struct {
 	listener net.Listener
 }
 
-func New(cdc *codec.Codec) *Server {
+func New(clientCtx client.Context) *Server {
 	return &Server{
 		Router:    mux.NewRouter(),
-		ClientCtx: client.NewContext().WithCodec(cdc),
+		ClientCtx: clientCtx,
 		logger:    log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "api-server"),
 	}
 }
@@ -59,8 +58,6 @@ func (s *Server) Start(cfg config.ListenerConfig, register RegisterRoutesFn) err
 
 	s.listener = listener
 	var h http.Handler = s.Router
-
-	s.logger.Info("starting application API service...")
 
 	if cfg.EnableUnsafeCORS {
 		return tmrpcserver.Serve(s.listener, handlers.CORS()(h), s.logger, tmCfg)

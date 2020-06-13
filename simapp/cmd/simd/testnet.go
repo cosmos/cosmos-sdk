@@ -31,6 +31,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -317,7 +318,7 @@ func collectGenFiles(
 		config.SetRoot(nodeDir)
 
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
-		initCfg := genutil.NewInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
+		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
 
 		genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
 		if err != nil {

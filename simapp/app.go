@@ -31,6 +31,8 @@ import (
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -84,7 +86,7 @@ var (
 	maccPerms = map[string][]string{
 		auth.FeeCollectorName:          nil,
 		distr.ModuleName:               nil,
-		mint.ModuleName:                {auth.Minter},
+		minttypes.ModuleName:           {auth.Minter},
 		stakingtypes.BondedPoolName:    {auth.Burner, auth.Staking},
 		stakingtypes.NotBondedPoolName: {auth.Burner, auth.Staking},
 		gov.ModuleName:                 {auth.Burner},
@@ -123,7 +125,7 @@ type SimApp struct {
 	CapabilityKeeper *capability.Keeper
 	StakingKeeper    stakingkeeper.Keeper
 	SlashingKeeper   slashingkeeper.Keeper
-	MintKeeper       mint.Keeper
+	MintKeeper       mintkeeper.Keeper
 	DistrKeeper      distr.Keeper
 	GovKeeper        gov.Keeper
 	CrisisKeeper     crisis.Keeper
@@ -159,7 +161,7 @@ func NewSimApp(
 
 	keys := sdk.NewKVStoreKeys(
 		auth.StoreKey, bank.StoreKey, stakingtypes.StoreKey,
-		mint.StoreKey, distr.StoreKey, slashingtypes.StoreKey,
+		minttypes.StoreKey, distr.StoreKey, slashingtypes.StoreKey,
 		gov.StoreKey, paramstypes.StoreKey, ibc.StoreKey, upgradetypes.StoreKey,
 		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
@@ -182,7 +184,7 @@ func NewSimApp(
 	app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
 	app.subspaces[stakingtypes.ModuleName] = app.ParamsKeeper.Subspace(stakingkeeper.DefaultParamspace)
-	app.subspaces[mint.ModuleName] = app.ParamsKeeper.Subspace(mint.DefaultParamspace)
+	app.subspaces[minttypes.ModuleName] = app.ParamsKeeper.Subspace(minttypes.DefaultParamspace)
 	app.subspaces[distr.ModuleName] = app.ParamsKeeper.Subspace(distr.DefaultParamspace)
 	app.subspaces[slashingtypes.ModuleName] = app.ParamsKeeper.Subspace(slashingtypes.DefaultParamspace)
 	app.subspaces[gov.ModuleName] = app.ParamsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
@@ -206,8 +208,8 @@ func NewSimApp(
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.subspaces[stakingtypes.ModuleName],
 	)
-	app.MintKeeper = mint.NewKeeper(
-		appCodec, keys[mint.StoreKey], app.subspaces[mint.ModuleName], &stakingKeeper,
+	app.MintKeeper = mintkeeper.NewKeeper(
+		appCodec, keys[minttypes.StoreKey], app.subspaces[minttypes.ModuleName], &stakingKeeper,
 		app.AccountKeeper, app.BankKeeper, auth.FeeCollectorName,
 	)
 	app.DistrKeeper = distr.NewKeeper(
@@ -294,7 +296,7 @@ func NewSimApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, mint.ModuleName, distr.ModuleName, slashingtypes.ModuleName,
+		upgradetypes.ModuleName, minttypes.ModuleName, distr.ModuleName, slashingtypes.ModuleName,
 		evidence.ModuleName, stakingtypes.ModuleName, ibc.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, stakingtypes.ModuleName)
@@ -306,7 +308,7 @@ func NewSimApp(
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
 		capability.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
-		slashingtypes.ModuleName, gov.ModuleName, mint.ModuleName, crisis.ModuleName,
+		slashingtypes.ModuleName, gov.ModuleName, minttypes.ModuleName, crisis.ModuleName,
 		ibc.ModuleName, genutil.ModuleName, evidence.ModuleName, transfer.ModuleName,
 	)
 

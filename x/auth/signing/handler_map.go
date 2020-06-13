@@ -3,24 +3,25 @@ package signing
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // SignModeHandlerMap is SignModeHandler that aggregates multiple SignModeHandler's into
 // a single handler
 type SignModeHandlerMap struct {
-	defaultMode      types.SignMode
-	modes            []types.SignMode
-	signModeHandlers map[types.SignMode]SignModeHandler
+	defaultMode      signing.SignMode
+	modes            []signing.SignMode
+	signModeHandlers map[signing.SignMode]SignModeHandler
 }
 
 var _ SignModeHandler = SignModeHandlerMap{}
 
 // NewSignModeHandlerMap returns a new SignModeHandlerMap with the provided defaultMode and handlers
-func NewSignModeHandlerMap(defaultMode types.SignMode, handlers []SignModeHandler) SignModeHandlerMap {
-	handlerMap := make(map[types.SignMode]SignModeHandler)
-	var modes []types.SignMode
+func NewSignModeHandlerMap(defaultMode signing.SignMode, handlers []SignModeHandler) SignModeHandlerMap {
+	handlerMap := make(map[signing.SignMode]SignModeHandler)
+	var modes []signing.SignMode
 
 	for _, h := range handlers {
 		for _, m := range h.Modes() {
@@ -40,17 +41,17 @@ func NewSignModeHandlerMap(defaultMode types.SignMode, handlers []SignModeHandle
 }
 
 // DefaultMode implements SignModeHandler.DefaultMode
-func (h SignModeHandlerMap) DefaultMode() types.SignMode {
+func (h SignModeHandlerMap) DefaultMode() signing.SignMode {
 	return h.defaultMode
 }
 
 // Modes implements SignModeHandler.Modes
-func (h SignModeHandlerMap) Modes() []types.SignMode {
+func (h SignModeHandlerMap) Modes() []signing.SignMode {
 	return h.modes
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes
-func (h SignModeHandlerMap) GetSignBytes(mode types.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
+func (h SignModeHandlerMap) GetSignBytes(mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
 	handler, found := h.signModeHandlers[mode]
 	if !found {
 		return nil, fmt.Errorf("can't verify sign mode %s", mode.String())

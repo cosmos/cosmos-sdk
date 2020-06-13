@@ -4,6 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -166,4 +171,59 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, tc.output, string(bz), "test case #%d", i)
 	}
+}
+
+func TestSignatureV2Conversions(t *testing.T) {
+	_, pubKey, _ := KeyTestPubAddr()
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	RegisterCodec(cdc)
+	dummy := []byte("dummySig")
+	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+
+	sigV2, err := StdSignatureToSignatureV2(cdc, sig)
+	require.NoError(t, err)
+	require.Equal(t, pubKey, sigV2.PubKey)
+	require.Equal(t, &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Signature: dummy,
+	}, sigV2.Data)
+
+	sigBz, err := SignatureDataToAminoSignature(cdc, sigV2.Data)
+	require.NoError(t, err)
+	require.Equal(t, dummy, sigBz)
+
+	// multisigs
+	_, pubKey2, _ := KeyTestPubAddr()
+	multiPK := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{
+		pubKey, pubKey2,
+	})
+	dummy2 := []byte("dummySig2")
+	bitArray := types.NewCompactBitArray(2)
+	bitArray.SetIndex(0, true)
+	bitArray.SetIndex(1, true)
+	msigData := &signing.MultiSignatureData{
+		BitArray: bitArray,
+		Signatures: []signing.SignatureData{
+			&signing.SingleSignatureData{
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				Signature: dummy,
+			},
+			&signing.SingleSignatureData{
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				Signature: dummy2,
+			},
+		},
+	}
+
+	msig, err := SignatureDataToAminoSignature(cdc, msigData)
+	require.NoError(t, err)
+
+	sigV2, err = StdSignatureToSignatureV2(cdc, StdSignature{
+		PubKey:    multiPK.Bytes(),
+		Signature: msig,
+	})
+	require.NoError(t, err)
+	require.Equal(t, multiPK, sigV2.PubKey)
+	require.Equal(t, msigData, sigV2.Data)
 }

@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	ics23 "github.com/confio/ics23/go"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -58,6 +59,21 @@ func (suite *TendermintTestSuite) TestValidate() {
 		{
 			name:        "invalid header",
 			clientState: ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+			expPass:     false,
+		},
+		{
+			name:        "trusting period not less than unbonding period",
+			clientState: ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+			expPass:     false,
+		},
+		{
+			name:        "proof specs is nil",
+			clientState: ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, suite.header, nil),
+			expPass:     false,
+		},
+		{
+			name:        "proof specs contains nil",
+			clientState: ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, suite.header, []*ics23.ProofSpec{ics23.TendermintSpec, nil}),
 			expPass:     false,
 		},
 	}

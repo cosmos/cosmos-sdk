@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func TestCLIWithdrawRewards(t *testing.T) {
@@ -22,14 +22,14 @@ func TestCLIWithdrawRewards(t *testing.T) {
 
 	genesisState := f.GenesisState()
 	inflationMin := sdk.MustNewDecFromStr("1.0")
-	var mintData mint.GenesisState
-	f.Cdc.UnmarshalJSON(genesisState[mint.ModuleName], &mintData)
+	var mintData minttypes.GenesisState
+	f.Cdc.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData)
 	mintData.Minter.Inflation = inflationMin
 	mintData.Params.InflationMin = inflationMin
 	mintData.Params.InflationMax = sdk.MustNewDecFromStr("1.0")
 	mintDataBz, err := f.Cdc.MarshalJSON(mintData)
 	require.NoError(t, err)
-	genesisState[mint.ModuleName] = mintDataBz
+	genesisState[minttypes.ModuleName] = mintDataBz
 
 	genFile := filepath.Join(f.SimdHome, "config", "genesis.json")
 	genDoc, err := tmtypes.GenesisDocFromFile(genFile)

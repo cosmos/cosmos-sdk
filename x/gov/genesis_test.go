@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestImportExportQueues(t *testing.T) {
@@ -45,8 +46,8 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, ok)
 	proposal2, ok = app.GovKeeper.GetProposal(ctx, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1.Status == gov.StatusDepositPeriod)
-	require.True(t, proposal2.Status == gov.StatusVotingPeriod)
+	require.True(t, proposal1.Status == types.StatusDepositPeriod)
+	require.True(t, proposal2.Status == types.StatusVotingPeriod)
 
 	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
 	bankGenState := bank.ExportGenesis(ctx, app.BankKeeper)
@@ -57,7 +58,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	genesisState[auth.ModuleName] = app.AppCodec().MustMarshalJSON(authGenState)
 	genesisState[bank.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
-	genesisState[gov.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
+	genesisState[types.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
@@ -91,8 +92,8 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, ok)
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal1.Status == gov.StatusDepositPeriod)
-	require.True(t, proposal2.Status == gov.StatusVotingPeriod)
+	require.True(t, proposal1.Status == types.StatusDepositPeriod)
+	require.True(t, proposal2.Status == types.StatusVotingPeriod)
 
 	macc := app2.GovKeeper.GetGovernanceAccount(ctx2)
 	require.Equal(t, app2.GovKeeper.GetDepositParams(ctx2).MinDeposit, app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
@@ -105,7 +106,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
-	require.True(t, proposal2.Status == gov.StatusRejected)
+	require.True(t, proposal2.Status == types.StatusRejected)
 }
 
 func TestEqualProposals(t *testing.T) {
@@ -131,8 +132,8 @@ func TestEqualProposals(t *testing.T) {
 	require.NotEqual(t, proposal1, proposal2)
 
 	// Now create two genesis blocks
-	state1 := gov.GenesisState{Proposals: []gov.Proposal{proposal1}}
-	state2 := gov.GenesisState{Proposals: []gov.Proposal{proposal2}}
+	state1 := types.GenesisState{Proposals: []types.Proposal{proposal1}}
+	state2 := types.GenesisState{Proposals: []types.Proposal{proposal2}}
 	require.NotEqual(t, state1, state2)
 	require.False(t, state1.Equal(state2))
 

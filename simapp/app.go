@@ -22,6 +22,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -133,7 +135,7 @@ type SimApp struct {
 	MintKeeper       mintkeeper.Keeper
 	DistrKeeper      distr.Keeper
 	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     crisis.Keeper
+	CrisisKeeper     crisiskeeper.Keeper
 	UpgradeKeeper    upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
 	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
@@ -193,7 +195,7 @@ func NewSimApp(
 	app.subspaces[distr.ModuleName] = app.ParamsKeeper.Subspace(distr.DefaultParamspace)
 	app.subspaces[slashingtypes.ModuleName] = app.ParamsKeeper.Subspace(slashingtypes.DefaultParamspace)
 	app.subspaces[govtypes.ModuleName] = app.ParamsKeeper.Subspace(govtypes.DefaultParamspace).WithKeyTable(govtypes.ParamKeyTable())
-	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
+	app.subspaces[crisistypes.ModuleName] = app.ParamsKeeper.Subspace(crisistypes.DefaultParamspace)
 
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(std.ConsensusParamsKeyTable()))
@@ -224,8 +226,8 @@ func NewSimApp(
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.subspaces[slashingtypes.ModuleName],
 	)
-	app.CrisisKeeper = crisis.NewKeeper(
-		app.subspaces[crisis.ModuleName], invCheckPeriod, app.BankKeeper, auth.FeeCollectorName,
+	app.CrisisKeeper = crisiskeeper.NewKeeper(
+		app.subspaces[crisistypes.ModuleName], invCheckPeriod, app.BankKeeper, auth.FeeCollectorName,
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 
@@ -304,7 +306,7 @@ func NewSimApp(
 		upgradetypes.ModuleName, minttypes.ModuleName, distr.ModuleName, slashingtypes.ModuleName,
 		evidence.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
-	app.mm.SetOrderEndBlockers(crisis.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
 
 	// NOTE: The genutils moodule must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -313,7 +315,7 @@ func NewSimApp(
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
 		capability.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
-		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisis.ModuleName,
+		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidence.ModuleName, transfer.ModuleName,
 	)
 

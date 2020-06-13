@@ -25,6 +25,7 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -311,7 +312,7 @@ func NewSimApp(
 	app.mm.SetOrderInitGenesis(
 		capability.ModuleName, auth.ModuleName, distr.ModuleName, stakingtypes.ModuleName, bank.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisis.ModuleName,
-		ibc.ModuleName, genutil.ModuleName, evidence.ModuleName, transfer.ModuleName,
+		ibc.ModuleName, genutiltypes.ModuleName, evidence.ModuleName, transfer.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

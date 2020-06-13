@@ -44,7 +44,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 			}
 
 			toPrint := newPrintInfo(config.Moniker, genDoc.ChainID, nodeID, genTxsDir, json.RawMessage(""))
-			initCfg := genutil.NewInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
+			initCfg := types.NewInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
 
 			appMessage, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, genBalIterator)
 			if err != nil {

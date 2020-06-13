@@ -94,7 +94,7 @@ var (
 		minttypes.ModuleName:           {auth.Minter},
 		stakingtypes.BondedPoolName:    {auth.Burner, auth.Staking},
 		stakingtypes.NotBondedPoolName: {auth.Burner, auth.Staking},
-		govtypes.ModuleName:                 {auth.Burner},
+		govtypes.ModuleName:            {auth.Burner},
 		ibctransfertypes.ModuleName:    {auth.Minter, auth.Burner},
 	}
 

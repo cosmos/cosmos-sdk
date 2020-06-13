@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -21,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -40,6 +42,58 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 			tmtypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
+}
+
+// SetupWithValSet initializes a new SimApp. A Nop logger is set in SimApp.
+func SetupWithValSet(isCheckTx bool, valSet []*tmtypes.Validator) *SimApp {
+	db := dbm.NewMemDB()
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
+	if !isCheckTx {
+		validators := make([]stakingtypes.Validator, 0, len(valSet))
+		delegations := make([]stakingtypes.Delegation, 0, len(valSet))
+
+		for _, val := range valSet {
+			validator := stakingtypes.Validator{
+				OperatorAddress:   val.Address.Bytes(),
+				ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
+				Jailed:            false,
+				Status:            sdk.Bonded,
+				Tokens:            sdk.ZeroInt(),
+				DelegatorShares:   sdk.OneDec(),
+				Description:       stakingtypes.Description{},
+				UnbondingHeight:   int64(0),
+				UnbondingTime:     time.Unix(0, 0).UTC(),
+				Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+				MinSelfDelegation: sdk.ZeroInt(),
+			}
+			validators = append(validators, validator)
+			// TODO: add in genesis account to delegate from?
+			delegations = append(delegations, stakingtypes.NewDelegation(del.Address, val.Address.Bytes(), sdk.OneDec()))
+
+		}
+
+		stakingGenesisState := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
+		stakingGenBytes := app.Codec().MustMarshalJSON(stakingGenesisState)
+
+		// init chain must be called to stop deliverState from being nil
+		genesisState := NewDefaultGenesisState()
+		genesisState[stakingtypes.ModuleName] = stakingGenBytes
+		stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+		if err != nil {
+			panic(err)
+		}
+
+		// Initialize the chain
+		app.InitChain(
+			abci.RequestInitChain{
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: DefaultConsensusParams,
+				AppStateBytes:   stateBytes,
+			},
+		)
+	}
+
+	return app
 }
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.

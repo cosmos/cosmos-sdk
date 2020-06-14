@@ -64,6 +64,8 @@ type ListenerConfig struct {
 	RPCMaxBodyBytes uint `mapstructure:"rpc-max-body-bytes"`
 
 	// TODO: TLS/Proxy configuration.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
 // Config defines the server's top level configuration

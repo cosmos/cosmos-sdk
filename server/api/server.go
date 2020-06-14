@@ -38,11 +38,12 @@ func New(clientCtx client.Context) *Server {
 	}
 }
 
-// Start starts the API server that listens on the provided listenAddr. The API
-// service will use Tendermint's default RPC configuration, where the R/W timeout
-// and max open connections are overridden.
-func (s *Server) Start(cfg config.ListenerConfig, register RegisterRoutesFn) error {
-	register(s)
+// Start starts the API server. Internally, the API server leverages Tendermint's
+// JSON RPC server. Configuration options are provided via config.ListenerConfig
+// and are delegated to the Tendermint JSON RPC server. The process is
+// non-blocking, so an external signal handler must be used. The API server does
+// not register any additional handlers automatically apart from Swagger docs.
+func (s *Server) Start(cfg config.ListenerConfig) error {
 	s.registerSwaggerUI()
 
 	tmCfg := tmrpcserver.DefaultConfig()

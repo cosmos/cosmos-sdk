@@ -42,7 +42,7 @@ const (
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator, register api.RegisterRoutesFn) *cobra.Command {
+func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -78,7 +78,7 @@ which accepts a path for the resulting pprof file.
 
 			ctx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(ctx, cdc, appCreator, register)
+			err := startInProcess(ctx, cdc, appCreator)
 			return err
 		},
 	}
@@ -149,7 +149,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator, register api.RegisterRoutesFn) error {
+func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -218,7 +218,9 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			EnableUnsafeCORS:   viper.GetBool("listener.enabled-unsafe-cors"),
 		}
 
-		if err := apiSrv.Start(listenerCfg, register); err != nil {
+		app.RegisterAPIRoutes(apiSrv)
+
+		if err := apiSrv.Start(listenerCfg); err != nil {
 			return err
 		}
 	}

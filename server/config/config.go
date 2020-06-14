@@ -113,7 +113,7 @@ func DefaultConfig() *Config {
 			PruningSnapshotEvery: "0",
 		},
 		Listener: ListenerConfig{
-			Enable:             true,
+			Enable:             false,
 			Address:            "tcp://0.0.0.0:1317",
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,

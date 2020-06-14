@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmkv "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 

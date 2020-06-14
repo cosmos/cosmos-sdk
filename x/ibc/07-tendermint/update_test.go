@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	lite "github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"

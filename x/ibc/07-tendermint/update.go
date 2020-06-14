@@ -3,7 +3,7 @@ package tendermint
 import (
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	lite "github.com/tendermint/tendermint/light"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"

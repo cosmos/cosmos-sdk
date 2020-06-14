@@ -1,0 +1,13 @@
+syntax = "proto3";
+package cosmos_sdk.kv.v1;
+
+import "third_party/proto/gogoproto/gogo.proto";
+
+option go_package                       = "github.com/cosmos/cosmos-sdk/types/kv";
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all)         = false;
+
+message Pair {
+  bytes key   = 1;
+  bytes value = 2;
+}

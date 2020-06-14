@@ -5,8 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tendermint/tendermint/libs/log"
-	tmlite "github.com/tendermint/tendermint/lite"
-	tmliteproxy "github.com/tendermint/tendermint/lite/proxy"
+	tmlite "github.com/tendermint/tendermint/light"
+	tmliteproxy "github.com/tendermint/tendermint/light/proxy"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 

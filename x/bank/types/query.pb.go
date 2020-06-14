@@ -9,7 +9,6 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -461,10 +460,10 @@ type QueryClient interface {
 }
 
 type queryClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewQueryClient(cc grpc1.ClientConn) QueryClient {
+func NewQueryClient(cc *grpc.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
@@ -533,7 +532,7 @@ func (*UnimplementedQueryServer) SupplyOf(ctx context.Context, req *QuerySupplyO
 	return nil, status.Errorf(codes.Unimplemented, "method SupplyOf not implemented")
 }
 
-func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
+func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 

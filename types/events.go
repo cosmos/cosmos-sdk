@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 )
 
 // ----------------------------------------------------------------------------

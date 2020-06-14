@@ -5,15 +5,15 @@ import (
 	"encoding/binary"
 	"io"
 
+	types "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/kv"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
 // hash(key) | hash(value). Leaves are sorted before Merkle hashing.
 type merkleMap struct {
-	kvs    kv.Pairs
+	kvs    types.Pairs
 	sorted bool
 }
 
@@ -24,9 +24,9 @@ func newMerkleMap() *merkleMap {
 	}
 }
 
-// set creates a kv.Pair from the provided key and value. The value is hashed prior
-// to creating a kv.Pair. The created kv.Pair is appended to the merkleMap's slice
-// of kv.Pairs. Whenever called, the merkleMap must be resorted.
+// set creates a types.Pair from the provided key and value. The value is hashed prior
+// to creating a types.Pair. The created types.Pair is appended to the merkleMap's slice
+// of types.Pairs. Whenever called, the merkleMap must be resorted.
 func (sm *merkleMap) set(key string, value []byte) {
 	sm.sorted = false
 
@@ -34,7 +34,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.kvs = append(sm.kvs, kv.Pair{
+	sm.kvs = append(sm.kvs, types.Pair{
 		Key:   []byte(key),
 		Value: vhash,
 	})
@@ -55,21 +55,21 @@ func (sm *merkleMap) sort() {
 	sm.sorted = true
 }
 
-// kvPair defines a type alias for kv.Pair so that we can create bytes to hash
+// kvPair defines a type alias for types.Pair so that we can create bytes to hash
 // when constructing the merkle root. Note, key and values are both length-prefixed.
-type kvPair kv.Pair
+type kvPair types.Pair
 
 // bytes returns a byte slice representation of the kvPair where the key and value
 // are length-prefixed.
 func (kv kvPair) bytes() []byte {
 	var b bytes.Buffer
 
-	err := encodeByteSlice(&b, kv.Key)
+	err := encodeByteSlice(&b, types.Key)
 	if err != nil {
 		panic(err)
 	}
 
-	err = encodeByteSlice(&b, kv.Value)
+	err = encodeByteSlice(&b, types.Value)
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func encodeByteSlice(w io.Writer, bz []byte) error {
 
 // hashKVPairs hashes a kvPair and creates a merkle tree where the leaves are
 // byte slices.
-func hashKVPairs(kvs kv.Pairs) []byte {
+func hashKVPairs(kvs types.Pairs) []byte {
 	kvsH := make([][]byte, len(kvs))
 	for i, kvp := range kvs {
 		kvsH[i] = kvPair(kvp).bytes()

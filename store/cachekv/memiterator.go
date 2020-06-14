@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"errors"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
 )
 

@@ -3,7 +3,7 @@ package store
 import (
 	"bytes"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

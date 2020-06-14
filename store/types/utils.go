@@ -3,7 +3,7 @@ package types
 import (
 	"bytes"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // Iterator over all the keys with a certain prefix in ascending order

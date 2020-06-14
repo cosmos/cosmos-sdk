@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	tmkv "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"

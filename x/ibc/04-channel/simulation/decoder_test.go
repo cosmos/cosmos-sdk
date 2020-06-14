@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	tmkv "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -3,7 +3,7 @@ package simulation
 import (
 	"fmt"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmkv "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	clientsim "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"

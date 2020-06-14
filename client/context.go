@@ -11,7 +11,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/cli"
-	tmlite "github.com/tendermint/tendermint/lite"
+	tmlite "github.com/tendermint/tendermint/light"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 

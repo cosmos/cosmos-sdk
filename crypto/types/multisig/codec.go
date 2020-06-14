@@ -21,10 +21,10 @@ func init() {
 	Cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
 	Cdc.RegisterConcrete(PubKeyMultisigThreshold{},
 		PubKeyAminoRoute, nil)
-	Cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
+	Cdc.RegisterConcrete(ed25519.PubKey{},
 		ed25519.PubKeyAminoName, nil)
-	Cdc.RegisterConcrete(sr25519.PubKeySr25519{},
+	Cdc.RegisterConcrete(sr25519.PubKey{},
 		sr25519.PubKeyAminoName, nil)
-	Cdc.RegisterConcrete(secp256k1.PubKeySecp256k1{},
+	Cdc.RegisterConcrete(secp256k1.PubKey{},
 		secp256k1.PubKeyAminoName, nil)
 }

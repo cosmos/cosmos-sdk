@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/std"
 
+	tmkv "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"

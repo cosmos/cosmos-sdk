@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/kv"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as

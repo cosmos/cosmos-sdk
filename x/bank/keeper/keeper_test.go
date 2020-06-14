@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -489,23 +489,23 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	event1 := sdk.Event{
 		Type:       types.EventTypeTransfer,
-		Attributes: []tmkv.Pair{},
+		Attributes: []kv.Pair{},
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+		kv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
+		kv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
 	)
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
-		Attributes: []tmkv.Pair{},
+		Attributes: []kv.Pair{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		kv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 
 	suite.Require().Equal(abci.Event(event1), events[0])
@@ -563,11 +563,11 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
-		Attributes: []tmkv.Pair{},
+		Attributes: []kv.Pair{},
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		kv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 	suite.Require().Equal(abci.Event(event1), events[0])
 
@@ -585,34 +585,34 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
-		Attributes: []tmkv.Pair{},
+		Attributes: []kv.Pair{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())},
+		kv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())},
 	)
 	event3 := sdk.Event{
 		Type:       types.EventTypeTransfer,
-		Attributes: []tmkv.Pair{},
+		Attributes: []kv.Pair{},
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
+		kv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
 	)
 	event3.Attributes = append(
 		event3.Attributes,
-		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+		kv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
 	event4 := sdk.Event{
 		Type:       types.EventTypeTransfer,
-		Attributes: []tmkv.Pair{},
+		Attributes: []kv.Pair{},
 	}
 	event4.Attributes = append(
 		event4.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
+		kv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
 	)
 	event4.Attributes = append(
 		event4.Attributes,
-		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+		kv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
 
 	suite.Require().Equal(abci.Event(event1), events[1])

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -109,7 +109,7 @@ func PrintStats(db dbm.DB) {
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs []tmkv.Pair) (log string) {
+func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs []kv.Pair) (log string) {
 	for i := 0; i < len(kvAs); i++ {
 		if len(kvAs[i].Value) == 0 && len(kvBs[i].Value) == 0 {
 			// skip if the value doesn't have any bytes

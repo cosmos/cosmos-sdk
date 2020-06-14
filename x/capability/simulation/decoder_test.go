@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/capability/simulation"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
@@ -21,16 +21,16 @@ func TestDecodeStore(t *testing.T) {
 		Owners: []types.Owner{{Module: "transfer", Name: "ports/transfer"}},
 	}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   types.KeyIndex,
 			Value: sdk.Uint64ToBigEndian(10),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   types.KeyPrefixIndexCapability,
 			Value: cdc.MustMarshalBinaryBare(&capOwners),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

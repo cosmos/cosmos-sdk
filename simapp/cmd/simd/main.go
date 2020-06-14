@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -47,16 +47,16 @@ func main() {
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(ctx, cdc, bank.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(ctx, cdc, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(ctx, cdc),
 		genutilcli.GenTxCmd(
 			ctx, cdc, simapp.ModuleBasics, staking.AppModuleBasic{},
-			bank.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultCLIHome,
+			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultCLIHome,
 		),
 		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
 		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome),
 		flags.NewCompletionCmd(rootCmd, true),
-		testnetCmd(ctx, cdc, simapp.ModuleBasics, bank.GenesisBalancesIterator{}),
+		testnetCmd(ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(cdc))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

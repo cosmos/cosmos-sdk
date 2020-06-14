@@ -19,9 +19,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -42,12 +43,12 @@ type AppModuleBasic struct{}
 
 // Name implements AppModuleBasic interface
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterCodec implements AppModuleBasic interface
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
@@ -60,7 +61,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
 	return gs.Validate()
@@ -78,22 +79,22 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx.Codec, QuerierRoute)
+	return cli.GetQueryCmd(clientCtx.Codec, types.QuerierRoute)
 }
 
 // RegisterInterfaceTypes registers module concrete types into protobuf Any.
 func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
-	RegisterInterfaces(registry)
+	types.RegisterInterfaces(registry)
 }
 
 // AppModule represents the AppModule for this module
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new 20-transfer module
-func NewAppModule(k Keeper) AppModule {
+func NewAppModule(k keeper.Keeper) AppModule {
 	return AppModule{
 		keeper: k,
 	}
@@ -105,18 +106,13 @@ func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route implements the AppModule interface
-func (AppModule) Route() string {
-	return RouterKey
-}
-
-// NewHandler implements the AppModule interface
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute implements the AppModule interface
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return types.QuerierRoute
 }
 
 // NewQuerierHandler implements the AppModule interface
@@ -188,7 +184,7 @@ func (am AppModule) OnChanOpenInit(
 	connectionHops []string,
 	portID string,
 	channelID string,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
@@ -219,7 +215,7 @@ func (am AppModule) OnChanOpenTry(
 	connectionHops []string,
 	portID,
 	channelID string,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version,
 	counterpartyVersion string,
@@ -290,16 +286,16 @@ func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) (*sdk.Result, []byte, error) {
-	var data FungibleTokenPacketData
+	var data types.FungibleTokenPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
-	acknowledgement := FungibleTokenPacketAcknowledgement{
+	acknowledgement := types.FungibleTokenPacketAcknowledgement{
 		Success: true,
 		Error:   "",
 	}
 	if err := am.keeper.OnRecvPacket(ctx, packet, data); err != nil {
-		acknowledgement = FungibleTokenPacketAcknowledgement{
+		acknowledgement = types.FungibleTokenPacketAcknowledgement{
 			Success: false,
 			Error:   err.Error(),
 		}
@@ -307,10 +303,10 @@ func (am AppModule) OnRecvPacket(
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			EventTypePacket,
-			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-			sdk.NewAttribute(AttributeKeyReceiver, data.Receiver),
-			sdk.NewAttribute(AttributeKeyValue, data.Amount.String()),
+			types.EventTypePacket,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
+			sdk.NewAttribute(types.AttributeKeyValue, data.Amount.String()),
 		),
 	)
 
@@ -324,11 +320,11 @@ func (am AppModule) OnAcknowledgementPacket(
 	packet channeltypes.Packet,
 	acknowledgement []byte,
 ) (*sdk.Result, error) {
-	var ack FungibleTokenPacketAcknowledgement
+	var ack types.FungibleTokenPacketAcknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
-	var data FungibleTokenPacketData
+	var data types.FungibleTokenPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
@@ -339,19 +335,19 @@ func (am AppModule) OnAcknowledgementPacket(
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			EventTypePacket,
-			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-			sdk.NewAttribute(AttributeKeyReceiver, data.Receiver),
-			sdk.NewAttribute(AttributeKeyValue, data.Amount.String()),
-			sdk.NewAttribute(AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success)),
+			types.EventTypePacket,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
+			sdk.NewAttribute(types.AttributeKeyValue, data.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success)),
 		),
 	)
 
 	if !ack.Success {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				EventTypePacket,
-				sdk.NewAttribute(AttributeKeyAckError, ack.Error),
+				types.EventTypePacket,
+				sdk.NewAttribute(types.AttributeKeyAckError, ack.Error),
 			),
 		)
 	}
@@ -365,7 +361,7 @@ func (am AppModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) (*sdk.Result, error) {
-	var data FungibleTokenPacketData
+	var data types.FungibleTokenPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
@@ -376,10 +372,10 @@ func (am AppModule) OnTimeoutPacket(
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			EventTypeTimeout,
-			sdk.NewAttribute(AttributeKeyRefundReceiver, data.Sender),
-			sdk.NewAttribute(AttributeKeyRefundValue, data.Amount.String()),
-			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
+			types.EventTypeTimeout,
+			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
+			sdk.NewAttribute(types.AttributeKeyRefundValue, data.Amount.String()),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
 

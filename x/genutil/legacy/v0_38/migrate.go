@@ -8,13 +8,13 @@ import (
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
 	v038distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_38"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_38"
 )
 
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.
-func Migrate(appState genutil.AppMap) genutil.AppMap {
+func Migrate(appState types.AppMap) types.AppMap {
 	v036Codec := codec.New()
 	cryptocodec.RegisterCrypto(v036Codec)
 

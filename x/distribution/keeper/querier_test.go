@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const custom = "custom"
@@ -168,9 +169,9 @@ func TestQueries(t *testing.T) {
 
 	// test delegation rewards query
 	sh := staking.NewHandler(app.StakingKeeper)
-	comm := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(
-		valOpAddr1, valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, comm, sdk.OneInt(),
+	comm := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(
+		valOpAddr1, valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, comm, sdk.OneInt(),
 	)
 
 	res, err := sh(ctx, msg)

@@ -6,7 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/spf13/viper"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,21 +17,25 @@ func TestGetCommandDecode(t *testing.T) {
 
 	cmd := GetDecodeCommand(clientCtx)
 
-	viper.Set("hex", false)
+	encodingConfig := simappparams.MakeEncodingConfig()
+	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txContents := []byte("{\"type\":\"cosmos-sdk/StdTx\",\"value\":{\"msg\":[{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{\"from_address\":\"cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw\",\"to_address\":\"cosmos1wc8mpr8m3sy3ap3j7fsgqfzx36um05pystems4\",\"amount\":[{\"denom\":\"stake\",\"amount\":\"10000\"}]}}],\"fee\":{\"amount\":[],\"gas\":\"200000\"},\"signatures\":null,\"memo\":\"\"}}")
+	txGen := encodingConfig.TxGenerator
+	clientCtx = clientCtx.WithTxGenerator(txGen)
 
-	txJSONBytes, err := clientCtx.TxGenerator.TxJSONDecoder()(txContents)
+	// Build a test transaction
+	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
 
+	// TODO if "txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)" throws error try with the following code
+	// cdc := codec.New()
+	// sdk.RegisterCodec(cdc)
+	// txBytes, err := cdc.MarshalBinaryBare(stdTx)
+
+	txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
 	require.NoError(t, err)
+	base64Encoded := base64.StdEncoding.EncodeToString(txBytes)
 
-	txBytes, err := clientCtx.TxGenerator.TxEncoder()(txJSONBytes)
-	require.NoError(t, err)
-
-	txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
-
-	require.NoError(t, err)
-	err = cmd.RunE(cmd, []string{txBytesBase64})
-
+	err = cmd.RunE(cmd, []string{base64Encoded})
 	require.NoError(t, err)
 }

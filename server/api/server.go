@@ -19,8 +19,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-type RegisterRoutesFn func(*Server)
-
 // Server defines the server's API interface.
 type Server struct {
 	Router    *mux.Router

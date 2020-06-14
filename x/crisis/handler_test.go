@@ -13,14 +13,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
 	testModuleName        = "dummy"
-	dummyRouteWhichPasses = crisis.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) (string, bool) { return "", false })
-	dummyRouteWhichFails  = crisis.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) (string, bool) { return "whoops", true })
+	dummyRouteWhichPasses = types.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) (string, bool) { return "", false })
+	dummyRouteWhichFails  = types.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) (string, bool) { return "whoops", true })
 )
 
 func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
@@ -56,9 +57,9 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 		msg            sdk.Msg
 		expectedResult string
 	}{
-		{"bad invariant route", crisis.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist"), "fail"},
-		{"invariant broken", crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route), "panic"},
-		{"invariant passing", crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route), "pass"},
+		{"bad invariant route", types.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist"), "fail"},
+		{"invariant broken", types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route), "panic"},
+		{"invariant passing", types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route), "pass"},
 		{"invalid msg", sdk.NewTestMsg(), "fail"},
 	}
 
@@ -95,7 +96,7 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 	app.CrisisKeeper.SetConstantFee(ctx, excessCoins)
 
 	h := crisis.NewHandler(app.CrisisKeeper)
-	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
+	msg := types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
 
 	res, err := h(ctx, msg)
 	require.Error(t, err)
@@ -112,7 +113,7 @@ func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *tes
 	app.DistrKeeper.SetFeePool(ctx, feePool)
 
 	h := crisis.NewHandler(app.CrisisKeeper)
-	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
+	msg := types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 
 	var res *sdk.Result
 	require.Panics(t, func() {

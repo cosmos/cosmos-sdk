@@ -42,7 +42,7 @@ const (
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(ctx *Context, cdc *codec.Codec, appCreator AppCreator, register api.RegisterRoutesFn) *cobra.Command {
+func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator, register api.RegisterRoutesFn) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -149,7 +149,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc *codec.Codec, appCreator AppCreator, register api.RegisterRoutesFn) error {
+func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator, register api.RegisterRoutesFn) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -204,7 +204,7 @@ func startInProcess(ctx *Context, cdc *codec.Codec, appCreator AppCreator, regis
 		ctx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithCodec(cdc).
+			WithJSONMarshaler(cdc).
 			WithClient(local.New(tmNode)).
 			WithTrustNode(true)
 

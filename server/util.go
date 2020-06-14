@@ -123,7 +123,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 // add server commands
 func AddCommands(
-	ctx *Context, aminoCdc *codec.Codec, rootCmd *cobra.Command,
+	ctx *Context, cdc codec.JSONMarshaler, rootCmd *cobra.Command,
 	appCreator AppCreator, appExport AppExporter, register api.RegisterRoutesFn,
 ) {
 
@@ -142,11 +142,11 @@ func AddCommands(
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(ctx, aminoCdc, appCreator, register),
+		StartCmd(ctx, cdc, appCreator, register),
 		UnsafeResetAllCmd(ctx),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(ctx, aminoCdc, appExport),
+		ExportCmd(ctx, cdc, appExport),
 		flags.LineBreak,
 		version.Cmd,
 	)

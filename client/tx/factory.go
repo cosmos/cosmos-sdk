@@ -23,12 +23,12 @@ type Factory struct {
 	sequence           uint64
 	gas                uint64
 	gasAdjustment      float64
-	simulateAndExecute bool
 	chainID            string
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
+	simulateAndExecute bool
 }
 
 func NewFactoryFromCLI(input io.Reader) Factory {

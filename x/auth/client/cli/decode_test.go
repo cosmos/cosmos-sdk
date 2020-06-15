@@ -27,15 +27,14 @@ func TestGetCommandDecode(t *testing.T) {
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
 
-	// TODO if "txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)" throws error try with the following code
-	// cdc := codec.New()
-	// sdk.RegisterCodec(cdc)
-	// txBytes, err := cdc.MarshalBinaryBare(stdTx)
-
+	// Encode transaction
 	txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
 	require.NoError(t, err)
+
+	// Convert the transaction into base64 encoded string
 	base64Encoded := base64.StdEncoding.EncodeToString(txBytes)
 
-	err = cmd.RunE(cmd, []string{base64Encoded})
+	// Execute the command
+	err = runDecodeTxString(clientCtx)(cmd, []string{base64Encoded})
 	require.NoError(t, err)
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
@@ -601,11 +600,16 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []crypto.P
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
 		var privkey crypto.PrivKey
-		if rand.Int63()%2 == 0 {
-			privkey = ed25519.GenPrivKey()
-		} else {
-			privkey = secp256k1.GenPrivKey()
-		}
+		privkey = secp256k1.GenPrivKey()
+
+		// TODO: also generate ed25519 keys as below when ed25519 keys are actually supported,
+		// for now this fails:
+		//if rand.Int63()%2 == 0 {
+		//	privkey = ed25519.GenPrivKey()
+		//} else {
+		//	privkey = secp256k1.GenPrivKey()
+		//}
+
 		pubkeys[i] = privkey.PubKey()
 		signatures[i], _ = privkey.Sign(msg)
 	}

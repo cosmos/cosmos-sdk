@@ -235,6 +235,7 @@ func (tx StdTx) GetSignatures() [][]byte {
 	return sigs
 }
 
+// GetSignaturesV2 implements SigVerifiableTx.GetSignaturesV2
 func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	res := make([]signing.SignatureV2, len(tx.Signatures))
 

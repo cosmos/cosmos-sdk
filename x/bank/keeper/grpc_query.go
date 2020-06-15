@@ -27,9 +27,9 @@ func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	balance := q.GetBalance(ctx, req.Address, req.Denom)
+	balance, res := q.GetBalance(ctx, req.Address, req.Denom, req.Req)
 
-	return &types.QueryBalanceResponse{Balance: &balance}, nil
+	return &types.QueryBalanceResponse{Balance: &balance, Res: res}, nil
 }
 
 // AllBalances implements the Query/AllBalances gRPC method

@@ -18,7 +18,7 @@ import (
 type (
 	// Application defines an application interface that wraps abci.Application.
 	// The interface defines the necessary contracts to be implemented in order
-	// to fully boottrap and start an application.
+	// to fully bootstrap and start an application.
 	Application interface {
 		abci.Application
 

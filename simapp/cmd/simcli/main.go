@@ -64,7 +64,6 @@ func main() {
 		queryCmd(encodingConfig),
 		txCmd(encodingConfig),
 		flags.LineBreak,
-		lcd.ServeCommand(encodingConfig.Amino, registerRoutes),
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -47,7 +47,7 @@ func TestStakingMsgs(t *testing.T) {
 	acc1 := &auth.BaseAccount{Address: addr1}
 	acc2 := &auth.BaseAccount{Address: addr2}
 	accs := auth.GenesisAccounts{acc1, acc2}
-	balances := []bank.Balance{
+	balances := []banktypes.Balance{
 		{
 			Address: addr1,
 			Coins:   sdk.Coins{genCoin},

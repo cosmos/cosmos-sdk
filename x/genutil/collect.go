@@ -25,7 +25,7 @@ import (
 
 // GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc codec.JSONMarshaler, config *cfg.Config,
-	initCfg InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
+	initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
@@ -45,7 +45,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, config *cfg.Config,
 	}
 
 	// create the app state
-	appGenesisState, err := GenesisStateFromGenDoc(cdc, genDoc)
+	appGenesisState, err := types.GenesisStateFromGenDoc(cdc, genDoc)
 	if err != nil {
 		return appState, err
 	}

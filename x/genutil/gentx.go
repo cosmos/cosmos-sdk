@@ -21,7 +21,7 @@ func SetGenTxsInAppGenesisState(
 	cdc codec.JSONMarshaler, appGenesisState map[string]json.RawMessage, genTxs []authtypes.StdTx,
 ) (map[string]json.RawMessage, error) {
 
-	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
+	genesisState := types.GetGenesisStateFromAppState(cdc, appGenesisState)
 	genTxsBz := make([]json.RawMessage, 0, len(genTxs))
 
 	for _, genTx := range genTxs {
@@ -34,7 +34,7 @@ func SetGenTxsInAppGenesisState(
 	}
 
 	genesisState.GenTxs = genTxsBz
-	return SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
+	return types.SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
 }
 
 // ValidateAccountInGenesis checks that the provided account has a sufficient

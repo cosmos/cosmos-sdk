@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func NewTestTxGenerator() client.TxGenerator {
@@ -88,7 +88,7 @@ func TestBuildSimTx(t *testing.T) {
 		WithMemo("memo").
 		WithChainID("test-chain")
 
-	msg := bank.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
+	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	bz, err := tx.BuildSimTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, bz)
@@ -103,7 +103,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 		WithMemo("memo").
 		WithChainID("test-chain")
 
-	msg := bank.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
+	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	tx, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)

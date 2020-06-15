@@ -313,7 +313,7 @@ func queryVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // todo: Split this functionality into helper functions to remove the above
 func queryVotesOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
+		_, page, limit, err := rest.ParseHTTPArgs(r)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

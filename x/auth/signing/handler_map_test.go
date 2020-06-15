@@ -11,7 +11,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func MakeTestHandlerMap() signing.SignModeHandler {
@@ -37,7 +37,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	}
 	memo := "foo"
 	msgs := []sdk.Msg{
-		&bank.MsgSend{
+		&banktypes.MsgSend{
 			FromAddress: addr1,
 			ToAddress:   addr2,
 			Amount:      coins,

@@ -39,10 +39,16 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 		if pubKey != nil {
 			pubKeyBz = pubKey.Bytes()
 		}
-		sigBz, err := SignatureDataToAminoSignature(legacy.Cdc, sig.Data)
-		if err != nil {
-			return err
+
+		var sigBz []byte
+		var err error
+		if sig.Data != nil {
+			sigBz, err = SignatureDataToAminoSignature(legacy.Cdc, sig.Data)
+			if err != nil {
+				return err
+			}
 		}
+
 		sigs[i] = StdSignature{
 			PubKey:    pubKeyBz,
 			Signature: sigBz,

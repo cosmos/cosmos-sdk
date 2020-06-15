@@ -224,10 +224,6 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetFee(fees)
 	tx.SetGasLimit(txf.gas)
 
-	if err := tx.SetSignatures(); err != nil {
-		return nil, err
-	}
-
 	return tx, nil
 }
 

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -105,5 +107,5 @@ func TestBuildUnsignedTx(t *testing.T) {
 	tx, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
-	require.Equal(t, []sdk.Signature{}, tx.GetSignatures())
+	require.Empty(t, tx.GetTx().(ante.SigVerifiableTx).GetSignatures())
 }

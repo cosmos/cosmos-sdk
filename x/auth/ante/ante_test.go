@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -703,8 +705,8 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
-		switch pubkey := pubkey.(type) {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
+		switch pubkey := sig.PubKey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil

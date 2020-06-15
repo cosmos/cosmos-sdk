@@ -174,9 +174,10 @@ type SigVerificationDecorator struct {
 	signModeHandler authsigning.SignModeHandler
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		ak: ak,
+		ak:              ak,
+		signModeHandler: signModeHandler,
 	}
 }
 

@@ -3,6 +3,8 @@ package tx
 import (
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -26,6 +28,7 @@ type Factory struct {
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	signMode           signing.SignMode
 }
 
 func NewFactoryFromCLI(input io.Reader) Factory {
@@ -39,6 +42,15 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		panic(err)
 	}
 
+	signModeStr := viper.GetString(flags.FlagSignMode)
+	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+	switch signModeStr {
+	case "direct":
+		signMode = signing.SignMode_SIGN_MODE_DIRECT
+	case "amino-json":
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	}
+
 	f := Factory{
 		keybase:            kb,
 		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
@@ -48,6 +60,7 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		simulateAndExecute: flags.GasFlagVar.Simulate,
 		chainID:            viper.GetString(flags.FlagChainID),
 		memo:               viper.GetString(flags.FlagMemo),
+		signMode:           signMode,
 	}
 
 	f = f.WithFees(viper.GetString(flags.FlagFees))

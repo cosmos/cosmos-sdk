@@ -70,6 +70,7 @@ const (
 	FlagPage               = "page"
 	FlagLimit              = "limit"
 	FlagUnsafeCORS         = "unsafe-cors"
+	FlagSignMode           = "sign-mode"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -122,6 +123,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagOffline, false, "Offline mode (does not allow any online functionality")
 		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+		c.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
 
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(

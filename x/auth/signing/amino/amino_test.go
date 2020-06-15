@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
@@ -29,7 +29,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	}
 	memo := "foo"
 	msgs := []sdk.Msg{
-		&bank.MsgSend{
+		&banktypes.MsgSend{
 			FromAddress: addr1,
 			ToAddress:   addr2,
 			Amount:      coins,

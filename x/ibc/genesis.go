@@ -5,19 +5,21 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // InitGenesis initializes the ibc state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k Keeper, createLocalhost bool, gs GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, createLocalhost bool, gs types.GenesisState) {
 	client.InitGenesis(ctx, k.ClientKeeper, gs.ClientGenesis)
 	connection.InitGenesis(ctx, k.ConnectionKeeper, gs.ConnectionGenesis)
 	channel.InitGenesis(ctx, k.ChannelKeeper, gs.ChannelGenesis)
 }
 
 // ExportGenesis returns the ibc exported genesis.
-func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	return GenesisState{
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
+	return types.GenesisState{
 		ClientGenesis:     client.ExportGenesis(ctx, k.ClientKeeper),
 		ConnectionGenesis: connection.ExportGenesis(ctx, k.ConnectionKeeper),
 		ChannelGenesis:    channel.ExportGenesis(ctx, k.ChannelKeeper),

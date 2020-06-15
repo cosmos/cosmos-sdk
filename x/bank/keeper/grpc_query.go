@@ -27,9 +27,9 @@ func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	balance, res := q.GetBalance(ctx, req.Address, req.Denom, req.Req)
+	balance := q.GetBalance(ctx, req.Address, req.Denom)
 
-	return &types.QueryBalanceResponse{Balance: &balance, Res: res}, nil
+	return &types.QueryBalanceResponse{Balance: &balance}, nil
 }
 
 // AllBalances implements the Query/AllBalances gRPC method
@@ -43,9 +43,11 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	balances := q.GetAllBalances(ctx, req.Address)
-
-	return &types.QueryAllBalancesResponse{Balances: balances}, nil
+	balances, res, err := q.GetAllBalances(ctx, req.Address, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryAllBalancesResponse{Balances: balances, Res: res}, nil
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method

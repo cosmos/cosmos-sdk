@@ -56,7 +56,7 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	balances := k.GetAllBalances(ctx, params.Address)
+	balances, _, _ := k.GetAllBalances(ctx, params.Address, nil)
 
 	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balances)
 	if err != nil {
@@ -66,26 +66,26 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 	return bz, nil
 }
 
-func queryAllBalanceNew(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryAllBalancesRequest
-
-	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	balances, res, err := k.GetAllBalancesNew(ctx, params.Address, params.Req)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	// TODO: send balances + res
-	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balances)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return bz, nil
-}
+//func queryAllBalanceNew(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+//	var params types.QueryAllBalancesRequest
+//
+//	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
+//		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+//	}
+//
+//	balances, res, err := k.GetAllBalances(ctx, params.Address, params.Req)
+//	if err != nil {
+//		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+//	}
+//
+//	// TODO: send balances + res
+//	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balances)
+//	if err != nil {
+//		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+//	}
+//
+//	return bz, nil
+//}
 
 func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryTotalSupplyParams

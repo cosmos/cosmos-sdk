@@ -33,7 +33,7 @@ func ModuleAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 		})
 
 		macc := keeper.GetGovernanceAccount(ctx)
-		balances := bk.GetAllBalances(ctx, macc.GetAddress())
+		balances, _, _ := bk.GetAllBalances(ctx, macc.GetAddress(), nil)
 		broken := !balances.IsEqual(expectedDeposits)
 
 		return sdk.FormatInvariant(types.ModuleName, "deposits",

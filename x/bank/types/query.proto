@@ -51,8 +51,25 @@ message QueryAllBalancesRequest {
     cosmos_sdk.query.v1.PageRequest req = 2;
 }
 
+// QueryAllBalancesRequestNew is the request type for the Query/AllBalances RPC method
+message QueryAllBalancesRequestNew {
+    // address is the address to query balances for
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+
+    cosmos_sdk.query.v1.PageRequest req = 2;
+}
+
 // QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method
 message QueryAllBalancesResponse {
+    // balances is the balances of the coins
+    repeated cosmos_sdk.v1.Coin balances = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+    cosmos_sdk.query.v1.PageResponse res = 2;
+}
+
+
+// QueryAllBalancesResponseNew is the response type for the Query/AllBalances RPC method
+message QueryAllBalancesResponseNew {
     // balances is the balances of the coins
     repeated cosmos_sdk.v1.Coin balances = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 

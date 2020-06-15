@@ -5,18 +5,20 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // GetQueryCmd returns the query commands for IBC channels
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ics04ChannelQueryCmd := &cobra.Command{
-		Use:                "channel",
+		Use:                types.SubModuleName,
 		Short:              "IBC channel query subcommands",
 		DisableFlagParsing: true,
 	}
 
 	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryChannel(storeKey, cdc),
+		GetCmdQueryChannelClientState(cdc),
 	)...)
 
 	return ics04ChannelQueryCmd
@@ -25,7 +27,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // GetTxCmd returns the transaction commands for IBC channels
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ics04ChannelTxCmd := &cobra.Command{
-		Use:   "channel",
+		Use:   types.SubModuleName,
 		Short: "IBC channel transaction subcommands",
 	}
 

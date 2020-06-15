@@ -2,7 +2,7 @@ package signing
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // SignModeHandler defines a interface to be implemented by types which will handle
@@ -10,14 +10,14 @@ import (
 type SignModeHandler interface {
 	// DefaultMode is the default mode that is to be used with this handler if no
 	// other mode is specified. This can be useful for testing and CLI usage
-	DefaultMode() txtypes.SignMode
+	DefaultMode() signing.SignMode
 
 	// Modes is the list of modes supporting by this handler
-	Modes() []txtypes.SignMode
+	Modes() []signing.SignMode
 
 	// GetSignBytes returns the sign bytes for the provided SignMode, SignerData and Tx,
 	// or an error
-	GetSignBytes(mode txtypes.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
+	GetSignBytes(mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
 }
 
 // SignerData is the specific information needed to sign a transaction that generally

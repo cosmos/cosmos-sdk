@@ -10,10 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var moduleAccAddr = auth.NewModuleAddress(staking.BondedPoolName)
+var moduleAccAddr = auth.NewModuleAddress(stakingtypes.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis

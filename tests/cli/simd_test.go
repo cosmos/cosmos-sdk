@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestCLISimdCollectGentxs(t *testing.T) {
@@ -100,7 +100,7 @@ func TestCLISimdAddGenesisAccount(t *testing.T) {
 	appCodec := f.EncodingConfig.Marshaler
 
 	accounts := auth.GetGenesisStateFromAppState(appCodec, genesisState).Accounts
-	balances := bank.GetGenesisStateFromAppState(f.Cdc, genesisState).Balances
+	balances := banktypes.GetGenesisStateFromAppState(f.Cdc, genesisState).Balances
 	balancesSet := make(map[string]sdk.Coins)
 
 	for _, b := range balances {

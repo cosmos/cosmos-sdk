@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func RegisterHandlers(clientCtx client.Context, r *mux.Router) {
@@ -48,7 +48,7 @@ func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		content := types.NewCommunityPoolSpendProposal(req.Title, req.Description, req.Recipient, req.Amount)
 
-		msg, err := gov.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

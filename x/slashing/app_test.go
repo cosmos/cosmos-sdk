@@ -12,9 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -22,14 +22,14 @@ var (
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 )
 
-func checkValidator(t *testing.T, app *simapp.SimApp, _ sdk.AccAddress, expFound bool) staking.Validator {
+func checkValidator(t *testing.T, app *simapp.SimApp, _ sdk.AccAddress, expFound bool) stakingtypes.Validator {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	validator, found := app.StakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.Equal(t, expFound, found)
 	return validator
 }
 
-func checkValidatorSigningInfo(t *testing.T, app *simapp.SimApp, addr sdk.ConsAddress, expFound bool) slashing.ValidatorSigningInfo {
+func checkValidatorSigningInfo(t *testing.T, app *simapp.SimApp, addr sdk.ConsAddress, expFound bool) types.ValidatorSigningInfo {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	signingInfo, found := app.SlashingKeeper.GetValidatorSigningInfo(ctxCheck, addr)
 	require.Equal(t, expFound, found)
@@ -46,7 +46,7 @@ func TestSlashingMsgs(t *testing.T) {
 		Address: addr1,
 	}
 	accs := authtypes.GenesisAccounts{acc1}
-	balances := []bank.Balance{
+	balances := []banktypes.Balance{
 		{
 			Address: addr1,
 			Coins:   sdk.Coins{genCoin},
@@ -56,10 +56,10 @@ func TestSlashingMsgs(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(accs, balances...)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 
-	description := staking.NewDescription("foo_moniker", "", "", "", "")
-	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
+	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
-	createValidatorMsg := staking.NewMsgCreateValidator(
+	createValidatorMsg := stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission, sdk.OneInt(),
 	)
 
@@ -75,7 +75,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := &slashing.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
+	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
 
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(addr1), true)
 
@@ -84,5 +84,5 @@ func TestSlashingMsgs(t *testing.T) {
 	_, res, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)
-	require.True(t, errors.Is(slashing.ErrValidatorNotJailed, err))
+	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
 }

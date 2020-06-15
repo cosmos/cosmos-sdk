@@ -39,37 +39,31 @@ const (
 
 // List of CLI flags
 const (
-	FlagHome               = tmcli.HomeFlag
-	FlagUseLedger          = "ledger"
-	FlagChainID            = "chain-id"
-	FlagNode               = "node"
-	FlagHeight             = "height"
-	FlagGasAdjustment      = "gas-adjustment"
-	FlagTrustNode          = "trust-node"
-	FlagFrom               = "from"
-	FlagName               = "name"
-	FlagAccountNumber      = "account-number"
-	FlagSequence           = "sequence"
-	FlagMemo               = "memo"
-	FlagFees               = "fees"
-	FlagGasPrices          = "gas-prices"
-	FlagBroadcastMode      = "broadcast-mode"
-	FlagDryRun             = "dry-run"
-	FlagGenerateOnly       = "generate-only"
-	FlagOffline            = "offline"
-	FlagIndentResponse     = "indent"
-	FlagListenAddr         = "laddr"
-	FlagMaxOpenConnections = "max-open"
-	FlagRPCReadTimeout     = "read-timeout"
-	FlagRPCWriteTimeout    = "write-timeout"
-	FlagRPCMaxBodyBytes    = "max-body-bytes"
-	FlagOutputDocument     = "output-document" // inspired by wget -O
-	FlagSkipConfirmation   = "yes"
-	FlagProve              = "prove"
-	FlagKeyringBackend     = "keyring-backend"
-	FlagPage               = "page"
-	FlagLimit              = "limit"
-	FlagUnsafeCORS         = "unsafe-cors"
+	FlagHome             = tmcli.HomeFlag
+	FlagUseLedger        = "ledger"
+	FlagChainID          = "chain-id"
+	FlagNode             = "node"
+	FlagHeight           = "height"
+	FlagGasAdjustment    = "gas-adjustment"
+	FlagTrustNode        = "trust-node"
+	FlagFrom             = "from"
+	FlagName             = "name"
+	FlagAccountNumber    = "account-number"
+	FlagSequence         = "sequence"
+	FlagMemo             = "memo"
+	FlagFees             = "fees"
+	FlagGasPrices        = "gas-prices"
+	FlagBroadcastMode    = "broadcast-mode"
+	FlagDryRun           = "dry-run"
+	FlagGenerateOnly     = "generate-only"
+	FlagOffline          = "offline"
+	FlagIndentResponse   = "indent"
+	FlagOutputDocument   = "output-document" // inspired by wget -O
+	FlagSkipConfirmation = "yes"
+	FlagProve            = "prove"
+	FlagKeyringBackend   = "keyring-backend"
+	FlagPage             = "page"
+	FlagLimit            = "limit"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -139,19 +133,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.SetOut(c.OutOrStdout())
 	}
 	return cmds
-}
-
-// RegisterRestServerFlags registers the flags required for rest server
-func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
-	cmd = GetCommands(cmd)[0]
-	cmd.Flags().String(FlagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
-	cmd.Flags().Uint(FlagMaxOpenConnections, 1000, "The number of maximum open connections")
-	cmd.Flags().Uint(FlagRPCReadTimeout, 10, "The RPC read timeout (in seconds)")
-	cmd.Flags().Uint(FlagRPCWriteTimeout, 10, "The RPC write timeout (in seconds)")
-	cmd.Flags().Uint(FlagRPCMaxBodyBytes, 1000000, "The RPC max body bytes")
-	cmd.Flags().Bool(FlagUnsafeCORS, false, "Allows CORS requests from all domains. For development purposes only, use it at your own risk.")
-
-	return cmd
 }
 
 // Gas flag parsing functions

@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -46,7 +46,7 @@ func TestSlashingMsgs(t *testing.T) {
 		Address: addr1,
 	}
 	accs := authtypes.GenesisAccounts{acc1}
-	balances := []bank.Balance{
+	balances := []banktypes.Balance{
 		{
 			Address: addr1,
 			Coins:   sdk.Coins{genCoin},

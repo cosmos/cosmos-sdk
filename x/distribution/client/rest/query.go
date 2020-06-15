@@ -180,7 +180,7 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var commission types.ValidatorAccumulatedCommission
-		if rest.CheckInternalServerError(w, clientCtx.Codec.UnmarshalJSON(bz, &commission)) {
+		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(bz, &commission)) {
 			return
 		}
 
@@ -192,7 +192,7 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var rewards sdk.DecCoins
-		if rest.CheckInternalServerError(w, clientCtx.Codec.UnmarshalJSON(bz, &rewards)) {
+		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(bz, &rewards)) {
 			return
 		}
 
@@ -263,7 +263,7 @@ func communityPoolHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var result sdk.DecCoins
-		if rest.CheckInternalServerError(w, clientCtx.Codec.UnmarshalJSON(res, &result)) {
+		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &result)) {
 			return
 		}
 

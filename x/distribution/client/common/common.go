@@ -61,7 +61,7 @@ func WithdrawAllDelegatorRewards(clientCtx client.Context, queryRoute string, de
 	}
 
 	var validators []sdk.ValAddress
-	if err := clientCtx.Codec.UnmarshalJSON(bz, &validators); err != nil {
+	if err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &validators); err != nil {
 		return nil, err
 	}
 

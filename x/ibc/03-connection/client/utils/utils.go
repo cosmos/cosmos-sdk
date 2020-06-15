@@ -31,7 +31,7 @@ func QueryAllConnections(clientCtx client.Context, page, limit int) ([]types.Con
 	}
 
 	var connections []types.ConnectionEnd
-	err = clientCtx.Codec.UnmarshalJSON(res, &connections)
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &connections)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
 	}
@@ -80,7 +80,7 @@ func QueryAllClientConnectionPaths(clientCtx client.Context, page, limit int) ([
 	}
 
 	var connectionPaths []types.ConnectionPaths
-	err = clientCtx.Codec.UnmarshalJSON(res, &connectionPaths)
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &connectionPaths)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal client connection paths: %w", err)
 	}

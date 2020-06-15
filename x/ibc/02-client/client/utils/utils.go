@@ -30,7 +30,7 @@ func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported
 	}
 
 	var clients []exported.ClientState
-	err = clientCtx.Codec.UnmarshalJSON(res, &clients)
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clients)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
 	}

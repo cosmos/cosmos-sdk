@@ -112,7 +112,7 @@ func queryDepositsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var proposal types.Proposal
-		if rest.CheckInternalServerError(w, clientCtx.Codec.UnmarshalJSON(res, &proposal)) {
+		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &proposal)) {
 			return
 		}
 
@@ -203,7 +203,7 @@ func queryDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var deposit types.Deposit
-		if rest.CheckBadRequestError(w, clientCtx.Codec.UnmarshalJSON(res, &deposit)) {
+		if rest.CheckBadRequestError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &deposit)) {
 			return
 		}
 
@@ -280,7 +280,7 @@ func queryVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var vote types.Vote
-		if rest.CheckBadRequestError(w, clientCtx.Codec.UnmarshalJSON(res, &vote)) {
+		if rest.CheckBadRequestError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &vote)) {
 			return
 		}
 
@@ -350,7 +350,7 @@ func queryVotesOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var proposal types.Proposal
-		if rest.CheckInternalServerError(w, clientCtx.Codec.UnmarshalJSON(res, &proposal)) {
+		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &proposal)) {
 			return
 		}
 

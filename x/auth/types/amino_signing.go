@@ -40,6 +40,6 @@ func (LegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data sign
 	}
 
 	return StdSignBytes(
-		data.ChainID, data.AccountNumber, data.AccountSequence, StdFee{Amount: feeTx.GetFee(), Gas: feeTx.GetGas()}, tx.GetMsgs(), memoTx.GetMemo(), // nolint:staticcheck // SA1019: authtypes.StdFee is deprecated, will be removed once proto migration is completed
+		data.ChainID, data.AccountNumber, data.AccountSequence, StdFee{Amount: feeTx.GetFee(), Gas: feeTx.GetGas()}, tx.GetMsgs(), memoTx.GetMemo(),
 	), nil
 }

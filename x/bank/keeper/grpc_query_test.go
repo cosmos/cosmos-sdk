@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -73,7 +72,7 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	app, ctx := suite.app, suite.ctx
-	expectedTotalSupply := bank.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
+	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
@@ -92,7 +91,7 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 
 	test1Supply := sdk.NewInt64Coin("test1", 4000000)
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
-	expectedTotalSupply := bank.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
+	expectedTotalSupply := types.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
+
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
@@ -40,7 +42,7 @@ func TestSimulateGasCost(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -94,7 +96,7 @@ func TestSimulateGasCost(t *testing.T) {
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -144,7 +146,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -203,7 +205,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(0)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -261,7 +263,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -337,7 +339,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -379,7 +381,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -419,7 +421,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -469,7 +471,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -546,7 +548,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -664,7 +666,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -713,7 +715,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
-	})
+	}, amino.LegacyAminoJSONHandler{})
 
 	// verify that an secp256k1 account gets rejected
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -763,7 +765,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 
-	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, amino.LegacyAminoJSONHandler{})
 
 	// test that operations skipped on recheck do not run
 

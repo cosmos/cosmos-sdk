@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -372,6 +374,7 @@ func NewSimApp(
 	app.SetAnteHandler(
 		ante.NewAnteHandler(
 			app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer,
+			amino.LegacyAminoJSONHandler{},
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)

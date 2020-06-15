@@ -315,6 +315,7 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 
 	signMode := txf.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+		// use the SignModeHandler's default mode if unspecified
 		signMode = txf.txGenerator.SignModeHandler().DefaultMode()
 	}
 
@@ -324,7 +325,6 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 	}
 
 	pubKey := key.GetPubKey()
-
 	sigData := &signing.SingleSignatureData{
 		SignMode:  signMode,
 		Signature: nil,
@@ -333,7 +333,6 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 		PubKey: pubKey,
 		Data:   sigData,
 	}
-
 	err = tx.SetSignatures(sig)
 	if err != nil {
 		return err
@@ -357,6 +356,10 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 	}
 
 	sigData.Signature = sigBytes
+	sig = signing.SignatureV2{
+		PubKey: pubKey,
+		Data:   sigData,
+	}
 
 	if err := tx.SetSignatures(sig); err != nil {
 		return err

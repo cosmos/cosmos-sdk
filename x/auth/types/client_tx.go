@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -89,14 +87,6 @@ func (s StdTxGenerator) NewTxBuilder() client.TxBuilder {
 // MarshalTx implements TxGenerator.MarshalTx
 func (s StdTxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
 	return DefaultTxEncoder(s.Cdc)(tx)
-}
-
-func (s StdTxGenerator) WrapTxBuilder(tx sdk.Tx) (client.TxBuilder, error) {
-	stdTx, ok := tx.(StdTx)
-	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, tx)
-	}
-	return &StdTxBuilder{StdTx: stdTx, cdc: s.Cdc}, nil
 }
 
 func (s StdTxGenerator) SignModeHandler() authsigning.SignModeHandler {

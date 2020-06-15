@@ -12,8 +12,6 @@ type (
 	// implement TxBuilder.
 	TxGenerator interface {
 		NewTxBuilder() TxBuilder
-		// WrapTxBuilder wraps an existing tx in a TxBuilder or returns an error
-		WrapTxBuilder(tx sdk.Tx) (TxBuilder, error)
 		SignModeHandler() signing.SignModeHandler
 		MarshalTx(tx sdk.Tx) ([]byte, error)
 	}

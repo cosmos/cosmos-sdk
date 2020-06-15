@@ -65,7 +65,7 @@ func DefaultGenesisState() GenesisState {
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
@@ -82,7 +82,7 @@ type GenesisBalancesIterator struct{}
 // appGenesis and invokes a callback on each genesis account. If any call
 // returns true, iteration stops.
 func (GenesisBalancesIterator) IterateGenesisBalances(
-	cdc *codec.Codec, appState map[string]json.RawMessage, cb func(exported.GenesisBalance) (stop bool),
+	cdc codec.JSONMarshaler, appState map[string]json.RawMessage, cb func(exported.GenesisBalance) (stop bool),
 ) {
 	for _, balance := range GetGenesisStateFromAppState(cdc, appState).Balances {
 		if cb(balance) {

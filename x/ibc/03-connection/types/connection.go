@@ -103,7 +103,7 @@ func (c Counterparty) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
-	if c.Prefix.IsEmpty() {
+	if c.Prefix.Empty() {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty prefix cannot be empty")
 	}
 	return nil

@@ -81,7 +81,7 @@ func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
-[counterparty-versions] [path/to/proof_init.json]`),
+[counterparty-versions] [path/to/proof_init.json] [path/to/proof_consensus.json]`),
 		Short: "initiate connection handshake between two chains",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
@@ -89,10 +89,10 @@ func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s tx ibc connection open-try connection-id] [client-id] \
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] \
-[counterparty-versions] [path/to/proof_init.json]
+[counterparty-versions] [path/to/proof_init.json] [path/tp/proof_consensus.json]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(7),
+		Args: cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -113,7 +113,12 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 			// TODO: parse strings?
 			counterpartyVersions := args[5]
 
-			proofInit, err := utils.ParseProof(clientCtx.Codec, args[1])
+			proofInit, err := utils.ParseProof(clientCtx.Codec, args[6])
+			if err != nil {
+				return err
+			}
+
+			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[7])
 			if err != nil {
 				return err
 			}
@@ -126,7 +131,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofInit, proofHeight,
+				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofConsensus, proofHeight,
 				consensusHeight, clientCtx.GetFromAddress(),
 			)
 
@@ -145,16 +150,16 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 // connection open attempt from chain B to chain A
 func GetCmdConnectionOpenAck(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-ack [connection-id] [path/to/proof_try.json] [version]",
+		Use:   "open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
 		Short: "relay the acceptance of a connection open attempt from chain B to chain A",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`relay the acceptance of a connection open attempt from chain B to chain A:
 
 Example:
-$ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [version]
+$ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -167,16 +172,21 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 				return err
 			}
 
+			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[2])
+			if err != nil {
+				return err
+			}
+
 			proofHeight := uint64(clientCtx.Height)
 			consensusHeight, err := lastHeight(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			version := args[4]
+			version := args[3]
 
 			msg := types.NewMsgConnectionOpenAck(
-				connectionID, proofTry, proofTry, proofHeight,
+				connectionID, proofTry, proofConsensus, proofHeight,
 				consensusHeight, version, clientCtx.GetFromAddress(),
 			)
 

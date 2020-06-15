@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,7 @@ import (
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
 	require.NotNil(t, cmd)
+
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
@@ -27,11 +29,14 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(flags.FlagUseLedger, false)
 
 	mockIn.Reset("y\n")
+	// set algo flag value to the default
+	viper.Set(flagKeyAlgo, string(hd.Secp256k1Type))
+
 	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		kb.Delete("keyname1") // nolint:errcheck
-		kb.Delete("keyname2") // nolint:errcheck
+		_ = kb.Delete("keyname1")
+		_ = kb.Delete("keyname2")
 	})
 	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 

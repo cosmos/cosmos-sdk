@@ -18,7 +18,6 @@ func TestGetCommandEncode(t *testing.T) {
 
 	cmd := GetEncodeCommand(clientCtx)
 	encodingConfig := simappparams.MakeEncodingConfig()
-	// encodingConfig.Amino.RegisterInterface((*sdk.Msg)(nil), nil)
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
 

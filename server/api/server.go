@@ -37,12 +37,13 @@ func New(clientCtx client.Context) *Server {
 }
 
 // Start starts the API server. Internally, the API server leverages Tendermint's
-// JSON RPC server. Configuration options are provided via config.ListenerConfig
+// JSON RPC server. Configuration options are provided via config.APIConfig
 // and are delegated to the Tendermint JSON RPC server. The process is
-// non-blocking, so an external signal handler must be used. The API server does
-// not register any additional handlers automatically apart from Swagger docs.
-func (s *Server) Start(cfg config.ListenerConfig) error {
-	s.registerSwaggerUI()
+// non-blocking, so an external signal handler must be used.
+func (s *Server) Start(cfg config.APIConfig) error {
+	if cfg.Swagger {
+		s.registerSwaggerUI()
+	}
 
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.MaxOpenConnections)

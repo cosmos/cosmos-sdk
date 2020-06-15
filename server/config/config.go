@@ -40,10 +40,13 @@ type BaseConfig struct {
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 }
 
-// ListenerConfig defines the API listener configuration.
-type ListenerConfig struct {
+// APIConfig defines the API listener configuration.
+type APIConfig struct {
 	// Enable defines if the API server should be enabled.
 	Enable bool `mapstructure:"enable"`
+
+	// Swagger defines if swagger documentation should automatically be registered.
+	Swagger bool `mapstructure:"swagger"`
 
 	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
 	EnableUnsafeCORS bool `mapstructure:"enabled-unsafe-cors"`
@@ -72,7 +75,7 @@ type ListenerConfig struct {
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
-	Listener ListenerConfig `mapstructure:"listener"`
+	API APIConfig `mapstructure:"api"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -112,8 +115,9 @@ func DefaultConfig() *Config {
 			PruningKeepEvery:     "0",
 			PruningSnapshotEvery: "0",
 		},
-		Listener: ListenerConfig{
+		API: APIConfig{
 			Enable:             false,
+			Swagger:            false,
 			Address:            "tcp://0.0.0.0:1317",
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,

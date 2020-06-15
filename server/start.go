@@ -192,7 +192,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		return err
 	}
 
-	if viper.GetBool("listener.enable") {
+	if viper.GetBool("api.enable") {
 		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
@@ -209,18 +209,18 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			WithTrustNode(true)
 
 		apiSrv := api.New(ctx)
-		listenerCfg := config.ListenerConfig{
-			Address:            viper.GetString("listener.address"),
-			MaxOpenConnections: viper.GetUint("listener.max-open-connections"),
-			RPCReadTimeout:     viper.GetUint("listener.rpc-read-timeout"),
-			RPCWriteTimeout:    viper.GetUint("listener.rpc-write-timeout"),
-			RPCMaxBodyBytes:    viper.GetUint("listener.rpc-max-body-bytes"),
-			EnableUnsafeCORS:   viper.GetBool("listener.enabled-unsafe-cors"),
+		apiCfg := config.APIConfig{
+			Address:            viper.GetString("api.address"),
+			MaxOpenConnections: viper.GetUint("api.max-open-connections"),
+			RPCReadTimeout:     viper.GetUint("api.rpc-read-timeout"),
+			RPCWriteTimeout:    viper.GetUint("api.rpc-write-timeout"),
+			RPCMaxBodyBytes:    viper.GetUint("api.rpc-max-body-bytes"),
+			EnableUnsafeCORS:   viper.GetBool("api.enabled-unsafe-cors"),
 		}
 
 		app.RegisterAPIRoutes(apiSrv)
 
-		if err := apiSrv.Start(listenerCfg); err != nil {
+		if err := apiSrv.Start(apiCfg); err != nil {
 			return err
 		}
 	}

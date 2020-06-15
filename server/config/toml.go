@@ -48,31 +48,34 @@ halt-time = {{ .BaseConfig.HaltTime }}
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
 ###############################################################################
-###                         Listener Configuration                          ###
+###                           API Configuration                             ###
 ###############################################################################
 
-[listener]
+[api]
 
 # Enable defines if the API server should be enabled.
-enable = {{ .Listener.Enable }}
+enable = {{ .API.Enable }}
+
+# Swagger defines if swagger documentation should automatically be registered.
+swagger = {{ .API.Swagger }}
 
 # Address defines the API server to listen on
-address = "{{ .Listener.Address }}"
+address = "{{ .API.Address }}"
 
 # MaxOpenConnections defines the number of maximum open connections
-max-open-connections = {{ .Listener.MaxOpenConnections }}
+max-open-connections = {{ .API.MaxOpenConnections }}
 
 # RPCReadTimeout defines the Tendermint RPC read timeout (in seconds)
-rpc-read-timeout = {{ .Listener.RPCReadTimeout }}
+rpc-read-timeout = {{ .API.RPCReadTimeout }}
 
 # RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds)
-rpc-write-timeout = {{ .Listener.RPCWriteTimeout }}
+rpc-write-timeout = {{ .API.RPCWriteTimeout }}
 
 # RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes)
-rpc-max-body-bytes = {{ .Listener.RPCMaxBodyBytes }}
+rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
-enabled-unsafe-cors = {{ .Listener.EnableUnsafeCORS }}
+enabled-unsafe-cors = {{ .API.EnableUnsafeCORS }}
 `
 
 var configTemplate *template.Template

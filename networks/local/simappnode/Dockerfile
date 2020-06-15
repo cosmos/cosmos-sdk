@@ -15,7 +15,7 @@ RUN apt-get update && \
 
 VOLUME [ /simd ]
 WORKDIR /simd
-EXPOSE 26656 26657
+EXPOSE 26656 26657 1317
 ENTRYPOINT ["/usr/bin/wrapper.sh"]
 CMD ["start"]
 STOPSIGNAL SIGTERM

@@ -136,6 +136,10 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().AddFlagSet(fsDescriptionEdit)
+	cmd.Flags().AddFlagSet(fsCommissionUpdate)
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
+
 	return cmd
 }
 
@@ -175,9 +179,6 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
-	cmd.Flags().AddFlagSet(fsDescriptionEdit)
-	cmd.Flags().AddFlagSet(fsCommissionUpdate)
-	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
 
 	return cmd
 }

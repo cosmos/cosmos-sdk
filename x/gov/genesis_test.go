@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -58,7 +59,7 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState := simapp.NewDefaultGenesisState()
 
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenState)
-	genesisState[bank.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
+	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
 	genesisState[types.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)

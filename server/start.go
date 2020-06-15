@@ -16,6 +16,12 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
+	"github.com/tendermint/tendermint/rpc/client/local"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
 // Tendermint full-node start flags
@@ -36,7 +42,7 @@ const (
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
+func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -72,7 +78,7 @@ which accepts a path for the resulting pprof file.
 
 			ctx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(ctx, appCreator)
+			err := startInProcess(ctx, cdc, appCreator)
 			return err
 		},
 	}
@@ -143,7 +149,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) error {
+func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -165,13 +171,15 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 		return err
 	}
 
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(app),
-		node.DefaultGenesisDocProviderFunc(cfg),
+		genDocProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		ctx.Logger.With("module", "node"),
@@ -182,6 +190,39 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 
 	if err := tmNode.Start(); err != nil {
 		return err
+	}
+
+	if viper.GetBool("api.enable") {
+		genDoc, err := genDocProvider()
+		if err != nil {
+			return err
+		}
+
+		// TODO: Since this is running in process, do we need to provide a verifier
+		// and set TrustNode=false? If so, we need to add additional logic that
+		// waits for a block to be committed first before starting the API server.
+		ctx := client.Context{}.
+			WithHomeDir(home).
+			WithChainID(genDoc.ChainID).
+			WithJSONMarshaler(cdc).
+			WithClient(local.New(tmNode)).
+			WithTrustNode(true)
+
+		apiSrv := api.New(ctx)
+		apiCfg := config.APIConfig{
+			Address:            viper.GetString("api.address"),
+			MaxOpenConnections: viper.GetUint("api.max-open-connections"),
+			RPCReadTimeout:     viper.GetUint("api.rpc-read-timeout"),
+			RPCWriteTimeout:    viper.GetUint("api.rpc-write-timeout"),
+			RPCMaxBodyBytes:    viper.GetUint("api.rpc-max-body-bytes"),
+			EnableUnsafeCORS:   viper.GetBool("api.enabled-unsafe-cors"),
+		}
+
+		app.RegisterAPIRoutes(apiSrv)
+
+		if err := apiSrv.Start(apiCfg); err != nil {
+			return err
+		}
 	}
 
 	var cpuProfileCleanup func()

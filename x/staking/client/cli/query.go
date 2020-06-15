@@ -399,8 +399,8 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			ubd, err := types.UnmarshalUBD(types.ModuleCdc, res)
-			if err != nil {
+			var ubd types.UnbondingDelegation
+			if err = cdc.UnmarshalJSON(res, &ubd); err != nil {
 				return err
 			}
 
@@ -419,7 +419,7 @@ func GetCmdQueryUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra
 			fmt.Sprintf(`Query unbonding delegations for an individual delegator.
 
 Example:
-$ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+$ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 `,
 				version.ClientName,
 			),

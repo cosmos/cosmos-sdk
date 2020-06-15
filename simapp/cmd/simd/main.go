@@ -71,7 +71,7 @@ func main() {
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Application {
 	var cache sdk.MultiStorePersistentCache
 
 	if viper.GetBool(server.FlagInterBlockCache) {

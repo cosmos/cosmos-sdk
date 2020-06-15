@@ -6,6 +6,7 @@ services:
     image: "cosmos-sdk/simappnode"
     ports:
       - "26656-26657:26656-26657"
+      - "1317:1317"
     environment:
       - ID=0
       - LOG=${LOG:-simd.log}
@@ -20,6 +21,7 @@ services:
     image: "cosmos-sdk/simappnode"
     ports:
       - "26659-26660:26656-26657"
+      - "1318:1317"
     environment:
       - ID=1
       - LOG=${LOG:-simd.log}
@@ -37,6 +39,7 @@ services:
       - LOG=${LOG:-simd.log}
     ports:
       - "26661-26662:26656-26657"
+      - "1319:1317"
     volumes:
       - ./build:/simd:Z
     networks:
@@ -51,6 +54,7 @@ services:
       - LOG=${LOG:-simd.log}
     ports:
       - "26663-26664:26656-26657"
+      - "1320:1317"
     volumes:
       - ./build:/simd:Z
     networks:

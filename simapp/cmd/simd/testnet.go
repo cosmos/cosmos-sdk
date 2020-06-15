@@ -121,6 +121,7 @@ func InitTestnet(
 
 	simappConfig := srvconfig.DefaultConfig()
 	simappConfig.MinGasPrices = minGasPrices
+	simappConfig.API.Enable = true
 
 	var (
 		genAccounts []authtypes.GenesisAccount

@@ -55,7 +55,7 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			name := args[0]
 			params := types.NewQueryAppliedParams(name)
-			bz, err := clientCtx.Codec.MarshalJSON(params)
+			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 			if err != nil {
 				return err
 			}

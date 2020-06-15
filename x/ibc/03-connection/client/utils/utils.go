@@ -19,7 +19,7 @@ import (
 // any merkle proof.
 func QueryAllConnections(clientCtx client.Context, page, limit int) ([]types.ConnectionEnd, int64, error) {
 	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := clientCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}
@@ -68,7 +68,7 @@ func QueryConnection(
 // _does not_ return any merkle proof.
 func QueryAllClientConnectionPaths(clientCtx client.Context, page, limit int) ([]types.ConnectionPaths, int64, error) {
 	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := clientCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}

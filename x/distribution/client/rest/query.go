@@ -79,7 +79,7 @@ func delegatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryDelegatorParams(delegatorAddr)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal params: %s", err))
 			return
@@ -131,7 +131,7 @@ func delegatorWithdrawalAddrHandlerFn(clientCtx client.Context) http.HandlerFunc
 			return
 		}
 
-		bz := clientCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
+		bz := clientCtx.JSONMarshaler.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
 		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", types.QuerierRoute), bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
@@ -196,7 +196,7 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		bz, err = clientCtx.Codec.MarshalJSON(NewValidatorDistInfo(delAddr, rewards, commission))
+		bz, err = clientCtx.JSONMarshaler.MarshalJSON(NewValidatorDistInfo(delAddr, rewards, commission))
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -285,7 +285,7 @@ func outstandingRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		bin := clientCtx.Codec.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
+		bin := clientCtx.JSONMarshaler.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
 		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", types.QuerierRoute), bin)
 		if rest.CheckInternalServerError(w, err) {
 			return

@@ -179,7 +179,7 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			txs = append(txs, foundTxs)
 		}
 
-		res, err := clientCtx.Codec.MarshalJSON(txs)
+		res, err := clientCtx.JSONMarshaler.MarshalJSON(txs)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -234,7 +234,7 @@ func redelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			params.DstValidatorAddr = dstValidatorAddr
 		}
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -284,7 +284,7 @@ func validatorsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryValidatorsParams(page, limit, status)
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -330,7 +330,7 @@ func historicalInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryHistoricalInfoParams(height)
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

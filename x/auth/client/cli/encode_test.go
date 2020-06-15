@@ -18,8 +18,8 @@ func TestGetCommandEncode(t *testing.T) {
 
 	cmd := GetEncodeCommand(clientCtx)
 	encodingConfig := simappparams.MakeEncodingConfig()
-	encodingConfig.Amino.RegisterConcrete(authtypes.StdTx{}, "cosmos-sdk/StdTx", nil)
-	sdk.RegisterCodec(encodingConfig.Amino)
+	encodingConfig.Amino.RegisterInterface((*sdk.Msg)(nil), nil)
+	authtypes.RegisterCodec(encodingConfig.Amino)
 
 	txGen := encodingConfig.TxGenerator
 

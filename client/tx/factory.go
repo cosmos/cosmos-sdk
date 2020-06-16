@@ -32,8 +32,8 @@ type Factory struct {
 }
 
 const (
-	DIRECT     = "direct"
-	AMINO_JSON = "amino-json"
+	signModeDirect    = "direct"
+	signModeAminoJSON = "amino-json"
 )
 
 func NewFactoryFromCLI(input io.Reader) Factory {
@@ -50,9 +50,9 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 	signModeStr := viper.GetString(flags.FlagSignMode)
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
 	switch signModeStr {
-	case DIRECT:
+	case signModeDirect:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
-	case AMINO_JSON:
+	case signModeAminoJSON:
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
 

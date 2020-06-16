@@ -221,7 +221,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 		return nil, err
 	}
 	tx.SetMemo(txf.memo)
-	tx.SetFee(fees)
+	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(txf.gas)
 
 	return tx, nil

@@ -9,7 +9,9 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// StdTxBuilder wraps StdTx to implement to the context.TxBuilder interface
+// StdTxBuilder wraps StdTx to implement to the context.TxBuilder interface.
+// Note that this type just exists for backwards compatibility with amino StdTx
+// and will not work for protobuf transactions.
 type StdTxBuilder struct {
 	StdTx
 	cdc *codec.Codec
@@ -56,7 +58,7 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	return nil
 }
 
-func (s *StdTxBuilder) SetFee(amount sdk.Coins) {
+func (s *StdTxBuilder) SetFeeAmount(amount sdk.Coins) {
 	s.StdTx.Fee.Amount = amount
 }
 

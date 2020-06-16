@@ -31,6 +31,11 @@ type Factory struct {
 	simulateAndExecute bool
 }
 
+const (
+	DIRECT     = "direct"
+	AMINO_JSON = "amino-json"
+)
+
 func NewFactoryFromCLI(input io.Reader) Factory {
 	kb, err := keyring.New(
 		sdk.KeyringServiceName(),
@@ -45,9 +50,9 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 	signModeStr := viper.GetString(flags.FlagSignMode)
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
 	switch signModeStr {
-	case "direct":
+	case DIRECT:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
-	case "amino-json":
+	case AMINO_JSON:
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
 

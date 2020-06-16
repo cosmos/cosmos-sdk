@@ -7,12 +7,17 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 	"testing"
 )
 
 func TestPagination(t *testing.T) {
+	app, ctx := SetupTest(t)
+	// TODO Add pagenation tests
+}
 
+func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 
@@ -24,7 +29,11 @@ func TestPagination(t *testing.T) {
 
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
+	// setup
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{}) // make block height non-zero to ensure account numbers part of signBytes
+	ctx = ctx.WithBlockHeight(1)
+	_, _ = simapp.MakeCodecs()
 
-	cdc, _ := simapp.MakeCodecs()
-
+	return app, ctx
 }

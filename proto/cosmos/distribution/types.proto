@@ -5,7 +5,7 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/type
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/types.proto";
 
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
 message MsgSetWithdrawAddress {

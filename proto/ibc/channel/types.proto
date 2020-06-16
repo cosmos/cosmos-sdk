@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.ibc.channel;
+package ibc.channel;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 

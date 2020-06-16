@@ -2,8 +2,8 @@ syntax = "proto3";
 package cosmos.auth.vesting;
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
-import "cosmos/auth/auth.proto";
+import "cosmos/types.proto";
+import "cosmos/auth/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 

@@ -1,10 +1,10 @@
 syntax = "proto3";
-package cosmos.ibc_transfer;
+package ibc.transfer;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/types.proto";
 
 // MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
 // See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures

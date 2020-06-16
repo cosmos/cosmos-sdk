@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.ibc.localhost;
+package ibc.localhost;
 
 import "gogoproto/gogo.proto";
 

@@ -1,10 +1,10 @@
 syntax = "proto3";
-package cosmos.ibc.connection;
+package ibc.connection;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "gogoproto/gogo.proto";
-import "cosmos/ibc/commitment/commitment.proto";
+import "ibc/commitment/types.proto";
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
@@ -105,7 +105,7 @@ message Counterparty {
   // identifies the connection end on the counterparty chain associated with a given connection.
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   // commitment merkle prefix of the counterparty chain
-  cosmos.ibc.commitment.MerklePrefix prefix = 3 [(gogoproto.nullable) = false];
+  ibc.commitment.MerklePrefix prefix = 3 [(gogoproto.nullable) = false];
 }
 
 // ClientPaths define all the connection paths for a client state.

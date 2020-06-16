@@ -126,6 +126,8 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 // Commit commits the current store state and returns a CommitID with the new
 // version and hash.
 func (st *Store) Commit() types.CommitID {
+	defer metrics.MeasureSince([]string{"store", "iavl", "commit"}, time.Now().UTC())
+
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
 		// TODO: Do we want to extend Commit to allow returning errors?

@@ -19,12 +19,12 @@ const (
 
 // GenTx generates a signed mock transaction.
 func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) authtypes.StdTx {
-	fee := authtypes.StdFee{
+	fee := authtypes.StdFee{ //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
 		Amount: feeAmt,
 		Gas:    gas,
 	}
 
-	sigs := make([]authtypes.StdSignature, len(priv))
+	sigs := make([]authtypes.StdSignature, len(priv)) //nolint:staticcheck // SA1019: authtypes.StdSignature is deprecated
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -38,7 +38,7 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums
 			panic(err)
 		}
 
-		sigs[i] = authtypes.StdSignature{
+		sigs[i] = authtypes.StdSignature{ //nolint:staticcheck // SA1019: authtypes.StdSignature is deprecated
 			PubKey:    p.PubKey().Bytes(),
 			Signature: sig,
 		}

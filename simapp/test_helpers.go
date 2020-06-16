@@ -44,58 +44,6 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	},
 }
 
-// SetupWithValSet initializes a new SimApp. A Nop logger is set in SimApp.
-func SetupWithValSet(isCheckTx bool, valSet []*tmtypes.Validator) *SimApp {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
-	if !isCheckTx {
-		validators := make([]stakingtypes.Validator, 0, len(valSet))
-		delegations := make([]stakingtypes.Delegation, 0, len(valSet))
-
-		for _, val := range valSet {
-			validator := stakingtypes.Validator{
-				OperatorAddress:   val.Address.Bytes(),
-				ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
-				Jailed:            false,
-				Status:            sdk.Bonded,
-				Tokens:            sdk.ZeroInt(),
-				DelegatorShares:   sdk.OneDec(),
-				Description:       stakingtypes.Description{},
-				UnbondingHeight:   int64(0),
-				UnbondingTime:     time.Unix(0, 0).UTC(),
-				Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-				MinSelfDelegation: sdk.ZeroInt(),
-			}
-			validators = append(validators, validator)
-			// TODO: add in genesis account to delegate from?
-			delegations = append(delegations, stakingtypes.NewDelegation(del.Address, val.Address.Bytes(), sdk.OneDec()))
-
-		}
-
-		stakingGenesisState := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-		stakingGenBytes := app.Codec().MustMarshalJSON(stakingGenesisState)
-
-		// init chain must be called to stop deliverState from being nil
-		genesisState := NewDefaultGenesisState()
-		genesisState[stakingtypes.ModuleName] = stakingGenBytes
-		stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
-		if err != nil {
-			panic(err)
-		}
-
-		// Initialize the chain
-		app.InitChain(
-			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-			},
-		)
-	}
-
-	return app
-}
-
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
@@ -117,6 +65,77 @@ func Setup(isCheckTx bool) *SimApp {
 			},
 		)
 	}
+
+	return app
+}
+
+// SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts
+// that also act as delegators. For simplicity, each validator is bonded with a delegation
+// of one in the default token of the simapp from first genesis account. The balance of the
+// first genesis account must be greater than the number of validators. A Nop logger is set
+// in SimApp.
+func SetupWithGenesisValSet(valSet []*tmtypes.Validator, genAccs []auth.GenesisAccount, balances ...bank.Balance) *SimApp {
+	db := dbm.NewMemDB()
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
+
+	genesisState := NewDefaultGenesisState()
+
+	// set genesis accounts
+	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
+	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
+
+	validators := make([]stakingtypes.Validator, 0, len(valSet))
+	delegations := make([]stakingtypes.Delegation, 0, len(valSet))
+
+	for _, val := range valSet {
+		validator := stakingtypes.Validator{
+			OperatorAddress:   val.Address.Bytes(),
+			ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
+			Jailed:            false,
+			Status:            sdk.Bonded,
+			Tokens:            sdk.ZeroInt(),
+			DelegatorShares:   sdk.OneDec(),
+			Description:       stakingtypes.Description{},
+			UnbondingHeight:   int64(0),
+			UnbondingTime:     time.Unix(0, 0).UTC(),
+			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			MinSelfDelegation: sdk.ZeroInt(),
+		}
+		validators = append(validators, validator)
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+
+	}
+
+	// set validators and delegations
+	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
+	genesisState[stakingtypes.ModuleName] = app.Codec().MustMarshalJSON(stakingGenesis)
+
+	totalSupply := sdk.NewCoins()
+	for _, b := range balances {
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	// update total supply
+	bankGenesis := bank.NewGenesisState(bank.DefaultGenesisState().SendEnabled, balances, totalSupply)
+	genesisState[bank.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
+
+	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	if err != nil {
+		panic(err)
+	}
+
+	// init chain will set the validator set and initialize the genesis accounts
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
+		},
+	)
+
+	// commit genesis changes
+	app.Commit()
+	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
 
 	return app
 }

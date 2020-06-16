@@ -1,8 +1,6 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -10,13 +8,6 @@ import (
 )
 
 var _ clientexported.ConsensusState = ConsensusState{}
-
-// ConsensusState defines a Solo Machine consensus state
-type ConsensusState struct {
-	Sequence uint64 `json:"sequence" yaml:"sequence"`
-
-	PubKey crypto.PubKey `json:"pubkey" yaml:"pubkey"`
-}
 
 // ClientType returns Solo Machine type
 func (ConsensusState) ClientType() clientexported.ClientType {

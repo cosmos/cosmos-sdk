@@ -44,7 +44,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	gas := feeTx.GetGas()
 
 	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
-		defer metrics.SetGauge([]string{"tx_gas"}, float32(gas))
+		defer metrics.SetGauge([]string{"tx", "gas"}, float32(gas))
 	}
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,

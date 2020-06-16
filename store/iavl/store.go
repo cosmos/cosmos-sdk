@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
+	"github.com/armon/go-metrics"
 	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
@@ -187,23 +189,27 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 
 // Implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
+	defer metrics.MeasureSince([]string{"iavl", "set"}, time.Now().UTC())
 	types.AssertValidValue(value)
 	st.tree.Set(key, value)
 }
 
 // Implements types.KVStore.
 func (st *Store) Get(key []byte) []byte {
+	defer metrics.MeasureSince([]string{"iavl", "get"}, time.Now().UTC())
 	_, value := st.tree.Get(key)
 	return value
 }
 
 // Implements types.KVStore.
 func (st *Store) Has(key []byte) (exists bool) {
+	defer metrics.MeasureSince([]string{"iavl", "has"}, time.Now().UTC())
 	return st.tree.Has(key)
 }
 
 // Implements types.KVStore.
 func (st *Store) Delete(key []byte) {
+	defer metrics.MeasureSince([]string{"iavl", "delete"}, time.Now().UTC())
 	st.tree.Remove(key)
 }
 

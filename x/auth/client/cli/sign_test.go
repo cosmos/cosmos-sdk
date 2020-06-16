@@ -17,7 +17,6 @@ import (
 
 func TestGetTxSign(t *testing.T) {
 	clientCtx := client.Context{}
-	// clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator).WithChainID("test")
 
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)

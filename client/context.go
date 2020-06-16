@@ -325,7 +325,7 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 // Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx Context) Println(toPrint interface{}) error {
+func (ctx Context) PrintOutput(toPrint interface{}) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 	if err != nil {
@@ -362,38 +362,6 @@ func (ctx Context) Println(toPrint interface{}) error {
 
 	_, err = fmt.Fprintf(writer, "%s\n", out)
 	return err
-}
-
-// Deprecated: PrintOutput prints output while respecting output and indent flags
-// NOTE: pass in marshalled structs that have been unmarshaled
-// because this function will panic on marshaling errors.
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func (ctx Context) PrintOutput(toPrint interface{}) error {
-	var (
-		out []byte
-		err error
-	)
-
-	switch ctx.OutputFormat {
-	case "text":
-		out, err = yaml.Marshal(&toPrint)
-
-	case "json":
-		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
-
-		if ctx.Indent {
-			out, err = codec.MarshalIndentFromJSON(out)
-		}
-	}
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(out))
-	return nil
 }
 
 // GetFromFields returns a from account address and Keybase name given either

@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -119,7 +119,7 @@ func (k Keeper) TimeoutPacket(
 // CONTRACT: this function must be called in the IBC handler
 func (k Keeper) TimeoutExecuted(
 	ctx sdk.Context,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -166,7 +166,7 @@ func (k Keeper) TimeoutExecuted(
 // never be received (even if the timeoutHeight has not yet been reached).
 func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 	proof,
 	proofClosed []byte,

@@ -20,7 +20,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 		Long:  "Gets the currently scheduled upgrade plan, if one exists",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			// ignore height for now
 			res, _, err := clientCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
@@ -51,11 +51,11 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			"This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			name := args[0]
 			params := types.NewQueryAppliedParams(name)
-			bz, err := clientCtx.Codec.MarshalJSON(params)
+			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 			if err != nil {
 				return err
 			}

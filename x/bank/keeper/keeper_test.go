@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -46,7 +46,7 @@ func newBarCoin(amt int64) sdk.Coin {
 }
 
 // nolint: interfacer
-func getCoinsByName(ctx sdk.Context, bk bank.Keeper, ak types.AccountKeeper, moduleName string) sdk.Coins {
+func getCoinsByName(ctx sdk.Context, bk keeper.Keeper, ak types.AccountKeeper, moduleName string) sdk.Coins {
 	moduleAddress := ak.GetModuleAddress(moduleName)
 	macc := ak.GetAccount(ctx, moduleAddress)
 	if macc == nil {
@@ -104,9 +104,9 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
 		auth.ProtoBaseAccount, maccPerms,
 	)
-	keeper := bank.NewBaseKeeper(
+	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool),
+		app.GetSubspace(types.ModuleName), make(map[string]bool),
 	)
 
 	baseAcc := authKeeper.NewAccountWithAddress(ctx, auth.NewModuleAddress("baseAcc"))
@@ -167,9 +167,9 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
 		auth.ProtoBaseAccount, maccPerms,
 	)
-	keeper := bank.NewBaseKeeper(
+	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool),
+		app.GetSubspace(types.ModuleName), make(map[string]bool),
 	)
 
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
@@ -221,9 +221,9 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
 		auth.ProtoBaseAccount, maccPerms,
 	)
-	keeper := bank.NewBaseKeeper(
+	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool),
+		app.GetSubspace(types.ModuleName), make(map[string]bool),
 	)
 
 	suite.Require().NoError(keeper.SetBalances(ctx, burnerAcc.GetAddress(), initCoins))

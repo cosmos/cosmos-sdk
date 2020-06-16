@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -65,11 +66,16 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 		}
 	}
 
-	if clientCtx.Indent {
-		return clientCtx.Codec.MarshalJSONIndent(deposits, "", "  ")
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(deposits)
+	if err != nil {
+		return nil, err
 	}
 
-	return clientCtx.Codec.MarshalJSON(deposits)
+	if clientCtx.Indent {
+		return codec.MarshalIndentFromJSON(bz)
+	}
+
+	return bz, nil
 }
 
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
@@ -115,10 +121,17 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 	} else {
 		votes = votes[start:end]
 	}
-	if clientCtx.Indent {
-		return clientCtx.Codec.MarshalJSONIndent(votes, "", "  ")
+
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(votes)
+	if err != nil {
+		return nil, err
 	}
-	return clientCtx.Codec.MarshalJSON(votes)
+
+	if clientCtx.Indent {
+		return codec.MarshalIndentFromJSON(bz)
+	}
+
+	return bz, nil
 }
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
@@ -147,11 +160,16 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 					Option:     voteMsg.Option,
 				}
 
-				if clientCtx.Indent {
-					return clientCtx.Codec.MarshalJSONIndent(vote, "", "  ")
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(vote)
+				if err != nil {
+					return nil, err
 				}
 
-				return clientCtx.Codec.MarshalJSON(vote)
+				if clientCtx.Indent {
+					return codec.MarshalIndentFromJSON(bz)
+				}
+
+				return bz, nil
 			}
 		}
 	}
@@ -187,11 +205,16 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 					Amount:     depMsg.Amount,
 				}
 
-				if clientCtx.Indent {
-					return clientCtx.Codec.MarshalJSONIndent(deposit, "", "  ")
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(deposit)
+				if err != nil {
+					return nil, err
 				}
 
-				return clientCtx.Codec.MarshalJSON(deposit)
+				if clientCtx.Indent {
+					return codec.MarshalIndentFromJSON(bz)
+				}
+
+				return bz, nil
 			}
 		}
 	}
@@ -230,7 +253,7 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 // QueryProposalByID takes a proposalID and returns a proposal
 func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute string) ([]byte, error) {
 	params := types.NewQueryProposalParams(proposalID)
-	bz, err := clientCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 	if err != nil {
 		return nil, err
 	}

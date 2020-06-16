@@ -31,9 +31,10 @@ build-sim: go.sum
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simd
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simcli
 
-.PHONY: \
- build \
- build-sim
+build-sim-linux: go.sum
+	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-sim
+
+.PHONY: build build-sim build-sim-linux
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -216,9 +217,9 @@ lint:
 .PHONY: lint
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs goimports -w -local github.com/cosmos/cosmos-sdk
 .PHONY: format
 
 ###############################################################################
@@ -308,3 +309,20 @@ proto-update-deps:
 
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps
+
+###############################################################################
+###                                Localnet                                 ###
+###############################################################################
+
+build-docker-local-simapp:
+	@$(MAKE) -C networks/local
+
+# Run a 4-node testnet locally
+localnet-start: build-sim-linux localnet-stop
+	@if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/simd:Z cosmos-sdk/simappnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+	docker-compose up -d
+
+localnet-stop:
+	docker-compose down
+
+.PHONY: build-docker-local-simapp localnet-start localnet-stop

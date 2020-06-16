@@ -25,7 +25,9 @@ func Paginate(
 	key := req.Key
 	limit := req.Limit
 
-	if len(key) != 0 || offset != 0 {
+	// check if offset is nil or key is available
+	// thus making the key as the default iterator
+	if offset == 0 || len(key) != 0 {
 		iterator := prefixStore.Iterator(key, nil)
 		defer iterator.Close()
 

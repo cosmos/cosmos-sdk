@@ -66,7 +66,10 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	suite.Require().NotNil(res)
 	suite.True(res.Balances.IsZero())
 
-	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
+	fooCoins := newFooCoin(50)
+	barCoins := newBarCoin(30)
+
+	origCoins := sdk.NewCoins(fooCoins, barCoins)
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
@@ -75,11 +78,23 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.T().Log(origCoins)
-	suite.T().Log("this is bal")
-	suite.T().Log(res)
-	suite.T().Log(res.Balances)
-	suite.True(res.Balances.IsEqual(origCoins))
+	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(res.Balances[0], barCoins)
+	suite.NotEqual(res.Balances[0], fooCoins)
+	suite.NotNil(res.Res.NextKey)
+
+	suite.T().Log("query second page with nextkey")
+	pageReq = &query.PageRequest{
+		Key:        res.Res.NextKey,
+		Limit:      1,
+		CountTotal: true,
+	}
+	req = types.NewQueryAllBalancesRequest(addr, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(res.Balances[0], fooCoins)
+	suite.NotEqual(res.Balances[0], barCoins)
+	suite.Nil(res.Res.NextKey)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {

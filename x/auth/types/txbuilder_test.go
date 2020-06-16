@@ -13,6 +13,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+//var (
+//	priv = ed25519.GenPrivKey()
+//	addr = sdk.AccAddress(priv.PubKey().Address())
+//)
+
 func initTxBuilder () TxBuilder {
 	return NewTxBuilder(
 		DefaultTxEncoder(codec.New()), 1, 1,
@@ -271,11 +276,21 @@ func TestTxBuilder_BuildAndSign(t *testing.T) {
 }
 
 func TestTxBuilder_BuildSignMsg(t *testing.T) {
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	txBuilder, _ := initTxBuilderWithKeybase(t, "from-key")
 
+	tx, err := txBuilder.BuildSignMsg(msgs)
+
+	require.NoError(t, err)
+	require.NotNil(t, tx)
 }
 
 func TestTxBuilder_BuildTxForSim(t *testing.T) {
-
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	txBuilder, _ := initTxBuilderWithKeybase(t, "from-key")
+	tx, err := txBuilder.BuildTxForSim(msgs)
+	require.NoError(t, err)
+	require.NotNil(t, tx)
 }
 
 func TestTxBuilder_SimulateAndExecute(t *testing.T) {
@@ -283,9 +298,38 @@ func TestTxBuilder_SimulateAndExecute(t *testing.T) {
 }
 
 func TestTxBuilder_SignStdTx(t *testing.T) {
-
+	//const from = "from-key"
+	//msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	//txBuilder, acc := initTxBuilderWithKeybase(t, from)
+	//
+	//stdTx := StdTx{
+	//	Memo: txBuilder.Memo(),
+	//	Fee: nil,
+	//	Msgs: msgs,
+	//	Signatures: []auth.StdSignature{
+	//		{
+	//			Signature: acc.GetPubKey().Bytes(),
+	//			PubKey: acc.GetPubKey().Bytes(),
+	//		},
+	//	},
+	//}
+	//
+	//signedStdTx, err := txBuilder.SignStdTx(from, stdTx, false)
+	//require.NoError(t, err)
+	//require.NotNil(t, signedStdTx)
+	//require.Equal(t, signedStdTx.Signatures[0].PubKey, acc.GetPubKey().Bytes())
 }
 
 func TestTxBuilder_Sign(t *testing.T) {
+	var from = "from-key"
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	txBuilder, _ := initTxBuilderWithKeybase(t, from)
+	stdSignMsg, err := txBuilder.BuildSignMsg(msgs)
 
+	require.NoError(t, err)
+	require.NotNil(t, stdSignMsg)
+
+	tx, err := txBuilder.Sign(from, stdSignMsg)
+	require.NoError(t, err)
+	require.NotNil(t, tx)
 }

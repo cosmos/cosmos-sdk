@@ -361,11 +361,7 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 		Data:   sigData,
 	}
 
-	if err := tx.SetSignatures(sig); err != nil {
-		return err
-	}
-
-	return nil
+	return tx.SetSignatures(sig)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

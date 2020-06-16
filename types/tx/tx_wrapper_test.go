@@ -41,6 +41,15 @@ func TestTxWrapper(t *testing.T) {
 		},
 	})
 
+	var sig signing.SignatureV2
+	sig = signing.SignatureV2{
+		PubKey: pubkey,
+		Data: &signing.SingleSignatureData{
+			SignMode: signing.SignMode_SIGN_MODE_DIRECT,
+			Signature: pubkey.Bytes(),
+		},
+	}
+
 	fee := Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
 	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetAuthInfoBytes")
@@ -87,7 +96,8 @@ func TestTxWrapper(t *testing.T) {
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
 	tx.SetGas(fee.GasLimit)
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
-	tx.SetSignerInfos(signerInfo)
+	tx.SetSignaturesV2(sig)
+
 	// once fee, gas and signerInfos are all set, AuthInfo bytes should match
 	require.Equal(t, authInfoBytes, tx.GetAuthInfoBytes())
 

@@ -239,7 +239,7 @@ func (t *builder) SetFee(coins sdk.Coins) {
 	t.authInfoBz = nil
 }
 
-func (t builder) SetSignaturesV2(signatures ...signing.SignatureV2) error {
+func (t *builder) SetSignaturesV2(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
 	signerInfos := make([]*SignerInfo, n)
 	rawSigs := make([][]byte, n)
@@ -256,6 +256,8 @@ func (t builder) SetSignaturesV2(signatures ...signing.SignatureV2) error {
 			ModeInfo:  modeInfo,
 		}
 	}
+
+	t.setSignerInfos(signerInfos)
 
 	return nil
 }

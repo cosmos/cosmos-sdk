@@ -23,8 +23,8 @@ We must also aim to integrate metrics into the Cosmos SDK in the most seamless w
 metrics may be added or removed at will and without much friction. To do this, we will use the
 [go-metrics](https://github.com/armon/go-metrics) library.
 
-Finally, metrics should then be able to be queried for via ABCI, leveraging the existing query
-routing found in `BaseApp`.
+Finally, operators may enable telemetry along with specific configuration options. If enabled, metrics
+will be exposed via `/metrics?format={text|prometheus}` via the API server.
 
 ## Decision
 
@@ -75,51 +75,62 @@ type Metrics struct {
 // Gather collects all registered metrics and returns a GatherResponse where the
 // metrics are encoded depending on the type. Metrics are either encoded via
 // Prometheus or JSON if in-memory.
-func (m *Metrics) Gather() (GatherResponse, error) {
-  if m.prometheusEnabled {
+func (m *Metrics) Gather(format string) (GatherResponse, error) {
+  switch format {
+  case FormatPrometheus:
     return m.gatherPrometheus()
-  }
 
-  return m.gatherGeneric()
+  case FormatText:
+    return m.gatherGeneric()
+
+  case FormatDefault:
+    return m.gatherGeneric()
+
+  default:
+    return GatherResponse{}, fmt.Errorf("unsupported metrics format: %s", format)
+  }
 }
 ```
 
 In addition, `Metrics` allows us to gather the current set of metrics at any given point in time. An
-operator may also choose to send a signal, SIGUSR1,  to dump and print formatted metrics to STDERR.
+operator may also choose to send a signal, SIGUSR1, to dump and print formatted metrics to STDERR.
 
-During an application's bootstrapping and construction phase, if `Telemetry.Enabled` is `true`, we
-will create an instance of a reference to `Metrics` that we will pass to `BaseApp` as an variadic
-function option.
-
-Querying for metrics can be wired into the existing querying framework of `BaseApp`:
+During an application's bootstrapping and construction phase, if `Telemetry.Enabled` is `true`, the
+API server will create an instance of a reference to `Metrics` object and will register a metrics
+handler accordingly.
 
 ```go
-func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (s *Server) Start(cfg config.Config) error {
   // ...
 
-  switch path[0] {
-  // ...
+  if cfg.Telemetry.Enabled {
+    m, err := telemetry.New(cfg.Telemetry)
+    if err != nil {
+      return err
+    }
 
-  case "metrics":
-    return app.handleMetricsQuery()
+    s.metrics = m
+    s.registerMetrics()
   }
 
-  return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
+  // ...
 }
 
-func (app *BaseApp) handleMetricsQuery() abci.ResponseQuery {
-  if app.metrics == nil {
-    return sdkerrors.QueryResult(errors.New("metrics not enabled"))
+func (s *Server) registerMetrics() {
+  metricsHandler := func(w http.ResponseWriter, r *http.Request) {
+    format := strings.TrimSpace(r.FormValue("format"))
+
+    gr, err := s.metrics.Gather(format)
+    if err != nil {
+      rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to gather metrics: %s", err))
+      return
+    }
+
+    w.Header().Set("Content-Type", gr.ContentType)
+    _, _ = w.Write(gr.Metrics)
   }
 
-  gr, err := app.metrics.Gather()
-  if err != nil {
-    return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to gather metrics"))
-  }
-
-  return abci.ResponseQuery{
-    Value: gr.Metrics,
-  }
+  s.Router.HandleFunc("/metrics", metricsHandler).Methods("GET")
 }
 ```
 

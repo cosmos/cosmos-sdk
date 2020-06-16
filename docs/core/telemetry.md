@@ -25,7 +25,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 ```
 
 Developers may use the `telemetry` package directly, which provides wrappers around metric APIs
-that include adding useful labels, or they must the `go-metrics` library directly. It is preferable
+that include adding useful labels, or they must use the `go-metrics` library directly. It is preferable
 to add as much context and adequate dimensionality to metrics as possible, so the `telemetry` package
 is advised. Regardless of the package or method used, the Cosmos SDK supports the following metrics
 types:

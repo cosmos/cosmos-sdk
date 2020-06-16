@@ -45,7 +45,7 @@ func TestTxWrapper(t *testing.T) {
 	sig = signing.SignatureV2{
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
-			SignMode: signing.SignMode_SIGN_MODE_DIRECT,
+			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubkey.Bytes(),
 		},
 	}
@@ -92,11 +92,12 @@ func TestTxWrapper(t *testing.T) {
 
 	t.Log("verify that updated AuthInfo  results in the correct GetAuthInfoBytes and GetPubKeys")
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
-	tx.SetFee(fee.Amount)
+	tx.SetFeeAmount(fee.Amount)
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
-	tx.SetGas(fee.GasLimit)
+	tx.SetGasLimit(fee.GasLimit)
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
-	tx.SetSignaturesV2(sig)
+	err = tx.SetSignaturesV2(sig)
+	require.NoError(t, err)
 
 	// once fee, gas and signerInfos are all set, AuthInfo bytes should match
 	require.Equal(t, authInfoBytes, tx.GetAuthInfoBytes())

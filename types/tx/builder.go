@@ -28,8 +28,8 @@ type Builder interface {
 
 	SetMsgs([]sdk.Msg)
 	SetMemo(string)
-	SetGas(uint64)
-	SetFee(sdk.Coins)
+	SetGasLimit(uint64)
+	SetFeeAmount(sdk.Coins)
 	SetSignaturesV2(...signing.SignatureV2) error
 }
 
@@ -217,7 +217,7 @@ func (t *builder) SetMemo(memo string) {
 	t.bodyBz = nil
 }
 
-func (t *builder) SetGas(limit uint64) {
+func (t *builder) SetGasLimit(limit uint64) {
 	if t.tx.AuthInfo.Fee == nil {
 		t.tx.AuthInfo.Fee = &Fee{}
 	}
@@ -228,7 +228,7 @@ func (t *builder) SetGas(limit uint64) {
 	t.authInfoBz = nil
 }
 
-func (t *builder) SetFee(coins sdk.Coins) {
+func (t *builder) SetFeeAmount(coins sdk.Coins) {
 	if t.tx.AuthInfo.Fee == nil {
 		t.tx.AuthInfo.Fee = &Fee{}
 	}
@@ -258,6 +258,7 @@ func (t *builder) SetSignaturesV2(signatures ...signing.SignatureV2) error {
 	}
 
 	t.setSignerInfos(signerInfos)
+	t.setSignatures(rawSigs)
 
 	return nil
 }

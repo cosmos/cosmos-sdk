@@ -41,11 +41,10 @@ func TestDirectModeHandler(t *testing.T) {
 		},
 	})
 
-	var sig signingtypes.SignatureV2
-	sig = signingtypes.SignatureV2{
+	sig := signingtypes.SignatureV2{
 		PubKey: pubkey,
 		Data: &signingtypes.SingleSignatureData{
-			SignMode: signingtypes.SignMode_SIGN_MODE_DIRECT,
+			SignMode:  signingtypes.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubkey.Bytes(),
 		},
 	}
@@ -54,13 +53,14 @@ func TestDirectModeHandler(t *testing.T) {
 
 	tx.SetMsgs(msgs)
 	tx.SetMemo(memo)
-	tx.SetFee(fee.Amount)
-	tx.SetGas(fee.GasLimit)
+	tx.SetFeeAmount(fee.Amount)
+	tx.SetGasLimit(fee.GasLimit)
 
-	tx.SetSignaturesV2(sig)
+	err = tx.SetSignaturesV2(sig)
+	require.NoError(t, err)
 
 	t.Log("verify modes and default-mode")
-	var directModeHandler DirectModeHandler
+	var directModeHandler ModeHandler
 	require.Equal(t, directModeHandler.DefaultMode(), signingtypes.SignMode_SIGN_MODE_DIRECT)
 	require.Len(t, directModeHandler.Modes(), 1)
 

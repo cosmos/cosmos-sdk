@@ -10,19 +10,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-type DirectModeHandler struct{}
+type ModeHandler struct{}
 
-func (h DirectModeHandler) DefaultMode() signingtypes.SignMode {
+func (h ModeHandler) DefaultMode() signingtypes.SignMode {
 	return signingtypes.SignMode_SIGN_MODE_DIRECT
 }
 
-var _ signing.SignModeHandler = DirectModeHandler{}
+var _ signing.SignModeHandler = ModeHandler{}
 
-func (DirectModeHandler) Modes() []signingtypes.SignMode {
+func (ModeHandler) Modes() []signingtypes.SignMode {
 	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT}
 }
 
-func (DirectModeHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+func (ModeHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_DIRECT {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, mode)
 	}
@@ -35,10 +35,10 @@ func (DirectModeHandler) GetSignBytes(mode signingtypes.SignMode, data signing.S
 	bodyBz := protoTx.GetBodyBytes()
 	authInfoBz := protoTx.GetAuthInfoBytes()
 
-	return DirectSignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.AccountSequence)
+	return SignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.AccountSequence)
 }
 
-func DirectSignBytes(bodyBz, authInfoBz []byte, chainID string, accnum, sequence uint64) ([]byte, error) {
+func SignBytes(bodyBz, authInfoBz []byte, chainID string, accnum, sequence uint64) ([]byte, error) {
 	signDoc := types.SignDoc{
 		BodyBytes:       bodyBz,
 		AuthInfoBytes:   authInfoBz,

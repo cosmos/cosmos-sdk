@@ -1,6 +1,9 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/tests"
 	"reflect"
 	"testing"
 
@@ -9,6 +12,37 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func initTxBuilder () TxBuilder {
+	return NewTxBuilder(
+		DefaultTxEncoder(codec.New()), 1, 1,
+		0, 0, false,
+		"foo-chain", "", nil, nil,
+	)
+}
+
+func initTxBuilderWithKeybase(t *testing.T, from string) (TxBuilder, keyring.Info) {
+	// Now add a temporary keybase
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	kr, err := keyring.New(t.Name(), "test", dir, nil)
+	require.NoError(t, err)
+	path := hd.CreateHDPath(118, 0, 0).String()
+
+	_, seed, err := kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
+	require.NoError(t, err)
+	require.NoError(t, kr.Delete(from))
+
+	info, err := kr.NewAccount(from, seed, "", path, hd.Secp256k1)
+	require.NoError(t, err)
+
+	return NewTxBuilder(
+		DefaultTxEncoder(codec.New()), 1, 1,
+		0, 0, false,
+		"foo-chain", "", nil, nil,
+	).WithKeybase(kr), info
+}
 
 func TestTxBuilderBuild(t *testing.T) {
 	type fields struct {
@@ -31,6 +65,27 @@ func TestTxBuilderBuild(t *testing.T) {
 		want    StdSignMsg
 		wantErr bool
 	}{
+		{
+			"builder without fees and gas",
+			fields{
+				TxEncoder:     DefaultTxEncoder(codec.New()),
+				AccountNumber: 1,
+				Sequence:      1,
+				SimulateGas:   false,
+				ChainID:       "test-chain",
+				Memo:          "hello from Voyager 1!",
+			},
+			defaultMsg,
+			StdSignMsg{
+				ChainID:       "test-chain",
+				AccountNumber: 1,
+				Sequence:      1,
+				Memo:          "hello from Voyager 1!",
+				Msgs:          defaultMsg,
+				Fee:           NewStdFee(0, nil),
+			},
+			false,
+		},
 		{
 			"builder with fees",
 			fields{
@@ -145,4 +200,92 @@ func TestTxBuilderBuild(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTxBuilder_WithAccountNumber(t *testing.T) {
+	txBuilder := initTxBuilder()
+	txBuilder = txBuilder.WithAccountNumber(uint64(2))
+	require.Equal(t, txBuilder.AccountNumber(), uint64(2))
+}
+
+func TestTxBuilder_ChainID(t *testing.T) {
+	txBuilder := initTxBuilder()
+	txBuilder = txBuilder.WithChainID("test-chain")
+	require.Equal(t, txBuilder.ChainID(), "test-chain")
+}
+
+func TestTxBuilder_Fees(t *testing.T) {
+	txBuilder := initTxBuilder()
+	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	txBuilder = txBuilder.WithFees(fees.String())
+	//require.DeepEqual(t, txBuilder.Fees(), fees)
+	require.True(t, reflect.DeepEqual(txBuilder.Fees(), fees))
+}
+
+func TestTxBuilder_Gas(t *testing.T) {
+	txBuilder := initTxBuilder()
+	require.Equal(t, txBuilder.Gas(), uint64(0))
+	txBuilder = txBuilder.WithGas(200000)
+	require.Equal(t, txBuilder.Gas(), uint64(200000))
+}
+
+func TestTxBuilder_GasPrices(t *testing.T) {
+	txBuilder := initTxBuilder()
+	gasPrice := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom,
+		sdk.NewDecWithPrec(10000, sdk.Precision))}
+	txBuilder = txBuilder.WithGasPrices(gasPrice.String())
+	require.Equal(t, txBuilder.GasPrices(), gasPrice)
+}
+
+func TestTxBuilder_Keybase(t *testing.T) {
+	// Now add a temporary keybase
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	kr, err := keyring.New(t.Name(), "test", dir, nil)
+	require.NoError(t, err)
+
+	txBuilder := initTxBuilder()
+	require.Equal(t, txBuilder.Keybase(), nil)
+	txBuilder = txBuilder.WithKeybase(kr)
+	require.Equal(t, txBuilder.Keybase(), kr)
+	require.True(t, reflect.DeepEqual(txBuilder.Keybase(), kr))
+}
+
+func TestTxBuilder_Memo(t *testing.T) {
+	txBuilder := initTxBuilder()
+	require.Equal(t, txBuilder.Memo(), "")
+	txBuilder = txBuilder.WithMemo("foo-memo")
+	require.Equal(t, txBuilder.Memo(), "foo-memo")
+}
+
+func TestTxBuilder_BuildAndSign(t *testing.T) {
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	var from = "from-key"
+	txBuilder, _ := initTxBuilderWithKeybase(t, from)
+
+	tx, err := txBuilder.BuildAndSign(from, msgs)
+
+	require.NoError(t, err)
+	require.NotNil(t, tx)
+}
+
+func TestTxBuilder_BuildSignMsg(t *testing.T) {
+
+}
+
+func TestTxBuilder_BuildTxForSim(t *testing.T) {
+
+}
+
+func TestTxBuilder_SimulateAndExecute(t *testing.T) {
+
+}
+
+func TestTxBuilder_SignStdTx(t *testing.T) {
+
+}
+
+func TestTxBuilder_Sign(t *testing.T) {
+
 }

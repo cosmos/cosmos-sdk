@@ -1,9 +1,12 @@
-package types
+package types_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"reflect"
 	"testing"
 
@@ -13,14 +16,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//var (
-//	priv = ed25519.GenPrivKey()
-//	addr = sdk.AccAddress(priv.PubKey().Address())
-//)
+var (
+	priv = ed25519.GenPrivKey()
+	addr = sdk.AccAddress(priv.PubKey().Address())
+)
 
-func initTxBuilder () TxBuilder {
-	return NewTxBuilder(
-		DefaultTxEncoder(makeCodec()), 1, 1,
+func initTxBuilder () types.TxBuilder {
+	return types.NewTxBuilder(
+		types.DefaultTxEncoder(makeCodec()), 1, 1,
 		0, 0, false,
 		"foo-chain", "", nil, nil,
 	)
@@ -29,12 +32,12 @@ func initTxBuilder () TxBuilder {
 func makeCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }
 
-func initTxBuilderWithKeybase(t *testing.T, from string) (TxBuilder, keyring.Info) {
+func initTxBuilderWithKeybase(t *testing.T, from string) (types.TxBuilder, keyring.Info) {
 	// Now add a temporary keybase
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
@@ -50,8 +53,8 @@ func initTxBuilderWithKeybase(t *testing.T, from string) (TxBuilder, keyring.Inf
 	info, err := kr.NewAccount(from, seed, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	return NewTxBuilder(
-		DefaultTxEncoder(makeCodec()), 1, 1,
+	return types.NewTxBuilder(
+		types.DefaultTxEncoder(makeCodec()), 1, 1,
 		0, 0, false,
 		"foo-chain", "", nil, nil,
 	).WithKeybase(kr), info
@@ -75,13 +78,13 @@ func TestTxBuilderBuild(t *testing.T) {
 		name    string
 		fields  fields
 		msgs    []sdk.Msg
-		want    StdSignMsg
+		want    types.StdSignMsg
 		wantErr bool
 	}{
 		{
 			"builder without fees and gas",
 			fields{
-				TxEncoder:     DefaultTxEncoder(codec.New()),
+				TxEncoder:     types.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				SimulateGas:   false,
@@ -89,20 +92,20 @@ func TestTxBuilderBuild(t *testing.T) {
 				Memo:          "hello from Voyager 1!",
 			},
 			defaultMsg,
-			StdSignMsg{
+			types.StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           NewStdFee(0, nil),
+				Fee:           types.NewStdFee(0, nil),
 			},
 			false,
 		},
 		{
 			"builder with fees",
 			fields{
-				TxEncoder:     DefaultTxEncoder(codec.New()),
+				TxEncoder:     types.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -113,20 +116,20 @@ func TestTxBuilderBuild(t *testing.T) {
 				Fees:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
 			},
 			defaultMsg,
-			StdSignMsg{
+			types.StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
 		{
 			"builder with gas prices",
 			fields{
-				TxEncoder:     DefaultTxEncoder(codec.New()),
+				TxEncoder:     types.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -137,20 +140,20 @@ func TestTxBuilderBuild(t *testing.T) {
 				GasPrices:     sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
 			},
 			defaultMsg,
-			StdSignMsg{
+			types.StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
 				Memo:          "hello from Voyager 2!",
 				Msgs:          defaultMsg,
-				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
 		{
 			"no chain-id supplied",
 			fields{
-				TxEncoder:     DefaultTxEncoder(codec.New()),
+				TxEncoder:     types.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -161,20 +164,20 @@ func TestTxBuilderBuild(t *testing.T) {
 				Fees:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
 			},
 			defaultMsg,
-			StdSignMsg{
+			types.StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			true,
 		},
 		{
 			"builder w/ fees and gas prices",
 			fields{
-				TxEncoder:     DefaultTxEncoder(codec.New()),
+				TxEncoder:     types.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           200000,
@@ -186,13 +189,13 @@ func TestTxBuilderBuild(t *testing.T) {
 				GasPrices:     sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
 			},
 			defaultMsg,
-			StdSignMsg{
+			types.StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
 				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           types.NewStdFee(200000, sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			true,
 		},
@@ -201,7 +204,7 @@ func TestTxBuilderBuild(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			bldr := NewTxBuilder(
+			bldr := types.NewTxBuilder(
 				tt.fields.TxEncoder, tt.fields.AccountNumber, tt.fields.Sequence,
 				tt.fields.Gas, tt.fields.GasAdjustment, tt.fields.SimulateGas,
 				tt.fields.ChainID, tt.fields.Memo, tt.fields.Fees, tt.fields.GasPrices,
@@ -302,26 +305,33 @@ func TestTxBuilder_BuildTxForSim(t *testing.T) {
 }
 
 func TestTxBuilder_SignStdTx(t *testing.T) {
-	//const from = "from-key"
-	//msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	//txBuilder, acc := initTxBuilderWithKeybase(t, from)
-	//
-	//stdTx := StdTx{
-	//	Memo: txBuilder.Memo(),
-	//	Fee: nil,
-	//	Msgs: msgs,
-	//	Signatures: []auth.StdSignature{
-	//		{
-	//			Signature: acc.GetPubKey().Bytes(),
-	//			PubKey: acc.GetPubKey().Bytes(),
-	//		},
-	//	},
-	//}
-	//
-	//signedStdTx, err := txBuilder.SignStdTx(from, stdTx, false)
-	//require.NoError(t, err)
-	//require.NotNil(t, signedStdTx)
-	//require.Equal(t, signedStdTx.Signatures[0].PubKey, acc.GetPubKey().Bytes())
+	const from = "from-key"
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	txBuilder, acc := initTxBuilderWithKeybase(t, from)
+	stdFee := types.StdFee{
+		Gas: txBuilder.Gas(),
+		Amount: txBuilder.Fees(),
+	}
+
+	sig, err := priv.Sign(auth.StdSignBytes(txBuilder.ChainID(), txBuilder.AccountNumber(),
+		txBuilder.Sequence(), stdFee, msgs, txBuilder.Memo()))
+
+	stdTx := types.StdTx{
+		Memo: txBuilder.Memo(),
+		Fee: stdFee,
+		Msgs: msgs,
+		Signatures: []auth.StdSignature{
+			{
+				Signature: sig,
+				PubKey: priv.PubKey().Bytes(),
+			},
+		},
+	}
+
+	signedStdTx, err := txBuilder.SignStdTx(from, stdTx, false)
+	require.NoError(t, err)
+	require.NotNil(t, signedStdTx)
+	require.Equal(t, signedStdTx.Signatures[0].PubKey, acc.GetPubKey().Bytes())
 }
 
 func TestTxBuilder_Sign(t *testing.T) {

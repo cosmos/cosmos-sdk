@@ -41,6 +41,15 @@ func TestDirectModeHandler(t *testing.T) {
 		},
 	})
 
+	var sig signingtypes.SignatureV2
+	sig = signingtypes.SignatureV2{
+		PubKey: pubkey,
+		Data: &signingtypes.SingleSignatureData{
+			SignMode: signingtypes.SignMode_SIGN_MODE_DIRECT,
+			Signature: pubkey.Bytes(),
+		},
+	}
+
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
 	tx.SetMsgs(msgs)
@@ -48,7 +57,7 @@ func TestDirectModeHandler(t *testing.T) {
 	tx.SetFee(fee.Amount)
 	tx.SetGas(fee.GasLimit)
 
-	tx.SetSignerInfos(signerInfo)
+	tx.SetSignaturesV2(sig)
 
 	t.Log("verify modes and default-mode")
 	var directModeHandler DirectModeHandler

@@ -145,7 +145,7 @@ func CountSubKeys(pub crypto.PubKey) int {
 
 var _ sdk.Tx = (*StdTx)(nil)
 
-// StdTx is a standard way to wrap a Msg with Fee and Signatures.
+// Deprecated: StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`
@@ -154,6 +154,7 @@ type StdTx struct {
 	Memo       string         `json:"memo" yaml:"memo"`
 }
 
+// Deprecated
 func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
 		Msgs:       msgs,

@@ -3,20 +3,23 @@ package query_test
 import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	paramkeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 	"testing"
 )
 
+const (
+	holder     = "holder"
+	multiPerm  = "multiple permissions account"
+	randomPerm = "random permission"
+)
+
 func TestPagination(t *testing.T) {
-	app, ctx, _ := SetupTest(t)
+	app, ctx := SetupTest(t)
 
 	balances := sdk.NewCoins(sdk.NewInt64Coin("foo", 100), sdk.NewInt64Coin("bar", 50))
 
@@ -27,32 +30,34 @@ func TestPagination(t *testing.T) {
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	require.Equal(t, balances, acc1Balances)
+
 }
 
-func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context, types.CommitMultiStore) {
+func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	appCodec := app.AppCodec()
 
-	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
-	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	appCodec, _ := simapp.MakeCodecs()
 
-	keyParams := sdk.NewKVStoreKey(paramtypes.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
-
-	pk := paramkeeper.NewKeeper(appCodec, keyParams, tkeyParams)
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[auth.Burner] = []string{auth.Burner}
+	maccPerms[auth.Minter] = []string{auth.Minter}
+	maccPerms[multiPerm] = []string{auth.Burner, auth.Minter, auth.Staking}
+	maccPerms[randomPerm] = []string{"random"}
 	app.AccountKeeper = auth.NewAccountKeeper(
-		appCodec, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount, nil,
+		appCodec, app.GetKey(auth.StoreKey), app.GetSubspace(auth.ModuleName),
+		auth.ProtoBaseAccount, maccPerms,
 	)
-
 	app.BankKeeper = bank.NewBaseKeeper(
-		appCodec, keyBank, app.AccountKeeper, pk.Subspace(bank.DefaultParamspace), app.BlacklistedAccAddrs(),
+		appCodec, app.GetKey(auth.StoreKey), app.AccountKeeper,
+		app.GetSubspace(bank.ModuleName), make(map[string]bool),
 	)
 
-	return app, ctx, ms
+	return app, ctx
 }

@@ -27,7 +27,7 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		err = clientCtx.Codec.UnmarshalJSON(body, &req)
+		err = clientCtx.JSONMarshaler.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

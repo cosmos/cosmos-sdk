@@ -8,17 +8,18 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	cdc := codec.New()
 	viper.Set(flags.FlagOffline, true)
-	ctx := client.NewContext().WithCodec(cdc)
+	ctx := client.NewContext().WithJSONMarshaler(types.ModuleCdc)
+
 	type args struct {
 		delAddr string
 		valAddr string
 	}
+
 	tests := []struct {
 		name    string
 		args    args
@@ -30,6 +31,7 @@ func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 		{"invalid validator address", args{"cosmos1zxcsu7l5qxs53lvp0fqgd09a9r2g6kqrk2cdpa", "invalid"}, nil, true},
 		{"empty validator address", args{"cosmos1zxcsu7l5qxs53lvp0fqgd09a9r2g6kqrk2cdpa", ""}, nil, true},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {

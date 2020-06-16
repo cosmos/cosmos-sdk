@@ -45,7 +45,7 @@ func signingInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQuerySigningInfoParams(sdk.ConsAddress(pk.Address()))
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -75,7 +75,7 @@ func signingInfoHandlerListFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQuerySigningInfosParams(page, limit)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

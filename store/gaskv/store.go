@@ -2,6 +2,9 @@ package gaskv
 
 import (
 	"io"
+	"time"
+
+	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -34,6 +37,8 @@ func (gs *Store) GetStoreType() types.StoreType {
 
 // Implements KVStore.
 func (gs *Store) Get(key []byte) (value []byte) {
+	defer metrics.MeasureSince([]string{"store", "gaskv", "get"}, time.Now().UTC())
+
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
 
@@ -45,6 +50,8 @@ func (gs *Store) Get(key []byte) (value []byte) {
 
 // Implements KVStore.
 func (gs *Store) Set(key []byte, value []byte) {
+	defer metrics.MeasureSince([]string{"store", "gaskv", "set"}, time.Now().UTC())
+
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
@@ -54,12 +61,14 @@ func (gs *Store) Set(key []byte, value []byte) {
 
 // Implements KVStore.
 func (gs *Store) Has(key []byte) bool {
+	defer metrics.MeasureSince([]string{"store", "gaskv", "has"}, time.Now().UTC())
 	gs.gasMeter.ConsumeGas(gs.gasConfig.HasCost, types.GasHasDesc)
 	return gs.parent.Has(key)
 }
 
 // Implements KVStore.
 func (gs *Store) Delete(key []byte) {
+	defer metrics.MeasureSince([]string{"store", "gaskv", "delete"}, time.Now().UTC())
 	// charge gas to prevent certain attack vectors even though space is being freed
 	gs.gasMeter.ConsumeGas(gs.gasConfig.DeleteCost, types.GasDeleteDesc)
 	gs.parent.Delete(key)

@@ -52,7 +52,7 @@ func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 			return err
 		}
 
-		clientCtx := client.NewContext().WithCodec(cdc)
+		clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 		if hash := args[0]; hash != "" {
 			return queryEvidence(cdc, clientCtx, hash)

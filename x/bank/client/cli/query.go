@@ -57,7 +57,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for account balances by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -135,7 +135,7 @@ $ %s query %s total stake
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			if len(args) == 0 {
 				return queryTotalSupply(clientCtx, cdc)

@@ -12,14 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
@@ -65,7 +63,6 @@ func main() {
 		queryCmd(cdc),
 		txCmd(cdc),
 		flags.LineBreak,
-		lcd.ServeCommand(cdc, registerRoutes),
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,
@@ -146,14 +143,6 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	simapp.ModuleBasics.AddTxCommands(txCmd, clientCtx)
 
 	return txCmd
-}
-
-// registerRoutes registers the routes from the different modules for the REST client.
-// NOTE: details on the routes added for each module are in the module documentation
-func registerRoutes(rs *lcd.RestServer) {
-	rpc.RegisterRoutes(rs.ClientCtx, rs.Mux)
-	authrest.RegisterTxRoutes(rs.ClientCtx, rs.Mux)
-	simapp.ModuleBasics.RegisterRESTRoutes(rs.ClientCtx, rs.Mux)
 }
 
 func initConfig(cmd *cobra.Command) error {

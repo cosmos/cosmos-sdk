@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 
 	var (
 		packet  types.Packet
-		chanCap *capability.Capability
+		chanCap *capabilitytypes.Capability
 	)
 
 	testCases := []testCase{
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 		{"incorrect capability", func() {
 			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
-			chanCap = capability.NewCapability(100)
+			chanCap = capabilitytypes.NewCapability(100)
 		}, false},
 	}
 

@@ -41,12 +41,44 @@ type BaseConfig struct {
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 }
 
+// APIConfig defines the API listener configuration.
+type APIConfig struct {
+	// Enable defines if the API server should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// Swagger defines if swagger documentation should automatically be registered.
+	Swagger bool `mapstructure:"swagger"`
+
+	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
+	EnableUnsafeCORS bool `mapstructure:"enabled-unsafe-cors"`
+
+	// Address defines the API server to listen on
+	Address string `mapstructure:"address"`
+
+	// MaxOpenConnections defines the number of maximum open connections
+	MaxOpenConnections uint `mapstructure:"max-open-connections"`
+
+	// RPCReadTimeout defines the Tendermint RPC read timeout (in seconds)
+	RPCReadTimeout uint `mapstructure:"rpc-read-timeout"`
+
+	// RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds)
+	RPCWriteTimeout uint `mapstructure:"rpc-write-timeout"`
+
+	// RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes)
+	RPCMaxBodyBytes uint `mapstructure:"rpc-max-body-bytes"`
+
+	// TODO: TLS/Proxy configuration.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
+}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
 	// Telemetry defines the application telemetry configuration
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
+	API       APIConfig        `mapstructure:"api"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -87,5 +119,13 @@ func DefaultConfig() *Config {
 			PruningSnapshotEvery: "0",
 		},
 		Telemetry: telemetry.Config{},
+		API: APIConfig{
+			Enable:             false,
+			Swagger:            false,
+			Address:            "tcp://0.0.0.0:1317",
+			MaxOpenConnections: 1000,
+			RPCReadTimeout:     10,
+			RPCMaxBodyBytes:    1000000,
+		},
 	}
 }

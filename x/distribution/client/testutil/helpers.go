@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // TxWithdrawRewards raises a txn to withdraw rewards
@@ -37,56 +37,56 @@ func TxFundCommunityPool(f *cli.Fixtures, from string, amount sdk.Coin, flags ..
 }
 
 // QueryRewards returns the rewards of a delegator
-func QueryRewards(f *cli.Fixtures, delAddr sdk.AccAddress, flags ...string) distribution.QueryDelegatorTotalRewardsResponse {
+func QueryRewards(f *cli.Fixtures, delAddr sdk.AccAddress, flags ...string) types.QueryDelegatorTotalRewardsResponse {
 	cmd := fmt.Sprintf("%s query distribution rewards %s %s", f.SimcliBinary, delAddr, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 
-	var rewards distribution.QueryDelegatorTotalRewardsResponse
+	var rewards types.QueryDelegatorTotalRewardsResponse
 	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(res), &rewards))
 	return rewards
 }
 
 // QueryValidatorOutstandingRewards distribution outstanding (un-withdrawn) rewards
-func QueryValidatorOutstandingRewards(f *cli.Fixtures, valAddr string) distribution.ValidatorOutstandingRewards {
+func QueryValidatorOutstandingRewards(f *cli.Fixtures, valAddr string) types.ValidatorOutstandingRewards {
 	cmd := fmt.Sprintf("%s query distribution validator-outstanding-rewards %s %v", f.SimcliBinary, valAddr, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 
-	var outstandingRewards distribution.ValidatorOutstandingRewards
+	var outstandingRewards types.ValidatorOutstandingRewards
 	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(res), &outstandingRewards))
 	return outstandingRewards
 }
 
 // QueryParameters is simcli query distribution parameters
-func QueryParameters(f *cli.Fixtures, flags ...string) distribution.Params {
+func QueryParameters(f *cli.Fixtures, flags ...string) types.Params {
 	cmd := fmt.Sprintf("%s query distribution params %v", f.SimcliBinary, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
 
-	var params distribution.Params
+	var params types.Params
 	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &params))
 	return params
 }
 
 // QueryCommission returns validator commission rewards from delegators to that validator.
-func QueryCommission(f *cli.Fixtures, valAddr string, flags ...string) distribution.ValidatorAccumulatedCommission {
+func QueryCommission(f *cli.Fixtures, valAddr string, flags ...string) types.ValidatorAccumulatedCommission {
 	cmd := fmt.Sprintf("%s query distribution commission %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
 
-	var commission distribution.ValidatorAccumulatedCommission
+	var commission types.ValidatorAccumulatedCommission
 	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &commission))
 	return commission
 }
 
 // QuerySlashes returns all slashes of a validator for a given block range.
-func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) []distribution.ValidatorSlashEvent {
+func QuerySlashes(f *cli.Fixtures, valAddr string, flags ...string) []types.ValidatorSlashEvent {
 	cmd := fmt.Sprintf("%s query distribution slashes %s 0 5 %v ", f.SimcliBinary, valAddr, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
 
-	var slashes []distribution.ValidatorSlashEvent
+	var slashes []types.ValidatorSlashEvent
 	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &slashes))
 	return slashes
 }

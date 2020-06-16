@@ -145,7 +145,7 @@ func queryHeaderHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		res := clientCtx.Codec.MustMarshalJSON(header)
+		res := clientCtx.JSONMarshaler.MustMarshalJSON(header)
 		clientCtx = clientCtx.WithHeight(height)
 		rest.PostProcessResponse(w, clientCtx, res)
 	}
@@ -166,7 +166,7 @@ func queryNodeConsensusStateHandlerFn(clientCtx client.Context) http.HandlerFunc
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		}
 
-		res := clientCtx.Codec.MustMarshalJSON(state)
+		res := clientCtx.JSONMarshaler.MustMarshalJSON(state)
 		clientCtx = clientCtx.WithHeight(height)
 		rest.PostProcessResponse(w, clientCtx, res)
 	}

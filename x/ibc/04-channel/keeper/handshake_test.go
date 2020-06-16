@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -12,7 +12,7 @@ import (
 func (suite *KeeperTestSuite) TestChanOpenInit() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 
-	var portCap *capability.Capability
+	var portCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.createConnection(
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
 				connection.INIT,
 			)
-			portCap = capability.NewCapability(3)
+			portCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
 	channelKey := host.KeyChannel(testPort1, testChannel1)
 
-	var portCap *capability.Capability
+	var portCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.INIT, types.ORDERED, testConnectionIDA)
-			portCap = capability.NewCapability(3)
+			portCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	channelKey := host.KeyChannel(testPort2, testChannel2)
 
-	var channelCap *capability.Capability
+	var channelCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
@@ -263,7 +263,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
 				types.ORDERED, testConnectionIDA,
 			)
-			channelCap = capability.NewCapability(3)
+			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
@@ -303,7 +303,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	channelKey := host.KeyChannel(testPort2, testChannel2)
 
-	var channelCap *capability.Capability
+	var channelCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
@@ -384,7 +384,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
 				types.TRYOPEN, types.ORDERED, testConnectionIDA)
-			channelCap = capability.NewCapability(3)
+			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
@@ -422,7 +422,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 }
 
 func (suite *KeeperTestSuite) TestChanCloseInit() {
-	var channelCap *capability.Capability
+	var channelCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainB.CreateClient(suite.chainA)
@@ -468,7 +468,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 				testPort1, testChannel1, testPort2, testChannel2, types.OPEN,
 				types.ORDERED, testConnectionIDA,
 			)
-			channelCap = capability.NewCapability(3)
+			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
@@ -499,7 +499,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	channelKey := host.KeyChannel(testPort1, testChannel1)
 
-	var channelCap *capability.Capability
+	var channelCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)

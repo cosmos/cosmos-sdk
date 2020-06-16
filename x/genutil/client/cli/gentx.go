@@ -121,7 +121,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			// Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.

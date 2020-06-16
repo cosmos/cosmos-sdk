@@ -14,14 +14,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var (
@@ -49,24 +51,24 @@ func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleB
 
 // Name returns the evidence module's name.
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterCodec registers the evidence module's types to the provided codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var gs GenesisState
+	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
 	return gs.Validate()
@@ -96,11 +98,11 @@ func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 
 // GetTxCmd returns the evidence module's root query command.
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, clientCtx.Codec)
+	return cli.GetQueryCmd(types.StoreKey, clientCtx.Codec)
 }
 
-func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
-	RegisterInterfaces(registry)
+func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // ----------------------------------------------------------------------------
@@ -111,10 +113,10 @@ func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper Keeper
+	keeper keeper.Keeper
 }
 
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -128,17 +130,17 @@ func (am AppModule) Name() string {
 
 // Route returns the evidence module's message routing key.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(RouterKey, NewHandler(am.keeper))
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the evidence module's query routing key.
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return types.QuerierRoute
 }
 
 // NewQuerierHandler returns the evidence module's Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+	return keeper.NewQuerier(am.keeper)
 }
 
 func (am AppModule) RegisterQueryService(grpc.Server) {}
@@ -149,10 +151,10 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs GenesisState
+	var gs types.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
+		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
 	}
 
 	InitGenesis(ctx, am.keeper, gs)
@@ -197,7 +199,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.NewDecodeStore(am.keeper)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

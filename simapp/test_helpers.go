@@ -231,8 +231,7 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 // CheckBalance checks the balance of an account.
 func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
-	bal := app.BankKeeper.GetAllBalances(ctxCheck, addr)
-	require.True(t, balances.IsEqual(bal))
+	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
 
 // SignCheckDeliver checks a generated signed transaction and simulates a

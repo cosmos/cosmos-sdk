@@ -1,11 +1,14 @@
-package query
+package query_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	paramkeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
@@ -13,27 +16,43 @@ import (
 )
 
 func TestPagination(t *testing.T) {
-	app, ctx := SetupTest(t)
-	// TODO Add pagenation tests
+	app, ctx, _ := SetupTest(t)
+
+	balances := sdk.NewCoins(sdk.NewInt64Coin("foo", 100), sdk.NewInt64Coin("bar", 50))
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
+
+	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
+	require.Equal(t, balances, acc1Balances)
 }
 
-func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {
-	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
-	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context, types.CommitMultiStore) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
+	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
-	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
-
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	// setup
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{}) // make block height non-zero to ensure account numbers part of signBytes
-	ctx = ctx.WithBlockHeight(1)
-	_, _ = simapp.MakeCodecs()
+	appCodec, _ := simapp.MakeCodecs()
 
-	return app, ctx
+	keyParams := sdk.NewKVStoreKey(paramtypes.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
+
+	pk := paramkeeper.NewKeeper(appCodec, keyParams, tkeyParams)
+	app.AccountKeeper = auth.NewAccountKeeper(
+		appCodec, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount, nil,
+	)
+
+	app.BankKeeper = bank.NewBaseKeeper(
+		appCodec, keyBank, app.AccountKeeper, pk.Subspace(bank.DefaultParamspace), app.BlacklistedAccAddrs(),
+	)
+
+	return app, ctx, ms
 }

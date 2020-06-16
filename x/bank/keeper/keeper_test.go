@@ -54,8 +54,7 @@ func getCoinsByName(ctx sdk.Context, bk keeper.Keeper, ak types.AccountKeeper, m
 		return sdk.Coins(nil)
 	}
 
-	balances := bk.GetAllBalances(ctx, macc.GetAddress())
-	return balances
+	return bk.GetAllBalances(ctx, macc.GetAddress())
 }
 
 type IntegrationTestSuite struct {
@@ -147,9 +146,9 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, auth.Burner))
 	suite.Require().Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 
-	//suite.Require().NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), auth.Burner, initCoins))
-	//suite.Require().Equal(sdk.Coins(nil), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
-	//suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, auth.Burner))
+	suite.Require().NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), auth.Burner, initCoins))
+	suite.Require().Equal(sdk.Coins(nil), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, auth.Burner))
 }
 
 func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
@@ -271,7 +270,7 @@ func (suite *IntegrationTestSuite) TestSendCoinsNewAccount() {
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
-	suite.Require().NotEqual(balances, acc1Balances)
+	suite.Require().Equal(balances, acc1Balances)
 
 	addr2 := sdk.AccAddress([]byte("addr2"))
 

@@ -1,9 +1,9 @@
 build:
   roots:
     - proto
+    - third_party/proto
   excludes:
-    - proto/tendermint
-    - proto/google
+    - third_party/proto/google
 lint:
   use:
     - DEFAULT
@@ -15,10 +15,13 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
   ignore:
-    - third_party
-    - codec/testdata
+    - tendermint
+    - gogoproto
+    - cosmos_proto
 breaking:
   use:
     - FILE
   ignore:
-    - third_party
+    - tendermint
+    - gogoproto
+    - cosmos_proto

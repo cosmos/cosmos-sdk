@@ -228,7 +228,7 @@ jobs:
             .sum
       - name: build image
         run: |
-          make make build-docker-local-simapp      
+          make build-docker-local-simapp      
       - name: start localnet
         run: |
           make clean build-sim-linux localnet-start

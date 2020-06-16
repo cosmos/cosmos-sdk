@@ -109,6 +109,11 @@ func (vo *VoteOption) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	if s == "" {
+		*vo = OptionEmpty
+		return nil
+	}
+
 	bz2, err := VoteOptionFromString(s)
 	if err != nil {
 		return err

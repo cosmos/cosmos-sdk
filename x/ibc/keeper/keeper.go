@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -12,6 +12,9 @@ import (
 
 // Keeper defines each ICS keeper for IBC
 type Keeper struct {
+	aminoCdc *codec.Codec
+	cdc      codec.Marshaler
+
 	ClientKeeper     client.Keeper
 	ConnectionKeeper connection.Keeper
 	ChannelKeeper    channel.Keeper
@@ -21,19 +24,26 @@ type Keeper struct {
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	cdc *codec.Codec, appCodec codec.Marshaler, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capability.ScopedKeeper,
+	aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
-	clientKeeper := client.NewKeeper(cdc, key, stakingKeeper)
-	connectionKeeper := connection.NewKeeper(cdc, appCodec, key, clientKeeper)
+	clientKeeper := client.NewKeeper(aminoCdc, key, stakingKeeper)
+	connectionKeeper := connection.NewKeeper(aminoCdc, cdc, key, clientKeeper)
 	portKeeper := port.NewKeeper(scopedKeeper)
-	channelKeeper := channel.NewKeeper(appCodec, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
+	channelKeeper := channel.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return &Keeper{
+		aminoCdc:         aminoCdc,
+		cdc:              cdc,
 		ClientKeeper:     clientKeeper,
 		ConnectionKeeper: connectionKeeper,
 		ChannelKeeper:    channelKeeper,
 		PortKeeper:       portKeeper,
 	}
+}
+
+// Codecs returns the IBC module codec.
+func (k Keeper) Codecs() (codec.Marshaler, *codec.Codec) {
+	return k.cdc, k.aminoCdc
 }
 
 // SetRouter sets the Router in IBC Keeper and seals it. The method panics if

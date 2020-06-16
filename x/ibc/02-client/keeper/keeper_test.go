@@ -19,11 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
-	testClientID  = "gaia"
+	testClientID  = "gaiachain"
 	testClientID2 = "ethbridge"
 	testClientID3 = "ethermint"
 
@@ -71,17 +71,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 		ValidatorSet: suite.valSet,
 	}
 
-	var validators staking.Validators
+	var validators stakingtypes.Validators
 	for i := 1; i < 11; i++ {
 		privVal := tmtypes.NewMockPV()
 		pk, err := privVal.GetPubKey()
 		suite.Require().NoError(err)
-		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
 
-		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
 }
 
@@ -90,7 +90,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{})
+	clientState := ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs())
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -121,9 +121,9 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testClientID2, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID3, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID2, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testClientID3, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
 	}
 
 	for i := range expClients {
@@ -168,7 +168,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+	clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 	suite.Require().NoError(err)
 
 	suite.keeper.SetClientState(suite.ctx, clientState)

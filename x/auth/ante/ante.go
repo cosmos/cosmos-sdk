@@ -7,6 +7,8 @@ import (
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
 
+var TEST string = "TEST"
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.

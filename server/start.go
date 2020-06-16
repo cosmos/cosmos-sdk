@@ -193,6 +193,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 	}
 
 	config := config.GetConfig()
+	var apiSrv *api.Server
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -209,7 +210,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			WithClient(local.New(tmNode)).
 			WithTrustNode(true)
 
-		apiSrv := api.New(ctx)
+		apiSrv = api.New(ctx)
 		app.RegisterAPIRoutes(apiSrv)
 
 		if err := apiSrv.Start(config); err != nil {
@@ -244,6 +245,10 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 		if cpuProfileCleanup != nil {
 			cpuProfileCleanup()
+		}
+
+		if apiSrv != nil {
+			_ = apiSrv.Close()
 		}
 
 		ctx.Logger.Info("exiting...")

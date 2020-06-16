@@ -318,12 +318,18 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 func (ctx Context) Println(toPrint interface{}) error {
 	// always output JSON
 	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
+	if err != nil {
+		return err
+	}
 
 	// To JSON indent, we re-encode the already encoded JSON given there is no
 	// error. The re-encoded JSON uses the standard library as the initial encoded
 	// JSON should have the correct output produced by ctx.JSONMarshaler.
-	if ctx.Indent && err == nil {
+	if ctx.Indent {
 		out, err = codec.MarshalIndentFromJSON(out)
+		if err != nil {
+			return err
+		}
 	}
 
 	// since text is the default, we just check that the format is not json
@@ -334,7 +340,11 @@ func (ctx Context) Println(toPrint interface{}) error {
 		if err != nil {
 			return err
 		}
+
 		out, err = yaml.Marshal(j)
+		if err != nil {
+			return err
+		}
 	}
 
 	writer := ctx.Output

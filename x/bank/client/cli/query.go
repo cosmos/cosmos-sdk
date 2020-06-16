@@ -59,14 +59,14 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 				}
 				return clientCtx.Println(res.Balances)
 
-			} else {
-				params := types.NewQueryBalanceRequest(addr, denom)
-				res, err := queryClient.Balance(context.Background(), params)
-				if err != nil {
-					return err
-				}
-				return clientCtx.Println(res.Balance)
 			}
+
+			params := types.NewQueryBalanceRequest(addr, denom)
+			res, err := queryClient.Balance(context.Background(), params)
+			if err != nil {
+				return err
+			}
+			return clientCtx.Println(res.Balance)
 		},
 	}
 
@@ -102,14 +102,13 @@ $ %s query %s total stake
 					return err
 				}
 				return clientCtx.Println(res.Supply)
-			} else {
-
-				res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: args[0]})
-				if err != nil {
-					return err
-				}
-				return clientCtx.Println(res.Amount)
 			}
+
+			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: args[0]})
+			if err != nil {
+				return err
+			}
+			return clientCtx.Println(res.Amount)
 		},
 	}
 

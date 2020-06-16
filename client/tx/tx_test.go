@@ -132,7 +132,6 @@ func TestSign(t *testing.T) {
 	require.NoError(t, err)
 
 	txf := tx.Factory{}.
-		WithKeybase(kr).
 		WithTxGenerator(NewTestTxGenerator()).
 		WithAccountNumber(50).
 		WithSequence(23).
@@ -144,6 +143,24 @@ func TestSign(t *testing.T) {
 	txn, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 
+	t.Log("should failed if txf without keyring")
+	err = tx.Sign(txf, from, txn)
+	require.Error(t, err)
+
+	txf = tx.Factory{}.
+		WithKeybase(kr).
+		WithTxGenerator(NewTestTxGenerator()).
+		WithAccountNumber(50).
+		WithSequence(23).
+		WithFees("50stake").
+		WithMemo("memo").
+		WithChainID("test-chain")
+
+	t.Log("should succeed if txf with keyring")
 	err = tx.Sign(txf, from, txn)
 	require.NoError(t, err)
+
+	t.Log("should fail for non existing key")
+	err = tx.Sign(txf, "non_existing_key", txn)
+	require.Error(t, err)
 }

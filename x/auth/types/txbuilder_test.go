@@ -20,10 +20,18 @@ import (
 
 func initTxBuilder () TxBuilder {
 	return NewTxBuilder(
-		DefaultTxEncoder(codec.New()), 1, 1,
+		DefaultTxEncoder(makeCodec()), 1, 1,
 		0, 0, false,
 		"foo-chain", "", nil, nil,
 	)
+}
+
+func makeCodec() *codec.Codec {
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	RegisterCodec(cdc)
+	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	return cdc
 }
 
 func initTxBuilderWithKeybase(t *testing.T, from string) (TxBuilder, keyring.Info) {
@@ -43,7 +51,7 @@ func initTxBuilderWithKeybase(t *testing.T, from string) (TxBuilder, keyring.Inf
 	require.NoError(t, err)
 
 	return NewTxBuilder(
-		DefaultTxEncoder(codec.New()), 1, 1,
+		DefaultTxEncoder(makeCodec()), 1, 1,
 		0, 0, false,
 		"foo-chain", "", nil, nil,
 	).WithKeybase(kr), info

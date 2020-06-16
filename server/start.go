@@ -209,18 +209,9 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			WithTrustNode(true)
 
 		apiSrv := api.New(ctx)
-		apiCfg := config.APIConfig{
-			Address:            viper.GetString("api.address"),
-			MaxOpenConnections: viper.GetUint("api.max-open-connections"),
-			RPCReadTimeout:     viper.GetUint("api.rpc-read-timeout"),
-			RPCWriteTimeout:    viper.GetUint("api.rpc-write-timeout"),
-			RPCMaxBodyBytes:    viper.GetUint("api.rpc-max-body-bytes"),
-			EnableUnsafeCORS:   viper.GetBool("api.enabled-unsafe-cors"),
-		}
-
 		app.RegisterAPIRoutes(apiSrv)
 
-		if err := apiSrv.Start(apiCfg); err != nil {
+		if err := apiSrv.Start(config.GetConfig()); err != nil {
 			return err
 		}
 	}

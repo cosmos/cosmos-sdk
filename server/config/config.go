@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -126,6 +128,37 @@ func DefaultConfig() *Config {
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,
 			RPCMaxBodyBytes:    1000000,
+		},
+	}
+}
+
+// GetConfig returns a fully parsed Config object.
+func GetConfig() Config {
+	return Config{
+		BaseConfig: BaseConfig{
+			MinGasPrices:         viper.GetString("minimum-gas-prices"),
+			InterBlockCache:      viper.GetBool("inter-block-cache"),
+			Pruning:              viper.GetString("pruning"),
+			PruningKeepEvery:     viper.GetString("pruning-keep-every"),
+			PruningSnapshotEvery: viper.GetString("pruning-snapshot-every"),
+			HaltHeight:           viper.GetUint64("halt-height"),
+			HaltTime:             viper.GetUint64("halt-time"),
+		},
+		Telemetry: telemetry.Config{
+			ServiceName:             viper.GetString("telemetry.service-name"),
+			Enabled:                 viper.GetBool("telemetry.enabled"),
+			EnableHostname:          viper.GetBool("telemetry.enable-hostname"),
+			EnableHostnameLabel:     viper.GetBool("telemetry.enable-hostname-label"),
+			EnableServiceLabel:      viper.GetBool("telemetry.enable-service-label"),
+			PrometheusRetentionTime: viper.GetInt64("telemetry.prometheus-retention-time"),
+		},
+		API: APIConfig{
+			Address:            viper.GetString("api.address"),
+			MaxOpenConnections: viper.GetUint("api.max-open-connections"),
+			RPCReadTimeout:     viper.GetUint("api.rpc-read-timeout"),
+			RPCWriteTimeout:    viper.GetUint("api.rpc-write-timeout"),
+			RPCMaxBodyBytes:    viper.GetUint("api.rpc-max-body-bytes"),
+			EnableUnsafeCORS:   viper.GetBool("api.enabled-unsafe-cors"),
 		},
 	}
 }

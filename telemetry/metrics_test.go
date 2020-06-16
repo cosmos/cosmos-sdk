@@ -28,7 +28,7 @@ func TestMetrics_InMem(t *testing.T) {
 
 	emitMetrics()
 
-	gr, err := m.Gather()
+	gr, err := m.Gather(FormatText)
 	require.NoError(t, err)
 	require.Equal(t, gr.ContentType, "application/json")
 
@@ -54,7 +54,7 @@ func TestMetrics_Prom(t *testing.T) {
 
 	emitMetrics()
 
-	gr, err := m.Gather()
+	gr, err := m.Gather(FormatPrometheus)
 	require.NoError(t, err)
 	require.Equal(t, gr.ContentType, string(expfmt.FmtText))
 

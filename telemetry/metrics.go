@@ -12,6 +12,13 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
+// Metrics supported format types.
+const (
+	FormatDefault    = ""
+	FormatPrometheus = "prometheus"
+	FormatText       = "text"
+)
+
 // Config defines the configuration options for application telemetry.
 type Config struct {
 	// Prefixed with keys to separate services
@@ -90,15 +97,27 @@ func New(cfg Config) (*Metrics, error) {
 // Gather collects all registered metrics and returns a GatherResponse where the
 // metrics are encoded depending on the type. Metrics are either encoded via
 // Prometheus or JSON if in-memory.
-func (m *Metrics) Gather() (GatherResponse, error) {
-	if m.prometheusEnabled {
+func (m *Metrics) Gather(format string) (GatherResponse, error) {
+	switch format {
+	case FormatPrometheus:
 		return m.gatherPrometheus()
-	}
 
-	return m.gatherGeneric()
+	case FormatText:
+		return m.gatherGeneric()
+
+	case FormatDefault:
+		return m.gatherGeneric()
+
+	default:
+		return GatherResponse{}, fmt.Errorf("unsupported metrics format: %s", format)
+	}
 }
 
 func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
+	if !m.prometheusEnabled {
+		return GatherResponse{}, fmt.Errorf("prometheus metrics are not enabled")
+	}
+
 	metricsFamilies, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		return GatherResponse{}, fmt.Errorf("failed to gather prometheus metrics: %w", err)

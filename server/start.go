@@ -192,7 +192,8 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		return err
 	}
 
-	if viper.GetBool("api.enable") {
+	config := config.GetConfig()
+	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
@@ -211,7 +212,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		apiSrv := api.New(ctx)
 		app.RegisterAPIRoutes(apiSrv)
 
-		if err := apiSrv.Start(config.GetConfig()); err != nil {
+		if err := apiSrv.Start(config); err != nil {
 			return err
 		}
 	}

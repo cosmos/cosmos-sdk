@@ -48,7 +48,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	balances, _, _ := bk.GetAllBalances(ctx, moduleAcc.GetAddress(), nil)
+	balances := bk.GetAllBalances(ctx, moduleAcc.GetAddress())
 	if balances.IsZero() {
 		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), moduleHoldingsInt); err != nil {
 			panic(err)

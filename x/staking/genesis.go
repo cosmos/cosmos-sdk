@@ -102,8 +102,8 @@ func InitGenesis(
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	// add coins if not provided on genesis
-	bondedBalance, _, _ := bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress(), nil)
-	if bondedBalance.IsZero() {
+
+	if bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()).IsZero() {
 		if err := bankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins); err != nil {
 			panic(err)
 		}
@@ -116,8 +116,7 @@ func InitGenesis(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
-	notBondedBalances, _, _ := bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress(), nil)
-	if notBondedBalances.IsZero() {
+	if bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress()).IsZero() {
 		if err := bankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), notBondedCoins); err != nil {
 			panic(err)
 		}

@@ -41,7 +41,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		k.SetProposal(ctx, proposal)
 	}
 
-	balances, _, _ := bk.GetAllBalances(ctx, moduleAcc.GetAddress(), nil)
+	balances := bk.GetAllBalances(ctx, moduleAcc.GetAddress())
 	// add coins if not provided on genesis
 	if balances.IsZero() {
 		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), totalDeposits); err != nil {

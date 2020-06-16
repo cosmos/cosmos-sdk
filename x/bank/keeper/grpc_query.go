@@ -43,7 +43,7 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	balances, res, err := q.GetAllBalances(ctx, req.Address, nil)
+	balances, res, err := q.queryAllBalances(ctx, req.Address, req.Req)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/tendermint/tendermint/libs/log"
@@ -22,7 +21,7 @@ type ViewKeeper interface {
 	ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
 	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
 
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress, pageReq *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
@@ -58,19 +57,19 @@ func (k BaseViewKeeper) HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk
 	return k.GetBalance(ctx, addr, amt.Denom).IsGTE(amt)
 }
 
-//// GetAllBalances returns all the account balances for the given account address.
-//func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-//	balances := sdk.NewCoins()
-//	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
-//		balances = balances.Add(balance)
-//		return false
-//	})
-//
-//	return balances.Sort()
-//}
+// GetAllBalances returns all the account balances for the given account address.
+func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+	balances := sdk.NewCoins()
+	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
+		balances = balances.Add(balance)
+		return false
+	})
+
+	return balances.Sort()
+}
 
 // GetAllBalancesNew returns all the account balances for the given account address.
-func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress,
+func (k BaseViewKeeper) queryAllBalances(ctx sdk.Context, addr sdk.AccAddress,
 	pageReq *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
 	balances := sdk.NewCoins()
 	store := ctx.KVStore(k.storeKey)
@@ -79,7 +78,7 @@ func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress,
 
 	res, err := query.Paginate(accountStore, pageReq, func(key []byte, value []byte) error {
 		var result sdk.Coin
-		err := json.Unmarshal(value, &result)
+		err := k.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
 			return err
 		}
@@ -175,10 +174,7 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 // by address. If the account has no spendable coins, an empty Coins slice is
 // returned.
 func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	balances, _, err := k.GetAllBalances(ctx, addr, nil)
-	if err != nil {
-		return sdk.NewCoins()
-	}
+	balances := k.GetAllBalances(ctx, addr)
 	locked := k.LockedCoins(ctx, addr)
 
 	spendable, hasNeg := balances.SafeSub(locked)
@@ -202,10 +198,7 @@ func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) er
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
-	balances, _, err := k.GetAllBalances(ctx, addr, nil)
-	if err != nil {
-		return err
-	}
+	balances := k.GetAllBalances(ctx, addr)
 	if !balances.IsValid() {
 		return fmt.Errorf("account balance of %s is invalid", balances)
 	}

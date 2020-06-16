@@ -56,7 +56,7 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	balances, _, _ := k.GetAllBalances(ctx, params.Address, nil)
+	balances := k.GetAllBalances(ctx, params.Address)
 
 	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balances)
 	if err != nil {

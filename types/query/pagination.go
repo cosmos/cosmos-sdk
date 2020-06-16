@@ -21,68 +21,63 @@ func Paginate(
 	req *PageRequest,
 	onResult func(key []byte, value []byte) error,
 ) (*PageResponse, error) {
-	if req == nil {
-		// TODO: return default as entire response
-		return nil, nil
+	offset := req.Offset
+	key := req.Key
+	limit := req.Limit
+
+	if len(key) != 0 || offset != 0 {
+		iterator := prefixStore.Iterator(key, nil)
+		defer iterator.Close()
+
+		var count uint64
+		var nextKey []byte
+
+		for ; iterator.Valid(); iterator.Next() {
+			if count == limit {
+				nextKey = iterator.Key()
+				break
+			}
+
+			err := onResult(iterator.Key(), iterator.Value())
+			if err != nil {
+				return nil, err
+			}
+
+			count++
+		}
+
+		return &PageResponse{
+			NextKey: nextKey,
+		}, nil
 	} else {
-		offset := req.Offset
-		key := req.Key
-		limit := req.Limit
+		iterator := prefixStore.Iterator(nil, nil)
+		defer iterator.Close()
 
-		if len(key) != 0 {
-			iterator := prefixStore.Iterator(key, nil)
-			defer iterator.Close()
+		end := offset + limit
+		var count uint64
+		var nextKey []byte
 
-			var count uint64
-			var nextKey []byte
+		for ; iterator.Valid(); iterator.Next() {
+			count++
 
-			for ; iterator.Valid(); iterator.Next() {
-				if count == limit {
-					nextKey = iterator.Key()
-					break
-				}
-
+			if count < offset {
+				continue
+			} else if count <= end {
 				err := onResult(iterator.Key(), iterator.Value())
 				if err != nil {
 					return nil, err
 				}
-
-				count++
+			} else if !req.CountTotal {
+				nextKey = iterator.Key()
+				break
 			}
-
-			return &PageResponse{
-				NextKey: nextKey,
-			}, nil
-		} else {
-			iterator := prefixStore.Iterator(nil, nil)
-			defer iterator.Close()
-
-			end := offset + limit
-			var count uint64
-			var nextKey []byte
-
-			for ; iterator.Valid(); iterator.Next() {
-				count++
-
-				if count < offset {
-					continue
-				} else if count <= end {
-					err := onResult(iterator.Key(), iterator.Value())
-					if err != nil {
-						return nil, err
-					}
-				} else if !req.CountTotal {
-					nextKey = iterator.Key()
-					break
-				}
-			}
-
-			res := &PageResponse{NextKey: nextKey}
-			if req.CountTotal {
-				res.Total = count
-			}
-
-			return res, nil
 		}
+
+		res := &PageResponse{NextKey: nextKey}
+		if req.CountTotal {
+			res.Total = count
+		}
+
+		return res, nil
 	}
 }

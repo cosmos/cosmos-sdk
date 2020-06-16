@@ -81,6 +81,7 @@ func (s *Server) Start(cfg config.Config) error {
 	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
 }
 
+// Close closes the API server.
 func (s *Server) Close() error {
 	return s.listener.Close()
 }

@@ -20,3 +20,7 @@ func NewLabel(name, value string) metrics.Label {
 func ModuleMeasureSince(module string, keys ...string) {
 	metrics.MeasureSinceWithLabels(keys, time.Now().UTC(), []metrics.Label{NewLabel(MetricLabelNameModule, module)})
 }
+
+func ModuleSetGauge(module string, val float32, keys ...string) {
+	metrics.SetGaugeWithLabels(keys, val, []metrics.Label{NewLabel(MetricLabelNameModule, module)})
+}

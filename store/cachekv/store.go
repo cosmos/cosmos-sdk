@@ -6,7 +6,9 @@ import (
 	"io"
 	"sort"
 	"sync"
+	"time"
 
+	"github.com/armon/go-metrics"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
 
@@ -51,6 +53,7 @@ func (store *Store) GetStoreType() types.StoreType {
 func (store *Store) Get(key []byte) (value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+	defer metrics.MeasureSince([]string{"store", "cachekv", "get"}, time.Now().UTC())
 
 	types.AssertValidKey(key)
 
@@ -69,6 +72,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 func (store *Store) Set(key []byte, value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+	defer metrics.MeasureSince([]string{"store", "cachekv", "set"}, time.Now().UTC())
 
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
@@ -86,9 +90,9 @@ func (store *Store) Has(key []byte) bool {
 func (store *Store) Delete(key []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+	defer metrics.MeasureSince([]string{"store", "cachekv", "delete"}, time.Now().UTC())
 
 	types.AssertValidKey(key)
-
 	store.setCacheValue(key, nil, true, true)
 }
 
@@ -96,6 +100,7 @@ func (store *Store) Delete(key []byte) {
 func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+	defer metrics.MeasureSince([]string{"store", "cachekv", "write"}, time.Now().UTC())
 
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.

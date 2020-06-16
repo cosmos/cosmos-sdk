@@ -23,6 +23,8 @@ type ViewKeeper interface {
 
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	QueryAllBalances(ctx sdk.Context, addr sdk.AccAddress,
+		pageReq *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
@@ -68,7 +70,7 @@ func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk
 }
 
 // GetAllBalancesNew returns all the account balances for the given account address.
-func (k BaseViewKeeper) queryAllBalances(ctx sdk.Context, addr sdk.AccAddress,
+func (k BaseViewKeeper) QueryAllBalances(ctx sdk.Context, addr sdk.AccAddress,
 	pageReq *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
 	balances := sdk.NewCoins()
 	store := ctx.KVStore(k.storeKey)

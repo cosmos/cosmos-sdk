@@ -51,9 +51,8 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	//TODO: Uncomment after
-	//_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
-	//suite.Require().Error(err)
+	_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
+	suite.Require().Error(err)
 
 	pageReq := &query.PageRequest{
 		Key:        nil,

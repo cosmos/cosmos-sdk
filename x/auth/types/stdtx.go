@@ -145,7 +145,8 @@ func CountSubKeys(pub crypto.PubKey) int {
 
 var _ sdk.Tx = (*StdTx)(nil)
 
-// Deprecated: StdTx is a standard way to wrap a Msg with Fee and Signatures.
+// StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
+// It only works with Amino, please prefer the new protobuf Tx in types/tx.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`

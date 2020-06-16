@@ -14,6 +14,7 @@ const (
 	QueryAllChannels               = "channels"
 	QueryChannel                   = "channel"
 	QueryConnectionChannels        = "connection-channels"
+	QueryChannelClientState        = "channel-client-state"
 	QueryPacketCommitments         = "packet-commitments"
 	QueryUnrelayedAcknowledgements = "unrelayed-acknowledgements"
 	QueryUnrelayedPacketSends      = "unrelayed-packet-sends"
@@ -153,5 +154,20 @@ func NewRecvResponse(
 		Proof:            commitmenttypes.MerkleProof{Proof: proof},
 		ProofPath:        commitmenttypes.NewMerklePath(strings.Split(host.NextSequenceRecvPath(portID, channelID), "/")),
 		ProofHeight:      uint64(height),
+	}
+}
+
+// QueryChannelClientStateParams defines the parameters necessary for querying
+// ClientState at an associated port ID and channel ID.
+type QueryChannelClientStateParams struct {
+	PortID    string `json:"port_id" yaml:"port_id"`
+	ChannelID string `json:"channel_id" yaml:"channel_id"`
+}
+
+// NewQueryChannelClientStateParams creates a new QueryChannelClientStateParams instance.
+func NewQueryChannelClientStateParams(portID, channelID string) QueryChannelClientStateParams {
+	return QueryChannelClientStateParams{
+		PortID:    portID,
+		ChannelID: channelID,
 	}
 }

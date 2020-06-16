@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -19,7 +20,7 @@ type GenesisTestSuite struct {
 	suite.Suite
 
 	ctx    sdk.Context
-	keeper evidence.Keeper
+	keeper keeper.Keeper
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
@@ -44,7 +45,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Valid() {
 	}
 
 	suite.NotPanics(func() {
-		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(testEvidence))
+		evidence.InitGenesis(suite.ctx, suite.keeper, types.NewGenesisState(testEvidence))
 	})
 
 	for _, e := range testEvidence {
@@ -66,7 +67,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Invalid() {
 	}
 
 	suite.Panics(func() {
-		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(testEvidence))
+		evidence.InitGenesis(suite.ctx, suite.keeper, types.NewGenesisState(testEvidence))
 	})
 
 	suite.Empty(suite.keeper.GetAllEvidence(suite.ctx))

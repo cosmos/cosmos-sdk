@@ -26,14 +26,15 @@ message PublicKey {
 // keys and a threshold
 message PubKeyMultisigThreshold {
   uint32             threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
-  repeated PublicKey pubkeys   = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
+  repeated PublicKey public_keys = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
 }
 
 // MultiSignature wraps the signatures from a PubKeyMultisigThreshold.
 // See cosmos_sdk.tx.v1.ModeInfo.Multi for how to specify which signers signed
 // and with which modes
 message MultiSignature {
-  repeated bytes sigs = 1;
+  option (gogoproto.goproto_unrecognized) = true;
+  repeated bytes signatures = 1;
 }
 
 // CompactBitArray is an implementation of a space efficient bit array.

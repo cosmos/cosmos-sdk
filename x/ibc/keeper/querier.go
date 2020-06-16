@@ -7,7 +7,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // NewQuerier creates a querier for the IBC module
@@ -37,20 +38,22 @@ func NewQuerier(k Keeper) sdk.Querier {
 			default:
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", connection.SubModuleName)
 			}
-		case channel.SubModuleName:
+		case channeltypes.SubModuleName:
 			switch path[1] {
-			case channel.QueryAllChannels:
-				res, err = channel.QuerierChannels(ctx, req, k.ChannelKeeper)
-			case channel.QueryConnectionChannels:
-				res, err = channel.QuerierConnectionChannels(ctx, req, k.ChannelKeeper)
-			case channel.QueryPacketCommitments:
-				res, err = channel.QuerierPacketCommitments(ctx, req, k.ChannelKeeper)
-			case channel.QueryUnrelayedAcknowledgements:
-				res, err = channel.QuerierUnrelayedAcknowledgements(ctx, req, k.ChannelKeeper)
-			case channel.QueryUnrelayedPacketSends:
-				res, err = channel.QuerierUnrelayedPacketSends(ctx, req, k.ChannelKeeper)
+			case channeltypes.QueryAllChannels:
+				res, err = channelkeeper.QuerierChannels(ctx, req, k.ChannelKeeper)
+			case channeltypes.QueryConnectionChannels:
+				res, err = channelkeeper.QuerierConnectionChannels(ctx, req, k.ChannelKeeper)
+			case channeltypes.QueryChannelClientState:
+				res, err = channelkeeper.QuerierChannelClientState(ctx, req, k.ChannelKeeper)
+			case channeltypes.QueryPacketCommitments:
+				res, err = channelkeeper.QuerierPacketCommitments(ctx, req, k.ChannelKeeper)
+			case channeltypes.QueryUnrelayedAcknowledgements:
+				res, err = channelkeeper.QuerierUnrelayedAcknowledgements(ctx, req, k.ChannelKeeper)
+			case channeltypes.QueryUnrelayedPacketSends:
+				res, err = channelkeeper.QuerierUnrelayedPacketSends(ctx, req, k.ChannelKeeper)
 			default:
-				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channel.SubModuleName)
+				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channeltypes.SubModuleName)
 			}
 		default:
 			err = sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown IBC query endpoint")

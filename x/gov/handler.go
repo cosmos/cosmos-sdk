@@ -5,31 +5,32 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewHandler creates an sdk.Handler for all the gov type messages
-func NewHandler(keeper Keeper) sdk.Handler {
+func NewHandler(keeper keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case *MsgDeposit:
+		case *types.MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
 
-		case MsgSubmitProposalI:
+		case types.MsgSubmitProposalI:
 			return handleMsgSubmitProposal(ctx, keeper, msg)
 
-		case *MsgVote:
+		case *types.MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }
 
-func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposalI) (*sdk.Result, error) {
+func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.MsgSubmitProposalI) (*sdk.Result, error) {
 	proposal, err := keeper.SubmitProposal(ctx, msg.GetContent())
 	if err != nil {
 		return nil, err
@@ -58,12 +59,12 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	ctx.EventManager().EmitEvent(submitEvent)
 
 	return &sdk.Result{
-		Data:   GetProposalIDBytes(proposal.ProposalID),
+		Data:   types.GetProposalIDBytes(proposal.ProposalID),
 		Events: ctx.EventManager().ABCIEvents(),
 	}, nil
 }
 
-func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg *MsgDeposit) (*sdk.Result, error) {
+func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDeposit) (*sdk.Result, error) {
 	votingStarted, err := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
 		return nil, err
@@ -89,7 +90,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg *MsgDeposit) (*sdk.Res
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgVote(ctx sdk.Context, keeper Keeper, msg *MsgVote) (*sdk.Result, error) {
+func handleMsgVote(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgVote) (*sdk.Result, error) {
 	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	if err != nil {
 		return nil, err

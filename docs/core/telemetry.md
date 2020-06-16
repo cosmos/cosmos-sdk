@@ -50,6 +50,7 @@ Consider the following examples with enough granularity and adequate cardinality
 * tx gas used
 * block gas used
 * amount of tokens minted
+* amount of accounts created
 
 The following examples expose too much cardinality and may not even prove to be useful:
 

@@ -153,6 +153,7 @@ func GetConfig() Config {
 			PrometheusRetentionTime: viper.GetInt64("telemetry.prometheus-retention-time"),
 		},
 		API: APIConfig{
+			Enable:             viper.GetBool("api.enable"),
 			Address:            viper.GetString("api.address"),
 			MaxOpenConnections: viper.GetUint("api.max-open-connections"),
 			RPCReadTimeout:     viper.GetUint("api.rpc-read-timeout"),

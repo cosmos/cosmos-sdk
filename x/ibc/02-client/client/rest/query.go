@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -15,7 +16,7 @@ import (
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/clients", queryAllClientStatesFn(clientCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state/{%s}", RestClientID, RestRootHeight), queryConsensusStateHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(clientCtx)).Methods("GET")
 }
@@ -99,11 +100,16 @@ func queryClientStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // @Success 200 {object} QueryConsensusState "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/clients/{client-id}/consensus-state [get]
+// @Router /ibc/clients/{client-id}/consensus-state/{height} [get]
 func queryConsensusStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
+		height, err := strconv.ParseUint(vars[RestRootHeight], 10, 64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
@@ -112,7 +118,7 @@ func queryConsensusStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		csRes, err := utils.QueryConsensusState(clientCtx, clientID, uint64(clientCtx.Height), prove)
+		csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -18,9 +18,25 @@ func NewLabel(name, value string) metrics.Label {
 }
 
 func ModuleMeasureSince(module string, keys ...string) {
-	metrics.MeasureSinceWithLabels(keys, time.Now().UTC(), []metrics.Label{NewLabel(MetricLabelNameModule, module)})
+	metrics.MeasureSinceWithLabels(
+		keys,
+		time.Now().UTC(),
+		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, globalLabels...),
+	)
 }
 
 func ModuleSetGauge(module string, val float32, keys ...string) {
-	metrics.SetGaugeWithLabels(keys, val, []metrics.Label{NewLabel(MetricLabelNameModule, module)})
+	metrics.SetGaugeWithLabels(
+		keys,
+		val,
+		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, globalLabels...),
+	)
+}
+
+func SetGauge(val float32, keys ...string) {
+	metrics.SetGaugeWithLabels(keys, val, globalLabels)
+}
+
+func MeasureSince(keys ...string) {
+	metrics.MeasureSinceWithLabels(keys, time.Now().UTC(), globalLabels)
 }

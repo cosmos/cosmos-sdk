@@ -26,7 +26,7 @@ $ <appcli> tx broadcast ./mytxn.json
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			if clientCtx.Offline {
 				return errors.New("cannot broadcast tx during offline mode")

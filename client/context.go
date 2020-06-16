@@ -370,10 +370,10 @@ func (ctx Context) PrintOutput(toPrint interface{}) error {
 		out, err = yaml.Marshal(&toPrint)
 
 	case "json":
+		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
+
 		if ctx.Indent {
-			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
-		} else {
-			out, err = ctx.Codec.MarshalJSON(toPrint)
+			out, err = codec.MarshalIndentFromJSON(out)
 		}
 	}
 

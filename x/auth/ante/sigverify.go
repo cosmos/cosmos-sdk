@@ -363,7 +363,9 @@ func ConsumeMultisignatureVerificationGas(
 	sigIndex := 0
 
 	for i := 0; i < size; i++ {
-		if sig.BitArray.GetIndex(i) {
+		if !sig.BitArray.GetIndex(i) {
+			continue
+		} else {
 			sigV2 := signing.SignatureV2{
 				PubKey: pubkey.GetPubKeys()[i],
 				Data:   sig.Signatures[sigIndex],

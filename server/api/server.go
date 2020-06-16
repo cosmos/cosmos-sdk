@@ -1,9 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -14,6 +16,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -25,6 +29,7 @@ type Server struct {
 	ClientCtx client.Context
 
 	logger   log.Logger
+	metrics  *telemetry.Metrics
 	listener net.Listener
 }
 
@@ -40,18 +45,28 @@ func New(clientCtx client.Context) *Server {
 // JSON RPC server. Configuration options are provided via config.APIConfig
 // and are delegated to the Tendermint JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
-func (s *Server) Start(cfg config.APIConfig) error {
-	if cfg.Swagger {
+func (s *Server) Start(cfg config.Config) error {
+	if cfg.API.Swagger {
 		s.registerSwaggerUI()
 	}
 
-	tmCfg := tmrpcserver.DefaultConfig()
-	tmCfg.MaxOpenConnections = int(cfg.MaxOpenConnections)
-	tmCfg.ReadTimeout = time.Duration(cfg.RPCReadTimeout) * time.Second
-	tmCfg.WriteTimeout = time.Duration(cfg.RPCWriteTimeout) * time.Second
-	tmCfg.MaxBodyBytes = int64(cfg.RPCMaxBodyBytes)
+	if cfg.Telemetry.Enabled {
+		m, err := telemetry.New(cfg.Telemetry)
+		if err != nil {
+			return err
+		}
 
-	listener, err := tmrpcserver.Listen(cfg.Address, tmCfg)
+		s.metrics = m
+		s.registerMetrics()
+	}
+
+	tmCfg := tmrpcserver.DefaultConfig()
+	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
+	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
+	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
+	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
+
+	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
 	if err != nil {
 		return err
 	}
@@ -59,7 +74,7 @@ func (s *Server) Start(cfg config.APIConfig) error {
 	s.listener = listener
 	var h http.Handler = s.Router
 
-	if cfg.EnableUnsafeCORS {
+	if cfg.API.EnableUnsafeCORS {
 		return tmrpcserver.Serve(s.listener, handlers.CORS()(h), s.logger, tmCfg)
 	}
 
@@ -74,4 +89,21 @@ func (s *Server) registerSwaggerUI() {
 
 	staticServer := http.FileServer(statikFS)
 	s.Router.PathPrefix("/").Handler(staticServer)
+}
+
+func (s *Server) registerMetrics() {
+	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
+		format := strings.TrimSpace(r.FormValue("format"))
+
+		gr, err := s.metrics.Gather(format)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to gather metrics: %s", err))
+			return
+		}
+
+		w.Header().Set("Content-Type", gr.ContentType)
+		_, _ = w.Write(gr.Metrics)
+	}
+
+	s.Router.HandleFunc("/metrics", metricsHandler).Methods("GET")
 }

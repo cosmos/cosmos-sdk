@@ -301,10 +301,6 @@ func TestTxBuilder_BuildTxForSim(t *testing.T) {
 	require.NotNil(t, tx)
 }
 
-func TestTxBuilder_SimulateAndExecute(t *testing.T) {
-
-}
-
 func TestTxBuilder_SignStdTx(t *testing.T) {
 	//const from = "from-key"
 	//msgs := []sdk.Msg{sdk.NewTestMsg(addr)}

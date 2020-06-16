@@ -33,6 +33,8 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, ibctmtypes.Header{}, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
 		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, invalidHeader, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "invalid header"},
 		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, []*ics23.ProofSpec{nil}, signer), false, "invalid proof specs"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, nil, signer), false, "nil proof specs"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, lite.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "trusting period not less than unbonding period"},
 	}
 
 	for i, tc := range cases {

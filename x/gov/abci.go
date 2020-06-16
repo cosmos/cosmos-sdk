@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, keeper Keeper) {
+func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	logger := keeper.Logger(ctx)
 
 	// delete inactive proposal from store and its deposits
-	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
+	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal types.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.ProposalID)
 		keeper.DeleteDeposits(ctx, proposal.ProposalID)
 
@@ -36,7 +37,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 	})
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
+	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal types.Proposal) bool {
 		var tagValue, logMsg string
 
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
@@ -56,7 +57,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 			// is written and the error message is logged.
 			err := handler(cacheCtx, proposal.GetContent())
 			if err == nil {
-				proposal.Status = StatusPassed
+				proposal.Status = types.StatusPassed
 				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
 
@@ -69,12 +70,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 				// write state to the underlying multi-store
 				writeCache()
 			} else {
-				proposal.Status = StatusFailed
+				proposal.Status = types.StatusFailed
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err)
 			}
 		} else {
-			proposal.Status = StatusRejected
+			proposal.Status = types.StatusRejected
 			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
 		}

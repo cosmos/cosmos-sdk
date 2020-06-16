@@ -9,10 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 )
 
 func TestInvalidMsg(t *testing.T) {
-	k := gov.Keeper{}
+	k := keeper.Keeper{}
 	h := gov.NewHandler(k)
 
 	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())

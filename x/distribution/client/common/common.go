@@ -22,7 +22,7 @@ func QueryDelegationRewards(clientCtx client.Context, queryRoute, delAddr, valAd
 	}
 
 	params := types.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
-	bz, err := clientCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal params: %w", err)
 	}
@@ -36,7 +36,7 @@ func QueryDelegationRewards(clientCtx client.Context, queryRoute, delAddr, valAd
 func QueryDelegatorValidators(clientCtx client.Context, queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
 	res, _, err := clientCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorValidators),
-		clientCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
+		clientCtx.JSONMarshaler.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
 	return res, err
 }
@@ -45,7 +45,7 @@ func QueryDelegatorValidators(clientCtx client.Context, queryRoute string, deleg
 func QueryValidatorCommission(clientCtx client.Context, queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
 	res, _, err := clientCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorCommission),
-		clientCtx.Codec.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
+		clientCtx.JSONMarshaler.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
 	return res, err
 }
@@ -61,7 +61,7 @@ func WithdrawAllDelegatorRewards(clientCtx client.Context, queryRoute string, de
 	}
 
 	var validators []sdk.ValAddress
-	if err := clientCtx.Codec.UnmarshalJSON(bz, &validators); err != nil {
+	if err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &validators); err != nil {
 		return nil, err
 	}
 

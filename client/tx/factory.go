@@ -3,14 +3,13 @@ package tx
 import (
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Factory defines a client transaction factory that facilitates generating and

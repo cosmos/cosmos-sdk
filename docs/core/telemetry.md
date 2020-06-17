@@ -59,28 +59,34 @@ The following examples expose too much cardinality and may not even prove to be 
 
 ## Supported Metrics
 
-| Metric                       | Description                                                                            | Unit     | Type    |
-| :--------------------------- | :------------------------------------------------------------------------------------- | :------- | :------ |
-| `tx_count`                   | Total number of txs processed via `DeliverTx`                                          | tx       | counter |
-| `tx_gas_used`                | The total amount of gas used by a tx                                                   | gas      | gauge   |
-| `tx_gas_wanted`              | The total amount of gas requested by a tx                                              | gas      | gauge   |
-| `tx_msg_send`                | The total amount of tokens sent in a `MsgSend` (per denom)                             | token    | gauge   |
-| `tx_msg_withdraw_reward`     | The total amount of tokens withdrawn in a `MsgWithdrawDelegatorReward` (per denom)     | token    | gauge   |
-| `tx_msg_withdraw_commission` | The total amount of tokens withdrawn in a `MsgWithdrawValidatorCommission` (per denom) | token    | gauge   |
-| `gov_proposal`               | Total number of governance proposals                                                   | proposal | counter |
-| `begin_blocker`              | Duration of `BeginBlock` for a given module                                            | ms       | summary |
-| `end_blocker`                | Duration of `EndBlock` for a given module                                              | ms       | summary |
-| `store_iavl_get`             | Duration of an IAVL `Store#Get` call                                                   | ms       | summary |
-| `store_iavl_set`             | Duration of an IAVL `Store#Set` call                                                   | ms       | summary |
-| `store_iavl_has`             | Duration of an IAVL `Store#Has` call                                                   | ms       | summary |
-| `store_iavl_delete`          | Duration of an IAVL `Store#Delete` call                                                | ms       | summary |
-| `store_iavl_commit`          | Duration of an IAVL `Store#Commit` call                                                | ms       | summary |
-| `store_iavl_query`           | Duration of an IAVL `Store#Query` call                                                 | ms       | summary |
-| `store_gaskv_get`            | Duration of a GasKV `Store#Get` call                                                   | ms       | summary |
-| `store_gaskv_set`            | Duration of a GasKV `Store#Set` call                                                   | ms       | summary |
-| `store_gaskv_has`            | Duration of a GasKV `Store#Has` call                                                   | ms       | summary |
-| `store_gaskv_delete`         | Duration of a GasKV `Store#Delete` call                                                | ms       | summary |
-| `store_cachekv_get`          | Duration of a CacheKV `Store#Get` call                                                 | ms       | summary |
-| `store_cachekv_set`          | Duration of a CacheKV `Store#Set` call                                                 | ms       | summary |
-| `store_cachekv_write`        | Duration of a CacheKV `Store#Write` call                                               | ms       | summary |
-| `store_cachekv_delete`       | Duration of a CacheKV `Store#Delete` call                                              | ms       | summary |
+| Metric                          | Description                                                                            | Unit         | Type    |
+| :------------------------------ | :------------------------------------------------------------------------------------- | :----------- | :------ |
+| `tx_count`                      | Total number of txs processed via `DeliverTx`                                          | tx           | counter |
+| `tx_gas_used`                   | The total amount of gas used by a tx                                                   | gas          | gauge   |
+| `tx_gas_wanted`                 | The total amount of gas requested by a tx                                              | gas          | gauge   |
+| `tx_msg_send`                   | The total amount of tokens sent in a `MsgSend` (per denom)                             | token        | gauge   |
+| `tx_msg_withdraw_reward`        | The total amount of tokens withdrawn in a `MsgWithdrawDelegatorReward` (per denom)     | token        | gauge   |
+| `tx_msg_withdraw_commission`    | The total amount of tokens withdrawn in a `MsgWithdrawValidatorCommission` (per denom) | token        | gauge   |
+| `tx_msg_delegate`               | The total amount of tokens delegated in a `MsgDelegate`                                | token        | gauge   |
+| `tx_msg_begin_unbonding`        | The total amount of tokens undelegated in a `MsgUndelegate`                            | token        | gauge   |
+| `tx_msg_begin_begin_redelegate` | The total amount of tokens redelegated in a `MsgBeginRedelegate`                       | token        | gauge   |
+| `gov_proposal`                  | Total number of governance proposals                                                   | proposal     | counter |
+| `staking_delegate`              | Total number of delegations                                                            | delegation   | counter |
+| `staking_undelegate`            | Total number of undelegations                                                          | undelegation | counter |
+| `staking_redelegate`            | Total number of redelegations                                                          | redelegation | counter |
+| `begin_blocker`                 | Duration of `BeginBlock` for a given module                                            | ms           | summary |
+| `end_blocker`                   | Duration of `EndBlock` for a given module                                              | ms           | summary |
+| `store_iavl_get`                | Duration of an IAVL `Store#Get` call                                                   | ms           | summary |
+| `store_iavl_set`                | Duration of an IAVL `Store#Set` call                                                   | ms           | summary |
+| `store_iavl_has`                | Duration of an IAVL `Store#Has` call                                                   | ms           | summary |
+| `store_iavl_delete`             | Duration of an IAVL `Store#Delete` call                                                | ms           | summary |
+| `store_iavl_commit`             | Duration of an IAVL `Store#Commit` call                                                | ms           | summary |
+| `store_iavl_query`              | Duration of an IAVL `Store#Query` call                                                 | ms           | summary |
+| `store_gaskv_get`               | Duration of a GasKV `Store#Get` call                                                   | ms           | summary |
+| `store_gaskv_set`               | Duration of a GasKV `Store#Set` call                                                   | ms           | summary |
+| `store_gaskv_has`               | Duration of a GasKV `Store#Has` call                                                   | ms           | summary |
+| `store_gaskv_delete`            | Duration of a GasKV `Store#Delete` call                                                | ms           | summary |
+| `store_cachekv_get`             | Duration of a CacheKV `Store#Get` call                                                 | ms           | summary |
+| `store_cachekv_set`             | Duration of a CacheKV `Store#Set` call                                                 | ms           | summary |
+| `store_cachekv_write`           | Duration of a CacheKV `Store#Write` call                                               | ms           | summary |
+| `store_cachekv_delete`          | Duration of a CacheKV `Store#Delete` call                                              | ms           | summary |

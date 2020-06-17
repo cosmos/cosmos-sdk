@@ -48,6 +48,32 @@ halt-time = {{ .BaseConfig.HaltTime }}
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
 ###############################################################################
+###                         Telemetry Configuration                         ###
+###############################################################################
+
+[telemetry]
+
+# Prefixed with keys to separate services
+service-name = "{{ .Telemetry.ServiceName }}"
+
+# Enabled enables the application telemetry functionality. When enabled,
+# an in-memory sink is also enabled by default. Operators may also enabled
+# other sinks such as Prometheus.
+enabled = {{ .Telemetry.Enabled }}
+
+# Enable prefixing gauge values with hostname
+enable-hostname = {{ .Telemetry.EnableHostname }}
+
+# Enable adding hostname to labels
+enable-hostname-label = {{ .Telemetry.EnableHostnameLabel }}
+
+# Enable adding service to labels
+enable-service-label = {{ .Telemetry.EnableServiceLabel }}
+
+# PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
+prometheus-retention-time = {{ .Telemetry.PrometheusRetentionTime }}
+
+###############################################################################
 ###                           API Configuration                             ###
 ###############################################################################
 

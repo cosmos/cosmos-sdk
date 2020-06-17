@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type (
@@ -11,22 +11,9 @@ type (
 	// application-defined concrete transaction type. The type returned must
 	// implement TxBuilder.
 	TxGenerator interface {
-		NewTx() TxBuilder
-		NewFee() Fee
-		NewSignature() Signature
-		MarshalTx(tx types.Tx) ([]byte, error)
-	}
-
-	Fee interface {
-		types.Fee
-		SetGas(uint64)
-		SetAmount(types.Coins)
-	}
-
-	Signature interface {
-		types.Signature
-		SetPubKey(crypto.PubKey) error
-		SetSignature([]byte)
+		NewTxBuilder() TxBuilder
+		SignModeHandler() signing.SignModeHandler
+		MarshalTx(tx sdk.Tx) ([]byte, error)
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction
@@ -34,18 +21,12 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	TxBuilder interface {
-		GetTx() types.Tx
+		GetTx() sdk.Tx
 
-		SetMsgs(...types.Msg) error
-		GetSignatures() []types.Signature
-		SetSignatures(...Signature) error
-		GetFee() types.Fee
-		SetFee(Fee) error
-		GetMemo() string
-		SetMemo(string)
-
-		// CanonicalSignBytes returns the canonical sign bytes to sign over, given a
-		// chain ID, along with an account and sequence number.
-		CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
+		SetMsgs(msgs ...sdk.Msg) error
+		SetSignatures(signatures ...signingtypes.SignatureV2) error
+		SetMemo(memo string)
+		SetFeeAmount(amount sdk.Coins)
+		SetGasLimit(limit uint64)
 	}
 )

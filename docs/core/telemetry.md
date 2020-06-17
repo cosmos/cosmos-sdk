@@ -90,6 +90,12 @@ The following examples expose too much cardinality and may not even prove to be 
 | `staking_delegate`              | Total number of delegations                                                            | delegation   | counter |
 | `staking_undelegate`            | Total number of undelegations                                                          | undelegation | counter |
 | `staking_redelegate`            | Total number of redelegations                                                          | redelegation | counter |
+| `abci_check_tx`                 | Duration of ABCI `CheckTx`                                                             | ms           | summary |
+| `abci_deliver_tx`               | Duration of ABCI `DeliverTx`                                                           | ms           | summary |
+| `abci_commit`                   | Duration of ABCI `Commit`                                                              | ms           | summary |
+| `abci_query`                    | Duration of ABCI `Query`                                                               | ms           | summary |
+| `abci_begin_block`              | Duration of ABCI `BeginBlock`                                                          | ms           | summary |
+| `abci_end_block`                | Duration of ABCI `EndBlock`                                                            | ms           | summary |
 | `begin_blocker`                 | Duration of `BeginBlock` for a given module                                            | ms           | summary |
 | `end_blocker`                   | Duration of `EndBlock` for a given module                                              | ms           | summary |
 | `store_iavl_get`                | Duration of an IAVL `Store#Get` call                                                   | ms           | summary |

@@ -1,20 +1,20 @@
 package types
 
 import (
+	"reflect"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/stretchr/testify/require"
-	"reflect"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-const fromkey = "fromkey"
 
 func makeCodec() *codec.Codec {
 	cdc := codec.New()
@@ -25,6 +25,9 @@ func makeCodec() *codec.Codec {
 }
 
 func setupStdTxBuilderTest(t *testing.T) (client.TxBuilder, keyring.Info) {
+
+	const fromkey = "fromkey"
+
 	// Now add a temporary keybase
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
@@ -43,12 +46,12 @@ func setupStdTxBuilderTest(t *testing.T) (client.TxBuilder, keyring.Info) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(info.GetAddress())}
 
 	stdTx := StdTx{
-		Memo: "foomemo",
-		Msgs: msgs,
+		Memo:       "foomemo",
+		Msgs:       msgs,
 		Signatures: nil,
 		Fee: StdFee{
 			Amount: NewTestCoins(),
-			Gas: 200000,
+			Gas:    200000,
 		},
 	}
 
@@ -111,12 +114,12 @@ func TestStdTxBuilder_SetSignatures(t *testing.T) {
 
 	singleSignatureData := signingtypes.SingleSignatureData{
 		Signature: priv.PubKey().Bytes(),
-		SignMode: signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 	}
 
 	err := stdTxBuilder.SetSignatures(signingtypes.SignatureV2{
 		PubKey: priv.PubKey(),
-		Data: &singleSignatureData,
+		Data:   &singleSignatureData,
 	})
 
 	require.Equal(t, 1, len(stdTxBuilder.GetTx().GetMsgs()[0].GetSigners()))

@@ -1,5 +1,6 @@
 syntax = "proto3";
 package cosmos_sdk.query.v1;
+import "third_party/proto/gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/query";
 
@@ -19,7 +20,7 @@ message PageRequest {
     // offset is a numeric offset that can be used when key is unavailable.
     // It is less efficient than using key. Only one of offset or key should
     // be set.
-    uint64 offset = 2;
+    uint64 offset = 2 [(gogoproto.nullable) = true];
 
     // limit is the total number of results to be returned in the result page.
     // If left empty it will default to a value to be set by each app.

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -20,8 +20,8 @@ const (
 )
 
 var (
-	multiPermAcc  = auth.NewEmptyModuleAccount(multiPerm, auth.Burner, auth.Minter, auth.Staking)
-	randomPermAcc = auth.NewEmptyModuleAccount(randomPerm, "random")
+	multiPermAcc  = types.NewEmptyModuleAccount(multiPerm, types.Burner, types.Minter, types.Staking)
+	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -104,12 +104,12 @@ func TestSupply_ValidatePermissions(t *testing.T) {
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil
 	maccPerms[types.Burner] = []string{types.Burner}
-	maccPerms[auth.Minter] = []string{types.Minter}
+	maccPerms[types.Minter] = []string{types.Minter}
 	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
 	appCodec := std.NewAppCodec(app.Codec(), codectypes.NewInterfaceRegistry())
-	keeper := auth.NewAccountKeeper(
+	keeper := keeper.NewAccountKeeper(
 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
 		types.ProtoBaseAccount, maccPerms,
 	)

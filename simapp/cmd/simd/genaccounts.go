@@ -18,8 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -86,10 +85,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			}
 
 			// create concrete account type based on input parameters
-			var genAccount types.GenesisAccount
+			var genAccount authtypes.GenesisAccount
 
 			balances := banktypes.Balance{Address: addr, Coins: coins.Sort()}
-			baseAccount := auth.NewBaseAccount(addr, nil, 0, 0)
+			baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
+
 			if !vestingAmt.IsZero() {
 				baseVestingAccount := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
 
@@ -122,7 +122,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
 
-			authGenState := auth.GetGenesisStateFromAppState(cdc, appState)
+			authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
 
 			if authGenState.Accounts.Contains(addr) {
 				return fmt.Errorf("cannot add account at existing address %s", addr)
@@ -131,14 +131,14 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			// Add the new account to the set of genesis accounts and sanitize the
 			// accounts afterwards.
 			authGenState.Accounts = append(authGenState.Accounts, genAccount)
-			authGenState.Accounts = auth.SanitizeGenesisAccounts(authGenState.Accounts)
+			authGenState.Accounts = authtypes.SanitizeGenesisAccounts(authGenState.Accounts)
 
 			authGenStateBz, err := cdc.MarshalJSON(authGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 			}
 
-			appState[auth.ModuleName] = authGenStateBz
+			appState[authtypes.ModuleName] = authGenStateBz
 
 			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
 			bankGenState.Balances = append(bankGenState.Balances, balances)

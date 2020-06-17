@@ -1,6 +1,8 @@
 package types
 
 import (
+	ics23 "github.com/confio/ics23/go"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,6 +22,8 @@ type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
 
+	ChainID string `json:"chain_id" yaml:"chain_id"`
+
 	// Frozen status of the client
 	Frozen bool `json:"frozen" yaml:"frozen"`
 
@@ -27,15 +31,11 @@ type ClientState struct {
 	ConsensusState ConsensusState `json:"consensus_state" yaml:"consensus_state"`
 }
 
-// InitializeFromMsg creates a solo machine client from a MsgCreateClient
-func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
-	return NewClientState(msg.GetClientID(), msg.ConsensusState), nil
-}
-
 // NewClientState creates a new ClientState instance.
-func NewClientState(id string, consensusState ConsensusState) ClientState {
+func NewClientState(id, chainID string, consensusState ConsensusState) ClientState {
 	return ClientState{
 		ID:             id,
+		ChainID:        chainID,
 		Frozen:         false,
 		ConsensusState: consensusState,
 	}
@@ -48,7 +48,7 @@ func (cs ClientState) GetID() string {
 
 // GetChainID returns an empty string.
 func (cs ClientState) GetChainID() string {
-	return ""
+	return cs.ChainID
 }
 
 // ClientType is Solo Machine.
@@ -64,6 +64,11 @@ func (cs ClientState) GetLatestHeight() uint64 {
 // IsFrozen returns true if the client is frozen
 func (cs ClientState) IsFrozen() bool {
 	return cs.Frozen
+}
+
+// GetProofSpecs returns nil proof specs since client state verification uses signatures.
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return nil
 }
 
 // Validate performs basic validation of the client state fields.
@@ -103,7 +108,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -138,7 +143,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -174,7 +179,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -208,7 +213,7 @@ func (cs ClientState) VerifyPacketCommitment(
 
 	data := PacketCommitmentSignBytes(sequence, path, commitmentBytes)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -242,7 +247,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 
 	data := PacketAcknowledgementSignBytes(sequence, path, acknowledgement)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -276,7 +281,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 
 	data := PacketAcknowledgementAbsenceSignBytes(sequence, path)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -309,7 +314,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	data := NextSequenceRecvSignBytes(sequence, path, nextSequenceRecv)
 
-	if err := CheckSignature(cs.ConsensusState.PubKey, data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 
@@ -365,6 +370,6 @@ func validateVerificationArgs(
 
 // sets the client state to the store
 func setClientState(store sdk.KVStore, clientState clientexported.ClientState) {
-	bz := SubModuleCdc.MustMarshalBinaryBare(clientState)
+	bz := amino.MustMarshalBinaryBare(clientState)
 	store.Set(host.KeyClientState(), bz)
 }

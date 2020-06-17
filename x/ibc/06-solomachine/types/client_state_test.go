@@ -36,17 +36,17 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"invalid client id",
-			solomachinetypes.NewClientState("(testClientID)", suite.ConsensusState()),
+			solomachinetypes.NewClientState("(testClientID)", "", suite.ConsensusState()),
 			false,
 		},
 		{
 			"sequence is zero",
-			solomachinetypes.NewClientState(suite.clientID, solomachinetypes.ConsensusState{0, suite.privKey.PubKey()}),
+			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{0, suite.privKey.PubKey()}),
 			false,
 		},
 		{
 			"pubkey is empty",
-			solomachinetypes.NewClientState(suite.clientID, solomachinetypes.ConsensusState{suite.sequence, nil}),
+			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{suite.sequence, nil}),
 			false,
 		},
 	}

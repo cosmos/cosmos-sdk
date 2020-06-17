@@ -3,8 +3,6 @@ package types
 import (
 	"bytes"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
@@ -19,15 +17,6 @@ var (
 	_ evidenceexported.Evidence   = Evidence{}
 	_ clientexported.Misbehaviour = Evidence{}
 )
-
-// Evidence is proof of misbehaviour for a solo machine which consists of a sequence
-// and two signatures over different messages at that sequence.
-type Evidence struct {
-	ClientID     string           `json:"client_id" yaml:"client_id"`
-	Sequence     uint64           `json:"sequence" yaml:"sequence"`
-	SignatureOne SignatureAndData `json:"signature_one" yaml:"signature_one"`
-	SignatureTwo SignatureAndData `json:"signature_two" yam;:"signature_two"`
-}
 
 // ClientType is a Solo Machine light client.
 func (ev Evidence) ClientType() clientexported.ClientType {
@@ -47,15 +36,6 @@ func (ev Evidence) Route() string {
 // Type implements Evidence interface.
 func (ev Evidence) Type() string {
 	return "client_misbehaviour"
-}
-
-// String implements Evidence interface.
-func (ev Evidence) String() string {
-	bz, err := yaml.Marshal(ev)
-	if err != nil {
-		panic(err)
-	}
-	return string(bz)
 }
 
 // Hash implements Evidence interface
@@ -80,11 +60,11 @@ func (ev Evidence) ValidateBasic() error {
 	}
 
 	if err := ev.SignatureOne.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+		return sdkerrors.Wrap(err, "signature one failed basic validation")
 	}
 
 	if err := ev.SignatureTwo.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+		return sdkerrors.Wrap(err, "signature two failed basic validation")
 	}
 
 	// evidence signatures cannot be identical
@@ -94,16 +74,10 @@ func (ev Evidence) ValidateBasic() error {
 
 	// message data signed cannot be identical
 	if bytes.Equal(ev.SignatureOne.Data, ev.SignatureTwo.Data) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signatures must be signed over different messages")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signature data must be signed over different messages")
 	}
 
 	return nil
-}
-
-// SignatureAndData is a signature and the data signed over to create the signature.
-type SignatureAndData struct {
-	Signature []byte `json:"signature" yaml:"signature"`
-	Data      []byte `json:"data" yaml:"data"`
 }
 
 // ValidateBasic ensures that the signature and data fields are non-empty.

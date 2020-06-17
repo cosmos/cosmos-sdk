@@ -72,7 +72,7 @@ func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
 }
 
 func (suite *SoloMachineTestSuite) ClientState() solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(suite.clientID, suite.ConsensusState())
+	return solomachinetypes.NewClientState(suite.clientID, "", suite.ConsensusState())
 }
 
 func (suite *SoloMachineTestSuite) ConsensusState() solomachinetypes.ConsensusState {

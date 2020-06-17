@@ -6,7 +6,6 @@ import (
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -37,7 +36,7 @@ func (msg MsgCreateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.ConsensusState.ValidateBasic(); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "consensus state failed validatebasic: %v", err)
+		return err
 	}
 
 	return host.ClientIdentifierValidator(msg.ClientID)
@@ -50,7 +49,7 @@ func (msg MsgCreateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.ConsensusState.PubKey.Address())}
+	return []sdk.AccAddress{sdk.AccAddress(msg.ConsensusState.GetPubKey().Address())}
 }
 
 // GetClientID implements clientexported.MsgCreateClient
@@ -89,7 +88,7 @@ func (msg MsgUpdateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidHeader, "header validatebasic failed: %v", err)
+		return err
 	}
 	return host.ClientIdentifierValidator(msg.ClientID)
 }
@@ -101,7 +100,7 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.Header.NewPubKey.Address())}
+	return []sdk.AccAddress{sdk.AccAddress(msg.Header.GetPubKey().Address())}
 }
 
 // GetClientID implements clientexported.MsgUpdateClient
@@ -131,13 +130,13 @@ func (msg MsgSubmitClientMisbehaviour) Type() string {
 // ValidateBasic performs basic (non-state-dependent) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 	if msg.Evidence == nil {
-		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")
+		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "evidence cannot be nil")
 	}
 	if err := msg.Evidence.ValidateBasic(); err != nil {
 		return err
 	}
 	if msg.Submitter.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "submitter address cannot be empty")
 	}
 
 	return nil

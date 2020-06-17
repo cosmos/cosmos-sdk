@@ -85,7 +85,7 @@ func totalSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryTotalSupplyParams(page, limit)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -112,7 +112,7 @@ func supplyOfHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQuerySupplyOfParams(denom)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return

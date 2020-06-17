@@ -41,7 +41,7 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current minting parameters",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
 			res, _, err := clientCtx.QueryWithData(route, nil)
@@ -67,7 +67,7 @@ func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current minting inflation value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryInflation)
 			res, _, err := clientCtx.QueryWithData(route, nil)
@@ -93,7 +93,7 @@ func GetCmdQueryAnnualProvisions(cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current minting annual provisions value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAnnualProvisions)
 			res, _, err := clientCtx.QueryWithData(route, nil)

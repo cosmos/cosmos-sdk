@@ -107,19 +107,15 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// app.Commit()
 	// create current header and call begin block
 	header := abci.Header{
-		Height: 2,
-		Time:   globalStartTime.Add(timeIncrement),
+		Height: 1,
+		Time:   globalStartTime,
 	}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	lastHeader := ibctmtypes.CreateTestHeader(chainID, 1, globalStartTime, valSet, signers)
 
 	// create an account to send transactions from
-	return &TestChain{
+	chain := &TestChain{
 		t:             t,
 		ChainID:       chainID,
 		App:           app,
-		LastHeader:    lastHeader,
 		CurrentHeader: header,
 		Querier:       keeper.NewQuerier(*app.IBCKeeper),
 		Vals:          valSet,
@@ -129,6 +125,10 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		ClientIDs:     make([]string, 0),
 		Connections:   make([]TestConnection, 0),
 	}
+
+	chain.NextBlock()
+
+	return chain
 }
 
 // GetContext returns the current context for the application.
@@ -166,8 +166,9 @@ func (chain *TestChain) NextBlock() {
 
 	// increment the current header
 	chain.CurrentHeader = abci.Header{
-		Height: chain.CurrentHeader.Height + 1,
-		Time:   chain.CurrentHeader.Time,
+		Height:  chain.CurrentHeader.Height + 1,
+		AppHash: chain.App.LastCommitID().Hash,
+		Time:    chain.CurrentHeader.Time,
 	}
 	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 
@@ -260,7 +261,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 		ValidatorsHash:     vsetHash,
 		NextValidatorsHash: vsetHash,
 		ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
-		AppHash:            chain.App.LastCommitID().Hash,
+		AppHash:            chain.CurrentHeader.AppHash,
 		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 		ProposerAddress:    chain.Vals.Proposer.Address,
@@ -323,9 +324,11 @@ func (chain *TestChain) ConnectionOpenTry(
 
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
+	fmt.Printf("proofInit %v\n", proofInit)
 
 	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
 	require.True(chain.t, found)
+	fmt.Printf("actual constate %v\n", consState)
 
 	consensusHeight := consState.GetHeight()
 	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))

@@ -71,9 +71,8 @@ func Setup(isCheckTx bool) *SimApp {
 
 // SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
-// of one in the default token of the simapp from first genesis account. The balance of the
-// first genesis account must be greater than the number of validators. A Nop logger is set
-// in SimApp.
+// of one consensus engine unit (10^6) in the default token of the simapp from first genesis
+// account. A Nop logger is set in SimApp.
 func SetupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []auth.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
@@ -87,13 +86,15 @@ func SetupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []auth.Genesis
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
 
+	bondAmt := sdk.NewInt(1000000)
+
 	for _, val := range valSet.Validators {
 		validator := stakingtypes.Validator{
 			OperatorAddress:   val.Address.Bytes(),
 			ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
 			Jailed:            false,
 			Status:            sdk.Bonded,
-			Tokens:            sdk.ZeroInt(),
+			Tokens:            bondAmt,
 			DelegatorShares:   sdk.OneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
@@ -112,7 +113,8 @@ func SetupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []auth.Genesis
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
-		totalSupply = totalSupply.Add(b.Coins...)
+		// add genesis acc tokens and delegated tokens to total supply
+		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))...)
 	}
 
 	// update total supply
@@ -135,7 +137,7 @@ func SetupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []auth.Genesis
 
 	// commit genesis changes
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	return app
 }

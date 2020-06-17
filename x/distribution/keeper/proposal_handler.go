@@ -10,7 +10,7 @@ import (
 
 // HandleCommunityPoolSpendProposal is a handler for executing a passed community spend proposal
 func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p *types.CommunityPoolSpendProposal) error {
-	if k.cannotSendToAddrs[p.Recipient.String()] {
+	if k.blockedAddrs[p.Recipient.String()] {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", p.Recipient)
 	}
 

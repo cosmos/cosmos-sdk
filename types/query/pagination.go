@@ -4,6 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+const maxLimitPerPage = 25
+
 // Paginate does pagination of the results in the prefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling.
 //
@@ -24,6 +26,10 @@ func Paginate(
 	offset := req.Offset
 	key := req.Key
 	limit := req.Limit
+
+	if limit == 0 || limit > maxLimitPerPage {
+		limit = 25
+	}
 
 	// check if offset is nil or key is available
 	// thus making the key as the default iterator

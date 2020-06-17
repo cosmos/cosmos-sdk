@@ -1,6 +1,11 @@
 package query_test
 
 import (
+	gocontext "context"
+	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
-	"testing"
 )
 
 const (
@@ -21,7 +25,6 @@ const (
 
 func TestPagination(t *testing.T) {
 	app, ctx := SetupTest(t)
-
 	balances := sdk.NewCoins(sdk.NewInt64Coin("foo", 100), sdk.NewInt64Coin("bar", 50))
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -32,20 +35,26 @@ func TestPagination(t *testing.T) {
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	require.Equal(t, balances, acc1Balances)
 
-	// verify limit
+	t.Log("verify limit")
 	pageReq := &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err := app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
 	require.NoError(t, err)
 	require.NotNil(t, res)
+	require.Equal(t, len(balances), 2)
 	require.Equal(t, acc1Balances, balances)
 
-	// verify paginate with multiple keys
+	queryClient := types.NewQueryClient(ctx.QueryConn())
+	request := types.NewQueryAllBalancesRequest(addr1)
+	result, err := queryClient.AllBalances(gocontext.Background(), request)
+
+	t.Log("verify paginate with limit and countTotal")
 	pageReq = &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
 	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, len(balances), 1)
 	require.NotNil(t, res.NextKey)
+	require.Equal(t, res.Total, uint64(2))
 
 	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, CountTotal: true}
 	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
@@ -58,7 +67,7 @@ func TestPagination(t *testing.T) {
 	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t,1,len(balances))
+	require.Equal(t, 1, len(balances))
 	require.Nil(t, res.NextKey)
 
 	//verify offset usage over key and countTotal false
@@ -66,7 +75,7 @@ func TestPagination(t *testing.T) {
 	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t,1,len(balances))
+	require.Equal(t, 1, len(balances))
 	require.NotNil(t, res.NextKey)
 
 	//verify offset usage over key
@@ -74,7 +83,7 @@ func TestPagination(t *testing.T) {
 	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t,2,len(balances))
+	require.Equal(t, 2, len(balances))
 	require.Nil(t, res.NextKey)
 
 	//verify offset usage over key
@@ -82,7 +91,7 @@ func TestPagination(t *testing.T) {
 	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t,1,len(balances))
+	require.Equal(t, 1, len(balances))
 	require.Nil(t, res.NextKey)
 
 	t.Log("verify not in range offset")
@@ -90,7 +99,7 @@ func TestPagination(t *testing.T) {
 	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t,0,len(balances))
+	require.Equal(t, 0, len(balances))
 	require.Nil(t, res.NextKey)
 
 	// verify if total is not returned

@@ -34,6 +34,21 @@ types:
 * summaries
 * counters
 
+## Labels
+
+Certain components of modules will have their name automatically added as a label (e.g. `BeginBlock`).
+Operators may also supply the application with a global set of labels that will be applied to all
+metrics emitted using the `telemetry` package (e.g. chain-id). Global labels are supplied as a list
+of [name, value] tuples.
+
+Example:
+
+```toml
+global-labels = [
+  ["chain_id", "chain-OfXo4V"],
+]
+```
+
 ## Cardinality
 
 Cardinality is key, specifically label and key cardinality. Cardinality is how many unique values of

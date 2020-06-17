@@ -21,7 +21,7 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 
-	blacklistedAddrs map[string]bool
+	cannotSendToAddrs map[string]bool
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -30,7 +30,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
-	feeCollectorName string, blacklistedAddrs map[string]bool,
+	feeCollectorName string, cannotSendToAddrs map[string]bool,
 ) Keeper {
 
 	// ensure distribution module account is set
@@ -44,14 +44,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:         key,
-		cdc:              cdc,
-		paramSpace:       paramSpace,
-		authKeeper:       ak,
-		bankKeeper:       bk,
-		stakingKeeper:    sk,
-		feeCollectorName: feeCollectorName,
-		blacklistedAddrs: blacklistedAddrs,
+		storeKey:          key,
+		cdc:               cdc,
+		paramSpace:        paramSpace,
+		authKeeper:        ak,
+		bankKeeper:        bk,
+		stakingKeeper:     sk,
+		feeCollectorName:  feeCollectorName,
+		cannotSendToAddrs: cannotSendToAddrs,
 	}
 }
 
@@ -62,8 +62,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error {
-	if k.blacklistedAddrs[withdrawAddr.String()] {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is blacklisted from receiving external funds", withdrawAddr)
+	if k.cannotSendToAddrs[withdrawAddr.String()] {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", withdrawAddr)
 	}
 
 	if !k.GetWithdrawAddrEnabled(ctx) {

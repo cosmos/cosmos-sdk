@@ -26,7 +26,7 @@ type SendKeeper interface {
 	GetSendEnabled(ctx sdk.Context) bool
 	SetSendEnabled(ctx sdk.Context, enabled bool)
 
-	BlacklistedAddr(addr sdk.AccAddress) bool
+	CannotSendToAddr(addr sdk.AccAddress) bool
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -42,20 +42,20 @@ type BaseSendKeeper struct {
 	paramSpace paramtypes.Subspace
 
 	// list of addresses that are restricted from receiving transactions
-	blacklistedAddrs map[string]bool
+	cannotSendToAddrs map[string]bool
 }
 
 func NewBaseSendKeeper(
-	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, cannotSendToAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
-		BaseViewKeeper:   NewBaseViewKeeper(cdc, storeKey, ak),
-		cdc:              cdc,
-		ak:               ak,
-		storeKey:         storeKey,
-		paramSpace:       paramSpace,
-		blacklistedAddrs: blacklistedAddrs,
+		BaseViewKeeper:    NewBaseViewKeeper(cdc, storeKey, ak),
+		cdc:               cdc,
+		ak:                ak,
+		storeKey:          storeKey,
+		paramSpace:        paramSpace,
+		cannotSendToAddrs: cannotSendToAddrs,
 	}
 }
 
@@ -264,8 +264,8 @@ func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
 }
 
-// BlacklistedAddr checks if a given address is blacklisted (i.e restricted from
+// CannotSendToAddr checks if a given address cannot be sent to (i.e restricted from
 // receiving funds)
-func (k BaseSendKeeper) BlacklistedAddr(addr sdk.AccAddress) bool {
-	return k.blacklistedAddrs[addr.String()]
+func (k BaseSendKeeper) CannotSendToAddr(addr sdk.AccAddress) bool {
+	return k.cannotSendToAddrs[addr.String()]
 }

@@ -36,13 +36,13 @@ func TestSimAppExport(t *testing.T) {
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
 
-// ensure that black listed addresses are properly set in bank keeper
-func TestBlackListedAddrs(t *testing.T) {
+// ensure that cannotSendTo listed addresses are properly set in bank keeper
+func TestCannotSendToAddrs(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0)
 
 	for acc := range maccPerms {
-		require.Equal(t, !allowedReceivingModAcc[acc], app.BankKeeper.BlacklistedAddr(app.AccountKeeper.GetModuleAddress(acc)))
+		require.Equal(t, !allowedReceivingModAcc[acc], app.BankKeeper.CannotSendToAddr(app.AccountKeeper.GetModuleAddress(acc)))
 	}
 }
 

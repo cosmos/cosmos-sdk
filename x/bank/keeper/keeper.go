@@ -57,7 +57,7 @@ type BaseKeeper struct {
 
 func NewBaseKeeper(
 	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
-	blacklistedAddrs map[string]bool,
+	cannotSendToAddrs map[string]bool,
 ) BaseKeeper {
 
 	// set KeyTable if it has not already been set
@@ -66,7 +66,7 @@ func NewBaseKeeper(
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blacklistedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, cannotSendToAddrs),
 		ak:             ak,
 		cdc:            cdc,
 		storeKey:       storeKey,

@@ -50,7 +50,7 @@ func CheckMisbehaviourAndUpdateState(
 	if err := checkMisbehaviour(
 		tmClientState, tmConsensusState, tmEvidence, height, currentTimestamp, consensusParams,
 	); err != nil {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+		return nil, err
 	}
 
 	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())

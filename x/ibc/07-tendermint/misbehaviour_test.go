@@ -157,14 +157,14 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(simapp.DefaultConsensusParams.Evidence.MaxAgeDuration), bothValSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute).Add(simapp.DefaultConsensusParams.Evidence.MaxAgeDuration), bothValSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
 			simapp.DefaultConsensusParams,
 			2*height + uint64(simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks),
-			suite.now.Add(time.Duration(suite.now.Unix())),
+			suite.now.Add(2 * time.Minute).Add(simapp.DefaultConsensusParams.Evidence.MaxAgeDuration),
 			false,
 		},
 		{

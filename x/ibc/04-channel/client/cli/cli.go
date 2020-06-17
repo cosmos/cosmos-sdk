@@ -19,15 +19,20 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
+		// TODO: Query all channels
 		GetCmdQueryChannel(clientCtx),
+		// TODO: Query channels from a connection
 		GetCmdQueryChannelClientState(clientCtx),
+		// TODO: Query all packet commitments
+		// TODO: Query unrelayed packet ACKS
+		// TODO: Query unrelayed packet sends
 	)...)
 
 	return ics04ChannelQueryCmd
 }
 
-// GetTxCmd returns a CLI command handler for all x/ibc channel transaction commands.
-func GetTxCmd(clientCtx client.Context) *cobra.Command {
+// NewTxCmd returns a CLI command handler for all x/ibc channel transaction commands.
+func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	ics04ChannelTxCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC channel transaction subcommands",

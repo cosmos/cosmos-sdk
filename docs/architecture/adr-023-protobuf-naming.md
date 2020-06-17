@@ -120,7 +120,7 @@ or `.v3`.
 [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)
 (ex. `v1alpha1`) _should_ be used for non-stable packages. These packages should
 likely be excluded from breaking change detection and _should_ generally 
-be blacklisted from usage by smart contracts/persistent scripts to prevent them
+be blocked from usage by smart contracts/persistent scripts to prevent them
 from breaking. The SDK _should_ mark any packages as alpha or beta where the
 API is likely to change significantly in the near future.
 

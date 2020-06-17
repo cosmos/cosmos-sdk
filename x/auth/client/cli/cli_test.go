@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
@@ -308,7 +308,7 @@ func TestCLIEncode(t *testing.T) {
 	require.Nil(t, err)
 
 	// Check that the transaction decodes as epxceted
-	var decodedTx auth.StdTx
+	var decodedTx types.StdTx
 	require.Nil(t, f.Cdc.UnmarshalBinaryBare(decodedBytes, &decodedTx))
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }

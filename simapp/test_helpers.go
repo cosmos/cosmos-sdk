@@ -74,7 +74,7 @@ func Setup(isCheckTx bool) *SimApp {
 // of one in the default token of the simapp from first genesis account. The balance of the
 // first genesis account must be greater than the number of validators. A Nop logger is set
 // in SimApp.
-func SetupWithGenesisValSet(valSet []*tmtypes.Validator, genAccs []auth.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+func SetupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []auth.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
 
@@ -84,10 +84,10 @@ func SetupWithGenesisValSet(valSet []*tmtypes.Validator, genAccs []auth.GenesisA
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
 	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
 
-	validators := make([]stakingtypes.Validator, 0, len(valSet))
-	delegations := make([]stakingtypes.Delegation, 0, len(valSet))
+	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
+	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
 
-	for _, val := range valSet {
+	for _, val := range valSet.Validators {
 		validator := stakingtypes.Validator{
 			OperatorAddress:   val.Address.Bytes(),
 			ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),

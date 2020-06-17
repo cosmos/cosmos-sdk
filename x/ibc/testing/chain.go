@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -89,21 +90,21 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
 
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false,
-		abci.Header{
-			Height: 1,
-			Time:   globalStartTime,
-		},
-	)
-
-	// generate and set SenderAccount
+	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	simapp.AddTestAddrsFromPubKeys(app, ctx, []crypto.PubKey{senderPrivKey.PubKey()}, sdk.NewInt(10000000000))
-	acc := app.AccountKeeper.GetAccount(ctx, sdk.AccAddress(senderPrivKey.PubKey().Address()))
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{acc.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))}
+
+	app := simapp.SetupWithGenesisValSet(valSet, []authtypes.GenesisAccount{acc}, balance)
+	//ctx := app.BaseApp.NewContext(false,
+	//	abci.Header{
+	//		Height: 1,
+	//		Time:   globalStartTime,
+	//	},
+	//)
 
 	// commit init chain changes so create client can be called by a counterparty chain
-	app.Commit()
+	// app.Commit()
 	// create current header and call begin block
 	header := abci.Header{
 		Height: 2,

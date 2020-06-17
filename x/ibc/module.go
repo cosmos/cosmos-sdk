@@ -75,7 +75,7 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 
 // GetQueryCmd returns no root query command for the ibc module.
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(host.QuerierRoute, clientCtx.Codec)
+	return cli.GetQueryCmd(clientCtx)
 }
 
 // RegisterInterfaceTypes registers module concrete types into protobuf Any.

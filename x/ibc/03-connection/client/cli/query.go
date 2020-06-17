@@ -9,14 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 )
 
 // GetCmdQueryConnections defines the command to query all the connection ends
 // that this chain mantains.
-func GetCmdQueryConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "connections",
 		Short: "Query all available light clients",
@@ -30,7 +29,6 @@ $ %s query ibc connection connections
 		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -50,7 +48,7 @@ $ %s query ibc connection connections
 }
 
 // GetCmdQueryConnection defines the command to query a connection end
-func GetCmdQueryConnection(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "end [connection-id]",
 		Short: "Query stored connection end",
@@ -63,7 +61,6 @@ $ %s query ibc connection end [connection-id]
 		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
 			connectionID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 
@@ -82,7 +79,7 @@ $ %s query ibc connection end [connection-id]
 }
 
 // GetCmdQueryAllClientConnections defines the command to query a all the client connection paths.
-func GetCmdQueryAllClientConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryAllClientConnections(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "paths",
 		Short: "Query all stored client connection paths",
@@ -95,7 +92,6 @@ $ %s query ibc connection paths
 		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -115,7 +111,7 @@ $ %s query ibc connection paths
 }
 
 // GetCmdQueryClientConnections defines the command to query a client connections
-func GetCmdQueryClientConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryClientConnections(clientCtx client.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "path [client-id]",
 		Short: "Query stored client connection paths",
@@ -128,7 +124,6 @@ $ %s query ibc connection path [client-id]
 		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
 			clientID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 

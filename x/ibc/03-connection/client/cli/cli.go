@@ -5,12 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
 // GetQueryCmd returns the query commands for IBC connections
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	ics03ConnectionQueryCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC connection query subcommands",
@@ -19,8 +18,8 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ics03ConnectionQueryCmd.AddCommand(flags.GetCommands(
-		GetCmdQueryConnections(queryRoute, cdc),
-		GetCmdQueryConnection(queryRoute, cdc),
+		GetCmdQueryConnections(clientCtx),
+		GetCmdQueryConnection(clientCtx),
 	)...)
 
 	return ics03ConnectionQueryCmd

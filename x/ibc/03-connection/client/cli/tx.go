@@ -27,7 +27,7 @@ func NewConnectionOpenInitCmd(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.WithInput(cmd.InOrStdin())
+			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
 
 			connectionID := args[0]
 			clientID := args[1]
@@ -72,7 +72,7 @@ func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.WithInput(cmd.InOrStdin())
+			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
 
 			connectionID := args[0]
 			clientID := args[1]
@@ -133,7 +133,7 @@ func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.WithInput(cmd.InOrStdin())
+			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
 
 			connectionID := args[0]
 
@@ -184,7 +184,7 @@ func NewConnectionOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.WithInput(cmd.InOrStdin())
+			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
 
 			connectionID := args[0]
 

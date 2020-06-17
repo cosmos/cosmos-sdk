@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -28,13 +27,13 @@ func GetTxCmd(clientCtx client.Context) *cobra.Command {
 		tmclient.GetTxCmd(clientCtx.Codec, host.StoreKey),
 		localhost.GetTxCmd(clientCtx.Codec, host.StoreKey),
 		connection.GetTxCmd(clientCtx),
-		channel.GetTxCmd(clientCtx.Codec, host.StoreKey),
+		channel.GetTxCmd(clientCtx),
 	)...)
 	return ibcTxCmd
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	// Group ibc queries under a subcommand
 	ibcQueryCmd := &cobra.Command{
 		Use:                        host.ModuleName,
@@ -45,9 +44,9 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ibcQueryCmd.AddCommand(flags.GetCommands(
-		ibcclient.GetQueryCmd(cdc, queryRoute),
-		connection.GetQueryCmd(cdc, queryRoute),
-		channel.GetQueryCmd(cdc, queryRoute),
+		ibcclient.GetQueryCmd(clientCtx),
+		connection.GetQueryCmd(clientCtx),
+		channel.GetQueryCmd(clientCtx),
 	)...)
 	return ibcQueryCmd
 }

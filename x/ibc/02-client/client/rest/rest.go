@@ -13,6 +13,6 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 	registerQueryRoutes(clientCtx, r)
 }

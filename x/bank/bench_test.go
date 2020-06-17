@@ -8,16 +8,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var moduleAccAddr = auth.NewModuleAddress(stakingtypes.BondedPoolName)
+var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := auth.BaseAccount{
+	acc := authtypes.BaseAccount{
 		Address: addr1,
 	}
 
@@ -57,12 +57,12 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := auth.BaseAccount{
+	acc := authtypes.BaseAccount{
 		Address: addr1,
 	}
 
 	// Construct genesis state
-	genAccs := []types.GenesisAccount{&acc}
+	genAccs := []authtypes.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, abci.Header{})
 

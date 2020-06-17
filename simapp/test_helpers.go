@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -69,15 +69,15 @@ func Setup(isCheckTx bool) *SimApp {
 
 // SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(genAccs []auth.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0)
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()
 
-	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
-	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
+	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
+	genesisState[authtypes.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
@@ -288,8 +288,8 @@ func SignCheckDeliver(
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
-	txs := make([]auth.StdTx, numToGenerate)
+func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []authtypes.StdTx {
+	txs := make([]authtypes.StdTx, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
 		txs[i] = helpers.GenTx(
 			msgs,

@@ -1,13 +1,10 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/rest"
 )
@@ -18,11 +15,11 @@ func Name() string {
 }
 
 // RegisterRESTRoutes registers the REST routes for the IBC client
-func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router, queryRoute string) {
-	rest.RegisterRoutes(clientCtx, rtr, fmt.Sprintf("%s/%s", queryRoute, SubModuleName))
+func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // GetQueryCmd returns no root query command for the IBC client
-func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
-	return cli.GetQueryCmd(fmt.Sprintf("%s/%s", queryRoute, SubModuleName), cdc)
+func GetQueryCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetQueryCmd(clientCtx)
 }

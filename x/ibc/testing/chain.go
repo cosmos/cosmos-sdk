@@ -141,7 +141,7 @@ func (chain *TestChain) GetContext() sdk.Context {
 func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
-		Height: chain.App.LastBlockHeight(),
+		Height: chain.App.LastBlockHeight() - 1,
 		Data:   key,
 		Prove:  true,
 	})
@@ -164,12 +164,15 @@ func (chain *TestChain) NextBlock() {
 	// set the last header to the current header
 	chain.LastHeader = chain.CreateTMClientHeader()
 
+	fmt.Printf("height %d hash %v\n", chain.CurrentHeader.Height+1, chain.App.LastCommitID().Hash)
 	// increment the current header
 	chain.CurrentHeader = abci.Header{
-		Height:  chain.CurrentHeader.Height + 1,
+		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		Time:    chain.CurrentHeader.Time,
 	}
+	fmt.Printf("header app hash %v\n", chain.CurrentHeader.AppHash)
+
 	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 
 }
@@ -239,6 +242,7 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
 // client will be updated on the (target) chain.
 func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) error {
+	fmt.Println(counterparty.LastHeader)
 	msg := ibctmtypes.NewMsgUpdateClient(
 		clientID, counterparty.LastHeader,
 		chain.SenderAccount.GetAddress(),
@@ -250,6 +254,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 // CreateTMClientHeader creates a TM header to update the TM client.
 func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 	vsetHash := chain.Vals.Hash()
+	fmt.Printf("height %d, hash %v\n", chain.CurrentHeader.Height, chain.CurrentHeader.AppHash)
 	tmHeader := tmtypes.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
 		ChainID:            chain.ChainID,
@@ -326,6 +331,9 @@ func (chain *TestChain) ConnectionOpenTry(
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 	fmt.Printf("proofInit %v\n", proofInit)
 
+	self, _ := counterparty.App.IBCKeeper.ClientKeeper.GetSelfConsensusState(counterparty.GetContext(), proofHeight+1)
+	fmt.Printf("self root %X height %d\n", self.GetRoot(), proofHeight)
+
 	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
 	require.True(chain.t, found)
 	fmt.Printf("actual constate %v\n", consState)
@@ -339,7 +347,7 @@ func (chain *TestChain) ConnectionOpenTry(
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		prefix, []string{ConnectionVersion},
 		proofInit, proofConsensus,
-		proofHeight, consensusHeight,
+		proofHeight+1, consensusHeight,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)

@@ -47,10 +47,7 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 // CONTRACT: this function must be called after every commit on any TestChain.
 func (coord *Coordinator) IncrementTime() {
 	for _, chain := range coord.Chains {
-		chain.CurrentHeader = abci.Header{
-			Height: chain.CurrentHeader.Height,
-			Time:   chain.CurrentHeader.Time.Add((timeIncrement)),
-		}
+		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(timeIncrement)
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 	}
 }

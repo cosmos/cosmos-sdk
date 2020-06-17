@@ -31,9 +31,7 @@ func Paginate(
 		limit = 25
 	}
 
-	// check if offset is nil or key is available
-	// thus making the key as the default iterator
-	if offset == 0 || len(key) != 0 {
+	if len(key) != 0 {
 		iterator := prefixStore.Iterator(key, nil)
 		defer iterator.Close()
 
@@ -69,9 +67,9 @@ func Paginate(
 		for ; iterator.Valid(); iterator.Next() {
 			count++
 
-			if count < offset {
+			if count <= offset {
 				continue
-			} else if count < end {
+			} else if count <= end {
 				err := onResult(iterator.Key(), iterator.Value())
 				if err != nil {
 					return nil, err

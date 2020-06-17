@@ -57,6 +57,20 @@ type (
 		// require access to any other information.
 		ValidateBasic() error
 	}
+
+	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
+	FeeTx interface {
+		Tx
+		GetGas() uint64
+		GetFee() Coins
+		FeePayer() AccAddress
+	}
+
+	// Tx must have GetMemo() method to use ValidateMemoDecorator
+	TxWithMemo interface {
+		Tx
+		GetMemo() string
+	}
 )
 
 // TxDecoder unmarshals transaction bytes

@@ -1,10 +1,12 @@
-package types
+package types_test
 
 import (
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -14,12 +16,18 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var (
+	priv = secp256k1.GenPrivKey()
+	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
 func makeCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
-	//types.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }
@@ -42,32 +50,18 @@ func setupStdTxBuilderTest(t *testing.T) (client.TxBuilder, keyring.Info) {
 	info, err := kr.NewAccount(fromkey, seed, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	msgs := []sdk.Msg{sdk.NewTestMsg(info.GetAddress())}
-
-	stdTx := StdTx{
-		Memo:       "foomemo",
-		Msgs:       msgs,
-		Signatures: nil,
-		Fee: StdFee{
-			Amount: NewTestCoins(),
-			Gas:    200000,
-		},
+	stdTxGen := types.StdTxGenerator{
+		Cdc: makeCodec(),
 	}
 
-	return &StdTxBuilder{
-		stdTx,
-		makeCodec(),
-	}, info
+	return stdTxGen.NewTxBuilder(), info
 }
 
 func TestStdTxBuilder_GetTx(t *testing.T) {
-	stdTxBuilder, info := setupStdTxBuilderTest(t)
+	stdTxBuilder, _ := setupStdTxBuilderTest(t)
 	tx := stdTxBuilder.GetTx()
 	require.NotNil(t, tx)
-	require.NotNil(t, tx.GetMsgs())
-	require.Equal(t, tx.GetMsgs()[0].GetSigners()[0], info.GetAddress())
-	require.Equal(t, len(tx.GetMsgs()), 1)
-	require.Equal(t, len(tx.GetMsgs()[0].GetSigners()), 1)
+	require.Equal(t, len(tx.GetMsgs()), 0)
 }
 
 func TestStdTxBuilder_SetFeeAmount(t *testing.T) {
@@ -103,16 +97,14 @@ func TestStdTxBuilder_SetMemo(t *testing.T) {
 func TestStdTxBuilder_SetMsgs(t *testing.T) {
 	stdTxBuilder, _ := setupStdTxBuilderTest(t)
 	tx := stdTxBuilder.GetTx()
-	stdTxBuilder.SetMsgs(NewTestMsg(), NewTestMsg())
+	stdTxBuilder.SetMsgs(sdk.NewTestMsg(), sdk.NewTestMsg())
 	require.NotEqual(t, tx, stdTxBuilder.GetTx())
 	require.Equal(t, len(stdTxBuilder.GetTx().GetMsgs()), 2)
 }
 
 func TestStdTxBuilder_SetSignatures(t *testing.T) {
-	stdTxBuilder, info := setupStdTxBuilderTest(t)
+	stdTxBuilder, _ := setupStdTxBuilderTest(t)
 	tx := stdTxBuilder.GetTx()
-	require.Equal(t, tx.GetMsgs()[0].GetSigners()[0], info.GetAddress())
-
 	singleSignatureData := signingtypes.SingleSignatureData{
 		Signature: priv.PubKey().Bytes(),
 		SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
@@ -122,11 +114,8 @@ func TestStdTxBuilder_SetSignatures(t *testing.T) {
 		PubKey: priv.PubKey(),
 		Data:   &singleSignatureData,
 	})
-	//sigTx := stdTxBuilder.GetTx().(ante.SigVerifiableTx)
-
-	require.Equal(t, 1, len(stdTxBuilder.GetTx().GetMsgs()[0].GetSigners()))
+	sigTx := stdTxBuilder.GetTx().(ante.SigVerifiableTx)
 	require.NoError(t, err)
 	require.NotEqual(t, tx, stdTxBuilder.GetTx())
-	//require.NotEqual(t, sigTx.GetSignatures()[0], priv.PubKey().Bytes())
-	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
+	require.Equal(t, sigTx.GetSignatures()[0], priv.PubKey().Bytes())
 }

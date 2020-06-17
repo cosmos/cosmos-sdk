@@ -3,20 +3,24 @@ package query_test
 import (
 	gocontext "context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"testing"
 
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const (
@@ -33,10 +37,10 @@ func TestPagination(t *testing.T) {
 
 	var balances sdk.Coins
 	const (
-		numBalances = 235
-		maxLimit = 100
-		overLimit = 101
-		underLimit = 10
+		numBalances     = 235
+		maxLimit        = 100
+		overLimit       = 101
+		underLimit      = 10
 		lastPageRecords = 35
 	)
 
@@ -153,17 +157,17 @@ func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {
 
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil
-	maccPerms[auth.Burner] = []string{auth.Burner}
-	maccPerms[auth.Minter] = []string{auth.Minter}
-	maccPerms[multiPerm] = []string{auth.Burner, auth.Minter, auth.Staking}
+	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
+	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 	maccPerms[randomPerm] = []string{"random"}
-	app.AccountKeeper = auth.NewAccountKeeper(
-		appCodec, app.GetKey(auth.StoreKey), app.GetSubspace(auth.ModuleName),
-		auth.ProtoBaseAccount, maccPerms,
+	app.AccountKeeper = authkeeper.NewAccountKeeper(
+		appCodec, app.GetKey(authtypes.StoreKey), app.GetSubspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms,
 	)
-	app.BankKeeper = bank.NewBaseKeeper(
-		appCodec, app.GetKey(auth.StoreKey), app.AccountKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool),
+	app.BankKeeper = bankkeeper.NewBaseKeeper(
+		appCodec, app.GetKey(authtypes.StoreKey), app.AccountKeeper,
+		app.GetSubspace(types.ModuleName), make(map[string]bool),
 	)
 
 	return app, ctx

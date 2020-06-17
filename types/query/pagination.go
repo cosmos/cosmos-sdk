@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 

@@ -224,7 +224,7 @@ func NewSimApp(
 		appCodec, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount, maccPerms,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.subspaces[banktypes.ModuleName], app.BlacklistedAccAddrs(),
+		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.subspaces[banktypes.ModuleName], app.BlockedAddrs(),
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.subspaces[stakingtypes.ModuleName],
@@ -443,14 +443,15 @@ func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// BlacklistedAccAddrs returns all the app's module account addresses black listed for receiving tokens.
-func (app *SimApp) BlacklistedAccAddrs() map[string]bool {
-	blacklistedAddrs := make(map[string]bool)
+// BlockedAddrs returns all the app's module account addresses that are not
+// allowed to receive external tokens.
+func (app *SimApp) BlockedAddrs() map[string]bool {
+	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
-		blacklistedAddrs[auth.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
+		blockedAddrs[auth.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
 	}
 
-	return blacklistedAddrs
+	return blockedAddrs
 }
 
 // Codec returns SimApp's codec.

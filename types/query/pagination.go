@@ -1,6 +1,7 @@
 package query
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -29,8 +30,12 @@ func Paginate(
 	key := req.Key
 	limit := req.Limit
 
+	if offset > 0 && key != nil {
+		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
+
 	if limit == 0 || limit > maxLimit {
-		limit = 25
+		limit = maxLimit
 	}
 
 	if len(key) != 0 {

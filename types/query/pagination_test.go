@@ -3,7 +3,7 @@ package query_test
 import (
 	gocontext "context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -27,96 +27,170 @@ const (
 
 func TestPagination(t *testing.T) {
 	app, ctx := SetupTest(t)
-	balances := sdk.NewCoins(sdk.NewInt64Coin("foo", 100), sdk.NewInt64Coin("bar", 50))
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	var balances sdk.Coins
+	const (
+		numBalances = 235
+		maxLimit = 100
+		overLimit = 101
+		underLimit = 10
+		lastPageRecords = 35
+	)
+
+	for i := 0; i < numBalances; i++ {
+		denom := fmt.Sprintf("foo%ddenom", i)
+		balances = append(balances, sdk.NewInt64Coin(denom, 100))
+	}
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
 
-	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
-	require.Equal(t, balances, acc1Balances)
-
-	t.Log("verify limit")
-	pageReq := &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
-	balances, res, err := app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, len(balances), 2)
-	require.Equal(t, acc1Balances, balances)
-
-	appCodec, cdc := simapp.MakeCodecs()
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
-		WithJSONMarshaler(appCodec).
-		WithCodec(cdc)
-	queryClient := types.NewQueryClient(clientCtx.QueryConn())
+	t.Log("verify empty page request results a max of maxLimit records")
+	pageReq := &query.PageRequest{}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
-	result, err := queryClient.AllBalances(gocontext.Background(), request)
+	res, err := queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	fmt.Println(result.Res)
+	require.Equal(t, res.Res.Total, uint64(0))
+	require.NotNil(t, res.Res.NextKey)
+	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
 
-	t.Log("verify paginate with limit and countTotal")
-	pageReq = &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify page request with limit > maxLimit, returns only `maxLimit` records")
+	pageReq = &query.PageRequest{Limit: overLimit}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, len(balances), 1)
-	require.NotNil(t, res.NextKey)
-	require.Equal(t, res.Total, uint64(2))
+	require.Equal(t, res.Res.Total, uint64(0))
+	require.NotNil(t, res.Res.NextKey)
+	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
 
-	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, CountTotal: true}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify paginate with custom limit and countTotal true")
+	pageReq = &query.PageRequest{Limit: underLimit, CountTotal: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, len(balances), 1)
+	require.Equal(t, res.Balances.Len(), underLimit)
+	require.Nil(t, res.Res.NextKey)
+	require.Equal(t, res.Res.Total, uint64(numBalances))
 
-	//verify offset usage over key
-	pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: true}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify paginate with custom limit and countTotal false")
+	pageReq = &query.PageRequest{Limit: maxLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 1, len(balances))
-	require.Nil(t, res.NextKey)
+	require.Equal(t, res.Balances.Len(), maxLimit)
+	require.NotNil(t, res.Res.NextKey)
+	require.Equal(t, res.Res.Total, uint64(0))
 
-	//verify offset usage over key and countTotal false
-	pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: false}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify paginate with custom limit, key and countTotal false")
+	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: maxLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 1, len(balances))
-	require.NotNil(t, res.NextKey)
+	require.Equal(t, res.Balances.Len(), maxLimit)
+	require.NotNil(t, res.Res.NextKey)
+	require.Equal(t, res.Res.Total, uint64(0))
 
-	//verify offset usage over key
-	pageReq = &query.PageRequest{Offset: 1, Limit: 2, CountTotal: false}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify paginate for last page, results in records less than max limit")
+	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: maxLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 2, len(balances))
-	require.Nil(t, res.NextKey)
+	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.Equal(t, res.Balances.Len(), lastPageRecords)
+	require.Nil(t, res.Res.NextKey)
+	require.Equal(t, res.Res.Total, uint64(0))
 
-	//verify offset usage over key
-	pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: true}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify paginate with offset and limit")
+	pageReq = &query.PageRequest{Offset: 200, Limit: maxLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 1, len(balances))
-	require.Nil(t, res.NextKey)
+	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.Equal(t, res.Balances.Len(), lastPageRecords)
+	require.Nil(t, res.Res.NextKey)
+	require.Equal(t, res.Res.Total, uint64(0))
 
-	t.Log("verify not in range offset")
-	pageReq = &query.PageRequest{Offset: 3, Limit: 1, CountTotal: false}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify paginate with offset and limit")
+	pageReq = &query.PageRequest{Offset: 100, Limit: maxLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 0, len(balances))
-	require.Nil(t, res.NextKey)
+	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.NotNil(t, res.Res.NextKey)
+	require.Equal(t, res.Res.Total, uint64(0))
 
-	// verify if total is not returned
-	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: false}
-	balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	t.Log("verify paginate with offset and key - error")
+	pageReq = &query.PageRequest{Key: res.Res.NextKey, Offset: 100, Limit: maxLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "invalid request, either offset or key is expected, got both")
+
+	t.Log("verify paginate with offset greater than total results")
+	pageReq = &query.PageRequest{Offset: 300, Limit: maxLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, uint64(0), res.Total)
+	require.LessOrEqual(t, res.Balances.Len(), 0)
+	require.Nil(t, res.Res.NextKey)
+	//
+	//pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, CountTotal: true}
+	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	//require.NoError(t, err)
+	//require.NotNil(t, res)
+	//require.Equal(t, len(balances), 1)
+	//
+	////verify offset usage over key
+	//pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: true}
+	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	//require.NoError(t, err)
+	//require.NotNil(t, res)
+	//require.Equal(t, 1, len(balances))
+	//require.Nil(t, res.NextKey)
+	//
+	////verify offset usage over key and countTotal false
+	//pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: false}
+	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	//require.NoError(t, err)
+	//require.NotNil(t, res)
+	//require.Equal(t, 1, len(balances))
+	//require.NotNil(t, res.NextKey)
+	//
+	////verify offset usage over key
+	//pageReq = &query.PageRequest{Offset: 1, Limit: 2, CountTotal: false}
+	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	//require.NoError(t, err)
+	//require.NotNil(t, res)
+	//require.Equal(t, 2, len(balances))
+	//require.Nil(t, res.NextKey)
+	//
+	////verify offset usage over key
+	//pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: true}
+	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	//require.NoError(t, err)
+	//require.NotNil(t, res)
+	//require.Equal(t, 1, len(balances))
+	//require.Nil(t, res.NextKey)
+	//
+	//t.Log("verify not in range offset")
+	//pageReq = &query.PageRequest{Offset: 3, Limit: 1, CountTotal: false}
+	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	//require.NoError(t, err)
+	//require.NotNil(t, res)
+	//require.Equal(t, 0, len(balances))
+	//require.Nil(t, res.NextKey)
+	//
+	//// verify if total is not returned
+	//pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: false}
+	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
+	//require.NoError(t, err)
+	//require.NotNil(t, res)
+	//require.Equal(t, uint64(0), res.Total)
 }
 
 func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {

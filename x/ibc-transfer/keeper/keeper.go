@@ -9,7 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -25,14 +26,14 @@ type Keeper struct {
 	portKeeper    types.PortKeeper
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	scopedKeeper  capability.ScopedKeeper
+	scopedKeeper  capabilitykeeper.ScopedKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey,
 	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capability.ScopedKeeper,
+	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
 
 	// ensure ibc transfer module account is set
@@ -110,6 +111,6 @@ func (k Keeper) SetPort(ctx sdk.Context, portID string) {
 
 // ClaimCapability allows the transfer module that can claim a capability that IBC module
 // passes to it
-func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capability.Capability, name string) error {
+func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }

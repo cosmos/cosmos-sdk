@@ -21,8 +21,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Context implements a typical context created in SDK modules for
-// transaction handling and queries.
+// Context implements a typical context created in SDK modules for transaction
+// handling and queries.
 type Context struct {
 	FromAddress      sdk.AccAddress
 	Client           rpcclient.Client
@@ -34,10 +34,8 @@ type Context struct {
 	OutputFormat     string
 	Height           int64
 	HomeDir          string
-	NodeURI          string
 	From             string
 	BroadcastMode    string
-	Verifier         tmlite.Verifier
 	FromName         string
 	TrustNode        bool
 	UseLedger        bool
@@ -48,6 +46,12 @@ type Context struct {
 	SkipConfirm      bool
 	TxGenerator      TxGenerator
 	AccountRetriever AccountRetriever
+
+	// TODO: API and CLI interfaces are migrating to a single binary (i.e be part of
+	// the same process of the application). We need to groom through these fields
+	// and remove any that no longer make sense.
+	NodeURI  string
+	Verifier tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
@@ -267,6 +271,12 @@ func (ctx Context) WithChainID(chainID string) Context {
 	return ctx
 }
 
+// WithHomeDir returns a copy of the Context with HomeDir set.
+func (ctx Context) WithHomeDir(dir string) Context {
+	ctx.HomeDir = dir
+	return ctx
+}
+
 // WithGenerateOnly returns a copy of the context with updated GenerateOnly value
 func (ctx Context) WithGenerateOnly(generateOnly bool) Context {
 	ctx.GenerateOnly = generateOnly
@@ -360,10 +370,10 @@ func (ctx Context) PrintOutput(toPrint interface{}) error {
 		out, err = yaml.Marshal(&toPrint)
 
 	case "json":
+		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
+
 		if ctx.Indent {
-			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
-		} else {
-			out, err = ctx.Codec.MarshalJSON(toPrint)
+			out, err = codec.MarshalIndentFromJSON(out)
 		}
 	}
 

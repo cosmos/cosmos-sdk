@@ -21,7 +21,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -240,13 +240,13 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	validator := stakingtypes.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, stakingtypes.Description{},
 	)
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			Time:    client.Header.Time,
 			AppHash: commitID.Hash,
@@ -256,7 +256,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.Height, histInfo)
 
 	// also set staking params
-	stakingParams := staking.DefaultParams()
+	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.HistoricalEntries = 10
 	client.App.StakingKeeper.SetParams(ctxClient, stakingParams)
 
@@ -314,13 +314,13 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
-	validator := staking.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	validator := stakingtypes.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, stakingtypes.Description{},
 	)
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000)
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			Time:    client.Header.Time,
 			AppHash: commitID.Hash,

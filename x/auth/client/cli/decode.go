@@ -29,9 +29,9 @@ func GetDecodeCommand(codec *codec.Codec) *cobra.Command {
 	return flags.PostCommands(cmd)[0]
 }
 
-func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []string) (err error) {
+func runDecodeTxString(cdc *codec.Codec) func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		clientCtx := client.NewContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
+		clientCtx := client.NewContext().WithCodec(cdc).WithOutput(cmd.OutOrStdout()).WithJSONMarshaler(cdc)
 		var txBytes []byte
 
 		if viper.GetBool(flagHex) {

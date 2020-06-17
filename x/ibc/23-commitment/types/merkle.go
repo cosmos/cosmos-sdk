@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	ics23 "github.com/confio/ics23/go"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"

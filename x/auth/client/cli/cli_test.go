@@ -296,14 +296,13 @@ func TestCLIEncode(t *testing.T) {
 	jsonTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
-	// Run the encode command, and trim the extras from the stdout capture
+	// Run the encode command
 	success, base64Encoded, _ := testutil.TxEncode(f, jsonTxFile.Name())
 	require.True(t, success)
 
 	// Check that the transaction decodes as expected
 	success, stdout, stderr = testutil.TxDecode(f, base64Encoded)
 	decodedTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }
 

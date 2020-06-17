@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -42,7 +41,7 @@ func TestSlashingMsgs(t *testing.T) {
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
-	acc1 := &auth.BaseAccount{
+	acc1 := &authtypes.BaseAccount{
 		Address: addr1,
 	}
 	accs := authtypes.GenesisAccounts{acc1}

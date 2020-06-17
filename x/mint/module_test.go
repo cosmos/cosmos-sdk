@@ -7,7 +7,7 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -22,6 +22,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		},
 	)
 
-	acc := app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(types.ModuleName))
+	acc := app.AccountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	require.NotNil(t, acc)
 }

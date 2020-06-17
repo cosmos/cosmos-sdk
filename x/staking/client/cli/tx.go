@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -408,7 +408,7 @@ func PrepareFlagsForTxCreateValidator(
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(clientCtx client.Context, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error) {
+func BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(amounstStr)
 

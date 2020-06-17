@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -89,7 +88,7 @@ var (
 )
 
 func TestSendNotEnoughBalance(t *testing.T) {
-	acc := &auth.BaseAccount{
+	acc := &authtypes.BaseAccount{
 		Address: addr1,
 	}
 
@@ -104,7 +103,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	res1 := app.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
-	require.Equal(t, acc, res1.(*auth.BaseAccount))
+	require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
 	origAccNum := res1.GetAccountNumber()
 	origSeq := res1.GetSequence()
@@ -146,7 +145,7 @@ func TestSendToModuleAcc(t *testing.T) {
 		{
 			name:           "Allowed module account can be the recipient of bank sends",
 			fromBalance:    coins,
-			msg:            types.NewMsgSend(addr1, auth.NewModuleAddress(distrtypes.ModuleName), coins),
+			msg:            types.NewMsgSend(addr1, authtypes.NewModuleAddress(distrtypes.ModuleName), coins),
 			expPass:        true,
 			expSimPass:     true,
 			expFromBalance: sdk.NewCoins(),
@@ -157,7 +156,7 @@ func TestSendToModuleAcc(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			acc := &auth.BaseAccount{
+			acc := &authtypes.BaseAccount{
 				Address: test.msg.FromAddress,
 			}
 
@@ -172,7 +171,7 @@ func TestSendToModuleAcc(t *testing.T) {
 
 			res1 := app.AccountKeeper.GetAccount(ctx, test.msg.FromAddress)
 			require.NotNil(t, res1)
-			require.Equal(t, acc, res1.(*auth.BaseAccount))
+			require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
 			origAccNum := res1.GetAccountNumber()
 			origSeq := res1.GetSequence()
@@ -198,7 +197,7 @@ func TestSendToModuleAcc(t *testing.T) {
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {
-	acc := &auth.BaseAccount{
+	acc := &authtypes.BaseAccount{
 		Address: addr1,
 	}
 
@@ -213,7 +212,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	res1 := app.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
-	require.Equal(t, acc, res1.(*auth.BaseAccount))
+	require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
 	testCases := []appTestCase{
 		{
@@ -262,10 +261,10 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 }
 
 func TestMsgMultiSendMultipleOut(t *testing.T) {
-	acc1 := &auth.BaseAccount{
+	acc1 := &authtypes.BaseAccount{
 		Address: addr1,
 	}
-	acc2 := &auth.BaseAccount{
+	acc2 := &authtypes.BaseAccount{
 		Address: addr2,
 	}
 
@@ -309,13 +308,13 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 }
 
 func TestMsgMultiSendMultipleInOut(t *testing.T) {
-	acc1 := &auth.BaseAccount{
+	acc1 := &authtypes.BaseAccount{
 		Address: addr1,
 	}
-	acc2 := &auth.BaseAccount{
+	acc2 := &authtypes.BaseAccount{
 		Address: addr2,
 	}
-	acc4 := &auth.BaseAccount{
+	acc4 := &authtypes.BaseAccount{
 		Address: addr4,
 	}
 
@@ -363,8 +362,8 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 }
 
 func TestMsgMultiSendDependent(t *testing.T) {
-	acc1 := auth.NewBaseAccountWithAddress(addr1)
-	acc2 := auth.NewBaseAccountWithAddress(addr2)
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	acc2 := authtypes.NewBaseAccountWithAddress(addr2)
 	err := acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 

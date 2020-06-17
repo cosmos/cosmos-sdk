@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -102,7 +102,7 @@ func TestCLISimdAddGenesisAccount(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	appCodec := std.NewAppCodec(f.Cdc, interfaceRegistry)
 
-	accounts := auth.GetGenesisStateFromAppState(appCodec, genesisState).Accounts
+	accounts := authtypes.GetGenesisStateFromAppState(appCodec, genesisState).Accounts
 	balances := banktypes.GetGenesisStateFromAppState(f.Cdc, genesisState).Balances
 	balancesSet := make(map[string]sdk.Coins)
 

@@ -27,7 +27,6 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -208,7 +207,7 @@ func InitTestnet(
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: coins.Sort()})
-		genAccounts = append(genAccounts, auth.NewBaseAccount(addr, nil, 0, 0))
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valTokens := sdk.TokensFromConsensusPower(100)
 		msg := stakingtypes.NewMsgCreateValidator(
@@ -220,8 +219,8 @@ func InitTestnet(
 			sdk.OneInt(),
 		)
 
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo)
-		txBldr := auth.NewTxBuilderFromCLI(inBuf).WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
+		tx := authtypes.NewStdTx([]sdk.Msg{msg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
+		txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
 
 		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
 		if err != nil {
@@ -269,11 +268,11 @@ func initGenFiles(
 	appGenState := mbm.DefaultGenesis(cdc)
 
 	// set the accounts in the genesis state
-	var authGenState auth.GenesisState
-	cdc.MustUnmarshalJSON(appGenState[auth.ModuleName], &authGenState)
+	var authGenState authtypes.GenesisState
+	cdc.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
 	authGenState.Accounts = genAccounts
-	appGenState[auth.ModuleName] = cdc.MustMarshalJSON(authGenState)
+	appGenState[authtypes.ModuleName] = cdc.MustMarshalJSON(authGenState)
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState

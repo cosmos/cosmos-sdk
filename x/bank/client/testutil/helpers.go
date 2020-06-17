@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TxSend is simcli tx send
@@ -21,7 +21,7 @@ func TxSend(f *cli.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, fl
 }
 
 // QueryAccount is simcli query account
-func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) auth.BaseAccount {
+func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) authtypes.BaseAccount {
 	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
 
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
@@ -31,7 +31,7 @@ func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) auth
 	require.NoError(f.T, err, "out %v, err %v", out, err)
 	value := initRes["value"]
 
-	var acc auth.BaseAccount
+	var acc authtypes.BaseAccount
 	err = f.Cdc.UnmarshalJSON(value, &acc)
 	require.NoError(f.T, err, "value %v, err %v", string(value), err)
 

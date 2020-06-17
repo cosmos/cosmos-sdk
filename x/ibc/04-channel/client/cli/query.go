@@ -25,6 +25,8 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			portID := args[0]
 			channelID := args[1]
 			prove := viper.GetBool(flags.FlagProve)
@@ -52,6 +54,8 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.ClientName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			portID := args[0]
 			channelID := args[1]
 

@@ -31,6 +31,8 @@ $ %s query ibc client states
 		),
 		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -63,6 +65,8 @@ $ %s query ibc client state [client-id]
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
@@ -93,6 +97,8 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.ClientName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
@@ -126,6 +132,8 @@ func GetCmdQueryHeader(clientCtx client.Context) *cobra.Command {
 		Long:    "Query the latest Tendermint header of the running chain",
 		Example: fmt.Sprintf("%s query ibc client header", version.ClientName),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			header, height, err := utils.QueryTendermintHeader(clientCtx)
 			if err != nil {
 				return err
@@ -152,6 +160,8 @@ $ %s query ibc client node-state
 		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			state, height, err := utils.QueryNodeConsensusState(clientCtx)
 			if err != nil {
 				return err
@@ -169,6 +179,8 @@ func GetCmdQueryPath(clientCtx client.Context) *cobra.Command {
 		Use:   "path",
 		Short: "Query the commitment path of the running chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			path := commitmenttypes.NewMerklePrefix([]byte("ibc"))
 			return clientCtx.PrintOutput(path)
 		},

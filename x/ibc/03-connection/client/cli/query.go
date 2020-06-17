@@ -29,6 +29,8 @@ $ %s query ibc connection connections
 		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx = clientCtx.Init()
+
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -61,6 +63,8 @@ $ %s query ibc connection end [connection-id]
 		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			connectionID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 
@@ -92,6 +96,8 @@ $ %s query ibc connection paths
 		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx = clientCtx.Init()
+
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -124,6 +130,8 @@ $ %s query ibc connection path [client-id]
 		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
 			clientID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 

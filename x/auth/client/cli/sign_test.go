@@ -1,9 +1,11 @@
-package cli
+package cli_test
 
 import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetTxSign(t *testing.T) {
+func TestGetSignCommand(t *testing.T) {
 	clientCtx := client.Context{}
 
 	dir, clean := tests.NewTestCaseDir(t)
@@ -36,8 +38,14 @@ func TestGetTxSign(t *testing.T) {
 	_, err = kr.NewAccount(from, seed, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	// viper.Set(flags.FlagGenerateOnly, true)
+	//viper.Set(flags.FlagGenerateOnly, true)
 	viper.Set(flags.FlagFrom, from)
+	viper.Set(flags.FlagKeyringBackend, "test")
+	viper.Set(flags.FlagHome, dir)
+
+	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator).WithChainID("test").WithKeyring(kr)
+
+	cmd := cli.GetSignCommand(clientCtx)
 
 	encodingConfig := simappparams.MakeEncodingConfig()
 	authtypes.RegisterCodec(encodingConfig.Amino)
@@ -50,7 +58,9 @@ func TestGetTxSign(t *testing.T) {
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+
 	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+
 	txJSONEncoded, err := txGen.TxJSONEncoder()(stdTx)
 	require.NoError(t, err)
 

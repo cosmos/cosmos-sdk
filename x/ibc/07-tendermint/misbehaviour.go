@@ -71,6 +71,11 @@ func checkMisbehaviour(
 	// Reject misbehaviour if the age is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
+	//
+	// NOTE: The first condition is a safety check as the consensus params cannot
+	// be nil since the previous param values will be used in case they can't be
+	// retreived. If they are not set during initialization, Tendermint will always
+	// use the default values.
 	if consensusParams != nil &&
 		consensusParams.Evidence != nil &&
 		ageDuration > consensusParams.Evidence.MaxAgeDuration &&

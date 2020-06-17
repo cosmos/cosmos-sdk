@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	_ TxWithMemo = (*types.StdTx)(nil) // assert StdTx implements TxWithMemo
+	_ sdk.TxWithMemo = (*types.StdTx)(nil) // assert StdTx implements TxWithMemo
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
@@ -37,12 +37,6 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	return next(ctx, tx, simulate)
 }
 
-// Tx must have GetMemo() method to use ValidateMemoDecorator
-type TxWithMemo interface {
-	sdk.Tx
-	GetMemo() string
-}
-
 // ValidateMemoDecorator will validate memo given the parameters passed in
 // If memo is too large decorator returns with error, otherwise call next AnteHandler
 // CONTRACT: Tx must implement TxWithMemo interface
@@ -57,7 +51,7 @@ func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 }
 
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	memoTx, ok := tx.(TxWithMemo)
+	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}

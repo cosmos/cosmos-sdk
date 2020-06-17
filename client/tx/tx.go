@@ -13,10 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenerateOrBroadcastTx will either generate and print and unsigned transaction
@@ -108,7 +109,12 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	txBytes, err := Sign(txf, clientCtx.GetFromName(), clientkeys.DefaultKeyPass, tx)
+	err = Sign(txf, clientCtx.GetFromName(), tx)
+	if err != nil {
+		return err
+	}
+
+	txBytes, err := clientCtx.TxGenerator.MarshalTx(tx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -209,24 +215,14 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 		}
 	}
 
-	clientFee := txf.txGenerator.NewFee()
-	clientFee.SetAmount(fees)
-	clientFee.SetGas(txf.gas)
-
-	tx := txf.txGenerator.NewTx()
-	tx.SetMemo(txf.memo)
-
-	if err := tx.SetFee(clientFee); err != nil {
-		return nil, err
-	}
-
-	if err := tx.SetSignatures(); err != nil {
-		return nil, err
-	}
+	tx := txf.txGenerator.NewTxBuilder()
 
 	if err := tx.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
+	tx.SetMemo(txf.memo)
+	tx.SetFeeAmount(fees)
+	tx.SetGasLimit(txf.gas)
 
 	return tx, nil
 }
@@ -242,7 +238,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
-	sig := txf.txGenerator.NewSignature()
+	sig := signing.SignatureV2{}
 
 	if err := tx.SetSignatures(sig); err != nil {
 		return nil, err
@@ -312,33 +308,60 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name, passphrase string, tx client.TxBuilder) ([]byte, error) {
+func Sign(txf Factory, name string, tx client.TxBuilder) error {
 	if txf.keybase == nil {
-		return nil, errors.New("keybase must be set prior to signing a transaction")
+		return errors.New("keybase must be set prior to signing a transaction")
 	}
 
-	signBytes, err := tx.CanonicalSignBytes(txf.chainID, txf.accountNumber, txf.sequence)
+	signMode := txf.signMode
+	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+		// use the SignModeHandler's default mode if unspecified
+		signMode = txf.txGenerator.SignModeHandler().DefaultMode()
+	}
+
+	key, err := txf.keybase.Key(name)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	sigBytes, pubkey, err := txf.keybase.Sign(name, signBytes)
+	pubKey := key.GetPubKey()
+	sigData := &signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: nil,
+	}
+	sig := signing.SignatureV2{
+		PubKey: pubKey,
+		Data:   sigData,
+	}
+	err = tx.SetSignatures(sig)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	sig := txf.txGenerator.NewSignature()
-	sig.SetSignature(sigBytes)
-
-	if err := sig.SetPubKey(pubkey); err != nil {
-		return nil, err
+	signBytes, err := txf.txGenerator.SignModeHandler().GetSignBytes(
+		signMode,
+		authsigning.SignerData{
+			ChainID:         txf.chainID,
+			AccountNumber:   txf.accountNumber,
+			AccountSequence: txf.sequence,
+		}, tx.GetTx(),
+	)
+	if err != nil {
+		return err
 	}
 
-	if err := tx.SetSignatures(sig); err != nil {
-		return nil, err
+	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
+	if err != nil {
+		return err
 	}
 
-	return txf.txGenerator.MarshalTx(tx.GetTx())
+	sigData.Signature = sigBytes
+	sig = signing.SignatureV2{
+		PubKey: pubKey,
+		Data:   sigData,
+	}
+
+	return tx.SetSignatures(sig)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

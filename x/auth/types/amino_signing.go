@@ -1,13 +1,11 @@
-package amino
+package types
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // LegacyAminoJSONHandler is a SignModeHandler that handles SIGN_MODE_LEGACY_AMINO_JSON
@@ -31,17 +29,17 @@ func (LegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data sign
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
 	}
 
-	feeTx, ok := tx.(ante.FeeTx)
+	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, fmt.Errorf("expected FeeTx, got %T", tx)
 	}
 
-	memoTx, ok := tx.(ante.TxWithMemo)
+	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
 		return nil, fmt.Errorf("expected TxWithMemo, got %T", tx)
 	}
 
-	return authtypes.StdSignBytes(
-		data.ChainID, data.AccountNumber, data.AccountSequence, authtypes.StdFee{Amount: feeTx.GetFee(), Gas: feeTx.GetGas()}, tx.GetMsgs(), memoTx.GetMemo(), // nolint:staticcheck // SA1019: authtypes.StdFee is deprecated, will be removed once proto migration is completed
+	return StdSignBytes(
+		data.ChainID, data.AccountNumber, data.AccountSequence, StdFee{Amount: feeTx.GetFee(), Gas: feeTx.GetGas()}, tx.GetMsgs(), memoTx.GetMemo(),
 	), nil
 }

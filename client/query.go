@@ -1,11 +1,10 @@
 package client
 
 import (
+	gocontext "context"
 	"fmt"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -251,7 +250,7 @@ type cliQueryConn struct {
 var _ gogogrpc.ClientConn = cliQueryConn{}
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (c cliQueryConn) Invoke(_ Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
+func (c cliQueryConn) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
 	reqBz, err := protoCodec.Marshal(args)
 	if err != nil {
 		return err
@@ -264,6 +263,6 @@ func (c cliQueryConn) Invoke(_ Context, method string, args, reply interface{}, 
 }
 
 // NewStream implements the grpc ClientConn.NewStream method
-func (c cliQueryConn) NewStream(Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+func (c cliQueryConn) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("streaming rpc not supported")
 }

@@ -2,6 +2,8 @@ package query_test
 
 import (
 	gocontext "context"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -43,9 +45,16 @@ func TestPagination(t *testing.T) {
 	require.Equal(t, len(balances), 2)
 	require.Equal(t, acc1Balances, balances)
 
-	queryClient := types.NewQueryClient(ctx.QueryConn())
-	request := types.NewQueryAllBalancesRequest(addr1)
+	appCodec, cdc := simapp.MakeCodecs()
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithJSONMarshaler(appCodec).
+		WithCodec(cdc)
+	queryClient := types.NewQueryClient(clientCtx.QueryConn())
+	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	result, err := queryClient.AllBalances(gocontext.Background(), request)
+	require.NoError(t, err)
+	fmt.Println(result.Res)
 
 	t.Log("verify paginate with limit and countTotal")
 	pageReq = &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}

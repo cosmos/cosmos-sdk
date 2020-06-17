@@ -4,7 +4,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-const maxLimitPerPage = 25
+// maxLimit is the maximum allowed `limit` for queries
+// if the `limit` is not supplied, paginate will use `maxLimit` as default `limit`
+const maxLimit = 100
 
 // Paginate does pagination of the results in the prefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling.
@@ -27,7 +29,7 @@ func Paginate(
 	key := req.Key
 	limit := req.Limit
 
-	if limit == 0 || limit > maxLimitPerPage {
+	if limit == 0 || limit > maxLimit {
 		limit = 25
 	}
 

@@ -1,6 +1,9 @@
 package distribution
 
 import (
+	"github.com/armon/go-metrics"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -51,10 +54,20 @@ func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg *types.MsgSetWithdrawAd
 }
 
 func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg *types.MsgWithdrawDelegatorReward, k keeper.Keeper) (*sdk.Result, error) {
-	_, err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddress, msg.ValidatorAddress)
+	amount, err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddress, msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		for _, a := range amount {
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", "withdraw_reward"},
+				float32(a.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+			)
+		}
+	}()
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -68,10 +81,20 @@ func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg *types.MsgWithdrawDel
 }
 
 func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg *types.MsgWithdrawValidatorCommission, k keeper.Keeper) (*sdk.Result, error) {
-	_, err := k.WithdrawValidatorCommission(ctx, msg.ValidatorAddress)
+	amount, err := k.WithdrawValidatorCommission(ctx, msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		for _, a := range amount {
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", "withdraw_commission"},
+				float32(a.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+			)
+		}
+	}()
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

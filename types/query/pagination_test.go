@@ -138,59 +138,6 @@ func TestPagination(t *testing.T) {
 	require.NoError(t, err)
 	require.LessOrEqual(t, res.Balances.Len(), 0)
 	require.Nil(t, res.Res.NextKey)
-	//
-	//pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, CountTotal: true}
-	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	//require.NoError(t, err)
-	//require.NotNil(t, res)
-	//require.Equal(t, len(balances), 1)
-	//
-	////verify offset usage over key
-	//pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: true}
-	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	//require.NoError(t, err)
-	//require.NotNil(t, res)
-	//require.Equal(t, 1, len(balances))
-	//require.Nil(t, res.NextKey)
-	//
-	////verify offset usage over key and countTotal false
-	//pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: false}
-	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	//require.NoError(t, err)
-	//require.NotNil(t, res)
-	//require.Equal(t, 1, len(balances))
-	//require.NotNil(t, res.NextKey)
-	//
-	////verify offset usage over key
-	//pageReq = &query.PageRequest{Offset: 1, Limit: 2, CountTotal: false}
-	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	//require.NoError(t, err)
-	//require.NotNil(t, res)
-	//require.Equal(t, 2, len(balances))
-	//require.Nil(t, res.NextKey)
-	//
-	////verify offset usage over key
-	//pageReq = &query.PageRequest{Offset: 1, Limit: 1, CountTotal: true}
-	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	//require.NoError(t, err)
-	//require.NotNil(t, res)
-	//require.Equal(t, 1, len(balances))
-	//require.Nil(t, res.NextKey)
-	//
-	//t.Log("verify not in range offset")
-	//pageReq = &query.PageRequest{Offset: 3, Limit: 1, CountTotal: false}
-	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	//require.NoError(t, err)
-	//require.NotNil(t, res)
-	//require.Equal(t, 0, len(balances))
-	//require.Nil(t, res.NextKey)
-	//
-	//// verify if total is not returned
-	//pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: false}
-	//balances, res, err = app.BankKeeper.QueryAllBalances(ctx, addr1, pageReq)
-	//require.NoError(t, err)
-	//require.NotNil(t, res)
-	//require.Equal(t, uint64(0), res.Total)
 }
 
 func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {

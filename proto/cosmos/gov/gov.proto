@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.gov;
 
-import "cosmos/types.proto";
+import "cosmos/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";

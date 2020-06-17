@@ -4,7 +4,7 @@ package ibc.connection;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "gogoproto/gogo.proto";
-import "ibc/commitment/types.proto";
+import "ibc/commitment/commitment.proto";
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.

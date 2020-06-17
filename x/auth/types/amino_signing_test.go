@@ -1,7 +1,9 @@
-package amino_test
+package types_test
 
 import (
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -11,7 +13,6 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -49,7 +50,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		seqNum  uint64 = 7
 	)
 
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := types.LegacyAminoJSONHandler{}
 	signingData := signing.SignerData{
 		ChainID:         chainId,
 		AccountNumber:   accNum,
@@ -68,11 +69,11 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := types.LegacyAminoJSONHandler{}
 	require.Equal(t, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
 func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := types.LegacyAminoJSONHandler{}
 	require.Equal(t, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
 }

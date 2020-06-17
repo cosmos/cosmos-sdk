@@ -4,6 +4,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/tests"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -105,5 +111,56 @@ func TestBuildUnsignedTx(t *testing.T) {
 	tx, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
-	require.Equal(t, []sdk.Signature{}, tx.GetSignatures())
+	require.Empty(t, tx.GetTx().(ante.SigVerifiableTx).GetSignatures())
+}
+
+func TestSign(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	path := hd.CreateHDPath(118, 0, 0).String()
+	kr, err := keyring.New(t.Name(), "test", dir, nil)
+	require.NoError(t, err)
+
+	var from = "test_sign"
+
+	_, seed, err := kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
+	require.NoError(t, err)
+	require.NoError(t, kr.Delete(from))
+
+	info, err := kr.NewAccount(from, seed, "", path, hd.Secp256k1)
+	require.NoError(t, err)
+
+	txf := tx.Factory{}.
+		WithTxGenerator(NewTestTxGenerator()).
+		WithAccountNumber(50).
+		WithSequence(23).
+		WithFees("50stake").
+		WithMemo("memo").
+		WithChainID("test-chain")
+
+	msg := banktypes.NewMsgSend(info.GetAddress(), sdk.AccAddress("to"), nil)
+	txn, err := tx.BuildUnsignedTx(txf, msg)
+	require.NoError(t, err)
+
+	t.Log("should failed if txf without keyring")
+	err = tx.Sign(txf, from, txn)
+	require.Error(t, err)
+
+	txf = tx.Factory{}.
+		WithKeybase(kr).
+		WithTxGenerator(NewTestTxGenerator()).
+		WithAccountNumber(50).
+		WithSequence(23).
+		WithFees("50stake").
+		WithMemo("memo").
+		WithChainID("test-chain")
+
+	t.Log("should succeed if txf with keyring")
+	err = tx.Sign(txf, from, txn)
+	require.NoError(t, err)
+
+	t.Log("should fail for non existing key")
+	err = tx.Sign(txf, "non_existing_key", txn)
+	require.Error(t, err)
 }

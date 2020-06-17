@@ -39,7 +39,7 @@ func NewKeeper(
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(ParamKeyTable())
+		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
 	// ensure bonded and not bonded module accounts are set

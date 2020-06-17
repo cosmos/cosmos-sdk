@@ -63,36 +63,37 @@ func Paginate(
 		return &PageResponse{
 			NextKey: nextKey,
 		}, nil
-	} else {
-		iterator := prefixStore.Iterator(nil, nil)
-		defer iterator.Close()
-
-		end := offset + limit
-
-		var count uint64
-		var nextKey []byte
-
-		for ; iterator.Valid(); iterator.Next() {
-			count++
-
-			if count <= offset {
-				continue
-			} else if count <= end {
-				err := onResult(iterator.Key(), iterator.Value())
-				if err != nil {
-					return nil, err
-				}
-			} else if !req.CountTotal {
-				nextKey = iterator.Key()
-				break
-			}
-		}
-
-		res := &PageResponse{NextKey: nextKey}
-		if req.CountTotal {
-			res.Total = count
-		}
-
-		return res, nil
 	}
+
+	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	end := offset + limit
+
+	var count uint64
+	var nextKey []byte
+
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+
+		//nolint:gocritic
+		if count <= offset {
+			continue
+		} else if count <= end {
+			err := onResult(iterator.Key(), iterator.Value())
+			if err != nil {
+				return nil, err
+			}
+		} else if !req.CountTotal {
+			nextKey = iterator.Key()
+			break
+		}
+	}
+
+	res := &PageResponse{NextKey: nextKey}
+	if req.CountTotal {
+		res.Total = count
+	}
+
+	return res, nil
 }

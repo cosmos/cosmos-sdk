@@ -26,8 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -36,7 +36,7 @@ import (
 type StakingMsgBuildingHelpers interface {
 	CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string)
 	PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, chainID string, valPubKey crypto.PubKey)
-	BuildCreateValidatorMsg(clientCtx client.Context, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error)
+	BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error)
 }
 
 // GenTxCmd builds the application's gentx command.
@@ -120,7 +120,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
 			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			// Set the generate-only flag here after the CLI context has
@@ -203,8 +203,8 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
 }
 
-func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
-	var stdTx auth.StdTx
+func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (authtypes.StdTx, error) {
+	var stdTx authtypes.StdTx
 
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -216,7 +216,7 @@ func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
 	return stdTx, err
 }
 
-func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) error {
+func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx authtypes.StdTx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

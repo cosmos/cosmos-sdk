@@ -1,7 +1,6 @@
 package query_test
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"

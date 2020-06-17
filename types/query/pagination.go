@@ -1,7 +1,6 @@
 package query
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -25,8 +24,6 @@ func Paginate(
 	offset := req.Offset
 	key := req.Key
 	limit := req.Limit
-
-	fmt.Println(offset, key, limit)
 
 	// check if offset is nil or key is available
 	// thus making the key as the default iterator
@@ -68,7 +65,7 @@ func Paginate(
 
 			if count < offset {
 				continue
-			} else if count <= end {
+			} else if count < end {
 				err := onResult(iterator.Key(), iterator.Value())
 				if err != nil {
 					return nil, err

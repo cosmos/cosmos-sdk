@@ -3,8 +3,6 @@ package ante
 import (
 	"fmt"
 
-	"github.com/armon/go-metrics"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -42,10 +40,6 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
-
-	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
-		defer metrics.SetGauge([]string{"tx", "gas"}, float32(gas))
-	}
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus

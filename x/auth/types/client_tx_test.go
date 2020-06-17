@@ -25,7 +25,6 @@ func makeCodec() *codec.Codec {
 }
 
 func setupStdTxBuilderTest(t *testing.T) (client.TxBuilder, keyring.Info) {
-
 	const fromkey = "fromkey"
 
 	// Now add a temporary keybase
@@ -78,7 +77,9 @@ func TestStdTxBuilder_SetFeeAmount(t *testing.T) {
 	}
 	tx := stdTxBuilder.GetTx()
 	stdTxBuilder.SetFeeAmount(feeAmount)
+	feeTx := stdTxBuilder.GetTx().(sdk.FeeTx)
 	require.NotEqual(t, tx, stdTxBuilder.GetTx())
+	require.Equal(t, feeTx.GetFee(), feeAmount)
 	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
 }
 
@@ -86,7 +87,9 @@ func TestStdTxBuilder_SetGasLimit(t *testing.T) {
 	stdTxBuilder, _ := setupStdTxBuilderTest(t)
 	tx := stdTxBuilder.GetTx()
 	stdTxBuilder.SetGasLimit(300000)
+	feeTx := stdTxBuilder.GetTx().(sdk.FeeTx)
 	require.NotEqual(t, tx, stdTxBuilder.GetTx())
+	require.Equal(t, feeTx.GetGas(), uint64(300000))
 	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
 }
 
@@ -94,7 +97,9 @@ func TestStdTxBuilder_SetMemo(t *testing.T) {
 	stdTxBuilder, _ := setupStdTxBuilderTest(t)
 	tx := stdTxBuilder.GetTx()
 	stdTxBuilder.SetMemo("newfoomemo")
+	txWithMemo := stdTxBuilder.GetTx().(sdk.TxWithMemo)
 	require.NotEqual(t, tx, stdTxBuilder.GetTx())
+	require.Equal(t, txWithMemo.GetMemo(), "newfoomemo")
 	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
 }
 
@@ -121,9 +126,11 @@ func TestStdTxBuilder_SetSignatures(t *testing.T) {
 		PubKey: priv.PubKey(),
 		Data:   &singleSignatureData,
 	})
+	//sigTx := stdTxBuilder.GetTx().(ante.SigVerifiableTx)
 
 	require.Equal(t, 1, len(stdTxBuilder.GetTx().GetMsgs()[0].GetSigners()))
 	require.NoError(t, err)
 	require.NotEqual(t, tx, stdTxBuilder.GetTx())
+	//require.NotEqual(t, sigTx.GetSignatures()[0], priv.PubKey().Bytes())
 	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
 }

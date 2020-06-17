@@ -13,27 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 )
 
-func NewTestInterfaceRegistry() types.InterfaceRegistry {
-	registry := types.NewInterfaceRegistry()
-	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
-	registry.RegisterImplementations(
-		(*testdata.Animal)(nil),
-		&testdata.Dog{},
-		&testdata.Cat{},
-	)
-	registry.RegisterImplementations(
-		(*testdata.HasAnimalI)(nil),
-		&testdata.HasAnimal{},
-	)
-	registry.RegisterImplementations(
-		(*testdata.HasHasAnimalI)(nil),
-		&testdata.HasHasAnimal{},
-	)
-	return registry
-}
-
 func TestPackUnpack(t *testing.T) {
-	registry := NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
 	any := types.Any{}
@@ -81,7 +62,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestUnpackInterfaces(t *testing.T) {
-	registry := NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
 	any, err := types.NewAnyWithValue(spot)
@@ -105,7 +86,7 @@ func TestUnpackInterfaces(t *testing.T) {
 }
 
 func TestNested(t *testing.T) {
-	registry := NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
 	any, err := types.NewAnyWithValue(spot)
@@ -145,7 +126,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "{\"@type\":\"/cosmos_sdk.codec.v1.Dog\",\"name\":\"Spot\"}", json)
 
-	registry := NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 	jum := &jsonpb.Unmarshaler{}
 	var any2 types.Any
 	err = jum.Unmarshal(strings.NewReader(json), &any2)

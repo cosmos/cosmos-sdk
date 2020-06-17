@@ -322,7 +322,7 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 	return ctx
 }
 
-// Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// PrintOutput outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
 func (ctx Context) PrintOutput(toPrint interface{}) error {
@@ -360,8 +360,20 @@ func (ctx Context) PrintOutput(toPrint interface{}) error {
 		writer = os.Stdout
 	}
 
-	_, err = fmt.Fprintf(writer, "%s\n", out)
-	return err
+	_, err = writer.Write(out)
+	if err != nil {
+		return err
+	}
+
+	if ctx.OutputFormat != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // GetFromFields returns a from account address and Keybase name given either

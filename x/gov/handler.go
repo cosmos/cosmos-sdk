@@ -3,6 +3,7 @@ package gov
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -35,6 +36,8 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 	if err != nil {
 		return nil, err
 	}
+
+	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
 
 	votingStarted, err := keeper.AddDeposit(ctx, proposal.ProposalID, msg.GetProposer(), msg.GetInitialDeposit())
 	if err != nil {

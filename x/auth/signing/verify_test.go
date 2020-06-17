@@ -15,7 +15,6 @@ import (
 )
 
 func TestVerifySignature(t *testing.T) {
-	msg := []byte{1, 2, 3, 4}
 	_, pubKey, _ := types.KeyTestPubAddr()
 	addr := sdk.AccAddress(pubKey.Address())
 	app, ctx := createTestApp(false)
@@ -30,11 +29,19 @@ func TestVerifySignature(t *testing.T) {
 	balances := sdk.NewCoins(sdk.NewInt64Coin("atom", 200))
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr, balances))
 
-	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	sig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: msg}
-	stdTx := types.NewStdTx([]sdk.Msg{types.NewTestMsg(addr)}, fee, []types.StdSignature{sig}, "testsigs")
-
 	acc, err := ante.GetSignerAcc(ctx, app.AccountKeeper, addr)
+	msgs := []sdk.Msg{types.NewTestMsg(addr)}
+
+	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	txBuilder := types.NewTxBuilder(types.DefaultTxEncoder(codec.New()), acc.GetAccountNumber(), acc.GetSequence(),
+		200000, 1.1, false, "test-chain", "hello", sdk.NewCoins(),
+		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
+	)
+	signBytes, err := txBuilder.BuildSignMsg(msgs)
+	sign, err := txBuilder.Sign("addr", signBytes)
+	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sign}
+	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{}, "testsigs")
+
 	require.Nil(t, err)
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
@@ -48,7 +55,7 @@ func TestVerifySignature(t *testing.T) {
 		AccountSequence: acc.GetSequence(),
 	}
 
-	sigV2, err := types.StdSignatureToSignatureV2(cdc, sig)
+	sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
 	handler := MakeTestHandlerMap()
 
 	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)

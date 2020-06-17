@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,20 +33,20 @@ func TestGetTxSign(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, kr.Delete(from))
 
-	info, err := kr.NewAccount(from, seed, "", path, hd.Secp256k1)
+	_, err = kr.NewAccount(from, seed, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	viper.Set(flags.FlagGenerateOnly, true)
-	viper.Set(flags.FlagFrom, info.GetAddress())
+	// viper.Set(flags.FlagGenerateOnly, true)
+	viper.Set(flags.FlagFrom, from)
 
-	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator).WithChainID("test").WithKeyring(kr).WithFrom(from)
-
-	cmd := GetSignCommand(clientCtx)
 	encodingConfig := simappparams.MakeEncodingConfig()
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
+	clientCtx = clientCtx.WithTxGenerator(encodingConfig.TxGenerator).WithChainID("test").WithKeyring(kr).WithFrom(from)
+
+	cmd := GetSignCommand(clientCtx)
+	txGen := clientCtx.TxGenerator
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
@@ -54,6 +56,8 @@ func TestGetTxSign(t *testing.T) {
 
 	txFile, cleanup := tests.WriteToNewTempFile(t, string(txJSONEncoded))
 	txFileName := txFile.Name()
+	fileData, err := ioutil.ReadFile(txFileName)
+	fmt.Println("fileData", string(fileData))
 	t.Cleanup(cleanup)
 
 	err = cmd.RunE(cmd, []string{txFileName})

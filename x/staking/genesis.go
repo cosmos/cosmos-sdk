@@ -102,7 +102,6 @@ func InitGenesis(
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	// add coins if not provided on genesis
-
 	if bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()).IsZero() {
 		if err := bankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins); err != nil {
 			panic(err)

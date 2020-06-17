@@ -5,13 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // GetQueryCmd returns the query commands for IBC clients
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	ics02ClientQueryCmd := &cobra.Command{
-		Use:                        "client",
+		Use:                        types.SubModuleName,
 		Short:                      "IBC client query subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -19,12 +19,12 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ics02ClientQueryCmd.AddCommand(flags.GetCommands(
-		GetCmdQueryClientStates(queryRoute, cdc),
-		GetCmdQueryClientState(queryRoute, cdc),
-		GetCmdQueryConsensusState(queryRoute, cdc),
-		GetCmdQueryHeader(cdc),
-		GetCmdNodeConsensusState(queryRoute, cdc),
-		GetCmdQueryPath(queryRoute, cdc),
+		GetCmdQueryClientStates(clientCtx),
+		GetCmdQueryClientState(clientCtx),
+		GetCmdQueryConsensusState(clientCtx),
+		GetCmdQueryHeader(clientCtx),
+		GetCmdNodeConsensusState(clientCtx),
+		GetCmdQueryPath(clientCtx),
 	)...)
 	return ics02ClientQueryCmd
 }

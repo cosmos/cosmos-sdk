@@ -85,14 +85,12 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, clientCtx client.Cont
 			return err
 		}
 
-		var json []byte
+		json := clientCtx.JSONMarshaler.MustMarshalJSON(stdSignMsg)
 		if viper.GetBool(flags.FlagIndentResponse) {
-			json, err = clientCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
+			json, err = codec.MarshalIndentFromJSON(json)
 			if err != nil {
 				panic(err)
 			}
-		} else {
-			json = clientCtx.Codec.MustMarshalJSON(stdSignMsg)
 		}
 
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
@@ -161,14 +159,16 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, ms
 		return err
 	}
 
-	var json []byte
-	if viper.GetBool(flags.FlagIndentResponse) {
-		json, err = clientCtx.Codec.MarshalJSONIndent(stdTx, "", "  ")
-	} else {
-		json, err = clientCtx.Codec.MarshalJSON(stdTx)
-	}
+	json, err := clientCtx.JSONMarshaler.MarshalJSON(stdTx)
 	if err != nil {
 		return err
+	}
+
+	if viper.GetBool(flags.FlagIndentResponse) {
+		json, err = codec.MarshalIndentFromJSON(json)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, _ = fmt.Fprintf(clientCtx.Output, "%s\n", json)

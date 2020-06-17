@@ -1,18 +1,19 @@
-package amino_test
+package types_test
 
 import (
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
@@ -29,7 +30,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	}
 	memo := "foo"
 	msgs := []sdk.Msg{
-		&bank.MsgSend{
+		&banktypes.MsgSend{
 			FromAddress: addr1,
 			ToAddress:   addr2,
 			Amount:      coins,
@@ -49,13 +50,13 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		seqNum  uint64 = 7
 	)
 
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := types.LegacyAminoJSONHandler{}
 	signingData := signing.SignerData{
 		ChainID:         chainId,
 		AccountNumber:   accNum,
 		AccountSequence: seqNum,
 	}
-	signBz, err := handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
 	expectedSignBz := auth.StdSignBytes(chainId, accNum, seqNum, fee, msgs, memo)
@@ -63,16 +64,16 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Equal(t, expectedSignBz, signBz)
 
 	// expect error with wrong sign mode
-	_, err = handler.GetSignBytes(txtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
-	require.Equal(t, txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
+	handler := types.LegacyAminoJSONHandler{}
+	require.Equal(t, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
 func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
-	require.Equal(t, []txtypes.SignMode{txtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
+	handler := types.LegacyAminoJSONHandler{}
+	require.Equal(t, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
 }

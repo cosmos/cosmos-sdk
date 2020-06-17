@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet exported.PacketI
 
-	var channelCap *capability.Capability
+	var channelCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 1)
-			channelCap = capability.NewCapability(3)
+			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet
 
-	var channelCap *capability.Capability
+	var channelCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success: UNORDERED", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.UNORDERED, testConnectionIDA)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
-			channelCap = capability.NewCapability(3)
+			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
@@ -380,7 +380,7 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 
 	var (
 		packet  types.Packet
-		chanCap *capability.Capability
+		chanCap *capabilitytypes.Capability
 	)
 
 	testCases := []testCase{
@@ -393,7 +393,7 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 		{"incorrect capability", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), sequence, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
-			chanCap = capability.NewCapability(100)
+			chanCap = capabilitytypes.NewCapability(100)
 		}, false},
 	}
 

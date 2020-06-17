@@ -18,8 +18,8 @@ func Name() string {
 }
 
 // GetTxCmd returns the root tx command for the IBC connections.
-func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
-	return cli.GetTxCmd(fmt.Sprintf("%s/%s", storeKey, SubModuleName), cdc)
+func GetTxCmd(clientCtx client.Context) *cobra.Command {
+	return cli.NewTxCmd(clientCtx)
 }
 
 // GetQueryCmd returns no root query command for the IBC connections.

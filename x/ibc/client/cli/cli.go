@@ -15,7 +15,7 @@ import (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetTxCmd(clientCtx client.Context) *cobra.Command {
 	ibcTxCmd := &cobra.Command{
 		Use:                        host.ModuleName,
 		Short:                      "IBC transaction subcommands",
@@ -25,10 +25,10 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ibcTxCmd.AddCommand(flags.PostCommands(
-		tmclient.GetTxCmd(cdc, storeKey),
-		localhost.GetTxCmd(cdc, storeKey),
-		connection.GetTxCmd(cdc, storeKey),
-		channel.GetTxCmd(cdc, storeKey),
+		tmclient.GetTxCmd(clientCtx.Codec, host.StoreKey),
+		localhost.GetTxCmd(clientCtx.Codec, host.StoreKey),
+		connection.GetTxCmd(clientCtx),
+		channel.GetTxCmd(clientCtx.Codec, host.StoreKey),
 	)...)
 	return ibcTxCmd
 }

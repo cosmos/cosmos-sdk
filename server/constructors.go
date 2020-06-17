@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gogo/protobuf/grpc"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -23,6 +25,13 @@ type (
 		abci.Application
 
 		RegisterAPIRoutes(*api.Server)
+
+		// RegisterGRPC registers gRPC services directly with the gRPC server
+		RegisterGRPC(grpc.Server)
+
+		// RegisterGRPCProxy registers gRPC services against a proxy that is expected
+		// to proxy requests to the ABCI query endpoint
+		RegisterGRPCProxy(grpc.Server)
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

@@ -16,7 +16,13 @@ var protoCodec = encoding.GetCodec(proto.Name)
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	routes map[string]GRPCQueryHandler
+	routes      map[string]GRPCQueryHandler
+	serviceData []serviceData
+}
+
+type serviceData struct {
+	serviceDesc *grpc.ServiceDesc
+	handler     interface{}
 }
 
 var _ gogogrpc.Server
@@ -72,5 +78,16 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 				Value:  resBytes,
 			}, nil
 		}
+	}
+
+	qrt.serviceData = append(qrt.serviceData, serviceData{
+		serviceDesc: sd,
+		handler:     handler,
+	})
+}
+
+func (qrt GRPCQueryRouter) RegisterProxyServer(server gogogrpc.Server) {
+	for _, data := range qrt.serviceData {
+		server.RegisterService(data.serviceDesc, data.handler)
 	}
 }

@@ -294,6 +294,15 @@ func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
 func (app *BaseApp) GRPCQueryRouter() grpc.Server { return app.grpcQueryRouter }
 
+// RegisterGRPC registers gRPC services directly with the gRPC server
+func (app *BaseApp) RegisterGRPC(grpc.Server) {}
+
+// RegisterGRPCProxy registers gRPC services against a proxy that is expected
+// to proxy requests to the ABCI query endpoint
+func (app *BaseApp) RegisterGRPCProxy(server grpc.Server) {
+	app.grpcQueryRouter.RegisterProxyServer(server)
+}
+
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }
 

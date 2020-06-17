@@ -4,8 +4,13 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"runtime/pprof"
+
+	"google.golang.org/grpc/reflection"
+
+	"google.golang.org/grpc"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	grpcproxy "github.com/cosmos/cosmos-sdk/server/grpc"
 )
 
 // Tendermint full-node start flags
@@ -193,27 +199,52 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 	}
 
 	config := config.GetConfig()
+
+	genDoc, err := genDocProvider()
+	if err != nil {
+		return err
+	}
+
+	// TODO: Since this is running in process, do we need to provide a verifier
+	// and set TrustNode=false? If so, we need to add additional logic that
+	// waits for a block to be committed first before starting the API server.
+	clientCtx := client.Context{}.
+		WithHomeDir(home).
+		WithChainID(genDoc.ChainID).
+		WithJSONMarshaler(cdc).
+		WithClient(local.New(tmNode)).
+		WithTrustNode(true)
+
 	var apiSrv *api.Server
 	if config.API.Enable {
-		genDoc, err := genDocProvider()
+		apiSrv = api.New(clientCtx)
+		app.RegisterAPIRoutes(apiSrv)
+
+		if err := apiSrv.Start(config); err != nil {
+			return err
+		}
+	}
+
+	var grpcSrv *grpc.Server
+	if config.GRPC.Enable {
+		grpcSrv = grpc.NewServer()
+
+		app.RegisterGRPC(grpcSrv)
+
+		// proxy queries to the ABCI query endpoint
+		proxyInterceptor := grpcproxy.ABCIQueryProxyInterceptor(clientCtx)
+		proxySrv := grpcproxy.NewProxyServer(grpcSrv, proxyInterceptor)
+		app.RegisterGRPCProxy(proxySrv)
+
+		reflection.Register(grpcSrv)
+
+		listener, err := net.Listen("tcp", config.GRPC.Address)
 		if err != nil {
 			return err
 		}
 
-		// TODO: Since this is running in process, do we need to provide a verifier
-		// and set TrustNode=false? If so, we need to add additional logic that
-		// waits for a block to be committed first before starting the API server.
-		ctx := client.Context{}.
-			WithHomeDir(home).
-			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(cdc).
-			WithClient(local.New(tmNode)).
-			WithTrustNode(true)
-
-		apiSrv = api.New(ctx)
-		app.RegisterAPIRoutes(apiSrv)
-
-		if err := apiSrv.Start(config); err != nil {
+		err = grpcSrv.Serve(listener)
+		if err != nil {
 			return err
 		}
 	}
@@ -249,6 +280,10 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 		if apiSrv != nil {
 			_ = apiSrv.Close()
+		}
+
+		if grpcSrv != nil {
+			_ = grpcSrv.Stop
 		}
 
 		ctx.Logger.Info("exiting...")

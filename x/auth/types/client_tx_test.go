@@ -78,29 +78,26 @@ func TestStdTxBuilder_SetFeeAmount(t *testing.T) {
 	tx := stdTxBuilder.GetTx()
 	stdTxBuilder.SetFeeAmount(feeAmount)
 	feeTx := stdTxBuilder.GetTx().(sdk.FeeTx)
-	require.NotEqual(t, tx, stdTxBuilder.GetTx())
 	require.Equal(t, feeTx.GetFee(), feeAmount)
 	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
 }
 
 func TestStdTxBuilder_SetGasLimit(t *testing.T) {
+	const newGas uint64 = 300000
 	stdTxBuilder, _ := setupStdTxBuilderTest(t)
 	tx := stdTxBuilder.GetTx()
-	stdTxBuilder.SetGasLimit(300000)
+	stdTxBuilder.SetGasLimit(newGas)
 	feeTx := stdTxBuilder.GetTx().(sdk.FeeTx)
-	require.NotEqual(t, tx, stdTxBuilder.GetTx())
-	require.Equal(t, feeTx.GetGas(), uint64(300000))
+	require.Equal(t, feeTx.GetGas(), newGas)
 	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
 }
 
 func TestStdTxBuilder_SetMemo(t *testing.T) {
+	const newMemo string = "newfoomemo"
 	stdTxBuilder, _ := setupStdTxBuilderTest(t)
-	tx := stdTxBuilder.GetTx()
-	stdTxBuilder.SetMemo("newfoomemo")
+	stdTxBuilder.SetMemo(newMemo)
 	txWithMemo := stdTxBuilder.GetTx().(sdk.TxWithMemo)
-	require.NotEqual(t, tx, stdTxBuilder.GetTx())
-	require.Equal(t, txWithMemo.GetMemo(), "newfoomemo")
-	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
+	require.Equal(t, txWithMemo.GetMemo(), newMemo)
 }
 
 func TestStdTxBuilder_SetMsgs(t *testing.T) {
@@ -108,7 +105,6 @@ func TestStdTxBuilder_SetMsgs(t *testing.T) {
 	tx := stdTxBuilder.GetTx()
 	stdTxBuilder.SetMsgs(NewTestMsg(), NewTestMsg())
 	require.NotEqual(t, tx, stdTxBuilder.GetTx())
-	require.False(t, reflect.DeepEqual(tx, stdTxBuilder.GetTx()))
 	require.Equal(t, len(stdTxBuilder.GetTx().GetMsgs()), 2)
 }
 

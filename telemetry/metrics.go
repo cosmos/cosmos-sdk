@@ -12,6 +12,10 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
+// globalLabels defines the set of global labels that will be applied to all
+// metrics emitted using the telemetry package function wrappers.
+var globalLabels = []metrics.Label{}
+
 // Metrics supported format types.
 const (
 	FormatDefault    = ""
@@ -41,6 +45,13 @@ type Config struct {
 	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
 	// It defines the retention duration in seconds.
 	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
+
+	// GlobalLabels defines a global set of name/value label tuples applied to all
+	// metrics emitted using the wrapper functions defined in telemetry package.
+	//
+	// Example:
+	// [["chain_id", "cosmoshub-1"]]
+	GlobalLabels [][]string `mapstructure:"global-labels"`
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows
@@ -61,6 +72,15 @@ type GatherResponse struct {
 func New(cfg Config) (*Metrics, error) {
 	if !cfg.Enabled {
 		return nil, nil
+	}
+
+	if numGlobalLables := len(cfg.GlobalLabels); numGlobalLables > 0 {
+		parsedGlobalLabels := make([]metrics.Label, numGlobalLables)
+		for i, gl := range cfg.GlobalLabels {
+			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
+		}
+
+		globalLabels = parsedGlobalLabels
 	}
 
 	metricsConf := metrics.DefaultConfig(cfg.ServiceName)

@@ -1,0 +1,59 @@
+syntax = "proto3";
+package ibc.transfer;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/cosmos.proto";
+
+// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
+// See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+message MsgTransfer {
+  // the port on which the packet will be sent
+  string source_port = 1 [
+    (gogoproto.moretags) = "yaml:\"source_port\""
+  ];
+  // the channel by which the packet will be sent
+  string source_channel = 2 [
+    (gogoproto.moretags) = "yaml:\"source_channel\""
+  ];
+  // the tokens to be transferred
+  repeated cosmos.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // the sender address
+  bytes sender = 4 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+  ];
+  // the recipient address on the destination chain
+  string receiver = 5;
+  // Timeout height relative to the current block height.
+  // The timeout is disabled when set to 0.
+  uint64 timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
+  // The timeout is disabled when set to 0.
+  uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+}
+
+// FungibleTokenPacketData defines a struct for the packet payload
+// See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+message FungibleTokenPacketData {
+  // the tokens to be transferred
+  repeated cosmos.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // the sender address
+  string sender = 2;
+  // the recipient address on the destination chain
+  string receiver = 3;
+}
+
+// FungibleTokenPacketAcknowledgement contains a boolean success flag and an optional error msg
+// error msg is empty string on success
+// See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
+message FungibleTokenPacketAcknowledgement {
+  bool   success = 1;
+  string error   = 2;
+}

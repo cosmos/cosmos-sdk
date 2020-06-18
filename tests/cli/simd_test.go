@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -99,8 +97,7 @@ func TestCLISimdAddGenesisAccount(t *testing.T) {
 
 	genesisState := f.GenesisState()
 
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	appCodec := std.NewAppCodec(f.Cdc, interfaceRegistry)
+	appCodec := f.EncodingConfig.Marshaler
 
 	accounts := authtypes.GetGenesisStateFromAppState(appCodec, genesisState).Accounts
 	balances := banktypes.GetGenesisStateFromAppState(f.Cdc, genesisState).Balances

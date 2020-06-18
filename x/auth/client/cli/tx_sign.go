@@ -150,7 +150,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 }
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(codec *codec.Codec) *cobra.Command {
+func GetSignCommand(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -170,7 +170,7 @@ key. It implies --signature-only. Full multisig signed transactions may eventual
 be generated via the 'multisign' command.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeSignCmd(codec),
+		RunE:   makeSignCmd(clientCtx),
 		Args:   cobra.ExactArgs(1),
 	}
 
@@ -199,12 +199,13 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
+		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
+		stdTx := tx.(types.StdTx)
 
 		// if --signature-only is on, then override --append
 		var newTx types.StdTx
@@ -231,7 +232,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 			return err
 		}
 
-		json, err := getSignatureJSON(cdc, newTx, clientCtx.Indent, generateSignatureOnly)
+		json, err := getSignatureJSON(clientCtx.Codec, newTx, clientCtx.Indent, generateSignatureOnly)
 		if err != nil {
 			return err
 		}

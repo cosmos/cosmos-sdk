@@ -4,6 +4,7 @@ package cosmos_sdk.ibc.solomachine.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
+import "crypto/types/types.proto";
 
 // MsgCreateClient defines a message to create an IBC client
 message MsgCreateClient {
@@ -41,7 +42,7 @@ message ConsensusState {
   // current sequence of the consensus state
   uint64 sequence = 1 [(gogoproto.moretags) = "yaml:\"sequence\""];
   // public key of the solo machine
-  bytes pub_key = 2 [
+  cosmos_sdk.crypto.v1.PublicKey pub_key = 2 [
     (gogoproto.customname) = "PubKey",
     (gogoproto.moretags) = "yaml:\"pub_key\""
   ];
@@ -54,7 +55,7 @@ message Header {
   // sequence to update solo machine public key at
   uint64 sequence = 1 [(gogoproto.moretags) = "yaml:\"sequence\""];
   bytes signature = 2 [(gogoproto.moretags) = "yaml:\"signature\""];
-  bytes new_pub_key = 3 [
+  cosmos_sdk.crypto.v1.PublicKey new_pub_key = 3 [
     (gogoproto.customname) = "NewPubKey",
     (gogoproto.moretags) = "yaml:\"new_pub_key\""
   ];

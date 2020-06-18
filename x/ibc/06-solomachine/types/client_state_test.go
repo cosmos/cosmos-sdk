@@ -16,7 +16,7 @@ const (
 	testConnectionID             = "connectionid"
 	testChannelID                = "testchannelid"
 	testPortID                   = "testportid"
-	timestamp                    = 10
+	timestamp                    = uint64(10)
 )
 
 var (
@@ -42,12 +42,12 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{0, suite.privKey.PubKey().Bytes(), timestamp}),
+			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{0, suite.pubKey, timestamp}),
 			false,
 		},
 		{
 			"timstamp is zero",
-			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{1, suite.privKey.PubKey().Bytes(), 0}),
+			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{1, suite.pubKey, 0}),
 			false,
 		},
 		{

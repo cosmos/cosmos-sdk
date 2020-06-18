@@ -3,7 +3,6 @@ package types
 import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -24,15 +23,8 @@ func (h Header) GetHeight() uint64 {
 
 // GetPubKey unmarshals the new public key into a crypto.PubKey type.
 func (h Header) GetPubKey() tmcrypto.PubKey {
-	var pk cryptotypes.PublicKey
 
-	if len(h.NewPubKey) == 0 {
-		return nil
-	}
-
-	SubModuleCdc.MustUnmarshalBinaryBare(h.NewPubKey, &pk)
-
-	pubKey, err := std.DefaultPublicKeyCodec{}.Decode(&pk)
+	pubKey, err := std.DefaultPublicKeyCodec{}.Decode(h.NewPubKey)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +44,7 @@ func (h Header) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "signature cannot be empty")
 	}
 
-	if h.NewPubKey == nil || len(h.NewPubKey) == 0 {
+	if h.NewPubKey == nil || len(h.GetPubKey().Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "new public key cannot be empty")
 	}
 

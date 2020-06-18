@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,6 +16,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/client/solomachine/MsgCreateClient", nil)
 	cdc.RegisterConcrete(MsgUpdateClient{}, "ibc/client/solomachine/MsgUpdateClient", nil)
 	cdc.RegisterConcrete(MsgSubmitClientMisbehaviour{}, "ibc/client/solomachine/MsgSubmitClientMisbehaviour", nil)
+	cdc.RegisterConcrete(cryptotypes.PublicKey{}, "cosmos/PublicKey", nil)
 }
 
 // RegisterInterfaces register the ibc channel submodule interfaces to protobuf

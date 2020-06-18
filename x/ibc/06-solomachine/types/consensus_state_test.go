@@ -10,7 +10,7 @@ func (suite *SoloMachineTestSuite) TestConsensusState() {
 
 	suite.Require().Equal(clientexported.SoloMachine, consensusState.ClientType())
 	suite.Require().Equal(suite.sequence, consensusState.GetHeight())
-	suite.Require().Equal(uint64(0), consensusState.GetTimestamp())
+	suite.Require().Equal(timestamp, consensusState.GetTimestamp())
 	suite.Require().Nil(consensusState.GetRoot())
 }
 
@@ -29,7 +29,7 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 			"sequence is zero",
 			solomachinetypes.ConsensusState{
 				Sequence: 0,
-				PubKey:   suite.privKey.PubKey().Bytes(),
+				PubKey:   suite.pubKey,
 			},
 			false,
 		},

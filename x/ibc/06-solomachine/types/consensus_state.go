@@ -3,7 +3,7 @@ package types
 import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	//	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -35,15 +35,11 @@ func (cs ConsensusState) GetRoot() commitmentexported.Root {
 
 // GetPubKey unmarshals the public key into a crypto.PubKey type.
 func (cs ConsensusState) GetPubKey() tmcrypto.PubKey {
-	var pk cryptotypes.PublicKey
+	//	if len(cs.PubKey) == 0 {
+	//		return nil
+	//	}
 
-	if len(cs.PubKey) == 0 {
-		return nil
-	}
-
-	SubModuleCdc.MustUnmarshalBinaryBare(cs.PubKey, &pk)
-
-	pubKey, err := std.DefaultPublicKeyCodec{}.Decode(&pk)
+	pubKey, err := std.DefaultPublicKeyCodec{}.Decode(cs.PubKey)
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +55,7 @@ func (cs ConsensusState) ValidateBasic() error {
 	if cs.Timestamp == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be 0")
 	}
-	if cs.PubKey == nil || len(cs.PubKey) == 0 {
+	if cs.PubKey == nil || len(cs.GetPubKey().Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")
 	}
 

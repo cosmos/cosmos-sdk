@@ -11,7 +11,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
@@ -26,6 +28,7 @@ type SoloMachineTestSuite struct {
 	cdc       codec.Marshaler
 	store     sdk.KVStore
 	privKey   crypto.PrivKey
+	pubKey    *cryptotypes.PublicKey
 	sequence  uint64
 	clientID  string
 	timestamp uint64
@@ -38,6 +41,9 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.aminoCdc = app.Codec()
 	suite.cdc = app.AppCodec()
 	suite.privKey = ed25519.GenPrivKey()
+	pubKey, err := std.DefaultPublicKeyCodec{}.Encode(suite.privKey.PubKey())
+	suite.Require().NoError(err)
+	suite.pubKey = pubKey
 
 	suite.sequence = 1
 	suite.timestamp = 10
@@ -60,15 +66,19 @@ func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
 	signature, err := suite.privKey.Sign(data)
 	suite.Require().NoError(err)
 
+	pubKey, err := std.DefaultPublicKeyCodec{}.Encode(newPrivKey.PubKey())
+	suite.Require().NoError(err)
+
 	header := solomachinetypes.Header{
 		Sequence:  suite.sequence,
 		Signature: signature,
-		NewPubKey: newPrivKey.PubKey().Bytes(),
+		NewPubKey: pubKey,
 	}
 
 	// assumes successful header update
 	suite.sequence++
 	suite.privKey = newPrivKey
+	suite.pubKey = pubKey
 
 	return header
 }
@@ -80,7 +90,7 @@ func (suite *SoloMachineTestSuite) ClientState() solomachinetypes.ClientState {
 func (suite *SoloMachineTestSuite) ConsensusState() solomachinetypes.ConsensusState {
 	return solomachinetypes.ConsensusState{
 		Sequence:  suite.sequence,
-		PubKey:    suite.privKey.PubKey().Bytes(),
+		PubKey:    suite.pubKey,
 		Timestamp: suite.timestamp,
 	}
 }

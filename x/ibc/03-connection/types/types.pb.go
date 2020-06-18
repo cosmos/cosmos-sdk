@@ -4,11 +4,15 @@
 package types
 
 import (
+	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -550,6 +554,248 @@ func (m *ClientPaths) GetPaths() []string {
 	return nil
 }
 
+// QueryConnectionRequest is the request type for the Query/Connection RPC method
+type QueryConnectionRequest struct {
+	// connection unique identifier
+	ConnectionID string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+}
+
+func (m *QueryConnectionRequest) Reset()         { *m = QueryConnectionRequest{} }
+func (m *QueryConnectionRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryConnectionRequest) ProtoMessage()    {}
+func (*QueryConnectionRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ee50c03d1fbe43, []int{7}
+}
+func (m *QueryConnectionRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConnectionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConnectionRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConnectionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConnectionRequest.Merge(m, src)
+}
+func (m *QueryConnectionRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConnectionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConnectionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConnectionRequest proto.InternalMessageInfo
+
+func (m *QueryConnectionRequest) GetConnectionID() string {
+	if m != nil {
+		return m.ConnectionID
+	}
+	return ""
+}
+
+// QueryConnectionResponse is the response type for the Query/Connection RPC method.
+// Besides the connection end, it includes a proof and the height from which the
+// proof was retrieved.
+type QueryConnectionResponse struct {
+	// connection associated with the request identifier
+	Connection *ConnectionEnd `protobuf:"bytes,1,opt,name=connection,proto3" json:"connection,omitempty"`
+	// merkle proof of existence
+	Proof *types.MerkleProof `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof,omitempty"`
+	// merkle proof path
+	ProofPath *types.MerklePath `protobuf:"bytes,3,opt,name=proof_path,json=proofPath,proto3" json:"proof_path,omitempty"`
+	// height at which the proof was retrieved
+	ProofHeight uint64 `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+}
+
+func (m *QueryConnectionResponse) Reset()         { *m = QueryConnectionResponse{} }
+func (m *QueryConnectionResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryConnectionResponse) ProtoMessage()    {}
+func (*QueryConnectionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ee50c03d1fbe43, []int{8}
+}
+func (m *QueryConnectionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConnectionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConnectionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConnectionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConnectionResponse.Merge(m, src)
+}
+func (m *QueryConnectionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConnectionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConnectionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConnectionResponse proto.InternalMessageInfo
+
+func (m *QueryConnectionResponse) GetConnection() *ConnectionEnd {
+	if m != nil {
+		return m.Connection
+	}
+	return nil
+}
+
+func (m *QueryConnectionResponse) GetProof() *types.MerkleProof {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+func (m *QueryConnectionResponse) GetProofPath() *types.MerklePath {
+	if m != nil {
+		return m.ProofPath
+	}
+	return nil
+}
+
+func (m *QueryConnectionResponse) GetProofHeight() uint64 {
+	if m != nil {
+		return m.ProofHeight
+	}
+	return 0
+}
+
+// QueryClientConnectionsRequest is the request type for the Query/ClientConnections
+// RPC method
+type QueryClientConnectionsRequest struct {
+	// client identifier associated with a connection
+	ClientID string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+}
+
+func (m *QueryClientConnectionsRequest) Reset()         { *m = QueryClientConnectionsRequest{} }
+func (m *QueryClientConnectionsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryClientConnectionsRequest) ProtoMessage()    {}
+func (*QueryClientConnectionsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ee50c03d1fbe43, []int{9}
+}
+func (m *QueryClientConnectionsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryClientConnectionsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryClientConnectionsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryClientConnectionsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClientConnectionsRequest.Merge(m, src)
+}
+func (m *QueryClientConnectionsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryClientConnectionsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClientConnectionsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryClientConnectionsRequest proto.InternalMessageInfo
+
+func (m *QueryClientConnectionsRequest) GetClientID() string {
+	if m != nil {
+		return m.ClientID
+	}
+	return ""
+}
+
+// QueryClientConnectionsResponse is the response type for the Query/ClientConnections
+// RPC method
+type QueryClientConnectionsResponse struct {
+	// slice of all the connection paths associated with a client.
+	ConnectionPaths []string `protobuf:"bytes,1,rep,name=connection_paths,json=connectionPaths,proto3" json:"connection_paths,omitempty"`
+	// merkle proof of existence
+	Proof *types.MerkleProof `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof,omitempty"`
+	// merkle proof path
+	ProofPath *types.MerklePath `protobuf:"bytes,3,opt,name=proof_path,json=proofPath,proto3" json:"proof_path,omitempty"`
+	// height at which the proof was generated
+	ProofHeight uint64 `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+}
+
+func (m *QueryClientConnectionsResponse) Reset()         { *m = QueryClientConnectionsResponse{} }
+func (m *QueryClientConnectionsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryClientConnectionsResponse) ProtoMessage()    {}
+func (*QueryClientConnectionsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ee50c03d1fbe43, []int{10}
+}
+func (m *QueryClientConnectionsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryClientConnectionsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryClientConnectionsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryClientConnectionsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClientConnectionsResponse.Merge(m, src)
+}
+func (m *QueryClientConnectionsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryClientConnectionsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClientConnectionsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryClientConnectionsResponse proto.InternalMessageInfo
+
+func (m *QueryClientConnectionsResponse) GetConnectionPaths() []string {
+	if m != nil {
+		return m.ConnectionPaths
+	}
+	return nil
+}
+
+func (m *QueryClientConnectionsResponse) GetProof() *types.MerkleProof {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+func (m *QueryClientConnectionsResponse) GetProofPath() *types.MerklePath {
+	if m != nil {
+		return m.ProofPath
+	}
+	return nil
+}
+
+func (m *QueryClientConnectionsResponse) GetProofHeight() uint64 {
+	if m != nil {
+		return m.ProofHeight
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterEnum("cosmos_sdk.x.ibc.connection.v1.State", State_name, State_value)
 	proto.RegisterType((*MsgConnectionOpenInit)(nil), "cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenInit")
@@ -559,6 +805,10 @@ func init() {
 	proto.RegisterType((*ConnectionEnd)(nil), "cosmos_sdk.x.ibc.connection.v1.ConnectionEnd")
 	proto.RegisterType((*Counterparty)(nil), "cosmos_sdk.x.ibc.connection.v1.Counterparty")
 	proto.RegisterType((*ClientPaths)(nil), "cosmos_sdk.x.ibc.connection.v1.ClientPaths")
+	proto.RegisterType((*QueryConnectionRequest)(nil), "cosmos_sdk.x.ibc.connection.v1.QueryConnectionRequest")
+	proto.RegisterType((*QueryConnectionResponse)(nil), "cosmos_sdk.x.ibc.connection.v1.QueryConnectionResponse")
+	proto.RegisterType((*QueryClientConnectionsRequest)(nil), "cosmos_sdk.x.ibc.connection.v1.QueryClientConnectionsRequest")
+	proto.RegisterType((*QueryClientConnectionsResponse)(nil), "cosmos_sdk.x.ibc.connection.v1.QueryClientConnectionsResponse")
 }
 
 func init() {
@@ -566,63 +816,195 @@ func init() {
 }
 
 var fileDescriptor_30ee50c03d1fbe43 = []byte{
-	// 889 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x56, 0xbf, 0x6f, 0xdb, 0x46,
-	0x14, 0x16, 0x29, 0x4a, 0x96, 0xce, 0x72, 0xa2, 0x30, 0x72, 0x43, 0xb0, 0x05, 0xc9, 0x32, 0x48,
-	0x21, 0x14, 0x35, 0x55, 0x3b, 0x45, 0x06, 0x17, 0x1d, 0x24, 0x59, 0x41, 0x59, 0xd4, 0x8a, 0x40,
-	0xcb, 0x01, 0x9a, 0x85, 0x90, 0x48, 0x5a, 0x3a, 0xc8, 0x22, 0x05, 0xde, 0x39, 0xb0, 0xf6, 0x0e,
-	0x81, 0xa7, 0xae, 0x1d, 0x0c, 0x14, 0xc8, 0xd6, 0x3f, 0xa4, 0xf0, 0x98, 0xb1, 0x13, 0x51, 0xc8,
-	0x7b, 0x07, 0x8d, 0x9d, 0x0a, 0xde, 0x51, 0xa4, 0x14, 0xb9, 0x0e, 0x0c, 0x69, 0x28, 0x90, 0x45,
-	0xba, 0xf7, 0xeb, 0x7b, 0xf7, 0xde, 0xf7, 0xf8, 0x48, 0xf0, 0xe4, 0xbc, 0x02, 0xbb, 0x56, 0xe5,
-	0xeb, 0xa7, 0x3b, 0x96, 0xe7, 0xba, 0x8e, 0x85, 0xa1, 0xe7, 0x56, 0xf0, 0x78, 0xe4, 0x20, 0xfa,
-	0xab, 0x8d, 0x7c, 0x0f, 0x7b, 0xbc, 0x64, 0x79, 0x68, 0xe8, 0x21, 0x13, 0xd9, 0x03, 0xed, 0x5c,
-	0x83, 0x5d, 0x4b, 0x4b, 0xdc, 0xb5, 0xd7, 0xbb, 0xe2, 0x17, 0xb8, 0x0f, 0x7d, 0xdb, 0x1c, 0x75,
-	0x7c, 0x3c, 0xae, 0x90, 0x90, 0x4a, 0xcf, 0xeb, 0x79, 0xc9, 0x89, 0xe2, 0x88, 0x51, 0xba, 0xbd,
-	0x30, 0xdd, 0x70, 0x08, 0xf1, 0xd0, 0x71, 0xf1, 0x72, 0x3a, 0xf5, 0x8a, 0x05, 0xdb, 0x87, 0xa8,
-	0x57, 0x8f, 0x73, 0xbc, 0x18, 0x39, 0xae, 0xee, 0x42, 0xcc, 0x7f, 0x07, 0xf2, 0xd6, 0x29, 0x74,
-	0x5c, 0x6c, 0x42, 0x5b, 0x60, 0x14, 0xa6, 0x9c, 0xaf, 0x29, 0x93, 0x40, 0xce, 0xd5, 0x89, 0x52,
-	0x3f, 0x98, 0x06, 0x72, 0x71, 0xdc, 0x19, 0x9e, 0xee, 0xab, 0xb1, 0x9b, 0x6a, 0xe4, 0xe8, 0x59,
-	0xb7, 0xf9, 0x43, 0xb0, 0x95, 0x5c, 0x3c, 0x84, 0x60, 0x09, 0x44, 0x79, 0x12, 0xc8, 0x85, 0x24,
-	0x1b, 0x81, 0x29, 0x45, 0x30, 0xf3, 0xee, 0xaa, 0x51, 0x48, 0x64, 0xdd, 0xe6, 0x5f, 0x82, 0x82,
-	0xe5, 0x9d, 0xb9, 0xd8, 0xf1, 0x49, 0xe5, 0x42, 0x5a, 0x61, 0xca, 0x9b, 0x7b, 0x5f, 0x69, 0xb7,
-	0x77, 0x4b, 0xab, 0xcf, 0xc5, 0xd4, 0xb8, 0xab, 0x40, 0x4e, 0x19, 0x0b, 0x38, 0xbc, 0x0e, 0xb2,
-	0x08, 0xf6, 0x5c, 0xc7, 0x17, 0x38, 0x85, 0x29, 0x17, 0x6a, 0xbb, 0xff, 0x04, 0xf2, 0x4e, 0x0f,
-	0xe2, 0xfe, 0x59, 0x57, 0xb3, 0xbc, 0x61, 0x85, 0xe2, 0x47, 0x7f, 0x3b, 0xc8, 0x1e, 0x44, 0xdd,
-	0xab, 0x5a, 0x56, 0xd5, 0xb6, 0x7d, 0x07, 0x21, 0x23, 0x02, 0x50, 0x7f, 0xce, 0x80, 0xd2, 0x52,
-	0x2b, 0xdb, 0xfe, 0xf8, 0x23, 0xe9, 0xe4, 0x31, 0xd8, 0x9e, 0x97, 0xcd, 0xd7, 0x8e, 0x8f, 0xa0,
-	0xe7, 0x22, 0x81, 0x53, 0xd2, 0x61, 0xc5, 0xd3, 0x40, 0xfe, 0x6c, 0x76, 0xbd, 0x1b, 0xdc, 0x54,
-	0xa3, 0x34, 0xaf, 0x7f, 0x19, 0xa9, 0xf9, 0x6f, 0x00, 0x18, 0xf9, 0x9e, 0x77, 0x62, 0x42, 0x17,
-	0x62, 0x21, 0x43, 0x48, 0xda, 0x9e, 0x06, 0xf2, 0x03, 0x8a, 0x95, 0xd8, 0x54, 0x23, 0x4f, 0x04,
-	0x32, 0xbc, 0x9f, 0x83, 0x02, 0xb5, 0xf4, 0x1d, 0xd8, 0xeb, 0x63, 0x21, 0xab, 0x30, 0x65, 0xce,
-	0xd8, 0x24, 0xba, 0xef, 0x89, 0x8a, 0xaf, 0x83, 0xfb, 0xd4, 0xc5, 0xf2, 0x5c, 0xe4, 0xb8, 0xe8,
-	0x0c, 0x09, 0x1b, 0x04, 0x5d, 0x9c, 0x06, 0xf2, 0x27, 0xf3, 0xe8, 0xb1, 0x83, 0x6a, 0xdc, 0x23,
-	0x9a, 0xfa, 0x4c, 0xc1, 0x3f, 0x07, 0xc5, 0xd8, 0x3a, 0xcb, 0x95, 0x0b, 0x73, 0xd5, 0x3e, 0x9d,
-	0x06, 0xf2, 0xa3, 0x98, 0x8e, 0x05, 0x0f, 0xd5, 0xb8, 0x1f, 0xab, 0xa2, 0xcb, 0x24, 0x63, 0x98,
-	0x5f, 0x75, 0x0c, 0xff, 0x48, 0xdf, 0x30, 0x86, 0x55, 0x6b, 0xb0, 0x3c, 0x47, 0xcc, 0x4a, 0x73,
-	0x24, 0x80, 0x8d, 0x88, 0x3b, 0x3a, 0x90, 0xc6, 0x4c, 0xe4, 0x77, 0x01, 0x65, 0xc2, 0xc4, 0x3e,
-	0x1d, 0xaf, 0x42, 0xad, 0x94, 0xcc, 0x78, 0x6c, 0x52, 0x8d, 0x1c, 0x39, 0x87, 0x8f, 0xc8, 0xfe,
-	0x7b, 0x7c, 0x71, 0xa4, 0x87, 0x8f, 0xa6, 0x81, 0xfc, 0x70, 0x3e, 0x6a, 0xd6, 0xbf, 0x0f, 0x11,
-	0x99, 0x59, 0x0b, 0x91, 0xd9, 0x95, 0x88, 0xdc, 0x58, 0x95, 0xc8, 0xb7, 0x2c, 0x10, 0x96, 0x88,
-	0xac, 0x7b, 0xee, 0x09, 0xf4, 0x87, 0xeb, 0x26, 0x33, 0xa6, 0xac, 0x63, 0x0d, 0x08, 0x9d, 0x37,
-	0x50, 0xd6, 0xb1, 0x06, 0x33, 0xca, 0xc2, 0x71, 0x7a, 0x9f, 0xb2, 0xf4, 0x1d, 0x28, 0x5b, 0xe3,
-	0xd6, 0xfd, 0x9d, 0x05, 0x5b, 0x49, 0xc1, 0x0d, 0xd7, 0xe6, 0x1f, 0x03, 0x36, 0xee, 0xc7, 0xc3,
-	0x49, 0x20, 0xb3, 0xa4, 0x0b, 0x79, 0x7a, 0xa9, 0xb0, 0x74, 0x16, 0xda, 0x8b, 0x3b, 0x99, 0xbd,
-	0xf3, 0x4e, 0x16, 0x41, 0x2e, 0xde, 0x6f, 0xe9, 0x70, 0xbf, 0x19, 0xb1, 0xcc, 0x7f, 0x0b, 0x32,
-	0x08, 0x77, 0xb0, 0x43, 0x6a, 0xbb, 0xb7, 0xf7, 0xe4, 0x43, 0x9b, 0xf5, 0x28, 0x74, 0x36, 0x68,
-	0xcc, 0xd2, 0x76, 0xce, 0xac, 0x67, 0x3b, 0xef, 0x73, 0x6f, 0x7e, 0x93, 0x53, 0xea, 0xdf, 0x0c,
-	0x28, 0xcc, 0xbb, 0xfe, 0xcf, 0x5e, 0x4d, 0x3f, 0x80, 0xec, 0xc8, 0x77, 0x4e, 0xe0, 0xf9, 0x6d,
-	0x2f, 0xa5, 0xd9, 0xc7, 0x4c, 0x58, 0xf6, 0xa1, 0xe3, 0x0f, 0x4e, 0x9d, 0x16, 0x89, 0x89, 0xca,
-	0x8e, 0x10, 0xa2, 0x82, 0x1f, 0x83, 0x4d, 0x5a, 0x4a, 0xab, 0x83, 0xfb, 0x88, 0x2f, 0x81, 0xcc,
-	0x28, 0x3c, 0x08, 0x0c, 0xe1, 0x8c, 0x0a, 0x5f, 0xfe, 0xca, 0x80, 0x0c, 0x21, 0x81, 0x7f, 0x06,
-	0xe4, 0xa3, 0x76, 0xb5, 0xdd, 0x30, 0x8f, 0x9b, 0x7a, 0x53, 0x6f, 0xeb, 0xd5, 0x1f, 0xf5, 0x57,
-	0x8d, 0x03, 0xf3, 0xb8, 0x79, 0xd4, 0x6a, 0xd4, 0xf5, 0xe7, 0x7a, 0xe3, 0xa0, 0x98, 0x12, 0x1f,
-	0x5c, 0x5c, 0x2a, 0x5b, 0x0b, 0x0e, 0xbc, 0x00, 0x00, 0x8d, 0x0b, 0x95, 0x45, 0x46, 0xcc, 0x5d,
-	0x5c, 0x2a, 0x5c, 0x78, 0xe6, 0x25, 0xb0, 0x45, 0x2d, 0x6d, 0xe3, 0xa7, 0x17, 0xad, 0x46, 0xb3,
-	0xc8, 0x8a, 0x9b, 0x17, 0x97, 0xca, 0x46, 0x24, 0x26, 0x91, 0xc4, 0x98, 0xa6, 0x91, 0xe1, 0x59,
-	0xe4, 0xde, 0xbc, 0x95, 0x52, 0xb5, 0xd6, 0xd5, 0x44, 0x62, 0xde, 0x4d, 0x24, 0xe6, 0xaf, 0x89,
-	0xc4, 0xfc, 0x72, 0x2d, 0xa5, 0xde, 0x5d, 0x4b, 0xa9, 0x3f, 0xaf, 0xa5, 0xd4, 0xab, 0x67, 0xb7,
-	0x3e, 0x2f, 0xff, 0xf9, 0xb1, 0xd9, 0xcd, 0x92, 0x0f, 0xbf, 0xa7, 0xff, 0x06, 0x00, 0x00, 0xff,
-	0xff, 0x9f, 0x6b, 0x1d, 0x24, 0x90, 0x0a, 0x00, 0x00,
+	// 1086 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0xcd, 0x6f, 0xe3, 0x44,
+	0x14, 0x8f, 0x9d, 0xa4, 0x4d, 0x5f, 0xd2, 0x6d, 0x3a, 0xdb, 0x6e, 0x2d, 0x03, 0x76, 0xf0, 0x6a,
+	0x51, 0x77, 0xa1, 0x09, 0xcd, 0x42, 0x91, 0x8a, 0x16, 0x29, 0x49, 0xb3, 0xc2, 0x2b, 0xfa, 0x81,
+	0xdb, 0xae, 0xc4, 0x5e, 0xa2, 0xd4, 0x76, 0x13, 0x2b, 0x8d, 0x1d, 0x6c, 0x77, 0xd5, 0x9e, 0xb8,
+	0x70, 0x58, 0xf5, 0xc4, 0x81, 0xcb, 0x1e, 0x2a, 0x90, 0xf6, 0xc6, 0x1f, 0x82, 0x7a, 0xdc, 0x23,
+	0x27, 0x0b, 0xa5, 0x77, 0x0e, 0x39, 0x22, 0x0e, 0xc8, 0x33, 0xfe, 0x4a, 0x9d, 0x7e, 0xd1, 0x1e,
+	0x40, 0x5c, 0xda, 0x99, 0x37, 0xef, 0xfd, 0x66, 0xde, 0xfb, 0xfd, 0xe6, 0x4d, 0x0c, 0x0f, 0x0e,
+	0x4a, 0xda, 0x8e, 0x5c, 0xfa, 0xf8, 0xf1, 0x82, 0x6c, 0xe8, 0xba, 0x2a, 0xdb, 0x9a, 0xa1, 0x97,
+	0xec, 0xc3, 0x9e, 0x6a, 0x91, 0xbf, 0xc5, 0x9e, 0x69, 0xd8, 0x06, 0xe2, 0x64, 0xc3, 0xea, 0x1a,
+	0x56, 0xc3, 0x52, 0x3a, 0xc5, 0x83, 0xa2, 0xb6, 0x23, 0x17, 0x43, 0xf7, 0xe2, 0xcb, 0x45, 0xf6,
+	0x03, 0xbb, 0xad, 0x99, 0x4a, 0xa3, 0xd7, 0x34, 0xed, 0xc3, 0x12, 0x0e, 0x29, 0xb5, 0x8c, 0x96,
+	0x11, 0x8e, 0x08, 0x0e, 0xeb, 0x6d, 0x57, 0x76, 0xb7, 0xeb, 0x76, 0x35, 0xbb, 0xab, 0xea, 0x76,
+	0x7c, 0x3b, 0xe1, 0x84, 0x86, 0xd9, 0x55, 0xab, 0x55, 0x0b, 0xf6, 0x58, 0xef, 0xa9, 0xba, 0xa8,
+	0x6b, 0x36, 0x7a, 0x02, 0x13, 0xf2, 0x9e, 0xa6, 0xea, 0x76, 0x43, 0x53, 0x18, 0xaa, 0x40, 0xcd,
+	0x4f, 0x54, 0x0b, 0x7d, 0x87, 0xcf, 0xd4, 0xb0, 0x51, 0x5c, 0x19, 0x38, 0x7c, 0xfe, 0xb0, 0xd9,
+	0xdd, 0x5b, 0x16, 0x02, 0x37, 0x41, 0xca, 0x90, 0xb1, 0xa8, 0xa0, 0x55, 0x98, 0x0c, 0x0f, 0xee,
+	0x42, 0xd0, 0x18, 0x62, 0xbe, 0xef, 0xf0, 0xb9, 0x70, 0x37, 0x0c, 0x33, 0xe3, 0xc1, 0x44, 0xdd,
+	0x05, 0x29, 0x17, 0xce, 0x45, 0x05, 0x3d, 0x87, 0x9c, 0x6c, 0xec, 0xeb, 0xb6, 0x6a, 0xe2, 0xcc,
+	0x99, 0x64, 0x81, 0x9a, 0xcf, 0x96, 0x3f, 0x2a, 0x5e, 0x5c, 0xad, 0x62, 0x2d, 0x12, 0x53, 0x4d,
+	0x9d, 0x38, 0x7c, 0x42, 0x1a, 0xc2, 0x41, 0x22, 0x8c, 0x59, 0x5a, 0x4b, 0x57, 0x4d, 0x26, 0x55,
+	0xa0, 0xe6, 0x73, 0xd5, 0xc5, 0x3f, 0x1d, 0x7e, 0xa1, 0xa5, 0xd9, 0xed, 0xfd, 0x9d, 0xa2, 0x6c,
+	0x74, 0x4b, 0x04, 0xdf, 0xfb, 0xb7, 0x60, 0x29, 0x1d, 0xaf, 0x7a, 0x15, 0x59, 0xae, 0x28, 0x8a,
+	0xa9, 0x5a, 0x96, 0xe4, 0x01, 0x08, 0xdf, 0xa7, 0x61, 0x26, 0x56, 0xca, 0x2d, 0xf3, 0xf0, 0x7f,
+	0x52, 0xc9, 0x6d, 0x98, 0x8d, 0xce, 0x1b, 0x2f, 0x55, 0xd3, 0xd2, 0x0c, 0xdd, 0x62, 0x52, 0x85,
+	0xa4, 0x9b, 0xf1, 0xc0, 0xe1, 0xdf, 0xf5, 0x8f, 0x37, 0xc2, 0x4d, 0x90, 0x66, 0xa2, 0xf6, 0xe7,
+	0x9e, 0x19, 0x7d, 0x02, 0xd0, 0x33, 0x0d, 0x63, 0xb7, 0xa1, 0xe9, 0x9a, 0xcd, 0xa4, 0x31, 0x49,
+	0xb3, 0x03, 0x87, 0x9f, 0x26, 0x58, 0xe1, 0x9a, 0x20, 0x4d, 0xe0, 0x09, 0x16, 0xef, 0xfb, 0x90,
+	0x23, 0x2b, 0x6d, 0x55, 0x6b, 0xb5, 0x6d, 0x66, 0xac, 0x40, 0xcd, 0xa7, 0xa4, 0x2c, 0xb6, 0x7d,
+	0x89, 0x4d, 0xa8, 0x06, 0x53, 0xc4, 0x45, 0x36, 0x74, 0x4b, 0xd5, 0xad, 0x7d, 0x8b, 0x19, 0xc7,
+	0xe8, 0xec, 0xc0, 0xe1, 0xef, 0x45, 0xd1, 0x03, 0x07, 0x41, 0xba, 0x83, 0x2d, 0x35, 0xdf, 0x80,
+	0x9e, 0x42, 0x3e, 0x58, 0xf5, 0xf7, 0xca, 0xb8, 0x7b, 0x55, 0xdf, 0x19, 0x38, 0xfc, 0x5c, 0x40,
+	0xc7, 0x90, 0x87, 0x20, 0x4d, 0x05, 0x26, 0xef, 0x30, 0xa1, 0x0c, 0x27, 0x6e, 0x2a, 0xc3, 0x5f,
+	0x93, 0x23, 0x64, 0x58, 0x91, 0x3b, 0x71, 0x1d, 0x51, 0x37, 0xd2, 0x11, 0x03, 0xe3, 0x1e, 0x77,
+	0x44, 0x90, 0x92, 0x3f, 0x45, 0x8b, 0x40, 0x98, 0x68, 0xd8, 0x26, 0x91, 0x57, 0xae, 0x3a, 0x13,
+	0x6a, 0x3c, 0x58, 0x12, 0xa4, 0x0c, 0x1e, 0xbb, 0x57, 0x64, 0xf9, 0x0c, 0x5f, 0x29, 0x5c, 0xc3,
+	0xb9, 0x81, 0xc3, 0xdf, 0x8d, 0x46, 0xf9, 0xf5, 0xbb, 0x8c, 0xc8, 0xf4, 0xad, 0x10, 0x39, 0x76,
+	0x23, 0x22, 0xc7, 0x6f, 0x4a, 0xe4, 0x1b, 0x1a, 0x98, 0x18, 0x91, 0x35, 0x43, 0xdf, 0xd5, 0xcc,
+	0xee, 0x6d, 0x93, 0x19, 0x50, 0xd6, 0x94, 0x3b, 0x98, 0xce, 0x11, 0x94, 0x35, 0xe5, 0x8e, 0x4f,
+	0x99, 0x2b, 0xa7, 0xb3, 0x94, 0x25, 0xaf, 0x41, 0xd9, 0x2d, 0x76, 0xdd, 0x5f, 0x68, 0x98, 0x0c,
+	0x13, 0xae, 0xeb, 0x0a, 0xba, 0x0f, 0x74, 0x50, 0x8f, 0xbb, 0x7d, 0x87, 0xa7, 0x71, 0x15, 0x26,
+	0xc8, 0xa1, 0xdc, 0xd4, 0x69, 0x4d, 0x19, 0xee, 0xc9, 0xf4, 0xb5, 0x7b, 0x32, 0x0b, 0x99, 0xa0,
+	0xbf, 0x25, 0xdd, 0xfe, 0x26, 0x05, 0x73, 0xf4, 0x39, 0xa4, 0x2d, 0xbb, 0x69, 0xab, 0x38, 0xb7,
+	0x3b, 0xe5, 0x07, 0x97, 0x75, 0xd6, 0x4d, 0xd7, 0x59, 0x22, 0x31, 0xb1, 0xee, 0x9c, 0xbe, 0x9d,
+	0xee, 0xbc, 0x9c, 0x7a, 0xf5, 0x33, 0x9f, 0x10, 0xfe, 0xa0, 0x20, 0x17, 0x75, 0xfd, 0x97, 0x3d,
+	0x4d, 0xcf, 0x60, 0xac, 0x67, 0xaa, 0xbb, 0xda, 0xc1, 0x45, 0x8f, 0x92, 0xff, 0x63, 0xc6, 0x4d,
+	0x7b, 0x55, 0x35, 0x3b, 0x7b, 0xea, 0x06, 0x8e, 0xf1, 0xd2, 0xf6, 0x10, 0xbc, 0x84, 0xef, 0x43,
+	0x96, 0xa4, 0xb2, 0xd1, 0xb4, 0xdb, 0x16, 0x9a, 0x81, 0x74, 0xcf, 0x1d, 0x30, 0x14, 0xe6, 0x8c,
+	0x4c, 0x84, 0x75, 0xb8, 0xf7, 0xf5, 0xbe, 0x6a, 0x1e, 0x86, 0x27, 0x96, 0xd4, 0x6f, 0xf7, 0x55,
+	0xcb, 0x46, 0x9f, 0x8e, 0xbe, 0x65, 0xf9, 0xb3, 0xf9, 0x0d, 0xe7, 0x21, 0xbc, 0xa6, 0x61, 0x2e,
+	0x86, 0x68, 0xf5, 0xdc, 0x56, 0x81, 0x56, 0x01, 0x42, 0x5f, 0x8c, 0x97, 0x2d, 0x2f, 0x5c, 0x4e,
+	0x6f, 0x44, 0xe0, 0x52, 0x04, 0x00, 0x55, 0x20, 0x8d, 0x2f, 0x16, 0xae, 0x7c, 0xb6, 0xfc, 0xe1,
+	0x55, 0x2b, 0x66, 0x18, 0xbb, 0x12, 0x89, 0x44, 0xa2, 0xff, 0xc2, 0xba, 0xd5, 0xf0, 0x2a, 0xff,
+	0xe8, 0x8a, 0x38, 0x4d, 0xbb, 0xed, 0x3d, 0xbb, 0xee, 0x30, 0xf6, 0xec, 0xa6, 0x62, 0xcf, 0xae,
+	0xf0, 0x0c, 0xde, 0x23, 0xa5, 0xc1, 0xb4, 0x84, 0x89, 0x59, 0x7e, 0xcd, 0x1f, 0xc6, 0x25, 0x99,
+	0x8b, 0x4a, 0x32, 0x94, 0x9f, 0xf0, 0x17, 0x05, 0xdc, 0x79, 0x60, 0x5e, 0xb9, 0x1f, 0xe2, 0xbe,
+	0xee, 0x33, 0x18, 0x25, 0x7f, 0x2a, 0xb4, 0x13, 0x71, 0xfc, 0xd7, 0x4a, 0xf9, 0xe8, 0x35, 0x05,
+	0x69, 0xdc, 0x3c, 0xd0, 0x12, 0xf0, 0x9b, 0x5b, 0x95, 0xad, 0x7a, 0x63, 0x7b, 0x4d, 0x5c, 0x13,
+	0xb7, 0xc4, 0xca, 0x57, 0xe2, 0x8b, 0xfa, 0x4a, 0x63, 0x7b, 0x6d, 0x73, 0xa3, 0x5e, 0x13, 0x9f,
+	0x8a, 0xf5, 0x95, 0x7c, 0x82, 0x9d, 0x3e, 0x3a, 0x2e, 0x4c, 0x0e, 0x39, 0x20, 0x06, 0x80, 0xc4,
+	0xb9, 0xc6, 0x3c, 0xc5, 0x66, 0x8e, 0x8e, 0x0b, 0x29, 0x77, 0x8c, 0x38, 0x98, 0x24, 0x2b, 0x5b,
+	0xd2, 0x37, 0xeb, 0x1b, 0xf5, 0xb5, 0x3c, 0xcd, 0x66, 0x8f, 0x8e, 0x0b, 0xe3, 0xde, 0x34, 0x8c,
+	0xc4, 0x8b, 0x49, 0x12, 0xe9, 0x8e, 0xd9, 0xd4, 0xab, 0x37, 0x5c, 0xa2, 0xfc, 0x13, 0x0d, 0x69,
+	0x4c, 0x0d, 0xfa, 0x0e, 0x20, 0x24, 0x06, 0x2d, 0x5d, 0x26, 0xf5, 0xd1, 0x37, 0x91, 0xfd, 0xec,
+	0xda, 0x71, 0x44, 0x00, 0x42, 0x02, 0xfd, 0x48, 0xc1, 0x74, 0x4c, 0x20, 0xe8, 0xc9, 0xd5, 0x00,
+	0xcf, 0x51, 0x29, 0xfb, 0xc5, 0x3f, 0x0d, 0xf7, 0x8f, 0x55, 0xdd, 0x38, 0xe9, 0x73, 0xd4, 0xdb,
+	0x3e, 0x47, 0xfd, 0xde, 0xe7, 0xa8, 0x1f, 0x4e, 0xb9, 0xc4, 0xdb, 0x53, 0x2e, 0xf1, 0xdb, 0x29,
+	0x97, 0x78, 0xb1, 0x74, 0xe1, 0x4b, 0x78, 0xee, 0x67, 0xe4, 0xce, 0x18, 0xfe, 0xa4, 0x7b, 0xfc,
+	0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0x12, 0x22, 0x6f, 0x92, 0x6a, 0x0e, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// QueryClient is the client API for Query service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type QueryClient interface {
+	// Connection queries an IBC connection end.
+	Connection(ctx context.Context, in *QueryConnectionRequest, opts ...grpc.CallOption) (*QueryConnectionResponse, error)
+	// ClientConnections queries the connection paths associated with a client state.
+	ClientConnections(ctx context.Context, in *QueryClientConnectionsRequest, opts ...grpc.CallOption) (*QueryClientConnectionsResponse, error)
+}
+
+type queryClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewQueryClient(cc *grpc.ClientConn) QueryClient {
+	return &queryClient{cc}
+}
+
+func (c *queryClient) Connection(ctx context.Context, in *QueryConnectionRequest, opts ...grpc.CallOption) (*QueryConnectionResponse, error) {
+	out := new(QueryConnectionResponse)
+	err := c.cc.Invoke(ctx, "/cosmos_sdk.x.ibc.connection.v1.Query/Connection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ClientConnections(ctx context.Context, in *QueryClientConnectionsRequest, opts ...grpc.CallOption) (*QueryClientConnectionsResponse, error) {
+	out := new(QueryClientConnectionsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos_sdk.x.ibc.connection.v1.Query/ClientConnections", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// QueryServer is the server API for Query service.
+type QueryServer interface {
+	// Connection queries an IBC connection end.
+	Connection(context.Context, *QueryConnectionRequest) (*QueryConnectionResponse, error)
+	// ClientConnections queries the connection paths associated with a client state.
+	ClientConnections(context.Context, *QueryClientConnectionsRequest) (*QueryClientConnectionsResponse, error)
+}
+
+// UnimplementedQueryServer can be embedded to have forward compatible implementations.
+type UnimplementedQueryServer struct {
+}
+
+func (*UnimplementedQueryServer) Connection(ctx context.Context, req *QueryConnectionRequest) (*QueryConnectionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Connection not implemented")
+}
+func (*UnimplementedQueryServer) ClientConnections(ctx context.Context, req *QueryClientConnectionsRequest) (*QueryClientConnectionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientConnections not implemented")
+}
+
+func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
+	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_Connection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConnectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Connection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos_sdk.x.ibc.connection.v1.Query/Connection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Connection(ctx, req.(*QueryConnectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ClientConnections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryClientConnectionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ClientConnections(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos_sdk.x.ibc.connection.v1.Query/ClientConnections",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ClientConnections(ctx, req.(*QueryClientConnectionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Query_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "cosmos_sdk.x.ibc.connection.v1.Query",
+	HandlerType: (*QueryServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Connection",
+			Handler:    _Query_Connection_Handler,
+		},
+		{
+			MethodName: "ClientConnections",
+			Handler:    _Query_ClientConnections_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "x/ibc/03-connection/types/types.proto",
 }
 
 func (m *MsgConnectionOpenInit) Marshal() (dAtA []byte, err error) {
@@ -1023,6 +1405,191 @@ func (m *ClientPaths) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryConnectionRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConnectionRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConnectionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryConnectionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConnectionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConnectionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ProofHeight != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.ProofHeight))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.ProofPath != nil {
+		{
+			size, err := m.ProofPath.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Proof != nil {
+		{
+			size, err := m.Proof.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Connection != nil {
+		{
+			size, err := m.Connection.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryClientConnectionsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryClientConnectionsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryClientConnectionsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ClientID) > 0 {
+		i -= len(m.ClientID)
+		copy(dAtA[i:], m.ClientID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryClientConnectionsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryClientConnectionsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryClientConnectionsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ProofHeight != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.ProofHeight))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.ProofPath != nil {
+		{
+			size, err := m.ProofPath.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Proof != nil {
+		{
+			size, err := m.Proof.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ConnectionPaths) > 0 {
+		for iNdEx := len(m.ConnectionPaths) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.ConnectionPaths[iNdEx])
+			copy(dAtA[i:], m.ConnectionPaths[iNdEx])
+			i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionPaths[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTypes(v)
 	base := offset
@@ -1217,6 +1784,82 @@ func (m *ClientPaths) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovTypes(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *QueryConnectionRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ConnectionID)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryConnectionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Connection != nil {
+		l = m.Connection.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.Proof != nil {
+		l = m.Proof.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.ProofPath != nil {
+		l = m.ProofPath.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.ProofHeight != 0 {
+		n += 1 + sovTypes(uint64(m.ProofHeight))
+	}
+	return n
+}
+
+func (m *QueryClientConnectionsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientID)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryClientConnectionsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ConnectionPaths) > 0 {
+		for _, s := range m.ConnectionPaths {
+			l = len(s)
+			n += 1 + l + sovTypes(uint64(l))
+		}
+	}
+	if m.Proof != nil {
+		l = m.Proof.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.ProofPath != nil {
+		l = m.ProofPath.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.ProofHeight != 0 {
+		n += 1 + sovTypes(uint64(m.ProofHeight))
 	}
 	return n
 }
@@ -2574,6 +3217,532 @@ func (m *ClientPaths) Unmarshal(dAtA []byte) error {
 			}
 			m.Paths = append(m.Paths, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConnectionRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConnectionRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConnectionRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConnectionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConnectionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConnectionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Connection", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Connection == nil {
+				m.Connection = &ConnectionEnd{}
+			}
+			if err := m.Connection.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Proof == nil {
+				m.Proof = &types.MerkleProof{}
+			}
+			if err := m.Proof.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofPath", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ProofPath == nil {
+				m.ProofPath = &types.MerklePath{}
+			}
+			if err := m.ProofPath.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+			}
+			m.ProofHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProofHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryClientConnectionsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryClientConnectionsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryClientConnectionsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryClientConnectionsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryClientConnectionsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryClientConnectionsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionPaths", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionPaths = append(m.ConnectionPaths, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Proof == nil {
+				m.Proof = &types.MerkleProof{}
+			}
+			if err := m.Proof.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofPath", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ProofPath == nil {
+				m.ProofPath = &types.MerklePath{}
+			}
+			if err := m.ProofPath.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+			}
+			m.ProofHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProofHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])

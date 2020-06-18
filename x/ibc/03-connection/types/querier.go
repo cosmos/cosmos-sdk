@@ -16,20 +16,11 @@ const (
 	QueryAllClientConnections = "all_client_connections"
 )
 
-// ConnectionResponse defines the client query response for a connection which
-// also includes a proof and the height from which the proof was retrieved.
-type ConnectionResponse struct {
-	Connection  ConnectionEnd               `json:"connection" yaml:"connection"`
-	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
-}
-
-// NewConnectionResponse creates a new ConnectionResponse instance
-func NewConnectionResponse(
+// NewQueryConnectionResponse creates a new QueryConnectionResponse instance
+func NewQueryConnectionResponse(
 	connectionID string, connection ConnectionEnd, proof *merkle.Proof, height int64,
-) ConnectionResponse {
-	return ConnectionResponse{
+) *QueryConnectionResponse {
+	return &QueryConnectionResponse{
 		Connection:  connection,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
 		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connectionID), "/")),
@@ -52,21 +43,11 @@ func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
 	}
 }
 
-// ClientConnectionsResponse defines the client query response for a client
-// connection paths which also includes a proof and the height from which the
-// proof was retrieved.
-type ClientConnectionsResponse struct {
-	ConnectionPaths []string                    `json:"connection_paths" yaml:"connection_paths"`
-	Proof           commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath       commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight     uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
-}
-
-// NewClientConnectionsResponse creates a new ConnectionPaths instance
-func NewClientConnectionsResponse(
+// NewQueryClientConnectionsResponse creates a new ConnectionPaths instance
+func NewQueryClientConnectionsResponse(
 	clientID string, connectionPaths []string, proof *merkle.Proof, height int64,
-) ClientConnectionsResponse {
-	return ClientConnectionsResponse{
+) *QueryClientConnectionsResponse {
+	return &QueryClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
 		Proof:           commitmenttypes.MerkleProof{Proof: proof},
 		ProofPath:       commitmenttypes.NewMerklePath(strings.Split(host.ClientConnectionsPath(clientID), "/")),
@@ -74,15 +55,9 @@ func NewClientConnectionsResponse(
 	}
 }
 
-// QueryClientConnectionsParams defines the params for the following queries:
-// - 'custom/ibc/client/<clientID>/connections'
-type QueryClientConnectionsParams struct {
-	ClientID string
-}
-
-// NewQueryClientConnectionsParams creates a new QueryClientConnectionsParams instance
-func NewQueryClientConnectionsParams(clientID string) QueryClientConnectionsParams {
-	return QueryClientConnectionsParams{
+// NewQueryClientConnectionsRequest creates a new QueryClientConnectionsRequest instance
+func NewQueryClientConnectionsRequest(clientID string) QueryClientConnectionsRequest {
+	return QueryClientConnectionsRequest{
 		ClientID: clientID,
 	}
 }

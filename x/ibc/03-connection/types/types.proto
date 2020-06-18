@@ -23,7 +23,7 @@ message MsgConnectionOpenTry {
   Counterparty    counterparty          = 3 [(gogoproto.nullable) = false];
   repeated string counterparty_versions = 4 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`
-  bytes proof_init = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  bytes  proof_init   = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_height = 6;
   // proof of client consensus state
   bytes proof_consensus = 7
@@ -111,4 +111,53 @@ message Counterparty {
 // ClientPaths define all the connection paths for a client state.
 message ClientPaths {
   repeated string paths = 1;
+}
+
+// Query provides defines the gRPC querier service
+service Query {
+  // Connection queries an IBC connection end.
+  rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {}
+
+  // ClientConnections queries the connection paths associated with a client state.
+  rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {}
+}
+
+// QueryConnectionRequest is the request type for the Query/Connection RPC method
+message QueryConnectionRequest {
+  // connection unique identifier
+  string connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
+}
+
+// QueryConnectionResponse is the response type for the Query/Connection RPC method.
+// Besides the connection end, it includes a proof and the height from which the
+// proof was retrieved.
+message QueryConnectionResponse {
+  // connection associated with the request identifier
+  ConnectionEnd connection = 1;
+  // merkle proof of existence
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 2;
+  // merkle proof path
+  cosmos_sdk.x.ibc.commitment.v1.MerklePath proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
+}
+
+// QueryClientConnectionsRequest is the request type for the Query/ClientConnections
+// RPC method
+message QueryClientConnectionsRequest {
+  // client identifier associated with a connection
+  string client_id = 1 [(gogoproto.customname) = "ClientID"];
+}
+
+// QueryClientConnectionsResponse is the response type for the Query/ClientConnections
+// RPC method
+message QueryClientConnectionsResponse {
+  // slice of all the connection paths associated with a client.
+  repeated string connection_paths = 1;
+  // merkle proof of existence
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 2;
+  // merkle proof path
+  cosmos_sdk.x.ibc.commitment.v1.MerklePath proof_path = 3;
+  // height at which the proof was generated
+  uint64 proof_height = 4;
 }

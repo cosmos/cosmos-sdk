@@ -38,7 +38,7 @@ message MerklePath {
 message MerkleProof {
   option (gogoproto.equal) = true;
 
-  tendermint.crypto.merkle.Proof proof = 1;
+  tendermint.crypto.merkle.ProofOps proof = 1;
 }
 
 // KeyPath defines a slice of keys

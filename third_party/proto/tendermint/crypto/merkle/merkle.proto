@@ -1,20 +1,30 @@
 syntax = "proto3";
 package tendermint.crypto.merkle;
-option  go_package = "github.com/tendermint/tendermint/crypto/merkle";
 
-// For more information on gogo.proto, see:
-// https://github.com/gogo/protobuf/blob/master/extensions.md
+option go_package = "github.com/tendermint/tendermint/proto/crypto/merkle";
+
 import "third_party/proto/gogoproto/gogo.proto";
 
-option (gogoproto.marshaler_all)   = true;
-option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.sizer_all)       = true;
+message Proof {
+  int64          total     = 1;
+  int64          index     = 2;
+  bytes          leaf_hash = 3;
+  repeated bytes aunts     = 4;
+}
 
-option (gogoproto.populate_all) = true;
-option (gogoproto.equal_all)    = true;
+message ValueOp {
+  // Encoded in ProofOp.Key.
+  bytes key = 1;
 
-//----------------------------------------
-// Message types
+  // To encode in ProofOp.Data
+  Proof proof = 2;
+}
+
+message DominoOp {
+  string key    = 1;
+  string input  = 2;
+  string output = 3;
+}
 
 // ProofOp defines an operation used for calculating Merkle root
 // The data could be arbitrary format, providing nessecary data
@@ -25,7 +35,7 @@ message ProofOp {
   bytes  data = 3;
 }
 
-// Proof is Merkle proof defined by the list of ProofOps
-message Proof {
+// ProofOps is Merkle proof defined by the list of ProofOps
+message ProofOps {
   repeated ProofOp ops = 1 [(gogoproto.nullable) = false];
 }

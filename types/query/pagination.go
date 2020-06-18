@@ -10,7 +10,7 @@ import (
 // if the `limit` is not supplied, paginate will use `maxLimit` as default `limit`
 const maxLimit = 100
 
-// Paginate does pagination of the results in the prefixStore based on the
+// Paginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling.
 //
 // Ex:

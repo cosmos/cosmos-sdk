@@ -27,7 +27,7 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		if err := clientCtx.Codec.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
+		if err := clientCtx.JSONMarshaler.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
 			return
 		}
 

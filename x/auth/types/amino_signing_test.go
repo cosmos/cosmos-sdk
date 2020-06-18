@@ -1,7 +1,10 @@
-package amino_test
+package types_test
 
 import (
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -9,9 +12,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -23,7 +23,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 
-	fee := auth.StdFee{
+	fee := types.StdFee{
 		Amount: coins,
 		Gas:    10000,
 	}
@@ -36,7 +36,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		},
 	}
 
-	tx := auth.StdTx{
+	tx := types.StdTx{
 		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: nil,
@@ -49,7 +49,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		seqNum  uint64 = 7
 	)
 
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := types.LegacyAminoJSONHandler{}
 	signingData := signing.SignerData{
 		ChainID:         chainId,
 		AccountNumber:   accNum,
@@ -58,7 +58,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz := auth.StdSignBytes(chainId, accNum, seqNum, fee, msgs, memo)
+	expectedSignBz := types.StdSignBytes(chainId, accNum, seqNum, fee, msgs, memo)
 
 	require.Equal(t, expectedSignBz, signBz)
 
@@ -68,11 +68,11 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := types.LegacyAminoJSONHandler{}
 	require.Equal(t, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
 func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
-	handler := amino.LegacyAminoJSONHandler{}
+	handler := types.LegacyAminoJSONHandler{}
 	require.Equal(t, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
 }

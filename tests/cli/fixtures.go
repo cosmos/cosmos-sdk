@@ -32,6 +32,7 @@ type Fixtures struct {
 	SimdHome     string
 	SimcliHome   string
 	P2PAddr      string
+	GRPCAddr     string
 	Cdc          *codec.Codec
 	T            *testing.T
 }
@@ -45,6 +46,9 @@ func NewFixtures(t *testing.T) *Fixtures {
 	require.NoError(t, err)
 
 	p2pAddr, _, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+
+	grpcAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
 	buildDir := os.Getenv("BUILDDIR")
@@ -62,6 +66,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 		SimcliHome:   filepath.Join(tmpDir, ".simcli"),
 		RPCAddr:      servAddr,
 		P2PAddr:      p2pAddr,
+		GRPCAddr:     grpcAddr,
 		Cdc:          cdc,
 		Port:         port,
 	}

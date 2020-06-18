@@ -7,12 +7,14 @@ import (
 
 	"github.com/spf13/cobra"
 
+	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func GetValidateSignaturesCommand(clientCtx client.Context) *cobra.Command {
@@ -37,11 +39,10 @@ transaction will be not be performed as that will require RPC communication with
 
 func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
+		clientCtx, txBldr, stdTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
-		stdTx := tx.(types.StdTx)
 
 		if !printAndValidateSigs(cmd, clientCtx, txBldr.ChainID(), stdTx, clientCtx.Offline) {
 			return fmt.Errorf("signatures validation failed")
@@ -55,17 +56,24 @@ func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command
 // expected signers. In addition, if offline has not been supplied, the signature is
 // verified over the transaction sign bytes. Returns false if the validation fails.
 func printAndValidateSigs(
-	cmd *cobra.Command, clientCtx client.Context, chainID string, stdTx types.StdTx, offline bool,
+	cmd *cobra.Command, clientCtx client.Context, chainID string, tx sdk.Tx, offline bool,
 ) bool {
+	sigTx := tx.(txtypes.SigTx)
+	signModeHandler := clientCtx.TxGenerator.SignModeHandler()
+
 	cmd.Println("Signers:")
-	signers := stdTx.GetSigners()
+	signers := sigTx.GetSigners()
 
 	for i, signer := range signers {
 		cmd.Printf("  %v: %v\n", i, signer.String())
 	}
 
 	success := true
-	sigs := stdTx.Signatures
+	sigs, err := sigTx.GetSignatureData()
+	if err != nil {
+		panic(err)
+	}
+	pubKeys := sigTx.GetPubKeys()
 	cmd.Println("")
 	cmd.Println("Signatures:")
 
@@ -75,9 +83,10 @@ func printAndValidateSigs(
 
 	for i, sig := range sigs {
 		var (
+			pubKey         = pubKeys[i]
 			multiSigHeader string
 			multiSigMsg    string
-			sigAddr        = sdk.AccAddress(sig.GetPubKey().Address())
+			sigAddr        = sdk.AccAddress(pubKey.Address())
 			sigSanity      = "OK"
 		)
 
@@ -89,43 +98,65 @@ func printAndValidateSigs(
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			acc, err := types.NewAccountRetriever(authclient.Codec).GetAccount(clientCtx, sigAddr)
+			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, sigAddr)
 			if err != nil {
 				cmd.Printf("failed to get account: %s\n", sigAddr)
 				return false
 			}
 
-			sigBytes := types.StdSignBytes(
-				chainID, acc.GetAccountNumber(), acc.GetSequence(),
-				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
-			)
+			signingData := txtypes.SigningData{
+				PublicKey:       pubKey,
+				ChainID:         chainID,
+				AccountNumber:   accNum,
+				AccountSequence: accSeq,
+			}
 
-			if ok := sig.GetPubKey().VerifyBytes(sigBytes, sig.Signature); !ok {
-				sigSanity = "ERROR: signature invalid"
+			switch sig := sig.(type) {
+			case *txtypes.SingleSignatureData:
+				sigBytes, err := signModeHandler.GetSignBytes(sig.SignMode, signingData, tx)
+				if err != nil {
+					sigSanity = "ERROR: can't get sign bytes"
+					success = false
+				}
+
+				if ok := pubKey.VerifyBytes(sigBytes, sig.Signature); !ok {
+					sigSanity = "ERROR: signature invalid"
+					success = false
+				}
+			case *txtypes.MultiSignatureData:
+				multiPK, ok := pubKey.(multisig2.MultisigPubKey)
+				if ok {
+					if !multiPK.VerifyMultisignature(func(mode txtypes.SignMode) ([]byte, error) {
+						signingData.Mode = mode
+						return signModeHandler.GetSignBytes(mode, signingData, tx)
+					}, sig) {
+						sigSanity = "ERROR: signature invalid"
+						success = false
+					}
+
+					var b strings.Builder
+					b.WriteString("\n  MultiSig Signatures:\n")
+
+					pks := multiPK.GetPubKeys()
+					for i := 0; i < sig.BitArray.Size(); i++ {
+						if sig.BitArray.GetIndex(i) {
+							addr := sdk.AccAddress(pks[i].Address().Bytes())
+							b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
+						}
+					}
+
+					multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.Threshold(), len(pks))
+					multiSigMsg = b.String()
+					cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
+				} else {
+					sigSanity = "ERROR: expected multisig pub key"
+					success = false
+				}
+			default:
+				sigSanity = "ERROR: unexpected ModeInfo"
 				success = false
 			}
 		}
-
-		multiPK, ok := sig.GetPubKey().(multisig.PubKeyMultisigThreshold)
-		if ok {
-			var multiSig multisig.AminoMultisignature
-			clientCtx.Codec.MustUnmarshalBinaryBare(sig.Signature, &multiSig)
-
-			var b strings.Builder
-			b.WriteString("\n  MultiSig Signatures:\n")
-
-			for i := 0; i < multiSig.BitArray.Size(); i++ {
-				if multiSig.BitArray.GetIndex(i) {
-					addr := sdk.AccAddress(multiPK.PubKeys[i].Address().Bytes())
-					b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
-				}
-			}
-
-			multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.K, len(multiPK.PubKeys))
-			multiSigMsg = b.String()
-		}
-
-		cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	cmd.Println("")
@@ -133,17 +164,15 @@ func printAndValidateSigs(
 	return success
 }
 
-func readStdTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filename string) (
-	client.Context, types.TxBuilder, sdk.Tx, error,
-) {
+func readTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filename string) (client.Context, tx.Factory, sdk.Tx, error) {
 	stdTx, err := authclient.ReadTxFromFile(clientCtx, filename)
 	if err != nil {
-		return client.Context{}, types.TxBuilder{}, types.StdTx{}, err
+		return clientCtx, tx.Factory{}, nil, err
 	}
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	clientCtx = clientCtx.InitWithInput(inBuf)
-	txBldr := types.NewTxBuilderFromCLI(inBuf)
+	txFactory := tx.NewFactoryFromCLI(inBuf)
 
-	return clientCtx, txBldr, stdTx, nil
+	return clientCtx, txFactory, stdTx, nil
 }

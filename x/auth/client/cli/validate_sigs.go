@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	multisig2 "github.com/cosmos/cosmos-sdk/crypto/multisig"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -52,28 +56,32 @@ func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command
 	}
 }
 
+type hasSigners interface {
+	GetSigners() []sdk.AccAddress
+}
+
 // printAndValidateSigs will validate the signatures of a given transaction over its
 // expected signers. In addition, if offline has not been supplied, the signature is
 // verified over the transaction sign bytes. Returns false if the validation fails.
 func printAndValidateSigs(
 	cmd *cobra.Command, clientCtx client.Context, chainID string, tx sdk.Tx, offline bool,
 ) bool {
-	sigTx := tx.(txtypes.SigTx)
+	sigTx := tx.(signing.HasSignaturesV2)
+	hasSigners := tx.(hasSigners)
 	signModeHandler := clientCtx.TxGenerator.SignModeHandler()
 
 	cmd.Println("Signers:")
-	signers := sigTx.GetSigners()
+	signers := hasSigners.GetSigners()
 
 	for i, signer := range signers {
 		cmd.Printf("  %v: %v\n", i, signer.String())
 	}
 
 	success := true
-	sigs, err := sigTx.GetSignatureData()
+	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
 		panic(err)
 	}
-	pubKeys := sigTx.GetPubKeys()
 	cmd.Println("")
 	cmd.Println("Signatures:")
 
@@ -83,7 +91,7 @@ func printAndValidateSigs(
 
 	for i, sig := range sigs {
 		var (
-			pubKey         = pubKeys[i]
+			pubKey         = sig.PubKey
 			multiSigHeader string
 			multiSigMsg    string
 			sigAddr        = sdk.AccAddress(pubKey.Address())
@@ -104,33 +112,33 @@ func printAndValidateSigs(
 				return false
 			}
 
-			signingData := txtypes.SigningData{
-				PublicKey:       pubKey,
+			signingData := authsigning.SignerData{
 				ChainID:         chainID,
 				AccountNumber:   accNum,
 				AccountSequence: accSeq,
 			}
 
-			switch sig := sig.(type) {
-			case *txtypes.SingleSignatureData:
-				sigBytes, err := signModeHandler.GetSignBytes(sig.SignMode, signingData, tx)
+			switch data := sig.Data.(type) {
+			case *signing.SingleSignatureData:
+				sigBytes, err := signModeHandler.GetSignBytes(data.SignMode, signingData, tx)
 				if err != nil {
 					sigSanity = "ERROR: can't get sign bytes"
 					success = false
 				}
 
-				if ok := pubKey.VerifyBytes(sigBytes, sig.Signature); !ok {
+				if ok := pubKey.VerifyBytes(sigBytes, data.Signature); !ok {
 					sigSanity = "ERROR: signature invalid"
 					success = false
 				}
-			case *txtypes.MultiSignatureData:
-				multiPK, ok := pubKey.(multisig2.MultisigPubKey)
+			case *signing.MultiSignatureData:
+				multiPK, ok := pubKey.(multisig.PubKey)
 				if ok {
-					if !multiPK.VerifyMultisignature(func(mode txtypes.SignMode) ([]byte, error) {
-						signingData.Mode = mode
+					err = multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
 						return signModeHandler.GetSignBytes(mode, signingData, tx)
-					}, sig) {
-						sigSanity = "ERROR: signature invalid"
+					}, data)
+
+					if err != nil {
+						sigSanity = fmt.Sprintf("ERROR: signature invalid: %v", err)
 						success = false
 					}
 
@@ -138,14 +146,17 @@ func printAndValidateSigs(
 					b.WriteString("\n  MultiSig Signatures:\n")
 
 					pks := multiPK.GetPubKeys()
-					for i := 0; i < sig.BitArray.Size(); i++ {
-						if sig.BitArray.GetIndex(i) {
+					for i := 0; i < data.BitArray.Size(); i++ {
+						if data.BitArray.GetIndex(i) {
 							addr := sdk.AccAddress(pks[i].Address().Bytes())
 							b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))
 						}
 					}
 
-					multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.Threshold(), len(pks))
+					thresholdPk, ok := multiPK.(multisig.ThresholdPubKey)
+					if ok {
+						multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", thresholdPk.GetThreshold(), len(pks))
+					}
 					multiSigMsg = b.String()
 					cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 				} else {
@@ -175,4 +186,20 @@ func readTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filenam
 	txFactory := tx.NewFactoryFromCLI(inBuf)
 
 	return clientCtx, txFactory, stdTx, nil
+}
+
+// deprecated
+func readStdTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filename string) (
+	client.Context, types.TxBuilder, sdk.Tx, error,
+) {
+	stdTx, err := authclient.ReadTxFromFile(clientCtx, filename)
+	if err != nil {
+		return client.Context{}, types.TxBuilder{}, types.StdTx{}, err
+	}
+
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+	clientCtx = clientCtx.InitWithInput(inBuf)
+	txBldr := types.NewTxBuilderFromCLI(inBuf)
+
+	return clientCtx, txBldr, stdTx, nil
 }

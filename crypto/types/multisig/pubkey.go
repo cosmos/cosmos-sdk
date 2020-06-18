@@ -19,6 +19,11 @@ type PubKey interface {
 	GetPubKeys() []crypto.PubKey
 }
 
+type ThresholdPubKey interface {
+	PubKey
+	GetThreshold() uint
+}
+
 // GetSignBytesFunc defines a function type which returns sign bytes for a given SignMode or an error.
 // It will generally be implemented as a closure which wraps whatever signable object signatures are
 // being verified against.

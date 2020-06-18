@@ -365,17 +365,16 @@ func ConsumeMultisignatureVerificationGas(
 	for i := 0; i < size; i++ {
 		if !sig.BitArray.GetIndex(i) {
 			continue
-		} else {
-			sigV2 := signing.SignatureV2{
-				PubKey: pubkey.GetPubKeys()[i],
-				Data:   sig.Signatures[sigIndex],
-			}
-			err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
-			if err != nil {
-				return err
-			}
-			sigIndex++
 		}
+		sigV2 := signing.SignatureV2{
+			PubKey: pubkey.GetPubKeys()[i],
+			Data:   sig.Signatures[sigIndex],
+		}
+		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
+		if err != nil {
+			return err
+		}
+		sigIndex++
 	}
 
 	return nil

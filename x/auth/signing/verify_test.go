@@ -1,6 +1,9 @@
 package signing_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/tests"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,12 +40,28 @@ func TestVerifySignature(t *testing.T) {
 		200000, 1.1, false, "test-chain", "hello", sdk.NewCoins(),
 		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
 	)
+
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	path := hd.CreateHDPath(118, 0, 0).String()
+	kr, err := keyring.New(sdk.KeyringServiceName(), "test", dir, nil)
+	require.NoError(t, err)
+
+	var from = "test_sign"
+
+	_, _, err = kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
+	require.NoError(t, err)
+	txBuilder.WithKeybase(kr)
 	signBytes, err := txBuilder.BuildSignMsg(msgs)
-	sign, err := txBuilder.Sign("addr", signBytes)
+	require.Nil(t, err)
+
+	sign, err := txBuilder.Sign(from, signBytes)
+	require.Nil(t, err)
+
 	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sign}
 	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{}, "testsigs")
 
-	require.Nil(t, err)
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64

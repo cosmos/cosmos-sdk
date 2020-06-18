@@ -10,16 +10,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func MakeTestHandlerMap() signing.SignModeHandler {
 	return signing.NewSignModeHandlerMap(
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		[]signing.SignModeHandler{
-			amino.LegacyAminoJSONHandler{},
+			authtypes.LegacyAminoJSONHandler{},
 		},
 	)
 }
@@ -38,7 +37,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	}
 	memo := "foo"
 	msgs := []sdk.Msg{
-		&bank.MsgSend{
+		&banktypes.MsgSend{
 			FromAddress: addr1,
 			ToAddress:   addr2,
 			Amount:      coins,
@@ -59,7 +58,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	)
 
 	handler := MakeTestHandlerMap()
-	aminoJSONHandler := amino.LegacyAminoJSONHandler{}
+	aminoJSONHandler := authtypes.LegacyAminoJSONHandler{}
 
 	signingData := signing.SignerData{
 		ChainID:         chainId,

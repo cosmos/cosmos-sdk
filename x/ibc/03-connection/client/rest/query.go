@@ -12,11 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 )
 
-func registerQueryRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/connections", queryConnectionsHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}", RestConnectionID), queryConnectionHandlerFn(clientCtx, queryRoute)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}", RestConnectionID), queryConnectionHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/ibc/clients/connections", queryClientsConnectionsHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/connections", RestClientID), queryClientConnectionsHandlerFn(clientCtx, queryRoute)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/connections", RestClientID), queryClientConnectionsHandlerFn(clientCtx)).Methods("GET")
 }
 
 // queryConnectionsHandlerFn implements connections querying route
@@ -64,7 +64,7 @@ func queryClientsConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/{connection-id} [get]
-func queryConnectionHandlerFn(clientCtx client.Context, _ string) http.HandlerFunc {
+func queryConnectionHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		connectionID := vars[RestConnectionID]
@@ -131,7 +131,7 @@ func queryConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/connections [get]
-func queryClientConnectionsHandlerFn(clientCtx client.Context, _ string) http.HandlerFunc {
+func queryClientConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]

@@ -17,15 +17,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -148,22 +148,22 @@ func TestAppImportExport(t *testing.T) {
 	fmt.Printf("comparing stores...\n")
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keys[auth.StoreKey], newApp.keys[auth.StoreKey], [][]byte{}},
+		{app.keys[authtypes.StoreKey], newApp.keys[authtypes.StoreKey], [][]byte{}},
 		{app.keys[stakingtypes.StoreKey], newApp.keys[stakingtypes.StoreKey],
 			[][]byte{
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
 				stakingtypes.HistoricalInfoKey,
 			}}, // ordering may change but it doesn't matter
 		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
-		{app.keys[mint.StoreKey], newApp.keys[mint.StoreKey], [][]byte{}},
-		{app.keys[distr.StoreKey], newApp.keys[distr.StoreKey], [][]byte{}},
-		{app.keys[bank.StoreKey], newApp.keys[bank.StoreKey], [][]byte{bank.BalancesPrefix}},
+		{app.keys[minttypes.StoreKey], newApp.keys[minttypes.StoreKey], [][]byte{}},
+		{app.keys[distrtypes.StoreKey], newApp.keys[distrtypes.StoreKey], [][]byte{}},
+		{app.keys[banktypes.StoreKey], newApp.keys[banktypes.StoreKey], [][]byte{banktypes.BalancesPrefix}},
 		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
-		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
-		{app.keys[evidence.StoreKey], newApp.keys[evidence.StoreKey], [][]byte{}},
-		{app.keys[capability.StoreKey], newApp.keys[capability.StoreKey], [][]byte{}},
-		{app.keys[ibc.StoreKey], newApp.keys[ibc.StoreKey], [][]byte{}},
-		{app.keys[transfer.StoreKey], newApp.keys[transfer.StoreKey], [][]byte{}},
+		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
+		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
+		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
+		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
+		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {

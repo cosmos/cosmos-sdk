@@ -76,7 +76,7 @@ func QueryChannel(
 // a Channel.
 func QueryChannelClientState(clientCtx client.Context, portID, channelID string) (clientexported.ClientState, int64, error) {
 	params := types.NewQueryChannelClientStateParams(portID, channelID)
-	bz, err := clientCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}
@@ -88,7 +88,7 @@ func QueryChannelClientState(clientCtx client.Context, portID, channelID string)
 	}
 
 	var clientState clientexported.ClientState
-	err = clientCtx.Codec.UnmarshalJSON(res, &clientState)
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clientState)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
 	}

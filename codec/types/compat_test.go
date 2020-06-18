@@ -26,7 +26,7 @@ type Suite struct {
 func (s *Suite) SetupTest() {
 	s.cdc = amino.NewCodec()
 	s.cdc.RegisterInterface((*testdata.Animal)(nil), nil)
-	s.cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dob", nil)
+	s.cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dog", nil)
 
 	s.spot = &testdata.Dog{Size_: "small", Name: "Spot"}
 	s.a = TypeWithInterface{Animal: s.spot}

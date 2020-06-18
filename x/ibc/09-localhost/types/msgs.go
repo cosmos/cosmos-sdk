@@ -17,8 +17,8 @@ var (
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
-func NewMsgCreateClient(signer sdk.AccAddress) MsgCreateClient {
-	return MsgCreateClient{
+func NewMsgCreateClient(signer sdk.AccAddress) *MsgCreateClient {
+	return &MsgCreateClient{
 		Signer: signer,
 	}
 }

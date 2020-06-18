@@ -10,17 +10,14 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
@@ -66,7 +63,6 @@ func main() {
 		queryCmd(cdc),
 		txCmd(cdc),
 		flags.LineBreak,
-		lcd.ServeCommand(cdc, registerRoutes),
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,
@@ -104,7 +100,11 @@ func queryCmd(cdc *codec.Codec) *cobra.Command {
 	)
 
 	// add modules' query commands
-	simapp.ModuleBasics.AddQueryCommands(queryCmd, cdc)
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithJSONMarshaler(appCodec).
+		WithCodec(cdc)
+	simapp.ModuleBasics.AddQueryCommands(queryCmd, clientCtx)
 
 	return queryCmd
 }
@@ -118,17 +118,18 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cliCtx := context.CLIContext{}
-	cliCtx = cliCtx.
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
 		WithJSONMarshaler(appCodec).
 		WithTxGenerator(types.StdTxGenerator{Cdc: cdc}).
 		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
 		WithCodec(cdc)
 
 	txCmd.AddCommand(
-		bankcmd.NewSendTxCmd(cliCtx),
+		bankcmd.NewSendTxCmd(clientCtx),
 		flags.LineBreak,
 		authcmd.GetSignCommand(cdc),
+		authcmd.GetSignBatchCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
 		authcmd.GetValidateSignaturesCommand(cdc),
 		flags.LineBreak,
@@ -139,17 +140,9 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	)
 
 	// add modules' tx commands
-	simapp.ModuleBasics.AddTxCommands(txCmd, cliCtx)
+	simapp.ModuleBasics.AddTxCommands(txCmd, clientCtx)
 
 	return txCmd
-}
-
-// registerRoutes registers the routes from the different modules for the REST client.
-// NOTE: details on the routes added for each module are in the module documentation
-func registerRoutes(rs *lcd.RestServer) {
-	client.RegisterRoutes(rs.CliCtx, rs.Mux)
-	authrest.RegisterTxRoutes(rs.CliCtx, rs.Mux)
-	simapp.ModuleBasics.RegisterRESTRoutes(rs.CliCtx, rs.Mux)
 }
 
 func initConfig(cmd *cobra.Command) error {

@@ -71,7 +71,7 @@ func TestPruningOptions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			viper.Reset()
 			viper.SetDefault(flagPruning, "syncable")
-			startCommand := StartCmd(nil, nil)
+			startCommand := StartCmd(nil, nil, nil)
 			tt.paramInit()
 			err := startCommand.PreRunE(startCommand, nil)
 

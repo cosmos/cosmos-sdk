@@ -12,7 +12,7 @@ lint:
     - UNARY_RPC
     - COMMENT_FIELD
     - PACKAGE_DIRECTORY_MATCH
-    - PACKAGE_VERSION_SUFFIX # v1 doesn't need a suffix as per ADR23
+    - SERVICE_SUFFIX
   ignore:
     - third_party
     - codec/testdata

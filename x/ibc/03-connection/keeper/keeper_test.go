@@ -9,7 +9,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmencoding "github.com/tendermint/tendermint/crypto/encoding"
-	lite "github.com/tendermint/tendermint/lite2"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -23,7 +22,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -47,7 +46,7 @@ const (
 
 var (
 	timestamp         = time.Now() // starting timestamp for the client test chain
-	defaultTrustLevel = ibctmtypes.NewFractionFromTm(lite.DefaultTrustLevel)
+	defaultTrustLevel = ibctmtypes.NewFractionFromTm(ibctmtypes.DefaultTrustLevel)
 )
 
 type KeeperTestSuite struct {
@@ -70,7 +69,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // nolint: unused
-func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
+func queryProof(chain *TestChain, key []byte) ([]byte, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),
 		Height: chain.App.LastBlockHeight(),
@@ -78,9 +77,11 @@ func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint
 		Prove:  true,
 	})
 
-	proof := commitmenttypes.MerkleProof{
+	merkleProof := commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
+
+	proof, _ := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 
 	return proof, uint64(res.Height)
 }
@@ -133,9 +134,9 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
 	clients := []clientexported.ClientState{
-		ibctmtypes.NewClientState(testClientIDA, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientIDB, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID3, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientIDA, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testClientIDB, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testClientID3, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
 	}
 
 	for i := range clients {
@@ -251,8 +252,8 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validator := staking.NewValidator(sdk.ValAddress(client.Vals.Validators[0].Address), pk, staking.Description{})
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			Time:    client.Header.GetTime(),
 			AppHash: commitID.Hash,
@@ -262,7 +263,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.Height, histInfo)
 
 	// also set staking params
-	stakingParams := staking.DefaultParams()
+	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.HistoricalEntries = 10
 	client.App.StakingKeeper.SetParams(ctxClient, stakingParams)
 
@@ -270,7 +271,10 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState := ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs())
+	if err != nil {
+		return err
+	}
 	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
 	if err != nil {
 		return err
@@ -322,8 +326,8 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validator := staking.NewValidator(sdk.ValAddress(client.Vals.Validators[0].Address), pk, staking.Description{})
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000)
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			Time:    client.Header.GetTime(),
 			AppHash: commitID.Hash,
@@ -343,7 +347,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs()),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

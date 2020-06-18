@@ -15,9 +15,9 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(Header{}, "ibc/client/tendermint/Header", nil)
 	cdc.RegisterConcrete(Evidence{}, "ibc/client/tendermint/Evidence", nil)
-	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/client/tendermint/MsgCreateClient", nil)
-	cdc.RegisterConcrete(MsgUpdateClient{}, "ibc/client/tendermint/MsgUpdateClient", nil)
-	cdc.RegisterConcrete(MsgSubmitClientMisbehaviour{}, "ibc/client/tendermint/MsgSubmitClientMisbehaviour", nil)
+	cdc.RegisterConcrete(&MsgCreateClient{}, "ibc/client/tendermint/MsgCreateClient", nil)
+	cdc.RegisterConcrete(&MsgUpdateClient{}, "ibc/client/tendermint/MsgUpdateClient", nil)
+	cdc.RegisterConcrete(&MsgSubmitClientMisbehaviour{}, "ibc/client/tendermint/MsgSubmitClientMisbehaviour", nil)
 }
 
 // RegisterInterfaces registers the tendermint concrete evidence and client-related

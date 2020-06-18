@@ -1,7 +1,6 @@
 package ibc_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
@@ -10,25 +9,26 @@ import (
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
 	testCases := []struct {
 		name     string
-		genState ibc.GenesisState
+		genState types.GenesisState
 		expPass  bool
 	}{
 		{
 			name:     "default",
-			genState: ibc.DefaultGenesisState(),
+			genState: types.DefaultGenesisState(),
 			expPass:  true,
 		},
 		{
 			name: "valid genesis",
-			genState: ibc.GenesisState{
+			genState: types.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						ibctmtypes.NewClientState(clientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						localhosttypes.NewClientState("chaindID", 10),
 					},
 					[]client.ConsensusStates{
@@ -81,10 +81,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid client genesis",
-			genState: ibc.GenesisState{
+			genState: types.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						ibctmtypes.NewClientState(clientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						localhosttypes.NewClientState("(chaindID)", 0),
 					},
 					nil,
@@ -96,7 +96,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid connection genesis",
-			genState: ibc.GenesisState{
+			genState: types.GenesisState{
 				ClientGenesis: client.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
@@ -111,7 +111,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid channel genesis",
-			genState: ibc.GenesisState{
+			genState: types.GenesisState{
 				ClientGenesis:     client.DefaultGenesisState(),
 				ConnectionGenesis: connection.DefaultGenesisState(),
 				ChannelGenesis: channel.GenesisState{

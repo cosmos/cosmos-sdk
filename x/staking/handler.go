@@ -18,23 +18,23 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case types.MsgCreateValidator:
+		case *types.MsgCreateValidator:
 			return handleMsgCreateValidator(ctx, msg, k)
 
-		case types.MsgEditValidator:
+		case *types.MsgEditValidator:
 			return handleMsgEditValidator(ctx, msg, k)
 
-		case types.MsgDelegate:
+		case *types.MsgDelegate:
 			return handleMsgDelegate(ctx, msg, k)
 
-		case types.MsgBeginRedelegate:
+		case *types.MsgBeginRedelegate:
 			return handleMsgBeginRedelegate(ctx, msg, k)
 
-		case types.MsgUndelegate:
+		case *types.MsgUndelegate:
 			return handleMsgUndelegate(ctx, msg, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }
@@ -42,10 +42,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k keeper.Keeper) (*sdk.Result, error) {
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, msg.ValidatorAddress); found {
-		return nil, ErrValidatorOwnerExists
+		return nil, types.ErrValidatorOwnerExists
 	}
 
 	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, msg.Pubkey)
@@ -54,11 +54,11 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {
-		return nil, ErrValidatorPubKeyExists
+		return nil, types.ErrValidatorPubKeyExists
 	}
 
 	if msg.Value.Denom != k.BondDenom(ctx) {
-		return nil, ErrBadDenom
+		return nil, types.ErrBadDenom
 	}
 
 	if _, err := msg.Description.EnsureLength(); err != nil {
@@ -71,14 +71,14 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 		if !tmstrings.StringInSlice(tmPubKey.Type, cp.Validator.PubKeyTypes) {
 			return nil, sdkerrors.Wrapf(
-				ErrValidatorPubKeyTypeNotSupported,
+				types.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", tmPubKey.Type, cp.Validator.PubKeyTypes,
 			)
 		}
 	}
 
-	validator := NewValidator(msg.ValidatorAddress, pk, msg.Description)
-	commission := NewCommissionWithTime(
+	validator := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)
+	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
 	)
@@ -121,11 +121,11 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgEditValidator(ctx sdk.Context, msg *types.MsgEditValidator, k keeper.Keeper) (*sdk.Result, error) {
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
-		return nil, ErrNoValidatorFound
+		return nil, types.ErrNoValidatorFound
 	}
 
 	// replace all editable fields (clients should autofill existing values)
@@ -150,11 +150,11 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 
 	if msg.MinSelfDelegation != nil {
 		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, ErrMinSelfDelegationDecreased
+			return nil, types.ErrMinSelfDelegationDecreased
 		}
 
 		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, ErrSelfDelegationBelowMinimum
+			return nil, types.ErrSelfDelegationBelowMinimum
 		}
 
 		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
@@ -178,14 +178,14 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper) (*sdk.Result, error) {
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
-		return nil, ErrNoValidatorFound
+		return nil, types.ErrNoValidatorFound
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, ErrBadDenom
+		return nil, types.ErrBadDenom
 	}
 
 	// NOTE: source funds are always unbonded
@@ -210,7 +210,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Keeper) (*sdk.Result, error) {
 	shares, err := k.ValidateUnbondAmount(
 		ctx, msg.DelegatorAddress, msg.ValidatorAddress, msg.Amount.Amount,
 	)
@@ -219,7 +219,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, ErrBadDenom
+		return nil, types.ErrBadDenom
 	}
 
 	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, shares)
@@ -229,7 +229,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 
 	ts, err := gogotypes.TimestampProto(completionTime)
 	if err != nil {
-		return nil, ErrBadRedelegationAddr
+		return nil, types.ErrBadRedelegationAddr
 	}
 
 	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)
@@ -250,7 +250,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 	return &sdk.Result{Data: completionTimeBz, Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k keeper.Keeper) (*sdk.Result, error) {
 	shares, err := k.ValidateUnbondAmount(
 		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.Amount.Amount,
 	)
@@ -259,7 +259,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, ErrBadDenom
+		return nil, types.ErrBadDenom
 	}
 
 	completionTime, err := k.BeginRedelegation(
@@ -271,7 +271,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	ts, err := gogotypes.TimestampProto(completionTime)
 	if err != nil {
-		return nil, ErrBadRedelegationAddr
+		return nil, types.ErrBadRedelegationAddr
 	}
 
 	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)

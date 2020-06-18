@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	lite "github.com/tendermint/tendermint/lite2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,10 +29,31 @@ var (
 	_ evidenceexported.MsgSubmitEvidence = (*MsgSubmitClientMisbehaviour)(nil)
 )
 
+// // MsgCreateClient defines a message to create an IBC client
+// type MsgCreateClient struct {
+// 	ClientID        string             `json:"client_id" yaml:"client_id"`
+// 	Header          Header             `json:"header" yaml:"header"`
+// 	TrustLevel      tmmath.Fraction    `json:"trust_level" yaml:"trust_level"`
+// 	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
+// 	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
+// 	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
+// 	ProofSpecs      []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
+// 	Signer          sdk.AccAddress     `json:"address" yaml:"address"`
+// }
+
+// this is a constant to satisfy the linter
+const TODO = "TODO"
+
+// dummy implementation of proto.Message
+func (msg MsgCreateClient) Reset()         {}
+func (msg MsgCreateClient) String() string { return TODO }
+func (msg MsgCreateClient) ProtoMessage()  {}
+
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, header Header, trustLevel Fraction,
-	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration, signer sdk.AccAddress,
+	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
+	specs []*ics23.ProofSpec, signer sdk.AccAddress,
 ) MsgCreateClient {
 	return MsgCreateClient{
 		ClientID:        id,
@@ -40,6 +62,7 @@ func NewMsgCreateClient(
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
 		MaxClockDrift:   maxClockDrift,
+		ProofSpecs:      specs,
 		Signer:          signer,
 	}
 }
@@ -77,6 +100,21 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
+	if msg.TrustingPeriod >= msg.UnbondingPeriod {
+		return sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", msg.TrustingPeriod, msg.UnbondingPeriod,
+		)
+	}
+	// Validate ProofSpecs
+	if msg.ProofSpecs == nil {
+		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil")
+	}
+	for _, spec := range msg.ProofSpecs {
+		if spec == nil {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
+		}
+	}
 	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
@@ -111,6 +149,11 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 		ValidatorSet: msg.Header.ValidatorSet,
 	}
 }
+
+// dummy implementation of proto.Message
+func (msg MsgUpdateClient) Reset()         {}
+func (msg MsgUpdateClient) String() string { return TODO }
+func (msg MsgUpdateClient) ProtoMessage()  {}
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
@@ -159,6 +202,11 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 	return msg.Header
 }
 
+// dummy implementation of proto.Message
+func (msg MsgSubmitClientMisbehaviour) Reset()         {}
+func (msg MsgSubmitClientMisbehaviour) String() string { return TODO }
+func (msg MsgSubmitClientMisbehaviour) ProtoMessage()  {}
+
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
 func NewMsgSubmitClientMisbehaviour(evidence evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
@@ -177,7 +225,9 @@ func NewMsgSubmitClientMisbehaviour(evidence evidenceexported.Evidence, s sdk.Ac
 func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
-func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }
+func (msg MsgSubmitClientMisbehaviour) Type() string {
+	return TypeMsgSubmitClientMisbehaviour
+}
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {

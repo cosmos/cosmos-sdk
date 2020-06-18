@@ -16,4 +16,5 @@ var (
 	ErrTrustingPeriodExpired  = sdkerrors.Register(SubModuleName, 6, "time since latest trusted state has passed the trusting period")
 	ErrUnbondingPeriodExpired = sdkerrors.Register(SubModuleName, 7, "time since latest trusted state has passed the unbonding period")
 	ErrInvalidTrustLevel      = sdkerrors.Register(SubModuleName, 8, "invalid trust level")
+	ErrInvalidProofSpecs      = sdkerrors.Register(SubModuleName, 8, "invalid proof specs")
 )

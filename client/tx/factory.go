@@ -5,28 +5,35 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Factory defines a client transaction factory that facilitates generating and
 // signing an application-specific transaction.
 type Factory struct {
 	keybase            keyring.Keyring
-	txGenerator        context.TxGenerator
-	accountRetriever   context.AccountRetriever
+	txGenerator        client.TxGenerator
+	accountRetriever   client.AccountRetriever
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
 	gasAdjustment      float64
-	simulateAndExecute bool
 	chainID            string
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	signMode           signing.SignMode
+	simulateAndExecute bool
 }
+
+const (
+	signModeDirect    = "direct"
+	signModeAminoJSON = "amino-json"
+)
 
 func NewFactoryFromCLI(input io.Reader) Factory {
 	kb, err := keyring.New(
@@ -39,6 +46,15 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		panic(err)
 	}
 
+	signModeStr := viper.GetString(flags.FlagSignMode)
+	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+	switch signModeStr {
+	case signModeDirect:
+		signMode = signing.SignMode_SIGN_MODE_DIRECT
+	case signModeAminoJSON:
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	}
+
 	f := Factory{
 		keybase:            kb,
 		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
@@ -48,6 +64,7 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		simulateAndExecute: flags.GasFlagVar.Simulate,
 		chainID:            viper.GetString(flags.FlagChainID),
 		memo:               viper.GetString(flags.FlagMemo),
+		signMode:           signMode,
 	}
 
 	f = f.WithFees(viper.GetString(flags.FlagFees))
@@ -56,29 +73,29 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 	return f
 }
 
-func (f Factory) AccountNumber() uint64                      { return f.accountNumber }
-func (f Factory) Sequence() uint64                           { return f.sequence }
-func (f Factory) Gas() uint64                                { return f.gas }
-func (f Factory) GasAdjustment() float64                     { return f.gasAdjustment }
-func (f Factory) Keybase() keyring.Keyring                   { return f.keybase }
-func (f Factory) ChainID() string                            { return f.chainID }
-func (f Factory) Memo() string                               { return f.memo }
-func (f Factory) Fees() sdk.Coins                            { return f.fees }
-func (f Factory) GasPrices() sdk.DecCoins                    { return f.gasPrices }
-func (f Factory) AccountRetriever() context.AccountRetriever { return f.accountRetriever }
+func (f Factory) AccountNumber() uint64                     { return f.accountNumber }
+func (f Factory) Sequence() uint64                          { return f.sequence }
+func (f Factory) Gas() uint64                               { return f.gas }
+func (f Factory) GasAdjustment() float64                    { return f.gasAdjustment }
+func (f Factory) Keybase() keyring.Keyring                  { return f.keybase }
+func (f Factory) ChainID() string                           { return f.chainID }
+func (f Factory) Memo() string                              { return f.memo }
+func (f Factory) Fees() sdk.Coins                           { return f.fees }
+func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
+func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
 func (f Factory) SimulateAndExecute() bool { return f.simulateAndExecute }
 
 // WithTxGenerator returns a copy of the Factory with an updated TxGenerator.
-func (f Factory) WithTxGenerator(g context.TxGenerator) Factory {
+func (f Factory) WithTxGenerator(g client.TxGenerator) Factory {
 	f.txGenerator = g
 	return f
 }
 
 // WithAccountRetriever returns a copy of the Factory with an updated AccountRetriever.
-func (f Factory) WithAccountRetriever(ar context.AccountRetriever) Factory {
+func (f Factory) WithAccountRetriever(ar client.AccountRetriever) Factory {
 	f.accountRetriever = ar
 	return f
 }

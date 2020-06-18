@@ -5,13 +5,14 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -116,6 +117,7 @@ func TestConfiguredTxEncoder(t *testing.T) {
 }
 
 func TestReadStdTxFromFile(t *testing.T) {
+	t.Parallel()
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 
@@ -132,6 +134,54 @@ func TestReadStdTxFromFile(t *testing.T) {
 	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
 	require.NoError(t, err)
 	require.Equal(t, decodedTx.Memo, "foomemo")
+}
+
+func TestBatchScanner_Scan(t *testing.T) {
+	t.Parallel()
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+
+	batch1 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
+{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
+{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
+`
+	batch2 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
+malformed
+{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
+`
+	batch3 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
+{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}`
+	batch4 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
+
+{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
+`
+	tests := []struct {
+		name               string
+		batch              string
+		wantScannerError   bool
+		wantUnmarshalError bool
+		numTxs             int
+	}{
+		{"good batch", batch1, false, false, 3},
+		{"malformed", batch2, false, true, 1},
+		{"missing trailing newline", batch3, false, false, 2},
+		{"empty line", batch4, false, true, 1},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			scanner, i := NewBatchScanner(cdc, strings.NewReader(tt.batch)), 0
+			for scanner.Scan() {
+				_ = scanner.StdTx()
+				i++
+			}
+
+			require.Equal(t, tt.wantScannerError, scanner.Err() != nil)
+			require.Equal(t, tt.wantUnmarshalError, scanner.UnmarshalErr() != nil)
+			require.Equal(t, tt.numTxs, i)
+		})
+	}
 }
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
@@ -158,7 +208,7 @@ func writeToNewTempFile(t *testing.T, data string) *os.File {
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	authtypes.RegisterCodec(cdc)
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc

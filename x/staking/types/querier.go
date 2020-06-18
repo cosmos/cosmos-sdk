@@ -26,7 +26,6 @@ const (
 // defines the params for the following queries:
 // - 'custom/staking/delegatorDelegations'
 // - 'custom/staking/delegatorUnbondingDelegations'
-// - 'custom/staking/delegatorRedelegations'
 // - 'custom/staking/delegatorValidators'
 type QueryDelegatorParams struct {
 	DelegatorAddr sdk.AccAddress
@@ -45,11 +44,14 @@ func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams 
 // - 'custom/staking/validatorRedelegations'
 type QueryValidatorParams struct {
 	ValidatorAddr sdk.ValAddress
+	Page, Limit   int
 }
 
-func NewQueryValidatorParams(validatorAddr sdk.ValAddress) QueryValidatorParams {
+func NewQueryValidatorParams(validatorAddr sdk.ValAddress, page, limit int) QueryValidatorParams {
 	return QueryValidatorParams{
 		ValidatorAddr: validatorAddr,
+		Page:          page,
+		Limit:         limit,
 	}
 }
 

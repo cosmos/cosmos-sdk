@@ -19,8 +19,9 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // define constants used for testing
@@ -52,10 +53,16 @@ const (
 	disabledTimeoutHeight    = 0
 )
 
+var (
+	testPacketCommitment = []byte("packet commitment")
+	testAcknowledgement  = []byte("acknowledgement")
+)
+
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
+	cdc     *codec.Codec
+	querier sdk.Querier
 
 	chainA *TestChain
 	chainB *TestChain
@@ -66,6 +73,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainB = NewTestChain(testClientIDB)
 
 	suite.cdc = suite.chainA.App.Codec()
+	suite.querier = ibckeeper.NewQuerier(*suite.chainA.App.IBCKeeper)
 }
 
 func (suite *KeeperTestSuite) TestSetChannel() {
@@ -201,17 +209,61 @@ func (suite *KeeperTestSuite) TestSetSequence() {
 	suite.Equal(nextSeqAck, storedNextSeqAck)
 }
 
-func (suite *KeeperTestSuite) TestPackageCommitment() {
+// TestPacketCommitment does basic verification of setting and getting of packet commitments within
+// the Channel Keeper.
+func (suite *KeeperTestSuite) TestPacketCommitment() {
 	ctx := suite.chainB.GetContext()
 	seq := uint64(10)
-	storedCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
-	suite.Equal([]byte(nil), storedCommitment)
 
-	commitment := []byte("commitment")
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, testPort1, testChannel1, seq, commitment)
+	storedCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
+	suite.Nil(storedCommitment)
+
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, testPort1, testChannel1, seq, testPacketCommitment)
 
 	storedCommitment = suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
-	suite.Equal(commitment, storedCommitment)
+	suite.Equal(testPacketCommitment, storedCommitment)
+}
+
+// TestGetAllPacketCommitmentsAtChannel verifies that iterator returns all stored packet commitments
+// for a specific channel.
+func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
+	// setup
+	ctx := suite.chainB.GetContext()
+	expectedSeqs := make(map[uint64]bool)
+
+	seq := uint64(15)
+	maxSeq := uint64(25)
+	suite.Require().Greater(maxSeq, seq)
+
+	// create consecutive commitments
+	for i := uint64(1); i < seq; i++ {
+		suite.chainB.storePacketCommitment(ctx, testPort1, testChannel1, i)
+		expectedSeqs[i] = true
+	}
+
+	// add non-consecutive commitments
+	for i := seq; i < maxSeq; i += 2 {
+		suite.chainB.storePacketCommitment(ctx, testPort1, testChannel1, i)
+		expectedSeqs[i] = true
+	}
+
+	// add sequence on different channel/port
+	suite.chainB.storePacketCommitment(ctx, testPort2, testChannel2, maxSeq+1)
+
+	commitments := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitmentsAtChannel(ctx, testPort1, testChannel1)
+
+	suite.Equal(len(expectedSeqs), len(commitments))
+	suite.NotEqual(0, len(commitments))
+
+	// verify that all the packet commitments were stored
+	for _, packet := range commitments {
+		suite.True(expectedSeqs[packet.Sequence])
+		suite.Equal(testPort1, packet.PortID)
+		suite.Equal(testChannel1, packet.ChannelID)
+
+		// prevent duplicates from passing checks
+		expectedSeqs[packet.Sequence] = false
+	}
 }
 
 func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
@@ -248,7 +300,7 @@ func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
 }
 
 // nolint: unused
-func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
+func queryProof(chain *TestChain, key []byte) ([]byte, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight(),
@@ -256,9 +308,11 @@ func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint
 		Prove:  true,
 	})
 
-	proof := commitmenttypes.MerkleProof{
+	merkleProof := commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
+
+	proof, _ := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 
 	return proof, uint64(res.Height)
 }
@@ -324,8 +378,8 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	)
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			AppHash: commitID.Hash,
 		},
@@ -337,7 +391,10 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState := ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs())
+	if err != nil {
+		return err
+	}
 	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
 	if err != nil {
 		return err
@@ -383,8 +440,8 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	)
 	validator.Status = sdk.Bonded
 	validator.Tokens = sdk.NewInt(1000000)
-	validators := []staking.Validator{validator}
-	histInfo := staking.HistoricalInfo{
+	validators := []stakingtypes.Validator{validator}
+	histInfo := stakingtypes.HistoricalInfo{
 		Header: abci.Header{
 			AppHash: commitID.Hash,
 		},
@@ -403,7 +460,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs()),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -440,12 +497,24 @@ func (chain *TestChain) createChannel(
 	state types.State, order types.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
+
+	// sets channel with given state
 	channel := types.NewChannel(state, order, counterparty,
-		[]string{connectionID}, "1.0",
+		[]string{connectionID}, testChannelVersion,
 	)
 	ctx := chain.GetContext()
 	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
 	return channel
+}
+
+// storePacketCommitment is a helper function that sets a packet commitment in the Channel Keeper.
+func (chain *TestChain) storePacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) {
+	chain.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, portID, channelID, sequence, testPacketCommitment)
+}
+
+// storeAcknowledgement is a helper function that sets a packet commitment in the Channel Keeper.
+func (chain *TestChain) storeAcknowledgement(ctx sdk.Context, portID, channelID string, sequence uint64) {
+	chain.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, portID, channelID, sequence, testAcknowledgement)
 }
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {

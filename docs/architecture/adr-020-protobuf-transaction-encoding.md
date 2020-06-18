@@ -7,6 +7,7 @@
 - 2020 April 13: Added details on interface `oneof` handling
 - 2020 April 30: Switch to `Any`
 - 2020 May 14: Describe public key encoding
+- 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
 
 ## Status
 
@@ -56,10 +57,32 @@ package cosmos_sdk.v1;
 message Tx {
     TxBody body = 1;
     AuthInfo auth_info = 2;
+    // A list of signatures that matches the length and order of AuthInfo's signer_infos to
+    // allow connecting signature meta information like public key and signing mode by position.
+    repeated bytes signatures = 3;
+}
+
+// A variant of Tx that pins the signer's exact binary represenation of body and
+// auth_info. This is used for signing, broadcasting and verification. The binary
+// `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
+// becomes the "txhash", commonly used as the transaction ID.
+message TxRaw {
+    // A protobuf serialization of a TxBody that matches the representation in SignDoc.
+    bytes body = 1;
+    // A protobuf serialization of an AuthInfo that matches the representation in SignDoc.
+    bytes auth_info = 2;
+    // A list of signatures that matches the length and order of AuthInfo's signer_infos to
+    // allow connecting signature meta information like public key and signing mode by position.
     repeated bytes signatures = 3;
 }
 
 message TxBody {
+    // A list of messages to be executed. The required signers of those messages define
+    // the number and order of elements in AuthInfo's signer_infos and Tx's signatures.
+    // Each required signer address is added to the list only the first time it occurs.
+    //
+    // By convention, the first required signer (usually from the first message) is referred
+    // to as the primary signer and pays the fee for the whole transaction.
     repeated google.protobuf.Any messages = 1;
     string memo = 2;
     int64 timeout_height = 3;
@@ -67,13 +90,17 @@ message TxBody {
 }
 
 message AuthInfo {
+    // This list defines the signing modes for the required signers. The number
+    // and order of elements must match the required signers from TxBody's messages.
+    // The first element is the primary signer and the one which pays the fee.
     repeated SignerInfo signer_infos = 1;
-    // The first signer is the primary signer and the one which pays the fee
+    // The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation.
     Fee fee = 2;
 }
 
 message SignerInfo {
-    // PublicKey key is optional for accounts that already exist in state
+    // The public key is optional for accounts that already exist in state. If unset, the
+    // verifier can use the required signer address for this position and lookup the public key.
     PublicKey public_key = 1;
     // ModeInfo describes the signing mode of the signer and is a nested
     // structure to support nested multisig pubkey's
@@ -149,14 +176,16 @@ buffers implementation
 subtle differences between the signing and encoding formats which could 
 potentially be exploited by an attacker)
 
-Signatures are structured using the `SignDoc` below which reuses `TxBody` and
-`AuthInfo` and only adds the fields which are needed for signatures:
+Signatures are structured using the `SignDoc` below which reuses the serialization of
+`TxBody` and `AuthInfo` and only adds the fields which are needed for signatures:
 
 ```proto
 // types/types.proto
 message SignDoc {
-    TxBody body = 1;
-    AuthInfo auth_info = 2;
+    // A protobuf serialization of a TxBody that matches the representation in TxRaw.
+    bytes body = 1;
+    // A protobuf serialization of an AuthInfo that matches the representation in TxRaw.
+    bytes auth_info = 2;
     string chain_id = 3;
     uint64 account_number = 4;
     // account_sequence starts at 1 rather than 0 to avoid the case where
@@ -167,36 +196,27 @@ message SignDoc {
 
 In order to sign in the default mode, clients take the following steps:
 
-1. Encode `SignDoc`. (The only requirement of the underlying protobuf
-implementation is that fields are serialized in order).
-2. Sign the encoded `SignDoc` bytes
-3. Build and broadcast `Tx`. (The underlying protobuf implementation must encode
-`TxBody` and `AuthInfo` with the same binary representation as encoded in
-`SignDoc`. If this is a problem for clients, the "raw" types described under
-verification can be used for signing as well.)
+1. Serialize `TxBody` and `AuthInfo` using any valid protobuf implementation.
+2. Create a `SignDoc` and encode it. (The only requirement of the underlying
+   protobuf implementation is that fields are serialized in order).
+3. Sign the encoded `SignDoc` bytes.
+4. Build a `TxRaw` and serialize it for broadcasting.
 
 Signature verification is based on comparing the raw `TxBody` and `AuthInfo`
-bytes encoded in `Tx` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
+bytes encoded in `TxRaw` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
 algorithm which creates added complexity for clients in addition to preventing
 some forms of upgradeability (to be addressed later in this document).
 
-Signature verifiers should use a special set of "raw" types to perform this
-binary signature verification rather than attempting to re-encode protobuf
-documents which could result in a different binary encoding:
+Signature verifiers do:
 
-```proto
-message TxRaw {
-    bytes body_bytes = 1;
-    repeated bytes signatures = 2;
-}
-
-message SignDocRaw {
-    bytes body_bytes = 1;
-    string chain_id = 2;
-    uint64 account_number = 3;
-    uint64 account_sequence = 4;
-}
-```
+1. Deserialize a `TxRaw` and pull out `body` and `auth_info`.
+2. Create a list of required signer addresses from the messages.
+3. For each required signer:
+   - Pull account number and sequence from the state.
+   - Obtain the public key either from state or `AuthInfo`'s `signer_infos`.
+   - Create a `SignDoc` and serialize it. Due to the simplicity of the type it
+     is expected that this matches the serialization used by the signer.
+   - Verify the signature at the the same list position against the serialized `SignDoc`.
 
 #### `SIGN_MODE_LEGACY_AMINO`
 
@@ -323,25 +343,25 @@ type TxBuilder interface {
 }
 ```
 
-We then update `CLIContext` to have new fields: `JSONMarshaler`, `TxGenerator`,
+We then update `Context` to have new fields: `JSONMarshaler`, `TxGenerator`,
 and `AccountRetriever`, and we update `AppModuleBasic.GetTxCmd` to take
-a `CLIContext` which should have all of these fields pre-populated.
+a `Context` which should have all of these fields pre-populated.
 
 Each client method should then use one of the `Init` methods to re-initialize
-the pre-populated `CLIContext`. `tx.GenerateOrBroadcastTx` can be used to
+the pre-populated `Context`. `tx.GenerateOrBroadcastTx` can be used to
 generate or broadcast a transaction. For example:
 
 ```go
 import "github.com/spf13/cobra"
+import "github.com/cosmos/cosmos-sdk/client"
 import "github.com/cosmos/cosmos-sdk/client/tx"
-import "github.com/cosmos/cosmos-sdk/client/context"
 
-func NewCmdDoSomething(ctx context.CLIContext) *cobra.Command {
+func NewCmdDoSomething(clientCtx client.Context) *cobra.Command {
 	return &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := ctx.InitWithInput(cmd.InOrStdin())
+			clientCtx := ctx.InitWithInput(cmd.InOrStdin())
 			msg := NewSomeMsg{...}
-			tx.GenerateOrBroadcastTx(cliCtx, msg)
+			tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
 }

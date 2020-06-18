@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	ics23 "github.com/confio/ics23/go"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -67,10 +69,15 @@ func (cs ClientState) Validate() error {
 	return host.ClientIdentifierValidator(cs.ID)
 }
 
-// VerifyClientConsensusState always returns an error as the loopback client doesn't
-// store consensus states.
+// GetProofSpecs returns nil since localhost does not have to verify proofs
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return nil
+}
+
+// VerifyClientConsensusState verifies a proof of the consensus
+// state of the loop-back client.
 func (cs ClientState) VerifyClientConsensusState(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	_ codec.Marshaler,
 	_ commitmentexported.Root,
 	_ uint64,
@@ -93,7 +100,7 @@ func (cs ClientState) VerifyConnectionState(
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 	_ clientexported.ConsensusState,
@@ -131,7 +138,7 @@ func (cs ClientState) VerifyChannelState(
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
@@ -167,9 +174,10 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -200,9 +208,10 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -234,9 +243,10 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -259,9 +269,10 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
+	_ codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,

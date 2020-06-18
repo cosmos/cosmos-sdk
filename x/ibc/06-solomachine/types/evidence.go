@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	_ evidenceexported.Evidence   = Evidence{}
-	_ clientexported.Misbehaviour = Evidence{}
+	_ evidenceexported.Evidence   = &Evidence{}
+	_ clientexported.Misbehaviour = &Evidence{}
 )
 
 // ClientType is a Solo Machine light client.
@@ -40,7 +40,7 @@ func (ev Evidence) Type() string {
 
 // Hash implements Evidence interface
 func (ev Evidence) Hash() tmbytes.HexBytes {
-	bz := SubModuleCdc.MustMarshalBinaryBare(ev)
+	bz := SubModuleCdc.MustMarshalBinaryBare(&ev)
 	return tmhash.Sum(bz)
 }
 

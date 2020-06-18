@@ -40,7 +40,7 @@ func EvidenceSignBytes(sequence uint64, data []byte) []byte {
 func HeaderSignBytes(header Header) []byte {
 	return append(
 		sdk.Uint64ToBigEndian(header.Sequence),
-		header.NewPubKey.Bytes()...,
+		header.GetPubKey().Bytes()...,
 	)
 }
 

@@ -4,15 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
-	_ clientexported.MsgCreateClient     = MsgCreateClient{}
-	_ clientexported.MsgUpdateClient     = MsgUpdateClient{}
-	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
+	_ clientexported.MsgCreateClient     = &MsgCreateClient{}
+	_ clientexported.MsgUpdateClient     = &MsgUpdateClient{}
+	_ evidenceexported.MsgSubmitEvidence = &MsgSubmitClientMisbehaviour{}
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -115,7 +114,7 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
+func NewMsgSubmitClientMisbehaviour(e Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
 	return MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
 }
 
@@ -129,9 +128,6 @@ func (msg MsgSubmitClientMisbehaviour) Type() string {
 
 // ValidateBasic performs basic (non-state-dependent) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
-	if msg.Evidence == nil {
-		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "evidence cannot be nil")
-	}
 	if err := msg.Evidence.ValidateBasic(); err != nil {
 		return err
 	}
@@ -154,7 +150,7 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return msg.Evidence
+	return &msg.Evidence
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {

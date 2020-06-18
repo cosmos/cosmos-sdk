@@ -3,7 +3,6 @@ package cosmos_sdk.ibc.solomachine.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types";
 
-import "google/protobuf/any.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 
 // MsgCreateClient defines a message to create an IBC client
@@ -25,7 +24,7 @@ message MsgUpdateClient {
 message MsgSubmitClientMisbehaviour {
   option (gogoproto.goproto_getters)  = false;
   bytes submitter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  google.protobuf.Any evidence = 2;
+  Evidence evidence = 2[(gogoproto.nullable) = false];
 }
 
 // ConsensusState defines a solo machine consensus state

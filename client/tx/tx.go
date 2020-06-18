@@ -114,7 +114,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	txBytes, err := clientCtx.TxGenerator.MarshalTx(tx.GetTx())
+	txBytes, err := clientCtx.TxGenerator.TxEncoder()(tx.GetTx())
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 			"sequence is zero",
 			solomachinetypes.ConsensusState{
 				Sequence: 0,
-				PubKey:   suite.privKey.PubKey(),
+				PubKey:   suite.privKey.PubKey().Bytes(),
 			},
 			false,
 		},

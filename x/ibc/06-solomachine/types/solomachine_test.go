@@ -61,7 +61,7 @@ func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
 	header := solomachinetypes.Header{
 		Sequence:  suite.sequence,
 		Signature: signature,
-		NewPubKey: newPrivKey.PubKey(),
+		NewPubKey: newPrivKey.PubKey().Bytes(),
 	}
 
 	// assumes successful header update
@@ -78,7 +78,7 @@ func (suite *SoloMachineTestSuite) ClientState() solomachinetypes.ClientState {
 func (suite *SoloMachineTestSuite) ConsensusState() solomachinetypes.ConsensusState {
 	return solomachinetypes.ConsensusState{
 		Sequence: suite.sequence,
-		PubKey:   suite.privKey.PubKey(),
+		PubKey:   suite.privKey.PubKey().Bytes(),
 	}
 }
 
@@ -105,8 +105,8 @@ func (suite *SoloMachineTestSuite) Evidence() solomachinetypes.Evidence {
 	return solomachinetypes.Evidence{
 		ClientID:     suite.clientID,
 		Sequence:     suite.sequence,
-		SignatureOne: signatureOne,
-		SignatureTwo: signatureTwo,
+		SignatureOne: &signatureOne,
+		SignatureTwo: &signatureTwo,
 	}
 }
 

@@ -15,7 +15,7 @@ func (suite *SoloMachineTestSuite) TestEvidence() {
 	suite.Require().Equal(suite.clientID, ev.GetClientID())
 	suite.Require().Equal("client", ev.Route())
 	suite.Require().Equal("client_misbehaviour", ev.Type())
-	suite.Require().Equal(tmbytes.HexBytes(tmhash.Sum(solomachinetypes.SubModuleCdc.MustMarshalBinaryBare(ev))), ev.Hash())
+	suite.Require().Equal(tmbytes.HexBytes(tmhash.Sum(solomachinetypes.SubModuleCdc.MustMarshalBinaryBare(&ev))), ev.Hash())
 	suite.Require().Equal(int64(suite.sequence), ev.GetHeight())
 }
 

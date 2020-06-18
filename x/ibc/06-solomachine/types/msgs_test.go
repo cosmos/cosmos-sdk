@@ -12,7 +12,7 @@ func (suite *SoloMachineTestSuite) TestMsgCreateClientValidateBasic() {
 	}{
 		{"valid msg", solomachinetypes.NewMsgCreateClient(suite.clientID, suite.ConsensusState()), true},
 		{"invalid client id", solomachinetypes.NewMsgCreateClient("(BADCLIENTID)", suite.ConsensusState()), false},
-		{"invalid consensus state with zero sequence", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{0, suite.privKey.PubKey()}), false},
+		{"invalid consensus state with zero sequence", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{0, suite.privKey.PubKey().Bytes()}), false},
 		{"invalid consensus state with nil pubkey", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{suite.sequence, nil}), false},
 	}
 

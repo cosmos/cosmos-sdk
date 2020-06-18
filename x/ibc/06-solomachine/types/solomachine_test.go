@@ -21,13 +21,14 @@ import (
 type SoloMachineTestSuite struct {
 	suite.Suite
 
-	ctx      sdk.Context
-	aminoCdc *codec.Codec
-	cdc      codec.Marshaler
-	store    sdk.KVStore
-	privKey  crypto.PrivKey
-	sequence uint64
-	clientID string
+	ctx       sdk.Context
+	aminoCdc  *codec.Codec
+	cdc       codec.Marshaler
+	store     sdk.KVStore
+	privKey   crypto.PrivKey
+	sequence  uint64
+	clientID  string
+	timestamp uint64
 }
 
 func (suite *SoloMachineTestSuite) SetupTest() {
@@ -39,6 +40,7 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.privKey = ed25519.GenPrivKey()
 
 	suite.sequence = 1
+	suite.timestamp = 10
 	suite.clientID = "solomachineclient"
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1, Time: time.Now()})
 	suite.store = app.IBCKeeper.ClientKeeper.ClientStore(suite.ctx, clientexported.ClientTypeSoloMachine)
@@ -77,8 +79,9 @@ func (suite *SoloMachineTestSuite) ClientState() solomachinetypes.ClientState {
 
 func (suite *SoloMachineTestSuite) ConsensusState() solomachinetypes.ConsensusState {
 	return solomachinetypes.ConsensusState{
-		Sequence: suite.sequence,
-		PubKey:   suite.privKey.PubKey().Bytes(),
+		Sequence:  suite.sequence,
+		PubKey:    suite.privKey.PubKey().Bytes(),
+		Timestamp: suite.timestamp,
 	}
 }
 

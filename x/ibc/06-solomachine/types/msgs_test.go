@@ -12,8 +12,9 @@ func (suite *SoloMachineTestSuite) TestMsgCreateClientValidateBasic() {
 	}{
 		{"valid msg", solomachinetypes.NewMsgCreateClient(suite.clientID, suite.ConsensusState()), true},
 		{"invalid client id", solomachinetypes.NewMsgCreateClient("(BADCLIENTID)", suite.ConsensusState()), false},
-		{"invalid consensus state with zero sequence", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{0, suite.privKey.PubKey().Bytes()}), false},
-		{"invalid consensus state with nil pubkey", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{suite.sequence, nil}), false},
+		{"invalid consensus state with zero sequence", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{0, suite.privKey.PubKey().Bytes(), timestamp}), false},
+		{"invalid consensus state with zero timestamp", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{1, suite.privKey.PubKey().Bytes(), 0}), false},
+		{"invalid consensus state with nil pubkey", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{suite.sequence, nil, timestamp}), false},
 	}
 
 	for i, tc := range cases {

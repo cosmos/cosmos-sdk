@@ -16,6 +16,7 @@ const (
 	testConnectionID             = "connectionid"
 	testChannelID                = "testchannelid"
 	testPortID                   = "testportid"
+	timestamp                    = 10
 )
 
 var (
@@ -41,12 +42,17 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{0, suite.privKey.PubKey().Bytes()}),
+			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{0, suite.privKey.PubKey().Bytes(), timestamp}),
+			false,
+		},
+		{
+			"timstamp is zero",
+			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{1, suite.privKey.PubKey().Bytes(), 0}),
 			false,
 		},
 		{
 			"pubkey is empty",
-			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{suite.sequence, nil}),
+			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{suite.sequence, nil, timestamp}),
 			false,
 		},
 	}

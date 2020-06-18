@@ -25,7 +25,7 @@ func (cs ConsensusState) GetHeight() uint64 {
 
 // GetTimestamp returns zero.
 func (cs ConsensusState) GetTimestamp() uint64 {
-	return 0
+	return cs.Timestamp
 }
 
 // GetRoot returns nil as solo machines do not have roots
@@ -56,7 +56,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	if cs.Sequence == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "sequence cannot be 0")
 	}
-
+	if cs.Timestamp == 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be 0")
+	}
 	if cs.PubKey == nil || len(cs.PubKey) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")
 	}

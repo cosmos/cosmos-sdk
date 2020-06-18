@@ -5,8 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -83,7 +84,8 @@ func TestTxWrapper(t *testing.T) {
 
 	t.Log("verify that calling the SetMsgs, SetMemo results in the correct GetBodyBytes")
 	require.NotEqual(t, bodyBytes, tx.GetBodyBytes())
-	tx.SetMsgs(msgs)
+	err = tx.SetMsgs(msgs...)
+	require.NoError(t, err)
 	require.NotEqual(t, bodyBytes, tx.GetBodyBytes())
 	tx.SetMemo(memo)
 	require.Equal(t, bodyBytes, tx.GetBodyBytes())
@@ -96,7 +98,7 @@ func TestTxWrapper(t *testing.T) {
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
 	tx.SetGasLimit(fee.GasLimit)
 	require.NotEqual(t, authInfoBytes, tx.GetAuthInfoBytes())
-	err = tx.SetSignaturesV2(sig)
+	err = tx.SetSignatures(sig)
 	require.NoError(t, err)
 
 	// once fee, gas and signerInfos are all set, AuthInfo bytes should match

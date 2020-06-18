@@ -5,6 +5,8 @@ import (
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
+	"github.com/stretchr/testify/require"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -12,7 +14,6 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDirectModeHandler(t *testing.T) {
@@ -22,7 +23,7 @@ func TestDirectModeHandler(t *testing.T) {
 	_, pubkey, addr := authtypes.KeyTestPubAddr()
 	cdc := std.DefaultPublicKeyCodec{}
 
-	tx := txtypes.NewBuilder(app.AppCodec().Marshaler, std.DefaultPublicKeyCodec{})
+	tx := txtypes.NewBuilder(app.AppCodec(), std.DefaultPublicKeyCodec{})
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{authtypes.NewTestMsg(addr)}
 
@@ -51,12 +52,13 @@ func TestDirectModeHandler(t *testing.T) {
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
-	tx.SetMsgs(msgs)
+	err = tx.SetMsgs(msgs...)
+	require.NoError(t, err)
 	tx.SetMemo(memo)
 	tx.SetFeeAmount(fee.Amount)
 	tx.SetGasLimit(fee.GasLimit)
 
-	err = tx.SetSignaturesV2(sig)
+	err = tx.SetSignatures(sig)
 	require.NoError(t, err)
 
 	t.Log("verify modes and default-mode")
@@ -80,7 +82,7 @@ func TestDirectModeHandler(t *testing.T) {
 		SignerInfos: signerInfo,
 	}
 
-	authInfoBytes := app.AppCodec().Marshaler.MustMarshalBinaryBare(authInfo)
+	authInfoBytes := app.AppCodec().MustMarshalBinaryBare(authInfo)
 
 	anys := make([]*codectypes.Any, len(msgs))
 
@@ -96,7 +98,7 @@ func TestDirectModeHandler(t *testing.T) {
 		Memo:     memo,
 		Messages: anys,
 	}
-	bodyBytes := app.AppCodec().Marshaler.MustMarshalBinaryBare(txBody)
+	bodyBytes := app.AppCodec().MustMarshalBinaryBare(txBody)
 
 	t.Log("verify GetSignBytes with generating sign bytes by marshaling SignDoc")
 	signDoc := txtypes.SignDoc{

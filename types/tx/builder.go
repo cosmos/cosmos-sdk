@@ -3,6 +3,8 @@ package tx
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,11 +28,7 @@ type Builder interface {
 
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
 
-	SetMsgs([]sdk.Msg)
-	SetMemo(string)
-	SetGasLimit(uint64)
-	SetFeeAmount(sdk.Coins)
-	SetSignaturesV2(...signing.SignatureV2) error
+	client.TxBuilder
 }
 
 func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Builder {
@@ -193,14 +191,14 @@ func (t builder) GetPubKeys() []crypto.PubKey {
 	return t.pubKeys
 }
 
-func (t *builder) SetMsgs(msgs []sdk.Msg) {
+func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {
 		var err error
 		anys[i], err = codectypes.NewAnyWithValue(msg)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -208,6 +206,8 @@ func (t *builder) SetMsgs(msgs []sdk.Msg) {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	t.bodyBz = nil
+
+	return nil
 }
 
 func (t *builder) SetMemo(memo string) {
@@ -239,7 +239,7 @@ func (t *builder) SetFeeAmount(coins sdk.Coins) {
 	t.authInfoBz = nil
 }
 
-func (t *builder) SetSignaturesV2(signatures ...signing.SignatureV2) error {
+func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
 	signerInfos := make([]*SignerInfo, n)
 	rawSigs := make([][]byte, n)
@@ -315,4 +315,8 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*ModeInfo, []byt
 	default:
 		panic("unexpected case")
 	}
+}
+
+func (t builder) GetTx() sdk.Tx {
+	return t
 }

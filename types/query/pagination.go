@@ -37,6 +37,7 @@ func Paginate(
 	offset := req.Offset
 	key := req.Key
 	limit := req.Limit
+	countTotal := req.CountTotal
 
 	if offset > 0 && key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
@@ -46,7 +47,7 @@ func Paginate(
 		limit = defaultLimit
 
 		// count total results when the limit is zero/not supplied
-		req.CountTotal = true
+		countTotal = true
 	}
 
 	if len(key) != 0 {
@@ -94,14 +95,14 @@ func Paginate(
 			if err != nil {
 				return nil, err
 			}
-		} else if !req.CountTotal {
+		} else if !countTotal {
 			nextKey = iterator.Key()
 			break
 		}
 	}
 
 	res := &PageResponse{NextKey: nextKey}
-	if req.CountTotal {
+	if countTotal {
 		res.Total = count
 	}
 

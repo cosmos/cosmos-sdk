@@ -89,6 +89,8 @@ The following examples expose too much cardinality and may not even prove to be 
 | `tx_msg_begin_begin_redelegate` | The total amount of tokens redelegated in a `MsgBeginRedelegate`                       | token        | gauge   |
 | `new_account`                   | Total number of new accounts created                                                   | account      | counter |
 | `gov_proposal`                  | Total number of governance proposals                                                   | proposal     | counter |
+| `gov_vote`                      | Total number of governance votes for a proposal                                        | vote         | counter |
+| `gov_deposit`                   | Total number of governance deposits for a proposal                                     | deposit      | counter |
 | `staking_delegate`              | Total number of delegations                                                            | delegation   | counter |
 | `staking_undelegate`            | Total number of undelegations                                                          | undelegation | counter |
 | `staking_redelegate`            | Total number of redelegations                                                          | redelegation | counter |

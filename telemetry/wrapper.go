@@ -45,6 +45,12 @@ func IncrCounter(val float32, keys ...string) {
 	metrics.IncrCounterWithLabels(keys, val, globalLabels)
 }
 
+// IncrCounterWithLabels provides a wrapper functionality for emitting a counter
+// metric with global labels (if any) along with the provided labels.
+func IncrCounterWithLabels(keys []string, val float32, labels []metrics.Label) {
+	metrics.IncrCounterWithLabels(keys, val, append(labels, globalLabels...))
+}
+
 // SetGauge provides a wrapper functionality for emitting a gauge metric with
 // global labels (if any).
 func SetGauge(val float32, keys ...string) {

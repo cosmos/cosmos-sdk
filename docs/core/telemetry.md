@@ -77,6 +77,8 @@ The following examples expose too much cardinality and may not even prove to be 
 | Metric                          | Description                                                                            | Unit         | Type    |
 | :------------------------------ | :------------------------------------------------------------------------------------- | :----------- | :------ |
 | `tx_count`                      | Total number of txs processed via `DeliverTx`                                          | tx           | counter |
+| `tx_successful`                 | Total number of successful txs processed via `DeliverTx`                               | tx           | counter |
+| `tx_failed`                     | Total number of failed txs processed via `DeliverTx`                                   | tx           | counter |
 | `tx_gas_used`                   | The total amount of gas used by a tx                                                   | gas          | gauge   |
 | `tx_gas_wanted`                 | The total amount of gas requested by a tx                                              | gas          | gauge   |
 | `tx_msg_send`                   | The total amount of tokens sent in a `MsgSend` (per denom)                             | token        | gauge   |

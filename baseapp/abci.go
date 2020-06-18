@@ -215,16 +215,21 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		return sdkerrors.ResponseDeliverTx(err, 0, 0)
 	}
 
-	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx, tx)
-	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed)
-	}
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
 
 	defer func() {
 		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
 		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
+
+	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx, tx)
+	if err != nil {
+		resultStr = "failed"
+		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed)
+	}
 
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?

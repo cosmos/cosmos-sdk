@@ -1,9 +1,9 @@
 package connection
 
 import (
+	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/cli"
@@ -34,5 +34,5 @@ func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 
 // RegisterQueryService registers the gRPC query service for IBC connections.
 func RegisterQueryService(server grpc.Server, k keeper.Keeper) {
-	types.RegisterQueryServer(server, k)
+	types.RegisterQueryServer(&server, k)
 }

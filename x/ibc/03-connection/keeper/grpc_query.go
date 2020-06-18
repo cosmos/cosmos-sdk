@@ -25,7 +25,7 @@ func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	connection, found := q.GetConnection(ctx, req.Address, req.ConnectionID)
+	connection, found := q.GetConnection(ctx, req.ConnectionID)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
@@ -33,7 +33,7 @@ func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest)
 		)
 	}
 
-	return &types.QueryConnectionResponse{Connection: &balance}, nil
+	return &types.QueryConnectionResponse{Connection: &connection}, nil
 }
 
 // ClientConnections implements the Query/ClientConnections gRPC method
@@ -55,7 +55,9 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 		)
 	}
 
-	return &types.QueryConnectionResponse{Connection: &balance}, nil
+	return &types.QueryClientConnectionsResponse{
+		ConnectionPaths: clientConnectionPaths,
+	}, nil
 }
 
 // // AllBalances implements the Query/AllBalances gRPC method

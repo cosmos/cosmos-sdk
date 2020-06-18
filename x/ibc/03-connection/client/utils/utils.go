@@ -42,7 +42,7 @@ func QueryAllConnections(clientCtx client.Context, page, limit int) ([]types.Con
 // proof.
 func QueryConnection(
 	clientCtx client.Context, connectionID string, prove bool,
-) (types.ConnectionResponse, error) {
+) (*types.QueryConnectionResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyConnection(connectionID),
@@ -51,15 +51,15 @@ func QueryConnection(
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return types.ConnectionResponse{}, err
+		return nil, err
 	}
 
 	var connection types.ConnectionEnd
 	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &connection); err != nil {
-		return types.ConnectionResponse{}, err
+		return nil, err
 	}
 
-	connRes := types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height)
+	connRes := types.NewQueryConnectionResponse(connectionID, connection, res.Proof, res.Height)
 
 	return connRes, nil
 }
@@ -91,7 +91,7 @@ func QueryAllClientConnectionPaths(clientCtx client.Context, page, limit int) ([
 // registered for a particular client and a merkle proof.
 func QueryClientConnections(
 	clientCtx client.Context, clientID string, prove bool,
-) (types.ClientConnectionsResponse, error) {
+) (*types.QueryClientConnectionsResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyClientConnections(clientID),
@@ -100,15 +100,15 @@ func QueryClientConnections(
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return types.ClientConnectionsResponse{}, err
+		return nil, err
 	}
 
 	var paths []string
 	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &paths); err != nil {
-		return types.ClientConnectionsResponse{}, err
+		return nil, err
 	}
 
-	connPathsRes := types.NewClientConnectionsResponse(clientID, paths, res.Proof, res.Height)
+	connPathsRes := types.NewQueryClientConnectionsResponse(clientID, paths, res.Proof, res.Height)
 	return connPathsRes, nil
 }
 

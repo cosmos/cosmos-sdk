@@ -46,9 +46,6 @@ var (
 	NewMsgConnectionOpenTry          = types.NewMsgConnectionOpenTry
 	NewMsgConnectionOpenAck          = types.NewMsgConnectionOpenAck
 	NewMsgConnectionOpenConfirm      = types.NewMsgConnectionOpenConfirm
-	NewConnectionResponse            = types.NewConnectionResponse
-	NewClientConnectionsResponse     = types.NewClientConnectionsResponse
-	NewQueryClientConnectionsParams  = types.NewQueryClientConnectionsParams
 	GetCompatibleVersions            = types.GetCompatibleVersions
 	LatestVersion                    = types.LatestVersion
 	PickVersion                      = types.PickVersion
@@ -66,18 +63,15 @@ var (
 )
 
 type (
-	Keeper                       = keeper.Keeper
-	End                          = types.ConnectionEnd
-	State                        = types.State
-	Counterparty                 = types.Counterparty
-	ClientKeeper                 = types.ClientKeeper
-	MsgConnectionOpenInit        = types.MsgConnectionOpenInit
-	MsgConnectionOpenTry         = types.MsgConnectionOpenTry
-	MsgConnectionOpenAck         = types.MsgConnectionOpenAck
-	MsgConnectionOpenConfirm     = types.MsgConnectionOpenConfirm
-	Response                     = types.ConnectionResponse
-	ClientConnectionsResponse    = types.ClientConnectionsResponse
-	QueryClientConnectionsParams = types.QueryClientConnectionsParams
-	GenesisState                 = types.GenesisState
-	Paths                        = types.ConnectionPaths
+	Keeper                   = keeper.Keeper
+	End                      = types.ConnectionEnd
+	State                    = types.State
+	Counterparty             = types.Counterparty
+	ClientKeeper             = types.ClientKeeper
+	MsgConnectionOpenInit    = types.MsgConnectionOpenInit
+	MsgConnectionOpenTry     = types.MsgConnectionOpenTry
+	MsgConnectionOpenAck     = types.MsgConnectionOpenAck
+	MsgConnectionOpenConfirm = types.MsgConnectionOpenConfirm
+	GenesisState             = types.GenesisState
+	Paths                    = types.ConnectionPaths
 )

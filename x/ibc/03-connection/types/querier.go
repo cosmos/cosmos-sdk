@@ -20,10 +20,11 @@ const (
 func NewQueryConnectionResponse(
 	connectionID string, connection ConnectionEnd, proof *merkle.Proof, height int64,
 ) *QueryConnectionResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connectionID), "/"))
 	return &QueryConnectionResponse{
-		Connection:  connection,
-		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connectionID), "/")),
+		Connection:  &connection,
+		Proof:       &commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:   &path,
 		ProofHeight: uint64(height),
 	}
 }
@@ -47,10 +48,11 @@ func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
 func NewQueryClientConnectionsResponse(
 	clientID string, connectionPaths []string, proof *merkle.Proof, height int64,
 ) *QueryClientConnectionsResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.ClientConnectionsPath(clientID), "/"))
 	return &QueryClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
-		Proof:           commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:       commitmenttypes.NewMerklePath(strings.Split(host.ClientConnectionsPath(clientID), "/")),
+		Proof:           &commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:       &path,
 		ProofHeight:     uint64(height),
 	}
 }

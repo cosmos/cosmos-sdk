@@ -37,15 +37,15 @@ func QuerierConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 
 // QuerierClientConnections defines the sdk.Querier to query the client connections
 func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryClientConnectionsParams
+	var request types.QueryClientConnectionsRequest
 
-	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+	if err := k.cdc.UnmarshalJSON(req.Data, &request); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	clientConnectionPaths, found := k.GetClientConnectionPaths(ctx, params.ClientID)
+	clientConnectionPaths, found := k.GetClientConnectionPaths(ctx, request.ClientID)
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, params.ClientID)
+		return nil, sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, request.ClientID)
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(clientConnectionPaths)

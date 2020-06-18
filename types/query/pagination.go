@@ -14,14 +14,21 @@ const defaultLimit = 100
 // provided PageRequest. onResult should be used to do actual unmarshaling.
 //
 // Ex:
+//  func (q BaseKeeper) QuerySome(c context.Context, req *types.QuerySomeRequest)
+// 			(*types.QuerySomeResponse, error) {
 //		prefixStore := prefix.NewStore(store, someRequestParam)
 //		var results []Result
-//		pageRes, err := query.Paginate(accountStore, req.Page, func(key []byte, value []byte) error {
+//		pageRes, err := query.Paginate(prefixStore, req.Page, func(key []byte, value []byte) error {
 //			var result Result
 //			err := Unmarshal(value, &balance)
+//			...
 //			results = append(results, result)
 //			...
 //		})
+//		...
+//
+//		return &types.QuerySomeResponse{Results: results, Res: pageRes}, nil
+//  }
 func Paginate(
 	prefixStore types.KVStore,
 	req *PageRequest,
@@ -79,10 +86,10 @@ func Paginate(
 	for ; iterator.Valid(); iterator.Next() {
 		count++
 
-		//nolint:gocritic
 		if count <= offset {
 			continue
-		} else if count <= end {
+		}
+		if count <= end {
 			err := onResult(iterator.Key(), iterator.Value())
 			if err != nil {
 				return nil, err

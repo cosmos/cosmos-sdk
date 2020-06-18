@@ -3,7 +3,7 @@ package tendermint
 import (
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -22,6 +22,7 @@ func CheckMisbehaviourAndUpdateState(
 	misbehaviour clientexported.Misbehaviour,
 	height uint64, // height at which the consensus state was loaded
 	currentTimestamp time.Time,
+	consensusParams *abci.ConsensusParams,
 ) (clientexported.ClientState, error) {
 
 	// cast the interface to specific types before checking for misbehaviour
@@ -47,9 +48,9 @@ func CheckMisbehaviourAndUpdateState(
 	}
 
 	if err := checkMisbehaviour(
-		tmClientState, tmConsensusState, tmEvidence, height, currentTimestamp,
+		tmClientState, tmConsensusState, tmEvidence, height, currentTimestamp, consensusParams,
 	); err != nil {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+		return nil, err
 	}
 
 	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
@@ -59,8 +60,32 @@ func CheckMisbehaviourAndUpdateState(
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func checkMisbehaviour(
 	clientState types.ClientState, consensusState types.ConsensusState, evidence types.Evidence,
-	height uint64, currentTimestamp time.Time,
+	height uint64, currentTimestamp time.Time, consensusParams *abci.ConsensusParams,
 ) error {
+	// calculate the age of the misbehaviour evidence
+	infractionHeight := evidence.GetHeight()
+	infractionTime := evidence.GetTime()
+	ageDuration := currentTimestamp.Sub(infractionTime)
+	ageBlocks := height - uint64(infractionHeight)
+
+	// Reject misbehaviour if the age is too old. Evidence is considered stale
+	// if the difference in time and number of blocks is greater than the allowed
+	// parameters defined.
+	//
+	// NOTE: The first condition is a safety check as the consensus params cannot
+	// be nil since the previous param values will be used in case they can't be
+	// retreived. If they are not set during initialization, Tendermint will always
+	// use the default values.
+	if consensusParams != nil &&
+		consensusParams.Evidence != nil &&
+		ageDuration > consensusParams.Evidence.MaxAgeDuration &&
+		ageBlocks > uint64(consensusParams.Evidence.MaxAgeNumBlocks) {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
+			"age duration (%s) and age blocks (%d) are greater than max consensus params for duration (%s) and block (%d)",
+			ageDuration, ageBlocks, consensusParams.Evidence.MaxAgeDuration, consensusParams.Evidence.MaxAgeNumBlocks,
+		)
+	}
+
 	// check if provided height matches the headers' height
 	if height > uint64(evidence.GetHeight()) {
 		return sdkerrors.Wrapf(
@@ -81,21 +106,18 @@ func checkMisbehaviour(
 		)
 	}
 
-	// TODO: Evidence must be within trusting period
-	// Blocked on https://github.com/cosmos/ics/issues/379
-
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
-		evidence.Header1.Commit, lite.DefaultTrustLevel,
+		evidence.Header1.Commit, clientState.TrustLevel,
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
-		evidence.Header2.Commit, lite.DefaultTrustLevel,
+		evidence.Header2.Commit, clientState.TrustLevel,
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
 	}

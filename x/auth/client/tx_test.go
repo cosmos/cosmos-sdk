@@ -205,6 +205,28 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
+func TestPrepareTxBuilder(t *testing.T) {
+	cdc := makeCodec()
+
+	encodingConfig := simappparams.MakeEncodingConfig()
+	sdk.RegisterCodec(encodingConfig.Amino)
+
+	txGen := encodingConfig.TxGenerator
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxGenerator(txGen)
+
+	bldr := authtypes.NewTxBuilder(
+		authtypes.DefaultTxEncoder(cdc), 1, 1,
+		200000, 1.1, false, "test-chain",
+		"test-builder", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
+		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))})
+
+	bldr, err := PrepareTxBuilder(bldr, clientCtx)
+	require.NoError(t, err)
+	require.Equal(t, 1, bldr.AccountNumber())
+	require.Equal(t, 1, bldr.Sequence())
+}
+
 func writeToNewTempFile(t *testing.T, data string) *os.File {
 	fp, err := ioutil.TempFile(os.TempDir(), "client_tx_test")
 	require.NoError(t, err)

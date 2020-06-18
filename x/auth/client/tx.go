@@ -331,7 +331,9 @@ func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 // PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (authtypes.TxBuilder, error) {
 	from := clientCtx.GetFromAddress()
-
+	if from == nil {
+		return authtypes.TxBuilder{}, fmt.Errorf("unable to fetch from address from clientCtx")
+	}
 	accGetter := clientCtx.AccountRetriever
 	if err := accGetter.EnsureExists(clientCtx, from); err != nil {
 		return txBldr, err

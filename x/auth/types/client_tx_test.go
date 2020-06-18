@@ -21,10 +21,14 @@ func TestTxEncoder(t *testing.T) {
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	stdTx := authtypes.NewStdTx([]sdk.Msg{nil}, fee, []authtypes.StdSignature{}, "foomemo")
 
 	// Encode transaction
 	txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
 	require.NoError(t, err)
 	require.NotNil(t, txBytes)
+
+	tx, err := clientCtx.TxGenerator.TxDecoder()(txBytes)
+	require.NoError(t, err)
+	require.Equal(t, []sdk.Msg{nil}, tx.GetMsgs())
 }

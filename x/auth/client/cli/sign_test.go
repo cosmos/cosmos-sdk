@@ -53,7 +53,6 @@ func TestGetSignCommand(t *testing.T) {
 
 	clientCtx = clientCtx.WithTxGenerator(encodingConfig.TxGenerator).WithChainID("test").WithKeyring(kr).WithFrom(from)
 
-	cmd := GetSignCommand(clientCtx)
 	txGen := clientCtx.TxGenerator
 
 	// Build a test transaction

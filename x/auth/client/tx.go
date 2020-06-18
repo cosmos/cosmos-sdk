@@ -340,7 +340,7 @@ func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (aut
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
 	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
-		num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(clientCtx, from)
+		num, seq, err := accGetter.GetAccountNumberSequence(clientCtx, from)
 		if err != nil {
 			return txBldr, err
 		}

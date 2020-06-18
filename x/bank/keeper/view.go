@@ -5,8 +5,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,8 +23,6 @@ type ViewKeeper interface {
 
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	QueryAllBalances(ctx sdk.Context, addr sdk.AccAddress,
-		pageReq *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
@@ -69,31 +65,6 @@ func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk
 	})
 
 	return balances.Sort()
-}
-
-// GetAllBalancesNew returns all the account balances for the given account address.
-func (k BaseViewKeeper) QueryAllBalances(ctx sdk.Context, addr sdk.AccAddress,
-	pageReq *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
-	balances := sdk.NewCoins()
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
-
-	res, err := query.Paginate(accountStore, pageReq, func(key []byte, value []byte) error {
-		var result sdk.Coin
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
-		if err != nil {
-			return err
-		}
-		balances = append(balances, result)
-		return nil
-	})
-
-	if err != nil {
-		return sdk.NewCoins(), nil, err
-	}
-
-	return balances.Sort(), res, nil
 }
 
 // GetBalance returns the balance of a specific denomination for a given account

@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -38,15 +40,32 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if len(req.Address) == 0 {
+	addr := req.Address
+	if len(addr) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	balances, res, err := q.QueryAllBalances(ctx, req.Address, req.Req)
+
+	balances := sdk.NewCoins()
+	store := ctx.KVStore(q.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+
+	res, err := query.Paginate(accountStore, req.Req, func(key []byte, value []byte) error {
+		var result sdk.Coin
+		err := q.cdc.UnmarshalBinaryBare(value, &result)
+		if err != nil {
+			return err
+		}
+		balances = append(balances, result)
+		return nil
+	})
+
 	if err != nil {
-		return nil, err
+		return &types.QueryAllBalancesResponse{}, err
 	}
+
 	return &types.QueryAllBalancesResponse{Balances: balances, Res: res}, nil
 }
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -19,17 +19,7 @@ const (
 	flagDenom = "denom"
 )
 
-// ---------------------------------------------------------------------------
-// Deprecated
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ---------------------------------------------------------------------------
-
-// GetQueryCmd returns the parent querying command for the bank module.
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the bank module",
@@ -39,73 +29,44 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetBalancesCmd(cdc),
-		GetCmdQueryTotalSupply(cdc),
+		GetBalancesCmd(clientCtx),
+		GetCmdQueryTotalSupply(clientCtx),
 	)
 
 	return cmd
 }
 
-// GetAccountCmd returns a CLI command handler that facilitates querying for a
-// single or all account balances by address.
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
+func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "balances [address]",
 		Short: "Query for account balances by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			queryClient := types.NewQueryClient(clientCtx.Init())
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			var (
-				params interface{}
-				result interface{}
-				route  string
-			)
-
 			denom := viper.GetString(flagDenom)
+
 			if denom == "" {
-				params = types.NewQueryAllBalancesRequest(addr)
-				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllBalances)
-			} else {
-				params = types.NewQueryBalanceRequest(addr, denom)
-				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
+				params := types.NewQueryAllBalancesRequest(addr)
+				res, err := queryClient.AllBalances(context.Background(), params)
+				if err != nil {
+					return err
+				}
+				return clientCtx.PrintOutput(res.Balances)
+
 			}
 
-			bz, err := cdc.MarshalJSON(params)
-			if err != nil {
-				return fmt.Errorf("failed to marshal params: %w", err)
-			}
-
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			params := types.NewQueryBalanceRequest(addr, denom)
+			res, err := queryClient.Balance(context.Background(), params)
 			if err != nil {
 				return err
 			}
-
-			if denom == "" {
-				var balances sdk.Coins
-				if err := cdc.UnmarshalJSON(res, &balances); err != nil {
-					return err
-				}
-
-				result = balances
-			} else {
-				var balance sdk.Coin
-				if err := cdc.UnmarshalJSON(res, &balance); err != nil {
-					return err
-				}
-
-				result = balance
-			}
-
-			return clientCtx.PrintOutput(result)
+			return clientCtx.PrintOutput(res.Balance)
 		},
 	}
 
@@ -114,9 +75,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 	return flags.GetCommands(cmd)[0]
 }
 
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func GetCmdQueryTotalSupply(cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryTotalSupply(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total [denom]",
 		Args:  cobra.MaximumNArgs(1),
@@ -135,13 +94,21 @@ $ %s query %s total stake
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			queryClient := types.NewQueryClient(clientCtx.Init())
 
 			if len(args) == 0 {
-				return queryTotalSupply(clientCtx, cdc)
+				res, err := queryClient.TotalSupply(context.Background(), &types.QueryTotalSupplyRequest{})
+				if err != nil {
+					return err
+				}
+				return clientCtx.PrintOutput(res.Supply)
 			}
 
-			return querySupplyOf(clientCtx, cdc, args[0])
+			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: args[0]})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintOutput(res.Amount)
 		},
 	}
 

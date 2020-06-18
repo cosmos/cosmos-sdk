@@ -1,10 +1,12 @@
 // +build cli_test
 
-package cli
+package cli_test
 
 import (
 	"context"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/tests/cli"
 
 	"google.golang.org/grpc"
 
@@ -16,7 +18,7 @@ import (
 
 func TestCliQueryConn(t *testing.T) {
 	t.Parallel()
-	f := NewFixtures(t)
+	f := cli.NewFixtures(t)
 
 	// start simd server
 	proc := f.SDStart()
@@ -31,7 +33,7 @@ func TestCliQueryConn(t *testing.T) {
 
 func TestGRPCProxy(t *testing.T) {
 	t.Parallel()
-	f := NewFixtures(t)
+	f := cli.NewFixtures(t)
 
 	// start simd server
 	proc := f.SDStart()

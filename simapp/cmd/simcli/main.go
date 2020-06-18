@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -13,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -23,11 +24,11 @@ import (
 )
 
 var (
-	appCodec, cdc = simapp.MakeCodecs()
+	encodingConfig = simapp.MakeEncodingConfig()
 )
 
 func init() {
-	authclient.Codec = appCodec
+	authclient.Codec = encodingConfig.Marshaler
 }
 
 func main() {
@@ -60,8 +61,8 @@ func main() {
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		client.ConfigCmd(simapp.DefaultCLIHome),
-		queryCmd(cdc),
-		txCmd(cdc),
+		queryCmd(encodingConfig),
+		txCmd(encodingConfig),
 		flags.LineBreak,
 		flags.LineBreak,
 		keys.Commands(),
@@ -79,7 +80,7 @@ func main() {
 	}
 }
 
-func queryCmd(cdc *codec.Codec) *cobra.Command {
+func queryCmd(config simappparams.EncodingConfig) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -88,6 +89,8 @@ func queryCmd(cdc *codec.Codec) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
+
+	cdc := config.Amino
 
 	queryCmd.AddCommand(
 		authcmd.GetAccountCmd(cdc),
@@ -102,14 +105,14 @@ func queryCmd(cdc *codec.Codec) *cobra.Command {
 	// add modules' query commands
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.
-		WithJSONMarshaler(appCodec).
+		WithJSONMarshaler(config.Marshaler).
 		WithCodec(cdc)
 	simapp.ModuleBasics.AddQueryCommands(queryCmd, clientCtx)
 
 	return queryCmd
 }
 
-func txCmd(cdc *codec.Codec) *cobra.Command {
+func txCmd(config simappparams.EncodingConfig) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -118,24 +121,25 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	cdc := config.Amino
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.
-		WithJSONMarshaler(appCodec).
-		WithTxGenerator(types.StdTxGenerator{Cdc: cdc}).
-		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
+		WithJSONMarshaler(config.Marshaler).
+		WithTxGenerator(config.TxGenerator).
+		WithAccountRetriever(types.NewAccountRetriever(config.Marshaler)).
 		WithCodec(cdc)
 
 	txCmd.AddCommand(
 		bankcmd.NewSendTxCmd(clientCtx),
 		flags.LineBreak,
-		authcmd.GetSignCommand(cdc),
+		authcmd.GetSignCommand(clientCtx),
 		authcmd.GetSignBatchCommand(cdc),
-		authcmd.GetMultiSignCommand(cdc),
-		authcmd.GetValidateSignaturesCommand(cdc),
+		authcmd.GetMultiSignCommand(clientCtx),
+		authcmd.GetValidateSignaturesCommand(clientCtx),
 		flags.LineBreak,
-		authcmd.GetBroadcastCommand(cdc),
-		authcmd.GetEncodeCommand(cdc),
-		authcmd.GetDecodeCommand(cdc),
+		authcmd.GetBroadcastCommand(clientCtx),
+		authcmd.GetEncodeCommand(clientCtx),
+		authcmd.GetDecodeCommand(clientCtx),
 		flags.LineBreak,
 	)
 

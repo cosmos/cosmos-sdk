@@ -38,7 +38,7 @@ func TestPagination(t *testing.T) {
 	var balances sdk.Coins
 	const (
 		numBalances     = 235
-		maxLimit        = 100
+		defaultLimit    = 100
 		overLimit       = 101
 		underLimit      = 10
 		lastPageRecords = 35
@@ -54,23 +54,23 @@ func TestPagination(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
 
-	t.Log("verify empty page request results a max of maxLimit records")
+	t.Log("verify empty page request results a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.Equal(t, res.Res.Total, uint64(0))
-	require.NotNil(t, res.Res.NextKey)
-	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.Equal(t, res.Res.Total, uint64(numBalances))
+	require.Nil(t, res.Res.NextKey)
+	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 
-	t.Log("verify page request with limit > maxLimit, returns only `maxLimit` records")
+	t.Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
 	pageReq = &query.PageRequest{Limit: overLimit}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Res.Total, uint64(0))
 	require.NotNil(t, res.Res.NextKey)
-	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.LessOrEqual(t, res.Balances.Len(), overLimit)
 
 	t.Log("verify paginate with custom limit and countTotal true")
 	pageReq = &query.PageRequest{Limit: underLimit, CountTotal: true}
@@ -82,61 +82,61 @@ func TestPagination(t *testing.T) {
 	require.Equal(t, res.Res.Total, uint64(numBalances))
 
 	t.Log("verify paginate with custom limit and countTotal false")
-	pageReq = &query.PageRequest{Limit: maxLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.Equal(t, res.Balances.Len(), maxLimit)
+	require.Equal(t, res.Balances.Len(), defaultLimit)
 	require.NotNil(t, res.Res.NextKey)
 	require.Equal(t, res.Res.Total, uint64(0))
 
 	t.Log("verify paginate with custom limit, key and countTotal false")
-	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: maxLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.Equal(t, res.Balances.Len(), maxLimit)
+	require.Equal(t, res.Balances.Len(), defaultLimit)
 	require.NotNil(t, res.Res.NextKey)
 	require.Equal(t, res.Res.Total, uint64(0))
 
 	t.Log("verify paginate for last page, results in records less than max limit")
-	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: maxLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 	require.Equal(t, res.Balances.Len(), lastPageRecords)
 	require.Nil(t, res.Res.NextKey)
 	require.Equal(t, res.Res.Total, uint64(0))
 
 	t.Log("verify paginate with offset and limit")
-	pageReq = &query.PageRequest{Offset: 200, Limit: maxLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Offset: 200, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 	require.Equal(t, res.Balances.Len(), lastPageRecords)
 	require.Nil(t, res.Res.NextKey)
 	require.Equal(t, res.Res.Total, uint64(0))
 
 	t.Log("verify paginate with offset and limit")
-	pageReq = &query.PageRequest{Offset: 100, Limit: maxLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Offset: 100, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.LessOrEqual(t, res.Balances.Len(), maxLimit)
+	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 	require.NotNil(t, res.Res.NextKey)
 	require.Equal(t, res.Res.Total, uint64(0))
 
 	t.Log("verify paginate with offset and key - error")
-	pageReq = &query.PageRequest{Key: res.Res.NextKey, Offset: 100, Limit: maxLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Key: res.Res.NextKey, Offset: 100, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "invalid request, either offset or key is expected, got both")
 
 	t.Log("verify paginate with offset greater than total results")
-	pageReq = &query.PageRequest{Offset: 300, Limit: maxLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Offset: 300, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)

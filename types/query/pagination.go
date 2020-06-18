@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// maxLimit is the maximum allowed `limit` for queries
-// if the `limit` is not supplied, paginate will use `maxLimit` as default `limit`
-const maxLimit = 100
+// defaultLimit is the default `limit` for queries
+// if the `limit` is not supplied, paginate will use `defaultLimit`
+const defaultLimit = 100
 
 // Paginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling.
@@ -35,8 +35,11 @@ func Paginate(
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
 	}
 
-	if limit == 0 || limit > maxLimit {
-		limit = maxLimit
+	if limit == 0 {
+		limit = defaultLimit
+
+		// count total results when the limit is zero/not supplied
+		req.CountTotal = true
 	}
 
 	if len(key) != 0 {

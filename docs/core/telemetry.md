@@ -4,7 +4,7 @@ order: 8
 
 # Telemetry
 
-The Cosmos SDK enables operators and developers gain insight into the performance and behavior of
+The Cosmos SDK enables operators and developers to gain insight into the performance and behavior of
 their application through the use of the `telemetry` package. The Cosmos SDK currently supports
 enabling in-memory and prometheus as telemetry sinks. This allows the ability to query for and scrape
 metrics from a single exposed API endpoint -- `/metrics?format={text|prometheus}`, the default being

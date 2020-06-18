@@ -299,9 +299,9 @@ func TestCLIEncode(t *testing.T) {
 	// Run the encode command
 	success, base64Encoded, _ := testutil.TxEncode(f, jsonTxFile.Name())
 	require.True(t, success)
-
+	trimmedBase64 := strings.Trim(base64Encoded, "\"\n")
 	// Check that the transaction decodes as expected
-	success, stdout, stderr = testutil.TxDecode(f, base64Encoded)
+	success, stdout, stderr = testutil.TxDecode(f, trimmedBase64)
 	decodedTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }

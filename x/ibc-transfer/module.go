@@ -74,12 +74,12 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // GetTxCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetTxCmd(clientCtx.Codec)
+	return cli.NewTxCmd(clientCtx)
 }
 
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx.Codec, types.QuerierRoute)
+	return cli.GetQueryCmd(clientCtx)
 }
 
 // RegisterInterfaceTypes registers module concrete types into protobuf Any.

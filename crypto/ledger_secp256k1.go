@@ -48,6 +48,8 @@ type (
 	}
 )
 
+var _ tmcrypto.PrivKey = PrivKeyLedgerSecp256k1{}
+
 // NewPrivKeyLedgerSecp256k1Unsafe will generate a new key and store the public key for later use.
 //
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
@@ -152,6 +154,8 @@ func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
 	return cdc.MustMarshalBinaryBare(pkl)
 }
 
+func (pkl PrivKeyLedgerSecp256k1) Type() string { return "PrivKeyLedgerSecp256k1" }
+
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
 func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
@@ -244,7 +248,7 @@ func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubK
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
+	var compressedPublicKey tmsecp256k1.PubKey
 	copy(compressedPublicKey[:], cmp.SerializeCompressed())
 
 	return compressedPublicKey, nil
@@ -268,7 +272,7 @@ func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string) 
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
+	var compressedPublicKey tmsecp256k1.PubKey
 	copy(compressedPublicKey[:], cmp.SerializeCompressed())
 
 	return compressedPublicKey, addr, nil

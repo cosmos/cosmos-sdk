@@ -278,7 +278,7 @@ func (coord *Coordinator) CreateConnectionOpenAck(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, counterparty.ChainID,
+		counterparty.ChainID, source.ChainID,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
@@ -355,6 +355,10 @@ func (coord *Coordinator) CreateChannelInit(
 ) (TestChannel, TestChannel, error) {
 	sourceChannel := connection.AddTestChannel()
 	counterpartyChannel := counterpartyConnection.AddTestChannel()
+
+	// create port capability
+	source.CreatePortCapability(sourceChannel.PortID)
+	coord.IncrementTime()
 
 	// initialize channel on source
 	if err := source.ChannelOpenInit(sourceChannel, counterpartyChannel, order, connection.ID); err != nil {

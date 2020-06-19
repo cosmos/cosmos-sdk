@@ -1,8 +1,11 @@
 package testing
 
+import (
+	"strconv"
+)
+
 var (
 	ChannelIDPrefix = "channelid"
-	PortIDPrefix    = "portid"
 )
 
 // TestConnections is a testing helper struct to keep track of the connectionID, source clientID,
@@ -26,8 +29,9 @@ func (conn *TestConnection) AddTestChannel() TestChannel {
 
 // NextTestChannel returns the next test channel to be created on this connection
 func (conn *TestConnection) NextTestChannel() TestChannel {
-	portID := PortIDPrefix + string(len(conn.Channels))
-	channelID := ChannelIDPrefix + string(len(conn.Channels))
+	// TODO: pass as arg so application developers can provide their port
+	portID := "transfer"
+	channelID := ChannelIDPrefix + strconv.Itoa(len(conn.Channels))
 	return TestChannel{
 		PortID:    portID,
 		ChannelID: channelID,

@@ -35,7 +35,7 @@ const (
 	MaxClockDrift   time.Duration = time.Second * 10
 
 	ConnectionVersion = "1.0.0"
-	ChannelVersion    = "1.0.0"
+	ChannelVersion    = "ics20-1"
 
 	ConnectionIDPrefix = "connectionid"
 
@@ -164,14 +164,12 @@ func (chain *TestChain) NextBlock() {
 	// set the last header to the current header
 	chain.LastHeader = chain.CreateTMClientHeader()
 
-	fmt.Printf("height %d hash %v\n", chain.CurrentHeader.Height+1, chain.App.LastCommitID().Hash)
 	// increment the current header
 	chain.CurrentHeader = abci.Header{
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		Time:    chain.CurrentHeader.Time,
 	}
-	fmt.Printf("header app hash %v\n", chain.CurrentHeader.AppHash)
 
 	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 
@@ -329,14 +327,10 @@ func (chain *TestChain) ConnectionOpenTry(
 
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
-	fmt.Printf("proofInit %v\n", proofInit)
 
-	self, _ := counterparty.App.IBCKeeper.ClientKeeper.GetSelfConsensusState(counterparty.GetContext(), proofHeight+1)
-	fmt.Printf("self root %X height %d\n", self.GetRoot(), proofHeight)
-
+	// retreive consensus state to provide proof for
 	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
 	require.True(chain.t, found)
-	fmt.Printf("actual constate %v\n", consState)
 
 	consensusHeight := consState.GetHeight()
 	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
@@ -361,14 +355,18 @@ func (chain *TestChain) ConnectionOpenAck(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
-	consensusHeight := uint64(counterparty.App.LastBlockHeight())
-	consensusKey := prefixedClientKey(connection.ClientID, host.KeyConsensusState(consensusHeight))
+	// retreive consensus state to provide proof for
+	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
+	require.True(chain.t, found)
+
+	consensusHeight := consState.GetHeight()
+	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
 		connection.ID,
 		proofTry, proofConsensus,
-		proofHeight, consensusHeight,
+		proofHeight+1, consensusHeight,
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -385,10 +383,27 @@ func (chain *TestChain) ConnectionOpenConfirm(
 
 	msg := connectiontypes.NewMsgConnectionOpenConfirm(
 		connection.ID,
-		proof, height,
+		proof, height+1,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
+}
+
+// CreatePortCapability
+// TODO: allow application developers to bind their port
+func (chain *TestChain) CreatePortCapability(portID string) {
+	// check if the portId is already binded, if not bind it
+	_, ok := chain.App.ScopedIBCKeeper.GetCapability(chain.GetContext(), host.PortPath(portID))
+	if !ok {
+		cap, err := chain.App.ScopedIBCKeeper.NewCapability(chain.GetContext(), host.PortPath(portID))
+		require.NoError(chain.t, err)
+		err = chain.App.ScopedTransferKeeper.ClaimCapability(chain.GetContext(), cap, host.PortPath(portID))
+		require.NoError(chain.t, err)
+	}
+
+	chain.App.Commit()
+
+	chain.NextBlock()
 }
 
 // ChannelOpenInit will construct and execute a MsgChannelOpenInit.

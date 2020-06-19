@@ -740,7 +740,7 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 // SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
 // in the underlying key-value pairs.
 // The keys are sorted before the proofs are computed.
-func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*SimpleProof, keys []string) {
+func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*merkle.Proof, keys []string) {
 	sm := newSimpleMap()
 	for k, v := range m {
 		sm.Set(k, v)

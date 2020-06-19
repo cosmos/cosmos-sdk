@@ -3,8 +3,10 @@ package rootmulti
 import (
 	"bytes"
 
+	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/kv"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // Merkle tree from a map.
@@ -89,5 +91,5 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 	for i, kvp := range kvs {
 		kvsH[i] = KVPair(kvp).Bytes()
 	}
-	return SimpleHashFromByteSlices(kvsH)
+	return merkle.SimpleHashFromByteSlices(kvsH)
 }

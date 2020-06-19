@@ -93,7 +93,7 @@ func (coord *Coordinator) CommitNBlocks(chainID string, n uint64) {
 // any error occurs. The clientID's and TestConnections are returned for both chains.
 func (coord *Coordinator) Setup(
 	sourceID, counterpartyID string,
-) (string, string, TestConnection, TestConnection) {
+) (string, string, *TestConnection, *TestConnection) {
 	sourceClient, counterpartyClient, sourceConn, counterpartyConn := coord.CreateClientsAndConnections(sourceID, counterpartyID, clientexported.Tendermint)
 
 	// channels can be referenced through the returned connections
@@ -170,7 +170,7 @@ func (coord *Coordinator) UpdateClient(
 func (coord *Coordinator) CreateConnection(
 	sourceID, counterpartyID,
 	clientID, counterpartyClientID string,
-) (TestConnection, TestConnection, error) {
+) (*TestConnection, *TestConnection, error) {
 	source := coord.GetChain(sourceID)
 	counterparty := coord.GetChain(counterpartyID)
 
@@ -200,7 +200,7 @@ func (coord *Coordinator) CreateConnection(
 func (coord *Coordinator) CreateClientsAndConnections(
 	sourceID, counterpartyID string,
 	clientType clientexported.ClientType,
-) (string, string, TestConnection, TestConnection) {
+) (string, string, *TestConnection, *TestConnection) {
 	sourceClient, err := coord.CreateClient(sourceID, counterpartyID, clientType)
 	require.NoError(coord.t, err)
 	counterpartyClient, err := coord.CreateClient(counterpartyID, sourceID, clientType)
@@ -220,7 +220,7 @@ func (coord *Coordinator) CreateClientsAndConnections(
 func (coord *Coordinator) CreateConnectionInit(
 	source, counterparty *TestChain,
 	clientID, counterpartyClientID string,
-) (TestConnection, TestConnection, error) {
+) (*TestConnection, *TestConnection, error) {
 	sourceConnection := source.NewTestConnection(clientID, counterpartyClientID)
 	counterpartyConnection := counterparty.NewTestConnection(counterpartyClientID, clientID)
 
@@ -245,7 +245,7 @@ func (coord *Coordinator) CreateConnectionInit(
 // using the OpenTry handshake call.
 func (coord *Coordinator) CreateConnectionOpenTry(
 	source, counterparty *TestChain,
-	sourceConnection, counterpartyConnection TestConnection,
+	sourceConnection, counterpartyConnection *TestConnection,
 ) error {
 	// initialize TRYOPEN connection on source
 	if err := source.ConnectionOpenTry(counterparty, sourceConnection, counterpartyConnection); err != nil {
@@ -268,7 +268,7 @@ func (coord *Coordinator) CreateConnectionOpenTry(
 // using the OpenAck handshake call.
 func (coord *Coordinator) CreateConnectionOpenAck(
 	source, counterparty *TestChain,
-	sourceConnection, counterpartyConnection TestConnection,
+	sourceConnection, counterpartyConnection *TestConnection,
 ) error {
 	// set OPEN connection on source using OpenAck
 	if err := source.ConnectionOpenAck(counterparty, sourceConnection, counterpartyConnection); err != nil {
@@ -291,7 +291,7 @@ func (coord *Coordinator) CreateConnectionOpenAck(
 // using the OpenConfirm handshake call.
 func (coord *Coordinator) CreateConnectionOpenConfirm(
 	source, counterparty *TestChain,
-	sourceConnection, counterpartyConnection TestConnection,
+	sourceConnection, counterpartyConnection *TestConnection,
 ) error {
 	if err := source.ConnectionOpenConfirm(counterparty, sourceConnection, counterpartyConnection); err != nil {
 		return err
@@ -317,7 +317,7 @@ func (coord *Coordinator) CreateConnectionOpenConfirm(
 // application state.
 func (coord *Coordinator) CreateChannel(
 	sourceID, counterpartyID string,
-	connection, counterpartyConnection TestConnection,
+	connection, counterpartyConnection *TestConnection,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
 	source := coord.GetChain(sourceID)
@@ -350,7 +350,7 @@ func (coord *Coordinator) CreateChannel(
 // application state.
 func (coord *Coordinator) CreateChannelInit(
 	source, counterparty *TestChain,
-	connection, counterpartyConnection TestConnection,
+	connection, counterpartyConnection *TestConnection,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
 	sourceChannel := connection.AddTestChannel()
@@ -369,7 +369,7 @@ func (coord *Coordinator) CreateChannelInit(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty.ChainID, source.ChainID,
-		connection.CounterpartyClientID, clientexported.Tendermint,
+		counterpartyConnection.ClientID, clientexported.Tendermint,
 	); err != nil {
 		return sourceChannel, counterpartyChannel, err
 	}
@@ -382,12 +382,12 @@ func (coord *Coordinator) CreateChannelInit(
 func (coord *Coordinator) CreateChannelOpenTry(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
-	connection TestConnection,
+	connection *TestConnection,
 	order channeltypes.Order,
 ) error {
 
 	// initialize channel on source
-	if err := source.ChannelOpenTry(sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
+	if err := source.ChannelOpenTry(counterparty, sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
 		return err
 	}
 	coord.IncrementTime()
@@ -408,11 +408,11 @@ func (coord *Coordinator) CreateChannelOpenTry(
 func (coord *Coordinator) CreateChannelOpenAck(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
-	connection TestConnection,
+	connection *TestConnection,
 ) error {
 
 	// initialize channel on source
-	if err := source.ChannelOpenAck(sourceChannel, counterpartyChannel, connection.ID); err != nil {
+	if err := source.ChannelOpenAck(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
 	coord.IncrementTime()
@@ -433,11 +433,11 @@ func (coord *Coordinator) CreateChannelOpenAck(
 func (coord *Coordinator) CreateChannelOpenConfirm(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
-	connection TestConnection,
+	connection *TestConnection,
 ) error {
 
 	// initialize channel on source
-	if err := source.ChannelOpenConfirm(sourceChannel, counterpartyChannel, connection.ID); err != nil {
+	if err := source.ChannelOpenConfirm(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
 	coord.IncrementTime()

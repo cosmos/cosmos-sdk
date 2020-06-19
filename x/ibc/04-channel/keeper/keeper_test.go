@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -16,9 +16,9 @@ type KeeperTestSuite struct {
 
 	coordinator *ibctesting.Coordinator
 
-	// ID's of testing chains used for convience and readability
-	chainA string
-	chainB string
+	// testing chains used for convience and readability
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
 }
 
 // TestKeeperTestSuite runs all the tests within this package.
@@ -29,79 +29,90 @@ func TestKeeperTestSuite(t *testing.T) {
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-	suite.chainA = ibctesting.GetChainID(0)
-	suite.chainB = ibctesting.GetChainID(1)
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }
 
 // TestSetChannel create clients and connections on both chains. It tests for the non-existence
 // and existence of a channel in INIT on chainA.
 func (suite *KeeperTestSuite) TestSetChannel() {
-	chainA := suite.coordinator.GetChain(suite.chainA)
-	chainB := suite.coordinator.GetChain(suite.chainB)
-
 	// create client and connections on both chains
-	_, _, connA, connB := suite.coordinator.CreateClientsAndConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+	_, _, connA, connB := suite.coordinator.CreateClientsAndConnections(suite.chainA.ChainID, suite.chainB.ChainID, clientexported.Tendermint)
 
 	// check for channel to be created on chainB
 	channelA := connA.NextTestChannel()
-	_, found := chainA.App.IBCKeeper.ChannelKeeper.GetChannel(chainA.GetContext(), channelA.PortID, channelA.ChannelID)
+	_, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ChannelID)
 	suite.False(found)
 
 	// init channel
-	channelA, channelB, err := suite.coordinator.CreateChannelInit(chainA, chainB, connA, connB, channeltypes.ORDERED)
+	channelA, channelB, err := suite.coordinator.CreateChannelInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
 	suite.NoError(err)
 
-	storedChannel, found := chainA.App.IBCKeeper.ChannelKeeper.GetChannel(chainA.GetContext(), channelA.PortID, channelA.ChannelID)
-	expectedCounterparty := channeltypes.NewCounterparty(channelB.PortID, channelB.ChannelID)
+	storedChannel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ChannelID)
+	expectedCounterparty := types.NewCounterparty(channelB.PortID, channelB.ChannelID)
 
 	suite.True(found)
-	suite.Equal(channeltypes.INIT, storedChannel.State)
-	suite.Equal(channeltypes.ORDERED, storedChannel.Ordering)
+	suite.Equal(types.INIT, storedChannel.State)
+	suite.Equal(types.ORDERED, storedChannel.Ordering)
 	suite.Equal(expectedCounterparty, storedChannel.Counterparty)
 }
 
-/*
 // TestGetAllChannels creates multiple channels on chain A through various connections
 // and tests their retrieval. 2 channels are on connA0 and 1 channel is on connA1
 func (suite KeeperTestSuite) TestGetAllChannels() {
-	clientA, clientB, connA0, connB0 := suite.coordinator.Setup(suite.chainA, suite.chainB)
+	clientA, clientB, connA0, connB0 := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
+	// channel0 on first connection on chainA
 	testchannel0 := connA0.Channels[0]
+	counterparty0 := types.Counterparty{
+		PortID:    connB0.Channels[0].PortID,
+		ChannelID: connB0.Channels[0].ChannelID,
+	}
 
-	channel2, _, err := suite.cooordinator.CreateChannel(connA0, connB0)
+	// channel1 is second channel on first connection on chainA
+	testchannel1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA0, connB0, types.ORDERED)
+	suite.NoError(err)
+	counterparty1 := types.Counterparty{
+		PortID:    connB0.Channels[1].PortID,
+		ChannelID: connB0.Channels[1].ChannelID,
+	}
+
+	connA1, connB1, err := suite.coordinator.CreateConnection(suite.chainA.ChainID, suite.chainB.ChainID, clientA, clientB)
 	suite.NoError(err)
 
-	connA1, connB1, err := suite.coordinator.CreateConnection(clientA, clientB)
-	suite.No(err)
-
-	channel3, _, err := suite.coordinator.CreateChannelInit(connA1, connB1)
+	// channel2 is on a second connection on chainA
+	testchannel2, _, err := suite.coordinator.CreateChannelInit(suite.chainA, suite.chainB, connA1, connB1, types.UNORDERED)
+	counterparty2 := types.Counterparty{
+		PortID:    connB1.Channels[0].PortID,
+		ChannelID: connB1.Channels[0].ChannelID,
+	}
 
 	channel0 := types.NewChannel(
-		types.OPEN, types.ORDERED,
+		types.OPEN, types.UNORDERED,
 		counterparty0, []string{connB0.ID}, ibctesting.ChannelVersion,
 	)
-	channel2 := types.NewChannel(
+	channel1 := types.NewChannel(
 		types.OPEN, types.ORDERED,
-		counterparty2, []string{connB0.ID}, ibctesting.ChannelVersion,
+		counterparty1, []string{connB0.ID}, ibctesting.ChannelVersion,
 	)
-	channel3 := types.NewChannel(
-		types.INIT, types.ORDERED,
-		counterparty3, []string{connB1.ID}, ibctesting.ChannelVersion,
+	channel2 := types.NewChannel(
+		types.INIT, types.UNORDERED,
+		counterparty2, []string{connB1.ID}, ibctesting.ChannelVersion,
 	)
 
 	expChannels := []types.IdentifiedChannel{
 		types.NewIdentifiedChannel(testchannel0.PortID, testchannel0.ChannelID, channel0),
-		types.NewIdentifiedChannel(testchannel1.PortID, testChannel1.ChannelID, channel1),
-		types.NewIdentifiedChannel(testchannel2.PortID, testChannel2.ChannelID, channel2),
+		types.NewIdentifiedChannel(testchannel1.PortID, testchannel1.ChannelID, channel1),
+		types.NewIdentifiedChannel(testchannel2.PortID, testchannel2.ChannelID, channel2),
 	}
 
-	chainA := suite.coordinator.GetChain(suite.chainA)
-	ctxA := chainA.GetContext()
+	ctxA := suite.chainA.GetContext()
 
 	channels := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllChannels(ctxA)
 	suite.Require().Len(channels, len(expChannels))
 	suite.Require().Equal(expChannels, channels)
 }
 
+/*
 // TestGetAllSequences sets all packet sequences for two different channels on chain A and
 // tests their retrieval.
 func (suite KeeperTestSuite) TestGetAllSequences() {

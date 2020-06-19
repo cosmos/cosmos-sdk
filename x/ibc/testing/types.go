@@ -31,7 +31,8 @@ func (conn *TestConnection) AddTestChannel() TestChannel {
 func (conn *TestConnection) NextTestChannel() TestChannel {
 	// TODO: pass as arg so application developers can provide their port
 	portID := "transfer"
-	channelID := ChannelIDPrefix + strconv.Itoa(len(conn.Channels))
+	// TODO: come up with better naming scheme, will colide with mulitple client creations
+	channelID := conn.ID + strconv.Itoa(len(conn.Channels))
 	return TestChannel{
 		PortID:    portID,
 		ChannelID: channelID,

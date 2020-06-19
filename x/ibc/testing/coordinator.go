@@ -13,6 +13,8 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
+// TODO: change funcs to take in test chain pointer instead of id string
+
 var (
 	ChainIDPrefix   = "testchain"
 	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)

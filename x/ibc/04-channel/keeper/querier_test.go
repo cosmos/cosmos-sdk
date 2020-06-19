@@ -37,32 +37,33 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				suite.SetupTest()
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
-				// create channels on different connections
-				suite.chainA.createConnection(
-					testConnectionIDA, testConnectionIDB,
-					testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
+				// create first connection/channel
+				clientA, clientB, connA, _ := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
+				channelA0 := connA.Channels[0]
+
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort1, testChannel1,
-						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-							types.OPEN, types.ORDERED, testConnectionIDA,
+					types.NewIdentifiedChannel(,
+						channelA0.ChannelID,
+						channelA0.PortID,
+						suite.chainA.GetChannel(channelA0),
 						),
 					),
 				)
 
-				suite.chainA.createConnection(
-					testConnectionIDB, testConnectionIDA,
-					testClientIDB, testClientIDA,
-					connection.OPEN,
-				)
+				// create second connection
+				connA1, connB1 := suite.chainA.CreateConnection(suite.chainA.ChainID, suite.chainB.ChainID, clientA, clientB)
+
+				// create second channel on second connection
+				suite.chainA.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA1, connB1, types.ORDERED)
+
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort2, testChannel2,
-						suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1,
-							types.OPEN, types.ORDERED, testConnectionIDB,
-						),
+					types.NewIdentifiedChannel(,
+						channelA1.ChannelID,
+						channelA1.PortID,
+						suite.chainA.GetChannel(channelA1),
 					),
 				)
+
 
 				// set expected result
 				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)

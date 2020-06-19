@@ -10,7 +10,6 @@ To have your module interact over IBC you must: bind to a port(s), define your o
 
 ## Pre-requisites Readings
 
-- [Interchain Standards](https://github.com/cosmos/ics) {prereq}
 - [IBC SDK specification](../../modules/ibc) {prereq}
 
 ## Core IBC Overview

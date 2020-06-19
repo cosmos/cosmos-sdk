@@ -29,6 +29,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
+
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 

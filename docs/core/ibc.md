@@ -1,24 +1,33 @@
-## Application Writer's Guide
+<!--
+order: 9
+-->
 
-This document serves as a guide for developers who want to write their own IBC applications. Due to the modular design of the IBC protocol, IBC application developers do not need to concern themselves with the low-level details of clients, connections, and proof verification. Nevertheless a brief explanation of the lower levels of the stack is given so that application developers may have a high-level understanding of the IBC protocol. Then the document goes into detail on the abstraction layer most relevant for application developers (channels and ports), and describes how to define your own custom packets, and IBCModule callbacks.
+# IBC
 
-To have your module interact over IBC you must: bind to a port(s), define your own packet data (and optionally acknowledgement) structs as well as how to encode/decode them, and implement the IBCModule interface. Below is a more detailed explanation of how to write an IBC application module correctly.
+This document serves as a guide for developers who want to write their own IBC applications. Due to the modular design of the IBC protocol, IBC application developers do not need to concern themselves with the low-level details of clients, connections, and proof verification. Nevertheless a brief explanation of the lower levels of the stack is given so that application developers may have a high-level understanding of the IBC protocol. Then the document goes into detail on the abstraction layer most relevant for application developers (channels and ports), and describes how to define your own custom packets, and `IBCModule` callbacks.
 
-### Core IBC Overview
+To have your module interact over IBC you must: bind to a port(s), define your own packet data (and optionally acknowledgement) structs as well as how to encode/decode them, and implement the `IBCModule` interface. Below is a more detailed explanation of how to write an IBC application module correctly.
 
-**[Clients](../02-client)**: IBC Clients are light clients (identified by a unique client-id) that track the consensus states of other blockchains, along with the proof spec necessary to properly verify proofs against the client's consensus state. A client may be associated with any number of connections.
+## Pre-requisites Readings
 
-**[Connections](../03-connection)**: Connections encapsulate two ConnectionEnd objects on two seperate blockchains. Each ConnectionEnd is associated with a client of the other blockchain (ie counterparty blockchain). The connection handshake is responsible for verifying that the light clients on each chain are correct for their respective counterparties. Connections, once established, are responsible for facilitation all cross-chain verification of IBC state. A connection may be associated with any number of channels.
+- [Interchain Standards](https://github.com/cosmos/ics) {prereq}
+- [IBC SDK specification](../../x/ibc/spec/README.md) {prereq}
 
-**[Proofs](../23-commitment) and [Paths](../24-host)**: In IBC, blockchains do not directly pass messages to each other over the network. Instead, to communicate, a blockchain will commit some state to a specifically defined path reserved for a specific message type and a specific counterparty (perhaps storing a specific connectionEnd as part of a handshake, or a packet intended to be relayed to a module on the counterparty chain). A relayer process monitors for updates to these paths, and will relay messages, by submitting the data stored under the path along with a proof to the counterparty chain. The paths that all IBC implementations must use for committing IBC messages is defined in [ICS-24](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements) and the proof format that all implementations must be able to produce and verify is defined in this [ICS-23 implementation](https://github.com/confio/ics23).
+## Core IBC Overview
 
-**[Capabilities](../../capability)**: IBC is intended to work in execution environements where modules do not necessarily trust each other. Thus IBC must authenticate module actions on ports and channels so that only modules with the appropriate permissions can use them. This is accomplished using dynamic capabilities ([ADR](../../../docs/architecture/adr-003-dynamic-capability-store.md)). Upon binding to a port or creating a channel for a module, IBC will return a dynamic capability that the module must claim in order to use that port or channel. This prevents other modules from using that port or channel since they will not own the appropriate capability. For information on the object capability model, look [here](../../../docs/core/ocap.md)
+**[Clients](../../x/ibc/02-client)**: IBC Clients are light clients (identified by a unique client-id) that track the consensus states of other blockchains, along with the proof spec necessary to properly verify proofs against the client's consensus state. A client may be associated with any number of connections.
+
+**[Connections](../../x/ibc/03-connection)**: Connections encapsulate two `ConnectionEnd` objects on two seperate blockchains. Each `ConnectionEnd` is associated with a client of the other blockchain (ie counterparty blockchain). The connection handshake is responsible for verifying that the light clients on each chain are correct for their respective counterparties. Connections, once established, are responsible for facilitation all cross-chain verification of IBC state. A connection may be associated with any number of channels.
+
+**[Proofs](../../x/ibc/23-commitment) and [Paths](../../x/ibc/24-host)**: In IBC, blockchains do not directly pass messages to each other over the network. Instead, to communicate, a blockchain will commit some state to a specifically defined path reserved for a specific message type and a specific counterparty (perhaps storing a specific connectionEnd as part of a handshake, or a packet intended to be relayed to a module on the counterparty chain). A relayer process monitors for updates to these paths, and will relay messages, by submitting the data stored under the path along with a proof to the counterparty chain. The paths that all IBC implementations must use for committing IBC messages is defined in [ICS-24](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements) and the proof format that all implementations must be able to produce and verify is defined in this [ICS-23 implementation](https://github.com/confio/ics23).
+
+**[Capabilities](../../x/capability)**: IBC is intended to work in execution environements where modules do not necessarily trust each other. Thus IBC must authenticate module actions on ports and channels so that only modules with the appropriate permissions can use them. This is accomplished using dynamic capabilities ([ADR](../architecture/adr-003-dynamic-capability-store.md)). Upon binding to a port or creating a channel for a module, IBC will return a dynamic capability that the module must claim in order to use that port or channel. This prevents other modules from using that port or channel since they will not own the appropriate capability. For information on the object capability model, look [here](./ocap.md)
 
 ### Channels and Ports
 
 While the above is useful background information, IBC modules do not need to interact at all with these lower-level abstractions. The relevant abstraction layer for IBC application developers is that of channels and ports. IBC applications should be written as self-contained **modules**. A module on one blockchain can thus communicate with other modules on other blockchains by sending, receiving and acknowledging packets through channels, which are uniquely identified by the `(channelID, portID)` tuple. A useful analogy is to consider IBC modules as internet applications on a computer. A channel can then be conceptualized as an IP connection, with the IBC portID being analogous to a IP port and the IBC channelID being analogous to an IP address. Thus, a single instance of an IBC module may communicate on the same port with any number of other modules and and IBC will correctly route all packets to the relevant module using the (channelID, portID tuple). An IBC module may also communicate with another IBC module over multiple ports, with each `(portID<->portID)` packet stream being sent on a different unique channel.
 
-#### [Ports](../05-port) 
+#### [Ports](../../x/ibc/05-port)
 
 An IBC module may bind to any number of ports. Each port must be identified by a unique `portID`. Since IBC is designed to be secure with mutually-distrusted modules operating on the same ledger, binding a port will return a dynamic object capability. In order to take action on a particular port (eg open a channel with its portID), a module must provide the dynamic object capability to the IBC handler. This prevents a malicious module from opening channels with ports it does not own. Thus, IBC modules are responsible for claiming the capability that is returned on `BindPort`. Currently, ports must be bound on app initialization. A module may bind to ports in `InitGenesis` like so:
 
@@ -27,25 +36,25 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, state types.GenesisState
     // ... other initialization logic
 
     // Only try to bind to port if it is not already bound, since we may already own
-	// port capability from capability InitGenesis
-	if !isBound(ctx, state.PortID) {
-		// module binds to desired ports on InitChain
-		// and claims returned capabilities
+    // port capability from capability InitGenesis
+    if !isBound(ctx, state.PortID) {
+        // module binds to desired ports on InitChain
+        // and claims returned capabilities
         cap1 := keeper.IBCPortKeeper.BindPort(ctx, port1)
         cap2 := keeper.IBCPortKeeper.BindPort(ctx, port2)
-		cap3 := keeper.IBCPortKeeper.BindPort(ctx, port3)
+        cap3 := keeper.IBCPortKeeper.BindPort(ctx, port3)
 
         // NOTE: The module's scoped capability keeper must be private
         keeper.scopedKeeper.ClaimCapability(cap1)
         keeper.scopedKeeper.ClaimCapability(cap2)
         keeper.scopedKeeper.ClaimCapability(cap3)
     }
-    
+
     // ... more initialization logic
 }
 ```
 
-#### [Channels](../04-channel)
+#### [Channels](../../x/ibc/04-channel)
 
 An IBC channel can be established between 2 IBC ports. Currently, a port is exclusively owned by a single module. IBC packets are sent over channels. Just as IP packets contain the destination IP address and IP port as well as the the source IP address and source IP port, IBC packets will contain the destination portID and channelID as well as the source portID and channelID. This enables IBC to correctly route packets to the destination module, while also allowing modules receiving packets to know the sender module.
 
@@ -53,7 +62,7 @@ A channel may be `ORDERED`, in which case, packets from a sending module must be
 
 Modules may choose which channels they wish to communicate over with, thus IBC expects modules to implement callbacks that are called during the channel handshake. These callbacks may do custom channel initialization logic, if any return an error, the channel handshake will fail. Thus, by returning errors on callbacks, modules can programatically reject and accept channels.
 
-The SDK expects all IBC modules to implement the interface `IBCModule`, defined [here](../05-port/types/module.go). This interface contains all of the callbacks IBC expects modules to implement. This section will describe the callbacks that are called during channel handshake execution.
+The SDK expects all IBC modules to implement the interface `IBCModule`, defined [here](../../x/ibc/05-port/types/module.go). This interface contains all of the callbacks IBC expects modules to implement. This section will describe the callbacks that are called during channel handshake execution.
 
 The channel handshake is a 4 step handshake. Briefly, if chainA wants to open a channel with chainB using an already established connection, chainA will do `ChanOpenInit`, chainB will do `chanOpenTry`, chainA will do `ChanOpenAck`, chainB will do `chanOpenConfirm`. If all this happens successfully, the channel will be open on both sides. At each step in the handshake, the module associated with the `channelEnd` will have it's callback executed for that step of the handshake. So on `chanOpenInit`, the module on chainA will have its callback `OnChanOpenInit` executed.
 
@@ -170,7 +179,7 @@ Modules communicate with each other by sending packets over IBC channels. As men
 
 Modules send custom application data to each other inside the `Data []byte` field of the IBC packet. Thus, packet data is completely opaque to IBC handlers. It is incumbent on a sender module to encode their application-specific packet information into the `Data` field of packets, and the receiver module to decode that `Data` back to the original application data.
 
-Thus, modules connected by a channel must agree on what application data they are sending over the channel, as well as how they will encode/decode it. This process is not specified by IBC as it is up to each application module to determine how to implement this agreement. However, for most applications this will happen as a version negotiation during the channel handshake. While more complex version negotiation is possible to implement inside the channel opening handshake, a very simple version negotation is implemented in the [ibc-transfer module](../../ibc-transfer/module.go).
+Thus, modules connected by a channel must agree on what application data they are sending over the channel, as well as how they will encode/decode it. This process is not specified by IBC as it is up to each application module to determine how to implement this agreement. However, for most applications this will happen as a version negotiation during the channel handshake. While more complex version negotiation is possible to implement inside the channel opening handshake, a very simple version negotation is implemented in the [ibc-transfer module](../../x/ibc-transfer/module.go).
 
 Thus a module must define its a custom packet data structure, along with a well-defined way to encode and decode it to and from `[]byte`.
 
@@ -198,7 +207,7 @@ packet.Data = data
 IBCChannelKeeper.SendPacket(ctx, packet)
 ```
 
-A module receiving a packet must decode the PacketData into a structure it expects so that it can act on it.
+A module receiving a packet must decode the `PacketData` into a structure it expects so that it can act on it.
 
 ```go
 // Receiving custom application packet data (in OnRecvPacket)
@@ -267,7 +276,7 @@ OnRecvPacket(
 
 __**Important Note**__: `OnRecvPacket` should **only** return an error if we want the entire receive packet execution (including the IBC handling) to be reverted. This will allow the packet to be replayed in the case that some mistake in the relaying caused the packet processing to fail.
 
-If there was some application-level error happened while processing the packet data, in most cases, we will not want the packet processing to revert. Instead, we may want to encode this failure into the acknowledgement and finish processing the packet. This will ensure the packet cannot be replayed, and will also allow the sender module to potentially remediate the situation upon receiving the acknowledgement. An example of this technique is in the ibc-transfer module's [OnRecvPacket](../../ibc-transfer/module.go).
+If there was some application-level error happened while processing the packet data, in most cases, we will not want the packet processing to revert. Instead, we may want to encode this failure into the acknowledgement and finish processing the packet. This will ensure the packet cannot be replayed, and will also allow the sender module to potentially remediate the situation upon receiving the acknowledgement. An example of this technique is in the ibc-transfer module's [OnRecvPacket](../../x/ibc-transfer/module.go).
 
 **Acknowledging Packets**: If the receiving module writes an ackowledgement while processing the packet, a relayer can relay back the acknowledgement to the sender module. The sender module can then process the acknowledgement using the `OnAcknowledgementPacket` callback. The contents of the acknowledgement is entirely upto the modules on the channel (just like the packet data); however, it may often contain information on whether the packet was successfully received and processed along with some additional data that could be useful for remediation if the packet processing failed.
 
@@ -301,7 +310,7 @@ OnTimeoutPacket(
 
 #### Registering Module with the IBC Router
 
-IBC needs to know which module is bound to which port so that it can route packets to the appropriate module and call the appropriate callback. The port to module name mapping is handled by IBC's portKeeper. However, the mapping from module name to the relevant callbacks is accomplished by the [port.Router](../05-port/types/router.go).
+IBC needs to know which module is bound to which port so that it can route packets to the appropriate module and call the appropriate callback. The port to module name mapping is handled by IBC's portKeeper. However, the mapping from module name to the relevant callbacks is accomplished by the [port.Router](../../x/ibc//05-port/types/router.go).
 
 As mentioned above, modules must implement the IBC module interface (which contains both channel handshake callbacks and packet handling callbacks). The concrete implementation of this interface must be registered with the module name as a route on the IBC Router.
 

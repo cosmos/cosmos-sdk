@@ -274,9 +274,11 @@ OnRecvPacket(
 }
 ```
 
-__**Important Note**__: `OnRecvPacket` should **only** return an error if we want the entire receive packet execution (including the IBC handling) to be reverted. This will allow the packet to be replayed in the case that some mistake in the relaying caused the packet processing to fail.
+::: warning
+`OnRecvPacket` should **only** return an error if we want the entire receive packet execution (including the IBC handling) to be reverted. This will allow the packet to be replayed in the case that some mistake in the relaying caused the packet processing to fail.
 
 If there was some application-level error happened while processing the packet data, in most cases, we will not want the packet processing to revert. Instead, we may want to encode this failure into the acknowledgement and finish processing the packet. This will ensure the packet cannot be replayed, and will also allow the sender module to potentially remediate the situation upon receiving the acknowledgement. An example of this technique is in the ibc-transfer module's [OnRecvPacket](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer/module.go).
+:::
 
 **Acknowledging Packets**: If the receiving module writes an ackowledgement while processing the packet, a relayer can relay back the acknowledgement to the sender module. The sender module can then process the acknowledgement using the `OnAcknowledgementPacket` callback. The contents of the acknowledgement is entirely upto the modules on the channel (just like the packet data); however, it may often contain information on whether the packet was successfully received and processed along with some additional data that could be useful for remediation if the packet processing failed.
 

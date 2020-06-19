@@ -1,4 +1,4 @@
-package merkle
+package rootmulti
 
 import (
 	"bytes"

@@ -21,21 +21,21 @@ func init() {
 // codec.
 func RegisterCrypto(cdc *codec.Codec) {
 	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
-	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
+	cdc.RegisterConcrete(ed25519.PubKey{},
 		ed25519.PubKeyAminoName, nil)
-	cdc.RegisterConcrete(sr25519.PubKeySr25519{},
+	cdc.RegisterConcrete(sr25519.PubKey{},
 		sr25519.PubKeyAminoName, nil)
-	cdc.RegisterConcrete(secp256k1.PubKeySecp256k1{},
+	cdc.RegisterConcrete(secp256k1.PubKey{},
 		secp256k1.PubKeyAminoName, nil)
 	cdc.RegisterConcrete(multisig.PubKeyMultisigThreshold{},
 		multisig.PubKeyAminoRoute, nil)
 
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
-	cdc.RegisterConcrete(ed25519.PrivKeyEd25519{},
+	cdc.RegisterConcrete(ed25519.PrivKey{},
 		ed25519.PrivKeyAminoName, nil)
-	cdc.RegisterConcrete(sr25519.PrivKeySr25519{},
+	cdc.RegisterConcrete(sr25519.PrivKey{},
 		sr25519.PrivKeyAminoName, nil)
-	cdc.RegisterConcrete(secp256k1.PrivKeySecp256k1{},
+	cdc.RegisterConcrete(secp256k1.PrivKey{},
 		secp256k1.PrivKeyAminoName, nil)
 }
 

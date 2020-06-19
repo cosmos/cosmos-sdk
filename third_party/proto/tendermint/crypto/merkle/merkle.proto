@@ -1,8 +1,8 @@
 syntax = "proto3";
 package tendermint.crypto.merkle;
 
-// For more information on gogo.proto, see:
-// https://github.com/gogo/protobuf/blob/master/extensions.md
+option go_package = "github.com/tendermint/tendermint/proto/crypto/merkle";
+
 import "gogoproto/gogo.proto";
 
 message Proof {

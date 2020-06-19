@@ -118,12 +118,12 @@ func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 // ProofOp implements ProofOperator interface and converts a CommitmentOp
 // into a merkle.ProofOp format that can later be decoded by CommitmentOpDecoder
 // back into a CommitmentOp for proof verification
-func (op CommitmentOp) ProofOp() merkle.ProofOp {
+func (op CommitmentOp) ProofOp() tmmerkle.ProofOp {
 	bz, err := op.Proof.Marshal()
 	if err != nil {
 		panic(err.Error())
 	}
-	return merkle.ProofOp{
+	return tmmerkle.ProofOp{
 		Type: op.Type,
 		Key:  op.Key,
 		Data: bz,

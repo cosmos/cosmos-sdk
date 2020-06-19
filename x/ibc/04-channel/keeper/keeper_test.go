@@ -112,14 +112,13 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	suite.Require().Equal(expChannels, channels)
 }
 
-/*
 // TestGetAllSequences sets all packet sequences for two different channels on chain A and
 // tests their retrieval.
 func (suite KeeperTestSuite) TestGetAllSequences() {
-	connA, connB, err := suite.coordinator.Setup(suite.chainA, suite.chainB)
+	_, _, connA, connB := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
 	channelA0 := connA.Channels[0]
 
-	channelA1, _, err := suite.cooordinator.CreateChannel(connA, connB)
+	channelA1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
 	suite.NoError(err)
 
 	seq1 := types.NewPacketSequence(channelA0.PortID, channelA0.ChannelID, 1)
@@ -129,13 +128,12 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 	// seq1 should be overwritten by seq2
 	expSeqs := []types.PacketSequence{seq2, seq3}
 
-	chainA := suite.coordinator.GetChain(suite.chainA)
-	ctxA := chainA.GetContext()
+	ctxA := suite.chainA.GetContext()
 
-	for _, seq := range expSeqs {
-		chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, seq.PortID, seq.ChannelID, seq.Sequence)
-		chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctxA, seq.PortID, seq.ChannelID, seq.Sequence)
-		chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(ctxA, seq.PortID, seq.ChannelID, seq.Sequence)
+	for _, seq := range []types.PacketSequence{seq1, seq2, seq3} {
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, seq.PortID, seq.ChannelID, seq.Sequence)
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctxA, seq.PortID, seq.ChannelID, seq.Sequence)
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(ctxA, seq.PortID, seq.ChannelID, seq.Sequence)
 	}
 
 	sendSeqs := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllPacketSendSeqs(ctxA)
@@ -150,83 +148,113 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 	suite.Equal(expSeqs, ackSeqs)
 }
 
-// TestGetAllCommitmentsAcks
+// TestGetAllCommitmentsAcks creates a set of acks and packet commitments on two different
+// channels on chain A and tests their retrieval.
 func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {
-	ack1 := types.NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("ack"))
-	ack2 := types.NewPacketAckCommitment(testPort1, testChannel1, 2, []byte("ack"))
-	comm1 := types.NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("hash"))
-	comm2 := types.NewPacketAckCommitment(testPort1, testChannel1, 2, []byte("hash"))
+	_, _, connA, connB := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
+	channelA0 := connA.Channels[0]
 
-	expAcks := []types.PacketAckCommitment{ack1, ack2}
-	expCommitments := []types.PacketAckCommitment{comm1, comm2}
+	channelA1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
+	suite.NoError(err)
 
-	ctx := suite.chainB.GetContext()
+	// channel 0 acks
+	ack1 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ChannelID, 1, []byte("ack"))
+	ack2 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ChannelID, 2, []byte("ack"))
 
-	for i := 0; i < 2; i++ {
-		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, expAcks[i].PortID, expAcks[i].ChannelID, expAcks[i].Sequence, expAcks[i].Hash)
-		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, expCommitments[i].PortID, expCommitments[i].ChannelID, expCommitments[i].Sequence, expCommitments[i].Hash)
+	// duplicate ack
+	ack2dup := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ChannelID, 2, []byte("ack"))
+
+	// channel 1 acks
+	ack3 := types.NewPacketAckCommitment(channelA1.PortID, channelA1.ChannelID, 1, []byte("ack"))
+
+	// channel 0 packet commitments
+	comm1 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ChannelID, 1, []byte("hash"))
+	comm2 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ChannelID, 2, []byte("hash"))
+
+	// channel 1 packet commitments
+	comm3 := types.NewPacketAckCommitment(channelA1.PortID, channelA1.ChannelID, 1, []byte("hash"))
+	comm4 := types.NewPacketAckCommitment(channelA1.PortID, channelA1.ChannelID, 2, []byte("hash"))
+
+	expAcks := []types.PacketAckCommitment{ack1, ack2, ack3}
+	expCommitments := []types.PacketAckCommitment{comm1, comm2, comm3, comm4}
+
+	ctxA := suite.chainA.GetContext()
+
+	// set acknowledgements
+	for _, ack := range []types.PacketAckCommitment{ack1, ack2, ack2dup, ack3} {
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, ack.PortID, ack.ChannelID, ack.Sequence, ack.Hash)
 	}
 
-	acks := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketAcks(ctx)
-	commitments := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitments(ctx)
-	suite.Require().Len(acks, 2)
-	suite.Require().Len(commitments, 2)
+	// set packet commitments
+	for _, comm := range expCommitments {
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctxA, comm.PortID, comm.ChannelID, comm.Sequence, comm.Hash)
+	}
+
+	acks := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllPacketAcks(ctxA)
+	commitments := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitments(ctxA)
+	suite.Require().Len(acks, len(expAcks))
+	suite.Require().Len(commitments, len(expCommitments))
 
 	suite.Require().Equal(expAcks, acks)
 	suite.Require().Equal(expCommitments, commitments)
 }
 
-// TestSetSequence
+// TestSetSequence verifies that the keeper correctly sets the sequence counters.
 func (suite *KeeperTestSuite) TestSetSequence() {
-	ctx := suite.chainB.GetContext()
-	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
-	suite.False(found)
+	_, _, connA, _ := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
+	channelA := connA.Channels[0]
 
-	_, found = suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(ctx, testPort1, testChannel1)
-	suite.False(found)
+	ctxA := suite.chainA.GetContext()
+	one := uint64(1)
 
-	_, found = suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceAck(ctx, testPort1, testChannel1)
-	suite.False(found)
+	// initialized channel has next send seq of 1
+	seq, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctxA, channelA.PortID, channelA.ChannelID)
+	suite.True(found)
+	suite.Equal(one, seq)
+
+	// initialized channel has next seq recv of 1
+	seq, found = suite.chainA.App.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(ctxA, channelA.PortID, channelA.ChannelID)
+	suite.True(found)
+	suite.Equal(one, seq)
+
+	// initialized channel has next seq ack of
+	seq, found = suite.chainA.App.IBCKeeper.ChannelKeeper.GetNextSequenceAck(ctxA, channelA.PortID, channelA.ChannelID)
+	suite.True(found)
+	suite.Equal(one, seq)
 
 	nextSeqSend, nextSeqRecv, nextSeqAck := uint64(10), uint64(10), uint64(10)
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, testPort1, testChannel1, nextSeqSend)
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctx, testPort1, testChannel1, nextSeqRecv)
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(ctx, testPort1, testChannel1, nextSeqAck)
+	suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, channelA.PortID, channelA.ChannelID, nextSeqSend)
+	suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctxA, channelA.PortID, channelA.ChannelID, nextSeqRecv)
+	suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(ctxA, channelA.PortID, channelA.ChannelID, nextSeqAck)
 
-	storedNextSeqSend, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
+	storedNextSeqSend, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctxA, channelA.PortID, channelA.ChannelID)
 	suite.True(found)
 	suite.Equal(nextSeqSend, storedNextSeqSend)
 
-	storedNextSeqRecv, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
+	storedNextSeqRecv, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctxA, channelA.PortID, channelA.ChannelID)
 	suite.True(found)
 	suite.Equal(nextSeqRecv, storedNextSeqRecv)
 
-	storedNextSeqAck, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceAck(ctx, testPort1, testChannel1)
+	storedNextSeqAck, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetNextSequenceAck(ctxA, channelA.PortID, channelA.ChannelID)
 	suite.True(found)
 	suite.Equal(nextSeqAck, storedNextSeqAck)
 }
 
-// TestPacketCommitment does basic verification of setting and getting of packet commitments within
-// the Channel Keeper.
-func (suite *KeeperTestSuite) TestPacketCommitment() {
-	ctx := suite.chainB.GetContext()
-	seq := uint64(10)
-
-	storedCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
-	suite.Nil(storedCommitment)
-
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, testPort1, testChannel1, seq, testPacketCommitment)
-
-	storedCommitment = suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
-	suite.Equal(testPacketCommitment, storedCommitment)
-}
-
-// TestGetAllPacketCommitmentsAtChannel verifies that iterator returns all stored packet commitments
-// for a specific channel.
+// TestGetAllPacketCommitmentsAtChannel verifies that the keeper returns all stored packet
+// commitments for a specific channel. The test will store consecutive commitments up to the
+// value of "seq" and then add non-consecutive up to the value of "maxSeq". A final commitment
+// with the value maxSeq + 1 is set on a different channel.
 func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
-	// setup
-	ctx := suite.chainB.GetContext()
+	_, _, connA, connB := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
+	channelA := connA.Channels[0]
+
+	// create second channel
+	channelA1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
+	suite.NoError(err)
+
+	ctxA := suite.chainA.GetContext()
 	expectedSeqs := make(map[uint64]bool)
+	hash := []byte("commitment")
 
 	seq := uint64(15)
 	maxSeq := uint64(25)
@@ -234,61 +262,54 @@ func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
 
 	// create consecutive commitments
 	for i := uint64(1); i < seq; i++ {
-		suite.chainB.storePacketCommitment(ctx, testPort1, testChannel1, i)
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctxA, channelA.PortID, channelA.ChannelID, i, hash)
 		expectedSeqs[i] = true
 	}
 
 	// add non-consecutive commitments
 	for i := seq; i < maxSeq; i += 2 {
-		suite.chainB.storePacketCommitment(ctx, testPort1, testChannel1, i)
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctxA, channelA.PortID, channelA.ChannelID, i, hash)
 		expectedSeqs[i] = true
 	}
 
 	// add sequence on different channel/port
-	suite.chainB.storePacketCommitment(ctx, testPort2, testChannel2, maxSeq+1)
+	suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctxA, channelA1.PortID, channelA1.ChannelID, maxSeq+1, hash)
 
-	commitments := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitmentsAtChannel(ctx, testPort1, testChannel1)
+	commitments := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitmentsAtChannel(ctxA, channelA.PortID, channelA.ChannelID)
 
 	suite.Equal(len(expectedSeqs), len(commitments))
+	// ensure above for loops occurred
 	suite.NotEqual(0, len(commitments))
 
 	// verify that all the packet commitments were stored
 	for _, packet := range commitments {
 		suite.True(expectedSeqs[packet.Sequence])
-		suite.Equal(testPort1, packet.PortID)
-		suite.Equal(testChannel1, packet.ChannelID)
+		suite.Equal(channelA.PortID, packet.PortID)
+		suite.Equal(channelA.ChannelID, packet.ChannelID)
+		suite.Equal(hash, packet.Hash)
 
 		// prevent duplicates from passing checks
 		expectedSeqs[packet.Sequence] = false
 	}
 }
 
+// TestSetPacketAcknowledgement verifies that packet acknowledgements are correctly
+// set in the keeper.
 func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
-	ctx := suite.chainB.GetContext()
+	_, _, connA, _ := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
+	channelA := connA.Channels[0]
+
+	ctxA := suite.chainA.GetContext()
 	seq := uint64(10)
 
-	storedAckHash, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctx, testPort1, testChannel1, seq)
+	storedAckHash, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctxA, channelA.PortID, channelA.ChannelID, seq)
 	suite.False(found)
 	suite.Nil(storedAckHash)
 
 	ackHash := []byte("ackhash")
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, testPort1, testChannel1, seq, ackHash)
+	suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA.PortID, channelA.ChannelID, seq, ackHash)
 
-	storedAckHash, found = suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctx, testPort1, testChannel1, seq)
+	storedAckHash, found = suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctxA, channelA.PortID, channelA.ChannelID, seq)
 	suite.True(found)
 	suite.Equal(ackHash, storedAckHash)
 }
-
-
-// Mocked types
-
-type mockSuccessPacket struct{}
-
-// GetBytes returns the serialised packet data
-func (mp mockSuccessPacket) GetBytes() []byte { return []byte("THIS IS A SUCCESS PACKET") }
-
-type mockFailPacket struct{}
-
-// GetBytes returns the serialised packet data (without timeout)
-func (mp mockFailPacket) GetBytes() []byte { return []byte("THIS IS A FAILURE PACKET") }
-*/

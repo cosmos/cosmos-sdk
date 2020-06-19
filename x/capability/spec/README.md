@@ -1,6 +1,13 @@
-# x/capability
+<!--
+order: 0
+title: Capability Overview
+parent:
+  title: "capability"
+-->
 
-## Abstract
+# `capability`
+
+## Overview
 
 `x/capability` is an implementation of a Cosmos SDK module, per [ADR 003](./../../../docs/architecture/adr-003-dynamic-capability-store.md),
 that allows for provisioning, tracking, and authenticating multi-owner capabilities
@@ -27,7 +34,7 @@ like queriers, REST and CLI handlers, and genesis state.
 ## Initialization
 
 During application initialization, the keeper must be instantiated with a persistent
-store key and an in-memory store key. 
+store key and an in-memory store key.
 
 ```go
 type App struct {
@@ -87,3 +94,8 @@ with which the calling module previously associated it.
 `GetCapability` allows a module to fetch a capability which it has previously
 claimed by name. The module is not allowed to retrieve capabilities which it does
 not own.
+
+## Contents
+
+1. **[Concepts](01_concepts.md)**
+1. **[State](02_state.md)**

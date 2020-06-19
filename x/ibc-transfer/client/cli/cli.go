@@ -5,11 +5,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // GetQueryCmd returns the query commands for IBC fungible token transfer
-func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
+func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	ics20TransferQueryCmd := &cobra.Command{
 		Use:                        "ibc-transfer",
 		Short:                      "IBC fungible token transfer query subcommands",
@@ -19,14 +18,14 @@ func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
 	}
 
 	ics20TransferQueryCmd.AddCommand(flags.GetCommands(
-		GetCmdQueryNextSequence(cdc, queryRoute),
+		GetCmdQueryNextSequence(clientCtx),
 	)...)
 
 	return ics20TransferQueryCmd
 }
 
-// GetTxCmd returns the transaction commands for IBC fungible token transfer
-func GetTxCmd(cdc *codec.Codec) *cobra.Command {
+// NewTxCmd returns the transaction commands for IBC fungible token transfer
+func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	ics20TransferTxCmd := &cobra.Command{
 		Use:                        "ibc-transfer",
 		Short:                      "IBC fungible token transfer transaction subcommands",
@@ -36,7 +35,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	ics20TransferTxCmd.AddCommand(flags.PostCommands(
-		GetTransferTxCmd(cdc),
+		NewTransferTxCmd(clientCtx),
 	)...)
 
 	return ics20TransferTxCmd

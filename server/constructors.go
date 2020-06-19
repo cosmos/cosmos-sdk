@@ -11,13 +11,23 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/server/api"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
+	// Application defines an application interface that wraps abci.Application.
+	// The interface defines the necessary contracts to be implemented in order
+	// to fully bootstrap and start an application.
+	Application interface {
+		abci.Application
+
+		RegisterAPIRoutes(*api.Server)
+	}
+
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DB, io.Writer) abci.Application
+	AppCreator func(log.Logger, dbm.DB, io.Writer) Application
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.

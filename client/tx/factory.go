@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Factory defines a client transaction factory that facilitates generating and
@@ -21,12 +22,18 @@ type Factory struct {
 	sequence           uint64
 	gas                uint64
 	gasAdjustment      float64
-	simulateAndExecute bool
 	chainID            string
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	signMode           signing.SignMode
+	simulateAndExecute bool
 }
+
+const (
+	signModeDirect    = "direct"
+	signModeAminoJSON = "amino-json"
+)
 
 func NewFactoryFromCLI(input io.Reader) Factory {
 	kb, err := keyring.New(
@@ -39,6 +46,15 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		panic(err)
 	}
 
+	signModeStr := viper.GetString(flags.FlagSignMode)
+	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+	switch signModeStr {
+	case signModeDirect:
+		signMode = signing.SignMode_SIGN_MODE_DIRECT
+	case signModeAminoJSON:
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	}
+
 	f := Factory{
 		keybase:            kb,
 		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
@@ -48,6 +64,7 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		simulateAndExecute: flags.GasFlagVar.Simulate,
 		chainID:            viper.GetString(flags.FlagChainID),
 		memo:               viper.GetString(flags.FlagMemo),
+		signMode:           signMode,
 	}
 
 	f = f.WithFees(viper.GetString(flags.FlagFees))

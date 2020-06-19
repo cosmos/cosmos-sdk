@@ -1,9 +1,9 @@
 syntax = "proto3";
 package tendermint.crypto.merkle;
 
-option go_package = "github.com/tendermint/tendermint/proto/crypto/merkle";
-
-import "third_party/proto/gogoproto/gogo.proto";
+// For more information on gogo.proto, see:
+// https://github.com/gogo/protobuf/blob/master/extensions.md
+import "gogoproto/gogo.proto";
 
 message Proof {
   int64          total     = 1;

@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -21,8 +22,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Context implements a typical context created in SDK modules for
-// transaction handling and queries.
+// Context implements a typical context created in SDK modules for transaction
+// handling and queries.
 type Context struct {
 	FromAddress      sdk.AccAddress
 	Client           rpcclient.Client
@@ -34,10 +35,8 @@ type Context struct {
 	OutputFormat     string
 	Height           int64
 	HomeDir          string
-	NodeURI          string
 	From             string
 	BroadcastMode    string
-	Verifier         tmlite.Verifier
 	FromName         string
 	TrustNode        bool
 	UseLedger        bool
@@ -48,6 +47,12 @@ type Context struct {
 	SkipConfirm      bool
 	TxGenerator      TxGenerator
 	AccountRetriever AccountRetriever
+
+	// TODO: API and CLI interfaces are migrating to a single binary (i.e be part of
+	// the same process of the application). We need to groom through these fields
+	// and remove any that no longer make sense.
+	NodeURI  string
+	Verifier tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
@@ -267,6 +272,12 @@ func (ctx Context) WithChainID(chainID string) Context {
 	return ctx
 }
 
+// WithHomeDir returns a copy of the Context with HomeDir set.
+func (ctx Context) WithHomeDir(dir string) Context {
+	ctx.HomeDir = dir
+	return ctx
+}
+
 // WithGenerateOnly returns a copy of the context with updated GenerateOnly value
 func (ctx Context) WithGenerateOnly(generateOnly bool) Context {
 	ctx.GenerateOnly = generateOnly
@@ -311,67 +322,57 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 	return ctx
 }
 
-// Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// PrintOutput outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx Context) Println(toPrint interface{}) error {
-	var (
-		out []byte
-		err error
-	)
+func (ctx Context) PrintOutput(toPrint interface{}) error {
+	// always serialize JSON initially because proto json can't be directly YAML encoded
+	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
+	if err != nil {
+		return err
+	}
 
-	switch ctx.OutputFormat {
-	case "text":
-		out, err = yaml.Marshal(&toPrint)
+	if ctx.OutputFormat == "text" {
+		// handle text format by decoding and re-encoding JSON as YAML
+		var j interface{}
+		err = json.Unmarshal(out, &j)
+		if err != nil {
+			return err
+		}
 
-	case "json":
-		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
-
+		out, err = yaml.Marshal(j)
+		if err != nil {
+			return err
+		}
+	} else if ctx.Indent {
 		// To JSON indent, we re-encode the already encoded JSON given there is no
 		// error. The re-encoded JSON uses the standard library as the initial encoded
 		// JSON should have the correct output produced by ctx.JSONMarshaler.
-		if ctx.Indent && err == nil {
-			out, err = codec.MarshalIndentFromJSON(out)
+		out, err = codec.MarshalIndentFromJSON(out)
+		if err != nil {
+			return err
 		}
 	}
 
+	writer := ctx.Output
+	// default to stdout
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	_, err = writer.Write(out)
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(ctx.Output, "%s\n", out)
-	return err
-}
-
-// PrintOutput prints output while respecting output and indent flags
-// NOTE: pass in marshalled structs that have been unmarshaled
-// because this function will panic on marshaling errors.
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func (ctx Context) PrintOutput(toPrint interface{}) error {
-	var (
-		out []byte
-		err error
-	)
-
-	switch ctx.OutputFormat {
-	case "text":
-		out, err = yaml.Marshal(&toPrint)
-
-	case "json":
-		if ctx.Indent {
-			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
-		} else {
-			out, err = ctx.Codec.MarshalJSON(toPrint)
+	if ctx.OutputFormat != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
 		}
 	}
 
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(out))
 	return nil
 }
 

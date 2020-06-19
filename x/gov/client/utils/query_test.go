@@ -129,25 +129,33 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 		},
 	} {
+
 		tc := tc
+
 		t.Run(tc.description, func(t *testing.T) {
 			var (
 				marshalled = make([]tmtypes.Tx, len(tc.txs))
 				cdc        = newTestCodec()
 			)
+
 			for i := range tc.txs {
 				tx, err := cdc.MarshalBinaryBare(&tc.txs[i])
 				require.NoError(t, err)
 				marshalled[i] = tx
 			}
+
 			cli := TxSearchMock{txs: marshalled}
-			clientCtx := client.Context{}.WithCodec(cdc).WithTrustNode(true).WithClient(cli)
+			clientCtx := client.Context{}.
+				WithJSONMarshaler(cdc).
+				WithCodec(cdc).
+				WithTrustNode(true).
+				WithClient(cli)
 
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)
 			votesData, err := QueryVotesByTxQuery(clientCtx, params)
 			require.NoError(t, err)
 			votes := []types.Vote{}
-			require.NoError(t, clientCtx.Codec.UnmarshalJSON(votesData, &votes))
+			require.NoError(t, clientCtx.JSONMarshaler.UnmarshalJSON(votesData, &votes))
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {
 				require.Equal(t, tc.votes[i], votes[i])

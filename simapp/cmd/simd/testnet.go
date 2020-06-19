@@ -27,9 +27,8 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -46,7 +45,7 @@ var (
 
 // get cmd to initialize all files for tendermint testnet and application
 func testnetCmd(ctx *server.Context, cdc codec.JSONMarshaler,
-	mbm module.BasicManager, genBalIterator bank.GenesisBalancesIterator,
+	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
 ) *cobra.Command {
 
 	cmd := &cobra.Command{
@@ -106,7 +105,7 @@ const nodeDirPerm = 0755
 // Initialize the testnet
 func InitTestnet(
 	cmd *cobra.Command, config *tmconfig.Config, cdc codec.JSONMarshaler,
-	mbm module.BasicManager, genBalIterator bank.GenesisBalancesIterator,
+	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
 	nodeCLIHome, startingIPAddress string, numValidators int,
 ) error {
@@ -121,10 +120,15 @@ func InitTestnet(
 
 	simappConfig := srvconfig.DefaultConfig()
 	simappConfig.MinGasPrices = minGasPrices
+	simappConfig.API.Enable = true
+	simappConfig.Telemetry.Enabled = true
+	simappConfig.Telemetry.PrometheusRetentionTime = 60
+	simappConfig.Telemetry.EnableHostnameLabel = false
+	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", chainID}}
 
 	var (
 		genAccounts []authtypes.GenesisAccount
-		genBalances []bank.Balance
+		genBalances []banktypes.Balance
 		genFiles    []string
 	)
 
@@ -203,8 +207,8 @@ func InitTestnet(
 			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
 		}
 
-		genBalances = append(genBalances, bank.Balance{Address: addr, Coins: coins.Sort()})
-		genAccounts = append(genAccounts, auth.NewBaseAccount(addr, nil, 0, 0))
+		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: coins.Sort()})
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valTokens := sdk.TokensFromConsensusPower(100)
 		msg := stakingtypes.NewMsgCreateValidator(
@@ -216,8 +220,8 @@ func InitTestnet(
 			sdk.OneInt(),
 		)
 
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo)
-		txBldr := auth.NewTxBuilderFromCLI(inBuf).WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
+		tx := authtypes.NewStdTx([]sdk.Msg{msg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
+		txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
 
 		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
 		if err != nil {
@@ -258,25 +262,25 @@ func InitTestnet(
 
 func initGenFiles(
 	cdc codec.JSONMarshaler, mbm module.BasicManager, chainID string,
-	genAccounts []authtypes.GenesisAccount, genBalances []bank.Balance,
+	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
 
 	appGenState := mbm.DefaultGenesis(cdc)
 
 	// set the accounts in the genesis state
-	var authGenState auth.GenesisState
-	cdc.MustUnmarshalJSON(appGenState[auth.ModuleName], &authGenState)
+	var authGenState authtypes.GenesisState
+	cdc.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
 	authGenState.Accounts = genAccounts
-	appGenState[auth.ModuleName] = cdc.MustMarshalJSON(authGenState)
+	appGenState[authtypes.ModuleName] = cdc.MustMarshalJSON(authGenState)
 
 	// set the balances in the genesis state
-	var bankGenState bank.GenesisState
-	cdc.MustUnmarshalJSON(appGenState[bank.ModuleName], &bankGenState)
+	var bankGenState banktypes.GenesisState
+	cdc.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
 	bankGenState.Balances = genBalances
-	appGenState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenState)
+	appGenState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankGenState)
 
 	appGenStateJSON, err := codec.MarshalJSONIndent(cdc, appGenState)
 	if err != nil {
@@ -302,7 +306,7 @@ func collectGenFiles(
 	cdc codec.JSONMarshaler, config *tmconfig.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
-	genBalIterator bank.GenesisBalancesIterator,
+	genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
 
 	var appState json.RawMessage

@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -20,7 +20,7 @@ import (
 // chain.
 func (k Keeper) SendPacket(
 	ctx sdk.Context,
-	channelCap *capability.Capability,
+	channelCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
@@ -201,6 +201,17 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	// check if the packet acknowledgement has been received already for unordered channels
+	if channel.Ordering == types.UNORDERED {
+		_, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+		if found {
+			return nil, sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence (%d) already has been received", packet.GetSequence(),
+			)
+		}
+	}
+
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
@@ -219,7 +230,7 @@ func (k Keeper) RecvPacket(
 // CONTRACT: this function must be called in the IBC handler
 func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 	acknowledgement []byte,
 ) error {
@@ -245,13 +256,6 @@ func (k Keeper) PacketExecuted(
 	}
 
 	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
-		if _, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()); found {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidPacket,
-				"packet sequence (%d) already has been received", packet.GetSequence(),
-			)
-		}
-
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
@@ -402,7 +406,7 @@ func (k Keeper) AcknowledgePacket(
 // CONTRACT: this function must be called in the IBC handler
 func (k Keeper) AcknowledgementExecuted(
 	ctx sdk.Context,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
 	// sanity check
@@ -460,7 +464,7 @@ func (k Keeper) AcknowledgementExecuted(
 // and must be handled at the application level.
 func (k Keeper) CleanupPacket(
 	ctx sdk.Context,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 	proof []byte,
 	proofHeight,

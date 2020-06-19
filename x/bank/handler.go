@@ -1,6 +1,9 @@
 package bank
 
 import (
+	"github.com/armon/go-metrics"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -31,7 +34,7 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 		return nil, types.ErrSendDisabled
 	}
 
-	if k.BlacklistedAddr(msg.ToAddress) {
+	if k.BlockedAddr(msg.ToAddress) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", msg.ToAddress)
 	}
 
@@ -39,6 +42,16 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		for _, a := range msg.Amount {
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", "send"},
+				float32(a.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+			)
+		}
+	}()
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -58,7 +71,7 @@ func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgMultiSen
 	}
 
 	for _, out := range msg.Outputs {
-		if k.BlacklistedAddr(out.Address) {
+		if k.BlockedAddr(out.Address) {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
 		}
 	}

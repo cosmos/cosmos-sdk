@@ -120,7 +120,10 @@ func DefaultConfig() *Config {
 			PruningKeepEvery:     "0",
 			PruningSnapshotEvery: "0",
 		},
-		Telemetry: telemetry.Config{},
+		Telemetry: telemetry.Config{
+			Enabled:      false,
+			GlobalLabels: [][]string{},
+		},
 		API: APIConfig{
 			Enable:             false,
 			Swagger:            false,
@@ -134,6 +137,15 @@ func DefaultConfig() *Config {
 
 // GetConfig returns a fully parsed Config object.
 func GetConfig() Config {
+	globalLabelsRaw := viper.Get("telemetry.global-labels").([]interface{})
+	globalLabels := make([][]string, 0, len(globalLabelsRaw))
+	for _, glr := range globalLabelsRaw {
+		labelsRaw := glr.([]interface{})
+		if len(labelsRaw) == 2 {
+			globalLabels = append(globalLabels, []string{labelsRaw[0].(string), labelsRaw[1].(string)})
+		}
+	}
+
 	return Config{
 		BaseConfig: BaseConfig{
 			MinGasPrices:         viper.GetString("minimum-gas-prices"),
@@ -151,6 +163,7 @@ func GetConfig() Config {
 			EnableHostnameLabel:     viper.GetBool("telemetry.enable-hostname-label"),
 			EnableServiceLabel:      viper.GetBool("telemetry.enable-service-label"),
 			PrometheusRetentionTime: viper.GetInt64("telemetry.prometheus-retention-time"),
+			GlobalLabels:            globalLabels,
 		},
 		API: APIConfig{
 			Enable:             viper.GetBool("api.enable"),

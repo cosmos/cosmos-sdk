@@ -2,6 +2,7 @@ package types
 
 import (
 	"math"
+	"time"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -71,6 +72,14 @@ func (ev Evidence) Hash() tmbytes.HexBytes {
 // NOTE: assumes that evidence headers have the same height
 func (ev Evidence) GetHeight() int64 {
 	return int64(math.Min(float64(ev.Header1.Height), float64(ev.Header2.Height)))
+}
+
+// GetTime returns the timestamp at which misbehaviour occurred. It uses the
+// maximum value from both headers to prevent producing an invalid header outside
+// of the evidence age range.
+func (ev Evidence) GetTime() time.Time {
+	minTime := int64(math.Max(float64(ev.Header1.Time.UnixNano()), float64(ev.Header2.Time.UnixNano())))
+	return time.Unix(0, minTime)
 }
 
 // ValidateBasic implements Evidence interface

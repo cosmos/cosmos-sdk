@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -103,6 +104,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		// such as delegated fee messages.
 		acc := k.ak.GetAccount(ctx, out.Address)
 		if acc == nil {
+			defer telemetry.IncrCounter(1, "new", "account")
 			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, out.Address))
 		}
 	}
@@ -141,6 +143,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	// such as delegated fee messages.
 	acc := k.ak.GetAccount(ctx, toAddr)
 	if acc == nil {
+		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 

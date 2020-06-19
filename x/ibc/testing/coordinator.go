@@ -89,7 +89,7 @@ func (coord *Coordinator) CommitNBlocks(chainID string, n uint64) {
 	}
 }
 
-// Setup constructs a TM client, conenction, and channel on both chains provided. It fails if
+// Setup constructs a TM client, connection, and channel on both chains provided. It fails if
 // any error occurs. The clientID's and TestConnections are returned for both chains.
 func (coord *Coordinator) Setup(
 	sourceID, counterpartyID string,

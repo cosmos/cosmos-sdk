@@ -328,7 +328,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retreive consensus state to provide proof for
+	// retrieve consensus state to provide proof for
 	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
 	require.True(chain.t, found)
 
@@ -355,7 +355,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retreive consensus state to provide proof for
+	// retrieve consensus state to provide proof for
 	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
 	require.True(chain.t, found)
 

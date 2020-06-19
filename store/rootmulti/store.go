@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -734,4 +735,29 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 	}
 
 	return mm.hash()
+}
+
+// SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
+// in the underlying key-value pairs.
+// The keys are sorted before the proofs are computed.
+func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*SimpleProof, keys []string) {
+	sm := newSimpleMap()
+	for k, v := range m {
+		sm.Set(k, v)
+	}
+	sm.Sort()
+	kvs := sm.kvs
+	kvsBytes := make([][]byte, len(kvs))
+	for i, kvp := range kvs {
+		kvsBytes[i] = KVPair(kvp).Bytes()
+	}
+
+	rootHash, proofList := merkle.ProofsFromByteSlices(kvsBytes)
+	proofs = make(map[string]*tmmerkle.Proof)
+	keys = make([]string, len(proofList))
+	for i, kvp := range kvs {
+		proofs[string(kvp.Key)] = proofList[i]
+		keys[i] = string(kvp.Key)
+	}
+	return
 }

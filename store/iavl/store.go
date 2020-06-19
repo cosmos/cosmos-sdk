@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -303,7 +303,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 
 		// get proof from tree and convert to merkle.Proof before adding to result
-		res.Proof = getProofFromTree(mtree, req.Data, res.Value != nil)
+		res.ProofOps = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
 		var KVs []types.KVPair
@@ -329,7 +329,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmmerkle.ProofOps {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -351,7 +351,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 		}
 	}
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
+	return &tmmerkle.ProofOps{Ops: []tmmerkle.ProofOp{op.ProofOp()}}
 }
 
 //----------------------------------------

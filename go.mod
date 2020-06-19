@@ -40,7 +40,6 @@ require (
 	github.com/tendermint/tm-db v0.5.1
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	google.golang.org/grpc v1.29.1
-	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
 

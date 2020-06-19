@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/crypto/merkle"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -27,7 +27,7 @@ type ConnectionResponse struct {
 
 // NewConnectionResponse creates a new ConnectionResponse instance
 func NewConnectionResponse(
-	connectionID string, connection ConnectionEnd, proof *merkle.Proof, height int64,
+	connectionID string, connection ConnectionEnd, proof *tmmerkle.ProofOps, height int64,
 ) ConnectionResponse {
 	return ConnectionResponse{
 		Connection:  connection,
@@ -64,7 +64,7 @@ type ClientConnectionsResponse struct {
 
 // NewClientConnectionsResponse creates a new ConnectionPaths instance
 func NewClientConnectionsResponse(
-	clientID string, connectionPaths []string, proof *merkle.Proof, height int64,
+	clientID string, connectionPaths []string, proof *tmmerkle.ProofOps, height int64,
 ) ClientConnectionsResponse {
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,

@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/crypto/merkle"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -31,7 +31,7 @@ type ChannelResponse struct {
 
 // NewChannelResponse creates a new ChannelResponse instance
 func NewChannelResponse(
-	portID, channelID string, channel Channel, proof *merkle.Proof, height int64,
+	portID, channelID string, channel Channel, proof *tmmerkle.ProofOps, height int64,
 ) ChannelResponse {
 	return ChannelResponse{
 
@@ -125,7 +125,7 @@ type PacketResponse struct {
 
 // NewPacketResponse creates a new PacketResponswe instance
 func NewPacketResponse(
-	portID, channelID string, sequence uint64, packet Packet, proof *merkle.Proof, height int64,
+	portID, channelID string, sequence uint64, packet Packet, proof *tmmerkle.ProofOps, height int64,
 ) PacketResponse {
 	return PacketResponse{
 		Packet:      packet,
@@ -147,7 +147,7 @@ type RecvResponse struct {
 
 // NewRecvResponse creates a new RecvResponse instance
 func NewRecvResponse(
-	portID, channelID string, sequenceRecv uint64, proof *merkle.Proof, height int64,
+	portID, channelID string, sequenceRecv uint64, proof *tmmerkle.ProofOps, height int64,
 ) RecvResponse {
 	return RecvResponse{
 		NextSequenceRecv: sequenceRecv,

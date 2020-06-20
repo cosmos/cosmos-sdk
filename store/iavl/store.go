@@ -8,7 +8,6 @@ import (
 	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
-	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
@@ -129,24 +128,23 @@ func (st *Store) Commit() types.CommitID {
 
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
-		// TODO: Do we want to extend Commit to allow returning errors?
 		panic(err)
 	}
 
-	// If the version we saved got flushed to disk, check if previous flushed
-	// version should be deleted.
-	if st.pruning.FlushVersion(version) {
-		previous := version - st.pruning.KeepEvery
+	// // If the version we saved got flushed to disk, check if previous flushed
+	// // version should be deleted.
+	// if st.pruning.FlushVersion(version) {
+	// 	previous := version - st.pruning.KeepEvery
 
-		// Previous flushed version should only be pruned if the previous version is
-		// not a snapshot version OR if snapshotting is disabled (SnapshotEvery == 0).
-		if previous != 0 && !st.pruning.SnapshotVersion(previous) {
-			err := st.tree.DeleteVersion(previous)
-			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
-				panic(err)
-			}
-		}
-	}
+	// 	// Previous flushed version should only be pruned if the previous version is
+	// 	// not a snapshot version OR if snapshotting is disabled (SnapshotEvery == 0).
+	// 	if previous != 0 && !st.pruning.SnapshotVersion(previous) {
+	// 		err := st.tree.DeleteVersion(previous)
+	// 		if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
+	// 			panic(err)
+	// 		}
+	// 	}
+	// }
 
 	return types.CommitID{
 		Version: version,

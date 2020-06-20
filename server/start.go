@@ -37,10 +37,10 @@ const (
 	FlagInterBlockCache    = "inter-block-cache"
 	FlagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
 
-	flagPruning           = "pruning"
-	flagPruningKeepRecent = "pruning-keep-recent"
-	flagPruningKeepEvery  = "pruning-keep-every"
-	flagPruningInterval   = "pruning-interval"
+	FlagPruning           = "pruning"
+	FlagPruningKeepRecent = "pruning-keep-recent"
+	FlagPruningKeepEvery  = "pruning-keep-every"
+	FlagPruningInterval   = "pruning-interval"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -100,14 +100,14 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
-	cmd.Flags().String(flagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
-	cmd.Flags().Uint64(flagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
-	cmd.Flags().Uint64(flagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
-	cmd.Flags().Uint64(flagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
-	viper.BindPFlag(flagPruning, cmd.Flags().Lookup(flagPruning))
-	viper.BindPFlag(flagPruningKeepRecent, cmd.Flags().Lookup(flagPruningKeepRecent))
-	viper.BindPFlag(flagPruningKeepEvery, cmd.Flags().Lookup(flagPruningKeepEvery))
-	viper.BindPFlag(flagPruningInterval, cmd.Flags().Lookup(flagPruningInterval))
+	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
+	viper.BindPFlag(FlagPruning, cmd.Flags().Lookup(FlagPruning))
+	viper.BindPFlag(FlagPruningKeepRecent, cmd.Flags().Lookup(FlagPruningKeepRecent))
+	viper.BindPFlag(FlagPruningKeepEvery, cmd.Flags().Lookup(FlagPruningKeepEvery))
+	viper.BindPFlag(FlagPruningInterval, cmd.Flags().Lookup(FlagPruningInterval))
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

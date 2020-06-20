@@ -189,7 +189,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db)
-	rs.SetPruning(store.PruneSyncable)
+	rs.SetPruning(store.PruneDefault)
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -255,7 +255,7 @@ func TestSetLoader(t *testing.T) {
 
 func TestAppVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneSyncable)
+	pruningOpt := SetPruning(store.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -308,8 +308,9 @@ func TestLoadVersionInvalid(t *testing.T) {
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := store.PruningOptions{
-		KeepEvery:     2,
-		SnapshotEvery: 6,
+		KeepRecent: 2,
+		KeepEvery:  6,
+		Interval:   1,
 	}
 	pruningOpt := SetPruning(pruningOptions)
 	db := dbm.NewMemDB()

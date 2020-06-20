@@ -17,19 +17,19 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 		wantErr         bool
 	}{
 		{
-			name: flagPruning,
+			name: FlagPruning,
 			initParams: func() {
-				viper.Set(flagPruning, types.PruningOptionNothing)
+				viper.Set(FlagPruning, types.PruningOptionNothing)
 			},
 			expectedOptions: types.PruneNothing,
 		},
 		{
 			name: "custom pruning options",
 			initParams: func() {
-				viper.Set(flagPruning, types.PruningOptionCustom)
-				viper.Set(flagPruningKeepRecent, 1234)
-				viper.Set(flagPruningKeepEvery, 4321)
-				viper.Set(flagPruningInterval, 10)
+				viper.Set(FlagPruning, types.PruningOptionCustom)
+				viper.Set(FlagPruningKeepRecent, 1234)
+				viper.Set(FlagPruningKeepEvery, 4321)
+				viper.Set(FlagPruningInterval, 10)
 			},
 			expectedOptions: types.PruningOptions{
 				KeepRecent: 1234,
@@ -38,7 +38,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 			},
 		},
 		{
-			name:            "default",
+			name:            types.PruningOptionDefault,
 			initParams:      func() {},
 			expectedOptions: types.PruneDefault,
 		},
@@ -49,7 +49,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 
 		t.Run(tt.name, func(j *testing.T) {
 			viper.Reset()
-			viper.SetDefault(flagPruning, "syncable")
+			viper.SetDefault(FlagPruning, types.PruningOptionDefault)
 			tt.initParams()
 
 			opts, err := GetPruningOptionsFromFlags()

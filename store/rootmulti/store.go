@@ -299,10 +299,7 @@ func (rs *Store) Commit() types.CommitID {
 	version := rs.lastCommitInfo.Version + 1
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 
-	// write CommitInfo to disk only if this version was flushed to disk
-	if rs.pruningOpts.FlushVersion(version) {
-		flushCommitInfo(rs.db, version, rs.lastCommitInfo)
-	}
+	flushCommitInfo(rs.db, version, rs.lastCommitInfo)
 
 	// Prepare for next version.
 	commitID := types.CommitID{

@@ -21,7 +21,7 @@ func TestStoreType(t *testing.T) {
 
 func TestGetCommitKVStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, types.PruneSyncable)
+	ms := newMultiStoreWithMounts(db, types.PruneDefault)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -166,7 +166,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 	// XXX: confirm old commit is overwritten and we have rolled back
 	// LatestVersion
-	store = newMultiStoreWithMounts(db, types.PruneSyncable)
+	store = newMultiStoreWithMounts(db, types.PruneDefault)
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver+1)
@@ -293,8 +293,9 @@ func TestParsePath(t *testing.T) {
 func TestMultiStoreRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	pruning := types.PruningOptions{
-		KeepEvery:     3,
-		SnapshotEvery: 6,
+		KeepRecent: 3,
+		KeepEvery:  6,
+		Interval:   1,
 	}
 	multi := newMultiStoreWithMounts(db, pruning)
 	err := multi.LoadLatestVersion()

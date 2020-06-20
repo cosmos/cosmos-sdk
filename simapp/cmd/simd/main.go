@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -83,10 +84,11 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Applicati
 		skipUpgradeHeights[int64(h)] = true
 	}
 
+	// TODO: Make sure custom pruning works.
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		viper.GetString(flags.FlagHome), invCheckPeriod,
-		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
+		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(viper.GetString(server.FlagPruning))),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 		baseapp.SetHaltHeight(viper.GetUint64(server.FlagHaltHeight)),
 		baseapp.SetHaltTime(viper.GetUint64(server.FlagHaltTime)),

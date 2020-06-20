@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -144,9 +145,6 @@ func TestPagination(t *testing.T) {
 
 func ExamplePaginate() {
 	app, ctx := setupTest()
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServer(queryHelper, app.BankKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
 
 	var balances sdk.Coins
 
@@ -162,10 +160,26 @@ func ExamplePaginate() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	// Paginate example
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
-	res, _ := queryClient.AllBalances(gocontext.Background(), request)
-	fmt.Println(res)
+	balResult := sdk.NewCoins()
+	authStore := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
+	res, err := query.Paginate(accountStore, request.Req, func(key []byte, value []byte) error {
+		var tempRes sdk.Coin
+		err := app.Codec().UnmarshalBinaryBare(value, &tempRes)
+		if err != nil {
+			return err
+		}
+		balResult = append(balResult, tempRes)
+		return nil
+	})
+	if err != nil { // should return no error
+		fmt.Println(err)
+	}
+	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
 	// Output:
 	// balances:<denom:"foo0denom" amount:"100" > res:<total:2 >
 }

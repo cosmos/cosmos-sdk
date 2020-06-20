@@ -24,25 +24,23 @@ import (
 )
 
 const (
-	holder     = "holder"
-	multiPerm  = "multiple permissions account"
-	randomPerm = "random permission"
+	holder          = "holder"
+	multiPerm       = "multiple permissions account"
+	randomPerm      = "random permission"
+	numBalances     = 235
+	defaultLimit    = 100
+	overLimit       = 101
+	underLimit      = 10
+	lastPageRecords = 35
 )
 
 func TestPagination(t *testing.T) {
-	app, ctx := SetupTest(t)
+	app, ctx := setupTest()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	var balances sdk.Coins
-	const (
-		numBalances     = 235
-		defaultLimit    = 100
-		overLimit       = 101
-		underLimit      = 10
-		lastPageRecords = 35
-	)
 
 	for i := 0; i < numBalances; i++ {
 		denom := fmt.Sprintf("foo%ddenom", i)
@@ -144,7 +142,35 @@ func TestPagination(t *testing.T) {
 	require.Nil(t, res.Res.NextKey)
 }
 
-func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {
+func ExamplePaginate() {
+	app, ctx := setupTest()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	var balances sdk.Coins
+
+	for i := 0; i < 2; i++ {
+		denom := fmt.Sprintf("foo%ddenom", i)
+		balances = append(balances, sdk.NewInt64Coin(denom, 100))
+	}
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	err := app.BankKeeper.SetBalances(ctx, addr1, balances)
+	if err != nil {
+		fmt.Println(err)
+	}
+	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
+	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, _ := queryClient.AllBalances(gocontext.Background(), request)
+	fmt.Println(res)
+	// Output:
+	// balances:<denom:"foo0denom" amount:"100" > res:<total:2 >
+}
+
+func setupTest() (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
 	appCodec := app.AppCodec()
@@ -152,8 +178,7 @@ func SetupTest(t *testing.T) (*simapp.SimApp, sdk.Context) {
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
-	err := ms.LoadLatestVersion()
-	require.Nil(t, err)
+	ms.LoadLatestVersion()
 
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil

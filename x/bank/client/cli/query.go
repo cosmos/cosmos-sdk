@@ -17,11 +17,7 @@ import (
 )
 
 const (
-	flagDenom      = "denom"
-	flagOffset     = "offset"
-	flagKey        = "key"
-	flagLimit      = "limit"
-	flagCountTotal = "count-total"
+	flagDenom = "denom"
 )
 
 func GetQueryCmd(clientCtx client.Context) *cobra.Command {
@@ -55,13 +51,7 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 			}
 
 			denom := viper.GetString(flagDenom)
-			key := viper.GetString(flagKey)
-			pageReq := &query.PageRequest{
-				Key:        []byte(key),
-				Offset:     viper.GetUint64(flagOffset),
-				Limit:      viper.GetUint64(flagLimit),
-				CountTotal: viper.GetBool(flagCountTotal),
-			}
+			pageReq := &query.PageRequest{}
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
 				res, err := queryClient.AllBalances(context.Background(), params)
@@ -82,10 +72,6 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagDenom, "", "The specific balance denomination to query for")
-	cmd.Flags().String(flagKey, "", "Specify value of next key, use non-nil value for first page")
-	cmd.Flags().Uint64(flagOffset, 0, "Value of offset, in case key isn't being used")
-	cmd.Flags().Uint64(flagLimit, 0, "Limit is the number of values per page")
-	cmd.Flags().Bool(flagCountTotal, true, "If true, returns the total count of records")
 	return flags.GetCommands(cmd)[0]
 }
 

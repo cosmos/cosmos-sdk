@@ -41,7 +41,7 @@ func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) auth
 // QueryBalances executes the bank query balances command for a given address and
 // flag set.
 func QueryBalances(f *cli.Fixtures, address sdk.AccAddress, flags ...string) sdk.Coins {
-	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimcliBinary, address, f.QueryFlags())
+	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimcliBinary, address, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 
 	var balances sdk.Coins

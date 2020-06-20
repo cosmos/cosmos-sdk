@@ -68,8 +68,3 @@ func (f *Fixtures) Cleanup(dirs ...string) {
 func (f *Fixtures) Flags() string {
 	return fmt.Sprintf("--home=%s --node=%s", f.SimcliHome, f.RPCAddr)
 }
-
-// Flags returns the flags necessary for making most CLI calls
-func (f *Fixtures) QueryFlags() string {
-	return fmt.Sprintf("--home=%s --node=%s --key=%s ", f.SimcliHome, f.RPCAddr, "test")
-}

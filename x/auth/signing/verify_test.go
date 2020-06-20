@@ -21,6 +21,14 @@ import (
 
 func TestVerifySignature(t *testing.T) {
 	_, pubKey, _ := types.KeyTestPubAddr()
+
+	const (
+		from = "test_sign"
+		backend = "test"
+		memo = "testmemo"
+		chainId = "test-chain"
+	)
+
 	addr := sdk.AccAddress(pubKey.Address())
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
@@ -28,17 +36,17 @@ func TestVerifySignature(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	viper.Set(flags.FlagKeyringBackend, "test")
+	viper.Set(flags.FlagKeyringBackend, backend)
 	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(sdk.KeyringServiceName(), "test", dir, nil)
+	kr, err := keyring.New(sdk.KeyringServiceName(), backend, dir, nil)
 	require.NoError(t, err)
 
-	var from = "test_sign"
+
 	_, _, err = kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	viper.Set(flags.FlagFrom, from)
-	viper.Set(flags.FlagChainID, "test-chain")
+	viper.Set(flags.FlagChainID, chainId)
 	viper.Set(flags.FlagHome, dir)
 
 	cdc := codec.New()
@@ -56,8 +64,10 @@ func TestVerifySignature(t *testing.T) {
 
 	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	txBuilder := types.NewTxBuilder(types.DefaultTxEncoder(cdc), acc.GetAccountNumber(), acc.GetSequence(),
-		200000, 1.1, false, "test-chain", "testsigs", sdk.NewCoins(),
-		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
+		fee.Gas, 0, false, chainId,
+		memo,
+		fee.Amount,
+		nil,
 	).WithKeybase(kr)
 
 	signBytes, err := txBuilder.BuildSignMsg(msgs)
@@ -67,7 +77,7 @@ func TestVerifySignature(t *testing.T) {
 	require.Nil(t, err)
 
 	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sign}
-	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{}, "testsigs")
+	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{}, memo)
 
 	chainID := ctx.ChainID()
 

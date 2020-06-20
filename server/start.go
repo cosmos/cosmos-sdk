@@ -22,22 +22,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Tendermint full-node start flags
 const (
-	flagWithTendermint       = "with-tendermint"
-	flagAddress              = "address"
-	flagTraceStore           = "trace-store"
-	flagPruning              = "pruning"
-	flagPruningKeepEvery     = "pruning-keep-every"
-	flagPruningSnapshotEvery = "pruning-snapshot-every"
-	flagCPUProfile           = "cpu-profile"
-	FlagMinGasPrices         = "minimum-gas-prices"
-	FlagHaltHeight           = "halt-height"
-	FlagHaltTime             = "halt-time"
-	FlagInterBlockCache      = "inter-block-cache"
-	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
+	flagWithTendermint     = "with-tendermint"
+	flagAddress            = "address"
+	flagTraceStore         = "trace-store"
+	flagCPUProfile         = "cpu-profile"
+	FlagMinGasPrices       = "minimum-gas-prices"
+	FlagHaltHeight         = "halt-height"
+	FlagHaltTime           = "halt-time"
+	FlagInterBlockCache    = "inter-block-cache"
+	FlagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
+
+	flagPruning           = "pruning"
+	flagPruningKeepRecent = "pruning-keep-recent"
+	flagPruningKeepEvery  = "pruning-keep-every"
+	flagPruningInterval   = "pruning-interval"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -87,9 +90,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
-	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything, custom")
-	cmd.Flags().Int64(flagPruningKeepEvery, 0, "Define the state number that will be kept. Ignored if pruning is not custom.")
-	cmd.Flags().Int64(flagPruningSnapshotEvery, 0, "Defines the state that will be snapshot for pruning. Ignored if pruning is not custom.")
 	cmd.Flags().String(
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
@@ -100,9 +100,14 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
+	cmd.Flags().String(flagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+	cmd.Flags().Uint64(flagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(flagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(flagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	viper.BindPFlag(flagPruning, cmd.Flags().Lookup(flagPruning))
+	viper.BindPFlag(flagPruningKeepRecent, cmd.Flags().Lookup(flagPruningKeepRecent))
 	viper.BindPFlag(flagPruningKeepEvery, cmd.Flags().Lookup(flagPruningKeepEvery))
-	viper.BindPFlag(flagPruningSnapshotEvery, cmd.Flags().Lookup(flagPruningSnapshotEvery))
+	viper.BindPFlag(flagPruningInterval, cmd.Flags().Lookup(flagPruningInterval))
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

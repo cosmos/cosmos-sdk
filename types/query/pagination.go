@@ -12,23 +12,6 @@ const defaultLimit = 100
 
 // Paginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling.
-//
-// Ex:
-//  func (q BaseKeeper) QuerySome(c context.Context, req *types.QuerySomeRequest)
-// 			(*types.QuerySomeResponse, error) {
-//		prefixStore := prefix.NewStore(store, someRequestParam)
-//		var results []Result
-//		pageRes, err := query.Paginate(prefixStore, req.Page, func(key []byte, value []byte) error {
-//			var result Result
-//			err := Unmarshal(value, &balance)
-//			...
-//			results = append(results, result)
-//			...
-//		})
-//		...
-//
-//		return &types.QuerySomeResponse{Results: results, Res: pageRes}, nil
-//  }
 func Paginate(
 	prefixStore types.KVStore,
 	req *PageRequest,

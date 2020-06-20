@@ -7,8 +7,8 @@ import (
 
 	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
+	"github.com/cosmos/iavl"
 	"github.com/pkg/errors"
-	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmkv "github.com/tendermint/tendermint/libs/kv"

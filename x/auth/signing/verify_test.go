@@ -56,7 +56,7 @@ func TestVerifySignature(t *testing.T) {
 
 	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	txBuilder := types.NewTxBuilder(types.DefaultTxEncoder(cdc), acc.GetAccountNumber(), acc.GetSequence(),
-		200000, 1.1, false, "test-chain", "hello", sdk.NewCoins(),
+		200000, 1.1, false, "test-chain", "testsigs", sdk.NewCoins(),
 		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
 	).WithKeybase(kr)
 
@@ -67,17 +67,13 @@ func TestVerifySignature(t *testing.T) {
 	require.Nil(t, err)
 
 	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sign}
-	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{stdSig}, "testsigs")
+	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{}, "testsigs")
 
-	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
-	var accNum uint64
-	if !genesis {
-		accNum = acc.GetAccountNumber()
-	}
+
 	signerData := signing.SignerData{
 		ChainID:         chainID,
-		AccountNumber:   accNum,
+		AccountNumber:   acc.GetAccountNumber(),
 		AccountSequence: acc.GetSequence(),
 	}
 

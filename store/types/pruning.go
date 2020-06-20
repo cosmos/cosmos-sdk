@@ -12,11 +12,13 @@ const (
 
 var (
 	// PruneDefault defines a pruning strategy where the last 100 heights are kept
-	// in addition to every 500th.
+	// in addition to every 500th and where to-be pruned heights are pruned at
+	// every 10th height.
 	PruneDefault = NewPruningOptions(100, 500, 10)
 
 	// PruneEverything defines a pruning strategy where all committed heights are
-	// deleted, storing only the current height.
+	// deleted, storing only the current height and where to-be pruned heights are
+	// pruned at every 10th height.
 	PruneEverything = NewPruningOptions(0, 0, 10)
 
 	// PruneNothing defines a pruning strategy where all heights are kept on disk.

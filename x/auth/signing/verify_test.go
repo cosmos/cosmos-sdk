@@ -1,9 +1,11 @@
 package signing_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/spf13/viper"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,9 +25,26 @@ func TestVerifySignature(t *testing.T) {
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	viper.Set(flags.FlagKeyringBackend, "test")
+	path := hd.CreateHDPath(118, 0, 0).String()
+	kr, err := keyring.New(sdk.KeyringServiceName(), "test", dir, nil)
+	require.NoError(t, err)
+
+	var from = "test_sign"
+	_, _, err = kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
+	require.NoError(t, err)
+
+	viper.Set(flags.FlagFrom, from)
+	viper.Set(flags.FlagChainID, "test-chain")
+	viper.Set(flags.FlagHome, dir)
+
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	types.RegisterCodec(cdc)
+	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	app.AccountKeeper.SetAccount(ctx, acc1)
@@ -36,23 +55,11 @@ func TestVerifySignature(t *testing.T) {
 	msgs := []sdk.Msg{types.NewTestMsg(addr)}
 
 	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	txBuilder := types.NewTxBuilder(types.DefaultTxEncoder(codec.New()), acc.GetAccountNumber(), acc.GetSequence(),
+	txBuilder := types.NewTxBuilder(types.DefaultTxEncoder(cdc), acc.GetAccountNumber(), acc.GetSequence(),
 		200000, 1.1, false, "test-chain", "hello", sdk.NewCoins(),
 		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
-	)
+	).WithKeybase(kr)
 
-	dir, clean := tests.NewTestCaseDir(t)
-	t.Cleanup(clean)
-
-	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(sdk.KeyringServiceName(), "test", dir, nil)
-	require.NoError(t, err)
-
-	var from = "test_sign"
-
-	_, _, err = kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
-	require.NoError(t, err)
-	txBuilder.WithKeybase(kr)
 	signBytes, err := txBuilder.BuildSignMsg(msgs)
 	require.Nil(t, err)
 
@@ -60,7 +67,7 @@ func TestVerifySignature(t *testing.T) {
 	require.Nil(t, err)
 
 	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sign}
-	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{}, "testsigs")
+	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{stdSig}, "testsigs")
 
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()

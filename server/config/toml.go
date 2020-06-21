@@ -28,8 +28,9 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 pruning = "{{ .BaseConfig.Pruning }}"
 
 # These are applied if and only if the pruning strategy is custom.
+pruning-keep-recent = "{{ .BaseConfig.PruningKeepRecent }}"
 pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
-pruning-snapshot-every = "{{ .BaseConfig.PruningSnapshotEvery }}"
+pruning-interval = "{{ .BaseConfig.PruningInterval }}"
 
 # HaltHeight contains a non-zero block height at which a node will gracefully
 # halt and shutdown that can be used to assist upgrades and testing.

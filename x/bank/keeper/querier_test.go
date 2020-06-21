@@ -61,7 +61,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesRequest(addr))
+	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesRequest(addr, nil))
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)

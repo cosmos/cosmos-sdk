@@ -12,7 +12,6 @@ require (
 	github.com/confio/ics23-tendermint v0.6.1
 	github.com/confio/ics23/go v0.0.0-20200604202538-6e2c36a74465
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
-	github.com/cosmos/iavl v0.13.4-0.20200620212457-07b32d6bc8b4
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gibson042/canonicaljson-go v1.0.3
 	github.com/gogo/protobuf v1.3.1
@@ -38,6 +37,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
+	github.com/tendermint/iavl v0.13.4-0.20200621145059-83c3470ad61d
 	github.com/tendermint/tendermint v0.33.5
 	github.com/tendermint/tm-db v0.5.1
 	google.golang.org/grpc v1.29.1

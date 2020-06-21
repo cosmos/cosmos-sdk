@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tiavl "github.com/cosmos/iavl"
+	tiavl "github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -90,7 +90,7 @@ func TestIAVLStorePrefix(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, err := tiavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
-	iavlStore := iavl.UnsafeNewStore(tree, types.PruneNothing)
+	iavlStore := iavl.UnsafeNewStore(tree)
 
 	testPrefixStore(t, iavlStore, []byte("test"))
 }

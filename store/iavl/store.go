@@ -7,7 +7,7 @@ import (
 
 	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
-	"github.com/cosmos/iavl"
+	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
@@ -34,38 +34,18 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree    Tree
-	pruning types.PruningOptions
+	tree Tree
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load.
-func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
-	if !pruning.IsValid() {
-		return nil, fmt.Errorf("pruning options are invalid: %v", pruning)
-	}
-
-	var keepRecent int64
-
-	// Determine the value of keepRecent based on the following:
-	//
-	// If KeepEvery = 1, keepRecent should be 0 since there is no need to keep
-	// latest version in a in-memory cache.
-	//
-	// If KeepEvery > 1, keepRecent should be 1 so that state changes in between
-	// flushed states can be saved in the in-memory latest tree.
-	if pruning.KeepEvery == 1 {
-		keepRecent = 0
-	} else {
-		keepRecent = 1
-	}
-
+func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool) (types.CommitKVStore, error) {
 	tree, err := iavl.NewMutableTreeWithOpts(
 		db,
 		dbm.NewMemDB(),
 		defaultIAVLCacheSize,
-		iavl.PruningOptions(pruning.KeepEvery, keepRecent),
+		iavl.PruningOptions(1, 0),
 	)
 	if err != nil {
 		return nil, err
@@ -82,8 +62,7 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 	}
 
 	return &Store{
-		tree:    tree,
-		pruning: pruning,
+		tree: tree,
 	}, nil
 }
 
@@ -93,10 +72,9 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 // CONTRACT: The IAVL tree should be fully loaded.
 // CONTRACT: PruningOptions passed in as argument must be the same as pruning options
 // passed into iavl.MutableTree
-func UnsafeNewStore(tree *iavl.MutableTree, po types.PruningOptions) *Store {
+func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 	return &Store{
-		tree:    tree,
-		pruning: po,
+		tree: tree,
 	}
 }
 
@@ -116,8 +94,7 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 	}
 
 	return &Store{
-		tree:    &immutableTree{iTree},
-		pruning: st.pruning,
+		tree: &immutableTree{iTree},
 	}, nil
 }
 
@@ -348,6 +325,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
 		}
 	}
+
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
 	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
 }

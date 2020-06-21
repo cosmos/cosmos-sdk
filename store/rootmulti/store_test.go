@@ -443,6 +443,46 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Equal(t, v2, qres.Value)
 }
 
+func TestMultiStore_Pruning(t *testing.T) {
+	testCases := []struct {
+		name        string
+		numVersions int64
+		po          types.PruningOptions
+		deleted     []int64
+		saved       []int64
+	}{
+		{"prune nothing", 10, types.PruneNothing, nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune everything", 10, types.PruneEverything, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
+		{"prune some; no batch", 10, types.NewPruningOptions(2, 3, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
+		{"prune some; small batch", 10, types.NewPruningOptions(2, 3, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
+		{"prune some; large batch", 10, types.NewPruningOptions(2, 3, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			db := dbm.NewMemDB()
+			ms := newMultiStoreWithMounts(db, tc.po)
+			require.NoError(t, ms.LoadLatestVersion())
+
+			for i := int64(0); i < tc.numVersions; i++ {
+				ms.Commit()
+			}
+
+			for _, v := range tc.saved {
+				_, err := ms.CacheMultiStoreWithVersion(v)
+				require.NoError(t, err, "expected error when loading height: %d", v)
+			}
+
+			for _, v := range tc.deleted {
+				_, err := ms.CacheMultiStoreWithVersion(v)
+				require.Error(t, err, "expected error when loading height: %d", v)
+			}
+		})
+	}
+}
+
 //-----------------------------------------------------------------------
 // utils
 

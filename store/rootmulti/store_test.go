@@ -293,8 +293,8 @@ func TestParsePath(t *testing.T) {
 func TestMultiStoreRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	pruning := types.PruningOptions{
-		KeepRecent: 3,
-		KeepEvery:  6,
+		KeepRecent: 2,
+		KeepEvery:  3,
 		Interval:   1,
 	}
 	multi := newMultiStoreWithMounts(db, pruning)
@@ -323,8 +323,8 @@ func TestMultiStoreRestart(t *testing.T) {
 		multi.Commit()
 
 		cinfo, err := getCommitInfo(multi.db, int64(i))
-		require.NotNil(t, err)
-		require.Equal(t, commitInfo{}, cinfo)
+		require.NoError(t, err)
+		require.Equal(t, int64(i), cinfo.Version)
 	}
 
 	// Set and commit data in one store.
@@ -348,15 +348,15 @@ func TestMultiStoreRestart(t *testing.T) {
 	multi.Commit()
 
 	postFlushCinfo, err := getCommitInfo(multi.db, 4)
-	require.NotNil(t, err)
-	require.Equal(t, commitInfo{}, postFlushCinfo, "Commit changed after in-memory commit")
+	require.NoError(t, err)
+	require.Equal(t, int64(4), postFlushCinfo.Version, "Commit changed after in-memory commit")
 
 	multi = newMultiStoreWithMounts(db, pruning)
 	err = multi.LoadLatestVersion()
 	require.Nil(t, err)
 
 	reloadedCid := multi.LastCommitID()
-	require.Equal(t, flushedCinfo.CommitID(), reloadedCid, "Reloaded CID is not the same as last flushed CID")
+	require.Equal(t, int64(4), reloadedCid.Version, "Reloaded CID is not the same as last flushed CID")
 
 	// Check that store1 and store2 retained date from 3rd commit
 	store1 = multi.getStoreByName("store1").(types.KVStore)
@@ -370,7 +370,7 @@ func TestMultiStoreRestart(t *testing.T) {
 	// Check that store3 still has data from last commit even though update happened on 2nd commit
 	store3 = multi.getStoreByName("store3").(types.KVStore)
 	val3 := store3.Get([]byte(k3))
-	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v3, 2)), val3, "Reloaded value not the same as last flushed value")
+	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v3, 3)), val3, "Reloaded value not the same as last flushed value")
 }
 
 func TestMultiStoreQuery(t *testing.T) {

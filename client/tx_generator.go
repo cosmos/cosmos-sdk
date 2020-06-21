@@ -13,7 +13,11 @@ type (
 	TxGenerator interface {
 		NewTxBuilder() TxBuilder
 		SignModeHandler() signing.SignModeHandler
-		MarshalTx(tx sdk.Tx) ([]byte, error)
+
+		TxEncoder() sdk.TxEncoder
+		TxDecoder() sdk.TxDecoder
+		TxJSONEncoder() sdk.TxEncoder
+		TxJSONDecoder() sdk.TxDecoder
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction

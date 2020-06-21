@@ -7,8 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -34,7 +32,7 @@ const (
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 func AddGenesisAccountCmd(
-	ctx *server.Context, depCdc codec.JSONMarshaler, cdc *std.Codec, defaultNodeHome, defaultClientHome string,
+	ctx *server.Context, depCdc codec.JSONMarshaler, cdc codec.Marshaler, defaultNodeHome, defaultClientHome string,
 ) *cobra.Command {
 
 	cmd := &cobra.Command{

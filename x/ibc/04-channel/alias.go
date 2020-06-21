@@ -111,9 +111,6 @@ var (
 	EventTypeChannelCloseInit    = types.EventTypeChannelCloseInit
 	EventTypeChannelCloseConfirm = types.EventTypeChannelCloseConfirm
 	AttributeValueCategory       = types.AttributeValueCategory
-	ErrInvalidLengthTypes        = types.ErrInvalidLengthTypes
-	ErrIntOverflowTypes          = types.ErrIntOverflowTypes
-	ErrUnexpectedEndOfGroupTypes = types.ErrUnexpectedEndOfGroupTypes
 )
 
 // nolint: golint

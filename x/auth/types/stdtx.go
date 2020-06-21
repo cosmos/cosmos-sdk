@@ -342,6 +342,25 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
+func DefaultJSONTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		var tx = StdTx{}
+
+		if len(txBytes) == 0 {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+		}
+
+		// StdTx.Msg is an interface. The concrete types
+		// are registered by MakeTxCodec
+		err := cdc.UnmarshalJSON(txBytes, &tx)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		return tx, nil
+	}
+}
+
 // DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {

@@ -292,12 +292,12 @@ func (rs *Store) LastCommitID() types.CommitID {
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
-	version := rs.lastCommitInfo.Version + 1
+	previousHeight := rs.lastCommitInfo.Version
+	version := previousHeight + 1
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 
 	// Determine if the current height needs to be added to the list of heights to
 	// be pruned.
-	previousHeight := rs.lastCommitInfo.Version
 	if int64(rs.pruningOpts.KeepRecent) < previousHeight {
 		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
 		// We consider this height to be pruned iff:
@@ -311,7 +311,7 @@ func (rs *Store) Commit() types.CommitID {
 	}
 
 	// batch prune if the current height is a pruning interval height
-	if version%int64(rs.pruningOpts.Interval) == 0 {
+	if version > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
 		rs.pruneStores()
 	}
 

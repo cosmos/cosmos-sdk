@@ -311,7 +311,7 @@ func (rs *Store) Commit() types.CommitID {
 	}
 
 	// batch prune if the current height is a pruning interval height
-	if version > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
+	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
 		rs.pruneStores()
 	}
 

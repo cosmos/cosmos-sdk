@@ -52,13 +52,14 @@ func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) *cob
 		Long: `Run the full node application with Tendermint in or out of process. By
 default, the application will run with Tendermint in process.
 
-Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-snapshot-every' and 'pruning-keep-every' together.
+Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent',
+'pruning-keep-every', and 'pruning-interval' together.
 
 For '--pruning' the options are as follows:
 
-syncable: only those states not needed for state syncing will be deleted (flushes every 100th to disk and keeps every 10000th)
+default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-everything: all saved states will be deleted, storing only the current state
+everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
 
 Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
 the ABCI Commit phase, the node will check if the current block height is greater than or equal to

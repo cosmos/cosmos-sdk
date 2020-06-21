@@ -108,21 +108,6 @@ func (st *Store) Commit() types.CommitID {
 		panic(err)
 	}
 
-	// // If the version we saved got flushed to disk, check if previous flushed
-	// // version should be deleted.
-	// if st.pruning.FlushVersion(version) {
-	// 	previous := version - st.pruning.KeepEvery
-
-	// 	// Previous flushed version should only be pruned if the previous version is
-	// 	// not a snapshot version OR if snapshotting is disabled (SnapshotEvery == 0).
-	// 	if previous != 0 && !st.pruning.SnapshotVersion(previous) {
-	// 		err := st.tree.DeleteVersion(previous)
-	// 		if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
-	// 			panic(err)
-	// 		}
-	// 	}
-	// }
-
 	return types.CommitID{
 		Version: version,
 		Hash:    hash,
@@ -187,6 +172,13 @@ func (st *Store) Has(key []byte) (exists bool) {
 func (st *Store) Delete(key []byte) {
 	defer telemetry.MeasureSince("store", "iavl", "delete")
 	st.tree.Remove(key)
+}
+
+// DeleteVersions deletes a series of versions from the MutableTree. An error
+// is returned if any single version is invalid or the delete fails. All writes
+// happen in a single batch with a single commit.
+func (st *Store) DeleteVersions(versions ...int64) error {
+	return st.tree.DeleteVersions(versions...)
 }
 
 // Implements types.KVStore.

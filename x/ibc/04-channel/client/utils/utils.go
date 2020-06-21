@@ -15,7 +15,7 @@ import (
 func QueryPacket(
 	ctx client.Context, portID, channelID string,
 	sequence, timeoutHeight, timeoutTimestamp uint64, prove bool,
-) (types.PacketResponse, error) {
+) (types.QueryPacketResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyPacketCommitment(portID, channelID, sequence),
@@ -47,13 +47,13 @@ func QueryPacket(
 	)
 
 	// FIXME: res.Height+1 is hack, fix later
-	return types.NewPacketResponse(portID, channelID, sequence, packet, res.Proof, res.Height+1), nil
+	return types.NewQueryPacketResponse(portID, channelID, sequence, packet, res.Proof, res.Height+1), nil
 }
 
 // QueryChannel queries the store to get a channel and a merkle proof.
 func QueryChannel(
 	ctx client.Context, portID, channelID string, prove bool,
-) (types.ChannelResponse, error) {
+) (types.QueryChannelResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyChannel(portID, channelID),
@@ -62,14 +62,14 @@ func QueryChannel(
 
 	res, err := ctx.QueryABCI(req)
 	if res.Value == nil || err != nil {
-		return types.ChannelResponse{}, err
+		return types.QueryChannelResponse{}, err
 	}
 
 	var channel types.Channel
 	if err := ctx.Codec.UnmarshalBinaryBare(res.Value, &channel); err != nil {
-		return types.ChannelResponse{}, err
+		return types.QueryChannelResponse{}, err
 	}
-	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
+	return types.NewQueryChannelResponse(channel, res.Proof, res.Height), nil
 }
 
 // QueryChannelClientState uses the channel Querier to return the ClientState of

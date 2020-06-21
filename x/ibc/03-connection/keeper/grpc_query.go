@@ -6,8 +6,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -36,6 +38,37 @@ func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest)
 	return &types.QueryConnectionResponse{Connection: &connection}, nil
 }
 
+// Connections implements the Query/Connections gRPC method
+func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsRequest) (*types.QueryConnectionsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	connections := []*types.ConnectionEnd{}
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyConnectionPrefix)
+
+	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		var result types.ConnectionEnd
+		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
+			return err
+		}
+
+		connections = append(connections, &result)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryConnectionsResponse{
+		Connections: connections,
+		Res:         res,
+	}, nil
+}
+
 // ClientConnections implements the Query/ClientConnections gRPC method
 func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConnectionsRequest) (*types.QueryClientConnectionsResponse, error) {
 	if req == nil {
@@ -59,43 +92,3 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 		ConnectionPaths: clientConnectionPaths,
 	}, nil
 }
-
-// // AllBalances implements the Query/AllBalances gRPC method
-// func (q Keeper) AllBalances(c context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
-// 	if req == nil {
-// 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-// 	}
-
-// 	if len(req.Address) == 0 {
-// 		return nil, status.Errorf(codes.InvalidArgument, "invalid address")
-// 	}
-
-// 	ctx := sdk.UnwrapSDKContext(c)
-// 	balances := q.GetAllBalances(ctx, req.Address)
-
-// 	return &types.QueryAllBalancesResponse{Balances: balances}, nil
-// }
-
-// // TotalSupply implements the Query/TotalSupply gRPC method
-// func (q Keeper) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
-// 	ctx := sdk.UnwrapSDKContext(c)
-// 	totalSupply := q.GetSupply(ctx).GetTotal()
-
-// 	return &types.QueryTotalSupplyResponse{Supply: totalSupply}, nil
-// }
-
-// // SupplyOf implements the Query/SupplyOf gRPC method
-// func (q Keeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
-// 	if req == nil {
-// 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-// 	}
-
-// 	if req.Denom == "" {
-// 		return nil, status.Errorf(codes.InvalidArgument, "invalid denom")
-// 	}
-
-// 	ctx := sdk.UnwrapSDKContext(c)
-// 	supply := q.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
-
-// 	return &types.QuerySupplyOfResponse{Amount: supply}, nil
-// }

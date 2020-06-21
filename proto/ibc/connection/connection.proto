@@ -4,6 +4,7 @@ package ibc.connection;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "gogoproto/gogo.proto";
+import "cosmos/query/pagination.proto";
 import "ibc/commitment/commitment.proto";
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
@@ -120,6 +121,9 @@ service Query {
   // Connection queries an IBC connection end.
   rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {}
 
+  // Connections queries all the IBC connections of a chain.
+  rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {}
+
   // ClientConnections queries the connection paths associated with a client state.
   rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {}
 }
@@ -142,6 +146,18 @@ message QueryConnectionResponse {
   ibc.commitment.MerklePath proof_path = 3;
   // height at which the proof was retrieved
   uint64 proof_height = 4;
+}
+
+// QueryConnectionsRequest is the request type for the Query/Connections RPC method
+message QueryConnectionsRequest {
+  cosmos.query.PageRequest req = 1;
+}
+
+// QueryConnectionsResponse is the response type for the Query/Connections RPC method.
+message QueryConnectionsResponse {
+  // list of stored connections of the chain.
+  repeated ConnectionEnd    connections = 1;
+  cosmos.query.PageResponse res         = 2;
 }
 
 // QueryClientConnectionsRequest is the request type for the Query/ClientConnections

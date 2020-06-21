@@ -19,6 +19,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
@@ -128,6 +129,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // RegisterQueryService registers the gRPC query service for the ibc module.
 func (am AppModule) RegisterQueryService(server grpc.Server) {
 	connection.RegisterQueryService(server, am.keeper.ConnectionKeeper)
+	channel.RegisterQueryService(server, am.keeper.ChannelKeeper)
 }
 
 // InitGenesis performs genesis initialization for the ibc module. It returns

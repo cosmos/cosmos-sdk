@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-// Name returns the IBC connection ICS name
+// Name returns the IBC connection ICS name.
 func Name() string {
 	return SubModuleName
 }
@@ -22,7 +22,7 @@ func GetTxCmd(clientCtx client.Context) *cobra.Command {
 	return cli.NewTxCmd(clientCtx)
 }
 
-// GetQueryCmd returns no root query command for the IBC connections.
+// GetQueryCmd returns the root query command for the IBC connections.
 func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	return cli.GetQueryCmd(clientCtx)
 }

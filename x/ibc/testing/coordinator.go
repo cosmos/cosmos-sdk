@@ -43,6 +43,143 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 	}
 }
 
+// Setup constructs a TM client, connection, and channel on both chains provided. It fails if
+// any error occurs. The clientID's and TestConnections are returned for both chains.
+func (coord *Coordinator) Setup(
+	source, counterparty *TestChain,
+) (string, string, *TestConnection, *TestConnection) {
+	sourceClient, counterpartyClient, sourceConn, counterpartyConn := coord.SetupClientConnections(source, counterparty, clientexported.Tendermint)
+
+	// channels can be referenced through the returned connections
+	coord.CreateChannel(source, counterparty, sourceConn, counterpartyConn, channeltypes.UNORDERED)
+
+	return sourceClient, counterpartyClient, sourceConn, counterpartyConn
+}
+
+// SetupClientConnections is a helper function to create clients and the appropriate
+// connections on both the source and counterparty chain. It assumes the caller does not
+// anticipate any errors.
+func (coord *Coordinator) SetupClientConnections(
+	source, counterparty *TestChain,
+	clientType clientexported.ClientType,
+) (string, string, *TestConnection, *TestConnection) {
+
+	sourceClient, err := coord.CreateClient(source, counterparty, clientType)
+	require.NoError(coord.t, err)
+	counterpartyClient, err := coord.CreateClient(counterparty, source, clientType)
+	require.NoError(coord.t, err)
+
+	sourceConnection, counterpartyConnection := coord.CreateConnection(source, counterparty, sourceClient, counterpartyClient)
+
+	return sourceClient, counterpartyClient, sourceConnection, counterpartyConnection
+}
+
+// CreateClient creates a counterparty client on the source chain and returns the clientID.
+func (coord *Coordinator) CreateClient(
+	source, counterparty *TestChain,
+	clientType clientexported.ClientType,
+) (clientID string, err error) {
+	coord.CommitBlock(source, counterparty)
+
+	clientID = source.NewClientID(counterparty.ChainID)
+
+	switch clientType {
+	case clientexported.Tendermint:
+		err = source.CreateTMClient(counterparty, clientID)
+
+	default:
+		err = fmt.Errorf("client type %s is not supported", clientType)
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	coord.IncrementTime()
+
+	return clientID, nil
+}
+
+// UpdateClient updates a counterparty client on the source chain.
+func (coord *Coordinator) UpdateClient(
+	source, counterparty *TestChain,
+	clientID string,
+	clientType clientexported.ClientType,
+) (err error) {
+	coord.CommitBlock(source, counterparty)
+
+	switch clientType {
+	case clientexported.Tendermint:
+		err = source.UpdateTMClient(counterparty, clientID)
+
+	default:
+		err = fmt.Errorf("client type %s is not supported", clientType)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	coord.IncrementTime()
+
+	return nil
+}
+
+// CreateConnection constructs and executes connection handshake messages in order to create
+// OPEN channels on source and counterparty chains. The connection information of the source
+// and counterparty's are returned within a TestConnection struct. The function expects the
+// connections to be successfully created and testing will fail otherwise.
+//
+// NOTE: The counterparty testing connection will be created even if it is not created in the
+// application state.
+func (coord *Coordinator) CreateConnection(
+	source, counterparty *TestChain,
+	clientID, counterpartyClientID string,
+) (*TestConnection, *TestConnection) {
+
+	sourceConnection, counterpartyConnection, err := coord.CreateConnectionInit(source, counterparty, clientID, counterpartyClientID)
+	require.NoError(coord.t, err)
+
+	err = coord.CreateConnectionOpenTry(counterparty, source, counterpartyConnection, sourceConnection)
+	require.NoError(coord.t, err)
+
+	err = coord.CreateConnectionOpenAck(source, counterparty, sourceConnection, counterpartyConnection)
+	require.NoError(coord.t, err)
+
+	err = coord.CreateConnectionOpenConfirm(counterparty, source, counterpartyConnection, sourceConnection)
+	require.NoError(coord.t, err)
+
+	return sourceConnection, counterpartyConnection
+}
+
+// CreateChannel constructs and executes channel handshake messages in order to create
+// channels on source and counterparty chains with the passed in Channel State. The portID
+// and channelID of source and counterparty are returned. The function expects the creation
+// of both channels to succeed and testing fails otherwise.
+//
+// NOTE: The counterparty testing channel will be created even if it is not created in the
+// application state.
+func (coord *Coordinator) CreateChannel(
+	source, counterparty *TestChain,
+	connection, counterpartyConnection *TestConnection,
+	order channeltypes.Order,
+) (TestChannel, TestChannel) {
+
+	sourceChannel, counterpartyChannel, err := coord.CreateChannelInit(source, counterparty, connection, counterpartyConnection, order)
+	require.NoError(coord.t, err)
+
+	err = coord.CreateChannelOpenTry(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection, order)
+	require.NoError(coord.t, err)
+
+	err = coord.CreateChannelOpenAck(source, counterparty, sourceChannel, counterpartyChannel, connection)
+	require.NoError(coord.t, err)
+
+	err = coord.CreateChannelOpenConfirm(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection)
+	require.NoError(coord.t, err)
+
+	return sourceChannel, counterpartyChannel
+}
+
 // IncrementTime iterates through all the TestChain's and increments their current header time
 // by 5 seconds.
 //
@@ -70,9 +207,8 @@ func GetChainID(index int) string {
 // CommitBlock commits a block on the provided indexes and then increments the global time.
 //
 // CONTRACT: the passed in list of indexes must not contain duplicates
-func (coord *Coordinator) CommitBlock(chains ...string) {
-	for _, chainID := range chains {
-		chain := coord.GetChain(chainID)
+func (coord *Coordinator) CommitBlock(chains ...*TestChain) {
+	for _, chain := range chains {
 		chain.App.Commit()
 		chain.NextBlock()
 	}
@@ -80,131 +216,13 @@ func (coord *Coordinator) CommitBlock(chains ...string) {
 }
 
 // CommitNBlocks commits n blocks to state and updates the block height by 1 for each commit.
-func (coord *Coordinator) CommitNBlocks(chainID string, n uint64) {
-	chain := coord.GetChain(chainID)
-
+func (coord *Coordinator) CommitNBlocks(chain *TestChain, n uint64) {
 	for i := uint64(0); i < n; i++ {
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 		chain.App.Commit()
 		chain.NextBlock()
 		coord.IncrementTime()
 	}
-}
-
-// Setup constructs a TM client, connection, and channel on both chains provided. It fails if
-// any error occurs. The clientID's and TestConnections are returned for both chains.
-func (coord *Coordinator) Setup(
-	sourceID, counterpartyID string,
-) (string, string, *TestConnection, *TestConnection) {
-	sourceClient, counterpartyClient, sourceConn, counterpartyConn := coord.CreateClientsAndConnections(sourceID, counterpartyID, clientexported.Tendermint)
-
-	// channels can be referenced through the returned connections
-	coord.CreateChannel(sourceID, counterpartyID, sourceConn, counterpartyConn, channeltypes.UNORDERED)
-
-	return sourceClient, counterpartyClient, sourceConn, counterpartyConn
-}
-
-// CreateClient creates a counterparty client on the source chain and returns the clientID.
-func (coord *Coordinator) CreateClient(
-	sourceID, counterpartyID string,
-	clientType clientexported.ClientType,
-) (clientID string, err error) {
-	coord.CommitBlock(sourceID, counterpartyID)
-
-	source := coord.GetChain(sourceID)
-	counterparty := coord.GetChain(counterpartyID)
-
-	clientID = source.NewClientID(counterparty.ChainID)
-
-	switch clientType {
-	case clientexported.Tendermint:
-		err = source.CreateTMClient(counterparty, clientID)
-
-	default:
-		err = fmt.Errorf("client type %s is not supported", clientType)
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	coord.IncrementTime()
-
-	return clientID, nil
-}
-
-// UpdateClient updates a counterparty client on the source chain.
-func (coord *Coordinator) UpdateClient(
-	sourceID, counterpartyID,
-	clientID string,
-	clientType clientexported.ClientType,
-) (err error) {
-	coord.CommitBlock(sourceID, counterpartyID)
-
-	source := coord.GetChain(sourceID)
-	counterparty := coord.GetChain(counterpartyID)
-
-	switch clientType {
-	case clientexported.Tendermint:
-		err = source.UpdateTMClient(counterparty, clientID)
-
-	default:
-		err = fmt.Errorf("client type %s is not supported", clientType)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	coord.IncrementTime()
-
-	return nil
-}
-
-// CreateConnection constructs and executes connection handshake messages in order to create
-// OPEN channels on source and counterparty chains. The connection information of the source
-// and counterparty's are returned within a TestConnection struct. The function expects the
-// connections to be successfully created and testing will fail otherwise.
-//
-// NOTE: The counterparty testing connection will be created even if it is not created in the
-// application state.
-func (coord *Coordinator) CreateConnection(
-	sourceID, counterpartyID,
-	clientID, counterpartyClientID string,
-) (*TestConnection, *TestConnection) {
-	source := coord.GetChain(sourceID)
-	counterparty := coord.GetChain(counterpartyID)
-
-	sourceConnection, counterpartyConnection, err := coord.CreateConnectionInit(source, counterparty, clientID, counterpartyClientID)
-	require.NoError(coord.t, err)
-
-	err = coord.CreateConnectionOpenTry(counterparty, source, counterpartyConnection, sourceConnection)
-	require.NoError(coord.t, err)
-
-	err = coord.CreateConnectionOpenAck(source, counterparty, sourceConnection, counterpartyConnection)
-	require.NoError(coord.t, err)
-
-	err = coord.CreateConnectionOpenConfirm(counterparty, source, counterpartyConnection, sourceConnection)
-	require.NoError(coord.t, err)
-
-	return sourceConnection, counterpartyConnection
-}
-
-// CreateClientsAndConnections is a helper function to create clients and the appropriate
-// connections on both the source and counterparty chain. It assumes the caller does not
-// anticipate any errors.
-func (coord *Coordinator) CreateClientsAndConnections(
-	sourceID, counterpartyID string,
-	clientType clientexported.ClientType,
-) (string, string, *TestConnection, *TestConnection) {
-	sourceClient, err := coord.CreateClient(sourceID, counterpartyID, clientType)
-	require.NoError(coord.t, err)
-	counterpartyClient, err := coord.CreateClient(counterpartyID, sourceID, clientType)
-	require.NoError(coord.t, err)
-
-	sourceConnection, counterpartyConnection := coord.CreateConnection(sourceID, counterpartyID, sourceClient, counterpartyClient)
-
-	return sourceClient, counterpartyClient, sourceConnection, counterpartyConnection
 }
 
 // CreateConenctionInit initializes a connection on the source chain with the state INIT
@@ -227,7 +245,7 @@ func (coord *Coordinator) CreateConnectionInit(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		counterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return sourceConnection, counterpartyConnection, err
@@ -250,7 +268,7 @@ func (coord *Coordinator) CreateConnectionOpenTry(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
@@ -273,7 +291,7 @@ func (coord *Coordinator) CreateConnectionOpenAck(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
@@ -295,43 +313,13 @@ func (coord *Coordinator) CreateConnectionOpenConfirm(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// CreateChannel constructs and executes channel handshake messages in order to create
-// channels on source and counterparty chains with the passed in Channel State. The portID
-// and channelID of source and counterparty are returned. The function expects the creation
-// of both channels to succeed and testing fails otherwise.
-//
-// NOTE: The counterparty testing channel will be created even if it is not created in the
-// application state.
-func (coord *Coordinator) CreateChannel(
-	sourceID, counterpartyID string,
-	connection, counterpartyConnection *TestConnection,
-	order channeltypes.Order,
-) (TestChannel, TestChannel) {
-	source := coord.GetChain(sourceID)
-	counterparty := coord.GetChain(counterpartyID)
-
-	sourceChannel, counterpartyChannel, err := coord.CreateChannelInit(source, counterparty, connection, counterpartyConnection, order)
-	require.NoError(coord.t, err)
-
-	err = coord.CreateChannelOpenTry(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection, order)
-	require.NoError(coord.t, err)
-
-	err = coord.CreateChannelOpenAck(source, counterparty, sourceChannel, counterpartyChannel, connection)
-	require.NoError(coord.t, err)
-
-	err = coord.CreateChannelOpenConfirm(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection)
-	require.NoError(coord.t, err)
-
-	return sourceChannel, counterpartyChannel
 }
 
 // CreateChannelInit initializes a channel on the source chain with the state INIT
@@ -359,7 +347,7 @@ func (coord *Coordinator) CreateChannelInit(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
 	); err != nil {
 		return sourceChannel, counterpartyChannel, err
@@ -385,7 +373,7 @@ func (coord *Coordinator) CreateChannelOpenTry(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		connection.CounterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
@@ -410,7 +398,7 @@ func (coord *Coordinator) CreateChannelOpenAck(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		connection.CounterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
@@ -435,7 +423,7 @@ func (coord *Coordinator) CreateChannelOpenConfirm(
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
-		counterparty.ChainID, source.ChainID,
+		counterparty, source,
 		connection.CounterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return err

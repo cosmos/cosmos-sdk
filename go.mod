@@ -1,3 +1,5 @@
+go 1.13
+
 module github.com/cosmos/cosmos-sdk
 
 require (
@@ -30,7 +32,5 @@ require (
 	google.golang.org/grpc v1.30.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
-
-go 1.13
 
 replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4

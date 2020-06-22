@@ -5,7 +5,6 @@ import (
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
-// nolint
 type (
 	PruningOptions   = types.PruningOptions
 	Store            = types.Store
@@ -29,11 +28,4 @@ type (
 	Gas              = types.Gas
 	GasMeter         = types.GasMeter
 	GasConfig        = types.GasConfig
-)
-
-// nolint - reexport
-var (
-	PruneNothing    = types.PruneNothing
-	PruneEverything = types.PruneEverything
-	PruneSyncable   = types.PruneSyncable
 )

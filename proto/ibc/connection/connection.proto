@@ -35,28 +35,32 @@ message MsgConnectionOpenTry {
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
 // the change of connection state to TRYOPEN on Chain B.
 message MsgConnectionOpenAck {
-  string connection_id = 1 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
-  string version       = 2;
+  string       client_id     = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
+  string       connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
+  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
+  string version             = 4;
   // proof of the initialization the connection on Chain B: `UNITIALIZED -> TRYOPEN`
-  bytes proof_try = 3
+  bytes proof_try = 5
       [(gogoproto.moretags) = "yaml:\"proof_try\""];
-  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  uint64 proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of client consensus state
-  bytes proof_consensus = 5
+  bytes proof_consensus = 7
       [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_height = 6 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes  signer           = 7 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 consensus_height = 8 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
+  bytes  signer           = 9 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of connection state to OPEN on Chain A.
 message MsgConnectionOpenConfirm {
-  string connection_id = 1 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
+  string       client_id     = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
+  string       connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
+  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
-  bytes proof_ack = 2
+  bytes proof_ack = 4
       [(gogoproto.moretags) = "yaml:\"proof_ack\""];
-  uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes  signer       = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // ICS03 - Connection Data Structures as defined in

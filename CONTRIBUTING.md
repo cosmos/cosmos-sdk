@@ -273,7 +273,7 @@ Finally, when a point release is ready to be made:
 Note, although we aim to support only a single release at a time, the process stated above could be
 used for multiple previous versions.
 
-## Stable Release Updates (SRU)
+## Point Releases
 
 Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
 and must follow the *Stable Release Update* (or SRU) procedure.

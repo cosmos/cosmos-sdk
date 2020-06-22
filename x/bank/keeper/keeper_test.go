@@ -275,6 +275,7 @@ func (suite *IntegrationTestSuite) TestSendCoinsNewAccount() {
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
 	suite.Require().Nil(app.AccountKeeper.GetAccount(ctx, addr2))
+	app.BankKeeper.GetAllBalances(ctx, addr2)
 	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
 
 	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))

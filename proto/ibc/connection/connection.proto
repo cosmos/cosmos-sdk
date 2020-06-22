@@ -111,7 +111,16 @@ message Counterparty {
 
 // ClientPaths define all the connection paths for a client state.
 message ClientPaths {
+  // list of connection paths
   repeated string paths = 1;
+}
+
+// ConnectionPaths define all the connection paths for a given client state.
+message ConnectionPaths {
+  // client state unique identifier
+  string client_id = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
+  // list of connection paths
+  repeated string paths = 2;
 }
 
 // TODO: move to query.go
@@ -126,6 +135,9 @@ service Query {
 
   // ClientConnections queries the connection paths associated with a client state.
   rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {}
+
+  // ClientsConnections queries all the connection paths associated with all client states.
+  rpc ClientsConnections(QueryClientsConnectionsRequest) returns (QueryClientsConnectionsResponse) {}
 }
 
 // QueryConnectionRequest is the request type for the Query/Connection RPC method
@@ -156,8 +168,11 @@ message QueryConnectionsRequest {
 // QueryConnectionsResponse is the response type for the Query/Connections RPC method.
 message QueryConnectionsResponse {
   // list of stored connections of the chain.
-  repeated ConnectionEnd    connections = 1;
-  cosmos.query.PageResponse res         = 2;
+  repeated ConnectionEnd connections = 1;
+  // pagination response
+  cosmos.query.PageResponse res = 2;
+  // query block height
+  int64 height = 3;
 }
 
 // QueryClientConnectionsRequest is the request type for the Query/ClientConnections
@@ -178,4 +193,19 @@ message QueryClientConnectionsResponse {
   ibc.commitment.MerklePath proof_path = 3;
   // height at which the proof was generated
   uint64 proof_height = 4;
+}
+
+// QueryClientConnectionsRequest is the request type for the Query/ClientConnections RPC method
+message QueryClientsConnectionsRequest {
+  cosmos.query.PageRequest req = 1;
+}
+
+// QueryClientConnectionsResponse is the response type for the Query/ClientConnections RPC method.
+message QueryClientsConnectionsResponse {
+  // list of connection paths
+  repeated ConnectionPaths connections_paths = 1;
+  // pagination response
+  cosmos.query.PageResponse res = 2;
+  // query block height
+  int64 height = 3;
 }

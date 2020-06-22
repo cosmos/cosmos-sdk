@@ -59,7 +59,6 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 					return err
 				}
 				return clientCtx.PrintOutput(res.Balances)
-
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)

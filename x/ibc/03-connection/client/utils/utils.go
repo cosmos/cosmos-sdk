@@ -15,29 +15,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// QueryAllConnections returns all the connections. It _does not_ return
-// any merkle proof.
-func QueryAllConnections(clientCtx client.Context, page, limit int) ([]types.ConnectionEnd, int64, error) {
-	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
-	}
-
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllConnections)
-	res, height, err := clientCtx.QueryWithData(route, bz)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var connections []types.ConnectionEnd
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &connections)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
-	}
-	return connections, height, nil
-}
-
 // QueryConnection queries the store to get a connection end and a merkle
 // proof.
 func QueryConnection(
@@ -62,29 +39,6 @@ func QueryConnection(
 	connRes := types.NewQueryConnectionResponse(connectionID, connection, res.Proof, res.Height)
 
 	return connRes, nil
-}
-
-// QueryAllClientConnectionPaths returns all the client connections paths. It
-// _does not_ return any merkle proof.
-func QueryAllClientConnectionPaths(clientCtx client.Context, page, limit int) ([]types.ConnectionPaths, int64, error) {
-	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
-	}
-
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllClientConnections)
-	res, height, err := clientCtx.QueryWithData(route, bz)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var connectionPaths []types.ConnectionPaths
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &connectionPaths)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal client connection paths: %w", err)
-	}
-	return connectionPaths, height, nil
 }
 
 // QueryClientConnections queries the store to get the registered connection paths

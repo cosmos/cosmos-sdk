@@ -39,7 +39,10 @@ func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*typ
 		)
 	}
 
-	return &types.QueryChannelResponse{Channel: &channel}, nil
+	return &types.QueryChannelResponse{
+		Channel:     &channel,
+		ProofHeight: uint64(ctx.BlockHeight()),
+	}, nil
 }
 
 // Channels implements the Query/Channels gRPC method
@@ -70,5 +73,6 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 	return &types.QueryChannelsResponse{
 		Channels: connections,
 		Res:      res,
+		Height:   ctx.BlockHeight(),
 	}, nil
 }

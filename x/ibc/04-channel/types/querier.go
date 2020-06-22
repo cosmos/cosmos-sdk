@@ -1,5 +1,13 @@
 package types
 
+import (
+	"strings"
+
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
+	"github.com/tendermint/tendermint/crypto/merkle"
+)
+
 // query routes supported by the IBC channel Querier
 const (
 	QueryAllChannels               = "channels"
@@ -11,10 +19,10 @@ const (
 	QueryUnrelayedPacketSends      = "unrelayed-packet-sends"
 )
 
-// NewChannelResponse creates a new ChannelResponse instance
+// NewQueryChannelResponse creates a new QueryChannelResponse instance
 func NewQueryChannelResponse(channel Channel, proof *merkle.Proof, height int64) QueryChannelResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/"))
 	return QueryChannelResponse{
-		path := commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/"))
 		Channel:     &channel,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
 		ProofPath:   &path,
@@ -22,7 +30,7 @@ func NewQueryChannelResponse(channel Channel, proof *merkle.Proof, height int64)
 	}
 }
 
-// NewQueryPacketResponse creates a new PacketResponswe instance
+// NewQueryPacketResponse creates a new QueryPacketResponse instance
 func NewQueryPacketResponse(
 	portID, channelID string, sequence uint64, packet Packet, proof *merkle.Proof, height int64,
 ) QueryPacketResponse {
@@ -34,4 +42,3 @@ func NewQueryPacketResponse(
 		ProofHeight: uint64(height),
 	}
 }
-

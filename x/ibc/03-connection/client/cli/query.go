@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,44 +10,38 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // GetCmdQueryConnections defines the command to query all the connection ends
 // that this chain mantains.
 func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "connections",
-		Short: "Query all available light clients",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all available connections
-
-Example:
-$ %s query ibc connection connections
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
+	return &cobra.Command{
+		Use:     "connections",
+		Short:   "Query all connections",
+		Long:    "Query all connections ends from a chain",
+		Example: fmt.Sprintf("%s query %s %s connections", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
+			queryClient := types.NewQueryClient(clientCtx)
 
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			req := types.QueryConnectionsRequest{
+				Req: &query.PageRequest{},
+			}
 
-			connections, height, err := utils.QueryAllConnections(clientCtx, page, limit)
+			res, err := queryClient.Connections(context.Background(), req)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(connections)
+			return clientCtx.PrintOutput(res.Connections)
 		},
 	}
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
-
-	return cmd
 }
 
 // GetCmdQueryConnection defines the command to query a connection end
@@ -97,21 +92,21 @@ $ %s query ibc connection paths
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
+			queryClient := types.NewQueryClient(clientCtx)
 
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			req := &types.QueryClientsConnectionsRequest{
+				Req: &query.PageRequest{},
+			}
 
-			connectionPaths, height, err := utils.QueryAllClientConnectionPaths(clientCtx, page, limit)
+			res, err := queryClient.ClientsConnections(context.Background(), req)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(connectionPaths)
+			clientCtx = clientCtx.WithHeight(res.Height)
+			return clientCtx.PrintOutput(res.ConnectionsPaths)
 		},
 	}
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
 
 	return cmd
 }

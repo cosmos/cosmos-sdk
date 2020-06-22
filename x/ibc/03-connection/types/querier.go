@@ -31,12 +31,14 @@ func NewQueryConnectionResponse(
 
 // QueryAllConnectionsParams defines the parameters necessary for querying for all
 // connections.
+// Deprecated.
 type QueryAllConnectionsParams struct {
 	Page  int `json:"page" yaml:"page"`
 	Limit int `json:"limit" yaml:"limit"`
 }
 
 // NewQueryAllConnectionsParams creates a new QueryAllConnectionsParams instance.
+// Deprecated:
 func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
 	return QueryAllConnectionsParams{
 		Page:  page,

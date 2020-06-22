@@ -123,14 +123,9 @@ func newSimpleMap() *simpleMap {
 func (sm *simpleMap) Set(key string, value []byte) {
 	sm.sorted = false
 
-	// The value is hashed, so you can
-	// check for equality with a cached value (say)
-	// and make a determination to fetch or not.
-	vhash := tmhash.Sum(value)
-
 	sm.kvs = append(sm.kvs, kv.Pair{
 		Key:   []byte(key),
-		Value: vhash,
+		Value: value,
 	})
 }
 
@@ -164,6 +159,15 @@ func (sm *simpleMap) KVPairs() kv.Pairs {
 // Key and value are length prefixed and concatenated,
 // then hashed.
 type KVPair kv.Pair
+
+// NewKVPair takes in a key and value and creates a kv.Pair
+// wrapped in the local extension KVPair
+func NewKVPair(key, value []byte) KVPair {
+	return KVPair(kv.Pair{
+		Key:   key,
+		Value: value,
+	})
+}
 
 // Bytes returns key || value, with both the
 // key and value length prefixed.

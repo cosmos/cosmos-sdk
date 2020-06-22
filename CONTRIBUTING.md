@@ -235,7 +235,7 @@ At the moment, only a single major release will be supported, so all point relea
 off of that release.
 
 In order to alleviate the burden for a single person to have to cherry-pick and handle merge conflicts
-of all desired backporting PRs to a point release, we instead maintain a living SRU branch, where
+of all desired backporting PRs to a point release, we instead maintain a living backport branch, where
 all desired features and bug fixes are merged into as separate PRs.
 
 Example:

@@ -206,7 +206,7 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 // GetChannel retreives an IBC Channel for the provided TestChannel. The
 // must be expected to exist otherwise testing will fail.
 func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel {
-	channel, found := chain.App.IBCKeeper.ChannelKeeper.GetChannel(chain.GetContext(), testChannel.PortID, testChannel.ChannelID)
+	channel, found := chain.App.IBCKeeper.ChannelKeeper.GetChannel(chain.GetContext(), testChannel.PortID, testChannel.ID)
 	require.True(chain.t, found)
 
 	return channel
@@ -422,9 +422,9 @@ func (chain *TestChain) ChannelOpenInit(
 	connectionID string,
 ) error {
 	msg := channeltypes.NewMsgChannelOpenInit(
-		ch.PortID, ch.ChannelID,
+		ch.PortID, ch.ID,
 		ChannelVersion, order, []string{connectionID},
-		counterparty.PortID, counterparty.ChannelID,
+		counterparty.PortID, counterparty.ID,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -437,12 +437,12 @@ func (chain *TestChain) ChannelOpenTry(
 	order channeltypes.Order,
 	connectionID string,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ChannelID))
+	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
-		ch.PortID, ch.ChannelID,
+		ch.PortID, ch.ID,
 		ChannelVersion, order, []string{connectionID},
-		counterpartyCh.PortID, counterpartyCh.ChannelID,
+		counterpartyCh.PortID, counterpartyCh.ID,
 		ChannelVersion,
 		proof, height+1,
 		chain.SenderAccount.GetAddress(),
@@ -455,10 +455,10 @@ func (chain *TestChain) ChannelOpenAck(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ChannelID))
+	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenAck(
-		ch.PortID, ch.ChannelID,
+		ch.PortID, ch.ID,
 		ChannelVersion,
 		proof, height+1,
 		chain.SenderAccount.GetAddress(),
@@ -471,10 +471,10 @@ func (chain *TestChain) ChannelOpenConfirm(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ChannelID))
+	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
-		ch.PortID, ch.ChannelID,
+		ch.PortID, ch.ID,
 		proof, height+1,
 		chain.SenderAccount.GetAddress(),
 	)

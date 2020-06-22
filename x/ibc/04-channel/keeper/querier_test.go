@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				channels = append(channels,
 					types.NewIdentifiedChannel(
 						channelA0.PortID,
-						channelA0.ChannelID,
+						channelA0.ID,
 						suite.chainA.GetChannel(channelA0),
 					),
 				)
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				channels = append(channels,
 					types.NewIdentifiedChannel(
 						channelA1.PortID,
-						channelA1.ChannelID,
+						channelA1.ID,
 						suite.chainA.GetChannel(channelA1),
 					),
 				)
@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				channels = append(channels,
 					types.NewIdentifiedChannel(
 						channelA0.PortID,
-						channelA0.ChannelID,
+						channelA0.ID,
 						suite.chainA.GetChannel(channelA0),
 					),
 				)
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				channels = append(channels,
 					types.NewIdentifiedChannel(
 						channelA1.PortID,
-						channelA1.ChannelID,
+						channelA1.ID,
 						suite.chainA.GetChannel(channelA1),
 					),
 				)
@@ -146,7 +146,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				channels = append(channels,
 					types.NewIdentifiedChannel(
 						channelA0.PortID,
-						channelA0.ChannelID,
+						channelA0.ID,
 						suite.chainA.GetChannel(channelA0),
 					),
 				)
@@ -156,7 +156,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				channels = append(channels,
 					types.NewIdentifiedChannel(
 						channelA1.PortID,
-						channelA1.ChannelID,
+						channelA1.ID,
 						suite.chainA.GetChannel(channelA1),
 					),
 				)
@@ -180,7 +180,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				channels = append(channels,
 					types.NewIdentifiedChannel(
 						channelA0.PortID,
-						channelA0.ChannelID,
+						channelA0.ID,
 						suite.chainA.GetChannel(channelA0),
 					),
 				)
@@ -268,10 +268,10 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 				channel.ConnectionHops[0] = "doesnotexist"
 
 				// set connection hops to wrong connection ID
-				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ChannelID, channel)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
 
 				clientID = clientA
-				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ChannelID)
+				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ID)
 
 			},
 			false,
@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connectiontypes.ConnectionEnd{})
 
 				clientID = clientA
-				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ChannelID)
+				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ID)
 			},
 			false,
 		},
@@ -297,7 +297,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 				channelA := connA.Channels[0]
 
 				clientID = clientA
-				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ChannelID)
+				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ID)
 			},
 			true,
 		},
@@ -358,11 +358,11 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 				// create several commitments on the same channel and port
 				for i := seq; i < 10; i++ {
-					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ChannelID, i, []byte("ack"))
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, i, []byte("ack"))
 					commitments = append(commitments, i)
 				}
 
-				params = types.NewQueryPacketCommitmentsParams(channelA.PortID, channelA.ChannelID, 1, 100)
+				params = types.NewQueryPacketCommitmentsParams(channelA.PortID, channelA.ID, 1, 100)
 
 				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), commitments)
 				suite.Require().NoError(err)
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 				// create several commitments on the same channel and port
 				for i := seq; i < 10; i++ {
-					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA0.PortID, channelA0.ChannelID, i, []byte("ack"))
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA0.PortID, channelA0.ID, i, []byte("ack"))
 					commitments = append(commitments, i)
 				}
 
@@ -388,10 +388,10 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 				// create several commitments on a different channel and port
 				for i := seq; i < 10; i++ {
-					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA1.PortID, channelA1.ChannelID, i, []byte("ack"))
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA1.PortID, channelA1.ID, i, []byte("ack"))
 				}
 
-				params = types.NewQueryPacketCommitmentsParams(channelA0.PortID, channelA1.ChannelID, 1, 100)
+				params = types.NewQueryPacketCommitmentsParams(channelA0.PortID, channelA1.ID, 1, 100)
 
 				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), commitments)
 				suite.Require().NoError(err)
@@ -403,7 +403,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 				_, _, connA, _ := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
 				channelA := connA.Channels[0]
 
-				params = types.NewQueryPacketCommitmentsParams(channelA.PortID, channelA.ChannelID, 1, 100)
+				params = types.NewQueryPacketCommitmentsParams(channelA.PortID, channelA.ID, 1, 100)
 
 				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []uint64{})
 				suite.Require().NoError(err)
@@ -462,14 +462,14 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				// create acknowledgements for first 3 sequences
 				for _, seq := range sequences {
 					if seq < 4 {
-						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ChannelID, seq, []byte("ack"))
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, []byte("ack"))
 						unrelayedAcks = append(unrelayedAcks, seq)
 					} else {
 						unrelayedSends = append(unrelayedSends, seq)
 					}
 				}
 
-				params = types.NewQueryUnrelayedPacketsParams(channelA.PortID, channelA.ChannelID, sequences, 1, 100)
+				params = types.NewQueryUnrelayedPacketsParams(channelA.PortID, channelA.ID, sequences, 1, 100)
 
 				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedAcks)
 				suite.Require().NoError(err)
@@ -492,7 +492,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				// create acknowledgements for first 3 sequences
 				for _, seq := range sequences {
 					if seq < 4 {
-						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA0.PortID, channelA0.ChannelID, seq, []byte("ack"))
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA0.PortID, channelA0.ID, seq, []byte("ack"))
 						unrelayedAcks = append(unrelayedAcks, seq)
 					} else {
 						unrelayedSends = append(unrelayedSends, seq)
@@ -505,11 +505,11 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 				// create acknowledgements for other sequences on different channel/port
 				for _, seq := range sequences {
 					if seq >= 4 {
-						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA1.PortID, channelA1.ChannelID, seq, []byte("ack"))
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA1.PortID, channelA1.ID, seq, []byte("ack"))
 					}
 				}
 
-				params = types.NewQueryUnrelayedPacketsParams(channelA0.PortID, channelA0.ChannelID, sequences, 1, 100)
+				params = types.NewQueryUnrelayedPacketsParams(channelA0.PortID, channelA0.ID, sequences, 1, 100)
 
 				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedAcks)
 				suite.Require().NoError(err)
@@ -526,10 +526,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 
 				// create acknowledgements for all sequences
 				for _, seq := range sequences {
-					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ChannelID, seq, []byte("ack"))
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, []byte("ack"))
 				}
 
-				params = types.NewQueryUnrelayedPacketsParams(channelA.PortID, channelA.ChannelID, sequences, 1, 100)
+				params = types.NewQueryUnrelayedPacketsParams(channelA.PortID, channelA.ID, sequences, 1, 100)
 
 				expResSend, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []uint64{})
 				suite.Require().NoError(err)

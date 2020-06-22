@@ -76,7 +76,8 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 		})
 	}
 }
-
+*/
+/*
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
 	channelKey := host.KeyChannel(testPort1, testChannel1)

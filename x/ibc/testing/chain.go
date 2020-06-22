@@ -20,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -413,6 +414,15 @@ func (chain *TestChain) CreatePortCapability(portID string) {
 	chain.App.Commit()
 
 	chain.NextBlock()
+}
+
+// GetPortCapability returns the port capability for the given portID. The capability must
+// exist, otherwise the testing will fail.
+func (chain *TestChain) GetPortCapability(portID string) *capabilitytypes.Capability {
+	cap, ok := chain.App.ScopedIBCKeeper.GetCapability(chain.GetContext(), host.PortPath(portID))
+	require.True(chain.t, ok)
+
+	return cap
 }
 
 // ChannelOpenInit will construct and execute a MsgChannelOpenInit.

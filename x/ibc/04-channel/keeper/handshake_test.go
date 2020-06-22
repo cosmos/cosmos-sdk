@@ -1,182 +1,187 @@
 package keeper_test
 
-/*
 import (
 	"fmt"
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-func (suite *KeeperTestSuite) TestChanOpenInit() {
-	counterparty := types.NewCounterparty(testPort2, testChannel2)
+type testCase = struct {
+	msg      string
+	malleate func()
+	expPass  bool
+}
 
-	var portCap *capabilitytypes.Capability
+// TestChanOpenInit tests the OpenInit handshake call for channels. It uses message passing
+// to enter into the appropriate state and then calls ChanOpenInit directly. The channel is
+// being created on chainA. The port capability must be created on chainA before ChanOpenInit
+// can succeed.
+func (suite *KeeperTestSuite) TestChanOpenInit() {
+	var (
+		connA   *ibctesting.TestConnection
+		connB   *ibctesting.TestConnection
+		portCap *capabilitytypes.Capability
+	)
+
 	testCases := []testCase{
 		{"success", func() {
-			suite.chainA.createConnection(
-				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connection.INIT,
-			)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			suite.chainA.CreatePortCapability(connA.NextTestChannel().PortID)
+			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel().PortID)
 		}, true},
 		{"channel already exists", func() {
-			suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, types.INIT,
-				types.ORDERED, testConnectionIDA,
-			)
+			_, _, connA, connB = suite.coordinator.Setup(suite.chainA, suite.chainB)
 		}, false},
-		{"connection doesn't exist", func() {}, false},
+		{"connection doesn't exist", func() {
+			// any non-nil values of connA and connB are acceptable
+			suite.Require().NotNil(connA)
+			suite.Require().NotNil(connB)
+		}, false},
 		{"connection is UNINITIALIZED", func() {
-			suite.chainA.createConnection(
-				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connection.UNINITIALIZED,
-			)
+			channel := types.NewChannel(types.UNINITIALIZED, types.ORDERED, types.NewCounterparty("port", "channel"), []string{"connB"}, ibctesting.ChannelVersion)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), "port", "channel", channel)
+			portCap = nil
 		}, false},
 		{"capability is incorrect", func() {
-			suite.chainA.createConnection(
-				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connection.INIT,
-			)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 			portCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
-		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
+			// run test for all types of ordering
+			for _, order := range []types.Order{types.UNORDERED, types.ORDERED} {
+				suite.SetupTest() // reset
+				tc.malleate()
 
-			var err error
-			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
-				suite.chainA.GetContext(), host.PortPath(testPort1),
-			)
-			suite.Require().NoError(err, "could not create capability")
+				counterparty := types.NewCounterparty(connB.FirstOrNextTestChannel().PortID, connB.FirstOrNextTestChannel().ID)
+				channelA := connA.FirstOrNextTestChannel()
 
-			tc.malleate()
-			cap, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenInit(
-				suite.chainA.GetContext(), types.ORDERED, []string{testConnectionIDA},
-				testPort1, testChannel1, portCap, counterparty, testChannelVersion,
-			)
-
-			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotNil(cap)
-				chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
-					suite.chainA.GetContext(),
-					host.ChannelCapabilityPath(testPort1, testChannel1),
+				cap, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenInit(
+					suite.chainA.GetContext(), order, []string{connA.ID},
+					channelA.PortID, channelA.ID, portCap, counterparty, ibctesting.ChannelVersion,
 				)
-				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
-				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
-			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+
+				if tc.expPass {
+					suite.Require().NoError(err)
+					suite.Require().NotNil(cap)
+
+					chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
+						suite.chainA.GetContext(),
+						host.ChannelCapabilityPath(channelA.PortID, channelA.ID),
+					)
+					suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
+					suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
+				} else {
+					suite.Require().Error(err)
+				}
 			}
 		})
 	}
 }
-*/
-/*
-func (suite *KeeperTestSuite) TestChanOpenTry() {
-	counterparty := types.NewCounterparty(testPort1, testChannel1)
-	channelKey := host.KeyChannel(testPort1, testChannel1)
 
-	var portCap *capabilitytypes.Capability
+// TestChanOpenTry tests the OpenTry handshake call for channels. It uses message passing
+// to enter into the appropriate state and then calls ChanOpenInit directly. The channel
+// is being created on chainB. The port capability must be created on chainB before
+// ChanOpenTry can succeed.
+func (suite *KeeperTestSuite) TestChanOpenTry() {
+	var (
+		connA      *ibctesting.TestConnection
+		connB      *ibctesting.TestConnection
+		portCap    *capabilitytypes.Capability
+		heightDiff uint64
+	)
+
 	testCases := []testCase{
 		{"success", func() {
-			suite.chainA.CreateClient(suite.chainB)
-			suite.chainB.CreateClient(suite.chainA)
-			suite.chainA.createConnection(
-				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connection.OPEN,
-			)
-			suite.chainB.createConnection(
-				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.INIT, types.ORDERED, testConnectionIDA)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			suite.coordinator.CreateChannelOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+
+			suite.chainB.CreatePortCapability(connB.NextTestChannel().PortID)
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel().PortID)
 		}, true},
 		{"previous channel with invalid state", func() {
-			suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, types.UNINITIALIZED,
-				types.ORDERED, testConnectionIDB,
-			)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			// make previous channel have wrong ordering
+			suite.coordinator.CreateChannelOpenInit(suite.chainB, suite.chainA, connB, connA, types.UNORDERED)
 		}, false},
-		{"connection doesn't exist", func() {}, false},
+		{"connection doesn't exist", func() {
+			// any non-nil values of connA and connB are acceptable
+			suite.Require().NotNil(connA)
+			suite.Require().NotNil(connB)
+		}, false},
 		{"connection is not OPEN", func() {
-			suite.chainA.createConnection(
-				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connection.INIT,
-			)
+			clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			var err error
+			connA, connB, err = suite.coordinator.CreateConnectionInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
 		}, false},
 		{"consensus state not found", func() {
-			suite.chainA.createConnection(
-				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connection.OPEN,
-			)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			suite.coordinator.CreateChannelOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+
+			suite.chainB.CreatePortCapability(connB.NextTestChannel().PortID)
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel().PortID)
+
+			heightDiff = 3 // consensus state doesn't exist at this height
 		}, false},
 		{"channel verification failed", func() {
-			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(
-				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connection.OPEN,
-			)
+			// not creating a channel on chainA will result in an invalid proof of existence
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 		}, false},
 		{"port capability not found", func() {
-			suite.chainA.CreateClient(suite.chainB)
-			suite.chainB.CreateClient(suite.chainA)
-			suite.chainA.createConnection(
-				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connection.OPEN,
-			)
-			suite.chainB.createConnection(
-				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.INIT, types.ORDERED, testConnectionIDA)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			suite.coordinator.CreateChannelOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+
 			portCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
-		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
-
-			var err error
-			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), host.PortPath(testPort2))
-			suite.Require().NoError(err, "could not create capability")
+			heightDiff = 0    // must be explicitly changed
 
 			tc.malleate()
+			counterparty := types.NewCounterparty(connA.FirstOrNextTestChannel().PortID, connA.FirstOrNextTestChannel().ID)
+			channelB := connB.FirstOrNextTestChannel()
 
-			suite.chainA.updateClient(suite.chainB)
-			suite.chainB.updateClient(suite.chainA)
-			proof, proofHeight := queryProof(suite.chainB, channelKey)
+			channelKey := host.KeyChannel(counterparty.PortID, counterparty.ChannelID)
+			proof, proofHeight := suite.chainA.QueryProof(channelKey)
+
+			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
+				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
+				channelB.PortID, channelB.ID, portCap, counterparty, ibctesting.ChannelVersion, ibctesting.ChannelVersion,
+				proof, proofHeight+1+heightDiff,
+			)
 
 			if tc.expPass {
-				cap, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
-					suite.chainA.GetContext(), types.ORDERED, []string{testConnectionIDB},
-					testPort2, testChannel2, portCap, counterparty, testChannelVersion, testChannelVersion,
-					proof, proofHeight+1,
-				)
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err)
 				suite.Require().NotNil(cap)
+
 				chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
 					suite.chainA.GetContext(),
-					host.ChannelCapabilityPath(testPort2, testChannel2),
+					host.ChannelCapabilityPath(channelB.PortID, channelB.ID),
 				)
 				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
-				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
+				suite.Require().Equal(chanCap.Index, cap.Index, "channel capability is not correct")
 			} else {
-				_, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
-					suite.chainA.GetContext(), types.ORDERED, []string{testConnectionIDB},
-					testPort2, testChannel2, portCap, counterparty, testChannelVersion, testChannelVersion,
-					proof, proofHeight,
-				)
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
 }
 
+/*
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	channelKey := host.KeyChannel(testPort2, testChannel2)
 
@@ -622,9 +627,5 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	}
 }
 
-type testCase = struct {
-	msg      string
-	malleate func()
-	expPass  bool
-}
+
 */

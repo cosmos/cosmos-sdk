@@ -109,8 +109,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 	}
 
 	for i, tc := range testCases {
-		// reset state
-		suite.SetupTest()
+		suite.SetupTest() // reset
 		tc.setup()
 
 		bz, err := suite.chainA.Querier(suite.chainA.GetContext(), path, query)
@@ -212,8 +211,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 	}
 
 	for i, tc := range testCases {
-		// reset state
-		suite.SetupTest()
+		suite.SetupTest() // reset
 		tc.setup()
 
 		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
@@ -304,8 +302,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 	}
 
 	for i, tc := range testCases {
-		// reset state
-		suite.SetupTest()
+		suite.SetupTest() // reset
 		tc.setup()
 
 		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
@@ -412,8 +409,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 	}
 
 	for i, tc := range testCases {
-		// reset state
-		suite.SetupTest()
+		suite.SetupTest() // reset
 		tc.setup()
 
 		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
@@ -541,8 +537,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 	}
 
 	for i, tc := range testCases {
-		// reset state
-		suite.SetupTest()
+		suite.SetupTest() // reset
 		tc.setup()
 
 		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)

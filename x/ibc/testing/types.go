@@ -39,6 +39,15 @@ func (conn *TestConnection) NextTestChannel() TestChannel {
 	}
 }
 
+// FirstOrNextTestChannel returns the first test channel if it exists, otherwise it
+// returns the next test channel to be created.
+func (conn *TestConnection) FirstOrNextTestChannel() TestChannel {
+	if len(conn.Channels) > 0 {
+		return conn.Channels[0]
+	}
+	return conn.NextTestChannel()
+}
+
 // TestChannel is a testing helper struct to keep track of the portID and channelID
 // used in creating and interacting with a channel.
 type TestChannel struct {

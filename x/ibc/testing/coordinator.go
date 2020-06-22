@@ -56,6 +56,22 @@ func (coord *Coordinator) Setup(
 	return sourceClient, counterpartyClient, sourceConn, counterpartyConn
 }
 
+// SetupClients is a helper function to create clients  on both the source and counterparty
+// chain. It assumes the caller does not anticipate any errors.
+func (coord *Coordinator) SetupClients(
+	source, counterparty *TestChain,
+	clientType clientexported.ClientType,
+) (string, string) {
+
+	sourceClient, err := coord.CreateClient(source, counterparty, clientType)
+	require.NoError(coord.t, err)
+
+	counterpartyClient, err := coord.CreateClient(counterparty, source, clientType)
+	require.NoError(coord.t, err)
+
+	return sourceClient, counterpartyClient
+}
+
 // SetupClientConnections is a helper function to create clients and the appropriate
 // connections on both the source and counterparty chain. It assumes the caller does not
 // anticipate any errors.
@@ -64,10 +80,7 @@ func (coord *Coordinator) SetupClientConnections(
 	clientType clientexported.ClientType,
 ) (string, string, *TestConnection, *TestConnection) {
 
-	sourceClient, err := coord.CreateClient(source, counterparty, clientType)
-	require.NoError(coord.t, err)
-	counterpartyClient, err := coord.CreateClient(counterparty, source, clientType)
-	require.NoError(coord.t, err)
+	sourceClient, counterpartyClient := coord.SetupClients(source, counterparty, clientType)
 
 	sourceConnection, counterpartyConnection := coord.CreateConnection(source, counterparty, sourceClient, counterpartyClient)
 
@@ -165,7 +178,7 @@ func (coord *Coordinator) CreateChannel(
 	order channeltypes.Order,
 ) (TestChannel, TestChannel) {
 
-	sourceChannel, counterpartyChannel, err := coord.CreateChannelInit(source, counterparty, connection, counterpartyConnection, order)
+	sourceChannel, counterpartyChannel, err := coord.CreateChannelOpenInit(source, counterparty, connection, counterpartyConnection, order)
 	require.NoError(coord.t, err)
 
 	err = coord.CreateChannelOpenTry(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection, order)
@@ -322,12 +335,12 @@ func (coord *Coordinator) CreateConnectionOpenConfirm(
 	return nil
 }
 
-// CreateChannelInit initializes a channel on the source chain with the state INIT
+// CreateChannelOpenInit initializes a channel on the source chain with the state INIT
 // using the OpenInit handshake call.
 //
 // NOTE: The counterparty testing channel will be created even if it is not created in the
 // application state.
-func (coord *Coordinator) CreateChannelInit(
+func (coord *Coordinator) CreateChannelOpenInit(
 	source, counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 	order channeltypes.Order,

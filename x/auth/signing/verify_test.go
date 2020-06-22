@@ -1,9 +1,6 @@
 package signing_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,16 +26,6 @@ func TestVerifySignature(t *testing.T) {
 
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-
-	dir, clean := tests.NewTestCaseDir(t)
-	t.Cleanup(clean)
-
-	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(sdk.KeyringServiceName(), backend, dir, nil)
-	require.NoError(t, err)
-
-	_, _, err = kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
-	require.NoError(t, err)
 
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)

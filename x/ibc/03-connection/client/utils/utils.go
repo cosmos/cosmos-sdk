@@ -36,9 +36,12 @@ func QueryConnection(
 		return nil, err
 	}
 
-	connRes := types.NewQueryConnectionResponse(connectionID, connection, res.Proof, res.Height)
+	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	if err != nil {
+		return nil, err
+	}
 
-	return connRes, nil
+	return types.NewQueryConnectionResponse(connection, proofBz, res.Height), nil
 }
 
 // QueryClientConnections queries the store to get the registered connection paths
@@ -62,8 +65,12 @@ func QueryClientConnections(
 		return nil, err
 	}
 
-	connPathsRes := types.NewQueryClientConnectionsResponse(clientID, paths, res.Proof, res.Height)
-	return connPathsRes, nil
+	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, res.Height), nil
 }
 
 // ParsePrefix unmarshals an cmd input argument from a JSON string to a commitment

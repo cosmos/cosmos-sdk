@@ -5,7 +5,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/query/pagination.proto";
-import "ibc/commitment/commitment.proto";
 
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
 // called by a relayer on Chain A.
@@ -239,9 +238,9 @@ message QueryChannelResponse {
   // channel associated with the request identifiers
   Channel channel = 1;
   // merkle proof of existence
-  ibc.commitment.MerkleProof proof = 2;
+  bytes proof = 2;
   // merkle proof path
-  ibc.commitment.MerklePath proof_path = 3;
+  string proof_path = 3;
   // height at which the proof was retrieved
   uint64 proof_height = 4;
 }
@@ -296,9 +295,9 @@ message QueryPacketResponse {
   // packet associated with the request fields
   Packet packet = 1;
   // merkle proof of existence
-  ibc.commitment.MerkleProof proof = 2;
+  bytes proof = 2;
   // merkle proof path
-  ibc.commitment.MerklePath proof_path = 3;
+  string proof_path = 3;
   // height at which the proof was retrieved
   uint64 proof_height = 4;
 }

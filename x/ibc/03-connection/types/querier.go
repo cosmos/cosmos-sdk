@@ -3,8 +3,6 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
-
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -18,13 +16,13 @@ const (
 
 // NewQueryConnectionResponse creates a new QueryConnectionResponse instance
 func NewQueryConnectionResponse(
-	connectionID string, connection ConnectionEnd, proof *merkle.Proof, height int64,
+	connection ConnectionEnd, proof []byte, height int64,
 ) *QueryConnectionResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connectionID), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connection.ID), "/"))
 	return &QueryConnectionResponse{
 		Connection:  &connection,
-		Proof:       &commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   &path,
+		Proof:       proof,
+		ProofPath:   path.Pretty(),
 		ProofHeight: uint64(height),
 	}
 }
@@ -48,13 +46,13 @@ func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
 
 // NewQueryClientConnectionsResponse creates a new ConnectionPaths instance
 func NewQueryClientConnectionsResponse(
-	clientID string, connectionPaths []string, proof *merkle.Proof, height int64,
+	clientID string, connectionPaths []string, proof []byte, height int64,
 ) *QueryClientConnectionsResponse {
 	path := commitmenttypes.NewMerklePath(strings.Split(host.ClientConnectionsPath(clientID), "/"))
 	return &QueryClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
-		Proof:           &commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:       &path,
+		Proof:           proof,
+		ProofPath:       path.Pretty(),
 		ProofHeight:     uint64(height),
 	}
 }

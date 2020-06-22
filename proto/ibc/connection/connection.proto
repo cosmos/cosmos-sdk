@@ -153,9 +153,9 @@ message QueryConnectionResponse {
   // connection associated with the request identifier
   ConnectionEnd connection = 1;
   // merkle proof of existence
-  ibc.commitment.MerkleProof proof = 2;
+  bytes proof = 2;
   // merkle proof path
-  ibc.commitment.MerklePath proof_path = 3;
+  string proof_path = 3;
   // height at which the proof was retrieved
   uint64 proof_height = 4;
 }
@@ -188,9 +188,9 @@ message QueryClientConnectionsResponse {
   // slice of all the connection paths associated with a client.
   repeated string connection_paths = 1;
   // merkle proof of existence
-  ibc.commitment.MerkleProof proof = 2;
+  bytes proof = 2;
   // merkle proof path
-  ibc.commitment.MerklePath proof_path = 3;
+  string proof_path = 3;
   // height at which the proof was generated
   uint64 proof_height = 4;
 }

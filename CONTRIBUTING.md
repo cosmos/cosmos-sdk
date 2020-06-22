@@ -229,7 +229,7 @@ only pull requests targeted directly against master.
 - Tag the release (use `git tag -a`) and create a release in Github
 - Delete the `RC` branches
 
-### Stable Release Update Procedure
+### Point Release Procedure
 
 At the moment, only a single major release will be supported, so all point releases will be based
 off of that release.

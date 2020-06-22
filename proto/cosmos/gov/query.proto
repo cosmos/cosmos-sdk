@@ -1,0 +1,32 @@
+syntax = "proto3";
+package cosmos.gov;
+
+import "gogoproto/gogo.proto";
+import "cosmos/query/pagination.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+
+service Query {
+  // Proposals queries all proposals.
+  rpc AllProposals (QueryAllProposalsRequest) returns (QueryAllProposalsResponse) {}
+}
+
+// QueryProposalRequest is the request type for the Query/Proposal RPC method
+message QueryAllProposalsRequest {
+  // status of the proposals.
+  int32 proposal_status = 1;
+  
+  // Voter address for the proposals.
+  bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"]; 
+
+  // Deposit addresses from the proposals.
+  bytes depositor = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+
+  cosmos.query.PageRequest req = 4;
+}
+
+message QueryAllProposalsResponse {
+  bytes proposals = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Proposal"];
+
+  cosmos.query.PageResponse res = 2;
+}

@@ -31,6 +31,7 @@ type Keeper struct {
 
 	// Proposal router
 	router types.Router
+	types.QueryServer
 }
 
 // NewKeeper returns a governance keeper. It handles:

@@ -203,6 +203,15 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	return nil
 }
 
+// GetChannel retreives an IBC Channel for the provided TestChannel. The
+// must be expected to exist otherwise testing will fail.
+func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel {
+	channel, found := chain.App.IBCKeeper.ChannelKeeper.GetChannel(chain.GetContext(), testChannel.PortID, testChannel.ChannelID)
+	require.True(chain.t, found)
+
+	return channel
+}
+
 // NewClientID appends a new clientID string in the format:
 // ClientFor<counterparty-chain-id><index>
 func (chain *TestChain) NewClientID(counterpartyChainID string) string {

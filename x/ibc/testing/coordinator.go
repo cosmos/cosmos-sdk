@@ -99,8 +99,7 @@ func (coord *Coordinator) Setup(
 	sourceClient, counterpartyClient, sourceConn, counterpartyConn := coord.CreateClientsAndConnections(sourceID, counterpartyID, clientexported.Tendermint)
 
 	// channels can be referenced through the returned connections
-	_, _, err := coord.CreateChannel(sourceID, counterpartyID, sourceConn, counterpartyConn, channeltypes.UNORDERED)
-	require.NoError(coord.t, err)
+	coord.CreateChannel(sourceID, counterpartyID, sourceConn, counterpartyConn, channeltypes.UNORDERED)
 
 	return sourceClient, counterpartyClient, sourceConn, counterpartyConn
 }
@@ -164,36 +163,31 @@ func (coord *Coordinator) UpdateClient(
 
 // CreateConnection constructs and executes connection handshake messages in order to create
 // OPEN channels on source and counterparty chains. The connection information of the source
-// and counterparty's are returned within a TestConnection struct. If there is a fault in
-// the connection handshake then an error is returned.
+// and counterparty's are returned within a TestConnection struct. The function expects the
+// connections to be successfully created and testing will fail otherwise.
 //
 // NOTE: The counterparty testing connection will be created even if it is not created in the
 // application state.
 func (coord *Coordinator) CreateConnection(
 	sourceID, counterpartyID,
 	clientID, counterpartyClientID string,
-) (*TestConnection, *TestConnection, error) {
+) (*TestConnection, *TestConnection) {
 	source := coord.GetChain(sourceID)
 	counterparty := coord.GetChain(counterpartyID)
 
 	sourceConnection, counterpartyConnection, err := coord.CreateConnectionInit(source, counterparty, clientID, counterpartyClientID)
-	if err != nil {
-		return sourceConnection, counterpartyConnection, err
-	}
+	require.NoError(coord.t, err)
 
-	if err := coord.CreateConnectionOpenTry(counterparty, source, counterpartyConnection, sourceConnection); err != nil {
-		return sourceConnection, counterpartyConnection, err
-	}
+	err = coord.CreateConnectionOpenTry(counterparty, source, counterpartyConnection, sourceConnection)
+	require.NoError(coord.t, err)
 
-	if err := coord.CreateConnectionOpenAck(source, counterparty, sourceConnection, counterpartyConnection); err != nil {
-		return sourceConnection, counterpartyConnection, err
-	}
+	err = coord.CreateConnectionOpenAck(source, counterparty, sourceConnection, counterpartyConnection)
+	require.NoError(coord.t, err)
 
-	if err := coord.CreateConnectionOpenConfirm(counterparty, source, counterpartyConnection, sourceConnection); err != nil {
-		return sourceConnection, counterpartyConnection, err
-	}
+	err = coord.CreateConnectionOpenConfirm(counterparty, source, counterpartyConnection, sourceConnection)
+	require.NoError(coord.t, err)
 
-	return sourceConnection, counterpartyConnection, nil
+	return sourceConnection, counterpartyConnection
 }
 
 // CreateClientsAndConnections is a helper function to create clients and the appropriate
@@ -208,8 +202,7 @@ func (coord *Coordinator) CreateClientsAndConnections(
 	counterpartyClient, err := coord.CreateClient(counterpartyID, sourceID, clientType)
 	require.NoError(coord.t, err)
 
-	sourceConnection, counterpartyConnection, err := coord.CreateConnection(sourceID, counterpartyID, sourceClient, counterpartyClient)
-	require.NoError(coord.t, err)
+	sourceConnection, counterpartyConnection := coord.CreateConnection(sourceID, counterpartyID, sourceClient, counterpartyClient)
 
 	return sourceClient, counterpartyClient, sourceConnection, counterpartyConnection
 }
@@ -312,8 +305,9 @@ func (coord *Coordinator) CreateConnectionOpenConfirm(
 }
 
 // CreateChannel constructs and executes channel handshake messages in order to create
-// channels on source and counterparty chains with the passed in Channel State. The portID and
-// channelID of source and counterparty are returned.
+// channels on source and counterparty chains with the passed in Channel State. The portID
+// and channelID of source and counterparty are returned. The function expects the creation
+// of both channels to succeed and testing fails otherwise.
 //
 // NOTE: The counterparty testing channel will be created even if it is not created in the
 // application state.
@@ -321,28 +315,23 @@ func (coord *Coordinator) CreateChannel(
 	sourceID, counterpartyID string,
 	connection, counterpartyConnection *TestConnection,
 	order channeltypes.Order,
-) (TestChannel, TestChannel, error) {
+) (TestChannel, TestChannel) {
 	source := coord.GetChain(sourceID)
 	counterparty := coord.GetChain(counterpartyID)
 
 	sourceChannel, counterpartyChannel, err := coord.CreateChannelInit(source, counterparty, connection, counterpartyConnection, order)
-	if err != nil {
-		return sourceChannel, counterpartyChannel, err
-	}
+	require.NoError(coord.t, err)
 
-	if err := coord.CreateChannelOpenTry(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection, order); err != nil {
-		return sourceChannel, counterpartyChannel, err
-	}
+	err = coord.CreateChannelOpenTry(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection, order)
+	require.NoError(coord.t, err)
 
-	if err := coord.CreateChannelOpenAck(source, counterparty, sourceChannel, counterpartyChannel, connection); err != nil {
-		return sourceChannel, counterpartyChannel, err
-	}
+	err = coord.CreateChannelOpenAck(source, counterparty, sourceChannel, counterpartyChannel, connection)
+	require.NoError(coord.t, err)
 
-	if err := coord.CreateChannelOpenConfirm(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection); err != nil {
-		return sourceChannel, counterpartyChannel, err
-	}
+	err = coord.CreateChannelOpenConfirm(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection)
+	require.NoError(coord.t, err)
 
-	return sourceChannel, counterpartyChannel, nil
+	return sourceChannel, counterpartyChannel
 }
 
 // CreateChannelInit initializes a channel on the source chain with the state INIT

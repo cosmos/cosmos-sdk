@@ -1,11 +1,9 @@
 package keeper_test
 
-/*
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -19,7 +17,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 	)
 
 	params := types.NewQueryAllChannelsParams(1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
+	data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
 	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
@@ -42,31 +40,29 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				channelA0 := connA.Channels[0]
 
 				channels = append(channels,
-					types.NewIdentifiedChannel(,
-						channelA0.ChannelID,
+					types.NewIdentifiedChannel(
 						channelA0.PortID,
+						channelA0.ChannelID,
 						suite.chainA.GetChannel(channelA0),
-						),
 					),
 				)
 
 				// create second connection
-				connA1, connB1 := suite.chainA.CreateConnection(suite.chainA.ChainID, suite.chainB.ChainID, clientA, clientB)
+				connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA.ChainID, suite.chainB.ChainID, clientA, clientB)
 
 				// create second channel on second connection
-				suite.chainA.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA1, connB1, types.ORDERED)
+				channelA1, _ := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA1, connB1, types.ORDERED)
 
 				channels = append(channels,
-					types.NewIdentifiedChannel(,
-						channelA1.ChannelID,
+					types.NewIdentifiedChannel(
 						channelA1.PortID,
+						channelA1.ChannelID,
 						suite.chainA.GetChannel(channelA1),
 					),
 				)
 
-
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
@@ -76,30 +72,30 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				suite.SetupTest()
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
-				// create channels on singular connections
-				suite.chainA.createConnection(
-					testConnectionIDA, testConnectionIDB,
-					testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
+				// create first connection/channel
+				_, _, connA, connB := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
+				channelA0 := connA.Channels[0]
 
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort1, testChannel1,
-						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-							types.OPEN, types.ORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA0.PortID,
+						channelA0.ChannelID,
+						suite.chainA.GetChannel(channelA0),
 					),
 				)
+
+				// create second channel on the same connection
+				channelA1, _ := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort2, testChannel2,
-						suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1,
-							types.OPEN, types.UNORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA1.PortID,
+						channelA1.ChannelID,
+						suite.chainA.GetChannel(channelA1),
 					),
 				)
 
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
@@ -107,7 +103,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 			"success no channels",
 			func() {
 				suite.SetupTest()
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, []types.IdentifiedChannel{})
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []types.IdentifiedChannel{})
 				suite.Require().NoError(err)
 			},
 		},
@@ -116,13 +112,14 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 	for i, tc := range testCases {
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
+		bz, err := suite.chainA.Querier(suite.chainA.GetContext(), path, query)
 
 		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Require().Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
 	}
 }
 
+/*
 // TestQueryConnectionChannel tests querying existing channels on a singular connection.
 func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 	path := []string{types.SubModuleName, types.QueryConnectionChannels}
@@ -133,7 +130,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 	)
 
 	params := types.NewQueryConnectionChannelsParams(testConnectionIDA, 1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
+	data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
 	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
@@ -174,7 +171,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				)
 
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
@@ -209,7 +206,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				)
 
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
@@ -217,7 +214,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 			"success no channels",
 			func() {
 				suite.SetupTest()
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, []types.IdentifiedChannel{})
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []types.IdentifiedChannel{})
 				suite.Require().NoError(err)
 			},
 		},
@@ -236,7 +233,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 	path := []string{types.SubModuleName, types.QueryChannelClientState}
 	params := types.NewQueryChannelClientStateParams(testPort1, testChannel1)
-	data, err := suite.cdc.MarshalJSON(params)
+	data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
 	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
@@ -315,7 +312,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 
 		if tc.expPass {
 			// set expected result
-			expRes, merr := codec.MarshalJSONIndent(suite.cdc, clientState)
+			expRes, merr := codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), clientState)
 			suite.Require().NoError(merr)
 			suite.Require().True(found)
 			suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
@@ -337,7 +334,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 	)
 
 	params := types.NewQueryPacketCommitmentsParams(testPort1, testChannel1, 1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
+	data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
 	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
@@ -363,7 +360,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 					commitments = append(commitments, i)
 				}
 
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, commitments)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), commitments)
 				suite.Require().NoError(err)
 			},
 		},
@@ -386,7 +383,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 					suite.chainA.storePacketCommitment(ctx, testPort2, testChannel2, i)
 				}
 
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, commitments)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), commitments)
 				suite.Require().NoError(err)
 			},
 		},
@@ -394,7 +391,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 			"success no packet commitments",
 			func() {
 				suite.SetupTest()
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []uint64{})
 				suite.Require().NoError(err)
 			},
 		},
@@ -424,7 +421,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 	)
 
 	params := types.NewQueryUnrelayedPacketsParams(testPort1, testChannel1, sequences, 1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
+	data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
 	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
@@ -454,10 +451,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 					}
 				}
 
-				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedAcks)
 				suite.Require().NoError(err)
 
-				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
+				expResSend, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedSends)
 				suite.Require().NoError(err)
 
 			},
@@ -487,10 +484,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 					}
 				}
 
-				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedAcks)
 				suite.Require().NoError(err)
 
-				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
+				expResSend, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedSends)
 				suite.Require().NoError(err)
 			},
 		},
@@ -505,10 +502,10 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 					suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
 				}
 
-				expResSend, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
+				expResSend, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []uint64{})
 				suite.Require().NoError(err)
 
-				expResAck, err = codec.MarshalJSONIndent(suite.cdc, sequences)
+				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), sequences)
 				suite.Require().NoError(err)
 			},
 		},

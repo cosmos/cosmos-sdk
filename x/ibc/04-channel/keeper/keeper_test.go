@@ -69,18 +69,18 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	}
 
 	// channel1 is second channel on first connection on chainA
-	testchannel1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA0, connB0, types.ORDERED)
-	suite.NoError(err)
+	testchannel1, _ := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA0, connB0, types.ORDERED)
 	counterparty1 := types.Counterparty{
 		PortID:    connB0.Channels[1].PortID,
 		ChannelID: connB0.Channels[1].ChannelID,
 	}
 
-	connA1, connB1, err := suite.coordinator.CreateConnection(suite.chainA.ChainID, suite.chainB.ChainID, clientA, clientB)
-	suite.NoError(err)
+	connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA.ChainID, suite.chainB.ChainID, clientA, clientB)
 
 	// channel2 is on a second connection on chainA
 	testchannel2, _, err := suite.coordinator.CreateChannelInit(suite.chainA, suite.chainB, connA1, connB1, types.UNORDERED)
+	suite.Require().NoError(err)
+
 	counterparty2 := types.Counterparty{
 		PortID:    connB1.Channels[0].PortID,
 		ChannelID: connB1.Channels[0].ChannelID,
@@ -118,8 +118,7 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 	_, _, connA, connB := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
 	channelA0 := connA.Channels[0]
 
-	channelA1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
-	suite.NoError(err)
+	channelA1, _ := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
 
 	seq1 := types.NewPacketSequence(channelA0.PortID, channelA0.ChannelID, 1)
 	seq2 := types.NewPacketSequence(channelA0.PortID, channelA0.ChannelID, 2)
@@ -154,8 +153,7 @@ func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {
 	_, _, connA, connB := suite.coordinator.Setup(suite.chainA.ChainID, suite.chainB.ChainID)
 	channelA0 := connA.Channels[0]
 
-	channelA1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
-	suite.NoError(err)
+	channelA1, _ := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
 
 	// channel 0 acks
 	ack1 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ChannelID, 1, []byte("ack"))
@@ -249,8 +247,7 @@ func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
 	channelA := connA.Channels[0]
 
 	// create second channel
-	channelA1, _, err := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
-	suite.NoError(err)
+	channelA1, _ := suite.coordinator.CreateChannel(suite.chainA.ChainID, suite.chainB.ChainID, connA, connB, types.UNORDERED)
 
 	ctxA := suite.chainA.GetContext()
 	expectedSeqs := make(map[uint64]bool)

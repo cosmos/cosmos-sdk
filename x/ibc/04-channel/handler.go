@@ -80,6 +80,9 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 			types.EventTypeChannelOpenAck,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -104,6 +107,9 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 			types.EventTypeChannelOpenConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -128,6 +134,9 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 			types.EventTypeChannelCloseInit,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -152,6 +161,9 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 			types.EventTypeChannelCloseConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

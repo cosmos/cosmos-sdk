@@ -483,6 +483,40 @@ func TestMultiStore_Pruning(t *testing.T) {
 	}
 }
 
+func TestMultiStore_PruningRestart(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Commit enough to build up heights to prune, where on the next block we should
+	// batch delete.
+	for i := int64(0); i < 10; i++ {
+		ms.Commit()
+	}
+
+	pruneHeights := []int64{1, 2, 4, 5, 7}
+
+	// ensure we've persisted the current batch of heights to prune to the store's DB
+	ph, err := getPruningHeights(ms.db)
+	require.NoError(t, err)
+	require.Equal(t, pruneHeights, ph)
+
+	// "restart"
+	ms = newMultiStoreWithMounts(db, types.NewPruningOptions(2, 3, 11))
+	err = ms.LoadLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, pruneHeights, ms.pruneHeights)
+
+	// commit one more block and ensure the heights have been pruned
+	ms.Commit()
+	require.Empty(t, ms.pruneHeights)
+
+	for _, v := range pruneHeights {
+		_, err := ms.CacheMultiStoreWithVersion(v)
+		require.Error(t, err, "expected error when loading height: %d", v)
+	}
+}
+
 //-----------------------------------------------------------------------
 // utils
 

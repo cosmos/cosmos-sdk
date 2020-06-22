@@ -26,6 +26,7 @@ import (
 
 const (
 	latestVersionKey = "s/latest"
+	pruneHeightsKey  = "s/pruneheights"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
@@ -206,6 +207,12 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	rs.lastCommitInfo = cInfo
 	rs.stores = newStores
 
+	// load any pruned heights we missed from disk to be pruned on the next run
+	ph, err := getPruningHeights(rs.db)
+	if err == nil && len(ph) > 0 {
+		rs.pruneHeights = ph
+	}
+
 	return nil
 }
 
@@ -315,7 +322,7 @@ func (rs *Store) Commit() types.CommitID {
 		rs.pruneStores()
 	}
 
-	flushCommitInfo(rs.db, version, rs.lastCommitInfo)
+	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
 
 	return types.CommitID{
 		Version: version,
@@ -686,12 +693,6 @@ func getLatestVersion(db dbm.DB) int64 {
 	return latest
 }
 
-// Set the latest version.
-func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes, _ := cdc.MarshalBinaryBare(version)
-	batch.Set([]byte(latestVersionKey), latestBytes)
-}
-
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) commitInfo {
 	storeInfos := make([]storeInfo, 0, len(storeMap))
@@ -736,23 +737,48 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 	return cInfo, nil
 }
 
-// Set a commitInfo for given version.
 func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
 	cInfoBytes := cdc.MustMarshalBinaryBare(cInfo)
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
 	batch.Set([]byte(cInfoKey), cInfoBytes)
 }
 
-// flushCommitInfo flushes a commitInfo for given version to the DB. Note, this
-// needs to happen atomically.
-func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
+func setLatestVersion(batch dbm.Batch, version int64) {
+	latestBytes := cdc.MustMarshalBinaryBare(version)
+	batch.Set([]byte(latestVersionKey), latestBytes)
+}
+
+func setPruningHeights(batch dbm.Batch, pruneHeights []int64) {
+	bz := cdc.MustMarshalBinaryBare(pruneHeights)
+	batch.Set([]byte(pruneHeightsKey), bz)
+}
+
+func getPruningHeights(db dbm.DB) ([]int64, error) {
+	bz, err := db.Get([]byte(pruneHeightsKey))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pruned heights: %w", err)
+	}
+	if len(bz) == 0 {
+		return nil, errors.New("no pruned heights found")
+	}
+
+	var prunedHeights []int64
+	if err := cdc.UnmarshalBinaryBare(bz, &prunedHeights); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal pruned heights: %w", err)
+	}
+
+	return prunedHeights, nil
+}
+
+func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []int64) {
 	batch := db.NewBatch()
 	defer batch.Close()
 
 	setCommitInfo(batch, version, cInfo)
 	setLatestVersion(batch, version)
-	err := batch.Write()
-	if err != nil {
+	setPruningHeights(batch, pruneHeights)
+
+	if err := batch.Write(); err != nil {
 		panic(fmt.Errorf("error on batch write %w", err))
 	}
 }

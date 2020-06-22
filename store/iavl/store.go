@@ -41,12 +41,7 @@ type Store struct {
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load.
 func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool) (types.CommitKVStore, error) {
-	tree, err := iavl.NewMutableTreeWithOpts(
-		db,
-		dbm.NewMemDB(),
-		defaultIAVLCacheSize,
-		iavl.PruningOptions(1, 0),
-	)
+	tree, err := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	if err != nil {
 		return nil, err
 	}

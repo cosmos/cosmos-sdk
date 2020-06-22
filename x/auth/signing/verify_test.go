@@ -1,11 +1,9 @@
 package signing_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/spf13/viper"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -35,17 +33,12 @@ func TestVerifySignature(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	viper.Set(flags.FlagKeyringBackend, backend)
 	path := hd.CreateHDPath(118, 0, 0).String()
 	kr, err := keyring.New(sdk.KeyringServiceName(), backend, dir, nil)
 	require.NoError(t, err)
 
 	_, _, err = kr.NewMnemonic(from, keyring.English, path, hd.Secp256k1)
 	require.NoError(t, err)
-
-	viper.Set(flags.FlagFrom, from)
-	viper.Set(flags.FlagChainID, chainId)
-	viper.Set(flags.FlagHome, dir)
 
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)

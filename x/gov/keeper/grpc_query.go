@@ -25,7 +25,7 @@ func (q Keeper) AllProposals(c context.Context, req *types.QueryAllProposalsRequ
 	store := ctx.KVStore(q.storeKey)
 	// proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
-	res, err := query.Paginate(proposalStore, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
 		var result types.Proposal
 		err := q.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {

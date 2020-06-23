@@ -280,27 +280,35 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 
 // WaitForHeight performs a blocking check where it waits for a block to be
 // committed after a given block. If that height is not reached within a timeout,
-// an error is returned.
-func (n *Network) WaitForHeight(h int64) error {
+// an error is returned. Regardless, the latest height queried is returned.
+func (n *Network) WaitForHeight(h int64) (int64, error) {
+	return n.WaitForHeightWithTimeout(h, 10*time.Second)
+}
+
+// WaitForHeightWithTimeout is the same as WaitForHeight except the caller can
+// provide a custom timeout.
+func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, error) {
 	ticker := time.NewTicker(time.Second)
-	timeout := time.After(10 * time.Second)
+	timeout := time.After(t)
 
 	if len(n.Validators) == 0 {
-		return errors.New("no validators available")
+		return 0, errors.New("no validators available")
 	}
 
+	var latestHeight int64
 	val := n.Validators[0]
 
 	for {
 		select {
 		case <-timeout:
 			ticker.Stop()
-			return errors.New("timeout exceeded waiting for block")
+			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
 			status, err := val.RPCClient.Status()
 			if err == nil && status != nil {
-				if status.SyncInfo.LatestBlockHeight > h {
-					return nil
+				latestHeight = status.SyncInfo.LatestBlockHeight
+				if latestHeight >= h {
+					return latestHeight, nil
 				}
 			}
 		}

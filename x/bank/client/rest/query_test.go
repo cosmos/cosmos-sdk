@@ -27,7 +27,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = cfg
 	s.network = testutil.NewTestNetwork(s.T(), cfg)
-	s.Require().NoError(s.network.WaitForHeight(1))
+
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

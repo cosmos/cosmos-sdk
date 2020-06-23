@@ -12,22 +12,6 @@ func TestNetwork_Liveness(t *testing.T) {
 	defer n.Cleanup()
 	require.NotNil(t, n)
 
-	require.NoError(t, n.WaitForHeight(1))
-
-	client := n.Validators[0].RPCClient
-	ticker := time.NewTicker(5 * time.Second)
-	timeout := time.After(time.Minute)
-
-	for {
-		select {
-		case <-ticker.C:
-			s, _ := client.Status()
-			if s != nil && s.SyncInfo.LatestBlockHeight >= 10 {
-				t.Logf("successfully process %d blocks", s.SyncInfo.LatestBlockHeight)
-				return
-			}
-		case <-timeout:
-			t.Fatal("timeout exceeded waiting for enough committed blocks")
-		}
-	}
+	h, err := n.WaitForHeightWithTimeout(10, time.Minute)
+	require.NoError(t, err, "expected to reach 10 blocks; got %d", h)
 }

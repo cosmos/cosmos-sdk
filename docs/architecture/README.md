@@ -50,3 +50,4 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 022: Custom baseapp panic handling](./adr-022-custom-panic-handling.md)
 - [ADR 023: Protocol Buffer Naming and Versioning](./adr-023-protobuf-naming.md)
 - [ADR 024: Coin Metadata](./adr-024-coin-metadata.md)
+- [ADR 026: IBC Client Recovery Mechanisms](./adr-026-ibc-client-recovery-mechanisms.md)

@@ -5,7 +5,6 @@ import (
 	"io"
 	"sync"
 
-	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -260,12 +259,9 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			// sanity check: If value for given version was retrieved, immutable tree must also be retrievable
 			panic(fmt.Sprintf("version exists in store but could not retrieve corresponding versioned tree in store, %s", err.Error()))
 		}
-		mtree := &iavl.MutableTree{
-			ImmutableTree: iTree,
-		}
 
 		// get proof from tree and convert to merkle.Proof before adding to result
-		res.Proof = getProofFromTree(mtree, req.Data, res.Value != nil)
+		res.Proof = getProofFromTree(iTree, req.Data, res.Value != nil)
 
 	case "/subspace":
 		var KVs []types.KVPair
@@ -291,7 +287,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
+func getProofFromTree(tree *iavl.ImmutableTree, key []byte, exists bool) *merkle.Proof {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -299,14 +295,14 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 
 	if exists {
 		// value was found
-		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
+		commitmentProof, err = CreateMembershipProof(tree, key)
 		if err != nil {
 			// sanity check: If value was found, membership proof must be creatable
 			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
 		}
 	} else {
 		// value wasn't found
-		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
+		commitmentProof, err = CreateNonMembershipProof(tree, key)
 		if err != nil {
 			// sanity check: If value wasn't found, nonmembership proof must be creatable
 			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))

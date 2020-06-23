@@ -8,7 +8,6 @@ require (
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/btcsuite/btcutil v1.0.2
-	github.com/confio/ics23-iavl v0.6.0
 	github.com/confio/ics23-tendermint v0.6.1
 	github.com/confio/ics23/go v0.0.0-20200604202538-6e2c36a74465
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d

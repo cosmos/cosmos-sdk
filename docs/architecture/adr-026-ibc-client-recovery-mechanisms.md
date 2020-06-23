@@ -20,7 +20,7 @@ The state of concern is where a client associated with connection(s) and channel
 
 1. The chain which the client is following has halted and is no longer producing blocks/headers, so no updates can be made to the client
 1. The chain which the client is following has continued to operate, but no relayer has submitted a new header within the unbonding period, and the client has expired
-  1. This could be due to real misbehaviour (intentional Byzantine behaviour) or merely a mistake by validators, but the client cannot distinguish these two cases
+    1. This could be due to real misbehaviour (intentional Byzantine behaviour) or merely a mistake by validators, but the client cannot distinguish these two cases
 1. The chain which the client is following has experienced a misbehaviour event, and the client has been frozen & thus can no longer be updated
 
 ### Security model
@@ -32,16 +32,16 @@ Two-thirds of the validator set (the quorum for governance, module participation
 We elect not to deal with chains which have actually halted, which is necessarily Byzantine behaviour and in which case token recovery is not likely possible anyways (in-flight packets cannot be timed-out, but the relative impact of that is minor).
 
 1. Require Tendermint light clients (ICS 07) to be created with the following additional flags
-  1. `allow_governance_override_after_expiry` (boolean)
+    1. `allow_governance_override_after_expiry` (boolean)
 1. Require Tendermint light clients (ICS 07) to expose the following additional internal query functions
-  1. `Expired() boolean`, which returns whether or not the client has passed the unbonding period since the last update
+    1. `Expired() boolean`, which returns whether or not the client has passed the unbonding period since the last update
 1. Require Tendermint light clients (ICS 07) & solo machine clients (ICS 06) to be created with the following additional flags
-  1. `allow_governance_override_after_misbehaviour` (boolean)
+    1. `allow_governance_override_after_misbehaviour` (boolean)
 1. Add a new governance proposal type, `ClientUpdateProposal`, in the `x/ibc` module
-  1. Extend the base `Proposal` with a client identifier (`string`) and a header (`bytes`, encoded in a client-type-specific format)
-  1. If this governance proposal passes, the client is updated with the provided header, if and only if:
-    1. `allow_governance_override_after_expiry` is true and the client has expired (`Expired()` returns true)
-    1. `allow_governance_override_after_misbehaviour` is true and the client has been frozen (`Frozen()` returns true)
+    1. Extend the base `Proposal` with a client identifier (`string`) and a header (`bytes`, encoded in a client-type-specific format)
+    1. If this governance proposal passes, the client is updated with the provided header, if and only if:
+        1. `allow_governance_override_after_expiry` is true and the client has expired (`Expired()` returns true)
+        1. `allow_governance_override_after_misbehaviour` is true and the client has been frozen (`Frozen()` returns true)
 
 ## Consequences
 

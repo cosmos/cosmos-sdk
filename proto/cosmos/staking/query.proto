@@ -7,9 +7,10 @@ import "cosmos/staking/staking.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
+// TODO: Add docs for each
 // Query provides defines the gRPC querier service
 service Query {
-//  rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
+  rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
 
   rpc ValidatorQ (QueryValidatorRequest) returns (QueryValidatorResponse) {}
 
@@ -19,53 +20,43 @@ service Query {
 
   rpc DelegationQ (QueryBondParamsRequest) returns (QueryDelegationResponse) {}
 
-//  rpc UnbondingDelegation (QueryBondParamsRequest) returns (QueryUnbondingDelegationResponse) {}
+  rpc UnbondingDelegation (QueryBondParamsRequest) returns (QueryUnbondingDelegationResponse) {}
 //
-//  rpc DelegatorDelegations (QueryDelegatorParamsRequest) returns (QueryDelegatorDelegationsResponse) {}
+  rpc DelegatorDelegations (QueryDelegatorParamsRequest) returns (QueryDelegatorDelegationsResponse) {}
 //
 //  rpc DelegatorUnbondingDelegations (QueryDelegatorParamsRequest) returns (QueryUnbondingDelegatorDelegationsResponse) {}
 //
 //  rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) { }
 //
 //  rpc DelegatorValidators (QueryDelegatorParamsRequest) returns (QueryDelegatorValidatorsResponse) { }
-//
-//  rpc DelegatorValidator (QueryBondParamsRequest) returns (QueryDelegatorValidatorResponse) { }
-//
-//  rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
-//
-//  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
 
-//  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
+  rpc DelegatorValidator (QueryBondParamsRequest) returns (QueryDelegatorValidatorResponse) { }
+
+  rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
+
+  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
+
+  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
 }
 
-//message QueryValidatorsRequest{
-//    int64 Page = 1;
-//
-//    int64 Limit = 2;
-//
-//    string State = 3;
-//
-//  cosmos.query.PageRequest req = 4;
-//}
-//
-//message QueryValidatorsResponse {
-//  option (gogoproto.equal) = true;
-//
-//  repeated cosmos.staking.Validator validators = 1 [(gogoproto.nullable) = false];
-//
-//  cosmos.query.PageResponse res = 2;
-//}
-
-message QueryValidatorRequest{
-  bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+message QueryValidatorsRequest{
+  string status = 3;
 
   cosmos.query.PageRequest req = 4;
 }
 
-message QueryValidatorResponse{
-  cosmos.staking.Validator validator = 1;
+message QueryValidatorsResponse {
+  repeated cosmos.staking.Validator validators = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse res = 2[(gogoproto.nullable) = false];
+}
+
+message QueryValidatorRequest{
+  bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+}
+
+message QueryValidatorResponse{
+  cosmos.staking.Validator validator = 1[(gogoproto.nullable) = false];
 }
 
 message QueryValidatorDelegationsResponse{
@@ -86,32 +77,28 @@ message QueryBondParamsRequest{
 
   bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 
-  cosmos.query.PageRequest req = 3;
+  cosmos.query.PageRequest req = 3[(gogoproto.nullable) = false];
 }
 
 message QueryDelegationResponse{
   cosmos.staking.DelegationResponse delegation_response = 1  [(gogoproto.casttype) = "DelegationResponse"];
-
-  cosmos.query.PageResponse res = 2;
 }
-//
-//message QueryUnbondingDelegationResponse{
-//  cosmos.staking.UnbondingDelegation unbond =1;
-//
-//  cosmos.query.PageResponse res = 2;
-//}
-//
-//message QueryDelegatorParamsRequest{
-//  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-//
-//  cosmos.query.PageRequest req = 2;
-//}
-//
-//message QueryDelegatorDelegationsResponse{
-//  bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
-//
-//  cosmos.query.PageResponse res = 2;
-//}
+
+message QueryUnbondingDelegationResponse{
+  cosmos.staking.UnbondingDelegation unbond =1[(gogoproto.nullable) = false];
+}
+
+message QueryDelegatorParamsRequest{
+  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+
+  cosmos.query.PageRequest req = 2;
+}
+
+message QueryDelegatorDelegationsResponse{
+  repeated cosmos.staking.DelegationResponse delegation_responses = 1[(gogoproto.nullable) = false];
+
+  cosmos.query.PageResponse res = 2[(gogoproto.nullable) = false];
+}
 //
 //message QueryUnbondingDelegatorDelegationsResponse{
 //  bytes unbonding_responses = 1  [(gogoproto.casttype) = "UnbondingDelegations"];
@@ -140,37 +127,32 @@ message QueryDelegationResponse{
 //
 //  cosmos.query.PageResponse res = 2;
 //}
-//
-//message QueryDelegatorValidatorResponse{
-//  cosmos.staking.Validator validator = 1;
-//
-//  cosmos.query.PageResponse res = 2;
-//}
-//
-//message QueryHistoricalInfoRequest{
-//  int64 height = 1;
-//
-//  cosmos.query.PageRequest req = 2;
-//}
-//
-//message QueryHistoricalInfoResponse{
-//  cosmos.staking.HistoricalInfo hist = 1;
-//
-//  cosmos.query.PageResponse res = 2;
-//}
-//
-//message QueryPoolRequest{ }
-//
-//message QueryPoolResponse{
-//  bytes pool = 1[(gogoproto.casttype) = "Pool"];
-//
-//  cosmos.query.PageResponse res = 2;
-//}
-//
-//message QueryParametersRequest{ }
-//
-//message QueryParametersResponse{
-//  bytes params = 1[(gogoproto.casttype) = "Params"];
-//
-//  cosmos.query.PageResponse res = 2;
-//}
+
+message QueryDelegatorValidatorResponse{
+  cosmos.staking.Validator validator = 1[(gogoproto.nullable) = false];
+
+  cosmos.query.PageResponse res = 2[(gogoproto.nullable) = false];
+}
+
+message QueryHistoricalInfoRequest{
+  int64 height = 1;
+}
+
+message QueryHistoricalInfoResponse{
+  cosmos.staking.HistoricalInfo hist = 1;
+}
+
+message QueryPoolRequest{ }
+
+//TODO: Fix Pool and Params issues
+message QueryPoolResponse{
+  bytes pool = 1[(gogoproto.casttype) = "Pool"];
+}
+
+message QueryParametersRequest{ }
+
+message QueryParametersResponse{
+  bytes params = 1[(gogoproto.casttype) = "Params"];
+
+  cosmos.query.PageResponse res = 2;
+}

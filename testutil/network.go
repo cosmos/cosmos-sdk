@@ -98,6 +98,7 @@ type (
 		NodeID     string
 		PubKey     crypto.PubKey
 		Moniker    string
+		APIAddress string
 		RPCAddress string
 		P2PAddress string
 		Address    sdk.AccAddress
@@ -144,10 +145,10 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 
 		apiAddr, _, err := server.FreeTCPAddr()
 		require.NoError(t, err)
+		appCfg.API.Address = apiAddr
 
 		apiURL, err := url.Parse(apiAddr)
 		require.NoError(t, err)
-		appCfg.API.Address = fmt.Sprintf("%s:%s", apiURL.Hostname(), apiURL.Port())
 
 		ctx := server.NewDefaultContext()
 		tmCfg := ctx.Config
@@ -251,6 +252,7 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 			Moniker:    nodeDirName,
 			RPCAddress: rpcAddr,
 			P2PAddress: p2pAddr,
+			APIAddress: fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port()),
 			Address:    addr,
 			ValAddress: sdk.ValAddress(addr),
 		}

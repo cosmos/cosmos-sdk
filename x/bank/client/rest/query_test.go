@@ -2,8 +2,6 @@ package rest_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -39,54 +37,97 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
 	val := s.network.Validators[0]
-	apiAddr := val.AppConfig.API.Address
+	baseURL := val.APIAddress
 
-	url := fmt.Sprintf("http://%s/bank/balances/%s?height=1", apiAddr, val.Address)
-	resp, err := getRequest(url)
-	s.Require().NoError(err)
+	testCases := []struct {
+		name     string
+		url      string
+		respType fmt.Stringer
+		expected fmt.Stringer
+	}{
+		{
+			"total account balance",
+			fmt.Sprintf("%s/bank/balances/%s?height=1", baseURL, val.Address),
+			&sdk.Coins{},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+			),
+		},
+		{
+			"total account balance of a specific denom",
+			fmt.Sprintf("%s/bank/balances/%s?height=1&denom=%s", baseURL, val.Address, s.cfg.BondDenom),
+			&sdk.Coin{},
+			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+		},
+		{
+			"total account balance of a bogus denom",
+			fmt.Sprintf("%s/bank/balances/%s?height=1&denom=foobar", baseURL, val.Address),
+			&sdk.Coin{},
+			sdk.NewCoin("foobar", sdk.ZeroInt()),
+		},
+	}
 
-	bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
-	s.Require().NoError(err)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
 
-	var balances sdk.Coins
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, &balances))
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+			s.Require().NoError(err)
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType))
+			s.Require().Equal(tc.expected.String(), tc.respType.String())
+		})
+	}
+}
 
-	expected := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-		sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
-	)
-	s.Require().Equal(expected.String(), balances.String())
+func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
 
-	url = fmt.Sprintf("http://%s/bank/balances/%s?height=1&denom=%s", apiAddr, val.Address, s.cfg.BondDenom)
-	resp, err = getRequest(url)
-	s.Require().NoError(err)
+	testCases := []struct {
+		name     string
+		url      string
+		respType fmt.Stringer
+		expected fmt.Stringer
+	}{
+		{
+			"total supply",
+			fmt.Sprintf("%s/bank/total?height=1", baseURL),
+			&sdk.Coins{}, sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			),
+		},
+		{
+			"total supply of a specific denom",
+			fmt.Sprintf("%s/bank/total/%s?height=1", baseURL, s.cfg.BondDenom),
+			&sdk.Coin{},
+			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+		},
+		{
+			"total supply of a bogus denom",
+			fmt.Sprintf("%s/bank/total/foobar?height=1", baseURL),
+			&sdk.Coin{},
+			sdk.NewCoin("foobar", sdk.ZeroInt()),
+		},
+	}
 
-	bz, err = rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
-	s.Require().NoError(err)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
 
-	var balance sdk.Coin
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, &balance))
-	s.Require().Equal(expected[1].String(), balance.String())
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+			s.Require().NoError(err)
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType))
+			s.Require().Equal(tc.expected.String(), tc.respType.String())
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func getRequest(url string) ([]byte, error) {
-	res, err := http.Get(url) // nolint:gosec
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = res.Body.Close(); err != nil {
-		return nil, err
-	}
-
-	return body, nil
 }

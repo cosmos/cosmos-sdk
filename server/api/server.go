@@ -59,18 +59,13 @@ func (s *Server) Start(cfg config.Config) error {
 		s.registerMetrics()
 	}
 
-	addr := cfg.API.Address
-	if !strings.Contains(addr, "tcp://") {
-		addr = "tcp://" + addr
-	}
-
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
 	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
 	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(addr, tmCfg)
+	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
 	if err != nil {
 		return err
 	}

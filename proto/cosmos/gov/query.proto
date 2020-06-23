@@ -9,6 +9,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 service Query {
   // Proposals queries all proposals.
   rpc AllProposals (QueryAllProposalsRequest) returns (QueryAllProposalsResponse) {}
+
+  // Votes queries votes of a given proposal
+  rpc Votes (QueryVotesRequest) returns (QueryVotesResponse) {}
 }
 
 // QueryProposalRequest is the request type for the Query/Proposal RPC method
@@ -27,6 +30,19 @@ message QueryAllProposalsRequest {
 
 message QueryAllProposalsResponse {
   bytes proposals = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Proposal"];
+
+  cosmos.query.PageResponse res = 2;
+}
+
+message QueryVotesRequest {
+  // unique id of the proposal
+  uint64 proposal_id = 1;
+
+  cosmos.query.PageRequest req = 2;
+}
+
+message QueryVotesResponse {
+  bytes votes = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Vote"];
 
   cosmos.query.PageResponse res = 2;
 }

@@ -42,3 +42,34 @@ func (q Keeper) AllProposals(c context.Context, req *types.QueryAllProposalsRequ
 	bz, err := q.cdc.MarshalJSON(proposals)
 	return &types.QueryAllProposalsResponse{Proposals: bz, Res: res}, nil
 }
+
+// Votes returns single proposal's votes
+func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	var votes types.Votes
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(q.storeKey)
+	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
+	// proposalStore := prefix.NewStore(votesStore, types.VotesKey(proposalID))
+
+	res, err := query.Paginate(votesStore, req.Req, func(key []byte, value []byte) error {
+		var result types.Vote
+		err := q.cdc.UnmarshalBinaryBare(value, &result)
+		if err != nil {
+			return err
+		}
+		votes = append(votes, result)
+		return nil
+	})
+
+	if err != nil {
+		return &types.QueryVotesResponse{}, err
+	}
+
+	bz, err := q.cdc.MarshalJSON(votes)
+	return &types.QueryVotesResponse{Votes: bz, Res: res}, nil
+}

@@ -5,7 +5,6 @@ import (
 	"io"
 	"strings"
 
-	ics23tendermint "github.com/confio/ics23-tendermint"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
 	iavltree "github.com/tendermint/iavl"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkproofs "github.com/cosmos/cosmos-sdk/types/proofs"
 )
 
 const (
@@ -625,7 +625,7 @@ func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
 		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))
 	}
 	// convert merkle.SimpleProof to CommitmentProof
-	existProof, err := ics23tendermint.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
+	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
 	if err != nil {
 		panic(fmt.Errorf("could not convert simple proof to existence proof: %w", err))
 	}

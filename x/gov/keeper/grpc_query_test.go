@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"strconv"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,24 +30,44 @@ func TestAllProposal(t *testing.T) {
 	req := types.NewQueryProposalsRequest(0, nil, nil, pageReq)
 
 	proposals, err := queryClient.AllProposals(gocontext.Background(), req)
-	require.Error(t, err)
-	require.Nil(t, proposals)
-
-	// create test proposals
-	testProposal := types.NewTextProposal("All Proposals", "testing all proposals")
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
 	require.NoError(t, err)
+	require.Equal(t, string(proposals.Proposals), "null")
 
-	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
-	require.True(t, inactiveIterator.Valid())
-
-	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
-	require.Equal(t, proposalID, proposal.ProposalID)
-	inactiveIterator.Close()
-
-	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
+	// create 2 test proposals
+	for i := 0; i < 2; i++ {
+		num := strconv.Itoa(i + 1)
+		testProposal := types.NewTextProposal("Proposal"+num, "testing proposal "+num)
+		_, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
+		require.NoError(t, err)
+	}
 
 	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, proposals.Proposals)
+	require.NotEmpty(t, proposals.Res.NextKey)
+
+	pageReq = &query.PageRequest{
+		Key:        proposals.Res.NextKey,
+		Limit:      1,
+		CountTotal: false,
+	}
+
+	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, proposals.Proposals)
+	require.Empty(t, proposals.Res)
+
+	pageReq = &query.PageRequest{
+		Key:        nil,
+		Limit:      2,
+		CountTotal: false,
+	}
+	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, proposals.Proposals)
+	require.Empty(t, proposals.Res)
 }

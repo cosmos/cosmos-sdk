@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -22,9 +23,9 @@ func (q Keeper) AllProposals(c context.Context, req *types.QueryAllProposalsRequ
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(q.storeKey)
-	// proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
+	proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
-	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(proposalStore, req.Req, func(key []byte, value []byte) error {
 		var result types.Proposal
 		err := q.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {

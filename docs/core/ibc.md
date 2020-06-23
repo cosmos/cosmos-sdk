@@ -83,15 +83,14 @@ IBC will correctly route all packets to the relevant module using the (channelID
 IBC module may also communicate with another IBC module over multiple ports, with each
 `(portID<->portID)` packet stream being sent on a different unique channel.
 
-- **[Ports](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/05-port)**
-
-An IBC module may bind to any number of ports. Each port must be identified by a unique `portID`.
-Since IBC is designed to be secure with mutually-distrusted modules operating on the same ledger,
-binding a port will return a dynamic object capability. In order to take action on a particular port
-(eg open a channel with its portID), a module must provide the dynamic object capability to the IBC
-handler. This prevents a malicious module from opening channels with ports it does not own. Thus,IBC
-modules are responsible for claiming the capability that is returned on `BindPort`. Currently, ports
-must be bound on app initialization. A module may bind to ports in `InitGenesis` like so:
+- **[Ports](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/05-port)**: An IBC module may
+  bind to any number of ports. Each port must be identified by a unique `portID`. Since IBC is
+  designed to be secure with mutually-distrusted modules operating on the same ledger, binding a
+  port will return a dynamic object capability. In order to take action on a particular port (eg
+  open a channel with its portID), a module must provide the dynamic object capability to the IBC
+  handler. This prevents a malicious module from opening channels with ports it does not own. Thus,
+  IBC modules are responsible for claiming the capability that is returned on `BindPort`. Currently,
+  ports must be bound on app initialization. A module may bind to ports in `InitGenesis` like so:
 
 ```go
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, state types.GenesisState) {
@@ -120,10 +119,10 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, state types.GenesisState
 
 An IBC channel can be established between 2 IBC ports. Currently, a port is exclusively owned by a
 single module. IBC packets are sent over channels. Just as IP packets contain the destination IP
-address and IP port as well as the the source IP address and source IP port, IBC packets will
-contain the destination portID and channelID as well as the source portID and channelID. This
-enables IBC to correctly route packets to the destination module, while also allowing modules
-receiving packets to know the sender module.
+address and IP port as well as the source IP address and source IP port, IBC packets will contain
+the destination portID and channelID as well as the source portID and channelID. This enables IBC to
+correctly route packets to the destination module, while also allowing modules receiving packets to
+know the sender module.
 
 A channel may be `ORDERED`, in which case, packets from a sending module must be processed by the
 receiving module in the order they were sent. Or a channel may be `UNORDERED`, in which case packets
@@ -410,15 +409,15 @@ OnRecvPacket(
 ```
 
 ::: warning
-`OnRecvPacket` should **only** return an error if we want the entire receive packet
-execution (including the IBC handling) to be reverted. This will allow the packet to be replayed in
-the case that some mistake in the relaying caused the packet processing to fail.
+`OnRecvPacket` should **only** return an error if we want the entire receive packet execution
+(including the IBC handling) to be reverted. This will allow the packet to be replayed in the case
+that some mistake in the relaying caused the packet processing to fail.
 
-If there was some application-level error happened while processing the packet data, in most cases,
-we will not want the packet processing to revert. Instead, we may want to encode this failure into
-the acknowledgement and finish processing the packet. This will ensure the packet cannot be
-replayed, and will also allow the sender module to potentially remediate the situation upon
-receiving the acknowledgement. An example of this technique is in the ibc-transfer module's
+If some application-level error happened while processing the packet data, in most cases, we will
+not want the packet processing to revert. Instead, we may want to encode this failure into the
+acknowledgement and finish processing the packet. This will ensure the packet cannot be replayed,
+and will also allow the sender module to potentially remediate the situation upon receiving the
+acknowledgement. An example of this technique is in the `ibc-transfer` module's
 [`OnRecvPacket`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer/module.go).
 :::
 

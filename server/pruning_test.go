@@ -6,53 +6,58 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func TestGetPruningOptionsFromFlags(t *testing.T) {
 	tests := []struct {
 		name            string
 		initParams      func()
-		expectedOptions store.PruningOptions
+		expectedOptions types.PruningOptions
 		wantErr         bool
 	}{
 		{
-			name: "pruning",
+			name: FlagPruning,
 			initParams: func() {
-				viper.Set(flagPruning, store.PruningStrategyNothing)
+				viper.Set(FlagPruning, types.PruningOptionNothing)
 			},
-			expectedOptions: store.PruneNothing,
+			expectedOptions: types.PruneNothing,
 		},
 		{
-			name: "granular pruning",
+			name: "custom pruning options",
 			initParams: func() {
-				viper.Set(flagPruning, "custom")
-				viper.Set(flagPruningSnapshotEvery, 1234)
-				viper.Set(flagPruningKeepEvery, 4321)
+				viper.Set(FlagPruning, types.PruningOptionCustom)
+				viper.Set(FlagPruningKeepRecent, 1234)
+				viper.Set(FlagPruningKeepEvery, 4321)
+				viper.Set(FlagPruningInterval, 10)
 			},
-			expectedOptions: store.PruningOptions{
-				SnapshotEvery: 1234,
-				KeepEvery:     4321,
+			expectedOptions: types.PruningOptions{
+				KeepRecent: 1234,
+				KeepEvery:  4321,
+				Interval:   10,
 			},
 		},
 		{
-			name:            "default",
+			name:            types.PruningOptionDefault,
 			initParams:      func() {},
-			expectedOptions: store.PruneSyncable,
+			expectedOptions: types.PruneDefault,
 		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
+
 		t.Run(tt.name, func(j *testing.T) {
 			viper.Reset()
-			viper.SetDefault(flagPruning, "syncable")
+			viper.SetDefault(FlagPruning, types.PruningOptionDefault)
 			tt.initParams()
+
 			opts, err := GetPruningOptionsFromFlags()
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
+
 			require.Equal(t, tt.expectedOptions, opts)
 		})
 	}

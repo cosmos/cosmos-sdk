@@ -12,6 +12,27 @@ send fungible token transfers to other chains.
 
 ## Integrating the IBC module
 
+```go
+// app.go
+//
+type App struct {
+  // baseapp, keys and subspaces definitions
+
+  // other keepers
+  // ...
+  IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+  EvidenceKeeper   evidencekeeper.Keeper // required to set up the client misbehaviour route
+  TransferKeeper   ibctransferkeeper.Keeper // for cross-chain fungible token transfers
+
+  // make scoped keepers public for test purposes
+  ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+  ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+
+  /// ...
+  /// module and simulation manager definitions
+}
+```
+
 ### Configure the capabilities' `ScopedKeeper`
 
 ### Register the IBC router

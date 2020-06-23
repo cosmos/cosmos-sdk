@@ -269,6 +269,8 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 	return network
 }
 
+// Cleanup removes the root testing (temporary) directory and stops both the
+// Tendermint and API services.
 func (n *Network) Cleanup() {
 	n.T.Log("cleaning up test network...")
 

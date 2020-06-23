@@ -21,6 +21,7 @@ func TestAllProposal(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
+	// check for the proposals with no proposal added should return null.
 	pageReq := &query.PageRequest{
 		Key:        nil,
 		Limit:      1,
@@ -41,6 +42,8 @@ func TestAllProposal(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	// Query for proposals after adding 2 proposals to the store.
+	// give page limit as 1 and expect NextKey should not to be empty
 	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, proposals.Proposals)
@@ -53,6 +56,9 @@ func TestAllProposal(t *testing.T) {
 	}
 
 	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+
+	// query for the next page which is 2nd proposal at present context.
+	// and expect NextKey should be empty
 	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
 
 	require.NoError(t, err)
@@ -64,7 +70,10 @@ func TestAllProposal(t *testing.T) {
 		Limit:      2,
 		CountTotal: false,
 	}
+
 	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+
+	// Query the page with limit 2 and expect NextKey should ne nil
 	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
 
 	require.NoError(t, err)

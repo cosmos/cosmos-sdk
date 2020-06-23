@@ -25,7 +25,9 @@ Integrating the IBC module to your SDK-based application is straighforward. The 
 
 ### Module `BasicManager` and `ModuleAccount` permissions
 
-The first step is to add the following modules to the `BasicManager`: `x/capability`, `x/ibc`, `x/evidence` and `x/ibc-transfer`. After that, we need to grant `Minter` and `Burner` permissions to the `ibc-transfer` `ModuleAccount` to mint and burn relayed tokens.
+The first step is to add the following modules to the `BasicManager`: `x/capability`, `x/ibc`,
+`x/evidence` and `x/ibc-transfer`. After that, we need to grant `Minter` and `Burner` permissions to
+the `ibc-transfer` `ModuleAccount` to mint and burn relayed tokens.
 
 ```go
 // app.go
@@ -202,10 +204,15 @@ at each height during the `BeginBlock` call. The historical info is required to 
 past historical info at any given height in order to verify the light client `ConsensusState`  a
 connection handhake.
 
-The IBC module also has [`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/02-client/abci.go) logic as well. This is optional as it is only required if your application uses the [localhost client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client) to connect two different modules from the same chain.
+The IBC module also has
+[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/02-client/abci.go) logic as
+well. This is optional as it is only required if your application uses the [localhost
+client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client) to connect two
+different modules from the same chain.
 
 ::: tip
-Only register the ibc module to the `SetOrderBeginBlockers` if your application will use the localhost (_aka_ loopback) client.
+Only register the ibc module to the `SetOrderBeginBlockers` if your application will use the
+localhost (_aka_ loopback) client.
 :::
 
 ```go
@@ -258,5 +265,9 @@ func NewApp(...args) *App {
   return app
 }
 ```
+
+That's it! You have now wired up the IBC module and are now able to send fungible tokens across
+different chains. If you want to have a broader view of the changes take a look into the SDK's
+[`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/master/simapp/app.go).
 
 Learn about how to create [custom IBC modules](./custom.md) for your application {hide}

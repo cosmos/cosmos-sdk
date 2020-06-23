@@ -112,9 +112,9 @@ func NewQueryProposalsRequest(status int32, voter, depositor sdk.AccAddress, req
 	}
 }
 
-// NewQueryVotesRequest creates a new instance of QueryVotesRequest.
-func NewQueryVotesRequest(proposalID uint64, req *query.PageRequest) *QueryVotesRequest {
-	return &QueryVotesRequest{
+// NewQueryProposalRequest creates a new instance of QueryProposalRequest.
+func NewQueryProposalRequest(proposalID uint64, req *query.PageRequest) *QueryProposalRequest {
+	return &QueryProposalRequest{
 		ProposalId: proposalID,
 		Req:        req,
 	}

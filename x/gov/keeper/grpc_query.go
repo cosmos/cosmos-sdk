@@ -44,7 +44,7 @@ func (q Keeper) AllProposals(c context.Context, req *types.QueryAllProposalsRequ
 }
 
 // Votes returns single proposal's votes
-func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
+func (q Keeper) Votes(c context.Context, req *types.QueryProposalRequest) (*types.QueryVotesResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -72,4 +72,34 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 
 	bz, err := q.cdc.MarshalJSON(votes)
 	return &types.QueryVotesResponse{Votes: bz, Res: res}, nil
+}
+
+// Deposits returns single proposal's all deposits
+func (q Keeper) Deposits(c context.Context, req *types.QueryProposalRequest) (*types.QueryDepositsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	var deposits types.Deposits
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(q.storeKey)
+	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
+
+	res, err := query.Paginate(depositStore, req.Req, func(key []byte, value []byte) error {
+		var result types.Deposit
+		err := q.cdc.UnmarshalBinaryBare(value, &result)
+		if err != nil {
+			return err
+		}
+		deposits = append(deposits, result)
+		return nil
+	})
+
+	if err != nil {
+		return &types.QueryDepositsResponse{}, err
+	}
+
+	bz, err := q.cdc.MarshalJSON(deposits)
+	return &types.QueryDepositsResponse{Deposits: bz, Res: res}, nil
 }

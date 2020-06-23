@@ -11,7 +11,10 @@ service Query {
   rpc AllProposals (QueryAllProposalsRequest) returns (QueryAllProposalsResponse) {}
 
   // Votes queries votes of a given proposal
-  rpc Votes (QueryVotesRequest) returns (QueryVotesResponse) {}
+  rpc Votes (QueryProposalRequest) returns (QueryVotesResponse) {}
+
+  // Deposits returns all deposits of a single proposal
+  rpc Deposits(QueryProposalRequest) returns (QueryDepositsResponse) {}
 }
 
 // QueryProposalRequest is the request type for the Query/Proposal RPC method
@@ -34,7 +37,7 @@ message QueryAllProposalsResponse {
   cosmos.query.PageResponse res = 2;
 }
 
-message QueryVotesRequest {
+message QueryProposalRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
 
@@ -43,6 +46,12 @@ message QueryVotesRequest {
 
 message QueryVotesResponse {
   bytes votes = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Vote"];
+
+  cosmos.query.PageResponse res = 2;
+}
+
+message QueryDepositsResponse {
+  bytes deposits = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Deposit"];
 
   cosmos.query.PageResponse res = 2;
 }

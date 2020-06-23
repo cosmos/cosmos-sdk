@@ -107,7 +107,7 @@ func TestVotesGRPC(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req := types.NewQueryVotesRequest(proposalID, pageReq)
+	req := types.NewQueryProposalRequest(proposalID, pageReq)
 	votes, err := queryClient.Votes(gocontext.Background(), req)
 
 	require.NoError(t, err)
@@ -132,7 +132,7 @@ func TestVotesGRPC(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryVotesRequest(proposalID, pageReq)
+	req = types.NewQueryProposalRequest(proposalID, pageReq)
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, votes.Votes)
@@ -145,7 +145,7 @@ func TestVotesGRPC(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryVotesRequest(proposalID, pageReq)
+	req = types.NewQueryProposalRequest(proposalID, pageReq)
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, votes.Votes)
@@ -158,9 +158,85 @@ func TestVotesGRPC(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryVotesRequest(proposalID, pageReq)
+	req = types.NewQueryProposalRequest(proposalID, pageReq)
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, votes.Votes)
 	require.Empty(t, votes.Res)
+}
+
+func TestDepositsGRPC(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+
+	pageReq := &query.PageRequest{
+		Key:        nil,
+		Limit:      1,
+		CountTotal: false,
+	}
+
+	req := types.NewQueryProposalRequest(proposalID, pageReq)
+	deposits, err := queryClient.Deposits(gocontext.Background(), req)
+	require.NoError(t, err)
+	require.Equal(t, string(deposits.Deposits), "null")
+	require.Empty(t, deposits.Res)
+
+	deposit1 := types.NewDeposit(proposalID, addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20))))
+	app.GovKeeper.SetDeposit(ctx, deposit1)
+
+	deposit2 := types.NewDeposit(proposalID, addrs[1], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(30))))
+	app.GovKeeper.SetDeposit(ctx, deposit2)
+
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	pageReq = &query.PageRequest{
+		Key:        nil,
+		Limit:      1,
+		CountTotal: false,
+	}
+
+	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	deposits, err = queryClient.Deposits(gocontext.Background(), req)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, deposits.Deposits)
+	require.NotEmpty(t, deposits.Res.NextKey)
+
+	// query vote with limit 1, next key and expect NextKey to be nil.
+	pageReq = &query.PageRequest{
+		Key:        deposits.Res.NextKey,
+		Limit:      1,
+		CountTotal: false,
+	}
+
+	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	deposits, err = queryClient.Deposits(gocontext.Background(), req)
+	require.NoError(t, err)
+	require.NotEmpty(t, deposits.Deposits)
+	require.Empty(t, deposits.Res)
+
+	// query vote with limit 2 and expect NextKey to be nil.
+	pageReq = &query.PageRequest{
+		Key:        nil,
+		Limit:      2,
+		CountTotal: false,
+	}
+
+	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	deposits, err = queryClient.Deposits(gocontext.Background(), req)
+	require.NoError(t, err)
+	require.NotEmpty(t, deposits.Deposits)
+	require.Empty(t, deposits.Res)
 }

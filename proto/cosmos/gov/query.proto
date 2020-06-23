@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.gov;
 
+import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/query/pagination.proto";
 

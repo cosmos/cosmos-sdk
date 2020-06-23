@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -106,9 +107,12 @@ type (
 )
 
 func NewTestNetwork(t *testing.T, cfg Config) *Network {
+	baseDir, err := ioutil.TempDir(os.TempDir(), cfg.ChainID)
+	require.NoError(t, err)
+
 	network := &Network{
 		T:          t,
-		BaseDir:    os.TempDir(),
+		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),
 	}
 

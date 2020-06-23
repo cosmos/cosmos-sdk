@@ -1,3 +1,5 @@
+go 1.14
+
 module github.com/cosmos/cosmos-sdk
 
 require (
@@ -35,15 +37,11 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/iavl v0.13.3
+	github.com/tendermint/iavl v0.13.4-0.20200621145059-83c3470ad61d
 	github.com/tendermint/tendermint v0.33.5
 	github.com/tendermint/tm-db v0.5.1
-	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	google.golang.org/grpc v1.29.1
-	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
-
-go 1.14

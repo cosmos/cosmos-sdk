@@ -1,10 +1,12 @@
 <!--
-order: 9
+order: 1
 -->
 
-# IBC
+# Overview
 
-Learn how to configure your application to use IBC and send data packets to other chains. {synopsis}
+Learn what IBC is, its components and use cases. {synopsis}
+
+## What is the Interblockchain Communication Protocol (IBC)? 
 
 This document serves as a guide for developers who want to write their own Inter-blockchain
 Communication Protocol (IBC) applications for custom [use-cases](https://github.com/cosmos/ics/blob/master/ibc/4_IBC_USECASES.md).
@@ -24,10 +26,10 @@ module correctly.
 
 ## Pre-requisites Readings
 
-- [IBC Overview](https://github.com/cosmos/ics/blob/master/ibc/README.md) {prereq}
+- [IBC specification overview](https://github.com/cosmos/ics/blob/master/ibc/README.md) {prereq}
 - [IBC SDK specification](../../modules/ibc) {prereq}
 
-## Core IBC Overview
+## Components Overview
 
 - **[Clients](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/02-client)**: IBC Clients are
   light clients (identified by a unique client-id) that track the consensus states of other
@@ -462,53 +464,4 @@ OnTimeoutPacket(
 }
 ```
 
-#### Registering Module with the IBC Router
-
-IBC needs to know which module is bound to which port so that it can route packets to the
-appropriate module and call the appropriate callback. The port to module name mapping is handled by
-IBC's port `Keeper`. However, the mapping from module name to the relevant callbacks is accomplished by
-the [`port.Router`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc//05-port/types/router.go).
-
-As mentioned above, modules must implement the IBC module interface (which contains both channel
-handshake callbacks and packet handling callbacks). The concrete implementation of this interface
-must be registered with the module name as a route on the IBC `Router`.
-
-Currently, the `Router` is static so it must be initialized and set correctly on app initialization.
-Once the `Router` has been set, no new routes can be added.
-
-```go
-// app.go
-
-// Create static IBC router, add module routes, then set and seal it
-ibcRouter := port.NewRouter()
-
-// Note: moduleCallbacks must implement IBCModule interface
-ibcRouter.AddRoute(moduleName, moduleCallbacks)
-
-// Setting Router will finalize all routes by sealing router
-// No more routes can be added
-app.IBCKeeper.SetRouter(ibcRouter)
-```
-
-Adding the module routes allows the IBC handler to call the appropriate callback when processing a
-channel handshake or a packet.
-
-#### Working Example
-
-For a real working example of an IBC application, you can look through the `ibc-transfer` module
-which implements everything discussed above.
-
-Here are the useful parts of the module to look at:
-
-[Binding to transfer
-port](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/genesis.go)
-
-[Sending transfer
-packets](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/keeper/relay.go)
-
-[Implementing IBC
-callbacks](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/module.go)
-
-## Next {hide}
-
-Learn about [object-capabilities](./ocap.md) {hide}
+Learn about how to [integrate](./integration.md) IBC to your application {hide}

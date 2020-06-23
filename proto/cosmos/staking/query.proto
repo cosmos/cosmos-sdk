@@ -9,52 +9,52 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // Query provides defines the gRPC querier service
 service Query {
-  rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
+//  rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
 
-  rpc Validator (QueryValidatorRequest) returns (QueryValidatorResponse) {}
+  rpc ValidatorGet (QueryValidatorRequest) returns (QueryValidatorResponse) {}
+//
+//  rpc ValidatorDelegations (QueryValidatorRequest) returns (QueryValidatorDelegationsResponse) {}
+//
+//  rpc ValidatorUnbondingDelegations (QueryValidatorRequest) returns (QueryValidatorUnbondingResponse) {}
+//
+//  rpc Delegation (QueryBondParamsRequest) returns (QueryDelegationResponse) {}
+//
+//  rpc UnbondingDelegation (QueryBondParamsRequest) returns (QueryUnbondingDelegationResponse) {}
+//
+//  rpc DelegatorDelegations (QueryDelegatorParamsRequest) returns (QueryDelegatorDelegationsResponse) {}
+//
+//  rpc DelegatorUnbondingDelegations (QueryDelegatorParamsRequest) returns (QueryUnbondingDelegatorDelegationsResponse) {}
+//
+//  rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) { }
+//
+//  rpc DelegatorValidators (QueryDelegatorParamsRequest) returns (QueryDelegatorValidatorsResponse) { }
+//
+//  rpc DelegatorValidator (QueryBondParamsRequest) returns (QueryDelegatorValidatorResponse) { }
+//
+//  rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
+//
+//  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
 
-  rpc ValidatorDelegations (QueryValidatorRequest) returns (QueryValidatorDelegationsResponse) {}
-
-  rpc ValidatorUnbondingDelegations (QueryValidatorRequest) returns (QueryValidatorUnbondingResponse) {}
-
-  rpc Delegation (QueryBondParamsRequest) returns (QueryDelegationResponse) {}
-
-  rpc UnbondingDelegation (QueryBondParamsRequest) returns (QueryUnbondingDelegationResponse) {}
-
-  rpc DelegatorDelegations (QueryDelegatorParamsRequest) returns (QueryDelegatorDelegationsResponse) {}
-
-  rpc DelegatorUnbondingDelegations (QueryDelegatorParamsRequest) returns (QueryUnbondingDelegatorDelegationsResponse) {}
-
-  rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) { }
-
-  rpc DelegatorValidators (QueryDelegatorParamsRequest) returns (QueryDelegatorValidatorsResponse) { }
-
-  rpc DelegatorValidator (QueryBondParamsRequest) returns (QueryDelegatorValidatorResponse) { }
-
-  rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
-
-  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
-
-  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
+//  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
 }
 
-message QueryValidatorsRequest{
-    int64 Page = 1;
-
-    int64 Limit = 2;
-
-    string State = 3;
-
-  cosmos.query.PageRequest req = 4;
-}
-
-message QueryValidatorsResponse {
-  option (gogoproto.equal) = true;
-
-  repeated Validator validator = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-
-  cosmos.query.PageResponse res = 2;
-}
+//message QueryValidatorsRequest{
+//    int64 Page = 1;
+//
+//    int64 Limit = 2;
+//
+//    string State = 3;
+//
+//  cosmos.query.PageRequest req = 4;
+//}
+//
+//message QueryValidatorsResponse {
+//  option (gogoproto.equal) = true;
+//
+//  repeated cosmos.staking.Validator validators = 1 [(gogoproto.nullable) = false];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
 
 message QueryValidatorRequest{
   bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
@@ -67,113 +67,113 @@ message QueryValidatorRequest{
 }
 
 message QueryValidatorResponse{
-  repeated cosmos.staking.Validator validators = 1;
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryValidatorDelegationsResponse{
-  repeated bytes delegation_responses = 1  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DelegationResponse"];
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryValidatorUnbondingResponse{
-  repeated bytes delegation_responses = 1  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DelegationResponse"];
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryBondParamsRequest{
-  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-
-  bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  cosmos.query.PageRequest req = 3;
-}
-
-message QueryDelegationResponse{
-  bytes delegation_responses = 1  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DelegationResponse"];
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryUnbondingDelegationResponse{
-  cosmos.staking.UnbondingDelegation unbond =1;
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryDelegatorParamsRequest{
-  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-
-  cosmos.query.PageRequest req = 2;
-}
-
-message QueryDelegatorDelegationsResponse{
-  repeated bytes delegation_responses = 1  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DelegationResponse"];
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryUnbondingDelegatorDelegationsResponse{
-  repeated bytes unbonding_responses = 1  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.UnbondingResponse"];
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryRedelegationsRequest{
-  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-
-  bytes src_validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  bytes dest_validator_addr = 3[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  cosmos.query.PageRequest req = 4;
-}
-
-message QueryRedelegationsResponse{
-  repeated bytes redelegation_responses = 1  [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.ReDelegationResponse"];
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryDelegatorValidatorsResponse{
-  repeated cosmos.staking.Validator validators = 1;
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryDelegatorValidatorResponse{
   cosmos.staking.Validator validator = 1;
 
   cosmos.query.PageResponse res = 2;
 }
 
-message QueryHistoricalInfoRequest{
-  int64 height = 1;
-
-  cosmos.query.PageRequest req = 2;
-}
-
-message QueryHistoricalInfoResponse{
-  cosmos.staking.HistoricalInfo hist = 1;
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryPoolRequest{ }
-
-message QueryPoolResponse{
-  bytes pool = 1[(gogoproto.casttype) = "Pool"];
-
-  cosmos.query.PageResponse res = 2;
-}
-
-message QueryParametersRequest{ }
-
-message QueryParametersResponse{
-  bytes pool = 1[(gogoproto.casttype) = "Params"];
-
-  cosmos.query.PageResponse res = 2;
-}
+//message QueryValidatorDelegationsResponse{
+//  bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryValidatorUnbondingResponse{
+// repeated bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryBondParamsRequest{
+//  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+//
+//  bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+//
+//  cosmos.query.PageRequest req = 3;
+//}
+//
+//message QueryDelegationResponse{
+//  bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryUnbondingDelegationResponse{
+//  cosmos.staking.UnbondingDelegation unbond =1;
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryDelegatorParamsRequest{
+//  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+//
+//  cosmos.query.PageRequest req = 2;
+//}
+//
+//message QueryDelegatorDelegationsResponse{
+//  bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryUnbondingDelegatorDelegationsResponse{
+//  bytes unbonding_responses = 1  [(gogoproto.casttype) = "UnbondingDelegations"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryRedelegationsRequest{
+//  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+//
+//  bytes src_validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+//
+//  bytes dest_validator_addr = 3[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+//
+//  cosmos.query.PageRequest req = 4;
+//}
+//
+//message QueryRedelegationsResponse{
+//  bytes redelegation_responses = 1  [(gogoproto.casttype) = "RedelegationResponses"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryDelegatorValidatorsResponse{
+//  repeated cosmos.staking.Validator validators = 1;
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryDelegatorValidatorResponse{
+//  cosmos.staking.Validator validator = 1;
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryHistoricalInfoRequest{
+//  int64 height = 1;
+//
+//  cosmos.query.PageRequest req = 2;
+//}
+//
+//message QueryHistoricalInfoResponse{
+//  cosmos.staking.HistoricalInfo hist = 1;
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryPoolRequest{ }
+//
+//message QueryPoolResponse{
+//  bytes pool = 1[(gogoproto.casttype) = "Pool"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
+//
+//message QueryParametersRequest{ }
+//
+//message QueryParametersResponse{
+//  bytes params = 1[(gogoproto.casttype) = "Params"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}

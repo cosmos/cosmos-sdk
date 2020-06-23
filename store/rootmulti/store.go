@@ -613,13 +613,13 @@ func (ci commitInfo) Hash() []byte {
 	if len(ci.StoreInfos) == 0 {
 		return nil
 	}
-	rootHash, _, _ := merkle.SimpleProofsFromMap(ci.toMap())
+	rootHash, _, _ := SimpleProofsFromMap(ci.toMap())
 	return rootHash
 }
 
 func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
 	cmap := ci.toMap()
-	_, proofs, _ := merkle.SimpleProofsFromMap(cmap)
+	_, proofs, _ := SimpleProofsFromMap(cmap)
 	proof := proofs[storeName]
 	if proof == nil {
 		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))
@@ -792,4 +792,29 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 	}
 
 	return mm.hash()
+}
+
+// SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
+// in the underlying key-value pairs.
+// The keys are sorted before the proofs are computed.
+func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*merkle.SimpleProof, keys []string) {
+	sm := newSimpleMap()
+	for k, v := range m {
+		sm.Set(k, v)
+	}
+	sm.Sort()
+	kvs := sm.kvs
+	kvsBytes := make([][]byte, len(kvs))
+	for i, kvp := range kvs {
+		kvsBytes[i] = KVPair(kvp).Bytes()
+	}
+
+	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
+	proofs = make(map[string]*merkle.SimpleProof)
+	keys = make([]string, len(proofList))
+	for i, kvp := range kvs {
+		proofs[string(kvp.Key)] = proofList[i]
+		keys[i] = string(kvp.Key)
+	}
+	return
 }

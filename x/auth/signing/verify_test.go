@@ -18,8 +18,6 @@ func TestVerifySignature(t *testing.T) {
 	priv, pubKey, addr := types.KeyTestPubAddr()
 
 	const (
-		from = "test_sign"
-		backend = "test"
 		memo = "testmemo"
 		chainId = "test-chain"
 	)

@@ -244,6 +244,9 @@ func TestGetSignaturesV2(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, len(sigs), 1)
 
-	sigV2, err := StdSignatureToSignatureV2(cdc, sig)
-	require.Equal(t, sigs[0], sigV2)
+	require.Equal(t, sigs[0].PubKey.Bytes(), sig.GetPubKey().Bytes())
+	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Signature: sig.GetSignature(),
+	})
 }

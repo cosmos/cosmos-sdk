@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -192,8 +193,9 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		return err
 	}
 
-	config := config.GetConfig()
 	var apiSrv *api.Server
+
+	config := config.GetConfig()
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -213,8 +215,18 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		apiSrv = api.New(ctx)
 		app.RegisterAPIRoutes(apiSrv)
 
-		if err := apiSrv.Start(config); err != nil {
+		errCh := make(chan error)
+
+		go func() {
+			if err := apiSrv.Start(config); err != nil {
+				errCh <- err
+			}
+		}()
+
+		select {
+		case err := <-errCh:
 			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
 		}
 	}
 

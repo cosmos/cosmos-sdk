@@ -278,13 +278,6 @@ func (d Redelegations) String() (out string) {
 // ----------------------------------------------------------------------------
 // Client Types
 
-// DelegationResponse is equivalent to Delegation except that it contains a balance
-// in addition to shares which is more suitable for client responses.
-type DelegationResponse struct {
-	Delegation
-	Balance sdk.Coin `json:"balance" yaml:"balance"`
-}
-
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, balance sdk.Coin,

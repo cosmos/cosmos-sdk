@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -22,9 +22,10 @@ type BaseConfig struct {
 	// specified in this config (e.g. 0.25token1;0.0001token2).
 	MinGasPrices string `mapstructure:"minimum-gas-prices"`
 
-	Pruning              string `mapstructure:"pruning"`
-	PruningKeepEvery     string `mapstructure:"pruning-keep-every"`
-	PruningSnapshotEvery string `mapstructure:"pruning-snapshot-every"`
+	Pruning           string `mapstructure:"pruning"`
+	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
+	PruningKeepEvery  string `mapstructure:"pruning-keep-every"`
+	PruningInterval   string `mapstructure:"pruning-interval"`
 
 	// HaltHeight contains a non-zero block height at which a node will gracefully
 	// halt and shutdown that can be used to assist upgrades and testing.
@@ -114,11 +115,12 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:         defaultMinGasPrices,
-			InterBlockCache:      true,
-			Pruning:              store.PruningStrategySyncable,
-			PruningKeepEvery:     "0",
-			PruningSnapshotEvery: "0",
+			MinGasPrices:      defaultMinGasPrices,
+			InterBlockCache:   true,
+			Pruning:           storetypes.PruningOptionDefault,
+			PruningKeepRecent: "0",
+			PruningKeepEvery:  "0",
+			PruningInterval:   "0",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -148,13 +150,14 @@ func GetConfig() Config {
 
 	return Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:         viper.GetString("minimum-gas-prices"),
-			InterBlockCache:      viper.GetBool("inter-block-cache"),
-			Pruning:              viper.GetString("pruning"),
-			PruningKeepEvery:     viper.GetString("pruning-keep-every"),
-			PruningSnapshotEvery: viper.GetString("pruning-snapshot-every"),
-			HaltHeight:           viper.GetUint64("halt-height"),
-			HaltTime:             viper.GetUint64("halt-time"),
+			MinGasPrices:      viper.GetString("minimum-gas-prices"),
+			InterBlockCache:   viper.GetBool("inter-block-cache"),
+			Pruning:           viper.GetString("pruning"),
+			PruningKeepRecent: viper.GetString("pruning-keep-recent"),
+			PruningKeepEvery:  viper.GetString("pruning-keep-every"),
+			PruningInterval:   viper.GetString("pruning-interval"),
+			HaltHeight:        viper.GetUint64("halt-height"),
+			HaltTime:          viper.GetUint64("halt-time"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             viper.GetString("telemetry.service-name"),

@@ -262,7 +262,9 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 	require.NoError(t, eg.Wait())
 	t.Log("started test network")
 
-	// TODO: Do we need to trap signal
+	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
+	// defer in a test would not be called.
+	server.TrapSignal(network.Cleanup)
 
 	return network
 }

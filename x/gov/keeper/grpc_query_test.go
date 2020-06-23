@@ -38,5 +38,5 @@ func TestAllProposal(t *testing.T) {
 
 	proposals, err := queryClient.AllProposals(gocontext.Background(), &types.QueryAllProposalsRequest{})
 	require.NoError(t, err)
-	require.NotEmpty(proposals)
+	require.NotEmpty(t, proposals)
 }

@@ -425,6 +425,15 @@ func (chain *TestChain) GetPortCapability(portID string) *capabilitytypes.Capabi
 	return cap
 }
 
+// GetChannelCapability returns the channel capability for the given portID and channelID.
+// The capability must exist, otherwise testing will fail.
+func (chain *TestChain) GetChannelCapability(portID, channelID string) *capabilitytypes.Capability {
+	cap, ok := chain.App.ScopedIBCKeeper.GetCapability(chain.GetContext(), host.ChannelCapabilityPath(portID, channelID))
+	require.True(chain.t, ok)
+
+	return cap
+}
+
 // ChannelOpenInit will construct and execute a MsgChannelOpenInit.
 func (chain *TestChain) ChannelOpenInit(
 	ch, counterparty TestChannel,

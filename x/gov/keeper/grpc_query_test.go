@@ -38,12 +38,5 @@ func TestAllProposal(t *testing.T) {
 
 	proposals, err := queryClient.AllProposals(gocontext.Background(), &types.QueryAllProposalsRequest{})
 	require.NoError(t, err)
-
-	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
-	require.True(t, activeIterator.Valid())
-
-	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())
-	require.Equal(t, proposalID, proposal.ProposalID)
-
-	activeIterator.Close()
+	require.NotEmpty(proposals)
 }

@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	suite.False(found)
 
 	// init channel
-	channelA, channelB, err := suite.coordinator.CreateChannelOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+	channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
 	suite.NoError(err)
 
 	storedChannel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
@@ -78,7 +78,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
 
 	// channel2 is on a second connection on chainA
-	testchannel2, _, err := suite.coordinator.CreateChannelOpenInit(suite.chainA, suite.chainB, connA1, connB1, types.UNORDERED)
+	testchannel2, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA1, connB1, types.UNORDERED)
 	suite.Require().NoError(err)
 
 	counterparty2 := types.Counterparty{

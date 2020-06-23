@@ -46,45 +46,45 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 // Setup constructs a TM client, connection, and channel on both chains provided. It fails if
 // any error occurs. The clientID's and TestConnections are returned for both chains.
 func (coord *Coordinator) Setup(
-	source, counterparty *TestChain,
+	chainA, chainB *TestChain,
 ) (string, string, *TestConnection, *TestConnection) {
-	sourceClient, counterpartyClient, sourceConn, counterpartyConn := coord.SetupClientConnections(source, counterparty, clientexported.Tendermint)
+	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, clientexported.Tendermint)
 
 	// channels can be referenced through the returned connections
-	coord.CreateChannel(source, counterparty, sourceConn, counterpartyConn, channeltypes.UNORDERED)
+	coord.CreateChannel(chainA, chainB, connA, connB, channeltypes.UNORDERED)
 
-	return sourceClient, counterpartyClient, sourceConn, counterpartyConn
+	return clientA, clientB, connA, connB
 }
 
-// SetupClients is a helper function to create clients  on both the source and counterparty
-// chain. It assumes the caller does not anticipate any errors.
+// SetupClients is a helper function to create clients on both chains. It assumes the
+// caller does not anticipate any errors.
 func (coord *Coordinator) SetupClients(
-	source, counterparty *TestChain,
+	chainA, chainB *TestChain,
 	clientType clientexported.ClientType,
 ) (string, string) {
 
-	sourceClient, err := coord.CreateClient(source, counterparty, clientType)
+	clientA, err := coord.CreateClient(chainA, chainB, clientType)
 	require.NoError(coord.t, err)
 
-	counterpartyClient, err := coord.CreateClient(counterparty, source, clientType)
+	clientB, err := coord.CreateClient(chainB, chainA, clientType)
 	require.NoError(coord.t, err)
 
-	return sourceClient, counterpartyClient
+	return clientA, clientB
 }
 
 // SetupClientConnections is a helper function to create clients and the appropriate
 // connections on both the source and counterparty chain. It assumes the caller does not
 // anticipate any errors.
 func (coord *Coordinator) SetupClientConnections(
-	source, counterparty *TestChain,
+	chainA, chainB *TestChain,
 	clientType clientexported.ClientType,
 ) (string, string, *TestConnection, *TestConnection) {
 
-	sourceClient, counterpartyClient := coord.SetupClients(source, counterparty, clientType)
+	clientA, clientB := coord.SetupClients(chainA, chainB, clientType)
 
-	sourceConnection, counterpartyConnection := coord.CreateConnection(source, counterparty, sourceClient, counterpartyClient)
+	connA, connB := coord.CreateConnection(chainA, chainB, clientA, clientB)
 
-	return sourceClient, counterpartyClient, sourceConnection, counterpartyConnection
+	return clientA, clientB, connA, connB
 }
 
 // CreateClient creates a counterparty client on the source chain and returns the clientID.
@@ -139,58 +139,51 @@ func (coord *Coordinator) UpdateClient(
 }
 
 // CreateConnection constructs and executes connection handshake messages in order to create
-// OPEN channels on source and counterparty chains. The connection information of the source
-// and counterparty's are returned within a TestConnection struct. The function expects the
-// connections to be successfully created and testing will fail otherwise.
-//
-// NOTE: The counterparty testing connection will be created even if it is not created in the
-// application state.
+// OPEN channels on chainA and chainB. The connection information of for chainA and chainB
+// are returned within a TestConnection struct. The function expects the connections to be
+// successfully opened otherwise testing will fail.
 func (coord *Coordinator) CreateConnection(
-	source, counterparty *TestChain,
-	clientID, counterpartyClientID string,
+	chainA, chainB *TestChain,
+	clientA, clientB string,
 ) (*TestConnection, *TestConnection) {
 
-	sourceConnection, counterpartyConnection, err := coord.CreateConnectionInit(source, counterparty, clientID, counterpartyClientID)
+	connA, connB, err := coord.ConnOpenInit(chainA, chainB, clientA, clientB)
 	require.NoError(coord.t, err)
 
-	err = coord.CreateConnectionOpenTry(counterparty, source, counterpartyConnection, sourceConnection)
+	err = coord.ConnOpenTry(chainB, chainA, connB, connA)
 	require.NoError(coord.t, err)
 
-	err = coord.CreateConnectionOpenAck(source, counterparty, sourceConnection, counterpartyConnection)
+	err = coord.ConnOpenAck(chainA, chainB, connA, connB)
 	require.NoError(coord.t, err)
 
-	err = coord.CreateConnectionOpenConfirm(counterparty, source, counterpartyConnection, sourceConnection)
+	err = coord.ConnOpenConfirm(chainB, chainA, connB, connA)
 	require.NoError(coord.t, err)
 
-	return sourceConnection, counterpartyConnection
+	return connA, connB
 }
 
 // CreateChannel constructs and executes channel handshake messages in order to create
-// channels on source and counterparty chains with the passed in Channel State. The portID
-// and channelID of source and counterparty are returned. The function expects the creation
-// of both channels to succeed and testing fails otherwise.
-//
-// NOTE: The counterparty testing channel will be created even if it is not created in the
-// application state.
+// OPEN channels on chainA and chainB. The function expects the channels to be successfully
+// opened otherwise testing will fail.
 func (coord *Coordinator) CreateChannel(
-	source, counterparty *TestChain,
-	connection, counterpartyConnection *TestConnection,
+	chainA, chainB *TestChain,
+	connA, connB *TestConnection,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel) {
 
-	sourceChannel, counterpartyChannel, err := coord.CreateChannelOpenInit(source, counterparty, connection, counterpartyConnection, order)
+	channelA, channelB, err := coord.ChanOpenInit(chainA, chainB, connA, connB, order)
 	require.NoError(coord.t, err)
 
-	err = coord.CreateChannelOpenTry(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection, order)
+	err = coord.ChanOpenTry(chainB, chainA, channelB, channelA, connB, order)
 	require.NoError(coord.t, err)
 
-	err = coord.CreateChannelOpenAck(source, counterparty, sourceChannel, counterpartyChannel, connection)
+	err = coord.ChanOpenAck(chainA, chainB, channelA, channelB)
 	require.NoError(coord.t, err)
 
-	err = coord.CreateChannelOpenConfirm(counterparty, source, counterpartyChannel, sourceChannel, counterpartyConnection)
+	err = coord.ChanOpenConfirm(chainB, chainA, channelB, channelA)
 	require.NoError(coord.t, err)
 
-	return sourceChannel, counterpartyChannel
+	return channelA, channelB
 }
 
 // IncrementTime iterates through all the TestChain's and increments their current header time
@@ -238,12 +231,12 @@ func (coord *Coordinator) CommitNBlocks(chain *TestChain, n uint64) {
 	}
 }
 
-// CreateConenctionInit initializes a connection on the source chain with the state INIT
+// ConnOpenInit initializes a connection on the source chain with the state INIT
 // using the OpenInit handshake call.
 //
 // NOTE: The counterparty testing connection will be created even if it is not created in the
 // application state.
-func (coord *Coordinator) CreateConnectionInit(
+func (coord *Coordinator) ConnOpenInit(
 	source, counterparty *TestChain,
 	clientID, counterpartyClientID string,
 ) (*TestConnection, *TestConnection, error) {
@@ -267,9 +260,9 @@ func (coord *Coordinator) CreateConnectionInit(
 	return sourceConnection, counterpartyConnection, nil
 }
 
-// CreateConenctionOpenTry initializes a connection on the source chain with the state TRYOPEN
+// ConnOpenTry initializes a connection on the source chain with the state TRYOPEN
 // using the OpenTry handshake call.
-func (coord *Coordinator) CreateConnectionOpenTry(
+func (coord *Coordinator) ConnOpenTry(
 	source, counterparty *TestChain,
 	sourceConnection, counterpartyConnection *TestConnection,
 ) error {
@@ -290,9 +283,9 @@ func (coord *Coordinator) CreateConnectionOpenTry(
 	return nil
 }
 
-// CreateConnectionOpenAck initializes a connection on the source chain with the state OPEN
+// ConnOpenAck initializes a connection on the source chain with the state OPEN
 // using the OpenAck handshake call.
-func (coord *Coordinator) CreateConnectionOpenAck(
+func (coord *Coordinator) ConnOpenAck(
 	source, counterparty *TestChain,
 	sourceConnection, counterpartyConnection *TestConnection,
 ) error {
@@ -313,9 +306,9 @@ func (coord *Coordinator) CreateConnectionOpenAck(
 	return nil
 }
 
-// CreateConnectionOpenConfirm initializes a connection on the source chain with the state OPEN
+// ConnOpenConfirm initializes a connection on the source chain with the state OPEN
 // using the OpenConfirm handshake call.
-func (coord *Coordinator) CreateConnectionOpenConfirm(
+func (coord *Coordinator) ConnOpenConfirm(
 	source, counterparty *TestChain,
 	sourceConnection, counterpartyConnection *TestConnection,
 ) error {
@@ -335,12 +328,12 @@ func (coord *Coordinator) CreateConnectionOpenConfirm(
 	return nil
 }
 
-// CreateChannelOpenInit initializes a channel on the source chain with the state INIT
+// ChanOpenInit initializes a channel on the source chain with the state INIT
 // using the OpenInit handshake call.
 //
 // NOTE: The counterparty testing channel will be created even if it is not created in the
 // application state.
-func (coord *Coordinator) CreateChannelOpenInit(
+func (coord *Coordinator) ChanOpenInit(
 	source, counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 	order channeltypes.Order,
@@ -353,7 +346,7 @@ func (coord *Coordinator) CreateChannelOpenInit(
 	coord.IncrementTime()
 
 	// initialize channel on source
-	if err := source.ChannelOpenInit(sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
+	if err := source.ChanOpenInit(sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
 		return sourceChannel, counterpartyChannel, err
 	}
 	coord.IncrementTime()
@@ -369,9 +362,9 @@ func (coord *Coordinator) CreateChannelOpenInit(
 	return sourceChannel, counterpartyChannel, nil
 }
 
-// CreateChannelOpenTry initializes a channel on the source chain with the state TRYOPEN
+// ChanOpenTry initializes a channel on the source chain with the state TRYOPEN
 // using the OpenTry handshake call.
-func (coord *Coordinator) CreateChannelOpenTry(
+func (coord *Coordinator) ChanOpenTry(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
 	connection *TestConnection,
@@ -379,7 +372,7 @@ func (coord *Coordinator) CreateChannelOpenTry(
 ) error {
 
 	// initialize channel on source
-	if err := source.ChannelOpenTry(counterparty, sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
+	if err := source.ChanOpenTry(counterparty, sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
 		return err
 	}
 	coord.IncrementTime()
@@ -395,15 +388,14 @@ func (coord *Coordinator) CreateChannelOpenTry(
 	return nil
 }
 
-// CreateChannelOpenAck initializes a channel on the source chain with the state OPEN
+// ChanOpenAck initializes a channel on the source chain with the state OPEN
 // using the OpenAck handshake call.
-func (coord *Coordinator) CreateChannelOpenAck(
+func (coord *Coordinator) ChanOpenAck(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
-	connection *TestConnection,
 ) error {
 
-	if err := source.ChannelOpenAck(counterparty, sourceChannel, counterpartyChannel); err != nil {
+	if err := source.ChanOpenAck(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
 	coord.IncrementTime()
@@ -411,7 +403,7 @@ func (coord *Coordinator) CreateChannelOpenAck(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		connection.CounterpartyClientID, clientexported.Tendermint,
+		sourceChannel.CounterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
 	}
@@ -419,15 +411,14 @@ func (coord *Coordinator) CreateChannelOpenAck(
 	return nil
 }
 
-// CreateChannelOpenConfirm initializes a channel on the source chain with the state OPEN
+// ChanOpenConfirm initializes a channel on the source chain with the state OPEN
 // using the OpenConfirm handshake call.
-func (coord *Coordinator) CreateChannelOpenConfirm(
+func (coord *Coordinator) ChanOpenConfirm(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
-	connection *TestConnection,
 ) error {
 
-	if err := source.ChannelOpenConfirm(counterparty, sourceChannel, counterpartyChannel); err != nil {
+	if err := source.ChanOpenConfirm(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
 	coord.IncrementTime()
@@ -435,7 +426,7 @@ func (coord *Coordinator) CreateChannelOpenConfirm(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		connection.CounterpartyClientID, clientexported.Tendermint,
+		sourceChannel.CounterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
 	}
@@ -450,7 +441,6 @@ func (coord *Coordinator) CreateChannelOpenConfirm(
 func (coord *Coordinator) ChanCloseInit(
 	source, counterparty *TestChain,
 	channel TestChannel,
-	connection *TestConnection,
 ) error {
 
 	if err := source.ChanCloseInit(counterparty, channel); err != nil {
@@ -461,7 +451,7 @@ func (coord *Coordinator) ChanCloseInit(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		connection.CounterpartyClientID, clientexported.Tendermint,
+		channel.CounterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
 	}
@@ -473,7 +463,6 @@ func (coord *Coordinator) ChanCloseInit(
 func (coord *Coordinator) SetChannelClosed(
 	source, counterparty *TestChain,
 	testChannel TestChannel,
-	connection *TestConnection,
 ) error {
 	channel := source.GetChannel(testChannel)
 
@@ -485,7 +474,7 @@ func (coord *Coordinator) SetChannelClosed(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		connection.CounterpartyClientID, clientexported.Tendermint,
+		testChannel.CounterpartyClientID, clientexported.Tendermint,
 	); err != nil {
 		return err
 	}

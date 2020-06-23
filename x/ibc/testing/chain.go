@@ -96,7 +96,10 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balance := banktypes.Balance{acc.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))}
+	balance := banktypes.Balance{
+		Address: acc.GetAddress(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	}
 
 	app := simapp.SetupWithGenesisValSet(valSet, []authtypes.GenesisAccount{acc}, balance)
 	//ctx := app.BaseApp.NewContext(false,
@@ -453,8 +456,8 @@ func (chain *TestChain) GetChannelCapability(portID, channelID string) *capabili
 	return cap
 }
 
-// ChannelOpenInit will construct and execute a MsgChannelOpenInit.
-func (chain *TestChain) ChannelOpenInit(
+// ChanOpenInit will construct and execute a MsgChannelOpenInit.
+func (chain *TestChain) ChanOpenInit(
 	ch, counterparty TestChannel,
 	order channeltypes.Order,
 	connectionID string,
@@ -468,8 +471,8 @@ func (chain *TestChain) ChannelOpenInit(
 	return chain.SendMsg(msg)
 }
 
-// ChannelOpenTry will construct and execute a MsgChannelOpenTry.
-func (chain *TestChain) ChannelOpenTry(
+// ChanOpenTry will construct and execute a MsgChannelOpenTry.
+func (chain *TestChain) ChanOpenTry(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 	order channeltypes.Order,
@@ -488,8 +491,8 @@ func (chain *TestChain) ChannelOpenTry(
 	return chain.SendMsg(msg)
 }
 
-// ChannelOpenAck will construct and execute a MsgChannelOpenAck.
-func (chain *TestChain) ChannelOpenAck(
+// ChanOpenAck will construct and execute a MsgChannelOpenAck.
+func (chain *TestChain) ChanOpenAck(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
@@ -504,8 +507,8 @@ func (chain *TestChain) ChannelOpenAck(
 	return chain.SendMsg(msg)
 }
 
-// ChannelOpenConfirm will construct and execute a MsgChannelOpenConfirm.
-func (chain *TestChain) ChannelOpenConfirm(
+// ChanOpenConfirm will construct and execute a MsgChannelOpenConfirm.
+func (chain *TestChain) ChanOpenConfirm(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {

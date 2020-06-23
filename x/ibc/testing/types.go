@@ -34,8 +34,10 @@ func (conn *TestConnection) NextTestChannel() TestChannel {
 	// TODO: come up with better naming scheme, will colide with multiple client creations
 	channelID := conn.ID + strconv.Itoa(len(conn.Channels))
 	return TestChannel{
-		PortID: portID,
-		ID:     channelID,
+		PortID:               portID,
+		ID:                   channelID,
+		ClientID:             conn.ClientID,
+		CounterpartyClientID: conn.CounterpartyClientID,
 	}
 }
 
@@ -49,8 +51,11 @@ func (conn *TestConnection) FirstOrNextTestChannel() TestChannel {
 }
 
 // TestChannel is a testing helper struct to keep track of the portID and channelID
-// used in creating and interacting with a channel.
+// used in creating and interacting with a channel. The clientID and counterparty
+// client ID are also tracked to cut down on querying and argument passing.
 type TestChannel struct {
-	PortID string
-	ID     string
+	PortID               string
+	ID                   string
+	ClientID             string
+	CounterpartyClientID string
 }

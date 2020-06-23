@@ -11,14 +11,14 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 service Query {
 //  rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
 
-  rpc ValidatorGet (QueryValidatorRequest) returns (QueryValidatorResponse) {}
-//
-//  rpc ValidatorDelegations (QueryValidatorRequest) returns (QueryValidatorDelegationsResponse) {}
-//
+  rpc ValidatorQ (QueryValidatorRequest) returns (QueryValidatorResponse) {}
+
+  rpc ValidatorDelegations (QueryValidatorRequest) returns (QueryValidatorDelegationsResponse) {}
+
 //  rpc ValidatorUnbondingDelegations (QueryValidatorRequest) returns (QueryValidatorUnbondingResponse) {}
-//
-//  rpc Delegation (QueryBondParamsRequest) returns (QueryDelegationResponse) {}
-//
+
+  rpc DelegationQ (QueryBondParamsRequest) returns (QueryDelegationResponse) {}
+
 //  rpc UnbondingDelegation (QueryBondParamsRequest) returns (QueryUnbondingDelegationResponse) {}
 //
 //  rpc DelegatorDelegations (QueryDelegatorParamsRequest) returns (QueryDelegatorDelegationsResponse) {}
@@ -59,10 +59,6 @@ service Query {
 message QueryValidatorRequest{
   bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 
-  int64 page = 2;
-
-  int64 limit = 3;
-
   cosmos.query.PageRequest req = 4;
 }
 
@@ -72,31 +68,32 @@ message QueryValidatorResponse{
   cosmos.query.PageResponse res = 2;
 }
 
-//message QueryValidatorDelegationsResponse{
-//  bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
-//
-//  cosmos.query.PageResponse res = 2;
-//}
-//
+message QueryValidatorDelegationsResponse{
+
+  repeated cosmos.staking.DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "DelegationResponses"];
+
+  cosmos.query.PageResponse res = 2;
+}
+
 //message QueryValidatorUnbondingResponse{
 // repeated bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
 //
 //  cosmos.query.PageResponse res = 2;
 //}
-//
-//message QueryBondParamsRequest{
-//  bytes delegator_address = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-//
-//  bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-//
-//  cosmos.query.PageRequest req = 3;
-//}
-//
-//message QueryDelegationResponse{
-//  bytes delegation_responses = 1  [(gogoproto.casttype) = "DelegationResponses"];
-//
-//  cosmos.query.PageResponse res = 2;
-//}
+
+message QueryBondParamsRequest{
+  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+
+  bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+
+  cosmos.query.PageRequest req = 3;
+}
+
+message QueryDelegationResponse{
+  cosmos.staking.DelegationResponse delegation_response = 1  [(gogoproto.casttype) = "DelegationResponse"];
+
+  cosmos.query.PageResponse res = 2;
+}
 //
 //message QueryUnbondingDelegationResponse{
 //  cosmos.staking.UnbondingDelegation unbond =1;

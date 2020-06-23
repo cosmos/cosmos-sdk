@@ -41,7 +41,6 @@ func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams 
 // - 'custom/staking/validator'
 // - 'custom/staking/validatorDelegations'
 // - 'custom/staking/validatorUnbondingDelegations'
-// - 'custom/staking/validatorRedelegations'
 type QueryValidatorParams struct {
 	ValidatorAddr sdk.ValAddress
 	Page, Limit   int

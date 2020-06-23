@@ -29,13 +29,13 @@ func NewQueryChannelResponse(portID, channelID string, channel Channel, proof []
 	}
 }
 
-// NewQueryPacketResponse creates a new QueryPacketResponse instance
-func NewQueryPacketResponse(
-	portID, channelID string, sequence uint64, packet Packet, proof []byte, height int64,
-) *QueryPacketResponse {
+// NewQueryPacketCommitmentResponse creates a new QueryPacketCommitmentResponse instance
+func NewQueryPacketCommitmentResponse(
+	portID, channelID string, sequence uint64, commitment []byte, proof []byte, height int64,
+) *QueryPacketCommitmentResponse {
 	path := commitmenttypes.NewMerklePath(strings.Split(host.PacketCommitmentPath(portID, channelID, sequence), "/"))
-	return &QueryPacketResponse{
-		Packet:      &packet,
+	return &QueryPacketCommitmentResponse{
+		Commitment:  commitment,
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
 		ProofHeight: uint64(height),

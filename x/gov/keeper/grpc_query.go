@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -40,7 +39,5 @@ func (q Keeper) AllProposals(c context.Context, req *types.QueryAllProposalsRequ
 	}
 
 	bz, err := q.cdc.MarshalJSON(proposals)
-	fmt.Println("proposals", proposals)
-
 	return &types.QueryAllProposalsResponse{Proposals: bz, Res: res}, nil
 }

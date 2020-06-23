@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
 // SubModuleCdc defines the IBC tendermint client codec.
@@ -9,6 +10,7 @@ var SubModuleCdc *codec.Codec
 
 func init() {
 	SubModuleCdc = codec.New()
+	cryptocodec.RegisterCrypto(SubModuleCdc)
 	RegisterCodec(SubModuleCdc)
 }
 

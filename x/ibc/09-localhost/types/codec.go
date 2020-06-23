@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
 const (
@@ -14,6 +15,7 @@ var SubModuleCdc *codec.Codec
 
 func init() {
 	SubModuleCdc = codec.New()
+	cryptocodec.RegisterCrypto(SubModuleCdc)
 	RegisterCodec(SubModuleCdc)
 }
 

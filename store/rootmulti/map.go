@@ -100,3 +100,91 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 
 	return merkle.SimpleHashFromByteSlices(kvsH)
 }
+
+// ---------------------------------------------
+
+// Merkle tree from a map.
+// Leaves are `hash(key) | hash(value)`.
+// Leaves are sorted before Merkle hashing.
+type simpleMap struct {
+	kvs    kv.Pairs
+	sorted bool
+}
+
+func newSimpleMap() *simpleMap {
+	return &simpleMap{
+		kvs:    nil,
+		sorted: false,
+	}
+}
+
+// Set creates a kv pair of the key and the hash of the value,
+// and then appends it to simpleMap's kv pairs.
+func (sm *simpleMap) Set(key string, value []byte) {
+	sm.sorted = false
+
+	// The value is hashed, so you can
+	// check for equality with a cached value (say)
+	// and make a determination to fetch or not.
+	vhash := tmhash.Sum(value)
+
+	sm.kvs = append(sm.kvs, kv.Pair{
+		Key:   []byte(key),
+		Value: vhash,
+	})
+}
+
+// Hash Merkle root hash of items sorted by key
+// (UNSTABLE: and by value too if duplicate key).
+func (sm *simpleMap) Hash() []byte {
+	sm.Sort()
+	return hashKVPairs(sm.kvs)
+}
+
+func (sm *simpleMap) Sort() {
+	if sm.sorted {
+		return
+	}
+	sm.kvs.Sort()
+	sm.sorted = true
+}
+
+// Returns a copy of sorted KVPairs.
+// NOTE these contain the hashed key and value.
+func (sm *simpleMap) KVPairs() kv.Pairs {
+	sm.Sort()
+	kvs := make(kv.Pairs, len(sm.kvs))
+	copy(kvs, sm.kvs)
+	return kvs
+}
+
+//----------------------------------------
+
+// A local extension to KVPair that can be hashed.
+// Key and value are length prefixed and concatenated,
+// then hashed.
+type KVPair kv.Pair
+
+// NewKVPair takes in a key and value and creates a kv.Pair
+// wrapped in the local extension KVPair
+func NewKVPair(key, value []byte) KVPair {
+	return KVPair(kv.Pair{
+		Key:   key,
+		Value: value,
+	})
+}
+
+// Bytes returns key || value, with both the
+// key and value length prefixed.
+func (kv KVPair) Bytes() []byte {
+	var b bytes.Buffer
+	err := encodeByteSlice(&b, kv.Key)
+	if err != nil {
+		panic(err)
+	}
+	err = encodeByteSlice(&b, kv.Value)
+	if err != nil {
+		panic(err)
+	}
+	return b.Bytes()
+}

@@ -73,7 +73,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		WithClient(rpcClient).
 		WithTrustNode(true)
 
-	apiSrv := api.New(val.ClientCtx)
+	apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
 	app.RegisterAPIRoutes(apiSrv)
 
 	errCh := make(chan error)

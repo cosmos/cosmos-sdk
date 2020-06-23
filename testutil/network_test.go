@@ -10,12 +10,11 @@ import (
 func TestNetwork_Liveness(t *testing.T) {
 	n := NewTestNetwork(t, DefaultConfig())
 	defer n.Cleanup()
-
 	require.NotNil(t, n)
-	require.NotEmpty(t, n.Validators)
-	client := n.Validators[0].RPCClient
-	require.NotNil(t, client)
 
+	require.NoError(t, n.WaitForHeight(1))
+
+	client := n.Validators[0].RPCClient
 	ticker := time.NewTicker(5 * time.Second)
 	timeout := time.After(time.Minute)
 

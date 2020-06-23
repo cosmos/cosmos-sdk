@@ -3,6 +3,7 @@ package testutil
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -43,33 +44,35 @@ var (
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
 type Config struct {
-	GenesisState  map[string]json.RawMessage
-	TimeoutCommit time.Duration
-	ChainID       string
-	NumValidators int
-	BondDenom     string
-	MinGasPrices  string
-	Passphrase    string
-	AccountTokens sdk.Int
-	StakingTokens sdk.Int
-	BondedTokens  sdk.Int
-	EnableLogging bool
+	GenesisState    map[string]json.RawMessage
+	TimeoutCommit   time.Duration
+	ChainID         string
+	NumValidators   int
+	BondDenom       string
+	MinGasPrices    string
+	Passphrase      string
+	AccountTokens   sdk.Int
+	StakingTokens   sdk.Int
+	BondedTokens    sdk.Int
+	PruningStrategy string
+	EnableLogging   bool
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
 func DefaultConfig() Config {
 	return Config{
-		GenesisState:  simapp.ModuleBasics.DefaultGenesis(cdc),
-		TimeoutCommit: 2 * time.Second,
-		ChainID:       "chain-" + tmrand.NewRand().Str(6),
-		NumValidators: 4,
-		BondDenom:     sdk.DefaultBondDenom,
-		MinGasPrices:  fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		Passphrase:    clientkeys.DefaultKeyPass,
-		AccountTokens: sdk.TokensFromConsensusPower(1000),
-		StakingTokens: sdk.TokensFromConsensusPower(500),
-		BondedTokens:  sdk.TokensFromConsensusPower(100),
+		GenesisState:    simapp.ModuleBasics.DefaultGenesis(cdc),
+		TimeoutCommit:   2 * time.Second,
+		ChainID:         "chain-" + tmrand.NewRand().Str(6),
+		NumValidators:   4,
+		BondDenom:       sdk.DefaultBondDenom,
+		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		Passphrase:      clientkeys.DefaultKeyPass,
+		AccountTokens:   sdk.TokensFromConsensusPower(1000),
+		StakingTokens:   sdk.TokensFromConsensusPower(500),
+		BondedTokens:    sdk.TokensFromConsensusPower(100),
+		PruningStrategy: storetypes.PruningOptionNothing,
 	}
 }
 
@@ -133,7 +136,7 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < cfg.NumValidators; i++ {
 		appCfg := srvconfig.DefaultConfig()
-		appCfg.Pruning = storetypes.PruningOptionNothing
+		appCfg.Pruning = cfg.PruningStrategy
 		appCfg.MinGasPrices = cfg.MinGasPrices
 		appCfg.API.Enable = true
 		appCfg.API.Swagger = false
@@ -141,7 +144,10 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 
 		apiAddr, _, err := server.FreeTCPAddr()
 		require.NoError(t, err)
-		appCfg.API.Address = apiAddr
+
+		apiURL, err := url.Parse(apiAddr)
+		require.NoError(t, err)
+		appCfg.API.Address = fmt.Sprintf("%s:%s", apiURL.Hostname(), apiURL.Port())
 
 		ctx := server.NewDefaultContext()
 		tmCfg := ctx.Config
@@ -199,10 +205,10 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 		// save private key seed words
 		require.NoError(t, writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, infoBz))
 
-		balances := sdk.Coins{
+		balances := sdk.NewCoins(
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), cfg.AccountTokens),
 			sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-		}
+		)
 
 		genFiles = append(genFiles, tmCfg.GenesisFile())
 		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: balances.Sort()})
@@ -222,7 +228,10 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
 		tx := authtypes.NewStdTx([]sdk.Msg{createValMsg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
-		txBldr := authtypes.TxBuilder{}.WithChainID(cfg.ChainID).WithMemo(memo).WithKeybase(kb)
+		txBldr := authtypes.TxBuilder{}.
+			WithChainID(cfg.ChainID).
+			WithMemo(memo).
+			WithKeybase(kb)
 
 		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
 		require.NoError(t, err)
@@ -267,6 +276,35 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 	server.TrapSignal(network.Cleanup)
 
 	return network
+}
+
+// WaitForHeight performs a blocking check where it waits for a block to be
+// committed after a given block. If that height is not reached within a timeout,
+// an error is returned.
+func (n *Network) WaitForHeight(h int64) error {
+	ticker := time.NewTicker(time.Second)
+	timeout := time.After(10 * time.Second)
+
+	if len(n.Validators) == 0 {
+		return errors.New("no validators available")
+	}
+
+	val := n.Validators[0]
+
+	for {
+		select {
+		case <-timeout:
+			ticker.Stop()
+			return errors.New("timeout exceeded waiting for block")
+		case <-ticker.C:
+			status, err := val.RPCClient.Status()
+			if err == nil && status != nil {
+				if status.SyncInfo.LatestBlockHeight > h {
+					return nil
+				}
+			}
+		}
+	}
 }
 
 // Cleanup removes the root testing (temporary) directory and stops both the

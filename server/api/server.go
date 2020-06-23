@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -33,11 +32,11 @@ type Server struct {
 	listener net.Listener
 }
 
-func New(clientCtx client.Context) *Server {
+func New(clientCtx client.Context, logger log.Logger) *Server {
 	return &Server{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
-		logger:    log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "api-server"),
+		logger:    logger,
 	}
 }
 
@@ -60,13 +59,18 @@ func (s *Server) Start(cfg config.Config) error {
 		s.registerMetrics()
 	}
 
+	addr := cfg.API.Address
+	if !strings.Contains(addr, "tcp://") {
+		addr = "tcp://" + addr
+	}
+
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
 	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
 	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
+	listener, err := tmrpcserver.Listen(addr, tmCfg)
 	if err != nil {
 		return err
 	}

@@ -43,11 +43,11 @@ func convertLeafOp() *ics23.LeafOp {
 }
 
 func convertInnerOps(p *merkle.SimpleProof) ([]*ics23.InnerOp, error) {
-	var inners []*ics23.InnerOp
+	inners := make([]*ics23.InnerOp, 0, len(p.Aunts))
 	path := buildPath(p.Index, p.Total)
 
 	if len(p.Aunts) != len(path) {
-		return nil, fmt.Errorf("Calculated a path different length (%d) than provided by SimpleProof (%d)", len(path), len(p.Aunts))
+		return nil, fmt.Errorf("calculated a path different length (%d) than provided by SimpleProof (%d)", len(path), len(p.Aunts))
 	}
 
 	for i, aunt := range p.Aunts {

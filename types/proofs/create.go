@@ -49,7 +49,7 @@ If the key exists in the tree, this will return an error.
 func CreateNonMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {
 	// ensure this key is not in the store
 	if _, ok := data[string(key)]; ok {
-		return nil, fmt.Errorf("Cannot create non-membership proof if key is in map")
+		return nil, fmt.Errorf("cannot create non-membership proof if key is in map")
 	}
 
 	keys := SortedKeys(data)

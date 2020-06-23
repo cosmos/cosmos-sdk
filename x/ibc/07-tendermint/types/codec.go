@@ -7,6 +7,11 @@ import (
 // SubModuleCdc defines the IBC tendermint client codec.
 var SubModuleCdc *codec.Codec
 
+func init() {
+	SubModuleCdc = codec.New()
+	RegisterCodec(SubModuleCdc)
+}
+
 // RegisterCodec registers the Tendermint types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ClientState{}, "ibc/client/tendermint/ClientState", nil)
@@ -16,11 +21,4 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&MsgCreateClient{}, "ibc/client/tendermint/MsgCreateClient", nil)
 	cdc.RegisterConcrete(&MsgUpdateClient{}, "ibc/client/tendermint/MsgUpdateClient", nil)
 	cdc.RegisterConcrete(&MsgSubmitClientMisbehaviour{}, "ibc/client/tendermint/MsgSubmitClientMisbehaviour", nil)
-
-	SetSubModuleCodec(cdc)
-}
-
-// SetSubModuleCodec sets the ibc tendermint client codec
-func SetSubModuleCodec(cdc *codec.Codec) {
-	SubModuleCdc = cdc
 }

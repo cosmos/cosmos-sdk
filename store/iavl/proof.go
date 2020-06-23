@@ -32,7 +32,7 @@ func CreateNonMembershipProof(tree *iavl.ImmutableTree, key []byte) (*ics23.Comm
 	// idx is one node right of what we want....
 	idx, val := tree.Get(key)
 	if val != nil {
-		return nil, fmt.Errorf("Cannot create NonExistanceProof when Key in State")
+		return nil, fmt.Errorf("cannot create NonExistanceProof when Key in State")
 	}
 
 	var err error
@@ -71,7 +71,7 @@ func createExistenceProof(tree *iavl.ImmutableTree, key []byte) (*ics23.Existenc
 		return nil, err
 	}
 	if value == nil {
-		return nil, fmt.Errorf("Cannot create ExistanceProof when Key not in State")
+		return nil, fmt.Errorf("cannot create ExistanceProof when Key not in State")
 	}
 	return convertExistenceProof(proof, key, value)
 }
@@ -83,7 +83,7 @@ func createExistenceProof(tree *iavl.ImmutableTree, key []byte) (*ics23.Existenc
 // demoing compatibility here
 func convertExistenceProof(p *iavl.RangeProof, key, value []byte) (*ics23.ExistenceProof, error) {
 	if len(p.Leaves) != 1 {
-		return nil, fmt.Errorf("Existence proof requires RangeProof to have exactly one leaf")
+		return nil, fmt.Errorf("existence proof requires RangeProof to have exactly one leaf")
 	}
 	return &ics23.ExistenceProof{
 		Key:   key,

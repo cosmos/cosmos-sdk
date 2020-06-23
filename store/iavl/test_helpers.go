@@ -10,18 +10,18 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
-// IavlResult is the result of one match
-type IavlResult struct {
+// Result is the result of one match
+type Result struct {
 	Key      []byte
 	Value    []byte
 	Proof    *iavl.RangeProof
 	RootHash []byte
 }
 
-// GenerateIavlResult makes a tree of size and returns a range proof for one random element
+// GenerateResult makes a tree of size and returns a range proof for one random element
 //
 // returns a range proof and the root hash of the tree
-func GenerateIavlResult(size int, loc Where) (*IavlResult, error) {
+func GenerateResult(size int, loc Where) (*Result, error) {
 	tree, allkeys, err := BuildTree(size)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func GenerateIavlResult(size int, loc Where) (*IavlResult, error) {
 	}
 	root := tree.Hash()
 
-	res := &IavlResult{
+	res := &Result{
 		Key:      key,
 		Value:    value,
 		Proof:    proof,
@@ -89,7 +89,7 @@ func GetNonKey(allkeys [][]byte, loc Where) []byte {
 // BuildTree creates random key/values and stores in tree
 // returns a list of all keys in sorted order
 func BuildTree(size int) (itree *iavl.ImmutableTree, keys [][]byte, err error) {
-	tree, err := iavl.NewMutableTree(db.NewMemDB(), 0)
+	tree, _ := iavl.NewMutableTree(db.NewMemDB(), 0)
 
 	// insert lots of info and store the bytes
 	keys = make([][]byte, size)

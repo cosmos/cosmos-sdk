@@ -399,7 +399,8 @@ func (chain *TestChain) ConnectionOpenConfirm(
 	return chain.SendMsg(msg)
 }
 
-// CreatePortCapability
+// CreatePortCapability binds and claims a capability for the given portID if it does not
+// already exist. This function will fail testing on any resulting error.
 // TODO: allow application developers to bind their port
 func (chain *TestChain) CreatePortCapability(portID string) {
 	// check if the portId is already binded, if not bind it
@@ -417,12 +418,30 @@ func (chain *TestChain) CreatePortCapability(portID string) {
 }
 
 // GetPortCapability returns the port capability for the given portID. The capability must
-// exist, otherwise the testing will fail.
+// exist, otherwise testing will fail.
 func (chain *TestChain) GetPortCapability(portID string) *capabilitytypes.Capability {
 	cap, ok := chain.App.ScopedIBCKeeper.GetCapability(chain.GetContext(), host.PortPath(portID))
 	require.True(chain.t, ok)
 
 	return cap
+}
+
+// CreateChannelCapability binds and claims a capability for the given portID and channelID
+// if it does not already exist. This function will fail testing on any resulting error.
+func (chain *TestChain) CreateChannelCapability(portID, channelID string) {
+	capName := host.ChannelCapabilityPath(portID, channelID)
+	// check if the portId is already binded, if not bind it
+	_, ok := chain.App.ScopedIBCKeeper.GetCapability(chain.GetContext(), capName)
+	if !ok {
+		cap, err := chain.App.ScopedIBCKeeper.NewCapability(chain.GetContext(), capName)
+		require.NoError(chain.t, err)
+		err = chain.App.ScopedTransferKeeper.ClaimCapability(chain.GetContext(), cap, capName)
+		require.NoError(chain.t, err)
+	}
+
+	chain.App.Commit()
+
+	chain.NextBlock()
 }
 
 // GetChannelCapability returns the channel capability for the given portID and channelID.
@@ -495,6 +514,20 @@ func (chain *TestChain) ChannelOpenConfirm(
 	msg := channeltypes.NewMsgChannelOpenConfirm(
 		ch.PortID, ch.ID,
 		proof, height+1,
+		chain.SenderAccount.GetAddress(),
+	)
+	return chain.SendMsg(msg)
+}
+
+// ChanCloseInit will construct and execute a MsgChannelCloseInit.
+//
+// NOTE: does not work with ibc-transfer module
+func (chain *TestChain) ChanCloseInit(
+	counterparty *TestChain,
+	channel TestChannel,
+) error {
+	msg := channeltypes.NewMsgChannelCloseInit(
+		channel.PortID, channel.ID,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)

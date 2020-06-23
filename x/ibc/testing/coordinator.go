@@ -403,7 +403,6 @@ func (coord *Coordinator) CreateChannelOpenAck(
 	connection *TestConnection,
 ) error {
 
-	// initialize channel on source
 	if err := source.ChannelOpenAck(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
@@ -428,11 +427,60 @@ func (coord *Coordinator) CreateChannelOpenConfirm(
 	connection *TestConnection,
 ) error {
 
-	// initialize channel on source
 	if err := source.ChannelOpenConfirm(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
 	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		connection.CounterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ChanCloseInit closes a channel on the source chain resulting in the channels state
+// being set to CLOSED.
+//
+// NOTE: does not work with ibc-transfer module
+func (coord *Coordinator) ChanCloseInit(
+	source, counterparty *TestChain,
+	channel TestChannel,
+	connection *TestConnection,
+) error {
+
+	if err := source.ChanCloseInit(counterparty, channel); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		connection.CounterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetChannelClosed sets a channel state to CLOSED.
+func (coord *Coordinator) SetChannelClosed(
+	source, counterparty *TestChain,
+	testChannel TestChannel,
+	connection *TestConnection,
+) error {
+	channel := source.GetChannel(testChannel)
+
+	channel.State = channeltypes.CLOSED
+	source.App.IBCKeeper.ChannelKeeper.SetChannel(source.GetContext(), testChannel.PortID, testChannel.ID, channel)
+
+	coord.CommitBlock(source)
 
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(

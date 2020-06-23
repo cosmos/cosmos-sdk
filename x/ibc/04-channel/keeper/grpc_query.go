@@ -24,12 +24,8 @@ func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*typ
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if err := host.PortIdentifierValidator(req.PortID); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	if err := host.ChannelIdentifierValidator(req.ChannelID); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -55,7 +51,7 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 	channels := []*types.IdentifiedChannel{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
 
-	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
 		var result types.IdentifiedChannel
 		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
 			return err
@@ -82,12 +78,16 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if err := host.ConnectionIdentifierValidator(req.Connection); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	channels := []*types.IdentifiedChannel{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
 
-	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
 		var channel types.IdentifiedChannel
 		if err := q.cdc.UnmarshalBinaryBare(value, &channel); err != nil {
 			return err
@@ -120,12 +120,8 @@ func (q Keeper) PacketCommitment(c context.Context, req *types.QueryPacketCommit
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if err := host.PortIdentifierValidator(req.PortID); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	if err := host.ChannelIdentifierValidator(req.ChannelID); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
 	}
 
 	if req.Sequence == 0 {
@@ -148,12 +144,16 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	commitments := []*types.PacketAckCommitment{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.PacketCommitmentPrefixPath(req.PortID, req.ChannelID)))
 
-	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
 		keySplit := strings.Split(string(key), "/")
 
 		sequence, err := strconv.ParseUint(keySplit[len(keySplit)-1], 10, 64)
@@ -175,4 +175,59 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 		Res:         res,
 		Height:      ctx.BlockHeight(),
 	}, nil
+}
+
+// UnrelayedPackets implements the Query/UnrelayedPackets gRPC method
+func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPacketsRequest) (*types.QueryUnrelayedPacketsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var (
+		unrelayedPackets = []uint64{}
+		store            sdk.KVStore
+		res              *query.PageResponse
+		err              error
+	)
+
+	for i, seq := range req.Sequences {
+		if seq == 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
+		}
+
+		store = prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyPacketAcknowledgement(req.PortID, req.ChannelID, seq)))
+		res, err = query.Paginate(store, req.Req, func(_, _ []byte) error {
+			return nil
+		})
+
+		if err != nil {
+			// ignore error and continue to the next sequence item
+			continue
+		}
+
+		unrelayedPackets = append(unrelayedPackets, seq)
+	}
+	return &types.QueryUnrelayedPacketsResponse{
+		Packets: unrelayedPackets,
+		Res:     res,
+		Height:  ctx.BlockHeight(),
+	}, nil
+}
+
+func validategRPCRequest(portID, channelID string) error {
+	if err := host.PortIdentifierValidator(portID); err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if err := host.ChannelIdentifierValidator(channelID); err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return nil
 }

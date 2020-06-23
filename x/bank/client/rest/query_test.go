@@ -37,7 +37,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestSendRequestHandler() {
+func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
 	val := s.network.Validators[0]
 	apiAddr := val.AppConfig.API.Address
 

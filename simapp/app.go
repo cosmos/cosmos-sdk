@@ -76,7 +76,7 @@ const appName = "SimApp"
 
 var (
 	// DefaultCLIHome default home directories for the application CLI
-	DefaultCLIHome = os.ExpandEnv("$HOME/.simapp")
+	DefaultCLIHome = os.ExpandEnv("$HOME/.simappcli")
 
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome = os.ExpandEnv("$HOME/.simapp")

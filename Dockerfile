@@ -1,0 +1,36 @@
+# Simple usage with a mounted data directory:
+# > docker build -t simapp .
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp -v ~/.simappcli:/root/.simappcli simapp simd init test-chain
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp -v ~/.simappcli:/root/.simappcli simapp simd start
+FROM golang:alpine AS build-env
+
+# Install minimum necessary dependencies,
+ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
+RUN apk add --no-cache $PACKAGES
+
+# Set working directory for the build
+WORKDIR /go/src/github.com/cosmos/cosmos-sdk
+
+# Add source files
+COPY . .
+
+# build Cosmos SDK, remove packages
+RUN make tools && \
+    make build-sim && \
+    cp ./build/sim* /go/bin
+# make build-sim-linux ??
+
+
+# Final image
+FROM alpine:edge
+
+# Install ca-certificates
+RUN apk add --update ca-certificates
+WORKDIR /root
+
+# Copy over binaries from the build-env
+COPY --from=build-env /go/bin/simd /usr/bin/simd
+COPY --from=build-env /go/bin/simcli /usr/bin/simcli
+
+# Run simd by default, omit entrypoint to ease using container with simcli
+CMD ["simd"]

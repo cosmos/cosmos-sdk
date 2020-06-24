@@ -392,31 +392,6 @@ func TestIAVLNoPrune(t *testing.T) {
 	}
 }
 
-func TestIAVLPruneEverything(t *testing.T) {
-	db := dbm.NewMemDB()
-	iavlOpts := iavl.PruningOptions(0, 1) // only store latest version in memory
-
-	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
-	require.NoError(t, err)
-
-	iavlStore := UnsafeNewStore(tree)
-	nextVersion(iavlStore)
-
-	for i := 1; i < 100; i++ {
-		for j := 1; j < i; j++ {
-			require.False(t, iavlStore.VersionExists(int64(j)),
-				"not pruned version %d with latest version %d; should prune all old versions",
-				j, i)
-		}
-
-		require.True(t, iavlStore.VersionExists(int64(i)),
-			"missing current version on step %d; should not prune current state tree",
-			i)
-
-		nextVersion(iavlStore)
-	}
-}
-
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, err := iavl.NewMutableTree(db, cacheSize)

@@ -713,7 +713,7 @@ func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
 }
 
 func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes := cdc.MustMarshalBinaryBare(version)
+	latestBytes := cdc.MustMarshalBinaryLengthPrefixed(version)
 	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 

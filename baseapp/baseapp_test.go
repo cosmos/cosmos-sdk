@@ -376,7 +376,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
 
-	err = app.LoadLatestVersion()
+	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }

@@ -10,7 +10,6 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	// cfg     eConfig
 	network *Network
 }
 

@@ -1,7 +1,15 @@
 # Simple usage with a mounted data directory:
 # > docker build -t simapp .
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp -v ~/.simappcli:/root/.simappcli simapp simd init test-chain
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp -v ~/.simappcli:/root/.simappcli simapp simd start
+#
+# Server:
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp simapp simd init test-chain
+# TODO: need to set validator in genesis so start runs
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp simapp simd start
+#
+# Client:
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simappcli simapp simcli keys add foo
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simappcli simapp simcli keys list
+# TODO: demo connecting rest-server (or is this in server now?)
 FROM golang:alpine AS build-env
 
 # Install minimum necessary dependencies,
@@ -31,6 +39,8 @@ WORKDIR /root
 # Copy over binaries from the build-env
 COPY --from=build-env /go/bin/simd /usr/bin/simd
 COPY --from=build-env /go/bin/simcli /usr/bin/simcli
+
+EXPOSE 26656 26657 1317
 
 # Run simd by default, omit entrypoint to ease using container with simcli
 CMD ["simd"]

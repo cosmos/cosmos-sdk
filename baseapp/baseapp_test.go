@@ -352,33 +352,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	require.Equal(t, int64(0), lastHeight)
 	require.Equal(t, emptyCommitID, lastID)
 
-<<<<<<< HEAD
-	// execute a block
-	header := abci.Header{Height: 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res := app.Commit()
-
-	// execute a block, collect commit ID
-	header = abci.Header{Height: 2}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
-
-	// execute a block
-	header = abci.Header{Height: 3}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-	commitID3 := sdk.CommitID{Version: 3, Hash: res.Data}
-
-	// reload with LoadLatestVersion, check it loads last flushed version
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
-	err = app.LoadLatestVersion(capKey)
-	require.Nil(t, err)
-	testLoadVersionHelper(t, app, int64(2), commitID2)
-=======
 	var lastCommitID sdk.CommitID
->>>>>>> 4716260a6... Merge PR #6475: Pruning Refactor
 
 	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
 	// (keep recent) and 3 (keep every).
@@ -401,23 +375,10 @@ func TestLoadVersionPruning(t *testing.T) {
 	// reload with LoadLatestVersion, check it loads last version
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
-<<<<<<< HEAD
-	err = app.LoadLatestVersion(capKey)
-	require.Nil(t, err)
-	testLoadVersionHelper(t, app, int64(4), commitID4)
-
-	// reload with LoadVersion of previous flushed version
-	// and check it fails since previous flush should be pruned
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
-	err = app.LoadVersion(2, capKey)
-	require.NotNil(t, err)
-=======
 
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
->>>>>>> 4716260a6... Merge PR #6475: Pruning Refactor
 }
 
 func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {

@@ -1,16 +1,9 @@
 package iavl
 
 import (
-	"fmt"
 	"io"
 	"sync"
 
-<<<<<<< HEAD
-	"github.com/pkg/errors"
-=======
-	ics23iavl "github.com/confio/ics23-iavl"
-	ics23 "github.com/confio/ics23/go"
->>>>>>> 4716260a6... Merge PR #6475: Pruning Refactor
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -288,38 +281,6 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return res
 }
 
-<<<<<<< HEAD
-=======
-// Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
-// appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
-// Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
-	var (
-		commitmentProof *ics23.CommitmentProof
-		err             error
-	)
-
-	if exists {
-		// value was found
-		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
-		if err != nil {
-			// sanity check: If value was found, membership proof must be creatable
-			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
-		}
-	} else {
-		// value wasn't found
-		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
-		if err != nil {
-			// sanity check: If value wasn't found, nonmembership proof must be creatable
-			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
-		}
-	}
-
-	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
-}
-
->>>>>>> 4716260a6... Merge PR #6475: Pruning Refactor
 //----------------------------------------
 
 // Implements types.Iterator.

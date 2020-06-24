@@ -751,14 +751,3 @@ func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []in
 		panic(fmt.Errorf("error on batch write %w", err))
 	}
 }
-
-// // SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
-// // root.
-// func SimpleHashFromMap(m map[string][]byte) []byte {
-// 	mm := newMerkleMap()
-// 	for k, v := range m {
-// 		mm.set(k, v)
-// 	}
-
-// 	return mm.hash()
-// }

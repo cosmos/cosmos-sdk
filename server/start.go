@@ -66,6 +66,10 @@ will not be able to commit subsequent blocks.
 For profiling and benchmarking purposes, CPU profiling can be enabled via the '--cpu-profile' flag
 which accepts a path for the resulting pprof file.
 `,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			_, err := GetPruningOptionsFromFlags()
+			return err
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !viper.GetBool(flagWithTendermint) {
 				ctx.Logger.Info("starting ABCI without Tendermint")

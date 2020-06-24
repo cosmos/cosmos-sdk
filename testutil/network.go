@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -39,6 +40,9 @@ import (
 
 var (
 	_, cdc = simapp.MakeCodecs()
+
+	// package-wide network lock to only allow one test network at a time
+	lock = new(sync.Mutex)
 )
 
 // Config defines the necessary configuration used to bootstrap and start an
@@ -81,6 +85,11 @@ type (
 	// configured to start any number of validators, each with its own RPC and API
 	// clients. Typically, this test network would be used in client and integration
 	// testing where user input is expected.
+	//
+	// Note, due to Tendermint constraints in regards to RPC functionality, there
+	// may only be one test network running at a time. Thus, any caller must be
+	// sure to Cleanup after testing is finished in order to allow other tests
+	// to create networks.
 	Network struct {
 		T          *testing.T
 		BaseDir    string
@@ -111,6 +120,10 @@ type (
 )
 
 func NewTestNetwork(t *testing.T, cfg Config) *Network {
+	// only one caller/test can create and use a network at a time
+	t.Log("acquiring test network lock")
+	lock.Lock()
+
 	baseDir, err := ioutil.TempDir(os.TempDir(), cfg.ChainID)
 	require.NoError(t, err)
 
@@ -325,8 +338,15 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 }
 
 // Cleanup removes the root testing (temporary) directory and stops both the
-// Tendermint and API services.
+// Tendermint and API services. It allows other callers to create and start
+// test networks. This method must be called when a test is finished, typically
+// in a defer.
 func (n *Network) Cleanup() {
+	defer func() {
+		lock.Unlock()
+		n.T.Log("released test network lock")
+	}()
+
 	n.T.Log("cleaning up test network...")
 
 	for _, v := range n.Validators {

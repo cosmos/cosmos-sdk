@@ -276,12 +276,4 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 
 }
 
-type mockTimeoutPacket struct{}
-
-func newMockTimeoutPacket() mockTimeoutPacket {
-	return mockTimeoutPacket{}
-}
-
-// GetBytes returns the serialised packet data (without timeout)
-func (mp mockTimeoutPacket) GetBytes() []byte { return []byte("THIS IS A TIMEOUT PACKET") }
 */

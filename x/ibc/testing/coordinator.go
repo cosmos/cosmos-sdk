@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -184,6 +185,52 @@ func (coord *Coordinator) CreateChannel(
 	require.NoError(coord.t, err)
 
 	return channelA, channelB
+}
+
+// SendPacket sends a packet through the channel keeper on the source chain and updates the
+// counterparty client for the source chain.
+func (coord *Coordinator) SendPacket(
+	source, counterparty *TestChain,
+	packet channelexported.PacketI,
+	counterpartyClientID string,
+) error {
+	if err := source.SendPacket(packet); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// PacketExecuted receives a packet through the channel keeper on the source chain and updates the
+// counterparty client for the source chain.
+func (coord *Coordinator) PacketExecuted(
+	source, counterparty *TestChain,
+	packet channelexported.PacketI,
+	counterpartyClientID string,
+) error {
+	if err := source.PacketExecuted(packet); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // IncrementTime iterates through all the TestChain's and increments their current header time

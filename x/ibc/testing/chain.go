@@ -23,6 +23,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -38,8 +39,7 @@ const (
 
 	// TODO: allow for this to be passed in, swap default to use that defined in connectiont types
 	ConnectionVersion = "1.0.0"
-	// TODO: use app developers provided versions
-	ChannelVersion = "ics20-1"
+	ChannelVersion    = "ics20-1" // TODO: use app developers provided versions
 
 	ConnectionIDPrefix = "connectionid"
 
@@ -48,6 +48,7 @@ const (
 
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
+	TestHash                          = []byte("TESTING HASH")
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -553,4 +554,44 @@ func (chain *TestChain) ChanCloseInit(
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
+}
+
+// SendPacket simulates sending a packet through the channel keeper. No message needs to be
+// passed since this call is made from a module.
+func (chain *TestChain) SendPacket(
+	packet channelexported.PacketI,
+) error {
+	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
+
+	// no need to send message, acting as a module
+	err := chain.App.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), channelCap, packet)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
+}
+
+// TODO allow recv through application module
+// PacketExecuted simulates receiving and wiritng an acknowledgement to the chain.
+func (chain *TestChain) PacketExecuted(
+	packet channelexported.PacketI,
+) error {
+	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
+
+	// no need to send message, acting as a handler
+	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
 }

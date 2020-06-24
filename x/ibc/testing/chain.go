@@ -21,6 +21,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -207,8 +208,26 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	return nil
 }
 
-// GetChannel retreives an IBC Channel for the provided TestChannel. The
-// must be expected to exist otherwise testing will fail.
+// GetClientState retreives the client state for the provided clientID. The client is
+// expected to exist otherwise testing will fail.
+func (chain *TestChain) GetClientState(clientID string) clientexported.ClientState {
+	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
+	require.True(chain.t, found)
+
+	return clientState
+}
+
+// GetConnection retreives an IBC Connection for the provided TestConnection. The
+// connection is expected to exist otherwise testing will fail.
+func (chain *TestChain) GetConnection(testConnection *TestConnection) connectiontypes.ConnectionEnd {
+	connection, found := chain.App.IBCKeeper.ConnectionKeeper.GetConnection(chain.GetContext(), testConnection.ID)
+	require.True(chain.t, found)
+
+	return connection
+}
+
+// GetChannel retreives an IBC Channel for the provided TestChannel. The channel
+// is expected to exist otherwise testing will fail.
 func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel {
 	channel, found := chain.App.IBCKeeper.ChannelKeeper.GetChannel(chain.GetContext(), testChannel.PortID, testChannel.ID)
 	require.True(chain.t, found)

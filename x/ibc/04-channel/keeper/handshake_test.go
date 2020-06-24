@@ -42,8 +42,14 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			suite.Require().NotNil(connB)
 		}, false},
 		{"connection is UNINITIALIZED", func() {
-			channel := types.NewChannel(types.UNINITIALIZED, types.ORDERED, types.NewCounterparty("port", "channel"), []string{"connB"}, ibctesting.ChannelVersion)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), "port", "channel", channel)
+			// any non-nil values of connA and connB are acceptable
+			suite.Require().NotNil(connA)
+			suite.Require().NotNil(connB)
+			channelA := connA.FirstOrNextTestChannel()
+			channelB := connB.FirstOrNextTestChannel()
+
+			channel := types.NewChannel(types.UNINITIALIZED, types.ORDERED, types.NewCounterparty(channelB.PortID, channelB.ID), []string{connB.ID}, ibctesting.ChannelVersion)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
 			portCap = nil
 		}, false},
 		{"capability is incorrect", func() {

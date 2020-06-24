@@ -40,7 +40,7 @@ require (
 	github.com/tendermint/iavl v0.13.4-0.20200622140716-a41a83e2415f
 	github.com/tendermint/tendermint v0.33.5
 	github.com/tendermint/tm-db v0.5.1
-	google.golang.org/grpc v1.29.1
+	google.golang.org/grpc v1.30.0
 	gopkg.in/yaml.v2 v2.3.0
 )
 

@@ -64,35 +64,39 @@ func startInProcess(cfg Config, val *Validator) error {
 		return err
 	}
 
-	rpcClient := local.New(tmNode)
+	val.tmNode = tmNode
 
-	val.ClientCtx = client.Context{}.
-		WithHomeDir(tmCfg.RootDir).
-		WithChainID(cfg.ChainID).
-		WithJSONMarshaler(cdc).
-		WithClient(rpcClient).
-		WithTrustNode(true)
-
-	apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
-	app.RegisterAPIRoutes(apiSrv)
-
-	errCh := make(chan error)
-
-	go func() {
-		if err := apiSrv.Start(*val.AppConfig); err != nil {
-			errCh <- err
-		}
-	}()
-
-	select {
-	case err := <-errCh:
-		return err
-	case <-time.After(5 * time.Second): // assume server started successfully
+	if val.RPCAddress != "" {
+		val.RPCClient = local.New(tmNode)
 	}
 
-	val.tmNode = tmNode
-	val.api = apiSrv
-	val.RPCClient = rpcClient
+	if val.APIAddress != "" {
+		val.ClientCtx = client.Context{}.
+			WithHomeDir(tmCfg.RootDir).
+			WithChainID(cfg.ChainID).
+			WithJSONMarshaler(cdc).
+			WithClient(val.RPCClient).
+			WithTrustNode(true)
+
+		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+		app.RegisterAPIRoutes(apiSrv)
+
+		errCh := make(chan error)
+
+		go func() {
+			if err := apiSrv.Start(*val.AppConfig); err != nil {
+				errCh <- err
+			}
+		}()
+
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
+		}
+
+		val.api = apiSrv
+	}
 
 	return nil
 }

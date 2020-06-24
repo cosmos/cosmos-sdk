@@ -143,16 +143,27 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 		appCfg.API.Swagger = false
 		appCfg.Telemetry.Enabled = false
 
-		apiAddr, _, err := server.FreeTCPAddr()
-		require.NoError(t, err)
-		appCfg.API.Address = apiAddr
-
-		apiURL, err := url.Parse(apiAddr)
-		require.NoError(t, err)
-
 		ctx := server.NewDefaultContext()
 		tmCfg := ctx.Config
 		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
+
+		// Only allow the first validator to expose an RPC and API server/client
+		// due to Tendermint in-process constraints.
+		apiAddr := ""
+		tmCfg.RPC.ListenAddress = ""
+		if i == 0 {
+			apiListenAddr, _, err := server.FreeTCPAddr()
+			require.NoError(t, err)
+			appCfg.API.Address = apiListenAddr
+
+			apiURL, err := url.Parse(apiListenAddr)
+			require.NoError(t, err)
+			apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
+
+			rpcAddr, _, err := server.FreeTCPAddr()
+			require.NoError(t, err)
+			tmCfg.RPC.ListenAddress = rpcAddr
+		}
 
 		logger := log.NewNopLogger()
 		if cfg.EnableLogging {
@@ -177,10 +188,6 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 		proxyAddr, _, err := server.FreeTCPAddr()
 		require.NoError(t, err)
 		tmCfg.ProxyApp = proxyAddr
-
-		rpcAddr, _, err := server.FreeTCPAddr()
-		require.NoError(t, err)
-		tmCfg.RPC.ListenAddress = rpcAddr
 
 		p2pAddr, _, err := server.FreeTCPAddr()
 		require.NoError(t, err)
@@ -250,9 +257,9 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 			NodeID:     nodeID,
 			PubKey:     pubKey,
 			Moniker:    nodeDirName,
-			RPCAddress: rpcAddr,
-			P2PAddress: p2pAddr,
-			APIAddress: fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port()),
+			RPCAddress: tmCfg.RPC.ListenAddress,
+			P2PAddress: tmCfg.P2P.ListenAddress,
+			APIAddress: apiAddr,
 			Address:    addr,
 			ValAddress: sdk.ValAddress(addr),
 		}

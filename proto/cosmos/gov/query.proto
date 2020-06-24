@@ -3,12 +3,13 @@ package cosmos.gov;
 
 import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/gov/gov.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
 service Query {
   // Proposals queries all proposals.
-  rpc AllProposals (QueryAllProposalsRequest) returns (QueryAllProposalsResponse) {}
+  rpc Proposals (QueryProposalsRequest) returns (QueryProposalsResponse) {}
 
   // Votes queries votes of a given proposal
   rpc Votes (QueryProposalRequest) returns (QueryVotesResponse) {}
@@ -18,7 +19,7 @@ service Query {
 }
 
 // QueryProposalRequest is the request type for the Query/Proposal RPC method
-message QueryAllProposalsRequest {
+message QueryProposalsRequest {
   // status of the proposals.
   int32 proposal_status = 1;
   
@@ -31,8 +32,8 @@ message QueryAllProposalsRequest {
   cosmos.query.PageRequest req = 4;
 }
 
-message QueryAllProposalsResponse {
-  bytes proposals = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Proposal"];
+message QueryProposalsResponse {
+  repeated cosmos.gov.Proposal proposals = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
@@ -45,13 +46,13 @@ message QueryProposalRequest {
 }
 
 message QueryVotesResponse {
-  bytes votes = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Vote"];
+  repeated cosmos.gov.Vote votes = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
 message QueryDepositsResponse {
-  bytes deposits = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/gov/types.Deposit"];
+  repeated cosmos.gov.Deposit deposits = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }

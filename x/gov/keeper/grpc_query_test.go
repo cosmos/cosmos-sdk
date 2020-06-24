@@ -31,9 +31,9 @@ func TestAllProposal(t *testing.T) {
 
 	req := types.NewQueryProposalsRequest(0, nil, nil, pageReq)
 
-	proposals, err := queryClient.AllProposals(gocontext.Background(), req)
+	proposals, err := queryClient.Proposals(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.Equal(t, string(proposals.Proposals), "null")
+	require.Empty(t, proposals.Proposals)
 
 	// create 2 test proposals
 	for i := 0; i < 2; i++ {
@@ -45,7 +45,7 @@ func TestAllProposal(t *testing.T) {
 
 	// Query for proposals after adding 2 proposals to the store.
 	// give page limit as 1 and expect NextKey should not to be empty
-	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
+	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, proposals.Proposals)
 	require.NotEmpty(t, proposals.Res.NextKey)
@@ -60,7 +60,7 @@ func TestAllProposal(t *testing.T) {
 
 	// query for the next page which is 2nd proposal at present context.
 	// and expect NextKey should be empty
-	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
+	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, proposals.Proposals)
@@ -75,7 +75,7 @@ func TestAllProposal(t *testing.T) {
 	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
 
 	// Query the page with limit 2 and expect NextKey should ne nil
-	proposals, err = queryClient.AllProposals(gocontext.Background(), req)
+	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, proposals.Proposals)
@@ -111,7 +111,7 @@ func TestVotesGRPC(t *testing.T) {
 	votes, err := queryClient.Votes(gocontext.Background(), req)
 
 	require.NoError(t, err)
-	require.Equal(t, string(votes.Votes), "null")
+	require.Empty(t, votes.Votes)
 	require.Empty(t, votes.Res)
 
 	// Register two votes with different addresses
@@ -189,7 +189,7 @@ func TestDepositsGRPC(t *testing.T) {
 	req := types.NewQueryProposalRequest(proposalID, pageReq)
 	deposits, err := queryClient.Deposits(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.Equal(t, string(deposits.Deposits), "null")
+	require.Empty(t, deposits.Deposits)
 	require.Empty(t, deposits.Res)
 
 	deposit1 := types.NewDeposit(proposalID, addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20))))

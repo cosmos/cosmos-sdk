@@ -103,8 +103,8 @@ func NewQueryProposalsParams(page, limit int, status ProposalStatus, voter, depo
 }
 
 // NewQueryProposalsRequest creates a new instance of QueryAllProposalsRequest.
-func NewQueryProposalsRequest(status int32, voter, depositor sdk.AccAddress, req *query.PageRequest) *QueryAllProposalsRequest {
-	return &QueryAllProposalsRequest{
+func NewQueryProposalsRequest(status int32, voter, depositor sdk.AccAddress, req *query.PageRequest) *QueryProposalsRequest {
+	return &QueryProposalsRequest{
 		ProposalStatus: status,
 		Voter:          voter,
 		Depositor:      depositor,

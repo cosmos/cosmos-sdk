@@ -13,8 +13,8 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// AllProposals implements the Query/AllProposals gRPC method
-func (q Keeper) AllProposals(c context.Context, req *types.QueryAllProposalsRequest) (*types.QueryAllProposalsResponse, error) {
+// Proposals implements the Query/Proposals gRPC method
+func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (*types.QueryProposalsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -36,11 +36,10 @@ func (q Keeper) AllProposals(c context.Context, req *types.QueryAllProposalsRequ
 	})
 
 	if err != nil {
-		return &types.QueryAllProposalsResponse{}, err
+		return &types.QueryProposalsResponse{}, err
 	}
 
-	bz, err := q.cdc.MarshalJSON(proposals)
-	return &types.QueryAllProposalsResponse{Proposals: bz, Res: res}, nil
+	return &types.QueryProposalsResponse{Proposals: proposals, Res: res}, nil
 }
 
 // Votes returns single proposal's votes
@@ -70,8 +69,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryProposalRequest) (*type
 		return &types.QueryVotesResponse{}, err
 	}
 
-	bz, err := q.cdc.MarshalJSON(votes)
-	return &types.QueryVotesResponse{Votes: bz, Res: res}, nil
+	return &types.QueryVotesResponse{Votes: votes, Res: res}, nil
 }
 
 // Deposits returns single proposal's all deposits
@@ -100,6 +98,5 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryProposalRequest) (*t
 		return &types.QueryDepositsResponse{}, err
 	}
 
-	bz, err := q.cdc.MarshalJSON(deposits)
-	return &types.QueryDepositsResponse{Deposits: bz, Res: res}, nil
+	return &types.QueryDepositsResponse{Deposits: deposits, Res: res}, nil
 }

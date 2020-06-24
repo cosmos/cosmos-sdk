@@ -680,7 +680,7 @@ type QueryClient interface {
 	Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error)
 	// Deposits returns all deposits of a single proposal
 	Deposits(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
-	// Tally queries the tally of a proposal vote
+	// TallyResult queries the tally of a proposal vote
 	TallyResult(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryTallyResponse, error)
 }
 
@@ -769,7 +769,7 @@ type QueryServer interface {
 	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
 	// Deposits returns all deposits of a single proposal
 	Deposits(context.Context, *QueryProposalRequest) (*QueryDepositsResponse, error)
-	// Tally queries the tally of a proposal vote
+	// TallyResult queries the tally of a proposal vote
 	TallyResult(context.Context, *QueryProposalRequest) (*QueryTallyResponse, error)
 }
 

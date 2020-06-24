@@ -223,6 +223,23 @@ func TestVotesGRPC(t *testing.T) {
 	require.Empty(t, votes.Res)
 }
 
+// func TestParams(t *testing.T) {
+// 	app := simapp.Setup(false)
+// 	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+// 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+// 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
+// 	queryClient := types.NewQueryClient(queryHelper)
+
+// 	req := &types.QueryParamsRequest{
+// 		ParamsType: types.ParamDeposit,
+// 	}
+
+// 	depositParams, err := queryClient.Params(gocontext.Background(), req)
+// 	fmt.Println("depositParams, err", depositParams, err)
+// 	require.NotNil(t, nil)
+// }
+
 func TestDeposit(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})

@@ -21,7 +21,7 @@ service Query {
   rpc Votes (QueryProposalRequest) returns (QueryVotesResponse) {}
 
   // Params queries all params
-  // rpc Params() returns () {}
+  // rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {}
 
   // Deposit queries single deposit information based proposalID, depositAddr
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {}
@@ -29,7 +29,7 @@ service Query {
   // Deposits returns all deposits of a single proposal
   rpc Deposits(QueryProposalRequest) returns (QueryDepositsResponse) {}
 
-  // Tally queries the tally of a proposal vote
+  // TallyResult queries the tally of a proposal vote
   rpc TallyResult(QueryProposalRequest) returns (QueryTallyResponse) {}
 }
 
@@ -81,6 +81,16 @@ message QueryVotesResponse {
 
   cosmos.query.PageResponse res = 2;
 }
+
+// message QueryParamsRequest { 
+//   string params_type = 1;
+// }
+
+// message QueryParamsResponse {
+//   bytes VotingParams = 1 [(gogoproto.customtype) = "VotingParams", (gogoproto.nullable) = false];
+//   bytes DepositParams = 2 [(gogoproto.customtype) = "DepositParams", (gogoproto.nullable) = false];
+//   bytes TallyParams = 3 [(gogoproto.customtype) = "TallyParams", (gogoproto.nullable) = false];
+// }
 
 message QueryDepositRequest {
   // unique id of the proposal

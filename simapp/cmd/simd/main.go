@@ -84,11 +84,24 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Applicati
 		skipUpgradeHeights[int64(h)] = true
 	}
 
+	pruningStr := viper.GetString(server.FlagPruning)
+	pruningOpts := storetypes.NewPruningOptionsFromString(pruningStr)
+
+	// If 'custom' strategy is provided, we construct the options from individual
+	// flags. We assume the values have been verified already.
+	if pruningStr == storetypes.PruningOptionCustom {
+		pruningOpts = storetypes.NewPruningOptions(
+			viper.GetUint64(server.FlagPruningKeepRecent),
+			viper.GetUint64(server.FlagPruningKeepEvery),
+			viper.GetUint64(server.FlagPruningInterval),
+		)
+	}
+
 	// TODO: Make sure custom pruning works.
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		viper.GetString(flags.FlagHome), invCheckPeriod,
-		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(viper.GetString(server.FlagPruning))),
+		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 		baseapp.SetHaltHeight(viper.GetUint64(server.FlagHaltHeight)),
 		baseapp.SetHaltTime(viper.GetUint64(server.FlagHaltTime)),

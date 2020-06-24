@@ -13,6 +13,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkmaps "github.com/cosmos/cosmos-sdk/internal/maps"
 	sdkproofs "github.com/cosmos/cosmos-sdk/internal/proofs"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -22,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkmaps "github.com/cosmos/cosmos-sdk/internal/maps"
 )
 
 const (

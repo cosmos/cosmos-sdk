@@ -188,3 +188,39 @@ func (kv KVPair) Bytes() []byte {
 	}
 	return b.Bytes()
 }
+
+// SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
+// root.
+func SimpleHashFromMap(m map[string][]byte) []byte {
+	mm := NewMerkleMap()
+	for k, v := range m {
+		mm.Set(k, v)
+	}
+
+	return mm.Hash()
+}
+
+// SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
+// in the underlying key-value pairs.
+// The keys are sorted before the proofs are computed.
+func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*merkle.SimpleProof, keys []string) {
+	sm := NewSimpleMap()
+	for k, v := range m {
+		sm.Set(k, v)
+	}
+	sm.Sort()
+	kvs := sm.Kvs
+	kvsBytes := make([][]byte, len(kvs))
+	for i, kvp := range kvs {
+		kvsBytes[i] = KVPair(kvp).Bytes()
+	}
+
+	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
+	proofs = make(map[string]*merkle.SimpleProof)
+	keys = make([]string, len(proofList))
+	for i, kvp := range kvs {
+		proofs[string(kvp.Key)] = proofList[i]
+		keys[i] = string(kvp.Key)
+	}
+	return
+}

@@ -13,7 +13,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdkmaps "github.com/cosmos/cosmos-sdk/internal/maps"
 	sdkproofs "github.com/cosmos/cosmos-sdk/internal/proofs"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -23,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkmaps "github.com/cosmos/cosmos-sdk/internal/maps"
 )
 
 const (
@@ -614,13 +614,13 @@ func (ci commitInfo) Hash() []byte {
 	if len(ci.StoreInfos) == 0 {
 		return nil
 	}
-	rootHash, _, _ := SimpleProofsFromMap(ci.toMap())
+	rootHash, _, _ := sdkmaps.SimpleProofsFromMap(ci.toMap())
 	return rootHash
 }
 
 func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
 	cmap := ci.toMap()
-	_, proofs, _ := SimpleProofsFromMap(cmap)
+	_, proofs, _ := sdkmaps.SimpleProofsFromMap(cmap)
 	proof := proofs[storeName]
 	if proof == nil {
 		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))
@@ -782,40 +782,4 @@ func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []in
 	if err := batch.Write(); err != nil {
 		panic(fmt.Errorf("error on batch write %w", err))
 	}
-}
-
-// SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
-// root.
-func SimpleHashFromMap(m map[string][]byte) []byte {
-	mm := sdkmaps.NewMerkleMap()
-	for k, v := range m {
-		mm.Set(k, v)
-	}
-
-	return mm.Hash()
-}
-
-// SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
-// in the underlying key-value pairs.
-// The keys are sorted before the proofs are computed.
-func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*merkle.SimpleProof, keys []string) {
-	sm := sdkmaps.NewSimpleMap()
-	for k, v := range m {
-		sm.Set(k, v)
-	}
-	sm.Sort()
-	kvs := sm.Kvs
-	kvsBytes := make([][]byte, len(kvs))
-	for i, kvp := range kvs {
-		kvsBytes[i] = sdkmaps.KVPair(kvp).Bytes()
-	}
-
-	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
-	proofs = make(map[string]*merkle.SimpleProof)
-	keys = make([]string, len(proofList))
-	for i, kvp := range kvs {
-		proofs[string(kvp.Key)] = proofList[i]
-		keys[i] = string(kvp.Key)
-	}
-	return
 }

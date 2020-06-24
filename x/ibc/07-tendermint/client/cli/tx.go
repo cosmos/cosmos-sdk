@@ -105,7 +105,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
 				}
-				if err := cdc.UnmarshalJSON(contents, &spec); err != nil {
+				if err := cdc.UnmarshalJSON(contents, &specs); err != nil {
 					return errors.Wrap(err, "error unmarshalling proof specs file")
 				}
 			}

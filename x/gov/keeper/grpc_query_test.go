@@ -14,6 +14,31 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+func TestSingleProposal(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	testProposal := types.NewTextProposal("Proposal", "testing proposal")
+	submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
+	require.NoError(t, err)
+
+	pageReq := &query.PageRequest{
+		Key:        nil,
+		Limit:      0,
+		CountTotal: false,
+	}
+
+	req := types.NewQueryProposalRequest(submittedProposal.ProposalID, pageReq)
+
+	proposal, err := queryClient.Proposal(gocontext.Background(), req)
+	require.NoError(t, nil)
+	require.NotEmpty(t, proposal)
+}
+
 func TestAllProposal(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
@@ -80,6 +105,39 @@ func TestAllProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, proposals.Proposals)
 	require.Empty(t, proposals.Res)
+}
+
+func TestVote(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(30000000))
+
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionAbstain))
+	_, found := app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
+	require.True(t, found)
+
+	req := &types.QueryVoteRequest{
+		ProposalId: proposalID,
+		Voter:      addrs[0],
+	}
+
+	vote, err := queryClient.Vote(gocontext.Background(), req)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, vote.Vote)
 }
 
 func TestVotesGRPC(t *testing.T) {
@@ -165,6 +223,35 @@ func TestVotesGRPC(t *testing.T) {
 	require.Empty(t, votes.Res)
 }
 
+func TestDeposit(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(30000000))
+
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+
+	deposit := types.NewDeposit(proposalID, addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20))))
+	app.GovKeeper.SetDeposit(ctx, deposit)
+
+	req := &types.QueryDepositRequest{
+		ProposalId: proposalID,
+		Depositor:  addrs[0],
+	}
+
+	d, err := queryClient.Deposit(gocontext.Background(), req)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, d.Deposit)
+}
+
 func TestDepositsGRPC(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
@@ -239,4 +326,39 @@ func TestDepositsGRPC(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, deposits.Deposits)
 	require.Empty(t, deposits.Res)
+}
+
+func TestTally(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.GovKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	addrs, _ := createValidators(ctx, app, []int64{5, 5, 5})
+	tp := TestProposal
+
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+
+	pageReq := &query.PageRequest{
+		Key:        nil,
+		Limit:      0,
+		CountTotal: false,
+	}
+
+	req := types.NewQueryProposalRequest(proposalID, pageReq)
+	tally, err := queryClient.TallyResult(gocontext.Background(), req)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, tally.Tally)
 }

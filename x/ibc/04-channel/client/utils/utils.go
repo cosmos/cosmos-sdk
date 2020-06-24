@@ -11,11 +11,11 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// QueryPacket returns a packet from the store
-func QueryPacket(
+// QueryPacketCommitment returns a packet commitment from the store
+func QueryPacketCommitment(
 	clientCtx client.Context, portID, channelID string,
 	sequence, timeoutHeight, timeoutTimestamp uint64, prove bool,
-) (*types.QueryPacketResponse, error) {
+) (*types.QueryPacketCommitmentResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyPacketCommitment(portID, channelID, sequence),
@@ -27,32 +27,13 @@ func QueryPacket(
 		return nil, err
 	}
 
-	channelRes, err := QueryChannel(clientCtx, portID, channelID, prove)
-	if err != nil {
-		return nil, err
-	}
-
 	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
 	if err != nil {
 		return nil, err
 	}
 
-	destPortID := channelRes.Channel.Counterparty.PortID
-	destChannelID := channelRes.Channel.Counterparty.ChannelID
-
-	packet := types.NewPacket(
-		res.Value,
-		sequence,
-		portID,
-		channelID,
-		destPortID,
-		destChannelID,
-		timeoutHeight,
-		timeoutTimestamp,
-	)
-
 	// FIXME: res.Height+1 is hack, fix later
-	return types.NewQueryPacketResponse(portID, channelID, sequence, packet, proofBz, res.Height+1), nil
+	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, res.Value, proofBz, res.Height+1), nil
 }
 
 // QueryChannel queries the store to get a channel and a merkle proof.
@@ -66,7 +47,7 @@ func QueryChannel(
 	}
 
 	res, err := clientCtx.QueryABCI(req)
-	if res.Value == nil || err != nil {
+	if err != nil {
 		return nil, err
 	}
 

@@ -19,6 +19,9 @@ import (
 
 // Keeper defines the IBC channel keeper
 type Keeper struct {
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
 	storeKey         sdk.StoreKey
 	cdc              codec.Marshaler
 	clientKeeper     types.ClientKeeper

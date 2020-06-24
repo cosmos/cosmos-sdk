@@ -41,7 +41,6 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
-
 	return cmd
 }
 
@@ -68,5 +67,35 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(clientStateRes)
 		},
 	}
+	return cmd
+}
+
+// GetCmdQueryNextSequence defines the command to query a next receive sequence for a given channel
+func GetCmdQueryNextSequence(clientCtx client.Context) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "next-sequence-receive [port-id] [channel-id]",
+		Short: "Query a next receive sequence",
+		Long: "Query the next receive sequence for a given channel"
+		Example: fmt.Sprintf(
+			"%s query %s %s next-sequence-receive [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName,
+		),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
+			portID := args[0]
+			channelID := args[1]
+			prove := viper.GetBool(flags.FlagProve)
+
+			sequenceRes, err := utils.QueryNextSequenceReceive(clientCtx, portID, channelID, prove)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(int64(sequenceRes.ProofHeight))
+			return clientCtx.PrintOutput(sequenceRes)
+		},
+	}
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 	return cmd
 }

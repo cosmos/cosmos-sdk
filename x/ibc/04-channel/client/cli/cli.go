@@ -26,6 +26,7 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		// TODO: Query all packet commitments
 		// TODO: Query unrelayed packet ACKS
 		// TODO: Query unrelayed packet sends
+		GetCmdQueryNextSequence(clientCtx),
 	)...)
 
 	return ics04ChannelQueryCmd

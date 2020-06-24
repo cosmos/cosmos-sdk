@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -85,4 +86,24 @@ func QueryChannelClientState(clientCtx client.Context, portID, channelID string)
 		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
 	}
 	return clientState, height, nil
+}
+
+// QueryNextSequenceReceive queries the store to get the next receive sequence and
+// a merkle proof.
+func QueryNextSequenceReceive(
+	clientCtx client.Context, portID, channelID string, prove bool,
+) (*types.QueryNextSequenceReceiveResponse, error) {
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  host.KeyNextSequenceRecv(portID, channelID),
+		Prove: prove,
+	}
+
+	res, err := clientCtx.QueryABCI(req)
+	if err != nil {
+		return nil, err
+	}
+
+	sequence := binary.BigEndian.Uint64(res.Value)
+	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, res.Proof, res.Height), nil
 }

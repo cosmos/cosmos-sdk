@@ -30,7 +30,7 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
-			req := types.QueryConnectionsRequest{
+			req := &types.QueryConnectionsRequest{
 				Req: &query.PageRequest{},
 			}
 

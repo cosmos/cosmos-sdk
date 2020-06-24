@@ -42,6 +42,19 @@ func NewQueryPacketCommitmentResponse(
 	}
 }
 
+// NewQueryNextSequenceReceiveResponse creates a new QueryNextSequenceReceiveResponse instance
+func NewQueryNextSequenceReceiveResponse(
+	portID, channelID string, sequence uint64, proof []byte, height int64,
+) *QueryNextSequenceReceiveResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.NextSequenceRecvPath(portID, channelID), "/"))
+	return &QueryNextSequenceReceiveResponse{
+		NextSequenceReceive: sequence,
+		Proof:               proof,
+		ProofPath:           path.Pretty(),
+		ProofHeight:         uint64(height),
+	}
+}
+
 // NewQueryChannelClientStateRequest creates a new QueryChannelClientStateRequest instance.
 func NewQueryChannelClientStateRequest(portID, channelID string) *QueryChannelClientStateRequest {
 	return &QueryChannelClientStateRequest{

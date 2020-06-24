@@ -27,6 +27,9 @@ service Query {
   // UnrelayedPackets returns all the unrelayed IBC packets associated with a channel and sequences.
   rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {}
 
+  // NextSequenceReceive returns the next receive sequence for a given channel
+  rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {}
+
   // TODO: blocked by client proto migration
   // rpc ChannelClientState(QueryChannelClientStateRequest) returns (QueryChannelClientStateRequest) {}
 }
@@ -149,6 +152,26 @@ message QueryUnrelayedPacketsResponse {
   cosmos.query.PageResponse res = 2;
   // query block height
   int64 height = 3;
+}
+
+// QueryNextSequenceReceiveRequest is the request type for the Query/QueryNextSequenceReceiveRequest RPC method
+message QueryNextSequenceReceiveRequest {
+  // port unique identifier
+  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  // channel unique identifier
+  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+}
+
+// QuerySequenceResponse is the request type for the Query/QueryNextSequenceReceiveResponse RPC method
+message QueryNextSequenceReceiveResponse {
+  // next sequence receive number
+  uint64 next_sequence_receive = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
 }
 
 // QueryChannelClientStateRequest is the request type for the Query/ClientState RPC method

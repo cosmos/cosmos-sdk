@@ -219,7 +219,7 @@ func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRe
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	var redels types.RedelegationResponses
+	var redels types.Redelegations
 	var res *query.PageResponse
 	var err error
 
@@ -237,7 +237,12 @@ func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRe
 		redels, res, err = queryAllRedelegations(store, k, req)
 	}
 
-	return &types.QueryRedelegationsResponse{RedelegationResponses: redels, Res: res}, nil
+	redelResponses, err := RedelegationsToRedelegationResponses(ctx, k, redels)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryRedelegationsResponse{RedelegationResponses: redelResponses, Res: res}, nil
 }
 
 func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegatorParamsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
@@ -297,14 +302,47 @@ func (k Keeper) Parameters(c context.Context, _ *types.QueryParametersRequest) (
 	return &types.QueryParametersResponse{Params: params}, nil
 }
 
-func queryRedelegation(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (types.RedelegationResponses, *query.PageResponse, error) {
-	return nil, nil, nil
+func queryRedelegation(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+	var redel types.Redelegation
+	res, err = query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		key = types.GetREDKey(req.DelegatorAddr, req.SrcValidatorAddr, req.DstValidatorAddr)
+		redel, err = types.UnmarshalRED(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	redels = []types.Redelegation{redel}
+	return redels, res, err
 }
 
-func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (types.RedelegationResponses, *query.PageResponse, error) {
-	return nil, nil, nil
+func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+	res, err = query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		key = types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr)
+
+		red, err := types.UnmarshalRED(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		redels = append(redels, red)
+		return nil
+	})
+
+	return redels, res, err
 }
 
-func queryAllRedelegations(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (types.RedelegationResponses, *query.PageResponse, error) {
-	return nil, nil, nil
+func queryAllRedelegations(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+	res, err = query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		key = types.GetREDsKey(req.DelegatorAddr)
+
+		redelegation, err := types.UnmarshalRED(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		redels = append(redels, redelegation)
+		return nil
+	})
+
+	return redels, res, err
 }

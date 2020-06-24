@@ -7,13 +7,36 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var _ types.QueryServer = Keeper{}
 
 func (k Keeper) Validators(c context.Context, req *types.QueryValidatorsRequest) (*types.QueryValidatorsResponse, error) {
-	return nil, nil
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	var validators types.Validators
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+
+	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		result, err := types.UnmarshalValidator(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		validators = append(validators, result)
+		return nil
+	})
+	if err != nil {
+		return &types.QueryValidatorsResponse{}, err
+	}
+
+	return &types.QueryValidatorsResponse{Validators: validators, Res: res}, nil
+
 }
 
 func (k Keeper) ValidatorQ(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorResponse, error) {
@@ -46,18 +69,43 @@ func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidato
 	return &types.QueryValidatorDelegationsResponse{DelegationResponses: delResponses}, nil
 }
 
+func (k Keeper) ValidatorUnbondingDelegations(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorUnbondingDelegationsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+
+	var ubds types.UnbondingDelegations
+	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		types.GetUBDsByValIndexKey(req.ValidatorAddr)
+		ubd, err := types.UnmarshalUBD(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		ubds = append(ubds, ubd)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryValidatorUnbondingDelegationsResponse{UnbondingResponses: ubds, Res: res}, nil
+}
+
 func (k Keeper) DelegationQ(c context.Context, req *types.QueryBondParamsRequest) (*types.QueryDelegationResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
 	delegation, found := k.GetDelegation(ctx, req.DelegatorAddr, req.ValidatorAddr)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "delegation with delegator %s not found for"+
 			"valiedator %s", req.DelegatorAddr, req.ValidatorAddr)
 	}
+
 	delResponse, err := DelegationToDelegationResponse(ctx, k, delegation)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Unable to convert delegations")
@@ -86,8 +134,21 @@ func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegato
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	var delegations types.Delegations
 	ctx := sdk.UnwrapSDKContext(c)
-	delegations := k.GetAllDelegatorDelegations(ctx, req.DelegatorAddress)
+
+	store := ctx.KVStore(k.storeKey)
+
+	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		key = types.GetDelegationsKey(req.DelegatorAddress)
+		delegation, err := types.UnmarshalDelegation(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		delegations = append(delegations, delegation)
+		return nil
+	})
+
 	if delegations == nil {
 		return &types.QueryDelegatorDelegationsResponse{DelegationResponses: types.DelegationResponses{}}, nil
 	}
@@ -96,7 +157,7 @@ func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegato
 		return nil, err
 	}
 
-	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps}, nil
+	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Res: res}, nil
 
 }
 
@@ -112,6 +173,31 @@ func (k Keeper) DelegatorValidator(c context.Context, req *types.QueryBondParams
 	}
 
 	return &types.QueryDelegatorValidatorResponse{Validator: validator}, nil
+}
+
+func (k Keeper) DelegatorUnbondingDelegations(c context.Context, req *types.QueryDelegatorParamsRequest) (*types.QueryUnbondingDelegatorDelegationsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	var unbondingDelegations types.UnbondingDelegations
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		key = types.GetUBDsKey(req.DelegatorAddress)
+		unbond, err := types.UnmarshalUBD(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		unbondingDelegations = append(unbondingDelegations, unbond)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryUnbondingDelegatorDelegationsResponse{UnbondingResponses: unbondingDelegations, Res: res}, nil
 }
 
 func (k Keeper) HistoricalInfo(c context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) {

@@ -214,6 +214,64 @@ func (k Keeper) HistoricalInfo(c context.Context, req *types.QueryHistoricalInfo
 	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
 }
 
+func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	var redels types.RedelegationResponses
+	var res *query.PageResponse
+	var err error
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	switch {
+	case !req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && !req.DstValidatorAddr.Empty():
+		redels, res, err = queryRedelegation(store, k, req)
+		if err != nil {
+			return nil, types.ErrNoRedelegation
+		}
+	case req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && req.DstValidatorAddr.Empty():
+		redels, res, err = queryRedelegationsFromSrcValidator(store, k, req)
+	default:
+		redels, res, err = queryAllRedelegations(store, k, req)
+	}
+
+	return &types.QueryRedelegationsResponse{RedelegationResponses: redels, Res: res}, nil
+}
+
+func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegatorParamsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	var validators types.Validators
+	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
+		key = types.GetDelegationsKey(req.DelegatorAddress)
+
+		delegation, err := types.UnmarshalDelegation(k.cdc, value)
+		if err != nil {
+			return err
+		}
+		validator, found := k.GetValidator(ctx, delegation.ValidatorAddress)
+		if !found {
+			panic(types.ErrNoValidatorFound)
+		}
+
+		validators = append(validators, validator)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Res: res}, nil
+}
+
 func (k Keeper) Pool(c context.Context, _ *types.QueryPoolRequest) (*types.QueryPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	bondDenom := k.BondDenom(ctx)
@@ -237,4 +295,16 @@ func (k Keeper) Parameters(c context.Context, _ *types.QueryParametersRequest) (
 	params := k.GetParams(ctx)
 
 	return &types.QueryParametersResponse{Params: params}, nil
+}
+
+func queryRedelegation(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (types.RedelegationResponses, *query.PageResponse, error) {
+	return nil, nil, nil
+}
+
+func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (types.RedelegationResponses, *query.PageResponse, error) {
+	return nil, nil, nil
+}
+
+func queryAllRedelegations(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (types.RedelegationResponses, *query.PageResponse, error) {
+	return nil, nil, nil
 }

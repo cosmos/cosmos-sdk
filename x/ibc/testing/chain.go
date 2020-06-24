@@ -236,6 +236,15 @@ func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel
 	return channel
 }
 
+// GetAcknowledgement retreives an acknowledgement for the provided packet. If the
+// acknowledgement does not exist then testing will fail.
+func (chain *TestChain) GetAcknowledgement(packet channelexported.PacketI) []byte {
+	ack, found := chain.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(chain.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	require.True(chain.t, found)
+
+	return ack
+}
+
 // NewClientID appends a new clientID string in the format:
 // ClientFor<counterparty-chain-id><index>
 func (chain *TestChain) NewClientID(counterpartyChainID string) string {

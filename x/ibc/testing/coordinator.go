@@ -44,6 +44,7 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 	}
 }
 
+// TODO return testchannels
 // Setup constructs a TM client, connection, and channel on both chains provided. It fails if
 // any error occurs. The clientID's and TestConnections are returned for both chains.
 func (coord *Coordinator) Setup(

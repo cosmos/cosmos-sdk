@@ -155,6 +155,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			channelA := connA.NextTestChannel()
 			channelB := connB.NextTestChannel()
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			// manually creating channel prevents next sequence from being set
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
 				suite.chainA.GetContext(),
 				channelA.PortID, channelA.ID,
@@ -224,9 +225,9 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, _, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelB := connB.Channels[0]
-			packet = types.NewPacket(validPacketData, 1, "invalidport", "invalidchannel", channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			_, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			channelA := connA.Channels[0]
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, "invalidport", "invalidchannel", timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"channel not open", func() {
 			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
@@ -234,7 +235,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			channelB := connB.Channels[0]
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
-			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
+			err := suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, channelB)
 			suite.Require().NoError(err)
 		}, false},
 		{"packet source port ≠ channel counterparty port", func() {
@@ -330,41 +331,76 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 
 }
 
-/*
+// TestPacketExecuted tests the PacketExecuted call on chainB.
 func (suite *KeeperTestSuite) TestPacketExecuted() {
-	counterparty := types.NewCounterparty(testPort2, testChannel2)
-	var packet types.Packet
+	var (
+		packet     types.Packet
+		channelCap *capabilitytypes.Capability
+	)
 
-	var channelCap *capabilitytypes.Capability
 	testCases := []testCase{
 		{"success: UNORDERED", func() {
-			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.UNORDERED, testConnectionIDA)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
+			// setup uses an UNORDERED channel
+			_, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			channelA := connA.Channels[0]
+			channelB := connB.Channels[0]
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, true},
 		{"success: ORDERED", func() {
-			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.ORDERED, testConnectionIDA)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
+			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, true},
-		{"channel not found", func() {}, false},
+		{"channel not found", func() {
+			// use wrong channel naming
+			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			channelA := connA.Channels[0]
+			channelB := connB.Channels[0]
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, "invalidport", "invalidchannel", timeoutHeight, disabledTimeoutTimestamp)
+			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
+		}, false},
 		{"channel not OPEN", func() {
-			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.CLOSED, types.ORDERED, testConnectionIDA)
+			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			channelA := connA.Channels[0]
+			channelB := connB.Channels[0]
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+
+			err := suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, channelB)
+			suite.Require().NoError(err)
 		}, false},
 		{"next sequence receive not found", func() {
-			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.ORDERED, testConnectionIDA)
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			channelA := connA.NextTestChannel()
+			channelB := connB.NextTestChannel()
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			// manually creating channel prevents next sequence receive from being set
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(
+				suite.chainB.GetContext(),
+				channelB.PortID, channelB.ID,
+				types.NewChannel(types.OPEN, types.ORDERED, types.NewCounterparty(channelA.PortID, channelA.ID), []string{connB.ID}, ibctesting.ChannelVersion),
+			)
+			suite.chainB.CreateChannelCapability(channelB.PortID, channelB.ID)
+			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"packet sequence ≠ next sequence receive", func() {
-			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.ORDERED, testConnectionIDA)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 5)
+			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+
+			// increments sequence receive
+			suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
 		}, false},
 		{"capability not found", func() {
-			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.UNORDERED, testConnectionIDA)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
+			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+
 			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
@@ -374,16 +410,16 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
 
-			var err error
-			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort2, testChannel2))
-			suite.Require().NoError(err, "could not create capability")
-
 			tc.malleate()
 
-			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(suite.chainA.GetContext(), channelCap, packet, mockSuccessPacket{}.GetBytes())
+			ack := ibctesting.TestHash
+			err := suite.chainB.App.IBCKeeper.ChannelKeeper.PacketExecuted(suite.chainB.GetContext(), channelCap, packet, ack)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
+				// verify packet ack is written
+				actualAck := suite.chainB.GetAcknowledgement(packet)
+				suite.Require().Equal(types.CommitAcknowledgement(ack), actualAck)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -391,6 +427,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 	}
 }
 
+/*
 func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet

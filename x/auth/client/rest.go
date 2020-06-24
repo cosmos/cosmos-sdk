@@ -51,7 +51,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, clientCtx client.Context,
 		return
 	}
 
-	output, err := clientCtx.Codec.MarshalJSON(types.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
+	output, err := clientCtx.JSONMarshaler.MarshalJSON(types.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}

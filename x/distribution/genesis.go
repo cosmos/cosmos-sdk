@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, keeper Keeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, keeper keeper.Keeper, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
 	keeper.SetFeePool(ctx, data.FeePool)
@@ -47,7 +48,8 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	if bk.GetAllBalances(ctx, moduleAcc.GetAddress()).IsZero() {
+	balances := bk.GetAllBalances(ctx, moduleAcc.GetAddress())
+	if balances.IsZero() {
 		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), moduleHoldingsInt); err != nil {
 			panic(err)
 		}
@@ -57,7 +59,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	feePool := keeper.GetFeePool(ctx)
 	params := keeper.GetParams(ctx)
 

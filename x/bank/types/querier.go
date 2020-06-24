@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // Querier path constants
@@ -18,8 +19,8 @@ func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequ
 }
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
-func NewQueryAllBalancesRequest(addr sdk.AccAddress) *QueryAllBalancesRequest {
-	return &QueryAllBalancesRequest{Address: addr}
+func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr, Req: req}
 }
 
 // QueryTotalSupply defines the params for the following queries:

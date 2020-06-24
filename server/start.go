@@ -16,40 +16,51 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
+	"github.com/tendermint/tendermint/rpc/client/local"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Tendermint full-node start flags
 const (
-	flagWithTendermint       = "with-tendermint"
-	flagAddress              = "address"
-	flagTraceStore           = "trace-store"
-	flagPruning              = "pruning"
-	flagPruningKeepEvery     = "pruning-keep-every"
-	flagPruningSnapshotEvery = "pruning-snapshot-every"
-	flagCPUProfile           = "cpu-profile"
-	FlagMinGasPrices         = "minimum-gas-prices"
-	FlagHaltHeight           = "halt-height"
-	FlagHaltTime             = "halt-time"
-	FlagInterBlockCache      = "inter-block-cache"
-	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
+	flagWithTendermint     = "with-tendermint"
+	flagAddress            = "address"
+	flagTraceStore         = "trace-store"
+	flagCPUProfile         = "cpu-profile"
+	FlagMinGasPrices       = "minimum-gas-prices"
+	FlagHaltHeight         = "halt-height"
+	FlagHaltTime           = "halt-time"
+	FlagInterBlockCache    = "inter-block-cache"
+	FlagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
+
+	FlagPruning           = "pruning"
+	FlagPruningKeepRecent = "pruning-keep-recent"
+	FlagPruningKeepEvery  = "pruning-keep-every"
+	FlagPruningInterval   = "pruning-interval"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
+func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
 		Long: `Run the full node application with Tendermint in or out of process. By
 default, the application will run with Tendermint in process.
 
-Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-snapshot-every' and 'pruning-keep-every' together.
+Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent',
+'pruning-keep-every', and 'pruning-interval' together.
 
 For '--pruning' the options are as follows:
 
-syncable: only those states not needed for state syncing will be deleted (flushes every 100th to disk and keeps every 10000th)
+default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-everything: all saved states will be deleted, storing only the current state
+everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
+custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
 
 Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
 the ABCI Commit phase, the node will check if the current block height is greater than or equal to
@@ -72,7 +83,7 @@ which accepts a path for the resulting pprof file.
 
 			ctx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(ctx, appCreator)
+			err := startInProcess(ctx, cdc, appCreator)
 			return err
 		},
 	}
@@ -81,9 +92,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
-	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything, custom")
-	cmd.Flags().Int64(flagPruningKeepEvery, 0, "Define the state number that will be kept. Ignored if pruning is not custom.")
-	cmd.Flags().Int64(flagPruningSnapshotEvery, 0, "Defines the state that will be snapshot for pruning. Ignored if pruning is not custom.")
 	cmd.Flags().String(
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
@@ -94,9 +102,14 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
-	viper.BindPFlag(flagPruning, cmd.Flags().Lookup(flagPruning))
-	viper.BindPFlag(flagPruningKeepEvery, cmd.Flags().Lookup(flagPruningKeepEvery))
-	viper.BindPFlag(flagPruningSnapshotEvery, cmd.Flags().Lookup(flagPruningSnapshotEvery))
+	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
+	viper.BindPFlag(FlagPruning, cmd.Flags().Lookup(FlagPruning))
+	viper.BindPFlag(FlagPruningKeepRecent, cmd.Flags().Lookup(FlagPruningKeepRecent))
+	viper.BindPFlag(FlagPruningKeepEvery, cmd.Flags().Lookup(FlagPruningKeepEvery))
+	viper.BindPFlag(FlagPruningInterval, cmd.Flags().Lookup(FlagPruningInterval))
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -143,7 +156,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) error {
+func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -165,13 +178,15 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 		return err
 	}
 
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(app),
-		node.DefaultGenesisDocProviderFunc(cfg),
+		genDocProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		ctx.Logger.With("module", "node"),
@@ -182,6 +197,32 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 
 	if err := tmNode.Start(); err != nil {
 		return err
+	}
+
+	config := config.GetConfig()
+	var apiSrv *api.Server
+	if config.API.Enable {
+		genDoc, err := genDocProvider()
+		if err != nil {
+			return err
+		}
+
+		// TODO: Since this is running in process, do we need to provide a verifier
+		// and set TrustNode=false? If so, we need to add additional logic that
+		// waits for a block to be committed first before starting the API server.
+		ctx := client.Context{}.
+			WithHomeDir(home).
+			WithChainID(genDoc.ChainID).
+			WithJSONMarshaler(cdc).
+			WithClient(local.New(tmNode)).
+			WithTrustNode(true)
+
+		apiSrv = api.New(ctx)
+		app.RegisterAPIRoutes(apiSrv)
+
+		if err := apiSrv.Start(config); err != nil {
+			return err
+		}
 	}
 
 	var cpuProfileCleanup func()
@@ -211,6 +252,10 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 
 		if cpuProfileCleanup != nil {
 			cpuProfileCleanup()
+		}
+
+		if apiSrv != nil {
+			_ = apiSrv.Close()
 		}
 
 		ctx.Logger.Info("exiting...")

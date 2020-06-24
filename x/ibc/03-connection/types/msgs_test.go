@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -19,16 +20,17 @@ import (
 
 var (
 	emptyPrefix = commitmenttypes.MerklePrefix{}
-	emptyProof  = commitmenttypes.MerkleProof{Proof: nil}
+	emptyProof  = []byte{}
 )
 
 type MsgTestSuite struct {
 	suite.Suite
 
-	proof commitmenttypes.MerkleProof
+	proof []byte
 }
 
 func (suite *MsgTestSuite) SetupTest() {
+	app := simapp.Setup(false)
 	db := dbm.NewMemDB()
 	store := rootmulti.NewStore(db)
 	storeKey := storetypes.NewKVStoreKey("iavlStoreKey")
@@ -46,7 +48,12 @@ func (suite *MsgTestSuite) SetupTest() {
 		Prove: true,
 	})
 
-	suite.proof = commitmenttypes.MerkleProof{Proof: res.Proof}
+	merkleProof := commitmenttypes.MerkleProof{Proof: res.Proof}
+	proof, err := app.AppCodec().MarshalBinaryBare(&merkleProof)
+	suite.NoError(err)
+
+	suite.proof = proof
+
 }
 
 func TestMsgTestSuite(t *testing.T) {

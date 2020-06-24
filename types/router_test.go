@@ -1,24 +1,25 @@
 package types
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNilRoute(t *testing.T) {
-	tests := []struct{
-		name string
-		route Route
+	tests := []struct {
+		name     string
+		route    Route
 		expected bool
-	} {
+	}{
 		{
-			name: "all empty",
-			route: NewRoute("", nil),
+			name:     "all empty",
+			route:    NewRoute("", nil),
 			expected: true,
 		},
 		{
-			name: "only path",
-			route: NewRoute("some", nil),
+			name:     "only path",
+			route:    NewRoute("some", nil),
 			expected: true,
 		},
 		{
@@ -37,7 +38,7 @@ func TestNilRoute(t *testing.T) {
 		},
 	}
 
- 	for _, tt := range tests {
+	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.expected, tt.route.Empty())

@@ -49,7 +49,7 @@ func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		denom := r.FormValue("denom")
 		if denom == "" {
-			params = types.NewQueryAllBalancesRequest(addr)
+			params = types.NewQueryAllBalancesRequest(addr, nil)
 			route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllBalances)
 		} else {
 			params = types.NewQueryBalanceRequest(addr, denom)
@@ -85,7 +85,7 @@ func totalSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryTotalSupplyParams(page, limit)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -112,7 +112,7 @@ func supplyOfHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQuerySupplyOfParams(denom)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return

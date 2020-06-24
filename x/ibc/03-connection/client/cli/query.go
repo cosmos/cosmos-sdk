@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -39,6 +38,7 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			// TODO: return res?
 			return clientCtx.PrintOutput(res.Connections)
 		},
 	}
@@ -47,15 +47,10 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 // GetCmdQueryConnection defines the command to query a connection end
 func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "end [connection-id]",
-		Short: "Query stored connection end",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query stored connection end
-		
-Example:
-$ %s query ibc connection end [connection-id]
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
+		Use:     "end [connection-id]",
+		Short:   "Query stored connection end",
+		Long:    "Query stored connection end",
+		Example: fmt.Sprintf("%s query %s %s end [connection-id]", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
@@ -80,15 +75,10 @@ $ %s query ibc connection end [connection-id]
 // GetCmdQueryAllClientConnections defines the command to query a all the client connection paths.
 func GetCmdQueryAllClientConnections(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "paths",
-		Short: "Query all stored client connection paths",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query all stored client connection paths
-		
-Example:
-$ %s query ibc connection paths
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
+		Use:     "paths",
+		Short:   "Query all stored client connection paths",
+		Long:    "Query all stored client connection paths",
+		Example: fmt.Sprintf("%s query %s %s paths", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
@@ -114,15 +104,10 @@ $ %s query ibc connection paths
 // GetCmdQueryClientConnections defines the command to query a client connections
 func GetCmdQueryClientConnections(clientCtx client.Context) *cobra.Command {
 	return &cobra.Command{
-		Use:   "path [client-id]",
-		Short: "Query stored client connection paths",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query stored client connection paths
-		
-Example:
-$ %s query ibc connection path [client-id]
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
+		Use:     "path [client-id]",
+		Short:   "Query stored client connection paths",
+		Long:    "Query stored client connection paths",
+		Example: fmt.Sprintf("%s query  %s %s path [client-id]", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()

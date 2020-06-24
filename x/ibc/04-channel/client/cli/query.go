@@ -75,11 +75,11 @@ func GetCmdQueryNextSequence(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "next-sequence-receive [port-id] [channel-id]",
 		Short: "Query a next receive sequence",
-		Long: "Query the next receive sequence for a given channel"
+		Long:  "Query the next receive sequence for a given channel",
 		Example: fmt.Sprintf(
 			"%s query %s %s next-sequence-receive [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName,
 		),
-		Args:    cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 

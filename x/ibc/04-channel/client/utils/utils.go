@@ -104,6 +104,11 @@ func QueryNextSequenceReceive(
 		return nil, err
 	}
 
+	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	if err != nil {
+		return nil, err
+	}
+
 	sequence := binary.BigEndian.Uint64(res.Value)
-	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, res.Proof, res.Height), nil
+	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, res.Height), nil
 }

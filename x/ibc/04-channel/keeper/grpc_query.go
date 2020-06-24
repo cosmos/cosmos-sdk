@@ -220,6 +220,28 @@ func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPac
 	}, nil
 }
 
+// NextSequenceReceive implements the Query/NextSequenceReceive gRPC method
+func (q Keeper) NextSequenceReceive(c context.Context, req *types.QueryNextSequenceReceiveRequest) (*types.QueryNextSequenceReceiveResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	sequence, found := q.GetNextSequenceRecv(ctx, req.PortID, req.ChannelID)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(types.ErrSequenceReceiveNotFound, "port-id: , channel-id %s", req.PortID, req.ChannelID).Error(),
+		)
+	}
+
+	return types.NewQueryNextSequenceReceiveResponse(req.PortID, req.ChannelID, sequence, nil, ctx.BlockHeight()), nil
+}
+
 func validategRPCRequest(portID, channelID string) error {
 	if err := host.PortIdentifierValidator(portID); err != nil {
 		return status.Error(codes.InvalidArgument, err.Error())

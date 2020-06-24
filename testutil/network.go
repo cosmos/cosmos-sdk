@@ -21,7 +21,6 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -282,15 +281,10 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 	require.NoError(t, collectGenFiles(cfg, network.Validators, network.BaseDir))
 
 	t.Log("starting test network...")
-	var eg errgroup.Group
 	for _, v := range network.Validators {
-		val := v
-		eg.Go(func() error {
-			return startInProcess(cfg, val)
-		})
+		require.NoError(t, startInProcess(cfg, v))
 	}
 
-	require.NoError(t, eg.Wait())
 	t.Log("started test network")
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any

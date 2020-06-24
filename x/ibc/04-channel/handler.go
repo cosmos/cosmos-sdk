@@ -1,8 +1,12 @@
 package channel
 
 import (
+	"strings"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -75,14 +79,21 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 		return nil, err
 	}
 
+	clientCtx := client.NewContext()
+	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
+	if err != nil {
+		return nil, err
+	}
+	channel := channelRes.Channel
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenAck,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -102,14 +113,21 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 		return nil, err
 	}
 
+	clientCtx := client.NewContext()
+	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
+	if err != nil {
+		return nil, err
+	}
+	channel := channelRes.Channel
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -129,14 +147,21 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 		return nil, err
 	}
 
+	clientCtx := client.NewContext()
+	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
+	if err != nil {
+		return nil, err
+	}
+	channel := channelRes.Channel
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelCloseInit,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -156,14 +181,21 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 		return nil, err
 	}
 
+	clientCtx := client.NewContext()
+	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
+	if err != nil {
+		return nil, err
+	}
+	channel := channelRes.Channel
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelCloseConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Counterparty.PortID),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

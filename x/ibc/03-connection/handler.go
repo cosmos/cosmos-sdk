@@ -1,7 +1,9 @@
 package connection
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
@@ -70,13 +72,20 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg *MsgConnectionOpe
 		return nil, err
 	}
 
+	clientCtx := client.NewContext()
+	connRes, err := utils.QueryConnection(clientCtx, msg.ConnectionID, false)
+	if err != nil {
+		return nil, err
+	}
+	connectionEnd := connRes.Connection
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			EventTypeConnectionOpenAck,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyConnetionID, msg.Counterparty.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnetionID, connectionEnd.Counterparty.ConnectionID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -97,13 +106,20 @@ func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg *MsgConnectio
 		return nil, err
 	}
 
+	clientCtx := client.NewContext()
+	connRes, err := utils.QueryConnection(clientCtx, msg.ConnectionID, false)
+	if err != nil {
+		return nil, err
+	}
+	connectionEnd := connRes.Connection
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			EventTypeConnectionOpenConfirm,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyConnetionID, msg.Counterparty.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnetionID, connectionEnd.Counterparty.ConnectionID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

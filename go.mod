@@ -36,7 +36,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.13.4-0.20200619134136-a20491d93d6a
-	github.com/tendermint/tendermint v0.33.5
+	github.com/tendermint/tendermint v0.34.0-dev1
 	github.com/tendermint/tm-db v0.5.1
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	google.golang.org/grpc v1.29.1
@@ -44,7 +44,5 @@ require (
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
-
-replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200612160744-206c814a8e64
 
 go 1.14

@@ -13,6 +13,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkmaps "github.com/cosmos/cosmos-sdk/internal/maps"
+	sdkproofs "github.com/cosmos/cosmos-sdk/internal/proofs"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -21,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkproofs "github.com/cosmos/cosmos-sdk/types/proofs"
 )
 
 const (
@@ -786,27 +787,27 @@ func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []in
 // SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
 // root.
 func SimpleHashFromMap(m map[string][]byte) []byte {
-	mm := newMerkleMap()
+	mm := sdkmaps.NewMerkleMap()
 	for k, v := range m {
-		mm.set(k, v)
+		mm.Set(k, v)
 	}
 
-	return mm.hash()
+	return mm.Hash()
 }
 
 // SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
 // in the underlying key-value pairs.
 // The keys are sorted before the proofs are computed.
 func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*merkle.SimpleProof, keys []string) {
-	sm := newSimpleMap()
+	sm := sdkmaps.NewSimpleMap()
 	for k, v := range m {
 		sm.Set(k, v)
 	}
 	sm.Sort()
-	kvs := sm.kvs
+	kvs := sm.Kvs
 	kvsBytes := make([][]byte, len(kvs))
 	for i, kvp := range kvs {
-		kvsBytes[i] = KVPair(kvp).Bytes()
+		kvsBytes[i] = sdkmaps.KVPair(kvp).Bytes()
 	}
 
 	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)

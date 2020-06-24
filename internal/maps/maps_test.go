@@ -1,4 +1,4 @@
-package rootmulti
+package maps
 
 import (
 	"fmt"
@@ -39,12 +39,12 @@ func TestMerkleMap(t *testing.T) {
 		},
 	}
 	for i, tc := range tests {
-		db := newMerkleMap()
+		db := NewMerkleMap()
 		for i := 0; i < len(tc.keys); i++ {
-			db.set(tc.keys[i], []byte(tc.values[i]))
+			db.Set(tc.keys[i], []byte(tc.values[i]))
 		}
 
-		got := db.hash()
+		got := db.Hash()
 		assert.Equal(t, tc.want, fmt.Sprintf("%x", got), "Hash didn't match on tc %d", i)
 	}
 }
@@ -81,7 +81,7 @@ func TestSimpleMap(t *testing.T) {
 		},
 	}
 	for i, tc := range tests {
-		db := newSimpleMap()
+		db := NewSimpleMap()
 		for i := 0; i < len(tc.keys); i++ {
 			db.Set(tc.keys[i], []byte(tc.values[i]))
 		}

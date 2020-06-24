@@ -1,4 +1,4 @@
-package rootmulti
+package maps
 
 import (
 	"bytes"
@@ -10,24 +10,24 @@ import (
 	"github.com/tendermint/tendermint/libs/kv"
 )
 
-// merkleMap defines a merkle-ized tree from a map. Leave values are treated as
+// MerkleMap defines a merkle-ized tree from a map. Leave values are treated as
 // hash(key) | hash(value). Leaves are sorted before Merkle hashing.
-type merkleMap struct {
+type MerkleMap struct {
 	kvs    kv.Pairs
 	sorted bool
 }
 
-func newMerkleMap() *merkleMap {
-	return &merkleMap{
+func NewMerkleMap() *MerkleMap {
+	return &MerkleMap{
 		kvs:    nil,
 		sorted: false,
 	}
 }
 
-// set creates a kv.Pair from the provided key and value. The value is hashed prior
-// to creating a kv.Pair. The created kv.Pair is appended to the merkleMap's slice
-// of kv.Pairs. Whenever called, the merkleMap must be resorted.
-func (sm *merkleMap) set(key string, value []byte) {
+// Set creates a kv.Pair from the provided key and value. The value is hashed prior
+// to creating a kv.Pair. The created kv.Pair is appended to the MerkleMap's slice
+// of kv.Pairs. Whenever called, the MerkleMap must be resorted.
+func (sm *MerkleMap) Set(key string, value []byte) {
 	sm.sorted = false
 
 	// The value is hashed, so you can check for equality with a cached value (say)
@@ -40,13 +40,13 @@ func (sm *merkleMap) set(key string, value []byte) {
 	})
 }
 
-// hash returns the merkle root of items sorted by key. Note, it is unstable.
-func (sm *merkleMap) hash() []byte {
+// Hash returns the merkle root of items sorted by key. Note, it is unstable.
+func (sm *MerkleMap) Hash() []byte {
 	sm.sort()
 	return hashKVPairs(sm.kvs)
 }
 
-func (sm *merkleMap) sort() {
+func (sm *MerkleMap) sort() {
 	if sm.sorted {
 		return
 	}
@@ -106,21 +106,21 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 // Merkle tree from a map.
 // Leaves are `hash(key) | hash(value)`.
 // Leaves are sorted before Merkle hashing.
-type simpleMap struct {
-	kvs    kv.Pairs
+type SimpleMap struct {
+	Kvs    kv.Pairs
 	sorted bool
 }
 
-func newSimpleMap() *simpleMap {
-	return &simpleMap{
-		kvs:    nil,
+func NewSimpleMap() *SimpleMap {
+	return &SimpleMap{
+		Kvs:    nil,
 		sorted: false,
 	}
 }
 
 // Set creates a kv pair of the key and the hash of the value,
-// and then appends it to simpleMap's kv pairs.
-func (sm *simpleMap) Set(key string, value []byte) {
+// and then appends it to SimpleMap's kv pairs.
+func (sm *SimpleMap) Set(key string, value []byte) {
 	sm.sorted = false
 
 	// The value is hashed, so you can
@@ -128,7 +128,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.kvs = append(sm.kvs, kv.Pair{
+	sm.Kvs = append(sm.Kvs, kv.Pair{
 		Key:   []byte(key),
 		Value: vhash,
 	})
@@ -136,25 +136,25 @@ func (sm *simpleMap) Set(key string, value []byte) {
 
 // Hash Merkle root hash of items sorted by key
 // (UNSTABLE: and by value too if duplicate key).
-func (sm *simpleMap) Hash() []byte {
+func (sm *SimpleMap) Hash() []byte {
 	sm.Sort()
-	return hashKVPairs(sm.kvs)
+	return hashKVPairs(sm.Kvs)
 }
 
-func (sm *simpleMap) Sort() {
+func (sm *SimpleMap) Sort() {
 	if sm.sorted {
 		return
 	}
-	sm.kvs.Sort()
+	sm.Kvs.Sort()
 	sm.sorted = true
 }
 
 // Returns a copy of sorted KVPairs.
 // NOTE these contain the hashed key and value.
-func (sm *simpleMap) KVPairs() kv.Pairs {
+func (sm *SimpleMap) KVPairs() kv.Pairs {
 	sm.Sort()
-	kvs := make(kv.Pairs, len(sm.kvs))
-	copy(kvs, sm.kvs)
+	kvs := make(kv.Pairs, len(sm.Kvs))
+	copy(kvs, sm.Kvs)
 	return kvs
 }
 

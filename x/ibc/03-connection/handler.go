@@ -1,9 +1,7 @@
 package connection
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
@@ -72,12 +70,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg *MsgConnectionOpe
 		return nil, err
 	}
 
-	clientCtx := client.NewContext()
-	connRes, err := utils.QueryConnection(clientCtx, msg.ConnectionID, false)
-	if err != nil {
-		return nil, err
-	}
-	connectionEnd := connRes.Connection
+	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -106,12 +99,7 @@ func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg *MsgConnectio
 		return nil, err
 	}
 
-	clientCtx := client.NewContext()
-	connRes, err := utils.QueryConnection(clientCtx, msg.ConnectionID, false)
-	if err != nil {
-		return nil, err
-	}
-	connectionEnd := connRes.Connection
+	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

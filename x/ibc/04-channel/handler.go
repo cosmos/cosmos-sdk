@@ -113,12 +113,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 		return nil, err
 	}
 
-	clientCtx := client.NewContext()
-	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
-	if err != nil {
-		return nil, err
-	}
-	channel := channelRes.Channel
+	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -147,12 +142,7 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 		return nil, err
 	}
 
-	clientCtx := client.NewContext()
-	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
-	if err != nil {
-		return nil, err
-	}
-	channel := channelRes.Channel
+	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -181,12 +171,7 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 		return nil, err
 	}
 
-	clientCtx := client.NewContext()
-	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
-	if err != nil {
-		return nil, err
-	}
-	channel := channelRes.Channel
+	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

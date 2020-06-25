@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -84,17 +83,9 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Applicati
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	pruningStr := viper.GetString(server.FlagPruning)
-	pruningOpts := storetypes.NewPruningOptionsFromString(pruningStr)
-
-	// If 'custom' strategy is provided, we construct the options from individual
-	// flags. We assume the values have been verified already.
-	if pruningStr == storetypes.PruningOptionCustom {
-		pruningOpts = storetypes.NewPruningOptions(
-			viper.GetUint64(server.FlagPruningKeepRecent),
-			viper.GetUint64(server.FlagPruningKeepEvery),
-			viper.GetUint64(server.FlagPruningInterval),
-		)
+	pruningOpts, err := server.GetPruningOptionsFromFlags()
+	if err != nil {
+		panic(err)
 	}
 
 	// TODO: Make sure custom pruning works.

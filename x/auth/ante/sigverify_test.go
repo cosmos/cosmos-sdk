@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/amino"
-
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -139,7 +137,7 @@ func TestSigVerification(t *testing.T) {
 	fee := types.NewTestStdFee()
 
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
-	svd := ante.NewSigVerificationDecorator(app.AccountKeeper, amino.LegacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(app.AccountKeeper, types.LegacyAminoJSONHandler{})
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
@@ -216,7 +214,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(app.AccountKeeper, amino.LegacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(app.AccountKeeper, types.LegacyAminoJSONHandler{})
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params

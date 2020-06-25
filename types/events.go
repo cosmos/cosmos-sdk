@@ -234,7 +234,9 @@ func FilterEvents(events []abci.Event, filter []string) []abci.Event {
 			}
 		}
 
-		filtered = append(filtered, fe)
+		if len(fe.Attributes) > 0 {
+			filtered = append(filtered, fe)
+		}
 	}
 
 	return filtered

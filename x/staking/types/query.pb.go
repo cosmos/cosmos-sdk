@@ -282,6 +282,53 @@ func (m *QueryValidatorDelegationsResponse) GetRes() *query.PageResponse {
 	return nil
 }
 
+type QueryValidatorUnbondingDelegationsResponse struct {
+	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
+	Res                *query.PageResponse   `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
+}
+
+func (m *QueryValidatorUnbondingDelegationsResponse) Reset() {
+	*m = QueryValidatorUnbondingDelegationsResponse{}
+}
+func (m *QueryValidatorUnbondingDelegationsResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryValidatorUnbondingDelegationsResponse) ProtoMessage() {}
+func (*QueryValidatorUnbondingDelegationsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802d43a0c79dce0e, []int{5}
+}
+func (m *QueryValidatorUnbondingDelegationsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidatorUnbondingDelegationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_QueryValidatorUnbondingDelegationsResponse.Marshal(b, m, deterministic)
+}
+func (m *QueryValidatorUnbondingDelegationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidatorUnbondingDelegationsResponse.Merge(m, src)
+}
+func (m *QueryValidatorUnbondingDelegationsResponse) XXX_Size() int {
+	return xxx_messageInfo_QueryValidatorUnbondingDelegationsResponse.Size(m)
+}
+func (m *QueryValidatorUnbondingDelegationsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidatorUnbondingDelegationsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidatorUnbondingDelegationsResponse proto.InternalMessageInfo
+
+func (m *QueryValidatorUnbondingDelegationsResponse) GetUnbondingResponses() []UnbondingDelegation {
+	if m != nil {
+		return m.UnbondingResponses
+	}
+	return nil
+}
+
+func (m *QueryValidatorUnbondingDelegationsResponse) GetRes() *query.PageResponse {
+	if m != nil {
+		return m.Res
+	}
+	return nil
+}
+
 type QueryBondParamsRequest struct {
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
@@ -292,28 +339,19 @@ func (m *QueryBondParamsRequest) Reset()         { *m = QueryBondParamsRequest{}
 func (m *QueryBondParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryBondParamsRequest) ProtoMessage()    {}
 func (*QueryBondParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{5}
+	return fileDescriptor_802d43a0c79dce0e, []int{6}
 }
 func (m *QueryBondParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
 func (m *QueryBondParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryBondParamsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_QueryBondParamsRequest.Marshal(b, m, deterministic)
 }
 func (m *QueryBondParamsRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryBondParamsRequest.Merge(m, src)
 }
 func (m *QueryBondParamsRequest) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_QueryBondParamsRequest.Size(m)
 }
 func (m *QueryBondParamsRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryBondParamsRequest.DiscardUnknown(m)
@@ -350,28 +388,19 @@ func (m *QueryDelegationResponse) Reset()         { *m = QueryDelegationResponse
 func (m *QueryDelegationResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegationResponse) ProtoMessage()    {}
 func (*QueryDelegationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{6}
+	return fileDescriptor_802d43a0c79dce0e, []int{7}
 }
 func (m *QueryDelegationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
 func (m *QueryDelegationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryDelegationResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
+	return xxx_messageInfo_QueryDelegationResponse.Marshal(b, m, deterministic)
 }
 func (m *QueryDelegationResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryDelegationResponse.Merge(m, src)
 }
 func (m *QueryDelegationResponse) XXX_Size() int {
-	return m.Size()
+	return xxx_messageInfo_QueryDelegationResponse.Size(m)
 }
 func (m *QueryDelegationResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryDelegationResponse.DiscardUnknown(m)
@@ -394,7 +423,7 @@ func (m *QueryUnbondingDelegationResponse) Reset()         { *m = QueryUnbonding
 func (m *QueryUnbondingDelegationResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryUnbondingDelegationResponse) ProtoMessage()    {}
 func (*QueryUnbondingDelegationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{7}
+	return fileDescriptor_802d43a0c79dce0e, []int{8}
 }
 func (m *QueryUnbondingDelegationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -431,15 +460,15 @@ func (m *QueryUnbondingDelegationResponse) GetUnbond() UnbondingDelegation {
 }
 
 type QueryDelegatorParamsRequest struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
-	Req              *query.PageRequest                            `protobuf:"bytes,2,opt,name=req,proto3" json:"req,omitempty"`
+	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	Req           *query.PageRequest                            `protobuf:"bytes,2,opt,name=req,proto3" json:"req,omitempty"`
 }
 
 func (m *QueryDelegatorParamsRequest) Reset()         { *m = QueryDelegatorParamsRequest{} }
 func (m *QueryDelegatorParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorParamsRequest) ProtoMessage()    {}
 func (*QueryDelegatorParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{8}
+	return fileDescriptor_802d43a0c79dce0e, []int{9}
 }
 func (m *QueryDelegatorParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -468,9 +497,9 @@ func (m *QueryDelegatorParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorParamsRequest proto.InternalMessageInfo
 
-func (m *QueryDelegatorParamsRequest) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
+func (m *QueryDelegatorParamsRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	if m != nil {
-		return m.DelegatorAddress
+		return m.DelegatorAddr
 	}
 	return nil
 }
@@ -491,7 +520,7 @@ func (m *QueryDelegatorDelegationsResponse) Reset()         { *m = QueryDelegato
 func (m *QueryDelegatorDelegationsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorDelegationsResponse) ProtoMessage()    {}
 func (*QueryDelegatorDelegationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{9}
+	return fileDescriptor_802d43a0c79dce0e, []int{10}
 }
 func (m *QueryDelegatorDelegationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -534,6 +563,53 @@ func (m *QueryDelegatorDelegationsResponse) GetRes() *query.PageResponse {
 	return nil
 }
 
+type QueryUnbondingDelegatorDelegationsResponse struct {
+	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
+	Res                *query.PageResponse   `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
+}
+
+func (m *QueryUnbondingDelegatorDelegationsResponse) Reset() {
+	*m = QueryUnbondingDelegatorDelegationsResponse{}
+}
+func (m *QueryUnbondingDelegatorDelegationsResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryUnbondingDelegatorDelegationsResponse) ProtoMessage() {}
+func (*QueryUnbondingDelegatorDelegationsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802d43a0c79dce0e, []int{11}
+}
+func (m *QueryUnbondingDelegatorDelegationsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryUnbondingDelegatorDelegationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_QueryUnbondingDelegatorDelegationsResponse.Marshal(b, m, deterministic)
+}
+func (m *QueryUnbondingDelegatorDelegationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryUnbondingDelegatorDelegationsResponse.Merge(m, src)
+}
+func (m *QueryUnbondingDelegatorDelegationsResponse) XXX_Size() int {
+	return xxx_messageInfo_QueryUnbondingDelegatorDelegationsResponse.Size(m)
+}
+func (m *QueryUnbondingDelegatorDelegationsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryUnbondingDelegatorDelegationsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryUnbondingDelegatorDelegationsResponse proto.InternalMessageInfo
+
+func (m *QueryUnbondingDelegatorDelegationsResponse) GetUnbondingResponses() []UnbondingDelegation {
+	if m != nil {
+		return m.UnbondingResponses
+	}
+	return nil
+}
+
+func (m *QueryUnbondingDelegatorDelegationsResponse) GetRes() *query.PageResponse {
+	if m != nil {
+		return m.Res
+	}
+	return nil
+}
+
 type QueryRedelegationsRequest struct {
 	DelegatorAddr    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
 	SrcValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=src_validator_addr,json=srcValidatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"src_validator_addr,omitempty"`
@@ -545,7 +621,7 @@ func (m *QueryRedelegationsRequest) Reset()         { *m = QueryRedelegationsReq
 func (m *QueryRedelegationsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryRedelegationsRequest) ProtoMessage()    {}
 func (*QueryRedelegationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{10}
+	return fileDescriptor_802d43a0c79dce0e, []int{12}
 }
 func (m *QueryRedelegationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -602,6 +678,49 @@ func (m *QueryRedelegationsRequest) GetReq() *query.PageRequest {
 	return nil
 }
 
+type QueryRedelegationsResponse struct {
+	RedelegationResponses []RedelegationResponse `protobuf:"bytes,1,rep,name=redelegation_responses,json=redelegationResponses,proto3" json:"redelegation_responses"`
+	Res                   *query.PageResponse    `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
+}
+
+func (m *QueryRedelegationsResponse) Reset()         { *m = QueryRedelegationsResponse{} }
+func (m *QueryRedelegationsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRedelegationsResponse) ProtoMessage()    {}
+func (*QueryRedelegationsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_802d43a0c79dce0e, []int{13}
+}
+func (m *QueryRedelegationsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRedelegationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_QueryRedelegationsResponse.Marshal(b, m, deterministic)
+}
+func (m *QueryRedelegationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRedelegationsResponse.Merge(m, src)
+}
+func (m *QueryRedelegationsResponse) XXX_Size() int {
+	return xxx_messageInfo_QueryRedelegationsResponse.Size(m)
+}
+func (m *QueryRedelegationsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRedelegationsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRedelegationsResponse proto.InternalMessageInfo
+
+func (m *QueryRedelegationsResponse) GetRedelegationResponses() []RedelegationResponse {
+	if m != nil {
+		return m.RedelegationResponses
+	}
+	return nil
+}
+
+func (m *QueryRedelegationsResponse) GetRes() *query.PageResponse {
+	if m != nil {
+		return m.Res
+	}
+	return nil
+}
+
 type QueryDelegatorValidatorsResponse struct {
 	Validators []Validator         `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
 	Res        *query.PageResponse `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
@@ -611,7 +730,7 @@ func (m *QueryDelegatorValidatorsResponse) Reset()         { *m = QueryDelegator
 func (m *QueryDelegatorValidatorsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorValidatorsResponse) ProtoMessage()    {}
 func (*QueryDelegatorValidatorsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{11}
+	return fileDescriptor_802d43a0c79dce0e, []int{14}
 }
 func (m *QueryDelegatorValidatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -663,7 +782,7 @@ func (m *QueryDelegatorValidatorResponse) Reset()         { *m = QueryDelegatorV
 func (m *QueryDelegatorValidatorResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorValidatorResponse) ProtoMessage()    {}
 func (*QueryDelegatorValidatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{12}
+	return fileDescriptor_802d43a0c79dce0e, []int{15}
 }
 func (m *QueryDelegatorValidatorResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -714,7 +833,7 @@ func (m *QueryHistoricalInfoRequest) Reset()         { *m = QueryHistoricalInfoR
 func (m *QueryHistoricalInfoRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryHistoricalInfoRequest) ProtoMessage()    {}
 func (*QueryHistoricalInfoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{13}
+	return fileDescriptor_802d43a0c79dce0e, []int{16}
 }
 func (m *QueryHistoricalInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -758,7 +877,7 @@ func (m *QueryHistoricalInfoResponse) Reset()         { *m = QueryHistoricalInfo
 func (m *QueryHistoricalInfoResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryHistoricalInfoResponse) ProtoMessage()    {}
 func (*QueryHistoricalInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_802d43a0c79dce0e, []int{14}
+	return fileDescriptor_802d43a0c79dce0e, []int{17}
 }
 func (m *QueryHistoricalInfoResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -800,12 +919,15 @@ func init() {
 	proto.RegisterType((*QueryValidatorRequest)(nil), "cosmos.staking.QueryValidatorRequest")
 	proto.RegisterType((*QueryValidatorResponse)(nil), "cosmos.staking.QueryValidatorResponse")
 	proto.RegisterType((*QueryValidatorDelegationsResponse)(nil), "cosmos.staking.QueryValidatorDelegationsResponse")
+	proto.RegisterType((*QueryValidatorUnbondingDelegationsResponse)(nil), "cosmos.staking.QueryValidatorUnbondingDelegationsResponse")
 	proto.RegisterType((*QueryBondParamsRequest)(nil), "cosmos.staking.QueryBondParamsRequest")
 	proto.RegisterType((*QueryDelegationResponse)(nil), "cosmos.staking.QueryDelegationResponse")
 	proto.RegisterType((*QueryUnbondingDelegationResponse)(nil), "cosmos.staking.QueryUnbondingDelegationResponse")
 	proto.RegisterType((*QueryDelegatorParamsRequest)(nil), "cosmos.staking.QueryDelegatorParamsRequest")
 	proto.RegisterType((*QueryDelegatorDelegationsResponse)(nil), "cosmos.staking.QueryDelegatorDelegationsResponse")
+	proto.RegisterType((*QueryUnbondingDelegatorDelegationsResponse)(nil), "cosmos.staking.QueryUnbondingDelegatorDelegationsResponse")
 	proto.RegisterType((*QueryRedelegationsRequest)(nil), "cosmos.staking.QueryRedelegationsRequest")
+	proto.RegisterType((*QueryRedelegationsResponse)(nil), "cosmos.staking.QueryRedelegationsResponse")
 	proto.RegisterType((*QueryDelegatorValidatorsResponse)(nil), "cosmos.staking.QueryDelegatorValidatorsResponse")
 	proto.RegisterType((*QueryDelegatorValidatorResponse)(nil), "cosmos.staking.QueryDelegatorValidatorResponse")
 	proto.RegisterType((*QueryHistoricalInfoRequest)(nil), "cosmos.staking.QueryHistoricalInfoRequest")
@@ -815,61 +937,68 @@ func init() {
 func init() { proto.RegisterFile("cosmos/staking/query.proto", fileDescriptor_802d43a0c79dce0e) }
 
 var fileDescriptor_802d43a0c79dce0e = []byte{
-	// 855 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0x4f, 0x4f, 0xdb, 0x48,
-	0x14, 0xb7, 0x09, 0xcb, 0x8a, 0xc7, 0x2e, 0x62, 0x27, 0x59, 0x16, 0xc2, 0x6e, 0x92, 0xf5, 0x6a,
-	0x29, 0x2a, 0x90, 0x40, 0xda, 0x6b, 0x55, 0x11, 0x55, 0x55, 0x7b, 0x23, 0x96, 0x4a, 0xab, 0x56,
-	0x34, 0x35, 0xf1, 0xd4, 0xb1, 0x02, 0x9e, 0xc4, 0xe3, 0x20, 0xf8, 0x02, 0x55, 0x8f, 0xad, 0xd4,
-	0x73, 0x3f, 0x00, 0x87, 0x7e, 0x8b, 0x4a, 0x1c, 0x39, 0xf6, 0x44, 0x11, 0xf4, 0x53, 0x70, 0x69,
-	0xe5, 0xf1, 0xd8, 0x71, 0xec, 0x49, 0x70, 0x68, 0xaa, 0x9e, 0x12, 0xcf, 0xbc, 0x3f, 0xbf, 0xf7,
-	0x7e, 0xef, 0x8f, 0x0d, 0xd9, 0x3a, 0xa1, 0x7b, 0x84, 0x96, 0xa8, 0xa3, 0x35, 0x4d, 0xcb, 0x28,
-	0xb5, 0x3b, 0xd8, 0x3e, 0x2c, 0xb6, 0x6c, 0xe2, 0x10, 0x34, 0xed, 0xdd, 0x15, 0xf9, 0x5d, 0xf6,
-	0x1f, 0x2e, 0xcb, 0x64, 0x4a, 0x2d, 0xcd, 0x30, 0x2d, 0xcd, 0x31, 0x89, 0xe5, 0x89, 0x67, 0x33,
-	0x06, 0x31, 0x08, 0xfb, 0x5b, 0x72, 0xff, 0xf1, 0xd3, 0xbf, 0x23, 0x0e, 0xf8, 0xaf, 0x77, 0xab,
-	0x6c, 0xc3, 0x6c, 0xd5, 0xb5, 0xb6, 0xa5, 0xed, 0x9a, 0xba, 0xe6, 0x10, 0x9b, 0xaa, 0xb8, 0xdd,
-	0xc1, 0xd4, 0x41, 0xb3, 0x30, 0x41, 0x1d, 0xcd, 0xe9, 0xd0, 0x39, 0xb9, 0x20, 0x2f, 0x4d, 0xaa,
-	0xfc, 0x09, 0x2d, 0x43, 0xca, 0xc6, 0xed, 0xb9, 0xb1, 0x82, 0xbc, 0x34, 0x55, 0x9e, 0x2f, 0x72,
-	0x88, 0x1e, 0xec, 0x4d, 0xcd, 0xc0, 0x5c, 0x5f, 0x75, 0xa5, 0x94, 0xd7, 0x32, 0xfc, 0x15, 0xb3,
-	0x4f, 0x5b, 0xc4, 0xa2, 0x18, 0xdd, 0x05, 0xd8, 0x0f, 0x4e, 0xe7, 0xe4, 0x42, 0x2a, 0x6c, 0xcf,
-	0x47, 0x19, 0xe8, 0x55, 0xc6, 0x8f, 0x4f, 0xf3, 0x92, 0x1a, 0x52, 0x41, 0x2b, 0x2e, 0x12, 0xca,
-	0x91, 0x64, 0x45, 0x48, 0x3c, 0x4f, 0x2e, 0x14, 0xaa, 0xbc, 0x97, 0xe1, 0xcf, 0x5e, 0x28, 0x7e,
-	0xa4, 0x4f, 0x60, 0x3a, 0xb0, 0x5a, 0xd3, 0x74, 0xdd, 0x66, 0x11, 0xff, 0x56, 0x59, 0xbf, 0x3c,
-	0xcd, 0xaf, 0x1a, 0xa6, 0xd3, 0xe8, 0xec, 0x14, 0xeb, 0x64, 0xaf, 0xc4, 0x13, 0xe9, 0xfd, 0xac,
-	0x52, 0xbd, 0x59, 0x72, 0x0e, 0x5b, 0x98, 0xba, 0x18, 0x37, 0x74, 0xdd, 0xc6, 0x94, 0xaa, 0xbf,
-	0x07, 0x86, 0xdc, 0x93, 0xe1, 0x72, 0xf5, 0x38, 0x4a, 0x45, 0x90, 0xa9, 0x3b, 0x30, 0x19, 0xd8,
-	0x65, 0xd8, 0x12, 0x24, 0xaa, 0xab, 0xa1, 0x7c, 0x94, 0xe1, 0xdf, 0x5e, 0xcb, 0xf7, 0xf0, 0x2e,
-	0x36, 0x58, 0xe9, 0x74, 0xe9, 0xb0, 0x21, 0xa3, 0x07, 0xc7, 0x35, 0x9b, 0x1f, 0xfb, 0xc4, 0x28,
-	0x51, 0x7f, 0x5d, 0x13, 0xbe, 0x85, 0xca, 0x82, 0xeb, 0xf8, 0xe8, 0x73, 0x3e, 0x1d, 0xbf, 0xa3,
-	0x6a, 0x5a, 0x8f, 0x1f, 0x0e, 0xc9, 0xe0, 0x57, 0x99, 0x67, 0xa8, 0x42, 0x2c, 0x7d, 0x53, 0xb3,
-	0xb5, 0x3d, 0x1a, 0xa2, 0x90, 0xdb, 0xbf, 0x1e, 0x85, 0x1b, 0xf5, 0x7a, 0x40, 0x61, 0x60, 0x88,
-	0x51, 0x18, 0x2f, 0x8e, 0xb1, 0x11, 0x15, 0xc7, 0xba, 0x57, 0x1c, 0xa9, 0x2b, 0x8a, 0x83, 0xf3,
-	0xc9, 0x4a, 0xe4, 0x95, 0xdf, 0x4e, 0xf1, 0x0c, 0xa3, 0x26, 0xa4, 0x05, 0xfc, 0xf1, 0x72, 0x49,
-	0x42, 0xdf, 0xec, 0xe5, 0x69, 0x1e, 0xc5, 0xcf, 0x55, 0x14, 0x67, 0x4e, 0xc1, 0x50, 0x60, 0x38,
-	0x1e, 0x59, 0x3b, 0xc4, 0xd2, 0x4d, 0xcb, 0x10, 0x00, 0xda, 0x80, 0x89, 0x0e, 0xbb, 0xe6, 0x18,
-	0xfe, 0x8b, 0x62, 0x10, 0x28, 0xf3, 0x60, 0xb9, 0xa2, 0x72, 0x24, 0xc3, 0x42, 0x38, 0x5e, 0x62,
-	0xf7, 0xd2, 0xfe, 0x1c, 0xfe, 0xe8, 0xa5, 0x1d, 0x53, 0x7a, 0x7d, 0xe6, 0x67, 0x7a, 0x98, 0xc7,
-	0x74, 0xc8, 0x59, 0xf7, 0xc1, 0x6f, 0xb3, 0x00, 0xac, 0xa8, 0xcd, 0x9e, 0x7d, 0x77, 0x9b, 0x79,
-	0x29, 0x1a, 0x41, 0x3f, 0x7d, 0x19, 0x83, 0x79, 0x06, 0x58, 0xc5, 0x7a, 0x18, 0xe9, 0x8f, 0x6e,
-	0xa9, 0x1a, 0x20, 0x6a, 0xd7, 0x6b, 0xa3, 0x6a, 0xab, 0x19, 0x6a, 0xd7, 0xb7, 0x7a, 0x3a, 0xab,
-	0x06, 0x48, 0xa7, 0x4e, 0xd4, 0x41, 0xea, 0xda, 0x0e, 0x74, 0xea, 0x6c, 0x89, 0xe6, 0xfa, 0x78,
-	0xa2, 0xba, 0x78, 0x2b, 0xf3, 0x66, 0x09, 0xea, 0xe2, 0xe7, 0x2f, 0xc3, 0x77, 0x32, 0xe4, 0xfb,
-	0x60, 0x1a, 0xd1, 0xd6, 0x41, 0xe5, 0x84, 0x80, 0xba, 0xf3, 0x8d, 0x2a, 0xb7, 0x21, 0xcb, 0x50,
-	0x3d, 0x30, 0xa9, 0x43, 0x6c, 0xb3, 0xae, 0xed, 0x3e, 0xb4, 0x5e, 0x92, 0xd0, 0x1b, 0x49, 0x03,
-	0x9b, 0x46, 0xc3, 0x61, 0x68, 0x52, 0x2a, 0x7f, 0x52, 0xaa, 0x7c, 0x48, 0x44, 0xb5, 0x78, 0x1c,
-	0x65, 0x18, 0x6f, 0x98, 0xd4, 0xe1, 0x21, 0xe4, 0xa2, 0x21, 0x44, 0xb4, 0x98, 0x6c, 0xf9, 0xec,
-	0x57, 0xf8, 0x85, 0xd9, 0x44, 0x35, 0x80, 0x2e, 0x5d, 0x68, 0x31, 0xaa, 0x2d, 0x7e, 0x79, 0xca,
-	0xde, 0xb8, 0x52, 0x8e, 0x0f, 0x52, 0x09, 0x6d, 0x87, 0x1c, 0x54, 0xd1, 0xff, 0x83, 0x15, 0x7d,
-	0xfb, 0x8b, 0x57, 0x89, 0x05, 0xe6, 0x6d, 0xc8, 0x88, 0xd6, 0x7e, 0x52, 0x47, 0xeb, 0x83, 0xc5,
-	0x04, 0x13, 0x4e, 0x91, 0xd0, 0x0b, 0x98, 0xea, 0x5e, 0x54, 0xfb, 0x24, 0x2d, 0xb6, 0xc4, 0xfb,
-	0x24, 0x2d, 0x3e, 0x01, 0x15, 0x09, 0xb5, 0x21, 0x2d, 0xd8, 0x1e, 0x89, 0x3d, 0xad, 0x09, 0xe5,
-	0x06, 0x2c, 0x33, 0x45, 0x42, 0x07, 0x90, 0x11, 0x0d, 0x76, 0xb4, 0x3c, 0x08, 0x75, 0x64, 0x61,
-	0xf5, 0x49, 0xe7, 0xa0, 0x85, 0xa1, 0x48, 0x68, 0x1f, 0xd2, 0x82, 0xd1, 0x31, 0x9c, 0xe3, 0xb5,
-	0xc1, 0xc2, 0xc2, 0xca, 0x24, 0x80, 0xe2, 0x02, 0x89, 0x73, 0x5c, 0x4a, 0xe8, 0x31, 0xe4, 0xb0,
-	0x09, 0xd3, 0xbd, 0xdd, 0x88, 0x6e, 0x0a, 0x8d, 0x08, 0xc7, 0x43, 0x76, 0x39, 0x91, 0xac, 0xef,
-	0xac, 0x72, 0xff, 0xf8, 0x3c, 0x27, 0x9f, 0x9c, 0xe7, 0xe4, 0xb3, 0xf3, 0x9c, 0xfc, 0xe6, 0x22,
-	0x27, 0x9d, 0x5c, 0xe4, 0xa4, 0x4f, 0x17, 0x39, 0xe9, 0xe9, 0xca, 0xc0, 0xf5, 0x70, 0x10, 0x7c,
-	0x49, 0xb1, 0x45, 0xb1, 0x33, 0xc1, 0x3e, 0xa4, 0x6e, 0x7d, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x7f,
-	0x44, 0xd1, 0xb2, 0xc9, 0x0d, 0x00, 0x00,
+	// 975 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xde, 0xb1, 0x43, 0x44, 0x5f, 0x69, 0x84, 0xc6, 0xae, 0x49, 0xb7, 0xc4, 0x36, 0x0b, 0x94,
+	0xd2, 0xb4, 0x76, 0x63, 0x38, 0x45, 0x42, 0x28, 0x16, 0x42, 0x70, 0xab, 0x57, 0x22, 0xa0, 0xa2,
+	0xca, 0x6c, 0xbc, 0xcb, 0x7a, 0xe5, 0x64, 0xc7, 0x9e, 0x59, 0x57, 0xed, 0x9d, 0x43, 0xe1, 0x54,
+	0x24, 0xce, 0x88, 0x48, 0x9c, 0x38, 0x70, 0xe5, 0xca, 0x05, 0x29, 0xc7, 0x1c, 0x39, 0x19, 0x94,
+	0xf0, 0x57, 0xe4, 0x84, 0x76, 0x77, 0x76, 0xbc, 0xde, 0x1d, 0x6f, 0xd6, 0x89, 0xf9, 0x71, 0x8a,
+	0x3d, 0xf3, 0xde, 0xf7, 0xbe, 0xf7, 0xde, 0x97, 0x37, 0x4f, 0x06, 0xb5, 0x47, 0xd8, 0x01, 0x61,
+	0x4d, 0xe6, 0x19, 0x03, 0xc7, 0xb5, 0x9b, 0xa3, 0xb1, 0x45, 0x9f, 0x36, 0x86, 0x94, 0x78, 0x04,
+	0xaf, 0x85, 0x77, 0x0d, 0x7e, 0xa7, 0x6e, 0x70, 0xdb, 0xc0, 0xa6, 0x39, 0x34, 0x6c, 0xc7, 0x35,
+	0x3c, 0x87, 0xb8, 0xa1, 0xb9, 0x5a, 0xb6, 0x89, 0x4d, 0x82, 0x8f, 0x4d, 0xff, 0x13, 0x3f, 0x7d,
+	0x35, 0x11, 0x80, 0xff, 0x0d, 0x6f, 0xb5, 0x47, 0x50, 0xe9, 0xf8, 0x68, 0xbb, 0xc6, 0xbe, 0x63,
+	0x1a, 0x1e, 0xa1, 0x4c, 0xb7, 0x46, 0x63, 0x8b, 0x79, 0xb8, 0x02, 0xab, 0xcc, 0x33, 0xbc, 0x31,
+	0x5b, 0x47, 0x75, 0x74, 0xfb, 0x8a, 0xce, 0xbf, 0xe1, 0x4d, 0x28, 0x52, 0x6b, 0xb4, 0x5e, 0xa8,
+	0xa3, 0xdb, 0x57, 0x5b, 0x37, 0x1a, 0x9c, 0x62, 0x48, 0xfb, 0x81, 0x61, 0x5b, 0xdc, 0x5f, 0xf7,
+	0xad, 0xb4, 0x67, 0x08, 0x5e, 0x49, 0xe1, 0xb3, 0x21, 0x71, 0x99, 0x85, 0xdf, 0x07, 0x78, 0x2c,
+	0x4e, 0xd7, 0x51, 0xbd, 0x18, 0xc7, 0x8b, 0x58, 0x0a, 0xbf, 0xf6, 0xca, 0xd1, 0xa4, 0xa6, 0xe8,
+	0x31, 0x17, 0x7c, 0xd7, 0x67, 0xc2, 0x38, 0x13, 0x55, 0xc6, 0x24, 0x8c, 0xe4, 0x53, 0x61, 0xda,
+	0xf7, 0x08, 0xae, 0xcf, 0x52, 0x89, 0x32, 0xfd, 0x0c, 0xd6, 0x04, 0x6a, 0xd7, 0x30, 0x4d, 0x1a,
+	0x64, 0xfc, 0x52, 0x7b, 0xeb, 0x6c, 0x52, 0xbb, 0x67, 0x3b, 0x5e, 0x7f, 0xbc, 0xd7, 0xe8, 0x91,
+	0x83, 0x26, 0x2f, 0x64, 0xf8, 0xe7, 0x1e, 0x33, 0x07, 0x4d, 0xef, 0xe9, 0xd0, 0x62, 0x3e, 0xc7,
+	0x1d, 0xd3, 0xa4, 0x16, 0x63, 0xfa, 0x35, 0x01, 0xe4, 0x9f, 0x2c, 0x56, 0xab, 0x4f, 0x93, 0xad,
+	0x10, 0x95, 0x7a, 0x0f, 0xae, 0x08, 0xdc, 0x80, 0x5b, 0x8e, 0x42, 0x4d, 0x3d, 0xb4, 0xdf, 0x10,
+	0xbc, 0x36, 0x8b, 0xfc, 0x81, 0xb5, 0x6f, 0xd9, 0x81, 0x74, 0xa6, 0xed, 0xa0, 0x50, 0x36, 0xc5,
+	0x71, 0x97, 0xf2, 0xe3, 0xa8, 0x31, 0x5a, 0x32, 0xde, 0x14, 0x22, 0x42, 0x68, 0xdf, 0xf4, 0x03,
+	0xff, 0xf4, 0x47, 0xad, 0x94, 0xbe, 0x63, 0x7a, 0xc9, 0x4c, 0x1f, 0x2e, 0xd8, 0xc1, 0x5f, 0x11,
+	0xdc, 0x99, 0xcd, 0xe3, 0x13, 0x77, 0x8f, 0xb8, 0xa6, 0xe3, 0xda, 0xb2, 0x84, 0x1e, 0x42, 0x69,
+	0x1c, 0xdd, 0xa7, 0xf2, 0x79, 0x3d, 0x99, 0x8f, 0x04, 0x8a, 0x57, 0x12, 0x0b, 0x94, 0x0b, 0x12,
+	0xdf, 0x7e, 0xf1, 0xd9, 0x61, 0x4d, 0xf9, 0xe1, 0xb0, 0xa6, 0x68, 0x5f, 0x17, 0x78, 0x93, 0xdb,
+	0xc4, 0x35, 0x1f, 0x18, 0xd4, 0x38, 0x60, 0x31, 0x15, 0xf2, 0x12, 0x5d, 0x4c, 0x85, 0x3b, 0xbd,
+	0x9e, 0x50, 0xa1, 0x00, 0x0a, 0x54, 0x98, 0xd6, 0x77, 0x61, 0x49, 0xfa, 0xde, 0x0a, 0xf5, 0x5d,
+	0x3c, 0x47, 0xdf, 0xbc, 0x90, 0xbe, 0x6d, 0xac, 0x16, 0xcf, 0xa3, 0xd9, 0x90, 0x96, 0x0b, 0x1e,
+	0x40, 0x49, 0x22, 0x46, 0xae, 0xfd, 0x3c, 0x5a, 0xac, 0x9c, 0x4d, 0x6a, 0x38, 0x7d, 0xae, 0xe3,
+	0xb4, 0x0c, 0x63, 0x94, 0x2c, 0xa8, 0x07, 0x8c, 0x24, 0x62, 0x10, 0xd4, 0x76, 0x60, 0x35, 0x14,
+	0x04, 0x67, 0xb3, 0x80, 0x92, 0xb8, 0xa3, 0xf6, 0x23, 0x82, 0x9b, 0xf1, 0xcc, 0x09, 0xfd, 0xb7,
+	0xa4, 0xb0, 0xd0, 0x40, 0xfa, 0x39, 0x9a, 0x1b, 0x82, 0xa6, 0xec, 0xdf, 0xec, 0xf3, 0x4b, 0xcf,
+	0x8d, 0xb0, 0x38, 0xcb, 0x1c, 0x10, 0xc9, 0x16, 0xc8, 0x99, 0xff, 0x1f, 0x07, 0xc4, 0x5f, 0x05,
+	0xb8, 0x11, 0xa4, 0xa0, 0x5b, 0x66, 0x9c, 0xf2, 0x3f, 0x2d, 0x8c, 0x2e, 0x60, 0x46, 0x7b, 0xdd,
+	0x65, 0xcd, 0x89, 0x97, 0x19, 0xed, 0xed, 0xce, 0x8c, 0x8a, 0x2e, 0x60, 0x93, 0x79, 0xc9, 0x00,
+	0xc5, 0x0b, 0x07, 0x30, 0x99, 0xb7, 0x2b, 0x7b, 0x6b, 0x57, 0x72, 0x49, 0xfb, 0x17, 0x04, 0xaa,
+	0xac, 0xcc, 0x5c, 0x19, 0x06, 0x54, 0xa8, 0x95, 0xa1, 0xea, 0x37, 0x92, 0xe2, 0x88, 0xc3, 0x24,
+	0x74, 0x7d, 0x9d, 0x5a, 0x97, 0x56, 0x76, 0x4c, 0x20, 0xdf, 0x22, 0x3e, 0xa3, 0x84, 0xb4, 0xff,
+	0xfb, 0xd5, 0xea, 0x3b, 0x04, 0xb5, 0x39, 0x9c, 0x96, 0xb4, 0xc3, 0xe0, 0x56, 0x4e, 0x42, 0xd3,
+	0xa7, 0x86, 0x69, 0xef, 0xf2, 0x1e, 0x7f, 0xe4, 0x30, 0x8f, 0x50, 0xa7, 0x67, 0xec, 0x7f, 0xec,
+	0x7e, 0x49, 0x62, 0xfb, 0x6d, 0xdf, 0x72, 0xec, 0xbe, 0x17, 0xb0, 0x29, 0xea, 0xfc, 0x9b, 0xd6,
+	0xe1, 0xb3, 0x39, 0xe9, 0xc5, 0xf3, 0x68, 0xc1, 0x4a, 0xdf, 0x61, 0x1e, 0x4f, 0xa1, 0x9a, 0x4c,
+	0x21, 0xe1, 0x15, 0xd8, 0xb6, 0x26, 0x00, 0x2f, 0x04, 0x98, 0xb8, 0x0b, 0x30, 0x6d, 0x17, 0xbe,
+	0x95, 0xf4, 0x96, 0xaf, 0xe2, 0xea, 0x5b, 0xe7, 0xda, 0x85, 0xe4, 0x34, 0x05, 0x3f, 0x8a, 0x05,
+	0xe8, 0xe0, 0x37, 0xb3, 0x1d, 0x23, 0xfc, 0x5b, 0xe7, 0x99, 0x09, 0x78, 0x0a, 0x65, 0xd9, 0x12,
+	0x99, 0x37, 0xd0, 0x56, 0xb6, 0x99, 0x64, 0x48, 0x6b, 0x0a, 0xfe, 0x0a, 0xc1, 0x46, 0xe6, 0xc6,
+	0x97, 0x37, 0xfa, 0x76, 0xb6, 0x59, 0xd6, 0x32, 0xa9, 0x29, 0xf8, 0x0b, 0xb8, 0x3a, 0xbd, 0xe8,
+	0xcc, 0xe9, 0x5d, 0x6a, 0xad, 0x9b, 0xd3, 0xbb, 0xf4, 0x2b, 0xa8, 0x29, 0x78, 0x04, 0x25, 0x09,
+	0x87, 0xdc, 0x91, 0xee, 0x4b, 0xed, 0x32, 0x56, 0x19, 0x4d, 0xc1, 0x4f, 0xa0, 0x2c, 0x7b, 0x22,
+	0xf1, 0x66, 0x16, 0xeb, 0xc4, 0xba, 0x32, 0xa7, 0xab, 0x59, 0x4f, 0xaf, 0xa6, 0xe0, 0x6f, 0x10,
+	0x6c, 0x08, 0x13, 0x69, 0x57, 0x17, 0xe2, 0xb0, 0x9d, 0x2b, 0xf9, 0x79, 0x64, 0xfa, 0x70, 0x6d,
+	0xe6, 0x21, 0xc0, 0x6f, 0x4b, 0xe1, 0x64, 0x6f, 0xb2, 0x7a, 0x27, 0x8f, 0xa9, 0x88, 0xf4, 0x18,
+	0x4a, 0x92, 0xc1, 0xbd, 0x58, 0xae, 0xf7, 0xb3, 0x8d, 0xa5, 0x73, 0x81, 0x00, 0x4e, 0x1b, 0xe4,
+	0x96, 0x56, 0x33, 0x67, 0xc4, 0x58, 0xc0, 0x01, 0xac, 0xcd, 0xce, 0x42, 0x2c, 0x2f, 0x94, 0x74,
+	0x38, 0xab, 0x9b, 0xb9, 0x6c, 0xa3, 0x60, 0xed, 0x0f, 0x8f, 0x4e, 0xaa, 0xe8, 0xf8, 0xa4, 0x8a,
+	0xfe, 0x3c, 0xa9, 0xa2, 0xe7, 0xa7, 0x55, 0xe5, 0xf8, 0xb4, 0xaa, 0xfc, 0x7e, 0x5a, 0x55, 0x1e,
+	0xde, 0xcd, 0x5c, 0x2b, 0x9e, 0x88, 0x5f, 0x45, 0x82, 0x05, 0x63, 0x6f, 0x35, 0xf8, 0x51, 0xe4,
+	0x9d, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xbe, 0x63, 0xee, 0x0b, 0x95, 0x11, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -887,9 +1016,12 @@ type QueryClient interface {
 	Validators(ctx context.Context, in *QueryValidatorsRequest, opts ...grpc.CallOption) (*QueryValidatorsResponse, error)
 	ValidatorQ(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorResponse, error)
 	ValidatorDelegations(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorDelegationsResponse, error)
+	ValidatorUnbondingDelegations(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorUnbondingDelegationsResponse, error)
 	DelegationQ(ctx context.Context, in *QueryBondParamsRequest, opts ...grpc.CallOption) (*QueryDelegationResponse, error)
 	UnbondingDelegation(ctx context.Context, in *QueryBondParamsRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorParamsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
+	DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorParamsRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegatorDelegationsResponse, error)
+	Redelegations(ctx context.Context, in *QueryRedelegationsRequest, opts ...grpc.CallOption) (*QueryRedelegationsResponse, error)
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorParamsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
 	DelegatorValidator(ctx context.Context, in *QueryBondParamsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
@@ -930,6 +1062,15 @@ func (c *queryClient) ValidatorDelegations(ctx context.Context, in *QueryValidat
 	return out, nil
 }
 
+func (c *queryClient) ValidatorUnbondingDelegations(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorUnbondingDelegationsResponse, error) {
+	out := new(QueryValidatorUnbondingDelegationsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.Query/ValidatorUnbondingDelegations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) DelegationQ(ctx context.Context, in *QueryBondParamsRequest, opts ...grpc.CallOption) (*QueryDelegationResponse, error) {
 	out := new(QueryDelegationResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.staking.Query/DelegationQ", in, out, opts...)
@@ -951,6 +1092,24 @@ func (c *queryClient) UnbondingDelegation(ctx context.Context, in *QueryBondPara
 func (c *queryClient) DelegatorDelegations(ctx context.Context, in *QueryDelegatorParamsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error) {
 	out := new(QueryDelegatorDelegationsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.staking.Query/DelegatorDelegations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorParamsRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegatorDelegationsResponse, error) {
+	out := new(QueryUnbondingDelegatorDelegationsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.Query/DelegatorUnbondingDelegations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Redelegations(ctx context.Context, in *QueryRedelegationsRequest, opts ...grpc.CallOption) (*QueryRedelegationsResponse, error) {
+	out := new(QueryRedelegationsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.Query/Redelegations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -989,9 +1148,12 @@ type QueryServer interface {
 	Validators(context.Context, *QueryValidatorsRequest) (*QueryValidatorsResponse, error)
 	ValidatorQ(context.Context, *QueryValidatorRequest) (*QueryValidatorResponse, error)
 	ValidatorDelegations(context.Context, *QueryValidatorRequest) (*QueryValidatorDelegationsResponse, error)
+	ValidatorUnbondingDelegations(context.Context, *QueryValidatorRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
 	DelegationQ(context.Context, *QueryBondParamsRequest) (*QueryDelegationResponse, error)
 	UnbondingDelegation(context.Context, *QueryBondParamsRequest) (*QueryUnbondingDelegationResponse, error)
 	DelegatorDelegations(context.Context, *QueryDelegatorParamsRequest) (*QueryDelegatorDelegationsResponse, error)
+	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorParamsRequest) (*QueryUnbondingDelegatorDelegationsResponse, error)
+	Redelegations(context.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
 	DelegatorValidators(context.Context, *QueryDelegatorParamsRequest) (*QueryDelegatorValidatorsResponse, error)
 	DelegatorValidator(context.Context, *QueryBondParamsRequest) (*QueryDelegatorValidatorResponse, error)
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
@@ -1010,6 +1172,9 @@ func (*UnimplementedQueryServer) ValidatorQ(ctx context.Context, req *QueryValid
 func (*UnimplementedQueryServer) ValidatorDelegations(ctx context.Context, req *QueryValidatorRequest) (*QueryValidatorDelegationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorDelegations not implemented")
 }
+func (*UnimplementedQueryServer) ValidatorUnbondingDelegations(ctx context.Context, req *QueryValidatorRequest) (*QueryValidatorUnbondingDelegationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorUnbondingDelegations not implemented")
+}
 func (*UnimplementedQueryServer) DelegationQ(ctx context.Context, req *QueryBondParamsRequest) (*QueryDelegationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegationQ not implemented")
 }
@@ -1018,6 +1183,12 @@ func (*UnimplementedQueryServer) UnbondingDelegation(ctx context.Context, req *Q
 }
 func (*UnimplementedQueryServer) DelegatorDelegations(ctx context.Context, req *QueryDelegatorParamsRequest) (*QueryDelegatorDelegationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorDelegations not implemented")
+}
+func (*UnimplementedQueryServer) DelegatorUnbondingDelegations(ctx context.Context, req *QueryDelegatorParamsRequest) (*QueryUnbondingDelegatorDelegationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegatorUnbondingDelegations not implemented")
+}
+func (*UnimplementedQueryServer) Redelegations(ctx context.Context, req *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Redelegations not implemented")
 }
 func (*UnimplementedQueryServer) DelegatorValidators(ctx context.Context, req *QueryDelegatorParamsRequest) (*QueryDelegatorValidatorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorValidators not implemented")
@@ -1087,6 +1258,24 @@ func _Query_ValidatorDelegations_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ValidatorUnbondingDelegations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidatorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ValidatorUnbondingDelegations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.Query/ValidatorUnbondingDelegations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ValidatorUnbondingDelegations(ctx, req.(*QueryValidatorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_DelegationQ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryBondParamsRequest)
 	if err := dec(in); err != nil {
@@ -1137,6 +1326,42 @@ func _Query_DelegatorDelegations_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).DelegatorDelegations(ctx, req.(*QueryDelegatorParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DelegatorUnbondingDelegations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDelegatorParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DelegatorUnbondingDelegations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.Query/DelegatorUnbondingDelegations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DelegatorUnbondingDelegations(ctx, req.(*QueryDelegatorParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Redelegations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRedelegationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Redelegations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.Query/Redelegations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Redelegations(ctx, req.(*QueryRedelegationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1212,6 +1437,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ValidatorDelegations_Handler,
 		},
 		{
+			MethodName: "ValidatorUnbondingDelegations",
+			Handler:    _Query_ValidatorUnbondingDelegations_Handler,
+		},
+		{
 			MethodName: "DelegationQ",
 			Handler:    _Query_DelegationQ_Handler,
 		},
@@ -1222,6 +1451,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegatorDelegations",
 			Handler:    _Query_DelegatorDelegations_Handler,
+		},
+		{
+			MethodName: "DelegatorUnbondingDelegations",
+			Handler:    _Query_DelegatorUnbondingDelegations_Handler,
+		},
+		{
+			MethodName: "Redelegations",
+			Handler:    _Query_Redelegations_Handler,
 		},
 		{
 			MethodName: "DelegatorValidators",
@@ -1455,88 +1692,6 @@ func (m *QueryValidatorDelegationsResponse) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryBondParamsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryBondParamsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryBondParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Req.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintQuery(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.ValidatorAddr) > 0 {
-		i -= len(m.ValidatorAddr)
-		copy(dAtA[i:], m.ValidatorAddr)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValidatorAddr)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.DelegatorAddr) > 0 {
-		i -= len(m.DelegatorAddr)
-		copy(dAtA[i:], m.DelegatorAddr)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.DelegatorAddr)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryDelegationResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryDelegationResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryDelegationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.DelegationResponse != nil {
-		{
-			size, err := m.DelegationResponse.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *QueryUnbondingDelegationResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1602,10 +1757,10 @@ func (m *QueryDelegatorParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.DelegatorAddress) > 0 {
-		i -= len(m.DelegatorAddress)
-		copy(dAtA[i:], m.DelegatorAddress)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.DelegatorAddress)))
+	if len(m.DelegatorAddr) > 0 {
+		i -= len(m.DelegatorAddr)
+		copy(dAtA[i:], m.DelegatorAddr)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DelegatorAddr)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1966,38 +2121,6 @@ func (m *QueryValidatorDelegationsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryBondParamsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.DelegatorAddr)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.ValidatorAddr)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = m.Req.Size()
-	n += 1 + l + sovQuery(uint64(l))
-	return n
-}
-
-func (m *QueryDelegationResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.DelegationResponse != nil {
-		l = m.DelegationResponse.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *QueryUnbondingDelegationResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2015,7 +2138,7 @@ func (m *QueryDelegatorParamsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.DelegatorAddress)
+	l = len(m.DelegatorAddr)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -2709,6 +2832,129 @@ func (m *QueryValidatorDelegationsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *QueryValidatorUnbondingDelegationsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidatorUnbondingDelegationsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidatorUnbondingDelegationsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingResponses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UnbondingResponses = append(m.UnbondingResponses, UnbondingDelegation{})
+			if err := m.UnbondingResponses[len(m.UnbondingResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Res == nil {
+				m.Res = &query.PageResponse{}
+			}
+			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QueryBondParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3069,7 +3315,7 @@ func (m *QueryDelegatorParamsRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -3096,9 +3342,9 @@ func (m *QueryDelegatorParamsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddress == nil {
-				m.DelegatorAddress = []byte{}
+			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
+			if m.DelegatorAddr == nil {
+				m.DelegatorAddr = []byte{}
 			}
 			iNdEx = postIndex
 		case 2:
@@ -3221,6 +3467,129 @@ func (m *QueryDelegatorDelegationsResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.DelegationResponses = append(m.DelegationResponses, DelegationResponse{})
 			if err := m.DelegationResponses[len(m.DelegationResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Res == nil {
+				m.Res = &query.PageResponse{}
+			}
+			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryUnbondingDelegatorDelegationsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryUnbondingDelegatorDelegationsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryUnbondingDelegatorDelegationsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingResponses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UnbondingResponses = append(m.UnbondingResponses, UnbondingDelegation{})
+			if err := m.UnbondingResponses[len(m.UnbondingResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3448,6 +3817,129 @@ func (m *QueryRedelegationsRequest) Unmarshal(dAtA []byte) error {
 				m.Req = &query.PageRequest{}
 			}
 			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRedelegationsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRedelegationsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRedelegationsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedelegationResponses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RedelegationResponses = append(m.RedelegationResponses, RedelegationResponse{})
+			if err := m.RedelegationResponses[len(m.RedelegationResponses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Res == nil {
+				m.Res = &query.PageResponse{}
+			}
+			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

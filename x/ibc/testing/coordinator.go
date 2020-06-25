@@ -44,18 +44,18 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 	}
 }
 
-// TODO return testchannels
-// Setup constructs a TM client, connection, and channel on both chains provided. It fails if
-// any error occurs. The clientID's and TestConnections are returned for both chains.
+// Setup constructs a TM client, connection, and channel on both chains provided. It will
+// fails if any error occurs. The clientID's, TestConnections, and TestChannels are returned
+// for both chains.
 func (coord *Coordinator) Setup(
 	chainA, chainB *TestChain,
-) (string, string, *TestConnection, *TestConnection) {
+) (string, string, *TestConnection, *TestConnection, TestChannel, TestChannel) {
 	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, clientexported.Tendermint)
 
-	// channels can be referenced through the returned connections
-	coord.CreateChannel(chainA, chainB, connA, connB, channeltypes.UNORDERED)
+	// channels can also be referenced through the returned connections
+	channelA, channelB := coord.CreateChannel(chainA, chainB, connA, connB, channeltypes.UNORDERED)
 
-	return clientA, clientB, connA, connB
+	return clientA, clientB, connA, connB, channelA, channelB
 }
 
 // SetupClients is a helper function to create clients on both chains. It assumes the

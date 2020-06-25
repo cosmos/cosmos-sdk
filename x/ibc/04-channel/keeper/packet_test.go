@@ -38,50 +38,38 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 
 	testCases := []testCase{
 		{"success", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, true},
 		{"packet basic validation failed, empty packet data", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket([]byte{}, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
-			packet = types.NewPacket(validPacketData, 1, "invalidport", "invalidchannel", channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"channel closed", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
 			suite.Require().NoError(err)
 		}, false},
 		{"packet dest port ≠ channel counterparty port", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong port for dest
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, "invalidport", channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, ibctesting.InvalidID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"packet dest channel ID ≠ channel counterparty channel ID", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong channel for dest
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, "invalidchannel", timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, ibctesting.InvalidID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"connection not found", func() {
@@ -115,32 +103,25 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"client state not found", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 			// change connection client ID
 			connection := suite.chainA.GetConnection(connA)
-			connection.ClientID = "invalidid"
+			connection.ClientID = ibctesting.InvalidID
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connection)
 
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"timeout height passed", func() {
-			clientA, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use client state latest height for timeout
 			clientState := suite.chainA.GetClientState(clientA)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clientState.GetLatestHeight(), disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"timeout timestamp passed", func() {
-			clientA, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
-
+			clientA, _, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use latest time on client state
 			clientState := suite.chainA.GetClientState(clientA)
 			connection := suite.chainA.GetConnection(connA)
@@ -165,17 +146,13 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"next sequence wrong", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 5)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"channel capability not found", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = capabilitytypes.NewCapability(5)
 		}, false},
@@ -217,40 +194,31 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 		}, true},
 		{"success unordered channel", func() {
 			// setup uses an UNORDERED channel
-			_, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, "invalidport", "invalidchannel", timeoutHeight, disabledTimeoutTimestamp)
+			_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, ibctesting.InvalidID, ibctesting.InvalidID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"channel not open", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, channelB)
 			suite.Require().NoError(err)
 		}, false},
 		{"packet source port ≠ channel counterparty port", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong port for dest
-			packet = types.NewPacket(validPacketData, 1, "invalidport", channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"packet source channel ID ≠ channel counterparty channel ID", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong port for dest
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, "invalidchannel", channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"connection not found", func() {
 			channelA := ibctesting.TestChannel{PortID: portID, ID: channelIDA}
@@ -280,22 +248,16 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"timeout height passed", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), disabledTimeoutTimestamp)
 		}, false},
 		{"timeout timestamp passed", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, disabledTimeoutHeight, uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 		}, false},
 		{"acknowledgement already received", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 
@@ -304,9 +266,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 		}, false},
 		{"validation failed", func() {
 			// packet commitment not set resulting in invalid proof
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 	}
@@ -343,9 +303,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 	testCases := []testCase{
 		{"success: UNORDERED", func() {
 			// setup uses an UNORDERED channel
-			_, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
@@ -359,16 +317,12 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, "invalidport", "invalidchannel", timeoutHeight, disabledTimeoutTimestamp)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, ibctesting.InvalidID, ibctesting.InvalidID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"channel not OPEN", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, channelB)
@@ -451,9 +405,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 		}, true},
 		{"success on unordered channel", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			// create packet commitment
@@ -466,32 +418,25 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, _, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelB := connB.Channels[0]
-			packet = types.NewPacket(validPacketData, 1, "invalidport", "invalidchannel", channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"channel not open", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
 			suite.Require().NoError(err)
 		}, false},
 		{"packet source port ≠ channel counterparty port", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong port for dest
-			packet = types.NewPacket(validPacketData, 1, "invalidport", channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"packet source channel ID ≠ channel counterparty channel ID", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong channel for dest
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, "invalidchannel", channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"connection not found", func() {
 			channelA := ibctesting.TestChannel{PortID: portID, ID: channelIDA}
@@ -522,16 +467,12 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 		}, false},
 		{"packet hasn't been sent", func() {
 			// packet commitment never written
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"packet ack verification failed", func() {
 			// ack never written
-			_, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			// create packet commitment
@@ -602,9 +543,7 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 	testCases := []testCase{
 		{"success ORDERED", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			// create packet commitment
@@ -619,14 +558,11 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, _, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelB := connB.Channels[0]
-			packet = types.NewPacket(validPacketData, 1, "invalidport", "invalidchannel", channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"incorrect capability", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			chanCap = capabilitytypes.NewCapability(100)
@@ -693,9 +629,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			nextSeqRecv = 5
 
 			// setup uses an UNORDERED channel
-			clientA, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 			for i := uint64(1); i < nextSeqRecv; i++ {
 				packet = types.NewPacket(validPacketData, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
@@ -712,35 +646,27 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
-			packet = types.NewPacket(validPacketData, 1, "invalidport", "invalidchannel", channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"channel not open", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
 			suite.Require().NoError(err)
 		}, false},
 		{"packet destination port ≠ channel counterparty port", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong port for dest
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, "invalidport", channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, ibctesting.InvalidID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"packet destination channel ID ≠ channel counterparty channel ID", func() {
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong channel for dest
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, "invalidchannel", timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, ibctesting.InvalidID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"connection not found", func() {
@@ -794,9 +720,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			ordered = false
 			nextSeqRecv = 5
 
-			_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 			packet = types.NewPacket(validPacketData, nextSeqRecv-1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
@@ -828,9 +752,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			ordered = true
 			nextSeqRecv = 5
 
-			clientA, clientB, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			channelA := connA.Channels[0]
-			channelB := connB.Channels[0]
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 			for i := uint64(1); i < nextSeqRecv; i++ {
 				packet = types.NewPacket(validPacketData, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)

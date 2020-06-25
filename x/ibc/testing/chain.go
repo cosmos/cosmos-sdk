@@ -40,6 +40,7 @@ const (
 	// TODO: allow for this to be passed in, swap default to use that defined in connectiont types
 	ConnectionVersion = "1.0.0"
 	ChannelVersion    = "ics20-1" // TODO: use app developers provided versions
+	InvalidID         = "invalidid"
 
 	ConnectionIDPrefix = "connectionid"
 

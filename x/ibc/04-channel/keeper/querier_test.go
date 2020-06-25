@@ -37,8 +37,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
 				// create first connection/channel
-				clientA, clientB, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA0 := connA.Channels[0]
+				clientA, clientB, _, _, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				channels = append(channels,
 					types.NewIdentifiedChannel(
@@ -73,8 +72,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
 				// create first connection/channel
-				_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA0 := connA.Channels[0]
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				channels = append(channels,
 					types.NewIdentifiedChannel(
@@ -139,8 +137,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
 				// create first connection/channel
-				_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA0 := connA.Channels[0]
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				channels = append(channels,
 					types.NewIdentifiedChannel(
@@ -173,8 +170,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				channels := make([]types.IdentifiedChannel, 0, 1)
 
 				// create first connection/channel
-				clientA, clientB, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA0 := connA.Channels[0]
+				clientA, clientB, connA, _, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				channels = append(channels,
 					types.NewIdentifiedChannel(
@@ -259,8 +255,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 			"connection for channel not found",
 			func() {
 				// connection for channel is deleted from state
-				clientA, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA := connA.Channels[0]
+				clientA, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				channel := suite.chainA.GetChannel(channelA)
 				channel.ConnectionHops[0] = "doesnotexist"
@@ -277,8 +272,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 		{
 			"client state for channel's connection not found",
 			func() {
-				clientA, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA := connA.Channels[0]
+				clientA, _, connA, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				// setting connection to empty results in wrong clientID used
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connectiontypes.ConnectionEnd{})
@@ -291,8 +285,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA := connA.Channels[0]
+				clientA, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				clientID = clientA
 				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ID)
@@ -347,8 +340,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 		{
 			"success",
 			func() {
-				_, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA := connA.Channels[0]
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				seq := uint64(1)
 				commitments := []uint64{}
@@ -368,8 +360,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 		{
 			"success with multiple channels",
 			func() {
-				_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA0 := connA.Channels[0]
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				seq := uint64(1)
 				commitments := []uint64{}
@@ -397,8 +388,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 		{
 			"success no packet commitments",
 			func() {
-				_, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA := connA.Channels[0]
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				params = types.NewQueryPacketCommitmentsParams(channelA.PortID, channelA.ID, 1, 100)
 
@@ -449,8 +439,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"success",
 			func() {
-				_, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA := connA.Channels[0]
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				unrelayedAcks := []uint64{}
 				unrelayedSends := []uint64{}
@@ -478,8 +467,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"success with multiple channels",
 			func() {
-				_, _, connA, connB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA0 := connA.Channels[0]
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 				ctxA := suite.chainA.GetContext()
 
 				unrelayedAcks := []uint64{}
@@ -517,8 +505,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"success no unrelayed acks",
 			func() {
-				_, _, connA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				channelA := connA.Channels[0]
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				// create acknowledgements for all sequences
 				for _, seq := range sequences {

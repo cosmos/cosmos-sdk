@@ -37,9 +37,8 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	// TODO: allow for this to be passed in, swap default to use that defined in connectiont types
 	ConnectionVersion = "1.0.0"
-	ChannelVersion    = "ics20-1" // TODO: use app developers provided versions
+	ChannelVersion    = "ics20-1"
 	InvalidID         = "invalidid"
 
 	ConnectionIDPrefix = "connectionid"
@@ -434,7 +433,6 @@ func (chain *TestChain) ConnectionOpenConfirm(
 
 // CreatePortCapability binds and claims a capability for the given portID if it does not
 // already exist. This function will fail testing on any resulting error.
-// TODO: allow application developers to bind their port
 func (chain *TestChain) CreatePortCapability(portID string) {
 	// check if the portId is already binded, if not bind it
 	_, ok := chain.App.ScopedIBCKeeper.GetCapability(chain.GetContext(), host.PortPath(portID))
@@ -586,7 +584,6 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// TODO allow recv through application module
 // PacketExecuted simulates receiving and wiritng an acknowledgement to the chain.
 func (chain *TestChain) PacketExecuted(
 	packet channelexported.PacketI,

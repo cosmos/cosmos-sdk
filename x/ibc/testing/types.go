@@ -29,9 +29,7 @@ func (conn *TestConnection) AddTestChannel() TestChannel {
 
 // NextTestChannel returns the next test channel to be created on this connection
 func (conn *TestConnection) NextTestChannel() TestChannel {
-	// TODO: pass as arg so application developers can provide their port
 	portID := "transfer"
-	// TODO: come up with better naming scheme, will colide with multiple client creations
 	channelID := conn.ID + strconv.Itoa(len(conn.Channels))
 	return TestChannel{
 		PortID:               portID,

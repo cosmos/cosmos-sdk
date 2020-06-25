@@ -7,6 +7,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmstrings "github.com/tendermint/tendermint/libs/strings"
 )
 
 // ----------------------------------------------------------------------------
@@ -213,4 +214,28 @@ func StringifyEvents(events []abci.Event) StringEvents {
 	}
 
 	return res.Flatten()
+}
+
+// FilterEvents returns a slice of ABCI events filtered by the events provided
+// in a filter. If the filter is empty, all the events are returned.
+func FilterEvents(events []abci.Event, filter []string) []abci.Event {
+	if len(filter) == 0 {
+		return events
+	}
+
+	filtered := make([]abci.Event, 0)
+	for _, event := range events {
+		fe := abci.Event{Type: event.Type, Attributes: make(tmkv.Pairs, 0)}
+
+		for _, attr := range event.Attributes {
+			composite := fmt.Sprintf("%s.%s", event.Type, attr.Key)
+			if tmstrings.StringInSlice(composite, filter) {
+				fe.Attributes = append(fe.Attributes, attr)
+			}
+		}
+
+		filtered = append(filtered, fe)
+	}
+
+	return filtered
 }

@@ -5,8 +5,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -14,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+//nolint:golint  // type name will be used as tx.TxGeneratorTestSuite by other packages, and that stutters; consider calling this GeneratorTestSuite
 type TxGeneratorTestSuite struct {
 	suite.Suite
 	TxGenerator client.TxGenerator
@@ -92,16 +91,18 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 }
 
 func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
-	// Build a test transaction
-	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := types.NewStdTx([]sdk.Msg{nil}, fee, []types.StdSignature{}, "foomemo")
+	txBuilder := s.TxGenerator.NewTxBuilder()
+	txBuilder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	txBuilder.SetGasLimit(50000)
+	txBuilder.SetMemo("foomemo")
+	tx := txBuilder.GetTx()
 
 	// Encode transaction
-	txBytes, err := s.TxGenerator.TxEncoder()(stdTx)
+	txBytes, err := s.TxGenerator.TxEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(txBytes)
 
-	tx, err := s.TxGenerator.TxDecoder()(txBytes)
+	tx2, err := s.TxGenerator.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	s.Require().Equal([]sdk.Msg{nil}, tx.GetMsgs())
+	s.Require().Equal(tx, tx2)
 }

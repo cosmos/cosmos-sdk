@@ -246,10 +246,6 @@ func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRe
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.DelegatorAddr == nil || req.SrcValidatorAddr == nil || req.DstValidatorAddr == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
-	}
-
 	var redels types.Redelegations
 	var res *query.PageResponse
 	var err error

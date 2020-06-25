@@ -7,7 +7,6 @@ import "cosmos/staking/staking.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
-// TODO: Add docs for each
 // Query provides defines the gRPC querier service
 service Query {
   rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}

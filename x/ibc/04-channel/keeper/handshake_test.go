@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
 				channelB.PortID, channelB.ID, portCap, counterparty, ibctesting.ChannelVersion, ibctesting.ChannelVersion,
-				proof, proofHeight+1+heightDiff,
+				proof, proofHeight+heightDiff,
 			)
 
 			if tc.expPass {
@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
 				suite.chainA.GetContext(), channelA.PortID, channelA.ID, channelCap, ibctesting.ChannelVersion,
-				proof, proofHeight+1+heightDiff,
+				proof, proofHeight+heightDiff,
 			)
 
 			if tc.expPass {
@@ -423,7 +423,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 				suite.chainB.GetContext(), channelB.PortID, channelB.ID,
-				channelCap, proof, proofHeight+1+heightDiff,
+				channelCap, proof, proofHeight+heightDiff,
 			)
 
 			if tc.expPass {
@@ -624,7 +624,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 				suite.chainB.GetContext(), channelB.PortID, channelB.ID, channelCap,
-				proof, proofHeight+1+heightDiff,
+				proof, proofHeight+heightDiff,
 			)
 
 			if tc.expPass {

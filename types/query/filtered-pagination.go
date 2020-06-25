@@ -12,7 +12,7 @@ func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsPara
 	var filteredProposals []types.Proposal
 
 	pageReq := &query.PageRequest{Key: nil, Limit: 10, Offset: 10, CountTotal: true}
-	res, err := query.FilteredPaginate(accountStore, request.Req, func(key []byte, value []byte, isValid bool) (hit, error) {
+	res, err := query.FilteredPaginate(accountStore, request.Req, func(key []byte, value []byte, accumulate bool) (hit, error) {
 		var p types.Proposal
 		err := app.Codec().UnmarshalBinaryBare(value, &p)
 		if err != nil {
@@ -37,7 +37,7 @@ func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsPara
 		}
 
 		if matchVoter && matchDepositor && matchStatus {
-			if isValid {
+			if accumulate {
 				filteredProposals = append(filteredProposals, p)
 			}
 
@@ -56,13 +56,13 @@ func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsPara
 // provided PageRequest. onResult should be used to do actual unmarshaling and filter the results.
 // if key is provided, the pagination uses the optimized querying
 // if offset is used, the pagination uses lazy filtering i.e., searches through all the records
-// isValid represents if the response is valid based on the offset given
-// it will be false for the results (filtered) < offset  and true for offset > isValid < end. This
+// accumulate represents if the response is valid based on the offset given
+// it will be false for the results (filtered) < offset  and true for `offset > accumulate <= end`. This
 // will help to append the result to original client response
 func FilteredPaginate(
 	prefixStore types.KVStore,
 	req *PageRequest,
-	onResult func(key []byte, value []byte, isValid bool) (bool, error),
+	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
 	offset := req.Offset
 	key := req.Key
@@ -113,29 +113,32 @@ func FilteredPaginate(
 
 	end := offset + limit
 
-	var count uint64
+	var numHits uint64
 	var nextKey []byte
 
 	for ; iterator.Valid(); iterator.Next() {
-		isValid := count >= offset && count < end
-		hit, err := onResult(iterator.Key(), iterator.Value(), isValid)
+		accumulate := numHits > offset && numHits <= end
+		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
 		if err != nil {
 			return nil, err
 		}
 
 		if hit {
-			count++
+			numHits++
 		}
 
-		if count == end && !countTotal {
+		if numHits == end {
 			nextKey = iterator.Key()
-			break
+
+			if !countTotal {
+				break
+			}
 		}
 	}
 
 	res := &PageResponse{NextKey: nextKey}
 	if countTotal {
-		res.Total = count
+		res.Total = numHits
 	}
 
 	return res, nil

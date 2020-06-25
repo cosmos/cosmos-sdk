@@ -69,29 +69,20 @@ message QueryValidatorDelegationsResponse{
 }
 
 message QueryValidatorUnbondingDelegationsResponse{
-  option (gogoproto.marshaler)        = false;
-  option (gogoproto.sizer)        = false;
   repeated cosmos.staking.UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
 message QueryBondParamsRequest{
-
-  option (gogoproto.sizer)        = false;
-  option (gogoproto.marshaler)        = false;
-
   bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 
-  cosmos.query.PageRequest req = 3[(gogoproto.nullable) = false];
+  cosmos.query.PageRequest req = 3;
 }
 
 message QueryDelegationResponse{
-  option (gogoproto.marshaler)        = false;
-  option (gogoproto.sizer)        = false;
-
   cosmos.staking.DelegationResponse delegation_response = 1  [(gogoproto.casttype) = "DelegationResponse"];
 }
 
@@ -112,9 +103,6 @@ message QueryDelegatorDelegationsResponse{
 }
 
 message QueryUnbondingDelegatorDelegationsResponse{
-  option (gogoproto.sizer)        = false;
-  option (gogoproto.marshaler)        = false;
-
   repeated cosmos.staking.UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
@@ -131,9 +119,6 @@ message QueryRedelegationsRequest{
 }
 
 message QueryRedelegationsResponse{
-  option (gogoproto.sizer)        = false;
-  option (gogoproto.marshaler)        = false;
-
   repeated cosmos.staking.RedelegationResponse redelegation_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;

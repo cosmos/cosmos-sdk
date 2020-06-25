@@ -65,6 +65,9 @@ func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidato
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.ValidatorAddr == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 	delegations := k.GetValidatorDelegations(ctx, req.ValidatorAddr)
 
@@ -106,6 +109,10 @@ func (k Keeper) DelegationQ(c context.Context, req *types.QueryBondParamsRequest
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.DelegatorAddr == nil || req.ValidatorAddr == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	delegation, found := k.GetDelegation(ctx, req.DelegatorAddr, req.ValidatorAddr)
 	if !found {
@@ -141,6 +148,10 @@ func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegato
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.DelegatorAddr == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	}
+
 	var delegations types.Delegations
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -173,6 +184,9 @@ func (k Keeper) DelegatorValidator(c context.Context, req *types.QueryBondParams
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.DelegatorAddr == nil || req.ValidatorAddr == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 	validator, err := k.GetDelegatorValidator(ctx, req.DelegatorAddr, req.ValidatorAddr)
 	if err != nil {
@@ -187,12 +201,16 @@ func (k Keeper) DelegatorUnbondingDelegations(c context.Context, req *types.Quer
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.DelegatorAddr == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	}
 	var unbondingDelegations types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
-		key = types.GetUBDsKey(req.DelegatorAddr)
+	unbStore := prefix.NewStore(store, types.GetUBDsKey(req.DelegatorAddr))
+
+	res, err := query.Paginate(unbStore, req.Req, func(key []byte, value []byte) error {
 		unbond, err := types.UnmarshalUBD(k.cdc, value)
 		if err != nil {
 			return err
@@ -224,6 +242,10 @@ func (k Keeper) HistoricalInfo(c context.Context, req *types.QueryHistoricalInfo
 func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.DelegatorAddr == nil || req.SrcValidatorAddr == nil || req.DstValidatorAddr == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
 	}
 
 	var redels types.Redelegations
@@ -314,9 +336,10 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 // }
 
 func queryRedelegation(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+	redStore := prefix.NewStore(store, types.GetREDKey(req.DelegatorAddr, req.SrcValidatorAddr, req.DstValidatorAddr))
+
 	var redel types.Redelegation
-	res, err = query.Paginate(store, req.Req, func(key []byte, value []byte) error {
-		key = types.GetREDKey(req.DelegatorAddr, req.SrcValidatorAddr, req.DstValidatorAddr)
+	res, err = query.Paginate(redStore, req.Req, func(key []byte, value []byte) error {
 		redel, err = types.UnmarshalRED(k.cdc, value)
 		if err != nil {
 			return err
@@ -329,9 +352,8 @@ func queryRedelegation(store sdk.KVStore, k Keeper, req *types.QueryRedelegation
 }
 
 func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	res, err = query.Paginate(store, req.Req, func(key []byte, value []byte) error {
-		key = types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr)
-
+	redStore := prefix.NewStore(store, types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr))
+	res, err = query.Paginate(redStore, req.Req, func(key []byte, value []byte) error {
 		red, err := types.UnmarshalRED(k.cdc, value)
 		if err != nil {
 			return err
@@ -344,9 +366,8 @@ func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Keeper, req *types.
 }
 
 func queryAllRedelegations(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	res, err = query.Paginate(store, req.Req, func(key []byte, value []byte) error {
-		key = types.GetREDsKey(req.DelegatorAddr)
-
+	redStore := prefix.NewStore(store, types.GetREDsKey(req.DelegatorAddr))
+	res, err = query.Paginate(redStore, req.Req, func(key []byte, value []byte) error {
 		redelegation, err := types.UnmarshalRED(k.cdc, value)
 		if err != nil {
 			return err

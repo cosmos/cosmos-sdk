@@ -342,34 +342,6 @@ func NewRedelegationEntryResponse(
 	}
 }
 
-// String implements the Stringer interface for RedelegationResp.
-// func (r RedelegationResponse) String() string {
-// 	out := fmt.Sprintf(`Redelegations between:
-//   Delegator:                 %s
-//   Source Validator:          %s
-//   Destination Validator:     %s
-//   Entries:
-// `,
-// 		r.Redelegation.DelegatorAddress, r.Redelegation.ValidatorSrcAddress, r.Redelegation.ValidatorDstAddress,
-// 	)
-//
-// 	for i, entry := range r.Entries {
-// 		out += fmt.Sprintf(`    Redelegation Entry #%d:
-//       Creation height:           %v
-//       Min time to unbond (unix): %v
-//       Initial Balance:           %s
-//       Shares:                    %s
-//       Balance:                   %s
-// `,
-// 			i, entry.RedelegationEntry.CreationHeight, entry.RedelegationEntry.CompletionTime,
-// 			entry.RedelegationEntry.InitialBalance, entry.RedelegationEntry.SharesDst,
-// 			entry.Balance,
-// 		)
-// 	}
-//
-// 	return strings.TrimRight(out, "\n")
-// }
-
 type redelegationRespAlias RedelegationResponse
 
 // MarshalJSON implements the json.Marshaler interface. This is so we can

@@ -374,7 +374,7 @@ func TestQueryDelegation(t *testing.T) {
 	_, err = querier(ctx, []string{types.QueryUnbondingDelegation}, query)
 	require.Error(t, err)
 
-	// Query Delegator Delegations
+	// Query Delegator Unbonding Delegations
 
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorUnbondingDelegations",

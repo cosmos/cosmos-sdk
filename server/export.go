@@ -93,7 +93,7 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 				return err
 			}
 
-			fmt.Println(string(sdk.MustSortJSON(encoded)))
+			cmd.Println(string(sdk.MustSortJSON(encoded)))
 			return nil
 		},
 	}
@@ -101,6 +101,8 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
+	cmd.SetOut(cmd.OutOrStdout())
+	cmd.SetErr(cmd.OutOrStderr())
 
 	return cmd
 }

@@ -35,6 +35,8 @@ We elect not to deal with chains which have actually halted, which is necessaril
     1. `allow_governance_override_after_expiry` (boolean, default false)
 1. Require Tendermint light clients (ICS 07) to expose the following additional internal query functions
     1. `Expired() boolean`, which returns whether or not the client has passed the trusting period since the last update (in which case no headers can be validated)
+1. Require Tendermint light clients (ICS 07) to expose the following additional state mutation functions
+    1. `Unfreeze()`, which unfreezes a light client after misbehaviour and clears any frozen height previously set
 1. Require Tendermint light clients (ICS 07) & solo machine clients (ICS 06) to be created with the following additional flags
     1. `allow_governance_override_after_misbehaviour` (boolean, default false)
 1. Add a new governance proposal type, `ClientUpdateProposal`, in the `x/ibc` module
@@ -42,6 +44,9 @@ We elect not to deal with chains which have actually halted, which is necessaril
     1. If this governance proposal passes, the client is updated with the provided header, if and only if:
         1. `allow_governance_override_after_expiry` is true and the client has expired (`Expired()` returns true)
         1. `allow_governance_override_after_misbehaviour` is true and the client has been frozen (`Frozen()` returns true)
+            1. In this case, additionally, the client is unfrozen by calling `Unfreeze()`
+
+Note additionally that the header submitted by governance must be new enough that it will be possible to update the light client after the new header is inserted into the client state (which will only happen after the governance proposal has passed).
 
 ## Consequences
 

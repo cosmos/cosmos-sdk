@@ -32,11 +32,11 @@ Two-thirds of the validator set (the quorum for governance, module participation
 We elect not to deal with chains which have actually halted, which is necessarily Byzantine behaviour and in which case token recovery is not likely possible anyways (in-flight packets cannot be timed-out, but the relative impact of that is minor).
 
 1. Require Tendermint light clients (ICS 07) to be created with the following additional flags
-    1. `allow_governance_override_after_expiry` (boolean)
+    1. `allow_governance_override_after_expiry` (boolean, default false)
 1. Require Tendermint light clients (ICS 07) to expose the following additional internal query functions
-    1. `Expired() boolean`, which returns whether or not the client has passed the unbonding period since the last update
+    1. `Expired() boolean`, which returns whether or not the client has passed the trusting period since the last update (in which case no headers can be validated)
 1. Require Tendermint light clients (ICS 07) & solo machine clients (ICS 06) to be created with the following additional flags
-    1. `allow_governance_override_after_misbehaviour` (boolean)
+    1. `allow_governance_override_after_misbehaviour` (boolean, default false)
 1. Add a new governance proposal type, `ClientUpdateProposal`, in the `x/ibc` module
     1. Extend the base `Proposal` with a client identifier (`string`) and a header (`bytes`, encoded in a client-type-specific format)
     1. If this governance proposal passes, the client is updated with the provided header, if and only if:

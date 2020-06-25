@@ -166,7 +166,9 @@ func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegato
 		delegations = append(delegations, delegation)
 		return nil
 	})
-
+	if err != nil {
+		return nil, err
+	}
 	if delegations == nil {
 		return &types.QueryDelegatorDelegationsResponse{DelegationResponses: types.DelegationResponses{}}, nil
 	}
@@ -265,7 +267,9 @@ func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRe
 	default:
 		redels, res, err = queryAllRedelegations(store, k, req)
 	}
-
+	if err != nil {
+		return nil, err
+	}
 	redelResponses, err := RedelegationsToRedelegationResponses(ctx, k, redels)
 	if err != nil {
 		return nil, err

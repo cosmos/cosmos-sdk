@@ -418,9 +418,9 @@ func TestQueryDelegation(t *testing.T) {
 	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.NoError(t, errRes)
 	require.Len(t, redelRes, 1)
-	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
-	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
-	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].Redelegation.DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].Redelegation.ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].Redelegation.ValidatorDstAddress)
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
 
@@ -574,9 +574,9 @@ func TestQueryRedelegations(t *testing.T) {
 	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.NoError(t, errRes)
 	require.Len(t, redelRes, 1)
-	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
-	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
-	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].Redelegation.DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].Redelegation.ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].Redelegation.ValidatorDstAddress)
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 
 	// validator redelegations
@@ -595,9 +595,9 @@ func TestQueryRedelegations(t *testing.T) {
 	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.NoError(t, errRes)
 	require.Len(t, redelRes, 1)
-	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
-	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
-	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].Redelegation.DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].Redelegation.ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].Redelegation.ValidatorDstAddress)
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
 

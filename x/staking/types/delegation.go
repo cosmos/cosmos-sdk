@@ -319,14 +319,6 @@ func (d DelegationResponses) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// RedelegationResponse is equivalent to a Redelegation except that its entries
-// contain a balance in addition to shares which is more suitable for client
-// responses.
-type RedelegationResponse struct {
-	Redelegation
-	Entries []RedelegationEntryResponse `json:"entries" yaml:"entries"`
-}
-
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
 func NewRedelegationResponse(
 	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
@@ -341,14 +333,6 @@ func NewRedelegationResponse(
 	}
 }
 
-// RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
-// contains a balance in addition to shares which is more suitable for client
-// responses.
-type RedelegationEntryResponse struct {
-	RedelegationEntry
-	Balance sdk.Int `json:"balance"`
-}
-
 // NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
 func NewRedelegationEntryResponse(
 	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int) RedelegationEntryResponse {
@@ -359,30 +343,32 @@ func NewRedelegationEntryResponse(
 }
 
 // String implements the Stringer interface for RedelegationResp.
-func (r RedelegationResponse) String() string {
-	out := fmt.Sprintf(`Redelegations between:
-  Delegator:                 %s
-  Source Validator:          %s
-  Destination Validator:     %s
-  Entries:
-`,
-		r.DelegatorAddress, r.ValidatorSrcAddress, r.ValidatorDstAddress,
-	)
-
-	for i, entry := range r.Entries {
-		out += fmt.Sprintf(`    Redelegation Entry #%d:
-      Creation height:           %v
-      Min time to unbond (unix): %v
-      Initial Balance:           %s
-      Shares:                    %s
-      Balance:                   %s
-`,
-			i, entry.CreationHeight, entry.CompletionTime, entry.InitialBalance, entry.SharesDst, entry.Balance,
-		)
-	}
-
-	return strings.TrimRight(out, "\n")
-}
+// func (r RedelegationResponse) String() string {
+// 	out := fmt.Sprintf(`Redelegations between:
+//   Delegator:                 %s
+//   Source Validator:          %s
+//   Destination Validator:     %s
+//   Entries:
+// `,
+// 		r.Redelegation.DelegatorAddress, r.Redelegation.ValidatorSrcAddress, r.Redelegation.ValidatorDstAddress,
+// 	)
+//
+// 	for i, entry := range r.Entries {
+// 		out += fmt.Sprintf(`    Redelegation Entry #%d:
+//       Creation height:           %v
+//       Min time to unbond (unix): %v
+//       Initial Balance:           %s
+//       Shares:                    %s
+//       Balance:                   %s
+// `,
+// 			i, entry.RedelegationEntry.CreationHeight, entry.RedelegationEntry.CompletionTime,
+// 			entry.RedelegationEntry.InitialBalance, entry.RedelegationEntry.SharesDst,
+// 			entry.Balance,
+// 		)
+// 	}
+//
+// 	return strings.TrimRight(out, "\n")
+// }
 
 type redelegationRespAlias RedelegationResponse
 

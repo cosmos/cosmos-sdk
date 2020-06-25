@@ -387,3 +387,25 @@ message DelegationResponse {
 
   cosmos.Coin balance = 2    [(gogoproto.nullable)    = false];
 }
+
+// RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
+// contains a balance in addition to shares which is more suitable for client
+// responses.
+message RedelegationEntryResponse {
+  option (gogoproto.equal)            = true;
+
+  RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
+  string balance = 4 [
+                     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+                     (gogoproto.nullable)   = false
+                     ];}
+
+// RedelegationResponse is equivalent to a Redelegation except that its entries
+// contain a balance in addition to shares which is more suitable for client
+// responses.
+message RedelegationResponse{
+  option (gogoproto.equal)            = true;
+
+  Redelegation redelegation = 1[(gogoproto.nullable)= false];
+  repeated RedelegationEntryResponse entries = 2 [(gogoproto.nullable) = false];
+}

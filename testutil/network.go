@@ -47,18 +47,19 @@ var (
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
 type Config struct {
-	GenesisState    map[string]json.RawMessage
-	TimeoutCommit   time.Duration
-	ChainID         string
-	NumValidators   int
-	BondDenom       string
-	MinGasPrices    string
-	Passphrase      string
-	AccountTokens   sdk.Int
-	StakingTokens   sdk.Int
-	BondedTokens    sdk.Int
-	PruningStrategy string
-	EnableLogging   bool
+	GenesisState    map[string]json.RawMessage // custom gensis state to provide
+	TimeoutCommit   time.Duration              // the consensus commitment timeout
+	ChainID         string                     // the network chain-id
+	NumValidators   int                        // the total number of validators to create and bond
+	BondDenom       string                     // the staking bond denomination
+	MinGasPrices    string                     // the minimum gas prices each validator will accept
+	Passphrase      string                     // the passphrase provided to the test keyring
+	AccountTokens   sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens   sdk.Int                    // the amount of tokens each validator has available to stake
+	BondedTokens    sdk.Int                    // the amount of tokens each validator stakes
+	PruningStrategy string                     // the pruning strategy each validator will have
+	EnableLogging   bool                       // enable Tendermint logging to STDOUT
+	CleanupDir      bool                       // remove base temporary directory during cleanup
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -76,6 +77,7 @@ func DefaultConfig() Config {
 		StakingTokens:   sdk.TokensFromConsensusPower(500),
 		BondedTokens:    sdk.TokensFromConsensusPower(100),
 		PruningStrategy: storetypes.PruningOptionNothing,
+		CleanupDir:      true,
 	}
 }
 
@@ -94,6 +96,8 @@ type (
 		T          *testing.T
 		BaseDir    string
 		Validators []*Validator
+
+		config Config
 	}
 
 	// Validator defines an in-process Tendermint validator node. Through this object,
@@ -126,11 +130,13 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 
 	baseDir, err := ioutil.TempDir(os.TempDir(), cfg.ChainID)
 	require.NoError(t, err)
+	t.Logf("created temporary directory: %s", baseDir)
 
 	network := &Network{
 		T:          t,
 		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),
+		config:     cfg,
 	}
 
 	t.Log("preparing test network...")
@@ -354,6 +360,9 @@ func (n *Network) Cleanup() {
 		}
 	}
 
-	_ = os.RemoveAll(n.BaseDir)
+	if n.config.CleanupDir {
+		_ = os.RemoveAll(n.BaseDir)
+	}
+
 	n.T.Log("finished cleaning up test network")
 }

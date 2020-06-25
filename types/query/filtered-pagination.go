@@ -84,11 +84,11 @@ func FilteredPaginate(
 		iterator := prefixStore.Iterator(key, nil)
 		defer iterator.Close()
 
-		var count uint64
+		var numHits uint64
 		var nextKey []byte
 
 		for ; iterator.Valid(); iterator.Next() {
-			if count == limit {
+			if numHits == limit {
 				nextKey = iterator.Key()
 				break
 			}
@@ -99,7 +99,7 @@ func FilteredPaginate(
 			}
 
 			if hit {
-				count++
+				numHits++
 			}
 		}
 

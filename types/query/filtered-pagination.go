@@ -13,7 +13,7 @@ const defaultLimit = 100
 // Example Code
 /*
 func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {
-	var proposals []types.Proposal
+	var filteredProposals []types.Proposal
 
 	pageReq := &query.PageRequest{Key: nil, Limit: 10, Offset: 10, CountTotal: true}
 	res, err := query.FilteredPaginate(accountStore, request.Req, func(key []byte, value []byte, isValid bool) (hit, error) {

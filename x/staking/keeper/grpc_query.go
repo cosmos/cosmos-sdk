@@ -310,30 +310,30 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Res: res}, nil
 }
 
-// func (k Keeper) Pool(c context.Context, _ *types.QueryPoolRequest) (*types.QueryPoolResponse, error) {
-// 	ctx := sdk.UnwrapSDKContext(c)
-// 	bondDenom := k.BondDenom(ctx)
-// 	bondedPool := k.GetBondedPool(ctx)
-// 	notBondedPool := k.GetNotBondedPool(ctx)
-//
-// 	if bondedPool == nil || notBondedPool == nil {
-// 		return nil, status.Errorf(codes.FailedPrecondition, "pool accounts haven't been set")
-// 	}
-//
-// 	pool := types.NewPool(
-// 		k.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount,
-// 		k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount,
-// 	)
-//
-// 	return &types.QueryPoolResponse{Pool: pool}, nil
-// }
-//
-// func (k Keeper) Parameters(c context.Context, _ *types.QueryParametersRequest) (*types.QueryParametersResponse, error) {
-// 	ctx := sdk.UnwrapSDKContext(c)
-// 	params := k.GetParams(ctx)
-//
-// 	return &types.QueryParametersResponse{Params: params}, nil
-// }
+func (k Keeper) Pool(c context.Context, _ *types.QueryPoolRequest) (*types.QueryPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	bondDenom := k.BondDenom(ctx)
+	bondedPool := k.GetBondedPool(ctx)
+	notBondedPool := k.GetNotBondedPool(ctx)
+
+	if bondedPool == nil || notBondedPool == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "pool accounts haven't been set")
+	}
+
+	pool := types.NewPool(
+		k.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount,
+		k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount,
+	)
+
+	return &types.QueryPoolResponse{Pool: pool}, nil
+}
+
+func (k Keeper) Parameters(c context.Context, _ *types.QueryParametersRequest) (*types.QueryParametersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params := k.GetParams(ctx)
+
+	return &types.QueryParametersResponse{Params: params}, nil
+}
 
 func queryRedelegation(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	redStore := prefix.NewStore(store, types.GetREDKey(req.DelegatorAddr, req.SrcValidatorAddr, req.DstValidatorAddr))

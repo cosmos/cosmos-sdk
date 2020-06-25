@@ -34,9 +34,9 @@ service Query {
 
   rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
 
-//  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
-//
-//  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
+  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
+
+  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
 }
 
 message QueryValidatorsRequest{
@@ -144,25 +144,16 @@ message QueryHistoricalInfoResponse{
   cosmos.staking.HistoricalInfo hist = 1;
 }
 
-//message QueryPoolRequest{ }
-//
-////TODO: Fix Pool and Params issues
-//message QueryPoolResponse{
-//  option (gogoproto.goproto_getters) = false;
-//  option (gogoproto.marshaler)        = false;
-//  option (gogoproto.sizer)        = false;
-//
-//  bytes pool = 1[(gogoproto.casttype) = "Pool"];
-//}
-//
-//message QueryParametersRequest{ }
-//
-//message QueryParametersResponse{
-//  option (gogoproto.goproto_getters) = false;
-//  option (gogoproto.marshaler)        = false;
-//  option (gogoproto.sizer)        = false;
-//
-//  bytes params = 1[(gogoproto.casttype) = "Params"];
-//
-//  cosmos.query.PageResponse res = 2;
-//}
+message QueryPoolRequest{ }
+
+message QueryPoolResponse{
+  cosmos.staking.Pool pool = 1[(gogoproto.nullable) = false];
+}
+
+message QueryParametersRequest{ }
+
+message QueryParametersResponse{
+  cosmos.staking.Params params = 1[(gogoproto.nullable) = false];
+
+  cosmos.query.PageResponse res = 2;
+}

@@ -35,8 +35,9 @@ func TestGRPCQueryValidators(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	_, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
+	vals, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
 	require.Error(t, err)
+	require.Nil(t, vals)
 
 	for i, s := range status {
 		req := &types.QueryValidatorsRequest{Status: s.String(), Req: &query.PageRequest{Limit: 5}}
@@ -221,4 +222,26 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
 	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
 	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
+}
+
+func TestGRPCQueryPoolParameters(t *testing.T) {
+	_, app, ctx := createTestInput()
+	bondDenom := sdk.DefaultBondDenom
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	// Query pool
+	res, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{})
+	require.NoError(t, err)
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	require.Equal(t, app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, res.Pool.NotBondedTokens)
+	require.Equal(t, app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
+
+	// Query Params
+	resp, err := queryClient.Parameters(gocontext.Background(), &types.QueryParametersRequest{})
+	require.NoError(t, err)
+	require.Equal(t, app.StakingKeeper.GetParams(ctx), resp.Params)
 }

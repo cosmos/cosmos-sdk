@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkmaps "github.com/cosmos/cosmos-sdk/internal/maps"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
 )
 
 func TestStoreType(t *testing.T) {

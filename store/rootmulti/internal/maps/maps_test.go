@@ -39,12 +39,12 @@ func TestMerkleMap(t *testing.T) {
 		},
 	}
 	for i, tc := range tests {
-		db := NewMerkleMap()
+		db := newMerkleMap()
 		for i := 0; i < len(tc.keys); i++ {
-			db.Set(tc.keys[i], []byte(tc.values[i]))
+			db.set(tc.keys[i], []byte(tc.values[i]))
 		}
 
-		got := db.Hash()
+		got := db.hash()
 		assert.Equal(t, tc.want, fmt.Sprintf("%x", got), "Hash didn't match on tc %d", i)
 	}
 }
@@ -81,7 +81,7 @@ func TestSimpleMap(t *testing.T) {
 		},
 	}
 	for i, tc := range tests {
-		db := NewSimpleMap()
+		db := newSimpleMap()
 		for i := 0; i < len(tc.keys); i++ {
 			db.Set(tc.keys[i], []byte(tc.values[i]))
 		}

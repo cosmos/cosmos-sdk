@@ -1,4 +1,4 @@
-package tx
+package testdata
 
 import (
 	"github.com/stretchr/testify/suite"
@@ -12,12 +12,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TxGeneratorTestSuite provides a test suite that can be used to test that a TxGenerator implementation is correct
 //nolint:golint  // type name will be used as tx.TxGeneratorTestSuite by other packages, and that stutters; consider calling this GeneratorTestSuite
 type TxGeneratorTestSuite struct {
 	suite.Suite
 	TxGenerator client.TxGenerator
 }
 
+// NewTxGeneratorTestSuite returns a new TxGeneratorTestSuite with the provided TxGenerator implementation
 func NewTxGeneratorTestSuite(txGenerator client.TxGenerator) *TxGeneratorTestSuite {
 	return &TxGeneratorTestSuite{TxGenerator: txGenerator}
 }

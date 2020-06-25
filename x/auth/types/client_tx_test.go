@@ -3,9 +3,10 @@ package types_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/testdata"
+
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -21,5 +22,5 @@ func testCodec() *codec.Codec {
 func TestStdTxGenerator(t *testing.T) {
 	cdc := testCodec()
 	txGen := types.StdTxGenerator{Cdc: cdc}
-	suite.Run(t, tx.NewTxGeneratorTestSuite(txGen))
+	suite.Run(t, testdata.NewTxGeneratorTestSuite(txGen))
 }

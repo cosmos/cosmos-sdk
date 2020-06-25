@@ -35,7 +35,7 @@ func TestSingleProposal(t *testing.T) {
 	req := types.NewQueryProposalRequest(submittedProposal.ProposalID, pageReq)
 
 	proposal, err := queryClient.Proposal(gocontext.Background(), req)
-	require.NoError(t, nil)
+	require.NoError(t, err)
 	require.NotEmpty(t, proposal)
 }
 

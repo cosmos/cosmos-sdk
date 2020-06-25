@@ -13,6 +13,7 @@ import (
 
 type IntegrationTestSuite struct {
 	suite.Suite
+
 	cfg     testutil.Config
 	network *testutil.Network
 }

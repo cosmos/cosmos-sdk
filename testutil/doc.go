@@ -8,7 +8,7 @@ defined in the Cosmos SDK. An in-process test network can be configured with any
 number of validators as well as account funds and even custom genesis state.
 
 When creating a test network, a series of Validator objects are returned. Each
-Validator objects has useful information such as their address and pubkey. A
+Validator object has useful information such as their address and pubkey. A
 Validator will also provide its RPC, P2P, and API addresses that can be useful
 for integration testing. In addition, a Tendermint local RPC client is also provided
 which can be handy for making direct RPC calls to Tendermint.

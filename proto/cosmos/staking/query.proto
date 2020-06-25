@@ -16,7 +16,7 @@ service Query {
 
   rpc ValidatorDelegations (QueryValidatorRequest) returns (QueryValidatorDelegationsResponse) {}
 
-  rpc ValidatorUnbondingDelegations (QueryValidatorRequest) returns (QueryValidatorUnbondingDelegationsResponse) {}
+//  rpc ValidatorUnbondingDelegations (QueryValidatorRequest) returns (QueryValidatorUnbondingDelegationsResponse) {}
 
   rpc DelegationQ (QueryBondParamsRequest) returns (QueryDelegationResponse) {}
 
@@ -24,9 +24,9 @@ service Query {
 
   rpc DelegatorDelegations (QueryDelegatorParamsRequest) returns (QueryDelegatorDelegationsResponse) {}
 
-  rpc DelegatorUnbondingDelegations (QueryDelegatorParamsRequest) returns (QueryUnbondingDelegatorDelegationsResponse) {}
+//  rpc DelegatorUnbondingDelegations (QueryDelegatorParamsRequest) returns (QueryUnbondingDelegatorDelegationsResponse) {}
 
-  rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) { }
+//  rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) { }
 
   rpc DelegatorValidators (QueryDelegatorParamsRequest) returns (QueryDelegatorValidatorsResponse) { }
 
@@ -34,9 +34,9 @@ service Query {
 
   rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
 
-  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
+//  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
 
-  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
+//  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
 }
 
 message QueryValidatorsRequest{
@@ -68,11 +68,11 @@ message QueryValidatorDelegationsResponse{
   cosmos.query.PageResponse res = 2;
 }
 
-message QueryValidatorUnbondingDelegationsResponse{
-  repeated bytes unbonding_responses = 1  [(gogoproto.casttype) = "UnbondingDelegation"];
-
-  cosmos.query.PageResponse res = 2;
-}
+//message QueryValidatorUnbondingDelegationsResponse{
+//  repeated bytes unbonding_responses = 1  [(gogoproto.casttype) = "UnbondingDelegation"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
 
 message QueryBondParamsRequest{
   bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -102,11 +102,11 @@ message QueryDelegatorDelegationsResponse{
   cosmos.query.PageResponse res = 2;
 }
 
-message QueryUnbondingDelegatorDelegationsResponse{
-  repeated bytes unbonding_responses = 1  [(gogoproto.casttype) = "UnbondingDelegation"];
-
-  cosmos.query.PageResponse res = 2;
-}
+//message QueryUnbondingDelegatorDelegationsResponse{
+//  repeated bytes unbonding_responses = 1  [(gogoproto.casttype) = "UnbondingDelegation"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
 
 message QueryRedelegationsRequest{
   bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -118,11 +118,11 @@ message QueryRedelegationsRequest{
   cosmos.query.PageRequest req = 4;
 }
 
-message QueryRedelegationsResponse{
-  repeated bytes redelegation_responses = 1  [(gogoproto.casttype) = "RedelegationResponse"];
-
-  cosmos.query.PageResponse res = 2;
-}
+//message QueryRedelegationsResponse{
+//  repeated bytes redelegation_responses = 1  [(gogoproto.casttype) = "RedelegationResponse"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}
 
 message QueryDelegatorValidatorsResponse{
   repeated cosmos.staking.Validator validators = 1[(gogoproto.nullable) = false];
@@ -144,17 +144,17 @@ message QueryHistoricalInfoResponse{
   cosmos.staking.HistoricalInfo hist = 1;
 }
 
-message QueryPoolRequest{ }
-
-//TODO: Fix Pool and Params issues
-message QueryPoolResponse{
-  bytes pool = 1[(gogoproto.casttype) = "Pool"];
-}
-
-message QueryParametersRequest{ }
-
-message QueryParametersResponse{
-  bytes params = 1[(gogoproto.casttype) = "Params"];
-
-  cosmos.query.PageResponse res = 2;
-}
+//message QueryPoolRequest{ }
+//
+////TODO: Fix Pool and Params issues
+//message QueryPoolResponse{
+//  bytes pool = 1[(gogoproto.casttype) = "Pool"];
+//}
+//
+//message QueryParametersRequest{ }
+//
+//message QueryParametersResponse{
+//  bytes params = 1[(gogoproto.casttype) = "Params"];
+//
+//  cosmos.query.PageResponse res = 2;
+//}

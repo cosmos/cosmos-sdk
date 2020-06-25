@@ -105,34 +105,34 @@ func (q Keeper) Votes(c context.Context, req *types.QueryProposalRequest) (*type
 	return &types.QueryVotesResponse{Votes: votes, Res: res}, nil
 }
 
-// // Params queries all params
-// func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-// 	if req == nil {
-// 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-// 	}
+// Params queries all params
+func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
 
-// 	ctx := sdk.UnwrapSDKContext(c)
+	ctx := sdk.UnwrapSDKContext(c)
 
-// 	switch req.ParamsType {
-// 	case types.ParamDeposit:
-// 		depositParmas := q.GetDepositParams(ctx)
+	switch req.ParamsType {
+	case types.ParamDeposit:
+		depositParmas := q.GetDepositParams(ctx)
 
-// 		return &types.QueryParamsResponse{DepositParams: depositParmas}, nil
+		return &types.QueryParamsResponse{DepositParams: depositParmas}, nil
 
-// 	case types.ParamVoting:
-// 		votingParmas := q.GetVotingParams(ctx)
+	case types.ParamVoting:
+		votingParmas := q.GetVotingParams(ctx)
 
-// 		return &types.QueryParamsResponse{VotingParams: votingParmas}, nil
+		return &types.QueryParamsResponse{VotingParams: votingParmas}, nil
 
-// 	case types.ParamTallying:
-// 		tallyParams := q.GetTallyParams(ctx)
+	case types.ParamTallying:
+		tallyParams := q.GetTallyParams(ctx)
 
-// 		return &types.QueryParamsResponse{TallyParams: tallyParams}, nil
+		return &types.QueryParamsResponse{TallyParams: tallyParams}, nil
 
-// 	default:
-// 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "%s is not a valid query request path", req.ParamsType)
-// 	}
-// }
+	default:
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "%s is not a valid query request path", req.ParamsType)
+	}
+}
 
 // Deposit queries single deposit information based proposalID, depositAddr
 func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {

@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -159,4 +160,27 @@ message Vote {
   uint64     proposal_id = 1 [(gogoproto.customname) = "ProposalID", (gogoproto.moretags) = "yaml:\"proposal_id\""];
   bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   VoteOption option      = 3;
+}
+
+message DepositParams {
+  repeated cosmos.Coin min_deposit = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  google.protobuf.Duration max_deposit_period = 2 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"max_deposit_period\""
+  ];
+}
+
+message VotingParams {
+  google.protobuf.Duration voting_period = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"voting_period\""
+  ];
+}
+
+message TallyParams {
+  bytes quorum = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  bytes threshold = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  bytes veto = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

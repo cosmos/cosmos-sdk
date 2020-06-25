@@ -10,7 +10,7 @@ number of validators as well as account funds and even custom genesis state.
 When creating a test network, a series of Validator objects are returned. Each
 Validator objects has useful information such as their address and pubkey. A
 Validator will also provide its RPC, P2P, and API addresses that can be useful
-for integration testing. In addition, a Tendermint local RPC client also provided
+for integration testing. In addition, a Tendermint local RPC client is also provided
 which can be handy for making direct RPC calls to Tendermint.
 
 Note, due to limitations in concurrency and the design of the RPC layer in

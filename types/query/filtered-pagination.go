@@ -16,7 +16,7 @@ func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsPara
 		var p types.Proposal
 		err := app.Codec().UnmarshalBinaryBare(value, &p)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		matchVoter, matchDepositor, matchStatus := true, true, true

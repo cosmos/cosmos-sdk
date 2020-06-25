@@ -14,7 +14,7 @@ for integration testing. In addition, a Tendermint local RPC client also provide
 which can be handy for making direct RPC calls to Tendermint.
 
 Note, due to limitations in concurrency and the design of the RPC layer in
-Tendermint, only the first Validator objects will have an RPC and API client
+Tendermint, only the first Validator object will have an RPC and API client
 exposed. Due to this exact same limitation, only a single test network can exist
 at a time. A caller must be certain it calls Cleanup after it no longer needs
 the network.

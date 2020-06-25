@@ -75,8 +75,9 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 			doc.Validators = validators
 			doc.ConsensusParams = &tmtypes.ConsensusParams{
 				Block: tmtypes.BlockParams{
-					MaxBytes: cp.Block.MaxBytes,
-					MaxGas:   cp.Block.MaxGas,
+					MaxBytes:   cp.Block.MaxBytes,
+					MaxGas:     cp.Block.MaxGas,
+					TimeIotaMs: doc.ConsensusParams.Block.TimeIotaMs,
 				},
 				Evidence: tmtypes.EvidenceParams{
 					MaxAgeNumBlocks: cp.Evidence.MaxAgeNumBlocks,

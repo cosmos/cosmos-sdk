@@ -39,7 +39,7 @@ const (
 
 	ConnectionVersion = "1.0.0"
 	ChannelVersion    = "ics20-1"
-	InvalidID         = "invalidid"
+	InvalidID         = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
 

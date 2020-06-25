@@ -42,9 +42,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			suite.Require().NotNil(connB)
 		}, false},
 		{"connection is UNINITIALIZED", func() {
-			// any non-nil values of connA and connB are acceptable
-			suite.Require().NotNil(connA)
-			suite.Require().NotNil(connB)
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 			channelA := connA.FirstOrNextTestChannel()
 			channelB := connB.FirstOrNextTestChannel()
 

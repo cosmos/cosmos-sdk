@@ -10,15 +10,15 @@ import (
 	"github.com/tendermint/tendermint/libs/kv"
 )
 
-// MerkleMap defines a merkle-ized tree from a map. Leave values are treated as
+// merkleMap defines a merkle-ized tree from a map. Leave values are treated as
 // hash(key) | hash(value). Leaves are sorted before Merkle hashing.
-type MerkleMap struct {
+type merkleMap struct {
 	kvs    kv.Pairs
 	sorted bool
 }
 
-func NewMerkleMap() *MerkleMap {
-	return &MerkleMap{
+func NewMerkleMap() *merkleMap {
+	return &merkleMap{
 		kvs:    nil,
 		sorted: false,
 	}
@@ -27,7 +27,7 @@ func NewMerkleMap() *MerkleMap {
 // Set creates a kv.Pair from the provided key and value. The value is hashed prior
 // to creating a kv.Pair. The created kv.Pair is appended to the MerkleMap's slice
 // of kv.Pairs. Whenever called, the MerkleMap must be resorted.
-func (sm *MerkleMap) Set(key string, value []byte) {
+func (sm *merkleMap) Set(key string, value []byte) {
 	sm.sorted = false
 
 	// The value is hashed, so you can check for equality with a cached value (say)
@@ -41,12 +41,12 @@ func (sm *MerkleMap) Set(key string, value []byte) {
 }
 
 // Hash returns the merkle root of items sorted by key. Note, it is unstable.
-func (sm *MerkleMap) Hash() []byte {
+func (sm *merkleMap) Hash() []byte {
 	sm.sort()
 	return hashKVPairs(sm.kvs)
 }
 
-func (sm *MerkleMap) sort() {
+func (sm *merkleMap) sort() {
 	if sm.sorted {
 		return
 	}

@@ -13,8 +13,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdkmaps "github.com/cosmos/cosmos-sdk/internal/maps"
-	sdkproofs "github.com/cosmos/cosmos-sdk/internal/proofs"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
+	sdkproofs "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/proofs"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"

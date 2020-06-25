@@ -53,6 +53,9 @@ func (po PruningOptions) Validate() error {
 	if po.KeepEvery == 1 && po.Interval != 0 { // prune nothing
 		return fmt.Errorf("invalid 'Interval' when pruning nothing: %d", po.Interval)
 	}
+	if po.KeepEvery > 1 && po.Interval == 0 {
+		return fmt.Errorf("invalid 'Interval' when pruning: %d", po.Interval)
+	}
 
 	return nil
 }

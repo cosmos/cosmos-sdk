@@ -23,6 +23,7 @@ func TestPruningOptions_Validate(t *testing.T) {
 
 	for _, tc := range testCases {
 		po := NewPruningOptions(tc.keepRecent, tc.keepEvery, tc.interval)
-		require.Equal(t, tc.expectErr, po.Validate() != nil, po)
+		err := po.Validate()
+		require.Equal(t, tc.expectErr, err != nil, "options: %v, err: %s", po, err)
 	}
 }

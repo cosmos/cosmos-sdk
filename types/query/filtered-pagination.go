@@ -118,22 +118,20 @@ func FilteredPaginate(
 	end := offset + limit
 
 	var count uint64
-	var numHits uint64
 	var nextKey []byte
 
 	for ; iterator.Valid(); iterator.Next() {
-		count++
+		isValid := count >= offset && count < end
+		hit, err := onResult(iterator.Key(), iterator.Value(), isValid)
+		if err != nil {
+			return nil, err
+		}
 
-		if numHits <= end {
-			hit, err := onResult(iterator.Key(), iterator.Value(), numHits > offset)
-			if err != nil {
-				return nil, err
-			}
+		if hit {
+			count++
+		}
 
-			if hit {
-				numHits++
-			}
-		} else if !countTotal {
+		if count == end && !countTotal {
 			nextKey = iterator.Key()
 			break
 		}

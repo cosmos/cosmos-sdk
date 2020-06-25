@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -191,7 +191,7 @@ func AddFlags(cmd string, flags []string) string {
 	return strings.TrimSpace(cmd)
 }
 
-func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx auth.StdTx) {
+func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx authtypes.StdTx) {
 	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
 	return
 }
@@ -200,7 +200,7 @@ func buildEventsQueryString(events []string) string {
 	return strings.Join(events, "&")
 }
 
-func MarshalStdTx(t require.TestingT, c *codec.Codec, stdTx auth.StdTx) []byte {
+func MarshalStdTx(t require.TestingT, c *codec.Codec, stdTx authtypes.StdTx) []byte {
 	bz, err := c.MarshalBinaryBare(stdTx)
 	require.NoError(t, err)
 

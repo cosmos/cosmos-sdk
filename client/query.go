@@ -99,7 +99,7 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 	}
 
 	// data from trusted node or subspace query doesn't need verification
-	if ctx.TrustNode || !isQueryStoreWithProof(req.Path) {
+	if !opts.Prove || !isQueryStoreWithProof(req.Path) {
 		return result.Response, nil
 	}
 

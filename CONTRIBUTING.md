@@ -146,6 +146,21 @@ For linting and checking breaking changes, we use [buf](https://buf.build/). The
 
 To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make protoc` & `make protoc-gen-gocosmos`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
 
+In order for imports to properly compile in your IDE, you may need to manually set your protobuf path in your IDE's workspace settings/config.
+
+For example, in vscode your `.vscode/settings.json` should look like:
+
+```
+{
+    "protoc": {
+        "options": [
+        "--proto_path=${workspaceRoot}/proto",
+        "--proto_path=${workspaceRoot}/third_party/proto"
+        ]
+    }
+}
+```
+
 ## Testing
 
 All repos should be hooked up to [CircleCI](https://circleci.com/).

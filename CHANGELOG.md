@@ -63,6 +63,7 @@ older clients.
 
 ### API Breaking Changes
 
+* (x/staking) [\#6451](https://github.com/cosmos/cosmos-sdk/pull/6451) `DefaultParamspace` and `ParamKeyTable` in staking module are moved from keeper to types to enforce consistency.
 * [\#6409](https://github.com/cosmos/cosmos-sdk/pull/6409) Rename all IsEmpty methods to Empty across the codebase and enforce consistency.
 * [\#6231](https://github.com/cosmos/cosmos-sdk/pull/6231) Simplify `AppModule` interface, `Route` and `NewHandler` methods become only `Route`
 and returns a new `Route` type.
@@ -122,6 +123,8 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
 * (modules) [\#6326](https://github.com/cosmos/cosmos-sdk/pull/6326) `AppModuleBasic.GetQueryCmd` now takes a single `CLIContext` parameter.
 * (modules) [\#6336](https://github.com/cosmos/cosmos-sdk/pull/6336) `AppModuleBasic.RegisterQueryService` method was added to support gRPC queries, and `QuerierRoute` and `NewQuerierHandler` were deprecated.
 * (modules) [\#6311](https://github.com/cosmos/cosmos-sdk/issues/6311) Remove `alias.go` usage
+* (x/auth) [\#6443](https://github.com/cosmos/cosmos-sdk/issues/6443) Move `FeeTx` and `TxWithMemo` interfaces from `x/auth/ante` to `types`.
+* (modules) [\#6447](https://github.com/cosmos/cosmos-sdk/issues/6447) Rename `blacklistedAddrs` to `blockedAddrs`.
   
   Migration guide:
 
@@ -297,6 +300,7 @@ pagination.
 * (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add `String()` method to `GasMeter`.
 * (types) [\#6195](https://github.com/cosmos/cosmos-sdk/pull/6195) Add codespace to broadcast(sync/async) response.
 * (baseapp) [\#6053](https://github.com/cosmos/cosmos-sdk/pull/6053) Customizable panic recovery handling added for `app.runTx()` method (as proposed in the [ADR 22](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-022-custom-panic-handling.md)). Adds ability for developers to register custom panic handlers extending standard ones.
+* (store) [\#6481](https://github.com/cosmos/cosmos-sdk/pull/6481) Move `SimpleProofsFromMap` from Tendermint into the SDK.
 
 ## [v0.38.4] - 2020-05-21
 

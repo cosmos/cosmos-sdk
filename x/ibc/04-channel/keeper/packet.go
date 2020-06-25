@@ -201,6 +201,17 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	// check if the packet acknowledgement has been received already for unordered channels
+	if channel.Ordering == types.UNORDERED {
+		_, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+		if found {
+			return nil, sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence (%d) already has been received", packet.GetSequence(),
+			)
+		}
+	}
+
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
@@ -245,13 +256,6 @@ func (k Keeper) PacketExecuted(
 	}
 
 	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
-		if _, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()); found {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidPacket,
-				"packet sequence (%d) already has been received", packet.GetSequence(),
-			)
-		}
-
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),

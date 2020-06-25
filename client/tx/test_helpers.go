@@ -5,6 +5,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -21,14 +23,14 @@ func NewTxGeneratorTestSuite(txGenerator client.TxGenerator) *TxGeneratorTestSui
 	return &TxGeneratorTestSuite{TxGenerator: txGenerator}
 }
 
-func (s *TxGeneratorTestSuite) TestTxBuilder_GetTx() {
+func (s *TxGeneratorTestSuite) TestTxBuilderGetTx() {
 	stdTxBuilder := s.TxGenerator.NewTxBuilder()
 	tx := stdTxBuilder.GetTx()
 	s.Require().NotNil(tx)
 	s.Require().Equal(len(tx.GetMsgs()), 0)
 }
 
-func (s *TxGeneratorTestSuite) TestTxBuilder_SetFeeAmount() {
+func (s *TxGeneratorTestSuite) TestTxBuilderSetFeeAmount() {
 	stdTxBuilder := s.TxGenerator.NewTxBuilder()
 	feeAmount := sdk.Coins{
 		sdk.NewInt64Coin("atom", 20000000),
@@ -38,7 +40,7 @@ func (s *TxGeneratorTestSuite) TestTxBuilder_SetFeeAmount() {
 	s.Require().Equal(feeAmount, feeTx.GetFee())
 }
 
-func (s *TxGeneratorTestSuite) TestTxBuilder_SetGasLimit() {
+func (s *TxGeneratorTestSuite) TestTxBuilderSetGasLimit() {
 	const newGas uint64 = 300000
 	stdTxBuilder := s.TxGenerator.NewTxBuilder()
 	stdTxBuilder.SetGasLimit(newGas)
@@ -46,7 +48,7 @@ func (s *TxGeneratorTestSuite) TestTxBuilder_SetGasLimit() {
 	s.Require().Equal(newGas, feeTx.GetGas())
 }
 
-func (s *TxGeneratorTestSuite) TestTxBuilder_SetMemo() {
+func (s *TxGeneratorTestSuite) TestTxBuilderSetMemo() {
 	const newMemo string = "newfoomemo"
 	stdTxBuilder := s.TxGenerator.NewTxBuilder()
 	stdTxBuilder.SetMemo(newMemo)
@@ -54,7 +56,7 @@ func (s *TxGeneratorTestSuite) TestTxBuilder_SetMemo() {
 	s.Require().Equal(txWithMemo.GetMemo(), newMemo)
 }
 
-func (s *TxGeneratorTestSuite) TestTxBuilder_SetMsgs() {
+func (s *TxGeneratorTestSuite) TestTxBuilderSetMsgs() {
 	stdTxBuilder := s.TxGenerator.NewTxBuilder()
 	tx := stdTxBuilder.GetTx()
 	err := stdTxBuilder.SetMsgs(sdk.NewTestMsg(), sdk.NewTestMsg())
@@ -69,7 +71,7 @@ type HasSignaturesTx interface {
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
 }
 
-func (s *TxGeneratorTestSuite) TestTxBuilder_SetSignatures() {
+func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 	priv := secp256k1.GenPrivKey()
 
 	stdTxBuilder := s.TxGenerator.NewTxBuilder()
@@ -87,4 +89,19 @@ func (s *TxGeneratorTestSuite) TestTxBuilder_SetSignatures() {
 	s.Require().NoError(err)
 	s.Require().NotEqual(tx, stdTxBuilder.GetTx())
 	s.Require().Equal(sigTx.GetSignatures()[0], priv.PubKey().Bytes())
+}
+
+func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
+	// Build a test transaction
+	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	stdTx := types.NewStdTx([]sdk.Msg{nil}, fee, []types.StdSignature{}, "foomemo")
+
+	// Encode transaction
+	txBytes, err := s.TxGenerator.TxEncoder()(stdTx)
+	s.Require().NoError(err)
+	s.Require().NotNil(txBytes)
+
+	tx, err := s.TxGenerator.TxDecoder()(txBytes)
+	s.Require().NoError(err)
+	s.Require().Equal([]sdk.Msg{nil}, tx.GetMsgs())
 }

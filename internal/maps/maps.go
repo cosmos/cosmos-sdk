@@ -203,11 +203,12 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 // SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
 // in the underlying key-value pairs.
 // The keys are sorted before the proofs are computed.
-func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[string]*merkle.SimpleProof, keys []string) {
+func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.SimpleProof, []string) {
 	sm := NewSimpleMap()
 	for k, v := range m {
 		sm.Set(k, v)
 	}
+
 	sm.Sort()
 	kvs := sm.Kvs
 	kvsBytes := make([][]byte, len(kvs))
@@ -216,11 +217,12 @@ func SimpleProofsFromMap(m map[string][]byte) (rootHash []byte, proofs map[strin
 	}
 
 	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
-	proofs = make(map[string]*merkle.SimpleProof)
-	keys = make([]string, len(proofList))
+	proofs := make(map[string]*merkle.SimpleProof)
+	keys := make([]string, len(proofList))
 	for i, kvp := range kvs {
 		proofs[string(kvp.Key)] = proofList[i]
 		keys[i] = string(kvp.Key)
 	}
-	return
+
+	return rootHash, proofs, keys
 }

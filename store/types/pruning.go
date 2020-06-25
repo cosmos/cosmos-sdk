@@ -47,11 +47,14 @@ func NewPruningOptions(keepRecent, keepEvery, interval uint64) PruningOptions {
 }
 
 func (po PruningOptions) Validate() error {
-	if po.KeepRecent == 0 && po.KeepEvery == 0 && po.Interval == 0 { // prune everything
+	if po.KeepEvery == 0 && po.Interval == 0 {
 		return fmt.Errorf("invalid 'Interval' when pruning everything: %d", po.Interval)
 	}
-	if po.KeepRecent == 0 && po.KeepEvery == 1 && po.Interval != 0 { // prune nothing
+	if po.KeepEvery == 1 && po.Interval != 0 { // prune nothing
 		return fmt.Errorf("invalid 'Interval' when pruning nothing: %d", po.Interval)
+	}
+	if po.KeepEvery > 1 && po.Interval == 0 {
+		return fmt.Errorf("invalid 'Interval' when pruning: %d", po.Interval)
 	}
 
 	return nil

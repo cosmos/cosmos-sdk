@@ -88,7 +88,8 @@ type (
 	// Note, due to Tendermint constraints in regards to RPC functionality, there
 	// may only be one test network running at a time. Thus, any caller must be
 	// sure to Cleanup after testing is finished in order to allow other tests
-	// to create networks.
+	// to create networks. In addition, only the first validator will have a valid
+	// RPC and API server/client.
 	Network struct {
 		T          *testing.T
 		BaseDir    string

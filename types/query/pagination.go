@@ -78,9 +78,12 @@ func Paginate(
 			if err != nil {
 				return nil, err
 			}
-		} else if !countTotal {
+		} else if count == end + 1 {
 			nextKey = iterator.Key()
-			break
+
+			if !countTotal {
+				break
+			}
 		}
 	}
 

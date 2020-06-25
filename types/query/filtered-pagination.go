@@ -6,10 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// defaultLimit is the default `limit` for queries
-// if the `limit` is not supplied, FilteredPaginate will use `defaultLimit`
-const defaultLimit = 100
-
 // Example Code
 /*
 func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {

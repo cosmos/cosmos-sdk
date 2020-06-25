@@ -59,7 +59,7 @@ func TestPagination(t *testing.T) {
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Res.Total, uint64(numBalances))
-	require.Nil(t, res.Res.NextKey)
+	require.NotNil(t, res.Res.NextKey)
 	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 
 	t.Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
@@ -77,7 +77,7 @@ func TestPagination(t *testing.T) {
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Balances.Len(), underLimit)
-	require.Nil(t, res.Res.NextKey)
+	require.NotNil(t, res.Res.NextKey)
 	require.Equal(t, res.Res.Total, uint64(numBalances))
 
 	t.Log("verify paginate with custom limit and countTotal false")
@@ -181,7 +181,7 @@ func ExamplePaginate() {
 	}
 	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
 	// Output:
-	// balances:<denom:"foo0denom" amount:"100" > res:<total:2 >
+	// balances:<denom:"foo0denom" amount:"100" > res:<next_key:"foo1denom" total:2 >
 }
 
 func setupTest() (*simapp.SimApp, sdk.Context) {

@@ -230,7 +230,8 @@ func FilterEvents(events []abci.Event, filter []string) []abci.Event {
 		for _, attr := range event.Attributes {
 			composite := fmt.Sprintf("%s.%s", event.Type, attr.Key)
 			if tmstrings.StringInSlice(composite, filter) {
-				fe.Attributes = append(fe.Attributes, attr)
+				// TODO: Set Index: true
+				fe.Attributes = append(fe.Attributes, tmkv.Pair{Key: attr.Key, Value: attr.Value})
 			}
 		}
 

@@ -44,6 +44,11 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
+// SetIndexEvents provides a BaseApp option function that sets the events to index.
+func SetIndexEvents(ie []string) func(*BaseApp) {
+	return func(app *BaseApp) { app.setIndexEvents(ie) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

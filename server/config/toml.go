@@ -47,6 +47,10 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
+# A set of events, {eventType}.{attributeKey}, to inform Tendermint to index.
+# If empty, all events will be indexed.
+index-events = {{ .BaseConfig.IndexEvents }}
+
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################

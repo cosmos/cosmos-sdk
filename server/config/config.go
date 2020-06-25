@@ -42,6 +42,10 @@ type BaseConfig struct {
 
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
+
+	// A set of events, {eventType}.{attributeKey}, to inform Tendermint to index.
+	// If empty, all events will be indexed.
+	IndexEvents []string `mapstructure:"index-events"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -121,6 +125,7 @@ func DefaultConfig() *Config {
 			PruningKeepRecent: "0",
 			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
+			IndexEvents:       make([]string, 0),
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -158,6 +163,7 @@ func GetConfig() Config {
 			PruningInterval:   viper.GetString("pruning-interval"),
 			HaltHeight:        viper.GetUint64("halt-height"),
 			HaltTime:          viper.GetUint64("halt-time"),
+			IndexEvents:       viper.GetStringSlice("index-events"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             viper.GetString("telemetry.service-name"),

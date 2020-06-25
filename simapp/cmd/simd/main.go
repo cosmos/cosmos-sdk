@@ -88,7 +88,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Applicati
 		panic(err)
 	}
 
-	// TODO: Make sure custom pruning works.
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		viper.GetString(flags.FlagHome), invCheckPeriod,
@@ -97,6 +96,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Applicati
 		baseapp.SetHaltHeight(viper.GetUint64(server.FlagHaltHeight)),
 		baseapp.SetHaltTime(viper.GetUint64(server.FlagHaltTime)),
 		baseapp.SetInterBlockCache(cache),
+		baseapp.SetIndexEvents(viper.GetStringSlice(server.FlagIndexEvents)),
 	)
 }
 

@@ -94,6 +94,10 @@ type BaseApp struct { // nolint: maligned
 	// application's version string
 	appVersion string
 
+	// A set of events, {eventType}.{attributeKey}, to inform Tendermint to index.
+	// If empty, all events will be indexed.
+	indexEvents []string
+
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
 }
@@ -275,6 +279,10 @@ func (app *BaseApp) setHaltTime(haltTime uint64) {
 
 func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 	app.interBlockCache = cache
+}
+
+func (app *BaseApp) setIndexEvents(ie []string) {
+	app.indexEvents = ie
 }
 
 // Router returns the router of the BaseApp.

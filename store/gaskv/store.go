@@ -3,6 +3,8 @@ package gaskv
 import (
 	"io"
 
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
@@ -113,6 +115,8 @@ func (gs *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	return gi
 }
 
+var _ dbm.Iterator = (*gasIterator)(nil)
+
 type gasIterator struct {
 	gasMeter  types.GasMeter
 	gasConfig types.GasConfig
@@ -163,8 +167,8 @@ func (gi *gasIterator) Value() (value []byte) {
 }
 
 // Implements Iterator.
-func (gi *gasIterator) Close() {
-	gi.parent.Close()
+func (gi *gasIterator) Close() error {
+	return gi.parent.Close()
 }
 
 // Error delegates the Error call to the parent iterator.

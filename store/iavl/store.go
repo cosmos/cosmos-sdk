@@ -437,11 +437,12 @@ func (iter *iavlIterator) Value() []byte {
 
 // Close closes the IAVL iterator by closing the quit channel and waiting for
 // the iterCh to finish/close.
-func (iter *iavlIterator) Close() {
+func (iter *iavlIterator) Close() error {
 	close(iter.quitCh)
 	// wait iterCh to close
 	for range iter.iterCh {
 	}
+	return nil
 }
 
 // Error performs a no-op.

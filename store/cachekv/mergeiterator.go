@@ -3,6 +3,7 @@ package cachekv
 import (
 	"bytes"
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -151,9 +152,16 @@ func (iter *cacheMergeIterator) Value() []byte {
 }
 
 // Close implements Iterator
-func (iter *cacheMergeIterator) Close() {
-	iter.parent.Close()
-	iter.cache.Close()
+func (iter *cacheMergeIterator) Close() error {
+	if err := iter.parent.Close(); err != nil {
+		return fmt.Errorf("failed to close parent iterator: %w", err)
+	}
+
+	if err := iter.cache.Close(); err != nil {
+		return fmt.Errorf("failed to close cache iterator: %w", err)
+	}
+
+	return nil
 }
 
 // Error returns an error if the cacheMergeIterator is invalid defined by the

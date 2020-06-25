@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	dbm "github.com/tendermint/tm-db"
@@ -85,13 +84,8 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 }
 
 // NewLevelDB instantiate a new LevelDB instance according to DBBackend.
-func NewLevelDB(name, dir string) (db dbm.DB, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("couldn't create db: %v", r)
-		}
-	}()
-	return dbm.NewDB(name, backend, dir), err
+func NewLevelDB(name, dir string) (dbm.DB, error) {
+	return dbm.NewDB(name, backend, dir)
 }
 
 // copy bytes

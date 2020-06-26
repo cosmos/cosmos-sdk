@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -50,9 +51,9 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 			}
 
 			denom := viper.GetString(flagDenom)
-
+			pageReq := &query.PageRequest{}
 			if denom == "" {
-				params := types.NewQueryAllBalancesRequest(addr)
+				params := types.NewQueryAllBalancesRequest(addr, pageReq)
 				res, err := queryClient.AllBalances(context.Background(), params)
 				if err != nil {
 					return err
@@ -71,7 +72,6 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagDenom, "", "The specific balance denomination to query for")
-
 	return flags.GetCommands(cmd)[0]
 }
 

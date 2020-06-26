@@ -114,7 +114,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	txBytes, err := clientCtx.TxGenerator.MarshalTx(tx.GetTx())
+	txBytes, err := clientCtx.TxGenerator.TxEncoder()(tx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -244,7 +244,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return txf.txGenerator.MarshalTx(tx.GetTx())
+	return txf.txGenerator.TxEncoder()(tx.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the

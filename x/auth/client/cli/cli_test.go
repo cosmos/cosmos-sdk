@@ -3,7 +3,6 @@
 package cli_test
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
@@ -15,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
@@ -298,18 +296,13 @@ func TestCLIEncode(t *testing.T) {
 	jsonTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
-	// Run the encode command, and trim the extras from the stdout capture
+	// Run the encode command
 	success, base64Encoded, _ := testutil.TxEncode(f, jsonTxFile.Name())
 	require.True(t, success)
 	trimmedBase64 := strings.Trim(base64Encoded, "\"\n")
-
-	// Decode the base64
-	decodedBytes, err := base64.StdEncoding.DecodeString(trimmedBase64)
-	require.Nil(t, err)
-
-	// Check that the transaction decodes as epxceted
-	var decodedTx types.StdTx
-	require.Nil(t, f.Cdc.UnmarshalBinaryBare(decodedBytes, &decodedTx))
+	// Check that the transaction decodes as expected
+	success, stdout, stderr = testutil.TxDecode(f, trimmedBase64)
+	decodedTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }
 

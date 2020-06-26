@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.bank;
 
+import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/cosmos.proto";
 
@@ -41,16 +42,20 @@ message QueryBalanceResponse {
 message QueryAllBalancesRequest {
     // address is the address to query balances for
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+
+    cosmos.query.PageRequest req = 2;
 }
 
 // QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method
 message QueryAllBalancesResponse {
     // balances is the balances of the coins
     repeated cosmos.Coin balances = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+    cosmos.query.PageResponse res = 2;
 }
 
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method
-message QueryTotalSupplyRequest { }
+message QueryTotalSupplyRequest {}
 
 // QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method
 message QueryTotalSupplyResponse {

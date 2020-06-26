@@ -426,15 +426,15 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
 			suite.Require().NoError(err)
 		}, false},
-		{"packet source port ≠ channel counterparty port", func() {
+		{"packet destination port ≠ channel counterparty port", func() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong port for dest
-			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, ibctesting.InvalidID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
-		{"packet source channel ID ≠ channel counterparty channel ID", func() {
+		{"packet destination channel ID ≠ channel counterparty channel ID", func() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			// use wrong channel for dest
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, ibctesting.InvalidID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"connection not found", func() {
 			channelA := ibctesting.TestChannel{PortID: portID, ID: channelIDA}

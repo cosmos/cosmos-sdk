@@ -103,16 +103,8 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := simapp.SetupWithGenesisValSet(valSet, []authtypes.GenesisAccount{acc}, balance)
-	//ctx := app.BaseApp.NewContext(false,
-	//	abci.Header{
-	//		Height: 1,
-	//		Time:   globalStartTime,
-	//	},
-	//)
+	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
 
-	// commit init chain changes so create client can be called by a counterparty chain
-	// app.Commit()
 	// create current header and call begin block
 	header := abci.Header{
 		Height: 1,
@@ -179,7 +171,9 @@ func (chain *TestChain) NextBlock() {
 	chain.CurrentHeader = abci.Header{
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
-		Time:    chain.CurrentHeader.Time,
+		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
+		// chains.
+		Time: chain.CurrentHeader.Time,
 	}
 
 	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})

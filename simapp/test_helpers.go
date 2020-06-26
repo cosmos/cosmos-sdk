@@ -73,7 +73,7 @@ func Setup(isCheckTx bool) *SimApp {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
 // account. A Nop logger is set in SimApp.
-func SetupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
 
@@ -122,9 +122,7 @@ func SetupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []authtypes.Ge
 	genesisState[banktypes.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(

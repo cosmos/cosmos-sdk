@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	flagDenom = "denom"
+	FlagDenom = "denom"
 )
 
 // GetQueryCmd returns the parent command for all x/bank CLi query commands. The
@@ -50,7 +50,7 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			denom, err := cmd.Flags().GetString(flagDenom)
+			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
 			}
@@ -85,7 +85,7 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagDenom, "", "The specific balance denomination to query for")
+	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	return flags.GetCommands(cmd)[0]
 }
 

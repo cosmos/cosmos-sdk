@@ -30,10 +30,3 @@ type (
 	GasMeter         = types.GasMeter
 	GasConfig        = types.GasConfig
 )
-
-// nolint - reexport
-var (
-	PruneNothing    = types.PruneNothing
-	PruneEverything = types.PruneEverything
-	PruneSyncable   = types.PruneSyncable
-)

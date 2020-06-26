@@ -24,8 +24,9 @@ type SendKeeper interface {
 	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
 	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
 
-	GetSendEnabled(ctx sdk.Context) bool
-	SetSendEnabled(ctx sdk.Context, enabled bool)
+	GetAllSendEnabled(ctx sdk.Context) types.SendEnabledParams
+	GetSendEnabled(ctx sdk.Context, denom string) bool
+	SetSendEnabled(ctx sdk.Context, denom string, enabled bool)
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -255,16 +256,30 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	return nil
 }
 
+// GetAllSendEnabled returns all of the send enabled configurations
+func (k BaseSendKeeper) GetAllSendEnabled(ctx sdk.Context) types.SendEnabledParams {
+	var sendEnabledParams types.SendEnabledParams
+	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
+
+	return sendEnabledParams
+}
+
 // GetSendEnabled returns the current SendEnabled
-func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
-	var enabled bool
-	k.paramSpace.Get(ctx, types.ParamStoreKeySendEnabled, &enabled)
-	return enabled
+func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context, denom string) bool {
+	sendEnabledParams types.SendEnabledParams
+	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
+
+	return sendEnabledParams.Enabled(denom)
 }
 
 // SetSendEnabled sets the send enabled
-func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
-	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
+func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, enabled bool) {
+	var sendEnabledParams types.SendEnabledParams
+	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
+
+	sendEnabledParams = sendEnabledParams.SetSendEnabledParam(denom, enabled)
+
+	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
 }
 
 // BlockedAddr checks if a given address is restricted from

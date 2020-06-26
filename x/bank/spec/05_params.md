@@ -6,7 +6,7 @@ order: 5
 
 The bank module contains the following parameters:
 
-| Key         | Type | Example |
-|-------------|------|---------|
-| sendenabled | bool | true    |
+| Key                 | Type               | Example                                |
+|---------------------|--------------------|----------------------------------------|
+| send_enabled_params | []SendEnabledParam | [{Denom: "stake", SendEnabled: true }] |
 

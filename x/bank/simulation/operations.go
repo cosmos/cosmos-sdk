@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -59,12 +60,14 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "transfers are not enabled"), nil, nil
-		}
-
 		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+
+		// Check send_enabled status of each coin denom
+		for _, c := range coins {
+			if !bk.GetSendEnabled(ctx, c.Denom) {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, fmt.Sprintf("%s transfers are currently disabled", c.Denom)), nil, nil
+			}
+		}
 
 		if skip {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "skip all transfers"), nil, nil
@@ -130,13 +133,18 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "transfers are not enabled"), nil, nil
-		}
-
 		// random number of inputs/outputs between [1, 3]
 		inputs := make([]types.Input, r.Intn(3)+1)
 		outputs := make([]types.Output, r.Intn(3)+1)
+
+		// Check send_enabled status of each input's coin denoms
+		for _, i := range inputs {
+			for _, c := range i.Coins {
+				if !bk.GetSendEnabled(ctx, c.Denom) {
+					return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, fmt.Sprintf("%s transfers are currently disabled", c.Denom)), nil, nil
+				}
+			}
+		}
 
 		// collect signer privKeys
 		privs := make([]crypto.PrivKey, len(inputs))

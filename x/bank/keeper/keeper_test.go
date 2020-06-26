@@ -69,7 +69,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	app.BankKeeper.SetSendEnabled(ctx, true)
+	app.BankKeeper.SetSendEnabled(ctx, "", true)
 
 	suite.app = app
 	suite.ctx = ctx
@@ -455,8 +455,8 @@ func (suite *IntegrationTestSuite) TestBalance() {
 func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app, ctx := suite.app, suite.ctx
 	enabled := false
-	app.BankKeeper.SetSendEnabled(ctx, enabled)
-	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx))
+	app.BankKeeper.SetSendEnabled(ctx, "", enabled)
+	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, ""))
 }
 
 func (suite *IntegrationTestSuite) TestHasBalance() {
@@ -527,7 +527,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	app, ctx := suite.app, suite.ctx
 
-	app.BankKeeper.SetSendEnabled(ctx, true)
+	app.BankKeeper.SetSendEnabled(ctx, "", true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))

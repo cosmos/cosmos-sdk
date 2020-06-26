@@ -30,8 +30,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.Result, error) {
-	if !k.GetSendEnabled(ctx) {
-		return nil, types.ErrSendDisabled
+	for _, a := range msg.Amount {
+		if !k.GetSendEnabled(ctx, a.Denom) {
+			return nil, sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", a.Denom)
+		}
 	}
 
 	if k.BlockedAddr(msg.ToAddress) {
@@ -66,8 +68,12 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 // Handle MsgMultiSend.
 func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgMultiSend) (*sdk.Result, error) {
 	// NOTE: totalIn == totalOut should already have been checked
-	if !k.GetSendEnabled(ctx) {
-		return nil, types.ErrSendDisabled
+	for _, in := range msg.Inputs {
+		for _, a := range in.Coins {
+			if !k.GetSendEnabled(ctx, a.Denom) {
+				return nil, sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", a.Denom)
+			}
+		}
 	}
 
 	for _, out := range msg.Outputs {

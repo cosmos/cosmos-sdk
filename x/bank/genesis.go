@@ -10,7 +10,9 @@ import (
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, genState types.GenesisState) {
-	keeper.SetSendEnabled(ctx, genState.SendEnabled)
+	for _, enabled := range genState.SendEnabled {
+		keeper.SetSendEnabled(ctx, enabled.Denom, enabled.SendEnabled)
+	}
 
 	var totalSupply sdk.Coins
 
@@ -57,7 +59,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 		})
 	}
 
-	return types.NewGenesisState(keeper.GetSendEnabled(ctx), balances, keeper.GetSupply(ctx).GetTotal())
+	return types.NewGenesisState(keeper.GetAllSendEnabled(ctx), balances, keeper.GetSupply(ctx).GetTotal())
 }
 
 // ValidateGenesis performs basic validation of supply genesis data returning an

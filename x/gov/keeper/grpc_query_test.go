@@ -131,8 +131,8 @@ func TestGRPCVote(t *testing.T) {
 	proposalID := proposal.ProposalID
 
 	req := &types.QueryVoteRequest{
-		ProposalId: 0,
-		Voter:      addrs[0],
+		ProposalId: proposalID,
+		Voter:      nil,
 	}
 
 	_, err = queryClient.Vote(gocontext.Background(), req)
@@ -302,8 +302,8 @@ func TestGRPCDeposit(t *testing.T) {
 	proposalID := proposal.ProposalID
 
 	req := &types.QueryDepositRequest{
-		ProposalId: 0,
-		Depositor:  addrs[0],
+		ProposalId: proposalID,
+		Depositor:  nil,
 	}
 
 	_, err = queryClient.Deposit(gocontext.Background(), req)

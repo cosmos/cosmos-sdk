@@ -245,7 +245,7 @@ func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
 		var err error
 		res[i], err = StdSignatureToSignatureV2(legacy.Cdc, sig)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrapf(err, "Unable to convert signature %v to V2", sig)
 		}
 	}
 

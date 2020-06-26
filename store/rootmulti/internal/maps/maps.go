@@ -1,4 +1,4 @@
-package rootmulti
+package maps
 
 import (
 	"bytes"
@@ -24,9 +24,9 @@ func newMerkleMap() *merkleMap {
 	}
 }
 
-// set creates a kv.Pair from the provided key and value. The value is hashed prior
-// to creating a kv.Pair. The created kv.Pair is appended to the merkleMap's slice
-// of kv.Pairs. Whenever called, the merkleMap must be resorted.
+// Set creates a kv.Pair from the provided key and value. The value is hashed prior
+// to creating a kv.Pair. The created kv.Pair is appended to the MerkleMap's slice
+// of kv.Pairs. Whenever called, the MerkleMap must be resorted.
 func (sm *merkleMap) set(key string, value []byte) {
 	sm.sorted = false
 
@@ -40,7 +40,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	})
 }
 
-// hash returns the merkle root of items sorted by key. Note, it is unstable.
+// Hash returns the merkle root of items sorted by key. Note, it is unstable.
 func (sm *merkleMap) hash() []byte {
 	sm.sort()
 	return hashKVPairs(sm.kvs)
@@ -107,19 +107,19 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 // Leaves are `hash(key) | hash(value)`.
 // Leaves are sorted before Merkle hashing.
 type simpleMap struct {
-	kvs    kv.Pairs
+	Kvs    kv.Pairs
 	sorted bool
 }
 
 func newSimpleMap() *simpleMap {
 	return &simpleMap{
-		kvs:    nil,
+		Kvs:    nil,
 		sorted: false,
 	}
 }
 
 // Set creates a kv pair of the key and the hash of the value,
-// and then appends it to simpleMap's kv pairs.
+// and then appends it to SimpleMap's kv pairs.
 func (sm *simpleMap) Set(key string, value []byte) {
 	sm.sorted = false
 
@@ -128,7 +128,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.kvs = append(sm.kvs, kv.Pair{
+	sm.Kvs = append(sm.Kvs, kv.Pair{
 		Key:   []byte(key),
 		Value: vhash,
 	})
@@ -138,14 +138,14 @@ func (sm *simpleMap) Set(key string, value []byte) {
 // (UNSTABLE: and by value too if duplicate key).
 func (sm *simpleMap) Hash() []byte {
 	sm.Sort()
-	return hashKVPairs(sm.kvs)
+	return hashKVPairs(sm.Kvs)
 }
 
 func (sm *simpleMap) Sort() {
 	if sm.sorted {
 		return
 	}
-	sm.kvs.Sort()
+	sm.Kvs.Sort()
 	sm.sorted = true
 }
 
@@ -153,8 +153,8 @@ func (sm *simpleMap) Sort() {
 // NOTE these contain the hashed key and value.
 func (sm *simpleMap) KVPairs() kv.Pairs {
 	sm.Sort()
-	kvs := make(kv.Pairs, len(sm.kvs))
-	copy(kvs, sm.kvs)
+	kvs := make(kv.Pairs, len(sm.Kvs))
+	copy(kvs, sm.Kvs)
 	return kvs
 }
 
@@ -187,4 +187,42 @@ func (kv KVPair) Bytes() []byte {
 		panic(err)
 	}
 	return b.Bytes()
+}
+
+// SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
+// root.
+func SimpleHashFromMap(m map[string][]byte) []byte {
+	mm := newMerkleMap()
+	for k, v := range m {
+		mm.set(k, v)
+	}
+
+	return mm.hash()
+}
+
+// SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
+// in the underlying key-value pairs.
+// The keys are sorted before the proofs are computed.
+func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.SimpleProof, []string) {
+	sm := newSimpleMap()
+	for k, v := range m {
+		sm.Set(k, v)
+	}
+
+	sm.Sort()
+	kvs := sm.Kvs
+	kvsBytes := make([][]byte, len(kvs))
+	for i, kvp := range kvs {
+		kvsBytes[i] = KVPair(kvp).Bytes()
+	}
+
+	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
+	proofs := make(map[string]*merkle.SimpleProof)
+	keys := make([]string, len(proofList))
+	for i, kvp := range kvs {
+		proofs[string(kvp.Key)] = proofList[i]
+		keys[i] = string(kvp.Key)
+	}
+
+	return rootHash, proofs, keys
 }

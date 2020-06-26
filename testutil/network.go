@@ -139,7 +139,7 @@ type (
 	}
 )
 
-func NewTestNetwork(t *testing.T, cfg Config, appConstructor AppConstructor) *Network {
+func NewTestNetwork(t *testing.T, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()
@@ -305,7 +305,7 @@ func NewTestNetwork(t *testing.T, cfg Config, appConstructor AppConstructor) *Ne
 
 	t.Log("starting test network...")
 	for _, v := range network.Validators {
-		require.NoError(t, startInProcess(cfg, v, appConstructor))
+		require.NoError(t, startInProcess(cfg, v))
 	}
 
 	t.Log("started test network")

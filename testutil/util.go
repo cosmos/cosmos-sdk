@@ -22,7 +22,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-func startInProcess(cfg Config, val *Validator, appConstructor AppConstructor) error {
+func startInProcess(cfg Config, val *Validator) error {
 	logger := val.Ctx.Logger
 	tmCfg := val.Ctx.Config
 	tmCfg.Instrumentation.Prometheus = false
@@ -32,7 +32,7 @@ func startInProcess(cfg Config, val *Validator, appConstructor AppConstructor) e
 		return err
 	}
 
-	app := appConstructor(*val)
+	app := cfg.AppConstructor(*val)
 
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
 	tmNode, err := node.NewNode(

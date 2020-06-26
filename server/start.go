@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -199,8 +200,9 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		return err
 	}
 
-	config := config.GetConfig()
 	var apiSrv *api.Server
+
+	config := config.GetConfig()
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -210,18 +212,28 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		// TODO: Since this is running in process, do we need to provide a verifier
 		// and set TrustNode=false? If so, we need to add additional logic that
 		// waits for a block to be committed first before starting the API server.
-		ctx := client.Context{}.
+		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
 			WithJSONMarshaler(cdc).
 			WithClient(local.New(tmNode)).
 			WithTrustNode(true)
 
-		apiSrv = api.New(ctx)
+		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
 
-		if err := apiSrv.Start(config); err != nil {
+		errCh := make(chan error)
+
+		go func() {
+			if err := apiSrv.Start(config); err != nil {
+				errCh <- err
+			}
+		}()
+
+		select {
+		case err := <-errCh:
 			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
 		}
 	}
 

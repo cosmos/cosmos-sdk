@@ -17,6 +17,12 @@ func Paginate(
 	req *PageRequest,
 	onResult func(key []byte, value []byte) error,
 ) (*PageResponse, error) {
+
+	// if the PageRequest is nil, use default PageRequest
+	if req == nil {
+		req = &PageRequest{}
+	}
+
 	offset := req.Offset
 	key := req.Key
 	limit := req.Limit

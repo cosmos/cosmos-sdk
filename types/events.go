@@ -217,9 +217,11 @@ func StringifyEvents(events []abci.Event) StringEvents {
 }
 
 // FilterEvents returns a slice of ABCI events filtered by the events provided
-// in a filter. If the filter is empty, all the events are returned.
+// in a filter. If the filter is empty, all the events are returned with Index
+// set to true.
 func FilterEvents(events []abci.Event, filter []string) []abci.Event {
 	if len(filter) == 0 {
+		// TODO: Rebuild list of events and set Index: true
 		return events
 	}
 

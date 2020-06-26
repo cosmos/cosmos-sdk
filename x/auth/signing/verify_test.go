@@ -5,8 +5,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -16,9 +18,10 @@ import (
 
 func TestVerifySignature(t *testing.T) {
 	priv, pubKey, addr := types.KeyTestPubAddr()
+	priv1, pubKey1, addr1 := types.KeyTestPubAddr()
 
 	const (
-		memo = "testmemo"
+		memo    = "testmemo"
 		chainId = "test-chain"
 	)
 
@@ -31,6 +34,7 @@ func TestVerifySignature(t *testing.T) {
 	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
 
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	_ = app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	balances := sdk.NewCoins(sdk.NewInt64Coin("atom", 200))
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr, balances))
@@ -51,10 +55,39 @@ func TestVerifySignature(t *testing.T) {
 
 	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: signature}
 	sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
+	require.NoError(t, err)
+
 	handler := MakeTestHandlerMap()
 	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{stdSig}, memo)
 	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
+
+	pkSet := []crypto.PubKey{pubKey, pubKey1}
+	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
+	multisignature := multisig.NewMultisig(2)
+	msgs = []sdk.Msg{types.NewTestMsg(addr, addr1)}
+	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence,
+		fee, msgs, memo)
+
+	sig1, err := priv.Sign(multiSignBytes)
+	require.NoError(t, err)
+	stdSig1 := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sig1}
+	sig1V2, err := types.StdSignatureToSignatureV2(cdc, stdSig1)
+	require.NoError(t, err)
+
+	sig2, err := priv1.Sign(multiSignBytes)
+	require.NoError(t, err)
+	stdSig2 := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sig2}
+	sig2V2, err := types.StdSignatureToSignatureV2(cdc, stdSig2)
+	require.NoError(t, err)
+
+	err = multisig.AddSignatureFromPubKey(multisignature, sig1V2.Data, pkSet[0], pkSet)
+	require.NoError(t, err)
+	err = multisig.AddSignatureFromPubKey(multisignature, sig2V2.Data, pkSet[1], pkSet)
+	require.NoError(t, err)
+
+	err = signing.VerifySignature(multisigKey, signerData, multisignature, handler, stdTx)
+	require.Error(t, err)
 }
 
 // returns context and app with params set on account keeper

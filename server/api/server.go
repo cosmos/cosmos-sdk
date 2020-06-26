@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -33,11 +32,11 @@ type Server struct {
 	listener net.Listener
 }
 
-func New(clientCtx client.Context) *Server {
+func New(clientCtx client.Context, logger log.Logger) *Server {
 	return &Server{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
-		logger:    log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "api-server"),
+		logger:    logger,
 	}
 }
 

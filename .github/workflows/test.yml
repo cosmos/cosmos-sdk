@@ -60,7 +60,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xaa.txt | xargs go test -mod=readonly -timeout 8m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xaa.txt | xargs go test -mod=readonly -timeout 8m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -98,7 +98,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xab.txt | xargs go test -mod=readonly -timeout 6m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xab.txt | xargs go test -mod=readonly -timeout 6m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -136,7 +136,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xac.txt | xargs go test -mod=readonly -timeout 6m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xac.txt | xargs go test -mod=readonly -timeout 6m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -174,7 +174,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xad.txt | xargs go test -mod=readonly -timeout 6m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xad.txt | xargs go test -mod=readonly -timeout 6m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -213,27 +213,3 @@ jobs:
         run: |
           make test-integration
         if: "env.GIT_DIFF != ''"
-
-  liveness-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
-        id: git_diff
-        with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum
-      - name: build image
-        run: |
-          make build-docker-local-simapp      
-      - name: start localnet
-        run: |
-          make clean build-sim-linux localnet-start
-        if: "env.GIT_DIFF != ''"
-      - name: test liveness
-        run: |
-          ./contrib/localnet_liveness.sh 100 5 50 localhost
-        if: "env.GIT_DIFF != ''"        

@@ -30,7 +30,7 @@ func (conn *TestConnection) AddTestChannel() TestChannel {
 // NextTestChannel returns the next test channel to be created on this connection
 func (conn *TestConnection) NextTestChannel() TestChannel {
 	portID := "transfer"
-	channelID := conn.ID + strconv.Itoa(len(conn.Channels))
+	channelID := fmt.Sprintf("%s-%d", conn.ID, len(conn.Channels))
 	return TestChannel{
 		PortID:               portID,
 		ID:                   channelID,

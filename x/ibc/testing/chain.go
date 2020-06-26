@@ -321,9 +321,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 	voteSet := tmtypes.NewVoteSet(chain.ChainID, chain.CurrentHeader.Height, 1, tmtypes.PrecommitType, chain.Vals)
 
 	commit, err := tmtypes.MakeCommit(blockID, chain.CurrentHeader.Height, 1, voteSet, chain.Signers, chain.CurrentHeader.Time)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(chain.t, err)
 
 	signedHeader := tmtypes.SignedHeader{
 		Header: &tmHeader,

@@ -11,6 +11,7 @@ import (
 	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,6 +58,8 @@ type KeeperTestSuite struct {
 
 	// ChainB testing fields
 	chainB *TestChain
+
+	grpcQueryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -64,6 +67,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainB = NewTestChain(testClientIDB)
 
 	suite.cdc = suite.chainA.App.Codec()
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.chainA.GetContext())
+	types.RegisterQueryServer(queryHelper, suite.chainA.App.IBCKeeper.ConnectionKeeper)
+	suite.grpcQueryClient = types.NewQueryClient(queryHelper)
 }
 
 // nolint: unused

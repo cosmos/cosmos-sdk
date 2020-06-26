@@ -35,7 +35,7 @@ A typical testing flow might look like the following:
 		cfg.NumValidators = 1
 
 		s.cfg = cfg
-		s.network = testutil.NewTestNetwork(s.T(), cfg, testutil.NewSimApp)
+		s.network = testutil.NewTestNetwork(s.T(), cfg)
 
 		_, err := s.network.WaitForHeight(1)
 		s.Require().NoError(err)

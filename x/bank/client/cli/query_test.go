@@ -23,7 +23,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultConfig()
-	cfg.NumValidators = 2
+	cfg.NumValidators = 1
 
 	s.cfg = cfg
 	s.network = testutil.NewTestNetwork(s.T(), cfg)

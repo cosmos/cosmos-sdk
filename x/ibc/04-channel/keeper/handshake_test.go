@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 						suite.chainA.GetContext(),
 						host.ChannelCapabilityPath(channelA.PortID, channelA.ID),
 					)
-					suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
+					suite.Require().True(ok, "could not retrieve channel capability after successful ChanOpenInit")
 					suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
 				} else {
 					suite.Require().Error(err)

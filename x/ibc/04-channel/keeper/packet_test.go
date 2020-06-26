@@ -28,7 +28,7 @@ var (
 	channelIDB = "channelidB"
 )
 
-// TestSendPacket tests SendPacket on chainA
+// TestSendPacket tests SendPacket from chainA to chainB
 func (suite *KeeperTestSuite) TestSendPacket() {
 	var (
 		packet     exported.PacketI
@@ -723,7 +723,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			packet = types.NewPacket(validPacketData, nextSeqRecv-1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
-		{"next seq receive verification failed", func() {
+		{"next seq receive verification failed: ORDERED channel", func() {
 			// set ordered to false giving wrong proof
 			ordered = false
 			nextSeqRecv = 2
@@ -745,7 +745,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			}
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
-		{"packet ack verification failed", func() {
+		{"packet ack verification failed: UNORDERED channel", func() {
 			// set ordered to true giving wrong proof
 			ordered = true
 			nextSeqRecv = 5

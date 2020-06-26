@@ -43,7 +43,17 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "balances [address]",
 		Short: "Query for account balances by address",
-		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the total balance of an account or of a specific denomination.
+
+Example:
+  $ %s query %s balances [address]
+  $ %s query %s balances [address] --denom=[denom]
+`,
+				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			height, err := cmd.Flags().GetInt64(flags.FlagHeight)
 			if err != nil {
@@ -91,40 +101,52 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 
 func GetCmdQueryTotalSupply(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "total [denom]",
-		Args:  cobra.MaximumNArgs(1),
+		Use:   "total",
 		Short: "Query the total supply of coins of the chain",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total supply of coins that are held by accounts in the
-			chain.
+			fmt.Sprintf(`Query total supply of coins that are held by accounts in the chain.
 
 Example:
-$ %s query %s total
+  $ %s query %s total
 
 To query for the total supply of a specific coin denomination use:
-$ %s query %s total stake
+  $ %s query %s total --denom=[denom]
 `,
 				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			queryClient := types.NewQueryClient(clientCtx.Init())
+			height, err := cmd.Flags().GetInt64(flags.FlagHeight)
+			if err != nil {
+				return err
+			}
 
-			if len(args) == 0 {
+			denom, err := cmd.Flags().GetString(FlagDenom)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(height)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			if denom == "" {
 				res, err := queryClient.TotalSupply(context.Background(), &types.QueryTotalSupplyRequest{})
 				if err != nil {
 					return err
 				}
+
 				return clientCtx.PrintOutput(res.Supply)
 			}
 
-			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: args[0]})
+			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: denom})
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintOutput(res.Amount)
 		},
 	}
 
+	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	return flags.GetCommands(cmd)[0]
 }

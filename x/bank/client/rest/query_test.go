@@ -96,7 +96,8 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 		{
 			"total supply",
 			fmt.Sprintf("%s/bank/total?height=1", baseURL),
-			&sdk.Coins{}, sdk.NewCoins(
+			&sdk.Coins{},
+			sdk.NewCoins(
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
 				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 			),

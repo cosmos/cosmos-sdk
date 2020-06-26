@@ -5,6 +5,7 @@ import (
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -42,12 +43,15 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			suite.Require().NotNil(connB)
 		}, false},
 		{"connection is UNINITIALIZED", func() {
-			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA := connA.FirstOrNextTestChannel()
-			channelB := connB.FirstOrNextTestChannel()
+			// any non-nil values of connA and connB are acceptable
+			suite.Require().NotNil(connA)
+			suite.Require().NotNil(connB)
 
-			channel := types.NewChannel(types.UNINITIALIZED, types.ORDERED, types.NewCounterparty(channelB.PortID, channelB.ID), []string{connA.ID}, ibctesting.ChannelVersion)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
+			// set connection as UNINITIALIZED
+			counterparty := connectiontypes.NewCounterparty(clientIDB, connIDA, suite.chainB.GetPrefix())
+			connection := connectiontypes.NewConnectionEnd(connectiontypes.UNINITIALIZED, clientIDA, connIDA, counterparty, []string{ibctesting.ConnectionVersion})
+			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connection)
+
 			portCap = nil
 		}, false},
 		{"capability is incorrect", func() {
@@ -242,7 +246,11 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			var err error
 			connA, connB, err = suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
-			channelA := connA.FirstOrNextTestChannel()
+
+			// create channel in init
+			channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+			suite.Require().NoError(err)
+
 			suite.chainA.CreateChannelCapability(channelA.PortID, channelA.ID)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},

@@ -248,6 +248,11 @@ func (chain *TestChain) GetAcknowledgement(packet channelexported.PacketI) []byt
 	return ack
 }
 
+// GetPrefix returns the prefix for used by a chain in connection creation
+func (chain *TestChain) GetPrefix() commitmenttypes.MerklePrefix {
+	return commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
+}
+
 // NewClientID appends a new clientID string in the format:
 // ClientFor<counterparty-chain-id><index>
 func (chain *TestChain) NewClientID(counterpartyChainID string) string {
@@ -352,12 +357,10 @@ func (chain *TestChain) ConnectionOpenInit(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
-	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
-
 	msg := connectiontypes.NewMsgConnectionOpenInit(
 		connection.ID, connection.ClientID,
 		counterpartyConnection.ID, connection.CounterpartyClientID,
-		prefix,
+		counterparty.GetPrefix(),
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -368,8 +371,6 @@ func (chain *TestChain) ConnectionOpenTry(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
-	prefix := commitmenttypes.NewMerklePrefix(counterparty.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes())
-
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
@@ -384,7 +385,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
-		prefix, []string{ConnectionVersion},
+		counterparty.GetPrefix(), []string{ConnectionVersion},
 		proofInit, proofConsensus,
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),

@@ -10,7 +10,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // Params returns params of the mint module.
-func (k Keeper) Params(c context.Context, req *types.QueryEmptyRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(c context.Context, _ *types.QueryEmptyRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
@@ -18,7 +18,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryEmptyRequest) (*types.
 }
 
 // Inflation returns minter.Inflation of the mint module.
-func (k Keeper) Inflation(c context.Context, req *types.QueryEmptyRequest) (*types.QueryInflationResponse, error) {
+func (k Keeper) Inflation(c context.Context, _ *types.QueryEmptyRequest) (*types.QueryInflationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	minter := k.GetMinter(ctx)
 
@@ -26,7 +26,7 @@ func (k Keeper) Inflation(c context.Context, req *types.QueryEmptyRequest) (*typ
 }
 
 // AnnualProvisions returns minter.AnnualProvisions of the mint module.
-func (k Keeper) AnnualProvisions(c context.Context, req *types.QueryEmptyRequest) (*types.QueryAnnualProvisionsResponse, error) {
+func (k Keeper) AnnualProvisions(c context.Context, _ *types.QueryEmptyRequest) (*types.QueryAnnualProvisionsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	minter := k.GetMinter(ctx)
 

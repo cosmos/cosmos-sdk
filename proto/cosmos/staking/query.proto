@@ -9,32 +9,45 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // Query provides defines the gRPC querier service
 service Query {
+  // Validators queries all validators that match given status and
   rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
 
+  // ValidatorQ queries validator info for given validator addr
   rpc ValidatorQ (QueryValidatorRequest) returns (QueryValidatorResponse) {}
 
+  // ValidatorDelegations queries delegate info for given validator
   rpc ValidatorDelegations (QueryValidatorRequest) returns (QueryValidatorDelegationsResponse) {}
 
+  // ValidatorUnbondingDelegations queries unbonding delegations of a validator
   rpc ValidatorUnbondingDelegations (QueryValidatorRequest) returns (QueryValidatorUnbondingDelegationsResponse) {}
 
+  // DelegationQ queries delegate info for given validator delegator pair
   rpc DelegationQ (QueryBondParamsRequest) returns (QueryDelegationResponse) {}
 
+  // UnbondingDelegation queries unbonding info for give validator delegator pair
   rpc UnbondingDelegation (QueryBondParamsRequest) returns (QueryUnbondingDelegationResponse) {}
 
+   // DelegatorDelegations queries all delegations of a give delegator address
   rpc DelegatorDelegations (QueryDelegatorParamsRequest) returns (QueryDelegatorDelegationsResponse) {}
-
+  // DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
   rpc DelegatorUnbondingDelegations (QueryDelegatorParamsRequest) returns (QueryUnbondingDelegatorDelegationsResponse) {}
 
+  // Redelegations queries redelegations of given address
   rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) { }
 
+  // DelegatorValidators queries all validator info for given delegator address
   rpc DelegatorValidators (QueryDelegatorParamsRequest) returns (QueryDelegatorValidatorsResponse) { }
 
+  // DelegatorValidator queries validator info for given delegator validator pair
   rpc DelegatorValidator (QueryBondParamsRequest) returns (QueryDelegatorValidatorResponse) { }
 
+  // HistoricalInfo queries the historical info for given height
   rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
 
+  // Pool queries the pool info
   rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
 
+  // Parameters queries the staking parameters
   rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
 }
 

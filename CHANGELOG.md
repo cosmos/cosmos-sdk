@@ -37,6 +37,34 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.38.5] - TBD
 
+The pruning changes introduced in 0.38.0 has bugs that may cause data loss, even after upgrading
+to 0.38.5. When upgrading from 0.38.x it is important to follow the instructions below, to prevent 
+data loss and database corruption.
+
+Do not modify pruning settings with <=0.38.4 as that may cause data corruption - the following 
+assumes pruning settings have not been modified since the node started using 0.38.x. The default 
+pruning setting `syncable` used `KeepEvery:100`.
+
+* If using `KeepEvery:1` (pruning settings `nothing` or `everything`), upgrading to 0.38.5 is safe.
+
+* Otherwise, if possible, halt block processing immediately after committing a height divisible by 
+  `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The node must _never_ have processed a 
+  height beyond that at any time in its past. Upgrading to 0.38.5 is then safe.
+
+* Otherwise, set the 0.38.5 `KeepEvery` setting to the same as the previous `KeepEvery` setting 
+  (<=0.38.4 defaults to `KeepEvery:100` while 0.38.5 defaults to `KeepEvery:500`). Upgrading to
+  0.38.5 is then safe as long as you allow one `KeepEvery` interval to pass plus one `KeepRecent` 
+  interval plus one `Interval` pruning interval before changing pruning settings or deleting the 
+  last <=0.38.4 height. No versions should exist between the last height persisted with <=0.38.4 
+  and next `KeepEvery` interval when deleting it, e.g. between 147600 and 147700 when deleting 
+  147600.
+
+* Otherwise, make sure the last version persisted with <=0.38.4 is never deleted after upgrading to 
+  0.38.5, as doing so may cause data loss and data corruption. This may happen if using the 
+  default pruning settings, so do not use the defaults.
+
+* Otherwise, consider syncing the node from scratch with 0.38.5.
+
 ### Improvements
 
 * (deps) Bump Tendermint version to [v0.33.5](https://github.com/tendermint/tendermint/releases/tag/v0.33.5)

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,6 +19,9 @@ const (
 	flagDenom = "denom"
 )
 
+// GetQueryCmd returns the parent command for all x/bank CLi query commands. The
+// provided clientCtx should have, at a minimum, a verifier, Tendermint RPC client,
+// and marshaler set.
 func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -43,23 +45,34 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 		Short: "Query for account balances by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			queryClient := types.NewQueryClient(clientCtx.Init())
+			height, err := cmd.Flags().GetInt64(flags.FlagHeight)
+			if err != nil {
+				return err
+			}
+
+			denom, err := cmd.Flags().GetString(flagDenom)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(height)
+			queryClient := types.NewQueryClient(clientCtx)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			denom := viper.GetString(flagDenom)
 			pageReq := &query.PageRequest{}
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
+
 				res, err := queryClient.AllBalances(context.Background(), params)
 				if err != nil {
 					return err
 				}
-				return clientCtx.PrintOutput(res.Balances)
 
+				return clientCtx.PrintOutput(res.Balances)
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
@@ -67,6 +80,7 @@ func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintOutput(res.Balance)
 		},
 	}

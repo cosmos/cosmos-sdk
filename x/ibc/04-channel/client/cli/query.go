@@ -1,18 +1,51 @@
 package cli
 
 import (
+	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
+
+// GetCmdQueryChannels defines the command to query all the channels ends
+// that this chain mantains.
+func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
+	return &cobra.Command{
+		Use:     "channels",
+		Short:   "Query all channels",
+		Long:    "Query all channels from a chain",
+		Example: fmt.Sprintf("%s query %s %s channels", version.ClientName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx = clientCtx.Init()
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryChannelsRequest{
+				Req: &query.PageRequest{},
+			}
+
+			res, err := queryClient.Channels(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(res.Height)
+			// TODO: return res?
+			return clientCtx.PrintOutput(res.Channels)
+		},
+	}
+}
 
 // GetCmdQueryChannel defines the command to query a channel end
 func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
@@ -44,6 +77,36 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 	return cmd
 }
 
+// GetCmdQueryConnectionChannels defines the command to query all the channels associated with a
+// connection
+func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
+	return &cobra.Command{
+		Use:     "connections [connection-id]",
+		Short:   "Query all channels associated with a connection",
+		Long:    "Query all channels associated with a connection",
+		Example: fmt.Sprintf("%s query %s %s connections [connection-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryConnectionChannelsRequest{
+				Connection: args[0],
+				Req:        &query.PageRequest{},
+			}
+
+			res, err := queryClient.ConnectionChannels(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(res.Height)
+			// TODO: return res?
+			return clientCtx.PrintOutput(res.Channels)
+		},
+	}
+}
+
 // GetCmdQueryChannelClientState defines the command to query a client state from a channel
 func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
@@ -70,8 +133,118 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryNextSequence defines the command to query a next receive sequence for a given channel
-func GetCmdQueryNextSequence(clientCtx client.Context) *cobra.Command {
+// GetCmdQueryPacketCommitments defines the command to query all packet commitments associated with
+// a channel
+func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
+	return &cobra.Command{
+		Use:     "packet-commitments [port-id] [channel-id]",
+		Short:   "Query all packet commitments associated with a channel",
+		Long:    "Query all packet commitments associated with a channel",
+		Example: fmt.Sprintf("%s query %s %s packet-commitments [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryPacketCommitmentsRequest{
+				PortID:    args[0],
+				ChannelID: args[1],
+				Req:       &query.PageRequest{},
+			}
+
+			res, err := queryClient.PacketCommitments(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(res.Height)
+			// TODO: return res?
+			return clientCtx.PrintOutput(res.Commitments)
+		},
+	}
+}
+
+// GetCmdQueryPacketCommitment defines the command to query a channel end
+func GetCmdQueryPacketCommitment(clientCtx client.Context) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "packet-commitment [port-id] [channel-id] [sequence]",
+		Short: "Query a packet commitment",
+		Long:  "Query a packet commitment",
+		Example: fmt.Sprintf(
+			"%s query %s %s end [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName,
+		),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+
+			portID := args[0]
+			channelID := args[1]
+			prove := viper.GetBool(flags.FlagProve)
+
+			seq, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			res, err := utils.QueryPacketCommitment(clientCtx, portID, channelID, seq, prove)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(int64(res.ProofHeight))
+			return clientCtx.PrintOutput(res)
+		},
+	}
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	return cmd
+}
+
+// GetCmdQueryUnrelayedPackets defines the command to query all the unrelayed packets.
+func GetCmdQueryUnrelayedPackets(clientCtx client.Context) *cobra.Command {
+	return &cobra.Command{
+		Use:   "unrelayed-packets [port-id] [channel-id] [sequences]",
+		Short: "Query all the unrelayed packets associated with a channel",
+		Long: `Query all the unrelayed packets associated with a channel.
+The sequences argument is a comma separated list of numbers.`,
+		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx = clientCtx.Init()
+			queryClient := types.NewQueryClient(clientCtx)
+
+			seqStrs := strings.Split(args[2], ",")
+
+			seqs := make([]uint64, len(seqStrs))
+
+			var err error
+			for i := range seqStrs {
+				seqs[i], err = strconv.ParseUint(seqStrs[i], 10, 64)
+				if err != nil {
+					return err
+				}
+			}
+
+			req := &types.QueryUnrelayedPacketsRequest{
+				PortID:    args[0],
+				ChannelID: args[1],
+				Sequences: seqs,
+				Req:       &query.PageRequest{},
+			}
+
+			res, err := queryClient.UnrelayedPackets(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(res.Height)
+			// TODO: return res?
+			return clientCtx.PrintOutput(res.Packets)
+		},
+	}
+}
+
+// GetCmdQueryNextSequenceReceive defines the command to query a next receive sequence for a given channel
+func GetCmdQueryNextSequenceReceive(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "next-sequence-receive [port-id] [channel-id]",
 		Short: "Query a next receive sequence",

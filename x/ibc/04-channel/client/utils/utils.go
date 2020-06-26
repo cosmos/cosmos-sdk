@@ -15,7 +15,7 @@ import (
 // QueryPacketCommitment returns a packet commitment from the store
 func QueryPacketCommitment(
 	clientCtx client.Context, portID, channelID string,
-	sequence, timeoutHeight, timeoutTimestamp uint64, prove bool,
+	sequence uint64, prove bool,
 ) (*types.QueryPacketCommitmentResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",

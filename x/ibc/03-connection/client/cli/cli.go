@@ -20,6 +20,8 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	ics03ConnectionQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryConnections(clientCtx),
 		GetCmdQueryConnection(clientCtx),
+		GetCmdQueryAllClientConnections(clientCtx),
+		GetCmdQueryClientConnections(clientCtx),
 	)...)
 
 	return ics03ConnectionQueryCmd

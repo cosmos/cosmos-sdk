@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
-			heightDiff = 0    // must be explicitly changed
+			heightDiff = 0    // must be explicitly changed in malleate
 
 			tc.malleate()
 			counterparty := types.NewCounterparty(connA.FirstOrNextTestChannel().PortID, connA.FirstOrNextTestChannel().ID)

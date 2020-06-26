@@ -86,8 +86,6 @@ github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:z
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/confio/ics23-iavl v0.6.0 h1:vVRCuVaP38FCw1kTeEdFuGuiY+2vAGTBQoH7Zxkq/ws=
 github.com/confio/ics23-iavl v0.6.0/go.mod h1:mmXAxD1vWoO0VP8YHu6mM1QHGv71NQqa1iSVm4HeKcY=
-github.com/confio/ics23-tendermint v0.6.1 h1:cnakVCG9+SltTJnwh43Z4uhWFEr3V0t3PF1zM9mewTo=
-github.com/confio/ics23-tendermint v0.6.1/go.mod h1:QOu6qLeiLIFMaLpc9R3QboIiw+mMA1N2Nc1Qnn7P6xc=
 github.com/confio/ics23/go v0.0.0-20200323120010-7d9a00f0a2fa/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=
 github.com/confio/ics23/go v0.0.0-20200604202538-6e2c36a74465 h1:tyK54ttJ14HaHaKjB6sQqkZaUSe/LUXKHjfgJNtcj20=
 github.com/confio/ics23/go v0.0.0-20200604202538-6e2c36a74465/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=
@@ -607,6 +605,7 @@ golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e h1:vcxGaoTs7kV8m5Np9uUNQin4BrLOthgV7252N8V+FwY=
 golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20180823144017-11551d06cbcc/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

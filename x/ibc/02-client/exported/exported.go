@@ -2,6 +2,7 @@ package exported
 
 import (
 	"encoding/json"
+	"time"
 
 	ics23 "github.com/confio/ics23/go"
 
@@ -24,6 +25,19 @@ type ClientState interface {
 	IsFrozen() bool
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
+
+	// Client modification functions
+
+	CheckValidityAndUpdateState(
+		header Header,
+		currentTime time.Time,
+	) (ClientState, ConsensusState, error)
+
+	CheckMisbehaviourAndUpdateState(
+		consensusState ConsensusState,
+		misbehaviour Misbehaviour,
+		currentTime time.Time,
+	) (ClientState, error)
 
 	// State verification functions
 
@@ -145,6 +159,10 @@ type MsgCreateClient interface {
 	GetClientID() string
 	GetClientType() string
 	GetConsensusState() ConsensusState
+
+	// Must be able to initialize client from msg
+	// NOTE: Localhost is only exception, which performs no-op
+	InitializeClientState() (ClientState, error)
 }
 
 // MsgUpdateClient defines the msg interface that the

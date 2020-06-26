@@ -1,4 +1,4 @@
-package tendermint
+package types
 
 import (
 	"time"
@@ -8,7 +8,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -21,42 +20,35 @@ import (
 //
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
-func CheckValidityAndUpdateState(
-	clientState clientexported.ClientState, header clientexported.Header,
+func (clientState ClientState) CheckValidityAndUpdateState(
+	header clientexported.Header,
 	currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
-	tmClientState, ok := clientState.(types.ClientState)
-	if !ok {
-		return nil, nil, sdkerrors.Wrap(
-			clienttypes.ErrInvalidClientType, "light client is not from Tendermint",
-		)
-	}
-
-	tmHeader, ok := header.(types.Header)
+	tmHeader, ok := header.(Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(
 			clienttypes.ErrInvalidHeader, "header is not from Tendermint",
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmHeader, currentTimestamp); err != nil {
+	if err := checkValidity(clientState, tmHeader, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
-	tmClientState, consensusState := update(tmClientState, tmHeader)
-	return tmClientState, consensusState, nil
+	clientState, consensusState := update(clientState, tmHeader)
+	return clientState, consensusState, nil
 }
 
 // checkValidity checks if the Tendermint header is valid.
 //
 // CONTRACT: assumes header.Height > consensusState.Height
 func checkValidity(
-	clientState types.ClientState, header types.Header, currentTimestamp time.Time,
+	clientState ClientState, header Header, currentTimestamp time.Time,
 ) error {
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
-			types.ErrTrustingPeriodExpired,
+			ErrTrustingPeriodExpired,
 			"current timestamp minus the latest trusted client state timestamp is greater than or equal to the trusting period (%s >= %s)",
 			currentTimestamp.Sub(clientState.GetLatestTimestamp()), clientState.TrustingPeriod,
 		)
@@ -100,9 +92,9 @@ func checkValidity(
 }
 
 // update the consensus state from a new header
-func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
+func update(clientState ClientState, header Header) (ClientState, ConsensusState) {
 	clientState.LastHeader = header
-	consensusState := types.ConsensusState{
+	consensusState := ConsensusState{
 		Height:       uint64(header.Height),
 		Timestamp:    header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(header.AppHash),

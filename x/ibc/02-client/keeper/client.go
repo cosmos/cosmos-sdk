@@ -7,8 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
@@ -71,10 +69,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	)
 
 	switch clientType {
-	case exported.Tendermint:
-		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, header, ctx.BlockTime(),
-		)
 	case exported.Localhost:
 		// override client state and update the block height
 		clientState = localhosttypes.NewClientState(
@@ -83,11 +77,11 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		)
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
-		err = types.ErrInvalidClientType
+		clientState, consensusState, err = clientState.CheckValidityAndUpdateState(header, ctx.BlockTime())
 	}
 
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s using header", clientID, header)
 	}
 
 	k.SetClientState(ctx, clientState)
@@ -136,16 +130,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrap(types.ErrConsensusStateNotFound, misbehaviour.GetClientID())
 	}
 
-	var err error
-	switch e := misbehaviour.(type) {
-	case ibctmtypes.Evidence:
-		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(), ctx.ConsensusParams(),
-		)
-
-	default:
-		err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC client evidence type: %T", e)
-	}
+	clientState, err := clientState.CheckMisbehaviourAndUpdateState(consensusState, misbehaviour, ctx.BlockTime())
 
 	if err != nil {
 		return err

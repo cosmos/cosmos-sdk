@@ -9,7 +9,6 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
@@ -23,24 +22,17 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 	)
 
 	switch clientType {
-	case exported.Tendermint:
-		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
-		if !ok {
-			return nil, sdkerrors.Wrap(ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
-		}
-		var err error
-
-		clientState, err = ibctmtypes.InitializeFromMsg(tmMsg)
-		if err != nil {
-			return nil, err
-		}
-		consensusHeight = msg.GetConsensusState().GetHeight()
 	case exported.Localhost:
 		// msg client id is always "localhost"
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
-		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
+		var err error
+		clientState, err = msg.InitializeClientState()
+		if err != nil {
+			return nil, err
+		}
+		consensusHeight = msg.GetConsensusState().GetHeight()
 	}
 
 	_, err := k.CreateClient(

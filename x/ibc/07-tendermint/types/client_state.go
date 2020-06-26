@@ -51,15 +51,6 @@ type ClientState struct {
 	ProofSpecs []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
 }
 
-// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
-	return Initialize(
-		msg.GetClientID(), msg.TrustLevel,
-		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header, msg.ProofSpecs,
-	)
-}
-
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(

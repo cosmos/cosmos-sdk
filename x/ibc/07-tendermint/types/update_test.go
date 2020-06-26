@@ -1,4 +1,4 @@
-package tendermint_test
+package types_test
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -151,7 +150,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			ValidatorSet: newHeader.ValidatorSet,
 		}
 
-		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(clientState, newHeader, currentTime)
+		clientState, consensusState, err := tc.clientState.CheckValidityAndUpdateState(clientState, newHeader, currentTime)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

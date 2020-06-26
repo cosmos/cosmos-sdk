@@ -65,3 +65,9 @@ func (msg MsgCreateClient) GetClientType() string {
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	return nil
 }
+
+// InitializeClientState implements clientexported.MsgCreateClient
+// Should never be called for localhost clients
+func (msg MsgCreateClient) InitializeClientState() (clientexported.ClientState, error) {
+	return nil, ErrInvalidInitialization
+}

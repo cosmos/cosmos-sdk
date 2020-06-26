@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
+	"time"
 
 	ics23 "github.com/confio/ics23/go"
 
@@ -79,6 +80,22 @@ func (cs ClientState) Validate() error {
 // GetProofSpecs returns nil since localhost does not have to verify proofs
 func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
+}
+
+// CheckValidityAndUpdateState implements clientexported.ClientState interface
+// Should never be called for local host clients
+func (cs ClientState) CheckValidityAndUpdateState(
+	_ clientexported.Header, _ time.Time,
+) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	return nil, nil, ErrInvalidUpdate
+}
+
+// CheckMisbheaviourAndUpdateState implements clientexported.ClientState interface
+// Should never be called for local host clients
+func (cs ClientState) CheckMisbehaviourAndUpdateState(
+	_ clientexported.ConsensusState, _ clientexported.Misbehaviour, _ time.Time,
+) (clientexported.ClientState, error) {
+	return nil, ErrInvalidMisbehaviour
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus

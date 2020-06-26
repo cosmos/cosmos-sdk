@@ -1,4 +1,4 @@
-package tendermint_test
+package types_test
 
 import (
 	"bytes"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -247,7 +246,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	for i, tc := range testCases {
 		tc := tc
 
-		clientState, err := tendermint.CheckMisbehaviourAndUpdateState(tc.clientState, tc.consensusState, tc.evidence, tc.height, tc.timestamp, tc.consensusParams)
+		clientState, err := tc.clientState.CheckMisbehaviourAndUpdateState(tc.consensusState, tc.evidence, tc.timestamp)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

@@ -21,7 +21,9 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
+	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -43,6 +45,18 @@ var (
 	// package-wide network lock to only allow one test network at a time
 	lock = new(sync.Mutex)
 )
+
+// AppConstructor defines a function which accepts a network configuration and
+// creates an ABCI Application to provide to Tendermint.
+type AppConstructor = func(cfg Config, val Validator) server.Application
+
+func NewSimApp(cfg Config, val Validator) server.Application {
+	return simapp.NewSimApp(
+		val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(cfg.PruningStrategy)),
+		baseapp.SetMinGasPrices(cfg.MinGasPrices),
+	)
+}
 
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
@@ -123,7 +137,7 @@ type (
 	}
 )
 
-func NewTestNetwork(t *testing.T, cfg Config) *Network {
+func NewTestNetwork(t *testing.T, cfg Config, appConstructor AppConstructor) *Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()
@@ -289,7 +303,7 @@ func NewTestNetwork(t *testing.T, cfg Config) *Network {
 
 	t.Log("starting test network...")
 	for _, v := range network.Validators {
-		require.NoError(t, startInProcess(cfg, v))
+		require.NoError(t, startInProcess(cfg, v, appConstructor))
 	}
 
 	t.Log("started test network")

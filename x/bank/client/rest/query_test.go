@@ -25,7 +25,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = testutil.NewTestNetwork(s.T(), cfg)
+	s.network = testutil.NewTestNetwork(s.T(), cfg, testutil.NewSimApp)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)

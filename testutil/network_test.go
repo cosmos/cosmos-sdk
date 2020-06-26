@@ -16,7 +16,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = NewTestNetwork(s.T(), DefaultConfig())
+	s.network = NewTestNetwork(s.T(), DefaultConfig(), NewSimApp)
 	s.Require().NotNil(s.network)
 
 	_, err := s.network.WaitForHeight(1)

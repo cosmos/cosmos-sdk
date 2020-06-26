@@ -23,6 +23,10 @@ func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*t
 
 	ctx := sdk.UnwrapSDKContext(c)
 
+	if req.ProposalId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
 	proposal, found := q.GetProposal(ctx, req.ProposalId)
 	if !found {
 		return &types.QueryProposalResponse{}, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", req.ProposalId)
@@ -69,6 +73,10 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 
 	ctx := sdk.UnwrapSDKContext(c)
 
+	if req.ProposalId == 0 || req.Voter == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
 	vote, found := q.GetVote(ctx, req.ProposalId, req.Voter)
 	if !found {
 		return &types.QueryVoteResponse{}, status.Errorf(codes.InvalidArgument,
@@ -84,12 +92,15 @@ func (q Keeper) Votes(c context.Context, req *types.QueryProposalRequest) (*type
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.ProposalId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
 	var votes types.Votes
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(q.storeKey)
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
-	// proposalStore := prefix.NewStore(votesStore, types.VotesKey(proposalID))
 
 	res, err := query.Paginate(votesStore, req.Req, func(key []byte, value []byte) error {
 		var result types.Vote
@@ -112,6 +123,10 @@ func (q Keeper) Votes(c context.Context, req *types.QueryProposalRequest) (*type
 func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.ParamsType == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -143,6 +158,10 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.ProposalId == 0 || req.Depositor == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	deposit, found := q.GetDeposit(ctx, req.ProposalId, req.Depositor)
@@ -158,6 +177,10 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 func (q Keeper) Deposits(c context.Context, req *types.QueryProposalRequest) (*types.QueryDepositsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	var deposits types.Deposits
@@ -187,6 +210,10 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryProposalRequest) (*t
 func (q Keeper) TallyResult(c context.Context, req *types.QueryProposalRequest) (*types.QueryTallyResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

@@ -48,19 +48,20 @@ var (
 
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
-type AppConstructor = func(cfg Config, val Validator) server.Application
+type AppConstructor = func(val Validator) server.Application
 
-func NewSimApp(cfg Config, val Validator) server.Application {
+func NewSimApp(val Validator) server.Application {
 	return simapp.NewSimApp(
 		val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(cfg.PruningStrategy)),
-		baseapp.SetMinGasPrices(cfg.MinGasPrices),
+		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+		baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 	)
 }
 
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
 type Config struct {
+	AppConstructor  AppConstructor             // the ABCI application constructor
 	GenesisState    map[string]json.RawMessage // custom gensis state to provide
 	TimeoutCommit   time.Duration              // the consensus commitment timeout
 	ChainID         string                     // the network chain-id
@@ -80,6 +81,7 @@ type Config struct {
 // testing requirements.
 func DefaultConfig() Config {
 	return Config{
+		AppConstructor:  NewSimApp,
 		GenesisState:    simapp.ModuleBasics.DefaultGenesis(cdc),
 		TimeoutCommit:   2 * time.Second,
 		ChainID:         "chain-" + tmrand.NewRand().Str(6),

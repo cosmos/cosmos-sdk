@@ -32,7 +32,7 @@ func startInProcess(cfg Config, val *Validator, appConstructor AppConstructor) e
 		return err
 	}
 
-	app := appConstructor(cfg, *val)
+	app := appConstructor(*val)
 
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
 	tmNode, err := node.NewNode(

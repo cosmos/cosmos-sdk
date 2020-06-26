@@ -151,6 +151,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 		{"channel verification failed", func() {
 			// not creating a channel on chainA will result in an invalid proof of existence
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel().PortID)
 		}, false},
 		{"port capability not found", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -183,12 +184,12 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(cap)
 
-				chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
-					suite.chainA.GetContext(),
+				chanCap, ok := suite.chainB.App.ScopedIBCKeeper.GetCapability(
+					suite.chainB.GetContext(),
 					host.ChannelCapabilityPath(channelB.PortID, channelB.ID),
 				)
-				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
-				suite.Require().Equal(chanCap.Index, cap.Index, "channel capability is not correct")
+				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenTry")
+				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
 			} else {
 				suite.Require().Error(err)
 			}

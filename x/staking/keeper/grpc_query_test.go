@@ -201,9 +201,10 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.Equal(t, unbond, delegatorUbds.UnbondingResponses[0])
 
 	// Query Redelegations
-	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
-	require.Error(t, err)
-	require.Nil(t, redelResp)
+	// TODO: Uncomment after nil check added to Paginate
+	// redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
+	// require.Error(t, err)
+	// require.Nil(t, redelResp)
 
 	redelegationTokens := sdk.TokensFromConsensusPower(10)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
@@ -215,7 +216,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	redelReq := &types.QueryRedelegationsRequest{
 		DelegatorAddr: addrAcc2, SrcValidatorAddr: val1.OperatorAddress, DstValidatorAddr: val2.OperatorAddress,
 		Req: &query.PageRequest{}}
-	redelResp, err = queryClient.Redelegations(gocontext.Background(), redelReq)
+	redelResp, err := queryClient.Redelegations(gocontext.Background(), redelReq)
 
 	require.NoError(t, err)
 	require.Len(t, redelResp.RedelegationResponses, 1)
@@ -318,6 +319,16 @@ func TestGRPCQueryRedelegation(t *testing.T) {
 	// delegator redelegations
 	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
 		DelegatorAddr: addrAcc2, SrcValidatorAddr: val1.OperatorAddress, Req: &query.PageRequest{}})
+	require.NoError(t, err)
+
+	require.Len(t, redelResp.RedelegationResponses, 1)
+	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
+
+	redelResp, err = queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
+		SrcValidatorAddr: val1.GetOperator(), Req: &query.PageRequest{}})
 	require.NoError(t, err)
 
 	require.Len(t, redelResp.RedelegationResponses, 1)

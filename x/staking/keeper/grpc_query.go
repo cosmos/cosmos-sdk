@@ -86,10 +86,9 @@ func (k Keeper) ValidatorUnbondingDelegations(c context.Context, req *types.Quer
 
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
-
+	ubdStore := prefix.NewStore(store, types.GetUBDsByValIndexKey(req.ValidatorAddr))
 	var ubds types.UnbondingDelegations
-	res, err := query.Paginate(store, req.Req, func(key []byte, value []byte) error {
-		types.GetUBDsByValIndexKey(req.ValidatorAddr)
+	res, err := query.Paginate(ubdStore, req.Req, func(key []byte, value []byte) error {
 		ubd, err := types.UnmarshalUBD(k.cdc, value)
 		if err != nil {
 			return err

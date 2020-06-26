@@ -54,7 +54,7 @@ pruning setting `syncable` used `KeepEvery:100`.
   as you wait one `KeepEvery` interval plus one `KeepRecent` interval plus one pruning `Interval`
   before changing pruning settings or deleting the last <=0.38.4 height (so wait 210 heights with
   the default configuration).
-* Otherwise, make sure the last version persisted with <=0.38.4 is never deleted after upgrading to 
+* Otherwise, make sure the last version persisted with <=0.38.4 is never deleted after upgrading to
   0.38.5, as doing so may cause data loss and data corruption.
 * Otherwise, consider syncing the node from scratch with 0.38.5.
 

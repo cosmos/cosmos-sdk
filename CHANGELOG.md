@@ -47,14 +47,14 @@ pruning setting `syncable` used `KeepEvery:100`.
 
 * If using `KeepEvery:1` (pruning settings `nothing` or `everything`), upgrading to 0.38.5 is safe.
 
-* Otherwise, if possible, halt block processing immediately after committing a height divisible by 
-  `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The node must _never_ have processed a 
+* Otherwise, halt block processing with `--halt-height` after committing a height divisible by
+  `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The node must _never_ have processed a
   height beyond that at any time in its past. Upgrading to 0.38.5 is then safe.
 
-* Otherwise, set the 0.38.5 `KeepEvery` setting to the same as the previous `KeepEvery` setting 
-  (<=0.38.4 and 0.38.5 both default to `KeepEvery:100`). Upgrading to 0.38.5 is then safe as long 
-  as you wait one `KeepEvery` interval plus one `KeepRecent` interval plus one pruning `Interval` 
-  before changing pruning settings or deleting the last <=0.38.4 height (so wait 210 heights with 
+* Otherwise, set the 0.38.5 `KeepEvery` setting to the same as the previous `KeepEvery` setting
+  (<=0.38.4 and 0.38.5 both default to `KeepEvery:100`). Upgrading to 0.38.5 is then safe as long
+  as you wait one `KeepEvery` interval plus one `KeepRecent` interval plus one pruning `Interval`
+  before changing pruning settings or deleting the last <=0.38.4 height (so wait 210 heights with
   the default configuration).
 
 * Otherwise, make sure the last version persisted with <=0.38.4 is never deleted after upgrading to 

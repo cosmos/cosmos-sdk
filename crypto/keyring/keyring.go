@@ -16,10 +16,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
+	cryptocdc "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -238,7 +238,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) 
 			return nil, err
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		priv, err = cryptocdc.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
 		}
@@ -287,7 +287,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	pubKey, err := cryptoamino.PubKeyFromBytes(pubBytes)
+	pubKey, err := cryptocdc.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
 			return nil, nil, fmt.Errorf("private key not available")
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		priv, err = cryptocdc.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}

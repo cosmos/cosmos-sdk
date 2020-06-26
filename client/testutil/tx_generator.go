@@ -1,8 +1,4 @@
-// Package testdata contains the TxGeneratorTxSuite for testing TxGenerator
-// implementations. It is stored in the testdata package which is ignored by
-// the go tool and test coverage as this code is only intended to be imported
-// into other tests.
-package testdata
+package testutil
 
 import (
 	"github.com/stretchr/testify/suite"

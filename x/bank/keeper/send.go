@@ -266,7 +266,7 @@ func (k BaseSendKeeper) GetAllSendEnabled(ctx sdk.Context) types.SendEnabledPara
 
 // GetSendEnabled returns the current SendEnabled
 func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context, denom string) bool {
-	sendEnabledParams types.SendEnabledParams
+	var sendEnabledParams types.SendEnabledParams
 	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
 
 	return sendEnabledParams.Enabled(denom)

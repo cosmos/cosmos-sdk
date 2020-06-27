@@ -87,7 +87,7 @@ func TestVerifySignature(t *testing.T) {
 	require.NoError(t, err)
 
 	err = signing.VerifySignature(multisigKey, signerData, multisignature, handler, stdTx)
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
 // returns context and app with params set on account keeper

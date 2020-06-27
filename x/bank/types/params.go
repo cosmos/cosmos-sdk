@@ -66,9 +66,8 @@ func validateSendEnabledParams(i interface{}) error {
 		}
 		if _, exists := registered[p.Denom]; exists {
 			return fmt.Errorf("duplicate send enabled parameter found: '%s'", p.Denom)
-		} else {
-			registered[p.Denom] = true
 		}
+		registered[p.Denom] = true
 	}
 	return nil
 }

@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -82,11 +82,13 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClie
 
 // HandlerClientMisbehaviour defines the Evidence module handler for submitting a
 // light client misbehaviour.
-func HandlerClientMisbehaviour(k Keeper) evidence.Handler {
+func HandlerClientMisbehaviour(k Keeper) evidencetypes.Handler {
 	return func(ctx sdk.Context, evidence evidenceexported.Evidence) error {
 		misbehaviour, ok := evidence.(exported.Misbehaviour)
 		if !ok {
-			return types.ErrInvalidEvidence
+			return sdkerrors.Wrapf(types.ErrInvalidEvidence,
+				"expected evidence to implement client Misbehaviour interface, got %T", evidence,
+			)
 		}
 
 		return k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)

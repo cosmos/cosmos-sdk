@@ -147,6 +147,21 @@ For linting and checking breaking changes, we use [buf](https://buf.build/). The
 
 To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make protoc` & `make protoc-gen-gocosmos`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
 
+In order for imports to properly compile in your IDE, you may need to manually set your protobuf path in your IDE's workspace settings/config.
+
+For example, in vscode your `.vscode/settings.json` should look like:
+
+```
+{
+    "protoc": {
+        "options": [
+        "--proto_path=${workspaceRoot}/proto",
+        "--proto_path=${workspaceRoot}/third_party/proto"
+        ]
+    }
+}
+```
+
 ## Testing
 
 All repos should be hooked up to [CircleCI](https://circleci.com/).
@@ -229,13 +244,13 @@ only pull requests targeted directly against master.
 - Tag the release (use `git tag -a`) and create a release in Github
 - Delete the `RC` branches
 
-### Stable Release Update Procedure
+### Point Release Procedure
 
 At the moment, only a single major release will be supported, so all point releases will be based
 off of that release.
 
 In order to alleviate the burden for a single person to have to cherry-pick and handle merge conflicts
-of all desired backporting PRs to a point release, we instead maintain a living SRU branch, where
+of all desired backporting PRs to a point release, we instead maintain a living backport branch, where
 all desired features and bug fixes are merged into as separate PRs.
 
 Example:

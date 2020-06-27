@@ -2,13 +2,13 @@ package channel
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // HandleMsgChannelOpenInit defines the sdk.Handler for MsgChannelOpenInit
-func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg *MsgChannelOpenInit) (*sdk.Result, *capability.Capability, error) {
+func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabilitytypes.Capability, msg *MsgChannelOpenInit) (*sdk.Result, *capabilitytypes.Capability, error) {
 	capKey, err := k.ChanOpenInit(
 		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
 		portCap, msg.Channel.Counterparty, msg.Channel.Version,
@@ -38,7 +38,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 }
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
-func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg *MsgChannelOpenTry) (*sdk.Result, *capability.Capability, error) {
+func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabilitytypes.Capability, msg *MsgChannelOpenTry) (*sdk.Result, *capabilitytypes.Capability, error) {
 	capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
 		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
@@ -67,7 +67,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 }
 
 // HandleMsgChannelOpenAck defines the sdk.Handler for MsgChannelOpenAck
-func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capability.Capability, msg *MsgChannelOpenAck) (*sdk.Result, error) {
+func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *MsgChannelOpenAck) (*sdk.Result, error) {
 	err := k.ChanOpenAck(
 		ctx, msg.PortID, msg.ChannelID, channelCap, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
 	)
@@ -93,7 +93,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 }
 
 // HandleMsgChannelOpenConfirm defines the sdk.Handler for MsgChannelOpenConfirm
-func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capability.Capability, msg *MsgChannelOpenConfirm) (*sdk.Result, error) {
+func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *MsgChannelOpenConfirm) (*sdk.Result, error) {
 	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofAck, msg.ProofHeight)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 }
 
 // HandleMsgChannelCloseInit defines the sdk.Handler for MsgChannelCloseInit
-func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *capability.Capability, msg *MsgChannelCloseInit) (*sdk.Result, error) {
+func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *MsgChannelCloseInit) (*sdk.Result, error) {
 	err := k.ChanCloseInit(ctx, msg.PortID, msg.ChannelID, channelCap)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 }
 
 // HandleMsgChannelCloseConfirm defines the sdk.Handler for MsgChannelCloseConfirm
-func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capability.Capability, msg *MsgChannelCloseConfirm) (*sdk.Result, error) {
+func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *MsgChannelCloseConfirm) (*sdk.Result, error) {
 	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofInit, msg.ProofHeight)
 	if err != nil {
 		return nil, err

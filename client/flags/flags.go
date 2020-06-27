@@ -57,7 +57,6 @@ const (
 	FlagDryRun           = "dry-run"
 	FlagGenerateOnly     = "generate-only"
 	FlagOffline          = "offline"
-	FlagIndentResponse   = "indent"
 	FlagOutputDocument   = "output-document" // inspired by wget -O
 	FlagSkipConfirmation = "yes"
 	FlagProve            = "prove"
@@ -77,13 +76,13 @@ var (
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
+		// TODO: REMOVE VIPER CALLS!
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
@@ -100,7 +99,6 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 // PostCommands adds common flags for commands to post tx
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 		c.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 		c.Flags().Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
@@ -136,8 +134,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	}
 	return cmds
 }
-
-// Gas flag parsing functions
 
 // GasSetting encapsulates the possible values passed through the --gas flag.
 type GasSetting struct {

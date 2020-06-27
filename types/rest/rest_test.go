@@ -223,10 +223,10 @@ func TestProcessPostResponse(t *testing.T) {
 
 	// check that height returns expected response
 	ctx = ctx.WithHeight(height)
-	runPostProcessResponse(t, ctx, acc, expectedNoIndent, false)
+	runPostProcessResponse(t, ctx, acc, expectedNoIndent)
 
 	// check height with indent
-	runPostProcessResponse(t, ctx, acc, expectedWithIndent, true)
+	runPostProcessResponse(t, ctx, acc, expectedWithIndent)
 }
 
 func TestReadRESTReq(t *testing.T) {
@@ -329,7 +329,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, "text string", string(got))
 
 	// write struct and indent response
-	clientCtx = client.Context{Indent: true}.WithCodec(codec.New())
+	clientCtx = client.Context{}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data := struct {
 		X int    `json:"x"`
@@ -351,7 +351,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 }`, string(got))
 
 	// write struct, don't indent response
-	clientCtx = client.Context{Indent: false}.WithCodec(codec.New())
+	clientCtx = client.Context{}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data = struct {
 		X int    `json:"x"`
@@ -370,7 +370,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, `{"x":"10","s":"test"}`, string(got))
 
 	// test marshalling failure
-	clientCtx = client.Context{Indent: false}.WithCodec(codec.New())
+	clientCtx = client.Context{}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data2 := badJSONMarshaller{}
 
@@ -396,11 +396,7 @@ func (badJSONMarshaller) MarshalJSON() ([]byte, error) {
 // asserts that ResponseRecorder returns the expected code and body
 // runs PostProcessResponse on the objects regular interface and on
 // the marshalled struct.
-func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, expectedBody []byte, indent bool) {
-	if indent {
-		ctx.Indent = indent
-	}
-
+func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, expectedBody []byte) {
 	// test using regular struct
 	w := httptest.NewRecorder()
 
@@ -416,11 +412,6 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 
 	marshalled, err := ctx.Codec.MarshalJSON(obj)
 	require.NoError(t, err)
-
-	if indent {
-		marshalled, err = codec.MarshalIndentFromJSON(marshalled)
-		require.NoError(t, err)
-	}
 
 	// test using marshalled struct
 	w = httptest.NewRecorder()

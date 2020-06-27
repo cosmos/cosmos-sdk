@@ -55,7 +55,7 @@ Example:
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			height, err := cmd.Flags().GetInt64(flags.FlagHeight)
+			clientCtx, err := client.ReadGetCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -65,7 +65,6 @@ Example:
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
 			queryClient := types.NewQueryClient(clientCtx)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
@@ -116,7 +115,7 @@ To query for the total supply of a specific coin denomination use:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			height, err := cmd.Flags().GetInt64(flags.FlagHeight)
+			clientCtx, err := client.ReadGetCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -126,7 +125,6 @@ To query for the total supply of a specific coin denomination use:
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
 			queryClient := types.NewQueryClient(clientCtx)
 
 			if denom == "" {

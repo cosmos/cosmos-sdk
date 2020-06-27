@@ -78,7 +78,6 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	cmd.Flags().String(flagKeyAlgo, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	return cmd
@@ -311,18 +310,13 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 			out.Mnemonic = mnemonic
 		}
 
-		var jsonString []byte
-		if viper.GetBool(flags.FlagIndentResponse) {
-			jsonString, err = KeysCdc.MarshalJSONIndent(out, "", "  ")
-		} else {
-			jsonString, err = KeysCdc.MarshalJSON(out)
-		}
-
+		jsonString, err := KeysCdc.MarshalJSON(out)
 		if err != nil {
 			return err
 		}
 
 		cmd.PrintErrln(string(jsonString))
+
 	default:
 		return fmt.Errorf("invalid output format %s", output)
 	}

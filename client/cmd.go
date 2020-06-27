@@ -6,6 +6,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // ValidateCmd returns unknown command error or Help display if help flag set
@@ -54,4 +57,60 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	return cmd.Help()
+}
+
+// ReadGetCommandFlags returns an updated Context with fields set based on flags
+// defined in GetCommands. An error is returned if any flag query fails.
+func ReadGetCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	if flagSet.Changed(flags.FlagHeight) {
+		height, err := flagSet.GetInt64(flags.FlagHeight)
+		if err != nil {
+			return clientCtx, err
+		}
+
+		clientCtx = clientCtx.WithHeight(height)
+	}
+
+	if flagSet.Changed(flags.FlagTrustNode) {
+		trustNode, err := flagSet.GetBool(flags.FlagTrustNode)
+		if err != nil {
+			return clientCtx, err
+		}
+
+		clientCtx = clientCtx.WithTrustNode(trustNode)
+	}
+
+	if flagSet.Changed(flags.FlagUseLedger) {
+		useLedger, err := flagSet.GetBool(flags.FlagUseLedger)
+		if err != nil {
+			return clientCtx, err
+		}
+
+		clientCtx = clientCtx.WithUseLedger(useLedger)
+	}
+
+	if clientCtx.Keyring == nil && flagSet.Changed(flags.FlagKeyringBackend) {
+		keyringBackend, err := flagSet.GetString(flags.FlagKeyringBackend)
+		if err != nil {
+			return clientCtx, err
+		}
+
+		kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+		if err != nil {
+			return clientCtx, err
+		}
+
+		clientCtx = clientCtx.WithKeyring(kr)
+	}
+
+	if clientCtx.Client == nil && flagSet.Changed(flags.FlagNode) {
+		rpcURI, err := flagSet.GetString(flags.FlagNode)
+		if err != nil {
+			return clientCtx, err
+		}
+
+		clientCtx = clientCtx.WithNodeURI(rpcURI)
+	}
+
+	return clientCtx, nil
 }

@@ -103,6 +103,8 @@ func Test_validateSendEnabledParams(t *testing.T) {
 
 	// fails due to duplicate entries.
 	require.Error(t, validateSendEnabledParams(sendParams))
+
 	// fails due to invalid type
 	require.Error(t, validateSendEnabledParams(DefaultSendEnabledParam()))
+	require.Error(t, validateSendEnabledParams(NewSendEnabledParams(NewSendEnabledParam("INVALIDDENOM", true))))
 }

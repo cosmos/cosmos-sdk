@@ -61,6 +61,9 @@ func validateSendEnabledParams(i interface{}) error {
 	// ensure each denom is only registered one time.
 	registered := make(map[string]bool)
 	for _, p := range params {
+		if err := validateSendEnabledParam(p); err != nil {
+			return err
+		}
 		if _, exists := registered[p.Denom]; exists {
 			return fmt.Errorf("duplicate send enabled parameter found: '%s'", p.Denom)
 		} else {

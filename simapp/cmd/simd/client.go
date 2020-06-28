@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -31,53 +30,28 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 }
 
-func main() {
-	// Configure cobra to sort commands
-	cobra.EnableCommandSorting = false
-
-	// Read in the configuration file for the sdk
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
-	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
-	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
-	config.Seal()
-
-	// TODO: setup keybase, viper object, etc. to be passed into
-	// the below functions and eliminate global vars, like we do
-	// with the cdc
-
-	rootCmd := &cobra.Command{
-		Use:   "simcli",
-		Short: "Command line interface for interacting with simd",
-	}
+func addClientCommands(config *sdk.Config, rootClientCmd *cobra.Command) *cobra.Command {
 
 	// Add --chain-id to persistent flags and mark it required
-	rootCmd.PersistentFlags().String(flags.FlagChainID, "", "Chain ID of tendermint node")
-	rootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
-		return initConfig(rootCmd)
+	rootClientCmd.PersistentFlags().String(flags.FlagChainID, "", "Chain ID of tendermint node")
+	rootClientCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
+		return initConfig(rootClientCmd)
 	}
 
 	// Construct Root Command
-	rootCmd.AddCommand(
+	rootClientCmd.AddCommand(
 		rpc.StatusCommand(),
-		client.ConfigCmd(simapp.DefaultCLIHome),
+		client.ConfigCmd(simapp.DefaultNodeHome),
 		queryCmd(encodingConfig),
 		txCmd(encodingConfig),
 		flags.LineBreak,
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,
-		flags.NewCompletionCmd(rootCmd, true),
+		flags.NewCompletionCmd(rootClientCmd, true),
 	)
 
-	// Add flags and prefix all env exposed with GA
-	executor := cli.PrepareMainCmd(rootCmd, "GA", simapp.DefaultCLIHome)
-
-	err := executor.Execute()
-	if err != nil {
-		fmt.Printf("Failed executing CLI command: %s, exiting...\n", err)
-		os.Exit(1)
-	}
+	return rootClientCmd
 }
 
 func queryCmd(config simappparams.EncodingConfig) *cobra.Command {

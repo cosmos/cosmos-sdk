@@ -27,7 +27,7 @@ const flagInvCheckPeriod = "inv-check-period"
 
 var invCheckPeriod uint
 
-func addDaemonCommands(config *sdk.Config, rootDaemonCmd *cobra.Command) *cobra.Command {
+func addDaemonCommands(rootDaemonCmd *cobra.Command) *cobra.Command {
 	appCodec, cdc := simapp.MakeCodecs()
 
 	ctx := server.NewDefaultContext()

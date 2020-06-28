@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -30,7 +29,7 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 }
 
-func addClientCommands(config *sdk.Config, rootClientCmd *cobra.Command) *cobra.Command {
+func addClientCommands(rootClientCmd *cobra.Command) *cobra.Command {
 
 	// Add --chain-id to persistent flags and mark it required
 	rootClientCmd.PersistentFlags().String(flags.FlagChainID, "", "Chain ID of tendermint node")

@@ -8,21 +8,21 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var moduleAccAddr = auth.NewModuleAddress(staking.BondedPoolName)
+var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := auth.BaseAccount{
+	acc := authtypes.BaseAccount{
 		Address: addr1,
 	}
 
 	// construct genesis state
-	genAccs := []authexported.GenesisAccount{&acc}
+	genAccs := []types.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, abci.Header{})
 
@@ -57,12 +57,12 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := auth.BaseAccount{
+	acc := authtypes.BaseAccount{
 		Address: addr1,
 	}
 
 	// Construct genesis state
-	genAccs := []authexported.GenesisAccount{&acc}
+	genAccs := []authtypes.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, abci.Header{})
 

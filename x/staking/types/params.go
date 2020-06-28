@@ -15,6 +15,9 @@ import (
 
 // Staking params default values
 const (
+	// Default parameter namespace
+	DefaultParamspace = ModuleName
+
 	// DefaultUnbondingTime reflects three weeks in seconds as the default
 	// unbonding time.
 	// TODO: Justify our choice of default here.
@@ -35,12 +38,17 @@ const (
 var (
 	KeyUnbondingTime     = []byte("UnbondingTime")
 	KeyMaxValidators     = []byte("MaxValidators")
-	KeyMaxEntries        = []byte("KeyMaxEntries")
+	KeyMaxEntries        = []byte("MaxEntries")
 	KeyBondDenom         = []byte("BondDenom")
 	KeyHistoricalEntries = []byte("HistoricalEntries")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
+
+// ParamTable for staking module
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+}
 
 // NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {

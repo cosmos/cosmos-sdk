@@ -14,8 +14,9 @@ import (
 
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -39,6 +40,17 @@ func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHei
 		Height: height,
 		Result: result,
 	}
+}
+
+// ParseResponseWithHeight returns the raw result from a JSON-encoded
+// ResponseWithHeight object.
+func ParseResponseWithHeight(cdc codec.JSONMarshaler, bz []byte) ([]byte, error) {
+	r := ResponseWithHeight{}
+	if err := cdc.UnmarshalJSON(bz, &r); err != nil {
+		return nil, err
+	}
+
+	return r.Result, nil
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -180,7 +192,7 @@ func CheckNotFoundError(w http.ResponseWriter, err error) bool {
 func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_, _ = w.Write(codec.Cdc.MustMarshalJSON(NewErrorResponse(0, err)))
+	_, _ = w.Write(legacy.Cdc.MustMarshalJSON(NewErrorResponse(0, err)))
 }
 
 // WriteSimulationResponse prepares and writes an HTTP
@@ -229,32 +241,32 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 
 // ParseQueryHeightOrReturnBadRequest sets the height to execute a query if set by the http request.
 // It returns false if there was an error parsing the height.
-func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (context.CLIContext, bool) {
+func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, clientCtx client.Context, r *http.Request) (client.Context, bool) {
 	heightStr := r.FormValue("height")
 	if heightStr != "" {
 		height, err := strconv.ParseInt(heightStr, 10, 64)
 		if CheckBadRequestError(w, err) {
-			return cliCtx, false
+			return clientCtx, false
 		}
 
 		if height < 0 {
 			WriteErrorResponse(w, http.StatusBadRequest, "height must be equal or greater than zero")
-			return cliCtx, false
+			return clientCtx, false
 		}
 
 		if height > 0 {
-			cliCtx = cliCtx.WithHeight(height)
+			clientCtx = clientCtx.WithHeight(height)
 		}
 	} else {
-		cliCtx = cliCtx.WithHeight(0)
+		clientCtx = clientCtx.WithHeight(0)
 	}
 
-	return cliCtx, true
+	return clientCtx, true
 }
 
 // PostProcessResponseBare post processes a body similar to PostProcessResponse
 // except it does not wrap the body and inject the height.
-func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body interface{}) {
+func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body interface{}) {
 	var (
 		resp []byte
 		err  error
@@ -264,8 +276,8 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
 	var marshaler codec.JSONMarshaler
 
-	if ctx.Marshaler != nil {
-		marshaler = ctx.Marshaler
+	if ctx.JSONMarshaler != nil {
+		marshaler = ctx.JSONMarshaler
 	} else {
 		marshaler = ctx.Codec
 	}
@@ -293,7 +305,7 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body
 // PostProcessResponse performs post processing for a REST response. The result
 // returned to clients will contain two fields, the height at which the resource
 // was queried at and the original result.
-func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp interface{}) {
+func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interface{}) {
 	var (
 		result []byte
 		err    error
@@ -308,8 +320,8 @@ func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp int
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
 	var marshaler codec.JSONMarshaler
 
-	if ctx.Marshaler != nil {
-		marshaler = ctx.Marshaler
+	if ctx.JSONMarshaler != nil {
+		marshaler = ctx.JSONMarshaler
 	} else {
 		marshaler = ctx.Codec
 	}
@@ -423,4 +435,24 @@ func ParseQueryParamBool(r *http.Request, param string) bool {
 	}
 
 	return false
+}
+
+// GetRequest defines a wrapper around an HTTP GET request with a provided URL.
+// An error is returned if the request or reading the body fails.
+func GetRequest(url string) ([]byte, error) {
+	res, err := http.Get(url) // nolint:gosec
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }

@@ -1,16 +1,19 @@
 package utils
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // QueryPacket returns a packet from the store
 func QueryPacket(
-	ctx context.CLIContext, portID, channelID string,
+	ctx client.Context, portID, channelID string,
 	sequence, timeoutHeight, timeoutTimestamp uint64, prove bool,
 ) (types.PacketResponse, error) {
 	req := abci.RequestQuery{
@@ -49,7 +52,7 @@ func QueryPacket(
 
 // QueryChannel queries the store to get a channel and a merkle proof.
 func QueryChannel(
-	ctx context.CLIContext, portID, channelID string, prove bool,
+	ctx client.Context, portID, channelID string, prove bool,
 ) (types.ChannelResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -67,4 +70,27 @@ func QueryChannel(
 		return types.ChannelResponse{}, err
 	}
 	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
+}
+
+// QueryChannelClientState uses the channel Querier to return the ClientState of
+// a Channel.
+func QueryChannelClientState(clientCtx client.Context, portID, channelID string) (clientexported.ClientState, int64, error) {
+	params := types.NewQueryChannelClientStateParams(portID, channelID)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
+	}
+
+	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryChannelClientState)
+	res, height, err := clientCtx.QueryWithData(route, bz)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var clientState clientexported.ClientState
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clientState)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
+	}
+	return clientState, height, nil
 }

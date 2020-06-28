@@ -3,7 +3,6 @@
 package cli_test
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
@@ -14,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
@@ -70,6 +68,57 @@ func TestCLIValidateSignatures(t *testing.T) {
 	require.False(t, success)
 
 	// Cleanup testing directories
+	f.Cleanup()
+}
+
+func TestCLISignBatch(t *testing.T) {
+	t.Parallel()
+	f := cli.InitFixtures(t)
+
+	fooAddr := f.KeyAddress(cli.KeyFoo)
+	barAddr := f.KeyAddress(cli.KeyBar)
+
+	sendTokens := sdk.TokensFromConsensusPower(10)
+	success, generatedStdTx, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
+
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// Write the output to disk
+	batchfile, cleanup1 := tests.WriteToNewTempFile(t, strings.Repeat(generatedStdTx, 3))
+	t.Cleanup(cleanup1)
+
+	// sign-batch file - offline is set but account-number and sequence are not
+	success, _, stderr = testutil.TxSignBatch(f, cli.KeyFoo, batchfile.Name(), "--offline")
+	require.Contains(t, stderr, "required flag(s) \"account-number\", \"sequence\" not set")
+	require.False(t, success)
+
+	// sign-batch file
+	success, stdout, stderr := testutil.TxSignBatch(f, cli.KeyFoo, batchfile.Name())
+	require.True(t, success)
+	require.Empty(t, stderr)
+	require.Equal(t, 3, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+
+	// sign-batch file
+	success, stdout, stderr = testutil.TxSignBatch(f, cli.KeyFoo, batchfile.Name(), "--signature-only")
+	require.True(t, success)
+	require.Empty(t, stderr)
+	require.Equal(t, 3, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+
+	malformedFile, cleanup2 := tests.WriteToNewTempFile(t, fmt.Sprintf("%smalformed", generatedStdTx))
+	t.Cleanup(cleanup2)
+
+	// sign-batch file
+	success, stdout, stderr = testutil.TxSignBatch(f, cli.KeyFoo, malformedFile.Name())
+	require.False(t, success)
+	require.Equal(t, 1, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+	require.Equal(t, "ERROR: cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value\n", stderr)
+
+	// sign-batch file
+	success, stdout, _ = testutil.TxSignBatch(f, cli.KeyFoo, malformedFile.Name(), "--signature-only")
+	require.False(t, success)
+	require.Equal(t, 1, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+
 	f.Cleanup()
 }
 
@@ -247,18 +296,13 @@ func TestCLIEncode(t *testing.T) {
 	jsonTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
-	// Run the encode command, and trim the extras from the stdout capture
+	// Run the encode command
 	success, base64Encoded, _ := testutil.TxEncode(f, jsonTxFile.Name())
 	require.True(t, success)
 	trimmedBase64 := strings.Trim(base64Encoded, "\"\n")
-
-	// Decode the base64
-	decodedBytes, err := base64.StdEncoding.DecodeString(trimmedBase64)
-	require.Nil(t, err)
-
-	// Check that the transaction decodes as epxceted
-	var decodedTx auth.StdTx
-	require.Nil(t, f.Cdc.UnmarshalBinaryBare(decodedBytes, &decodedTx))
+	// Check that the transaction decodes as expected
+	success, stdout, stderr = testutil.TxDecode(f, trimmedBase64)
+	decodedTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }
 

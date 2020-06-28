@@ -2,10 +2,17 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
 // SubModuleCdc defines the IBC tendermint client codec.
 var SubModuleCdc *codec.Codec
+
+func init() {
+	SubModuleCdc = codec.New()
+	cryptocodec.RegisterCrypto(SubModuleCdc)
+	RegisterCodec(SubModuleCdc)
+}
 
 // RegisterCodec registers the Tendermint types
 func RegisterCodec(cdc *codec.Codec) {
@@ -13,14 +20,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(Header{}, "ibc/client/tendermint/Header", nil)
 	cdc.RegisterConcrete(Evidence{}, "ibc/client/tendermint/Evidence", nil)
-	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/client/tendermint/MsgCreateClient", nil)
-	cdc.RegisterConcrete(MsgUpdateClient{}, "ibc/client/tendermint/MsgUpdateClient", nil)
-	cdc.RegisterConcrete(MsgSubmitClientMisbehaviour{}, "ibc/client/tendermint/MsgSubmitClientMisbehaviour", nil)
-
-	SetSubModuleCodec(cdc)
-}
-
-// SetSubModuleCodec sets the ibc tendermint client codec
-func SetSubModuleCodec(cdc *codec.Codec) {
-	SubModuleCdc = cdc
+	cdc.RegisterConcrete(&MsgCreateClient{}, "ibc/client/tendermint/MsgCreateClient", nil)
+	cdc.RegisterConcrete(&MsgUpdateClient{}, "ibc/client/tendermint/MsgUpdateClient", nil)
+	cdc.RegisterConcrete(&MsgSubmitClientMisbehaviour{}, "ibc/client/tendermint/MsgSubmitClientMisbehaviour", nil)
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -43,7 +43,7 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.Error(t, err)
@@ -55,7 +55,7 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"parameters"}, query)
 	require.NoError(t, err)
 
-	queryValParams := types.NewQueryValidatorParams(addrVal1)
+	queryValParams := types.NewQueryValidatorParams(addrVal1, 0, 0)
 	bz, errRes := cdc.MarshalJSON(queryValParams)
 	require.NoError(t, errRes)
 
@@ -107,11 +107,11 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParametersPool(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	bondDenom := sdk.DefaultBondDenom
 
-	res, err := querier(ctx, []string{staking.QueryParameters}, abci.RequestQuery{})
+	res, err := querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
 	require.NoError(t, err)
 
 	var params types.Params
@@ -119,7 +119,7 @@ func TestQueryParametersPool(t *testing.T) {
 	require.NoError(t, errRes)
 	require.Equal(t, app.StakingKeeper.GetParams(ctx), params)
 
-	res, err = querier(ctx, []string{staking.QueryPool}, abci.RequestQuery{})
+	res, err = querier(ctx, []string{types.QueryPool}, abci.RequestQuery{})
 	require.NoError(t, err)
 
 	var pool types.Pool
@@ -133,7 +133,7 @@ func TestQueryParametersPool(t *testing.T) {
 func TestQueryValidators(t *testing.T) {
 	cdc, app, ctx := createTestInput()
 	params := app.StakingKeeper.GetParams(ctx)
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
 
@@ -178,7 +178,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query each validator
 	for _, validator := range validators {
-		queryParams := types.NewQueryValidatorParams(validator.OperatorAddress)
+		queryParams := types.NewQueryValidatorParams(validator.OperatorAddress, 0, 0)
 		bz, err := cdc.MarshalJSON(queryParams)
 		require.NoError(t, err)
 
@@ -200,7 +200,7 @@ func TestQueryValidators(t *testing.T) {
 func TestQueryDelegation(t *testing.T) {
 	cdc, app, ctx := createTestInput()
 	params := app.StakingKeeper.GetParams(ctx)
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -323,7 +323,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Error(t, err)
 
 	// Query validator delegations
-	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1))
+	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1, 1, 100))
 	require.NoError(t, errRes)
 
 	query = abci.RequestQuery{
@@ -424,9 +424,115 @@ func TestQueryDelegation(t *testing.T) {
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
 
+func TestQueryValidatorDelegations_Pagination(t *testing.T) {
+	cases := []struct {
+		page            int
+		limit           int
+		expectedResults int
+	}{
+		{
+			page:            1,
+			limit:           75,
+			expectedResults: 75,
+		},
+		{
+			page:            2,
+			limit:           75,
+			expectedResults: 25,
+		},
+		{
+			page:            1,
+			limit:           100,
+			expectedResults: 100,
+		},
+	}
+
+	cdc, app, ctx := createTestInput()
+	querier := keeper.NewQuerier(app.StakingKeeper)
+
+	addrs := simapp.AddTestAddrs(app, ctx, 100, sdk.TokensFromConsensusPower(10000))
+	pubKeys := simapp.CreateTestPubKeys(1)
+
+	valAddress := sdk.ValAddress(addrs[0])
+
+	val1 := types.NewValidator(valAddress, pubKeys[0], types.Description{})
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+
+	// Create Validators and Delegation
+	for _, addr := range addrs {
+		validator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
+		if !found {
+			t.Error("expected validator not found")
+		}
+
+		delTokens := sdk.TokensFromConsensusPower(20)
+		_, err := app.StakingKeeper.Delegate(ctx, addr, delTokens, sdk.Unbonded, validator, true)
+		require.NoError(t, err)
+	}
+
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	for _, c := range cases {
+		// Query Delegator bonded validators
+		queryParams := types.NewQueryDelegatorParams(addrs[0])
+		bz, errRes := cdc.MarshalJSON(queryParams)
+		require.NoError(t, errRes)
+
+		// Query valAddress delegations
+		bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
+		require.NoError(t, errRes)
+
+		query := abci.RequestQuery{
+			Path: "custom/staking/validatorDelegations",
+			Data: bz,
+		}
+
+		res, err := querier(ctx, []string{types.QueryValidatorDelegations}, query)
+		require.NoError(t, err)
+
+		var delegationsRes types.DelegationResponses
+		errRes = cdc.UnmarshalJSON(res, &delegationsRes)
+		require.NoError(t, errRes)
+		require.Len(t, delegationsRes, c.expectedResults)
+	}
+
+	// Undelegate
+	for _, addr := range addrs {
+		delTokens := sdk.TokensFromConsensusPower(20)
+		_, err := app.StakingKeeper.Undelegate(ctx, addr, val1.GetOperator(), delTokens.ToDec())
+		require.NoError(t, err)
+	}
+
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	for _, c := range cases {
+		// Query Unbonding delegations with pagination.
+		queryParams := types.NewQueryDelegatorParams(addrs[0])
+		bz, errRes := cdc.MarshalJSON(queryParams)
+		require.NoError(t, errRes)
+
+		bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
+		require.NoError(t, errRes)
+		query := abci.RequestQuery{
+			Data: bz,
+		}
+
+		unbondingDelegations := types.UnbondingDelegations{}
+		res, err := querier(ctx, []string{types.QueryValidatorUnbondingDelegations}, query)
+		require.NoError(t, err)
+
+		errRes = cdc.UnmarshalJSON(res, &unbondingDelegations)
+		require.NoError(t, errRes)
+		require.Len(t, unbondingDelegations, c.expectedResults)
+	}
+}
+
 func TestQueryRedelegations(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -474,7 +580,7 @@ func TestQueryRedelegations(t *testing.T) {
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 
 	// validator redelegations
-	queryValidatorParams := types.NewQueryValidatorParams(val1.GetOperator())
+	queryValidatorParams := types.NewQueryValidatorParams(val1.GetOperator(), 0, 0)
 	bz, errRes = cdc.MarshalJSON(queryValidatorParams)
 	require.NoError(t, errRes)
 
@@ -497,7 +603,7 @@ func TestQueryRedelegations(t *testing.T) {
 
 func TestQueryUnbondingDelegation(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -592,7 +698,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 func TestQueryHistoricalInfo(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := staking.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]

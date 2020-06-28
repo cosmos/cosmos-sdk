@@ -5,22 +5,25 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	client2 "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var (
@@ -41,56 +44,56 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec registers the ibc module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the ibc module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var gs GenesisState
+	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", host.ModuleName, err)
 	}
 
 	return gs.Validate()
 }
 
 // RegisterRESTRoutes registers the REST routes for the ibc module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr, StoreKey)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterRoutes(clientCtx, rtr, host.StoreKey)
 }
 
 // GetTxCmd returns the root tx command for the ibc module.
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(StoreKey, cdc)
+func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetTxCmd(clientCtx)
 }
 
 // GetQueryCmd returns no root query command for the ibc module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(QuerierRoute, cdc)
+func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+	return cli.GetQueryCmd(clientCtx)
 }
 
 // RegisterInterfaceTypes registers module concrete types into protobuf Any.
 func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
-	RegisterInterfaces(registry)
+	types.RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for the ibc module.
 type AppModule struct {
 	AppModuleBasic
-	keeper *Keeper
+	keeper *keeper.Keeper
 
 	// create localhost by default
 	createLocalhost bool
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(k *Keeper) AppModule {
+func NewAppModule(k *keeper.Keeper) AppModule {
 	return AppModule{
 		keeper: k,
 	}
@@ -98,7 +101,7 @@ func NewAppModule(k *Keeper) AppModule {
 
 // Name returns the ibc module's name.
 func (AppModule) Name() string {
-	return ModuleName
+	return host.ModuleName
 }
 
 // RegisterInvariants registers the ibc module invariants.
@@ -107,32 +110,29 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route returns the message routing key for the ibc module.
-func (AppModule) Route() string {
-	return RouterKey
-}
-
-// NewHandler returns an sdk.Handler for the ibc module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(*am.keeper)
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(host.RouterKey, NewHandler(*am.keeper))
 }
 
 // QuerierRoute returns the ibc module's querier route name.
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return host.QuerierRoute
 }
 
 // NewQuerierHandler returns the ibc module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(*am.keeper)
+	return keeper.NewQuerier(*am.keeper)
 }
+
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the ibc module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs GenesisState
+	var gs types.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
+		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", host.ModuleName, err))
 	}
 	InitGenesis(ctx, *am.keeper, am.createLocalhost, gs)
 	return []abci.ValidatorUpdate{}
@@ -146,7 +146,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 
 // BeginBlock returns the begin blocker for the ibc module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	client.BeginBlocker(ctx, am.keeper.ClientKeeper)
+	client2.BeginBlocker(ctx, am.keeper.ClientKeeper)
 }
 
 // EndBlock returns the end blocker for the ibc module. It returns no validator
@@ -175,9 +175,8 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for ibc module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-	// TODO: in a following PR
-	// sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[host.StoreKey] = simulation.NewDecodeStore(am.keeper.Codecs())
 }
 
 // WeightedOperations returns the all the ibc module operations with their respective weights.

@@ -14,7 +14,7 @@ import (
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	iStore, err := iavl.LoadStore(db, types.CommitID{}, types.PruneNothing, false)
+	iStore, err := iavl.LoadStore(db, types.CommitID{}, false)
 	store := iStore.(*iavl.Store)
 	require.Nil(t, err)
 	store.Set([]byte("MYKEY"), []byte("MYVALUE"))
@@ -106,36 +106,6 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 
 	// Verify (bad) proof.
 	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY", []byte(nil))
-	require.NotNil(t, err)
-}
-
-func TestVerifyMultiStoreQueryProofEmptyStore(t *testing.T) {
-	// Create main tree for testing.
-	db := dbm.NewMemDB()
-	store := NewStore(db)
-	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
-
-	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
-	err := store.LoadVersion(0)
-	require.NoError(t, err)
-	cid := store.Commit() // Commit with empty iavl store.
-
-	// Get Proof
-	res := store.Query(abci.RequestQuery{
-		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
-		Data:  []byte("MYKEY"),
-		Prove: true,
-	})
-	require.NotNil(t, res.Proof)
-
-	// Verify proof.
-	prt := DefaultProofRuntime()
-	err = prt.VerifyAbsence(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY")
-	require.Nil(t, err)
-
-	// Verify (bad) proof.
-	prt = DefaultProofRuntime()
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE"))
 	require.NotNil(t, err)
 }
 

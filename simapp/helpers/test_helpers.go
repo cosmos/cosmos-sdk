@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -18,13 +18,13 @@ const (
 )
 
 // GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
-	fee := auth.StdFee{
+func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) authtypes.StdTx {
+	fee := authtypes.StdFee{ //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
 		Amount: feeAmt,
 		Gas:    gas,
 	}
 
-	sigs := make([]auth.StdSignature, len(priv))
+	sigs := make([]authtypes.StdSignature, len(priv)) //nolint:staticcheck // SA1019: authtypes.StdSignature is deprecated
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -33,16 +33,16 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing
-		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo))
+		sig, err := p.Sign(authtypes.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo))
 		if err != nil {
 			panic(err)
 		}
 
-		sigs[i] = auth.StdSignature{
+		sigs[i] = authtypes.StdSignature{ //nolint:staticcheck // SA1019: authtypes.StdSignature is deprecated
 			PubKey:    p.PubKey().Bytes(),
 			Signature: sig,
 		}
 	}
 
-	return auth.NewStdTx(msgs, fee, sigs, memo)
+	return authtypes.NewStdTx(msgs, fee, sigs, memo)
 }

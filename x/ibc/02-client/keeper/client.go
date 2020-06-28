@@ -38,17 +38,6 @@ func (k Keeper) CreateClient(
 	k.SetClientType(ctx, clientID, clientState.ClientType())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetLatestHeight()))
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeCreateClient,
-			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
-
 	return clientState, nil
 }
 
@@ -76,8 +65,9 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	var (
-		consensusState exported.ConsensusState
-		err            error
+		consensusState  exported.ConsensusState
+		consensusHeight uint64
+		err             error
 	)
 
 	switch clientType {
@@ -91,6 +81,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
 			ctx.BlockHeight(),
 		)
+		consensusHeight = uint64(ctx.BlockHeight())
 	default:
 		err = types.ErrInvalidClientType
 	}
@@ -104,6 +95,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	// we don't set consensus state for localhost client
 	if header != nil && clientType != exported.Localhost {
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
+		consensusHeight = consensusState.GetHeight()
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))
@@ -114,6 +106,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			types.EventTypeUpdateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
 		),
 	)
 
@@ -147,7 +140,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	switch e := misbehaviour.(type) {
 	case ibctmtypes.Evidence:
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(),
+			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(), ctx.ConsensusParams(),
 		)
 
 	default:
@@ -166,6 +159,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 			types.EventTypeSubmitMisbehaviour,
 			sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.GetClientID()),
 			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusState.GetHeight())),
 		),
 	)
 

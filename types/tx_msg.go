@@ -3,12 +3,15 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/tendermint/tendermint/crypto"
 )
 
 type (
 	// Msg defines the interface a transaction message must fulfill.
 	Msg interface {
+		proto.Message
 
 		// Return the message type.
 		// Must be alphanumeric or empty.
@@ -54,6 +57,20 @@ type (
 		// require access to any other information.
 		ValidateBasic() error
 	}
+
+	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
+	FeeTx interface {
+		Tx
+		GetGas() uint64
+		GetFee() Coins
+		FeePayer() AccAddress
+	}
+
+	// Tx must have GetMemo() method to use ValidateMemoDecorator
+	TxWithMemo interface {
+		Tx
+		GetMemo() string
+	}
 )
 
 // TxDecoder unmarshals transaction bytes
@@ -70,6 +87,11 @@ var _ Msg = (*TestMsg)(nil)
 type TestMsg struct {
 	signers []AccAddress
 }
+
+// dummy implementation of proto.Message
+func (msg *TestMsg) Reset()         {}
+func (msg *TestMsg) String() string { return "TODO" }
+func (msg *TestMsg) ProtoMessage()  {}
 
 func NewTestMsg(addrs ...AccAddress) *TestMsg {
 	return &TestMsg{

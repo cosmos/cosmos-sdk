@@ -7,16 +7,16 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
 	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -27,14 +27,14 @@ const (
 // Allow applications to extend and modify the migration process.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
-var migrationMap = extypes.MigrationMap{
+var migrationMap = types.MigrationMap{
 	"v0.36": v036.Migrate,
 	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible
 	"v0.39": v039.Migrate,
 }
 
 // GetMigrationCallback returns a MigrationCallback for a given version.
-func GetMigrationCallback(version string) extypes.MigrationCallback {
+func GetMigrationCallback(version string) types.MigrationCallback {
 	return migrationMap[version]
 }
 
@@ -71,12 +71,12 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			target := args[0]
 			importGenesis := args[1]
 
-			genDoc, err := types.GenesisDocFromFile(importGenesis)
+			genDoc, err := tmtypes.GenesisDocFromFile(importGenesis)
 			if err != nil {
 				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
 			}
 
-			var initialState extypes.AppMap
+			var initialState types.AppMap
 			if err := cdc.UnmarshalJSON(genDoc.AppState, &initialState); err != nil {
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}

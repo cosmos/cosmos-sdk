@@ -47,7 +47,7 @@ func NewGenesisStateFromStdTx(genTxs []authtypes.StdTx) GenesisState {
 }
 
 // GetGenesisStateFromAppState gets the genutil genesis state from the expected app state
-func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
@@ -56,8 +56,9 @@ func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawM
 }
 
 // SetGenesisStateInAppState sets the genutil genesis state within the expected app state
-func SetGenesisStateInAppState(cdc *codec.Codec,
-	appState map[string]json.RawMessage, genesisState GenesisState) map[string]json.RawMessage {
+func SetGenesisStateInAppState(
+	cdc codec.JSONMarshaler, appState map[string]json.RawMessage, genesisState GenesisState,
+) map[string]json.RawMessage {
 
 	genesisStateBz := cdc.MustMarshalJSON(genesisState)
 	appState[ModuleName] = genesisStateBz
@@ -68,7 +69,7 @@ func SetGenesisStateInAppState(cdc *codec.Codec,
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
+func GenesisStateFromGenDoc(cdc codec.JSONMarshaler, genDoc tmtypes.GenesisDoc,
 ) (genesisState map[string]json.RawMessage, err error) {
 
 	if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
@@ -81,13 +82,12 @@ func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
-) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
-
+func GenesisStateFromGenFile(cdc codec.JSONMarshaler, genFile string) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
 	if !tmos.FileExists(genFile) {
 		return genesisState, genDoc,
 			fmt.Errorf("%s does not exist, run `init` first", genFile)
 	}
+
 	genDoc, err = tmtypes.GenesisDocFromFile(genFile)
 	if err != nil {
 		return genesisState, genDoc, err
@@ -112,7 +112,7 @@ func ValidateGenesis(genesisState GenesisState) error {
 		}
 
 		// TODO: abstract back to staking
-		if _, ok := msgs[0].(stakingtypes.MsgCreateValidator); !ok {
+		if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
 			return fmt.Errorf(
 				"genesis transaction %v does not contain a MsgCreateValidator", i)
 		}

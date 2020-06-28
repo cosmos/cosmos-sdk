@@ -6,11 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -18,11 +17,12 @@ import (
 // packet to a counterparty module, where the timeout height has passed on the
 // counterparty chain without the packet being committed, to prove that the
 // packet can no longer be executed and to allow the calling module to safely
-// perform appropriate state transitions.
+// perform appropriate state transitions. Its intended usage is within the
+// ante handler.
 func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitmentexported.Proof,
+	proof []byte,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {
@@ -109,6 +109,39 @@ func (k Keeper) TimeoutPacket(
 		return nil, err
 	}
 
+	// NOTE: the remaining code is located in the TimeoutExecuted function
+	return packet, nil
+}
+
+// TimeoutExecuted deletes the commitment send from this chain after it verifies timeout.
+// If the timed-out packet came from an ORDERED channel then this channel will be closed.
+//
+// CONTRACT: this function must be called in the IBC handler
+func (k Keeper) TimeoutExecuted(
+	ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	packet exported.PacketI,
+) error {
+	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	if !found {
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
+	}
+
+	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
+		return sdkerrors.Wrap(
+			types.ErrChannelCapabilityNotFound,
+			"caller does not own capability for channel",
+		)
+	}
+
+	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	if channel.Ordering == types.ORDERED {
+		channel.State = types.CLOSED
+		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
+	}
+
 	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out: %v", packet))
 
 	// emit an event marking that we have processed the timeout
@@ -125,28 +158,6 @@ func (k Keeper) TimeoutPacket(
 		),
 	})
 
-	// NOTE: the remaining code is located on the TimeoutExecuted function
-	return packet, nil
-}
-
-// TimeoutExecuted deletes the commitment send from this chain after it verifies timeout
-func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability, packet exported.PacketI) error {
-	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if !found {
-		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
-	}
-
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
-	}
-
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-
-	if channel.Ordering == types.ORDERED {
-		channel.State = types.CLOSED
-		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
-	}
-
 	return nil
 }
 
@@ -155,9 +166,10 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability,
 // never be received (even if the timeoutHeight has not yet been reached).
 func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
-	packet types.Packet, // nolint: interfacer
+	chanCap *capabilitytypes.Capability,
+	packet exported.PacketI,
 	proof,
-	proofClosed commitmentexported.Proof,
+	proofClosed []byte,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {
@@ -166,17 +178,13 @@ func (k Keeper) TimeoutOnClose(
 		return nil, sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	// TODO: blocked by #5542
-	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	// if !found {
-	// 	return nil, types.ErrChannelCapabilityNotFound
-	// }
-
-	// portCapabilityKey := sdk.NewKVStoreKey(capKey)
-
-	// if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
-	// 	return nil, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
-	// }
+	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
+		return nil, sdkerrors.Wrap(
+			types.ErrInvalidChannelCapability,
+			"channel capability failed authentication",
+		)
+	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
@@ -227,6 +235,11 @@ func (k Keeper) TimeoutOnClose(
 	var err error
 	switch channel.Ordering {
 	case types.ORDERED:
+		// check that packet has not been received
+		if nextSequenceRecv > packet.GetSequence() {
+			return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
+		}
+
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
@@ -235,7 +248,7 @@ func (k Keeper) TimeoutOnClose(
 	case types.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
-			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
+			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 		)
 	default:
 		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))

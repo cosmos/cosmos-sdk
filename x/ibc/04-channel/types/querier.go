@@ -11,9 +11,13 @@ import (
 
 // query routes supported by the IBC channel Querier
 const (
-	QueryAllChannels        = "channels"
-	QueryChannel            = "channel"
-	QueryConnectionChannels = "connection-channels"
+	QueryAllChannels               = "channels"
+	QueryChannel                   = "channel"
+	QueryConnectionChannels        = "connection-channels"
+	QueryChannelClientState        = "channel-client-state"
+	QueryPacketCommitments         = "packet-commitments"
+	QueryUnrelayedAcknowledgements = "unrelayed-acknowledgements"
+	QueryUnrelayedPacketSends      = "unrelayed-packet-sends"
 )
 
 // ChannelResponse defines the client query response for a channel which also
@@ -70,6 +74,46 @@ func NewQueryConnectionChannelsParams(connection string, page, limit int) QueryC
 	}
 }
 
+// QueryPacketCommitmentsParams defines the parameters necessary for querying
+// all packet commitments at an associated port ID and channel ID.
+type QueryPacketCommitmentsParams struct {
+	PortID    string `json:"port_id" yaml:"port_id"`
+	ChannelID string `json:"channel_id" yaml:"channel_id"`
+	Page      int    `json:"page" yaml:"page"`
+	Limit     int    `json:"limit" yaml:"limit"`
+}
+
+// NewQueryPacketCommitmentsParams creates a new QueryPacketCommitmentsParams instance.
+func NewQueryPacketCommitmentsParams(portID, channelID string, page, limit int) QueryPacketCommitmentsParams {
+	return QueryPacketCommitmentsParams{
+		PortID:    portID,
+		ChannelID: channelID,
+		Page:      page,
+		Limit:     limit,
+	}
+}
+
+// QueryUnrelayedPacketsParams defines the parameters necessary for querying
+// unrelayed packets at an associated port ID and channel ID.
+type QueryUnrelayedPacketsParams struct {
+	PortID    string   `json:"port_id" yaml:"port_id"`
+	ChannelID string   `json:"channel_id" yaml:"channel_id"`
+	Sequences []uint64 `json:"sequences" yaml:"sequences"`
+	Page      int      `json:"page" yaml:"page"`
+	Limit     int      `json:"limit" yaml:"limit"`
+}
+
+// NewQueryUnrealyedPacketsParams creates a new QueryUnrelayedPacketsParams instance.
+func NewQueryUnrelayedPacketsParams(portID, channelID string, sequences []uint64, page, limit int) QueryUnrelayedPacketsParams {
+	return QueryUnrelayedPacketsParams{
+		PortID:    portID,
+		ChannelID: channelID,
+		Sequences: sequences,
+		Page:      page,
+		Limit:     limit,
+	}
+}
+
 // PacketResponse defines the client query response for a packet which also
 // includes a proof, its path and the height form which the proof was retrieved
 type PacketResponse struct {
@@ -110,5 +154,20 @@ func NewRecvResponse(
 		Proof:            commitmenttypes.MerkleProof{Proof: proof},
 		ProofPath:        commitmenttypes.NewMerklePath(strings.Split(host.NextSequenceRecvPath(portID, channelID), "/")),
 		ProofHeight:      uint64(height),
+	}
+}
+
+// QueryChannelClientStateParams defines the parameters necessary for querying
+// ClientState at an associated port ID and channel ID.
+type QueryChannelClientStateParams struct {
+	PortID    string `json:"port_id" yaml:"port_id"`
+	ChannelID string `json:"channel_id" yaml:"channel_id"`
+}
+
+// NewQueryChannelClientStateParams creates a new QueryChannelClientStateParams instance.
+func NewQueryChannelClientStateParams(portID, channelID string) QueryChannelClientStateParams {
+	return QueryChannelClientStateParams{
+		PortID:    portID,
+		ChannelID: channelID,
 	}
 }

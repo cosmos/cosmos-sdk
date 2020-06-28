@@ -9,16 +9,16 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ sdk.Msg = MsgConnectionOpenInit{}
+var _ sdk.Msg = &MsgConnectionOpenInit{}
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
 	signer sdk.AccAddress,
-) MsgConnectionOpenInit {
+) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
-	return MsgConnectionOpenInit{
+	return &MsgConnectionOpenInit{
 		ConnectionID: connectionID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
@@ -60,17 +60,17 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenTry{}
+var _ sdk.Msg = &MsgConnectionOpenTry{}
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	counterpartyVersions []string, proofInit, proofConsensus commitmenttypes.MerkleProof,
+	counterpartyVersions []string, proofInit, proofConsensus []byte,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
-) MsgConnectionOpenTry {
+) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
-	return MsgConnectionOpenTry{
+	return &MsgConnectionOpenTry{
 		ConnectionID:         connectionID,
 		ClientID:             clientID,
 		Counterparty:         counterparty,
@@ -109,14 +109,11 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
 	}
-	if msg.ProofInit.IsEmpty() || msg.ProofConsensus.IsEmpty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+	if len(msg.ProofInit) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
-	if err := msg.ProofInit.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof init cannot be nil")
-	}
-	if err := msg.ProofConsensus.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
+	if len(msg.ProofConsensus) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -140,15 +137,15 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenAck{}
+var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, proofTry, proofConsensus commitmenttypes.MerkleProof,
+	connectionID string, proofTry, proofConsensus []byte,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
-) MsgConnectionOpenAck {
-	return MsgConnectionOpenAck{
+) *MsgConnectionOpenAck {
+	return &MsgConnectionOpenAck{
 		ConnectionID:    connectionID,
 		ProofTry:        proofTry,
 		ProofConsensus:  proofConsensus,
@@ -177,14 +174,11 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.Version) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 	}
-	if msg.ProofTry.IsEmpty() || msg.ProofConsensus.IsEmpty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+	if len(msg.ProofTry) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
 	}
-	if err := msg.ProofTry.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof try cannot be nil")
-	}
-	if err := msg.ProofConsensus.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
+	if len(msg.ProofConsensus) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
@@ -208,14 +202,14 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionOpenConfirm{}
+var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck commitmenttypes.MerkleProof, proofHeight uint64,
+	connectionID string, proofAck []byte, proofHeight uint64,
 	signer sdk.AccAddress,
-) MsgConnectionOpenConfirm {
-	return MsgConnectionOpenConfirm{
+) *MsgConnectionOpenConfirm {
+	return &MsgConnectionOpenConfirm{
 		ConnectionID: connectionID,
 		ProofAck:     proofAck,
 		ProofHeight:  proofHeight,
@@ -238,11 +232,8 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if msg.ProofAck.IsEmpty() {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
-	}
-	if err := msg.ProofAck.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	if len(msg.ProofAck) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")

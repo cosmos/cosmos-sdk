@@ -7,31 +7,29 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const flagHex = "hex"
 
-// GetDecodeCommand returns the decode command to take Amino-serialized bytes
+// GetDecodeCommand returns the decode command to take serialized bytes
 // and turn it into a JSONified transaction.
-func GetDecodeCommand(codec *codec.Codec) *cobra.Command {
+func GetDecodeCommand(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decode [amino-byte-string]",
-		Short: "Decode an amino-encoded transaction string.",
+		Short: "Decode an binary encoded transaction string.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  runDecodeTxString(codec),
+		RunE:  runDecodeTxString(clientCtx),
 	}
 
 	cmd.Flags().BoolP(flagHex, "x", false, "Treat input as hexadecimal instead of base64")
 	return flags.PostCommands(cmd)[0]
 }
 
-func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []string) (err error) {
+func runDecodeTxString(clientCtx client.Context) func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		cliCtx := context.NewCLIContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
+		clientCtx = clientCtx.Init().WithOutput(cmd.OutOrStdout())
 		var txBytes []byte
 
 		if viper.GetBool(flagHex) {
@@ -43,12 +41,11 @@ func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []strin
 			return err
 		}
 
-		var stdTx authtypes.StdTx
-		err = cliCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
+		tx, err := clientCtx.TxGenerator.TxDecoder()(txBytes)
 		if err != nil {
 			return err
 		}
 
-		return cliCtx.PrintOutput(stdTx)
+		return clientCtx.PrintOutput(tx)
 	}
 }

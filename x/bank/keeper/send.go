@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -26,7 +27,7 @@ type SendKeeper interface {
 	GetSendEnabled(ctx sdk.Context) bool
 	SetSendEnabled(ctx sdk.Context, enabled bool)
 
-	BlacklistedAddr(addr sdk.AccAddress) bool
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -42,20 +43,20 @@ type BaseSendKeeper struct {
 	paramSpace paramtypes.Subspace
 
 	// list of addresses that are restricted from receiving transactions
-	blacklistedAddrs map[string]bool
+	blockedAddrs map[string]bool
 }
 
 func NewBaseSendKeeper(
-	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
-		BaseViewKeeper:   NewBaseViewKeeper(cdc, storeKey, ak),
-		cdc:              cdc,
-		ak:               ak,
-		storeKey:         storeKey,
-		paramSpace:       paramSpace,
-		blacklistedAddrs: blacklistedAddrs,
+		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
+		cdc:            cdc,
+		ak:             ak,
+		storeKey:       storeKey,
+		paramSpace:     paramSpace,
+		blockedAddrs:   blockedAddrs,
 	}
 }
 
@@ -96,6 +97,16 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
+
+		// Create account if recipient does not exist.
+		//
+		// NOTE: This should ultimately be removed in favor a more flexible approach
+		// such as delegated fee messages.
+		acc := k.ak.GetAccount(ctx, out.Address)
+		if acc == nil {
+			defer telemetry.IncrCounter(1, "new", "account")
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, out.Address))
+		}
 	}
 
 	return nil
@@ -132,6 +143,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	// such as delegated fee messages.
 	acc := k.ak.GetAccount(ctx, toAddr)
 	if acc == nil {
+		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 
@@ -255,8 +267,8 @@ func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
 }
 
-// BlacklistedAddr checks if a given address is blacklisted (i.e restricted from
-// receiving funds)
-func (k BaseSendKeeper) BlacklistedAddr(addr sdk.AccAddress) bool {
-	return k.blacklistedAddrs[addr.String()]
+// BlockedAddr checks if a given address is restricted from
+// receiving funds.
+func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
+	return k.blockedAddrs[addr.String()]
 }

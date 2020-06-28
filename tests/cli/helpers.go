@@ -113,14 +113,14 @@ func (f *Fixtures) ValidateGenesis() {
 
 // KeysDelete is simcli keys delete
 func (f *Fixtures) KeysDelete(name string, flags ...string) {
-	cmd := fmt.Sprintf("%s keys delete --keyring-backend=test --home=%s %s", f.SimcliBinary,
+	cmd := fmt.Sprintf("%s keys delete --keyring-backend=test --home=%s %s", f.SimdBinary,
 		f.SimcliHome, name)
 	ExecuteWrite(f.T, AddFlags(cmd, append(append(flags, "-y"), "-f")))
 }
 
 // KeysAdd is simcli keys add
 func (f *Fixtures) KeysAdd(name string, flags ...string) {
-	cmd := fmt.Sprintf("%s keys add --keyring-backend=test --home=%s %s", f.SimcliBinary,
+	cmd := fmt.Sprintf("%s keys add --keyring-backend=test --home=%s %s", f.SimdBinary,
 		f.SimcliHome, name)
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
@@ -128,20 +128,20 @@ func (f *Fixtures) KeysAdd(name string, flags ...string) {
 // KeysAddRecover prepares simcli keys add --recover
 func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) (exitSuccess bool, stdout, stderr string) {
 	cmd := fmt.Sprintf("%s keys add --keyring-backend=test --home=%s --recover %s",
-		f.SimcliBinary, f.SimcliHome, name)
+		f.SimdBinary, f.SimcliHome, name)
 	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), mnemonic)
 }
 
 // KeysAddRecoverHDPath prepares simcli keys add --recover --account --index
 func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, index uint32, flags ...string) {
 	cmd := fmt.Sprintf("%s keys add --keyring-backend=test --home=%s --recover %s --account %d"+
-		" --index %d", f.SimcliBinary, f.SimcliHome, name, account, index)
+		" --index %d", f.SimdBinary, f.SimcliHome, name, account, index)
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags), mnemonic)
 }
 
 // KeysShow is simcli keys show
 func (f *Fixtures) KeysShow(name string, flags ...string) keyring.KeyOutput {
-	cmd := fmt.Sprintf("%s keys show --keyring-backend=test --home=%s %s", f.SimcliBinary,
+	cmd := fmt.Sprintf("%s keys show --keyring-backend=test --home=%s %s", f.SimdBinary,
 		f.SimcliHome, name)
 	out, _ := tests.ExecuteT(f.T, AddFlags(cmd, flags), "")
 	var ko keyring.KeyOutput
@@ -164,7 +164,7 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 // QueryTxs is simcli query txs
 func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsResult {
 	cmd := fmt.Sprintf("%s query txs --page=%d --limit=%d --events='%s' %v",
-		f.SimcliBinary, page, limit, buildEventsQueryString(events), f.Flags())
+		f.SimdBinary, page, limit, buildEventsQueryString(events), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var result sdk.SearchTxsResult
 
@@ -178,7 +178,7 @@ func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsRes
 
 // CLIConfig is simcli config
 func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
-	cmd := fmt.Sprintf("%s config --home=%s %s %s", f.SimcliBinary, f.SimcliHome, key, value)
+	cmd := fmt.Sprintf("%s config --home=%s %s %s", f.SimdBinary, f.SimcliHome, key, value)
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
 

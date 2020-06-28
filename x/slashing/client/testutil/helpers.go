@@ -12,7 +12,7 @@ import (
 
 // QuerySigningInfo returns the signing info for a validator
 func QuerySigningInfo(f *cli.Fixtures, val string) types.ValidatorSigningInfo {
-	cmd := fmt.Sprintf("%s query slashing signing-info %s %s", f.SimcliBinary, val, f.Flags())
+	cmd := fmt.Sprintf("%s query slashing signing-info %s %s", f.SimdBinary, val, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 
@@ -24,7 +24,7 @@ func QuerySigningInfo(f *cli.Fixtures, val string) types.ValidatorSigningInfo {
 
 // QuerySlashingParams returns query slashing params
 func QuerySlashingParams(f *cli.Fixtures) types.Params {
-	cmd := fmt.Sprintf("%s query slashing params %s", f.SimcliBinary, f.Flags())
+	cmd := fmt.Sprintf("%s query slashing params %s", f.SimdBinary, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 

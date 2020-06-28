@@ -51,7 +51,7 @@ func (f *Fixtures) UnsafeResetAll(flags ...string) {
 // SDInit is simd init
 // NOTE: SDInit sets the ChainID for the Fixtures instance
 func (f *Fixtures) SDInit(moniker string, flags ...string) {
-	cmd := fmt.Sprintf("%s init -o --home=%s %s", f.SimdBinary, f.SimdHome, moniker)
+	cmd := fmt.Sprintf("%s init --overwrite --home=%s %s", f.SimdBinary, f.SimdHome, moniker)
 	_, stderr := tests.ExecuteT(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 
 	var chainID string

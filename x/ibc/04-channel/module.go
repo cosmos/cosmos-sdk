@@ -34,5 +34,5 @@ func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 
 // RegisterQueryService registers the gRPC query service for IBC channels.
 func RegisterQueryService(server grpc.Server, k keeper.Keeper) {
-	types.RegisterQueryServer(&server, k)
+	types.RegisterQueryServer(server, k)
 }

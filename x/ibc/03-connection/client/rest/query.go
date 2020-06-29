@@ -24,11 +24,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 
 func queryClientsConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
@@ -75,11 +70,6 @@ func queryConnectionHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return

@@ -16,7 +16,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = (*Keeper)(nil)
 
 // Channel implements the Query/Channel gRPC method
 func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*types.QueryChannelResponse, error) {

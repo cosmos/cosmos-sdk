@@ -21,13 +21,13 @@ func TestGRPCParams(t *testing.T) {
 
 	params, err := queryClient.Params(gocontext.Background(), &types.QueryEmptyRequest{})
 	require.NoError(t, err)
-	require.NotEmpty(t, params.Params)
+	require.Equal(t, params.Params, app.MintKeeper.GetParams(ctx))
 
 	inflation, err := queryClient.Inflation(gocontext.Background(), &types.QueryEmptyRequest{})
 	require.NoError(t, err)
-	require.NotEmpty(t, inflation.Inflation)
+	require.Equal(t, inflation.Inflation, app.MintKeeper.GetMinter(ctx).Inflation)
 
 	annualProvisions, err := queryClient.AnnualProvisions(gocontext.Background(), &types.QueryEmptyRequest{})
 	require.NoError(t, err)
-	require.NotEmpty(t, annualProvisions.AnnualProvisions)
+	require.Equal(t, annualProvisions.AnnualProvisions, app.MintKeeper.GetMinter(ctx).AnnualProvisions)
 }

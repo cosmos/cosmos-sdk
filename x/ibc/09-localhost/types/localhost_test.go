@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -31,7 +30,7 @@ func (suite *LocalhostTestSuite) SetupTest() {
 
 	suite.aminoCdc = app.Codec()
 	suite.cdc = app.AppCodec()
-	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: 1})
 	suite.store = app.IBCKeeper.ClientKeeper.ClientStore(ctx, clientexported.ClientTypeLocalHost)
 }
 

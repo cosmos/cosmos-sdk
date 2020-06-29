@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	lite "github.com/tendermint/tendermint/light"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,12 +19,10 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/ante"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // define constants used for testing
@@ -69,7 +68,7 @@ func queryProof(chain *TestChain, key string) ([]byte, int64) {
 
 	height := res.Height
 	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.Proof,
+		Proof: res.ProofOps,
 	}
 
 	proof, _ := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
@@ -111,7 +110,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	suite.chainA.updateClient(suite.chainB)
 	// // commit chainA to flush to IAVL so we can get proof
 	// suite.chainA.App.Commit()
-	// suite.chainA.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.chainA.App.LastBlockHeight() + 1, Time: suite.chainA.Header.Time}})
+	// suite.chainA.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.chainA.App.LastBlockHeight() + 1, Time: suite.chainA.Header.Time}})
 	// ctx = suite.chainA.GetContext()
 
 	proof, proofHeight = queryProof(suite.chainB, packetCommitmentPath)
@@ -212,7 +211,7 @@ func NewTestChain(clientID string) *TestChain {
 
 // Creates simple context for testing purposes
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.ChainID, Height: chain.Header.Height})
+	return chain.App.BaseApp.NewContext(false, tmproto.Header{ChainID: chain.Header.ChainID, Height: chain.Header.Height})
 }
 
 // createClient will create a client for clientChain on targetChain
@@ -221,7 +220,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -232,7 +231,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
-		Header: abci.Header{
+		Header: tmproto.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -282,7 +281,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	commitID := client.App.LastCommitID()
 
 	client.Header = nextHeader(client)
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -293,7 +292,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validator.Tokens = sdk.NewInt(1000000)
 	validators := []stakingtypes.Validator{validator}
 	histInfo := stakingtypes.HistoricalInfo{
-		Header: abci.Header{
+		Header: tmproto.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,

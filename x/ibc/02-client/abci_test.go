@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -26,7 +26,7 @@ func (suite *ClientTestSuite) SetupTest() {
 
 	suite.app = simapp.Setup(isCheckTx)
 	suite.cdc = suite.app.Codec()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 0, ChainID: "localhost_chain"})
+	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: 0, ChainID: "localhost_chain"})
 
 }
 

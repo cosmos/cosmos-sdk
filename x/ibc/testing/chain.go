@@ -2,6 +2,7 @@ package testing
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"testing"
 	"time"
@@ -13,8 +14,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/light"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,7 +64,7 @@ type TestChain struct {
 	App           *simapp.SimApp
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
-	CurrentHeader abci.Header       // header for current block height
+	CurrentHeader tmproto.Header    // header for current block height
 	Querier       sdk.Querier
 
 	Vals    *tmtypes.ValidatorSet
@@ -106,7 +108,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	// create current header and call begin block
-	header := abci.Header{
+	header := tmproto.Header{
 		Height: 1,
 		Time:   globalStartTime,
 	}
@@ -147,7 +149,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	})
 
 	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.Proof,
+		Proof: res.ProofOps,
 	}
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
@@ -168,7 +170,7 @@ func (chain *TestChain) NextBlock() {
 	chain.LastHeader = chain.CreateTMClientHeader()
 
 	// increment the current header
-	chain.CurrentHeader = abci.Header{
+	chain.CurrentHeader = tmproto.Header{
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
@@ -298,11 +300,11 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 	vsetHash := chain.Vals.Hash()
 	tmHeader := tmtypes.Header{
-		Version:            version.Consensus{Block: 2, App: 2},
+		Version:            tmversion.Consensus{Block: 2, App: 2},
 		ChainID:            chain.ChainID,
 		Height:             chain.CurrentHeader.Height,
 		Time:               chain.CurrentHeader.Time,
-		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), maxInt, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), math.MaxUint32, make([]byte, tmhash.Size)),
 		LastCommitHash:     chain.App.LastCommitID().Hash,
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,
@@ -317,7 +319,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
 
-	voteSet := tmtypes.NewVoteSet(chain.ChainID, chain.CurrentHeader.Height, 1, tmtypes.PrecommitType, chain.Vals)
+	voteSet := tmtypes.NewVoteSet(chain.ChainID, chain.CurrentHeader.Height, 1, tmproto.PrecommitType, chain.Vals)
 
 	commit, err := tmtypes.MakeCommit(blockID, chain.CurrentHeader.Height, 1, voteSet, chain.Signers, chain.CurrentHeader.Time)
 	require.NoError(chain.t, err)
@@ -334,10 +336,10 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 }
 
 // Copied unimported test functions from tmtypes to use them here
-func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
+func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
-		PartsHeader: tmtypes.PartSetHeader{
+		PartSetHeader: tmtypes.PartSetHeader{
 			Total: partSetSize,
 			Hash:  partSetHash,
 		},

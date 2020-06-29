@@ -24,7 +24,6 @@ const (
 var (
 	// functions aliases
 	RegisterCodec             = types.RegisterCodec
-	SetSubModuleCodec         = types.SetSubModuleCodec
 	NewClientConsensusStates  = types.NewClientConsensusStates
 	NewGenesisState           = types.NewGenesisState
 	DefaultGenesisState       = types.DefaultGenesisState

@@ -14,8 +14,7 @@
     - [Development Procedure](#development-procedure)
     - [Pull Merge Procedure](#pull-merge-procedure)
     - [Release Procedure](#release-procedure)
-    - [Stable Release Update Procedure](#stable-release-update-procedure)
-    - [Stable Release Updates](#stable-release-updates)
+    - [Point Release Procedure](#point-release-procedure)
   - [Code Owner Membership](#code-owner-membership)
 
 Thank you for considering making contributions to Cosmos-SDK and related

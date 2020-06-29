@@ -13,4 +13,5 @@ var (
 	ErrInvalidConnectionState        = sdkerrors.Register(SubModuleName, 6, "invalid connection state")
 	ErrInvalidCounterparty           = sdkerrors.Register(SubModuleName, 7, "invalid counterparty connection")
 	ErrInvalidConnection             = sdkerrors.Register(SubModuleName, 8, "invalid connection")
+	ErrVersionNegotiationFailed      = sdkerrors.Register(SubModuleName, 9, "connection version negotiation failed")
 )

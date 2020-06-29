@@ -71,7 +71,10 @@ func (k Keeper) ConnOpenTry(
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
-	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
+	version, err := types.PickVersion(counterpartyVersions)
+	if err != nil {
+		return err
+	}
 
 	// connection defines chain B's ConnectionEnd
 	connection := types.NewConnectionEnd(types.UNINITIALIZED, connectionID, clientID, counterparty, []string{version})
@@ -148,10 +151,10 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Check that ChainB's proposed version is one of chainA's accepted versions
-	if types.LatestVersion(connection.Versions) != version {
+	if !types.IsSupportedVersion(version, types.GetCompatibleVersions()) {
 		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidVersion,
-			"connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version,
+			types.ErrVersionNegotiationFailed,
+			"connection version provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
 		)
 	}
 

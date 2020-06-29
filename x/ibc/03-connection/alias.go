@@ -50,7 +50,6 @@ var (
 	NewClientConnectionsResponse     = types.NewClientConnectionsResponse
 	NewQueryClientConnectionsParams  = types.NewQueryClientConnectionsParams
 	GetCompatibleVersions            = types.GetCompatibleVersions
-	LatestVersion                    = types.LatestVersion
 	PickVersion                      = types.PickVersion
 	NewConnectionPaths               = types.NewConnectionPaths
 	DefaultGenesisState              = types.DefaultGenesisState

@@ -1,96 +1,45 @@
 package types
 
-// GetCompatibleVersions returns an ordered set of compatible IBC versions for the
-// caller chain's connection end.
+import (
+	"strings"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+var (
+	// DefaultIBCVersion represents the latest supported version of IBC
+	DefaultIBCVersion = "1.0.0"
+)
+
+// GetCompatibleVersions returns a descending ordered set of compatible IBC versions
+// for the caller chain's connection end.
 func GetCompatibleVersions() []string {
-	return []string{"1.0.0"}
+	return []string{DefaultIBCVersion}
 }
 
-// LatestVersion gets the latest version of a connection protocol
-//
-// CONTRACT: version array MUST be already sorted.
-func LatestVersion(versions []string) string {
-	if len(versions) == 0 {
-		return ""
+// IsSupportedVersion returns true if the version provided is supported.
+func IsSupportedVersion(version string, supportedVersions []string) bool {
+	for _, supportedVer := range supportedVersions {
+		if supportedVer == strings.TrimSpace(version) {
+			return true
+		}
 	}
-	return versions[len(versions)-1]
+	return false
 }
 
-// PickVersion picks the counterparty latest version that is matches the list
-// of compatible versions for the connection.
-func PickVersion(counterpartyVersions, compatibleVersions []string) string {
+// PickVersion iterates over the descending ordered set of compatible IBC versions
+// and selects the first version that is supported by the counterparty.
+func PickVersion(counterpartyVersions []string) (string, error) {
+	versions := GetCompatibleVersions()
 
-	n := len(counterpartyVersions)
-	m := len(compatibleVersions)
-
-	// aux hash maps to lookup already seen versions
-	counterpartyVerLookup := make(map[string]bool)
-	compatibleVerLookup := make(map[string]bool)
-
-	// versions suported
-	var supportedVersions []string
-
-	switch {
-	case n == 0 || m == 0:
-		return ""
-	case n == m:
-		for i := n - 1; i >= 0; i-- {
-			counterpartyVerLookup[counterpartyVersions[i]] = true
-			compatibleVerLookup[compatibleVersions[i]] = true
-
-			// check if we've seen any of the versions
-			if _, ok := compatibleVerLookup[counterpartyVersions[i]]; ok {
-				supportedVersions = append(supportedVersions, counterpartyVersions[i])
-			}
-
-			if _, ok := counterpartyVerLookup[compatibleVersions[i]]; ok {
-				// TODO: check if the version is already in the array
-				supportedVersions = append(supportedVersions, compatibleVersions[i])
-			}
-		}
-	case n > m:
-		for i := n - 1; i >= m; i-- {
-			counterpartyVerLookup[compatibleVersions[i]] = true
-		}
-
-		for i := m - 1; i >= 0; i-- {
-			counterpartyVerLookup[counterpartyVersions[i]] = true
-			compatibleVerLookup[compatibleVersions[i]] = true
-
-			// check if we've seen any of the versions
-			if _, ok := compatibleVerLookup[counterpartyVersions[i]]; ok {
-				supportedVersions = append(supportedVersions, counterpartyVersions[i])
-			}
-
-			if _, ok := counterpartyVerLookup[compatibleVersions[i]]; ok {
-				supportedVersions = append(supportedVersions, compatibleVersions[i])
-			}
-		}
-
-	case n < m:
-		for i := m - 1; i >= n; i-- {
-			compatibleVerLookup[compatibleVersions[i]] = true
-		}
-
-		for i := n - 1; i >= 0; i-- {
-			counterpartyVerLookup[counterpartyVersions[i]] = true
-			compatibleVerLookup[compatibleVersions[i]] = true
-
-			// check if we've seen any of the versions
-			if _, ok := compatibleVerLookup[counterpartyVersions[i]]; ok {
-				supportedVersions = append(supportedVersions, counterpartyVersions[i])
-			}
-
-			if _, ok := counterpartyVerLookup[compatibleVersions[i]]; ok {
-				supportedVersions = append(supportedVersions, compatibleVersions[i])
-			}
+	for _, ver := range versions {
+		if IsSupportedVersion(ver, counterpartyVersions) {
+			return ver, nil
 		}
 	}
 
-	if len(supportedVersions) == 0 {
-		return ""
-	}
-
-	// TODO: compare latest version before appending
-	return supportedVersions[len(supportedVersions)-1]
+	return "", sdkerrors.Wrapf(
+		ErrVersionNegotiationFailed,
+		"failed to find a matching counterparty version (%s) from the supported version list (%s)", counterpartyVersions, versions,
+	)
 }

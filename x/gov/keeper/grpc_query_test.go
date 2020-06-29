@@ -44,7 +44,7 @@ func TestGRPCProposal(t *testing.T) {
 
 	proposal, err := queryClient.Proposal(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, proposal)
+	require.Equal(t, proposal.Proposal.ProposalID, uint64(1))
 }
 
 func TestGRPCProposals(t *testing.T) {
@@ -161,7 +161,7 @@ func TestGRPCVote(t *testing.T) {
 	vote, err := queryClient.Vote(gocontext.Background(), req)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, vote.Vote)
+	require.Equal(t, vote.Vote.Option, types.OptionAbstain)
 }
 
 func TestGRPCVotes(t *testing.T) {
@@ -234,6 +234,7 @@ func TestGRPCVotes(t *testing.T) {
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Len(t, votes.Votes, 1)
+	require.Equal(t, types.OptionAbstain, votes.Votes[0].Option)
 	require.NotEmpty(t, votes.Res)
 
 	// query vote with limit 1, next key and expect NextKey to be nil.
@@ -251,6 +252,7 @@ func TestGRPCVotes(t *testing.T) {
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Len(t, votes.Votes, 1)
+	require.Equal(t, types.OptionNoWithVeto, votes.Votes[0].Option)
 	require.Empty(t, votes.Res)
 
 	// query vote with limit 2 and expect NextKey to be nil.
@@ -293,17 +295,19 @@ func TestGRPCParams(t *testing.T) {
 	req.ParamsType = types.ParamDeposit
 	params, err := queryClient.Params(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, params.DepositParams)
+	require.False(t, params.DepositParams.MinDeposit.IsZero())
 
 	req.ParamsType = types.ParamVoting
 	params, err = queryClient.Params(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, params.VotingParams)
+	require.NotZero(t, params.VotingParams.VotingPeriod)
 
 	req.ParamsType = types.ParamTallying
 	params, err = queryClient.Params(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, params.TallyParams)
+	require.False(t, params.TallyParams.Quorum.IsZero())
+	require.False(t, params.TallyParams.Threshold.IsZero())
+	require.False(t, params.TallyParams.Veto.IsZero())
 }
 
 func TestGRPCDeposit(t *testing.T) {
@@ -337,7 +341,8 @@ func TestGRPCDeposit(t *testing.T) {
 	_, err = queryClient.Deposit(gocontext.Background(), req)
 	require.Error(t, err)
 
-	deposit := types.NewDeposit(proposalID, addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20))))
+	depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20)))
+	deposit := types.NewDeposit(proposalID, addrs[0], depositCoins)
 	app.GovKeeper.SetDeposit(ctx, deposit)
 
 	req = &types.QueryDepositRequest{
@@ -348,7 +353,8 @@ func TestGRPCDeposit(t *testing.T) {
 	d, err := queryClient.Deposit(gocontext.Background(), req)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, d.Deposit)
+	require.False(t, d.Deposit.Empty())
+	require.Equal(t, d.Deposit.Amount, depositCoins)
 }
 
 func TestGRPCDeposits(t *testing.T) {
@@ -390,10 +396,12 @@ func TestGRPCDeposits(t *testing.T) {
 	require.Empty(t, deposits.Deposits)
 	require.Empty(t, deposits.Res)
 
-	deposit1 := types.NewDeposit(proposalID, addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20))))
+	depositAmount1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20)))
+	deposit1 := types.NewDeposit(proposalID, addrs[0], depositAmount1)
 	app.GovKeeper.SetDeposit(ctx, deposit1)
 
-	deposit2 := types.NewDeposit(proposalID, addrs[1], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(30))))
+	depositAmount2 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(30)))
+	deposit2 := types.NewDeposit(proposalID, addrs[1], depositAmount2)
 	app.GovKeeper.SetDeposit(ctx, deposit2)
 
 	proposal.Status = types.StatusVotingPeriod
@@ -414,6 +422,7 @@ func TestGRPCDeposits(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, deposits.Deposits, 1)
+	require.Equal(t, depositAmount1, deposits.Deposits[0].Amount)
 	require.NotEmpty(t, deposits.Res.NextKey)
 
 	// query vote with limit 1, next key and expect NextKey to be nil.
@@ -431,6 +440,7 @@ func TestGRPCDeposits(t *testing.T) {
 	deposits, err = queryClient.Deposits(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Len(t, deposits.Deposits, 1)
+	require.Equal(t, depositAmount2, deposits.Deposits[0].Amount)
 	require.Empty(t, deposits.Res)
 
 	// query vote with limit 2 and expect NextKey to be nil.
@@ -514,6 +524,7 @@ func TestGRPCTally(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotEmpty(t, tally.Tally)
+	require.NotZero(t, tally.Tally.Yes)
 
 	proposal.Status = types.StatusPassed
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -527,4 +538,5 @@ func TestGRPCTally(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotEmpty(t, tally.Tally)
+	require.NotZero(t, tally.Tally.Yes)
 }

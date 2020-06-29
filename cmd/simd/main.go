@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	cobra.EnableCommandSorting = false
+	cobra.EnableCommandSorting = true
 
 	// Read in the configuration file for the sdk
 	config := sdk.GetConfig()
@@ -21,7 +21,7 @@ func main() {
 
 	rootComd := &cobra.Command{
 		Use:   "simd",
-		Short: "simulation app binary",
+		Short: "simulation app",
 	}
 
 	// Construct Root Command

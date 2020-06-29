@@ -43,10 +43,7 @@ func addClientCommands(rootClientCmd *cobra.Command) *cobra.Command {
 		client.ConfigCmd(simapp.DefaultNodeHome),
 		queryCmd(encodingConfig),
 		txCmd(encodingConfig),
-		flags.LineBreak,
-		flags.LineBreak,
 		keys.Commands(),
-		flags.LineBreak,
 		flags.NewCompletionCmd(rootClientCmd, true),
 	)
 
@@ -67,12 +64,10 @@ func queryCmd(config simappparams.EncodingConfig) *cobra.Command {
 
 	queryCmd.AddCommand(
 		authcmd.GetAccountCmd(cdc),
-		flags.LineBreak,
 		rpc.ValidatorCommand(cdc),
 		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(cdc),
 		authcmd.QueryTxCmd(cdc),
-		flags.LineBreak,
 	)
 
 	// add modules' query commands

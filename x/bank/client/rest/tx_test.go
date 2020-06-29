@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,6 +18,8 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestCoinSend() {
+	authclient.Codec = s.cfg.EncodingConfig.Marshaler
+
 	val := s.network.Validators[0]
 
 	initValidatorCoins, err := getCoinsFromValidator(val)

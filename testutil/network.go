@@ -13,8 +13,6 @@ import (
 	"testing"
 	"time"
 
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 
 	"github.com/stretchr/testify/require"
@@ -147,8 +145,6 @@ type (
 
 // NewTestNetwork runs a test network used for test.
 func NewTestNetwork(t *testing.T, cfg Config) *Network {
-	authclient.Codec = cfg.EncodingConfig.Marshaler
-
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()

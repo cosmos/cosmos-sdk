@@ -7,7 +7,6 @@ import (
 
 	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
-	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto/merkle"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -331,7 +331,7 @@ type iavlIterator struct {
 	tree *iavl.ImmutableTree
 
 	// Channel to push iteration values.
-	iterCh chan tmkv.Pair
+	iterCh chan kv.Pair
 
 	// Close this to release goroutine.
 	quitCh chan struct{}
@@ -357,7 +357,7 @@ func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool
 		start:     sdk.CopyBytes(start),
 		end:       sdk.CopyBytes(end),
 		ascending: ascending,
-		iterCh:    make(chan tmkv.Pair), // Set capacity > 0?
+		iterCh:    make(chan kv.Pair), // Set capacity > 0?
 		quitCh:    make(chan struct{}),
 		initCh:    make(chan struct{}),
 	}
@@ -374,7 +374,7 @@ func (iter *iavlIterator) iterateRoutine() {
 			select {
 			case <-iter.quitCh:
 				return true // done with iteration.
-			case iter.iterCh <- tmkv.Pair{Key: key, Value: value}:
+			case iter.iterCh <- kv.Pair{Key: key, Value: value}:
 				return false // yay.
 			}
 		},

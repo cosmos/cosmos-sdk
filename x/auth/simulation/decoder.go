@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
-	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -18,8 +18,8 @@ type AuthUnmarshaler interface {
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding auth type.
-func NewDecodeStore(ak AuthUnmarshaler) func(kvA, kvB tmkv.Pair) string {
-	return func(kvA, kvB tmkv.Pair) string {
+func NewDecodeStore(ak AuthUnmarshaler) func(kvA, kvB kv.Pair) string {
+	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.AddressStoreKeyPrefix):
 			accA, err := ak.UnmarshalAccount(kvA.Value)

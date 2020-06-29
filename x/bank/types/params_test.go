@@ -17,29 +17,29 @@ func Test_validateSendEnabledParam(t *testing.T) {
 		wantErr bool
 	}{
 		{"invalid type", args{sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())}, true},
-		{"valid default params", args{DefaultSendEnabledParam()}, false},
+		{"valid default params", args{*DefaultParams().SendEnabled[0]}, false},
 
-		{"valid empty denom send enabled", args{NewSendEnabledParam("", true)}, false},
-		{"valid empty denom send disabled", args{NewSendEnabledParam("", false)}, false},
+		{"valid empty denom send enabled", args{*NewSendEnabled("", true)}, false},
+		{"valid empty denom send disabled", args{*NewSendEnabled("", false)}, false},
 
-		{"valid denom send enabled", args{NewSendEnabledParam(sdk.DefaultBondDenom, true)}, false},
-		{"valid denom send disabled", args{NewSendEnabledParam(sdk.DefaultBondDenom, false)}, false},
+		{"valid denom send enabled", args{*NewSendEnabled(sdk.DefaultBondDenom, true)}, false},
+		{"valid denom send disabled", args{*NewSendEnabled(sdk.DefaultBondDenom, false)}, false},
 
-		{"invalid denom send enabled", args{NewSendEnabledParam("FOO", true)}, true},
-		{"invalid denom send disabled", args{NewSendEnabledParam("FOO", false)}, true},
+		{"invalid denom send enabled", args{*NewSendEnabled("FOO", true)}, true},
+		{"invalid denom send disabled", args{*NewSendEnabled("FOO", false)}, true},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.wantErr, validateSendEnabledParam(tt.args.i) != nil)
+			require.Equal(t, tt.wantErr, validateSendEnabled(tt.args.i) != nil)
 		})
 	}
 }
 
 func Test_sendParamEqual(t *testing.T) {
-	paramsA := DefaultSendEnabledParam()
-	paramsB := NewSendEnabledParam("", true)
-	paramsC := NewSendEnabledParam("foodenom", false)
+	paramsA := DefaultSendEnabled()
+	paramsB := NewSendEnabled("", true)
+	paramsC := NewSendEnabled("foodenom", false)
 
 	ok := paramsA.Equal(paramsB)
 	require.True(t, ok)
@@ -50,61 +50,71 @@ func Test_sendParamEqual(t *testing.T) {
 
 func Test_sendParamString(t *testing.T) {
 	// verify denom attribute is omitted when empty
-	noDenomString := "send_enabled: true\n"
-	noDenom := NewSendEnabledParam("", true)
+	noDenomString := "enabled: true\n"
+	noDenom := NewSendEnabled("", true)
 
 	require.Equal(t, noDenomString, noDenom.String())
 
-	paramString := "denom: foo\nsend_enabled: false\n"
-	param := NewSendEnabledParam("foo", false)
+	paramString := "denom: foo\nenabled: false\n"
+	param := NewSendEnabled("foo", false)
 
 	require.Equal(t, paramString, param.String())
 }
 
-func Test_validateSendEnabledParams(t *testing.T) {
+func Test_validateParams(t *testing.T) {
 	params := DefaultParams()
 
+	// default params have no error
+	require.NoError(t, params.Validate())
+
 	// default case is all denoms are enabled for sending
-	require.True(t, params.SendEnabledParams.Enabled(sdk.DefaultBondDenom))
-	require.True(t, params.SendEnabledParams.Enabled("foodenom"))
+	require.True(t, params.IsSendEnabled(sdk.DefaultBondDenom))
+	require.True(t, params.IsSendEnabled("foodenom"))
 
-	sendParams := NewSendEnabledParams(
-		NewSendEnabledParam("", false),
-		NewSendEnabledParam("foodenom", true),
-	)
+	params = params.SetSendEnabledParam("", false).SetSendEnabledParam("foodenom", true)
 
-	require.NoError(t, validateSendEnabledParams(sendParams))
-	require.True(t, sendParams.Enabled("foodenom"))
-	require.False(t, sendParams.Enabled(sdk.DefaultBondDenom))
+	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
+	require.True(t, params.IsSendEnabled("foodenom"))
+	require.False(t, params.IsSendEnabled(sdk.DefaultBondDenom))
 
-	sendParams = sendParams.SetSendEnabledParam("foodenom", false).SetSendEnabledParam("", true)
+	params = params.SetSendEnabledParam("foodenom", false).SetSendEnabledParam("", true)
 
-	require.NoError(t, validateSendEnabledParams(sendParams))
-	require.False(t, sendParams.Enabled("foodenom"))
-	require.True(t, sendParams.Enabled(sdk.DefaultBondDenom))
+	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
+	require.False(t, params.IsSendEnabled("foodenom"))
+	require.True(t, params.IsSendEnabled(sdk.DefaultBondDenom))
 
-	sendParams = sendParams.SetSendEnabledParam("foodenom", true)
-	require.True(t, sendParams.Enabled("foodenom"))
+	params = params.SetSendEnabledParam("foodenom", true)
+	require.True(t, params.IsSendEnabled("foodenom"))
 
-	sendParams = sendParams.SetSendEnabledParam("foodenom", false)
-	require.False(t, sendParams.Enabled("foodenom"))
+	params = params.SetSendEnabledParam("foodenom", false)
+	require.False(t, params.IsSendEnabled("foodenom"))
 
-	require.True(t, sendParams.Enabled("foodenom2"))
-	sendParams = sendParams.SetSendEnabledParam("foodenom2", false)
-	require.True(t, sendParams.Enabled(""))
-	require.True(t, sendParams.Enabled(sdk.DefaultBondDenom))
-	require.False(t, sendParams.Enabled("foodenom2"))
+	require.True(t, params.IsSendEnabled("foodenom2"))
+	params = params.SetSendEnabledParam("foodenom2", false)
+	require.True(t, params.IsSendEnabled(""))
+	require.True(t, params.IsSendEnabled(sdk.DefaultBondDenom))
+	require.False(t, params.IsSendEnabled("foodenom2"))
 
-	sendParams = NewSendEnabledParams(
-		NewSendEnabledParam("", true),
-		NewSendEnabledParam("foodenom", false),
-		NewSendEnabledParam("foodenom", true), // this is not allowed
-	)
+	paramYaml := `send_enabled:
+- enabled: true
+- denom: foodenom
+  enabled: false
+- denom: foodenom2
+  enabled: false
+`
+	require.Equal(t, paramYaml, params.String())
+
+	params = NewParams(SendEnabledParams{
+		NewSendEnabled("", true),
+		NewSendEnabled("foodenom", false),
+		NewSendEnabled("foodenom", true), // this is not allowed
+	})
 
 	// fails due to duplicate entries.
-	require.Error(t, validateSendEnabledParams(sendParams))
+	require.Error(t, params.Validate())
 
 	// fails due to invalid type
-	require.Error(t, validateSendEnabledParams(DefaultSendEnabledParam()))
-	require.Error(t, validateSendEnabledParams(NewSendEnabledParams(NewSendEnabledParam("INVALIDDENOM", true))))
+	require.Error(t, validateSendEnabledParams(DefaultSendEnabled()))
+
+	require.Error(t, validateSendEnabledParams(SendEnabledParams{NewSendEnabled("INVALIDDENOM", true)}))
 }

@@ -24,9 +24,10 @@ type SendKeeper interface {
 	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
 	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
 
-	GetAllSendEnabled(ctx sdk.Context) types.SendEnabledParams
+	GetParams(ctx sdk.Context) types.Params
+	SetParams(ctx sdk.Context, params types.Params)
+
 	GetSendEnabled(ctx sdk.Context, denom string) bool
-	SetSendEnabled(ctx sdk.Context, denom string, enabled bool)
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -60,6 +61,21 @@ func NewBaseSendKeeper(
 		blockedAddrs:   blockedAddrs,
 	}
 }
+
+//______________________________________________________________________
+
+// GetParams returns the total set of bank parameters.
+func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
+	k.paramSpace.GetParamSet(ctx, &params)
+	return params
+}
+
+// SetParams sets the total set of bank parameters.
+func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+//______________________________________________________________________
 
 // InputOutputCoins performs multi-send functionality. It accepts a series of
 // inputs that correspond to a series of outputs. It returns an error if the
@@ -256,30 +272,9 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	return nil
 }
 
-// GetAllSendEnabled returns all of the send enabled configurations
-func (k BaseSendKeeper) GetAllSendEnabled(ctx sdk.Context) types.SendEnabledParams {
-	var sendEnabledParams types.SendEnabledParams
-	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
-
-	return sendEnabledParams
-}
-
 // GetSendEnabled returns the current SendEnabled
 func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context, denom string) bool {
-	var sendEnabledParams types.SendEnabledParams
-	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
-
-	return sendEnabledParams.Enabled(denom)
-}
-
-// SetSendEnabled sets the send enabled
-func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, enabled bool) {
-	var sendEnabledParams types.SendEnabledParams
-	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
-
-	sendEnabledParams = sendEnabledParams.SetSendEnabledParam(denom, enabled)
-
-	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabledParams, &sendEnabledParams)
+	return k.GetParams(ctx).IsSendEnabled(denom)
 }
 
 // BlockedAddr checks if a given address is restricted from

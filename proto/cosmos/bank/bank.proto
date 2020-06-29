@@ -7,6 +7,26 @@ import "cosmos/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
+// Params defines the set of bank parameters.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  repeated bank.SendEnabled send_enabled = 1[
+    (gogoproto.moretags) = "yaml:\"send_enabled\""
+  ];
+}
+
+// Send enabled configuration properties for each denomination
+message SendEnabled {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+  string denom = 1[
+    (gogoproto.moretags) = "yaml:\"denom,omitempty\""
+  ];
+  bool enabled = 2[
+    (gogoproto.moretags) = "yaml:\"enabled\""
+  ];
+}
+
 // MsgSend - high level transaction of the coin module
 message MsgSend {
   option (gogoproto.equal) = true;

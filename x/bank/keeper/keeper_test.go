@@ -69,7 +69,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	app.BankKeeper.SetSendEnabled(ctx, "", true)
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
 	suite.app = app
 	suite.ctx = ctx
@@ -454,9 +454,21 @@ func (suite *IntegrationTestSuite) TestBalance() {
 
 func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app, ctx := suite.app, suite.ctx
-	enabled := false
-	app.BankKeeper.SetSendEnabled(ctx, "", enabled)
+	enabled := true
+	params := types.DefaultParams()
+	app.BankKeeper.SetParams(ctx, params)
+	// assert with default (all denom) send enabled both default and Bond Denom are enabled
 	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, ""))
+	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, sdk.DefaultBondDenom))
+
+	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
+	params = params.SetSendEnabledParam("", !enabled).SetSendEnabledParam("foodenom", enabled)
+	app.BankKeeper.SetParams(ctx, params)
+
+	// Expect our specific override to be enabled, others to be !enabled.
+	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, "foodenom"))
+	suite.Require().Equal(!enabled, app.BankKeeper.GetSendEnabled(ctx, ""))
+	suite.Require().Equal(!enabled, app.BankKeeper.GetSendEnabled(ctx, sdk.DefaultBondDenom))
 }
 
 func (suite *IntegrationTestSuite) TestHasBalance() {
@@ -527,7 +539,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	app, ctx := suite.app, suite.ctx
 
-	app.BankKeeper.SetSendEnabled(ctx, "", true)
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))

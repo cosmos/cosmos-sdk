@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-const keySendEnabled = "send_enabled_params"
+const keySendEnabled = "SendEnabled"
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
@@ -20,7 +20,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keySendEnabled,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%v", GenSendEnabledParams(r))
+				return fmt.Sprintf("%s", types.ModuleCdc.MustMarshalJSON(RandomGenesisParams(r).SendEnabled))
 			},
 		),
 	}

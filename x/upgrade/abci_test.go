@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -52,7 +53,7 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 	)
 
 	s.keeper = app.UpgradeKeeper
-	s.ctx = app.BaseApp.NewContext(false, abci.Header{Height: height, Time: time.Now()})
+	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: height, Time: time.Now()})
 
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.querier = s.module.NewQuerierHandler()

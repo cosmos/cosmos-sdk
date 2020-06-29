@@ -9,6 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
@@ -222,20 +223,28 @@ func (d Description) EnsureLength() (Description, error) {
 
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
-func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
-	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetConsPubKey()),
-		Power:  v.ConsensusPower(),
+func (v Validator) ABCIValidatorUpdate() (abci.ValidatorUpdate, error) {
+	pk, err := cryptoenc.PubKeyToProto(v.GetConsPubKey())
+	if err != nil {
+		return abci.ValidatorUpdate{}, err
 	}
+	return abci.ValidatorUpdate{
+		PubKey: pk,
+		Power:  v.ConsensusPower(),
+	}, nil
 }
 
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
-func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetConsPubKey()),
-		Power:  0,
+func (v Validator) ABCIValidatorUpdateZero() (abci.ValidatorUpdate, error) {
+	pk, err := cryptoenc.PubKeyToProto(v.GetConsPubKey())
+	if err != nil {
+		return abci.ValidatorUpdate{}, err
 	}
+	return abci.ValidatorUpdate{
+		PubKey: pk,
+		Power:  0,
+	}, nil
 }
 
 // ToTmValidator casts an SDK validator to a tendermint type Validator.

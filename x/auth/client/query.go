@@ -43,7 +43,7 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 
 	prove := !clientCtx.TrustNode
 
-	resTxs, err := node.TxSearch(query, prove, page, limit, orderBy)
+	resTxs, err := node.TxSearch(query, prove, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
 	}

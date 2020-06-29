@@ -2,11 +2,16 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 // TestConnOpenInit - Chain A (ID #1) initializes (INIT state) a connection with
@@ -286,6 +291,111 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
+	}
+}
+
+// TestOpenTryVersionNegotiation uses tests the result of the version negotiation done during
+// the handshake procedure OpenTry.
+// TODO: following the refactor of this file based on ibc testing package, these cases
+// should become individual cases for the OpenTry handshake.
+// https://github.com/cosmos/cosmos-sdk/issues/5558
+func TestOpenTryVersionNegotiation(t *testing.T) {
+	testCases := []struct {
+		name                 string
+		counterpartyVersions []string
+		expPass              bool
+	}{
+		{"valid counterparty versions", types.GetCompatibleVersions(), true},
+		{"empty counterparty versions", []string{}, false},
+		{"no counterparty match", []string{"not a valid version"}, false},
+	}
+
+	// Test OpenTry variety of cases using counterpartyVersions
+	for i, tc := range testCases {
+		coordinator := ibctesting.NewCoordinator(t, 2)
+		chainA := coordinator.GetChain(ibctesting.GetChainID(0))
+		chainB := coordinator.GetChain(ibctesting.GetChainID(1))
+
+		clientA, clientB := coordinator.SetupClients(chainA, chainB, clientexported.Tendermint)
+		connA, connB, err := coordinator.ConnOpenInit(chainA, chainB, clientA, clientB)
+		require.NoError(t, err)
+
+		counterparty := types.NewCounterparty(clientA, connA.ID, chainA.GetPrefix())
+
+		connectionKey := host.KeyConnection(connA.ID)
+		proofInit, proofHeight := chainA.QueryProof(connectionKey)
+
+		// retrieve consensus state to provide proof for
+		consState, found := chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chainA.GetContext(), clientA)
+		require.True(t, found)
+
+		consensusHeight := consState.GetHeight()
+		consensusKey := ibctesting.PrefixedClientKey(clientA, host.KeyConsensusState(consensusHeight))
+		proofConsensus, _ := chainA.QueryProof(consensusKey)
+
+		err = chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(chainB.GetContext(),
+			connB.ID, counterparty, clientB, tc.counterpartyVersions,
+			proofInit, proofConsensus, proofHeight, consensusHeight,
+		)
+
+		if tc.expPass {
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
+		} else {
+			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
+		}
+	}
+}
+
+// TestOpenAckVersionNegotiation uses tests the result of the version negotiation done during
+// the handshake procedure OpenAck.
+// TODO: following the refactor of this file based on ibc testing package, these cases
+// should become individual cases for the OpenAck handshake.
+// https://github.com/cosmos/cosmos-sdk/issues/5558
+func TestOpenAckVersionNegotiation(t *testing.T) {
+	testCases := []struct {
+		name    string
+		version string
+		expPass bool
+	}{
+		{"valid selected version", types.DefaultIBCVersion, true},
+		{"empty selected versions", "", false},
+		{"selected version not supported", "not a valid version", false},
+	}
+
+	// Test OpenTry variety of cases using counterpartyVersions
+	for i, tc := range testCases {
+		coordinator := ibctesting.NewCoordinator(t, 2)
+		chainA := coordinator.GetChain(ibctesting.GetChainID(0))
+		chainB := coordinator.GetChain(ibctesting.GetChainID(1))
+
+		clientA, clientB := coordinator.SetupClients(chainA, chainB, clientexported.Tendermint)
+		connA, connB, err := coordinator.ConnOpenInit(chainA, chainB, clientA, clientB)
+		require.NoError(t, err)
+
+		err = coordinator.ConnOpenTry(chainB, chainA, connB, connA)
+		require.NoError(t, err)
+
+		connectionKey := host.KeyConnection(connB.ID)
+		proofTry, proofHeight := chainB.QueryProof(connectionKey)
+
+		// retrieve consensus state to provide proof for
+		consState, found := chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chainB.GetContext(), clientB)
+		require.True(t, found)
+
+		consensusHeight := consState.GetHeight()
+		consensusKey := ibctesting.PrefixedClientKey(clientB, host.KeyConsensusState(consensusHeight))
+		proofConsensus, _ := chainB.QueryProof(consensusKey)
+
+		err = chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
+			chainA.GetContext(), connA.ID, tc.version,
+			proofTry, proofConsensus, proofHeight, consensusHeight,
+		)
+
+		if tc.expPass {
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
+		} else {
+			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
+		}
 	}
 }
 

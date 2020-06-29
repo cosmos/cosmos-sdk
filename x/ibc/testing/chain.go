@@ -371,7 +371,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	require.True(chain.t, found)
 
 	consensusHeight := consState.GetHeight()
-	consensusKey := PrefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
@@ -398,7 +398,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	require.True(chain.t, found)
 
 	consensusHeight := consState.GetHeight()
-	consensusKey := PrefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(

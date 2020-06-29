@@ -330,7 +330,7 @@ func TestOpenTryVersionNegotiation(t *testing.T) {
 		require.True(t, found)
 
 		consensusHeight := consState.GetHeight()
-		consensusKey := ibctesting.PrefixedClientKey(clientA, host.KeyConsensusState(consensusHeight))
+		consensusKey := host.FullKeyClientPath(clientA, host.KeyConsensusState(consensusHeight))
 		proofConsensus, _ := chainA.QueryProof(consensusKey)
 
 		err = chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(chainB.GetContext(),
@@ -383,7 +383,7 @@ func TestOpenAckVersionNegotiation(t *testing.T) {
 		require.True(t, found)
 
 		consensusHeight := consState.GetHeight()
-		consensusKey := ibctesting.PrefixedClientKey(clientB, host.KeyConsensusState(consensusHeight))
+		consensusKey := host.FullKeyClientPath(clientB, host.KeyConsensusState(consensusHeight))
 		proofConsensus, _ := chainB.QueryProof(consensusKey)
 
 		err = chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(

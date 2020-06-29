@@ -24,7 +24,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultConfig()
-	cfg.NumValidators = 1
+	cfg.NumValidators = 2
 
 	s.cfg = cfg
 	s.network = testutil.NewTestNetwork(s.T(), cfg)
@@ -184,26 +184,31 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	cmd.SetOut(buf)
 
 	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-		respType  fmt.Stringer
+		name         string
+		args         []string
+		expectErr    bool
+		respType     fmt.Stringer
+		expectedCode uint32
 	}{
-		// TODO: Self send gen only
-		// TODO: Self send invalid fees
+		// TODO: send gen only
+		// TODO: send invalid fees
 		// TODO: send invalid gas
 		{
 			"valid transaction",
 			[]string{
 				val.Address.String(),
-				val.Address.String(),
+				s.network.Validators[1].Address.String(),
 				sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 					sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 				).String(),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false,
 			&sdk.TxResponse{},
+			0,
 		},
 	}
 
@@ -221,8 +226,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(buf.Bytes(), tc.respType), buf.String())
 
-				fmt.Println(tc.respType)
-				// s.Require().Equal(tc.expected.String(), tc.respType.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
 	}

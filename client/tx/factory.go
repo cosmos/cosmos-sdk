@@ -3,6 +3,7 @@ package tx
 import (
 	"io"
 
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,6 +36,46 @@ const (
 	signModeAminoJSON = "amino-json"
 )
 
+func NewFactoryFromFlags(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
+	signModeStr, _ := flagSet.GetString(flags.FlagSignMode)
+
+	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+	switch signModeStr {
+	case signModeDirect:
+		signMode = signing.SignMode_SIGN_MODE_DIRECT
+	case signModeAminoJSON:
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	}
+
+	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
+	accSeq, _ := flagSet.GetUint64(flags.FlagSequence)
+	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
+	memo, _ := flagSet.GetString(flags.FlagMemo)
+
+	f := Factory{
+		txGenerator:        clientCtx.TxGenerator,
+		accountRetriever:   clientCtx.AccountRetriever,
+		keybase:            clientCtx.Keyring,
+		chainID:            clientCtx.ChainID,
+		gas:                flags.GasFlagVar.Gas,
+		simulateAndExecute: flags.GasFlagVar.Simulate,
+		accountNumber:      accNum,
+		sequence:           accSeq,
+		gasAdjustment:      gasAdj,
+		memo:               memo,
+		signMode:           signMode,
+	}
+
+	feesStr, _ := flagSet.GetString(flags.FlagFees)
+	f = f.WithFees(feesStr)
+
+	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
+	f = f.WithGasPrices(gasPricesStr)
+
+	return f
+}
+
+// TODO: Remove in favor of NewFactoryFromFlags
 func NewFactoryFromCLI(input io.Reader) Factory {
 	kb, err := keyring.New(
 		sdk.KeyringServiceName(),
@@ -62,7 +103,6 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 		gas:                flags.GasFlagVar.Gas,
 		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
 		simulateAndExecute: flags.GasFlagVar.Simulate,
-		chainID:            viper.GetString(flags.FlagChainID),
 		memo:               viper.GetString(flags.FlagMemo),
 		signMode:           signMode,
 	}

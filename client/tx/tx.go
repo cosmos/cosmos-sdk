@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,8 +21,15 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
+	txf := NewFactoryFromFlags(clientCtx, flagSet)
+	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
+}
+
 // GenerateOrBroadcastTx will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
+//
+// TODO: Remove in favor of GenerateOrBroadcastTxCLI
 func GenerateOrBroadcastTx(clientCtx client.Context, msgs ...sdk.Msg) error {
 	txf := NewFactoryFromCLI(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)

@@ -53,8 +53,7 @@ func NewSendTxCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			// TODO: Fix stupid GenerateOrBroadcastTx
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

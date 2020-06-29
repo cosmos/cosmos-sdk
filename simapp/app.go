@@ -373,6 +373,7 @@ func NewSimApp(
 	app.SetAnteHandler(
 		ante.NewAnteHandler(
 			app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer,
+			authtypes.LegacyAminoJSONHandler{},
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)

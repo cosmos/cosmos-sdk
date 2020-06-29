@@ -111,3 +111,31 @@ func TestCustomPathValidator(t *testing.T) {
 		}
 	}
 }
+
+func TestConnectionVersionValidator(t *testing.T) {
+	testCases := []testCase{
+		{"valid semantic version", "1.1.0", true},
+		{"valid semantic with leading zeros", "0123.0052.1003", true},
+		{"no periods", "1234567890", false},
+		{"one period", "1243.000", false},
+		{"no last number", "1234.1234.", false},
+		{"blank id", "               ", false},
+		{"no first number", ".1234.6789", false},
+		{"no middle number", "123..123", false},
+		{"no numbers", "asdf.asdf.asdf", false},
+		{"empty string", "", false},
+		{"mixture with letters", "123asd.23d.123", false},
+		{"mixture with symbols", "123.&1324/.134", false},
+	}
+
+	for _, tc := range testCases {
+
+		err := ConnectionVersionValidator(tc.id)
+
+		if tc.expPass {
+			require.NoError(t, err, tc.msg)
+		} else {
+			require.Error(t, err, tc.msg)
+		}
+	}
+}

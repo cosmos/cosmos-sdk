@@ -9,14 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestFilteredPaginations(t *testing.T) {
 	app, ctx, appCodec := setupTest()
-	// queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	// banktypes.RegisterQueryServer(queryHelper, app.BankKeeper)
-	// queryClient := banktypes.NewQueryClient(queryHelper)
 
 	var balances sdk.Coins
 
@@ -33,16 +31,17 @@ func TestFilteredPaginations(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	// require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
 
 	// .Log("verify empty page request results a max of defaultLimit records and counts total records")
 
 	pageReq := &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 
-	store := ctx.KVStore(app.GetKey(banktypes.StoreKey))
-	balancesStore := prefix.NewStore(store, banktypes.BalancesPrefix)
+	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 
+	var balResult sdk.Coins
 	res, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
 		err := appCodec.UnmarshalBinaryBare(value, &bal)
@@ -51,15 +50,17 @@ func TestFilteredPaginations(t *testing.T) {
 		}
 
 		if bal.Amount.Int64() > int64(100) {
-			accumulate = true
+			if accumulate {
+				balResult = append(balResult, bal)
+			}
+
+			return true, nil
 		}
 
-		if accumulate {
-			balances = append(balances, bal)
-		}
 		return false, nil
 	})
+
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t, 2, len(balances))
+	require.Equal(t, 2, len(balResult))
 }

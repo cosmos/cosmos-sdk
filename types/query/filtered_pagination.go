@@ -50,7 +50,7 @@ func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsPara
 	// handle error
 
 	return types.QueryProposalsResponse{Proposals: filteredProposals, Res: res}
- */
+*/
 
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling and filter the results.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -36,7 +37,7 @@ const (
 )
 
 func TestPagination(t *testing.T) {
-	app, ctx := setupTest()
+	app, ctx, _ := setupTest()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
@@ -144,7 +145,7 @@ func TestPagination(t *testing.T) {
 }
 
 func ExamplePaginate() {
-	app, ctx := setupTest()
+	app, ctx, _ := setupTest()
 
 	var balances sdk.Coins
 
@@ -184,7 +185,7 @@ func ExamplePaginate() {
 	// balances:<denom:"foo0denom" amount:"100" > res:<next_key:"foo1denom" total:2 >
 }
 
-func setupTest() (*simapp.SimApp, sdk.Context) {
+func setupTest() (*simapp.SimApp, sdk.Context, codec.Marshaler) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
 	appCodec := app.AppCodec()
@@ -209,5 +210,5 @@ func setupTest() (*simapp.SimApp, sdk.Context) {
 		app.GetSubspace(types.ModuleName), make(map[string]bool),
 	)
 
-	return app, ctx
+	return app, ctx, appCodec
 }

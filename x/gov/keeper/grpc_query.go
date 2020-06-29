@@ -87,7 +87,7 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 }
 
 // Votes returns single proposal's votes
-func (q Keeper) Votes(c context.Context, req *types.QueryProposalRequest) (*types.QueryVotesResponse, error) {
+func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -174,7 +174,7 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 }
 
 // Deposits returns single proposal's all deposits
-func (q Keeper) Deposits(c context.Context, req *types.QueryProposalRequest) (*types.QueryDepositsResponse, error) {
+func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -207,7 +207,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryProposalRequest) (*t
 }
 
 // TallyResult queries the tally of a proposal vote
-func (q Keeper) TallyResult(c context.Context, req *types.QueryProposalRequest) (*types.QueryTallyResponse, error) {
+func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyRequest) (*types.QueryTallyResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

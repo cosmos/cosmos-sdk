@@ -18,7 +18,7 @@ service Query {
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {}
 
   // Votes queries votes of a given proposal
-  rpc Votes (QueryProposalRequest) returns (QueryVotesResponse) {}
+  rpc Votes (QueryVotesRequest) returns (QueryVotesResponse) {}
 
   // Params queries all params
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {}
@@ -27,12 +27,13 @@ service Query {
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {}
 
   // Deposits returns all deposits of a single proposal
-  rpc Deposits(QueryProposalRequest) returns (QueryDepositsResponse) {}
+  rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {}
 
   // TallyResult queries the tally of a proposal vote
-  rpc TallyResult(QueryProposalRequest) returns (QueryTallyResponse) {}
+  rpc TallyResult(QueryTallyRequest) returns (QueryTallyResponse) {}
 }
 
+// QueryProposalRequest is the request type for the Query/Proposal RPC method
 message QueryProposalRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
@@ -40,11 +41,12 @@ message QueryProposalRequest {
   cosmos.query.PageRequest req = 2;
 }
 
+// QueryProposalResponse is the response type for the Query/Proposal RPC method
 message QueryProposalResponse {
   cosmos.gov.Proposal proposal = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryProposalRequest is the request type for the Query/Proposal RPC method
+// QueryProposalsRequest is the request type for the Query/Proposals RPC method
 message QueryProposalsRequest {
   // status of the proposals.
   int32 proposal_status = 1;
@@ -58,12 +60,14 @@ message QueryProposalsRequest {
   cosmos.query.PageRequest req = 4;
 }
 
+// QueryProposalsResponse is the response type for the Query/Proposals RPC method
 message QueryProposalsResponse {
   repeated cosmos.gov.Proposal proposals = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
+// QueryVoteRequest is the request type for the Query/Vote RPC method
 message QueryVoteRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
@@ -72,26 +76,39 @@ message QueryVoteRequest {
   bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"]; 
 }
 
+// QueryVoteResponse is the response type for the Query/Vote RPC method
 message QueryVoteResponse {
   cosmos.gov.Vote vote = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryVotesRequest is the request type for the Query/Votes RPC method
+message QueryVotesRequest {
+  // unique id of the proposal
+  uint64 proposal_id = 1;
+
+  cosmos.query.PageRequest req = 2;
+}
+
+// QueryVotesResponse is the response type for the Query/Votes RPC method
 message QueryVotesResponse {
   repeated cosmos.gov.Vote votes = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
+// QueryParamsRequest is the request type for the Query/Params RPC method
 message QueryParamsRequest { 
   string params_type = 1;
 }
 
+// QueryParamsResponse is the response type for the Query/Params RPC method
 message QueryParamsResponse {
   cosmos.gov.VotingParams VotingParams = 1 [(gogoproto.customtype) = "VotingParams", (gogoproto.nullable) = false];
   cosmos.gov.DepositParams DepositParams = 2 [(gogoproto.customtype) = "DepositParams", (gogoproto.nullable) = false];
   cosmos.gov.TallyParams TallyParams = 3 [(gogoproto.customtype) = "TallyParams", (gogoproto.nullable) = false];
 }
 
+// QueryDepositRequest is the request type for the Query/Deposit RPC method
 message QueryDepositRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
@@ -100,16 +117,35 @@ message QueryDepositRequest {
   bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
+// QueryDepositResponse is the response type for the Query/Deposit RPC method
 message QueryDepositResponse {
   cosmos.gov.Deposit deposit = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryDepositsRequest is the request type for the Query/Deposits RPC method
+message QueryDepositsRequest {
+  // unique id of the proposal
+  uint64 proposal_id = 1;
+
+  cosmos.query.PageRequest req = 2;
+}
+
+// QueryDepositsResponse is the response type for the Query/Deposits RPC method
 message QueryDepositsResponse {
   repeated cosmos.gov.Deposit deposits = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
+// QueryTallyRequest is the request type for the Query/Tally RPC method
+message QueryTallyRequest {
+  // unique id of the proposal
+  uint64 proposal_id = 1;
+
+  cosmos.query.PageRequest req = 2;
+}
+
+// QueryTallyResponse is the response type for the Query/Tally RPC method
 message QueryTallyResponse { 
   cosmos.gov.TallyResult tally = 1 [(gogoproto.nullable) = false];
 } 

@@ -30,6 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryProposalRequest is the request type for the Query/Proposal RPC method
 type QueryProposalRequest struct {
 	// unique id of the proposal
 	ProposalId uint64             `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -83,6 +84,7 @@ func (m *QueryProposalRequest) GetReq() *query.PageRequest {
 	return nil
 }
 
+// QueryProposalResponse is the response type for the Query/Proposal RPC method
 type QueryProposalResponse struct {
 	Proposal Proposal `protobuf:"bytes,1,opt,name=proposal,proto3" json:"proposal"`
 }
@@ -127,7 +129,7 @@ func (m *QueryProposalResponse) GetProposal() Proposal {
 	return Proposal{}
 }
 
-// QueryProposalRequest is the request type for the Query/Proposal RPC method
+// QueryProposalsRequest is the request type for the Query/Proposals RPC method
 type QueryProposalsRequest struct {
 	// status of the proposals.
 	ProposalStatus int32 `protobuf:"varint,1,opt,name=proposal_status,json=proposalStatus,proto3" json:"proposal_status,omitempty"`
@@ -199,6 +201,7 @@ func (m *QueryProposalsRequest) GetReq() *query.PageRequest {
 	return nil
 }
 
+// QueryProposalsResponse is the response type for the Query/Proposals RPC method
 type QueryProposalsResponse struct {
 	Proposals []Proposal          `protobuf:"bytes,1,rep,name=proposals,proto3" json:"proposals"`
 	Res       *query.PageResponse `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
@@ -251,6 +254,7 @@ func (m *QueryProposalsResponse) GetRes() *query.PageResponse {
 	return nil
 }
 
+// QueryVoteRequest is the request type for the Query/Vote RPC method
 type QueryVoteRequest struct {
 	// unique id of the proposal
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -305,6 +309,7 @@ func (m *QueryVoteRequest) GetVoter() github_com_cosmos_cosmos_sdk_types.AccAddr
 	return nil
 }
 
+// QueryVoteResponse is the response type for the Query/Vote RPC method
 type QueryVoteResponse struct {
 	Vote Vote `protobuf:"bytes,1,opt,name=vote,proto3" json:"vote"`
 }
@@ -349,6 +354,61 @@ func (m *QueryVoteResponse) GetVote() Vote {
 	return Vote{}
 }
 
+// QueryVotesRequest is the request type for the Query/Votes RPC method
+type QueryVotesRequest struct {
+	// unique id of the proposal
+	ProposalId uint64             `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Req        *query.PageRequest `protobuf:"bytes,2,opt,name=req,proto3" json:"req,omitempty"`
+}
+
+func (m *QueryVotesRequest) Reset()         { *m = QueryVotesRequest{} }
+func (m *QueryVotesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVotesRequest) ProtoMessage()    {}
+func (*QueryVotesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6efb1c1bc2595eda, []int{6}
+}
+func (m *QueryVotesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVotesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVotesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVotesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVotesRequest.Merge(m, src)
+}
+func (m *QueryVotesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVotesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVotesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVotesRequest proto.InternalMessageInfo
+
+func (m *QueryVotesRequest) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *QueryVotesRequest) GetReq() *query.PageRequest {
+	if m != nil {
+		return m.Req
+	}
+	return nil
+}
+
+// QueryVotesResponse is the response type for the Query/Votes RPC method
 type QueryVotesResponse struct {
 	Votes []Vote              `protobuf:"bytes,1,rep,name=votes,proto3" json:"votes"`
 	Res   *query.PageResponse `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
@@ -358,7 +418,7 @@ func (m *QueryVotesResponse) Reset()         { *m = QueryVotesResponse{} }
 func (m *QueryVotesResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryVotesResponse) ProtoMessage()    {}
 func (*QueryVotesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6efb1c1bc2595eda, []int{6}
+	return fileDescriptor_6efb1c1bc2595eda, []int{7}
 }
 func (m *QueryVotesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -401,6 +461,7 @@ func (m *QueryVotesResponse) GetRes() *query.PageResponse {
 	return nil
 }
 
+// QueryParamsRequest is the request type for the Query/Params RPC method
 type QueryParamsRequest struct {
 	ParamsType string `protobuf:"bytes,1,opt,name=params_type,json=paramsType,proto3" json:"params_type,omitempty"`
 }
@@ -409,7 +470,7 @@ func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6efb1c1bc2595eda, []int{7}
+	return fileDescriptor_6efb1c1bc2595eda, []int{8}
 }
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -445,6 +506,7 @@ func (m *QueryParamsRequest) GetParamsType() string {
 	return ""
 }
 
+// QueryParamsResponse is the response type for the Query/Params RPC method
 type QueryParamsResponse struct {
 	VotingParams  VotingParams  `protobuf:"bytes,1,opt,name=VotingParams,proto3,customtype=VotingParams" json:"VotingParams"`
 	DepositParams DepositParams `protobuf:"bytes,2,opt,name=DepositParams,proto3,customtype=DepositParams" json:"DepositParams"`
@@ -455,7 +517,7 @@ func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
 func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6efb1c1bc2595eda, []int{8}
+	return fileDescriptor_6efb1c1bc2595eda, []int{9}
 }
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -484,6 +546,7 @@ func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
+// QueryDepositRequest is the request type for the Query/Deposit RPC method
 type QueryDepositRequest struct {
 	// unique id of the proposal
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
@@ -495,7 +558,7 @@ func (m *QueryDepositRequest) Reset()         { *m = QueryDepositRequest{} }
 func (m *QueryDepositRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDepositRequest) ProtoMessage()    {}
 func (*QueryDepositRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6efb1c1bc2595eda, []int{9}
+	return fileDescriptor_6efb1c1bc2595eda, []int{10}
 }
 func (m *QueryDepositRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -538,6 +601,7 @@ func (m *QueryDepositRequest) GetDepositor() github_com_cosmos_cosmos_sdk_types.
 	return nil
 }
 
+// QueryDepositResponse is the response type for the Query/Deposit RPC method
 type QueryDepositResponse struct {
 	Deposit Deposit `protobuf:"bytes,1,opt,name=deposit,proto3" json:"deposit"`
 }
@@ -546,7 +610,7 @@ func (m *QueryDepositResponse) Reset()         { *m = QueryDepositResponse{} }
 func (m *QueryDepositResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDepositResponse) ProtoMessage()    {}
 func (*QueryDepositResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6efb1c1bc2595eda, []int{10}
+	return fileDescriptor_6efb1c1bc2595eda, []int{11}
 }
 func (m *QueryDepositResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -582,6 +646,61 @@ func (m *QueryDepositResponse) GetDeposit() Deposit {
 	return Deposit{}
 }
 
+// QueryDepositsRequest is the request type for the Query/Deposits RPC method
+type QueryDepositsRequest struct {
+	// unique id of the proposal
+	ProposalId uint64             `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Req        *query.PageRequest `protobuf:"bytes,2,opt,name=req,proto3" json:"req,omitempty"`
+}
+
+func (m *QueryDepositsRequest) Reset()         { *m = QueryDepositsRequest{} }
+func (m *QueryDepositsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDepositsRequest) ProtoMessage()    {}
+func (*QueryDepositsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6efb1c1bc2595eda, []int{12}
+}
+func (m *QueryDepositsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDepositsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDepositsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDepositsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDepositsRequest.Merge(m, src)
+}
+func (m *QueryDepositsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDepositsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDepositsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDepositsRequest proto.InternalMessageInfo
+
+func (m *QueryDepositsRequest) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *QueryDepositsRequest) GetReq() *query.PageRequest {
+	if m != nil {
+		return m.Req
+	}
+	return nil
+}
+
+// QueryDepositsResponse is the response type for the Query/Deposits RPC method
 type QueryDepositsResponse struct {
 	Deposits []Deposit           `protobuf:"bytes,1,rep,name=deposits,proto3" json:"deposits"`
 	Res      *query.PageResponse `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
@@ -591,7 +710,7 @@ func (m *QueryDepositsResponse) Reset()         { *m = QueryDepositsResponse{} }
 func (m *QueryDepositsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDepositsResponse) ProtoMessage()    {}
 func (*QueryDepositsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6efb1c1bc2595eda, []int{11}
+	return fileDescriptor_6efb1c1bc2595eda, []int{13}
 }
 func (m *QueryDepositsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -634,6 +753,61 @@ func (m *QueryDepositsResponse) GetRes() *query.PageResponse {
 	return nil
 }
 
+// QueryTallyRequest is the request type for the Query/Tally RPC method
+type QueryTallyRequest struct {
+	// unique id of the proposal
+	ProposalId uint64             `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Req        *query.PageRequest `protobuf:"bytes,2,opt,name=req,proto3" json:"req,omitempty"`
+}
+
+func (m *QueryTallyRequest) Reset()         { *m = QueryTallyRequest{} }
+func (m *QueryTallyRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTallyRequest) ProtoMessage()    {}
+func (*QueryTallyRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6efb1c1bc2595eda, []int{14}
+}
+func (m *QueryTallyRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTallyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTallyRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTallyRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTallyRequest.Merge(m, src)
+}
+func (m *QueryTallyRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTallyRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTallyRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTallyRequest proto.InternalMessageInfo
+
+func (m *QueryTallyRequest) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *QueryTallyRequest) GetReq() *query.PageRequest {
+	if m != nil {
+		return m.Req
+	}
+	return nil
+}
+
+// QueryTallyResponse is the response type for the Query/Tally RPC method
 type QueryTallyResponse struct {
 	Tally TallyResult `protobuf:"bytes,1,opt,name=tally,proto3" json:"tally"`
 }
@@ -642,7 +816,7 @@ func (m *QueryTallyResponse) Reset()         { *m = QueryTallyResponse{} }
 func (m *QueryTallyResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryTallyResponse) ProtoMessage()    {}
 func (*QueryTallyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6efb1c1bc2595eda, []int{12}
+	return fileDescriptor_6efb1c1bc2595eda, []int{15}
 }
 func (m *QueryTallyResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -685,68 +859,73 @@ func init() {
 	proto.RegisterType((*QueryProposalsResponse)(nil), "cosmos.gov.QueryProposalsResponse")
 	proto.RegisterType((*QueryVoteRequest)(nil), "cosmos.gov.QueryVoteRequest")
 	proto.RegisterType((*QueryVoteResponse)(nil), "cosmos.gov.QueryVoteResponse")
+	proto.RegisterType((*QueryVotesRequest)(nil), "cosmos.gov.QueryVotesRequest")
 	proto.RegisterType((*QueryVotesResponse)(nil), "cosmos.gov.QueryVotesResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.gov.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.gov.QueryParamsResponse")
 	proto.RegisterType((*QueryDepositRequest)(nil), "cosmos.gov.QueryDepositRequest")
 	proto.RegisterType((*QueryDepositResponse)(nil), "cosmos.gov.QueryDepositResponse")
+	proto.RegisterType((*QueryDepositsRequest)(nil), "cosmos.gov.QueryDepositsRequest")
 	proto.RegisterType((*QueryDepositsResponse)(nil), "cosmos.gov.QueryDepositsResponse")
+	proto.RegisterType((*QueryTallyRequest)(nil), "cosmos.gov.QueryTallyRequest")
 	proto.RegisterType((*QueryTallyResponse)(nil), "cosmos.gov.QueryTallyResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/gov/query.proto", fileDescriptor_6efb1c1bc2595eda) }
 
 var fileDescriptor_6efb1c1bc2595eda = []byte{
-	// 769 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0x8d, 0xd3, 0xa4, 0x4d, 0x26, 0x05, 0xca, 0x36, 0x2d, 0xc1, 0xa2, 0x49, 0xf0, 0x85, 0x0a,
-	0x5a, 0x47, 0xa4, 0x2a, 0xe2, 0x86, 0x6a, 0x81, 0x50, 0x55, 0xa9, 0x1f, 0xa6, 0xea, 0x81, 0x4b,
-	0xe5, 0xc6, 0x96, 0x89, 0x48, 0xb3, 0xae, 0xd7, 0x89, 0xa8, 0xd4, 0x03, 0xb7, 0x5e, 0xe1, 0x5f,
-	0xf5, 0xd8, 0x23, 0xe2, 0x50, 0xa1, 0xf6, 0x5f, 0x70, 0x42, 0xde, 0x9d, 0x75, 0xec, 0x7c, 0x91,
-	0x16, 0x4e, 0xb1, 0x67, 0xdf, 0xbe, 0x7d, 0xf3, 0x76, 0x66, 0x62, 0x58, 0x6c, 0x50, 0x76, 0x4c,
-	0x59, 0xcd, 0xa5, 0xdd, 0xda, 0x49, 0xc7, 0xf1, 0x4f, 0x75, 0xcf, 0xa7, 0x01, 0x25, 0x20, 0xe2,
-	0xba, 0x4b, 0xbb, 0xea, 0x12, 0x62, 0xf8, 0x7a, 0xcd, 0xb3, 0xdc, 0x66, 0xdb, 0x0a, 0x9a, 0xb4,
-	0x2d, 0xa0, 0x6a, 0xd1, 0xa5, 0x2e, 0xe5, 0x8f, 0xb5, 0xf0, 0x49, 0x46, 0x63, 0xc4, 0x2e, 0xed,
-	0x8a, 0xa8, 0x66, 0x43, 0x71, 0x2f, 0x64, 0xd9, 0xf5, 0xa9, 0x47, 0x99, 0xd5, 0x32, 0x9d, 0x93,
-	0x8e, 0xc3, 0x02, 0x52, 0x81, 0x82, 0x87, 0xa1, 0xc3, 0xa6, 0x5d, 0x52, 0xaa, 0xca, 0x72, 0xc6,
-	0x04, 0x19, 0xda, 0xb4, 0xc9, 0x0b, 0x98, 0xf2, 0x9d, 0x93, 0x52, 0xba, 0xaa, 0x2c, 0x17, 0xea,
-	0x8f, 0x75, 0x54, 0x27, 0x14, 0xef, 0x5a, 0xae, 0x83, 0x44, 0x66, 0x88, 0xd2, 0x76, 0x60, 0xa1,
-	0xef, 0x14, 0xe6, 0xd1, 0x36, 0x73, 0xc8, 0x2b, 0xc8, 0x49, 0x4e, 0x7e, 0x46, 0xa1, 0x5e, 0xd4,
-	0x7b, 0x89, 0xea, 0x12, 0x6f, 0x64, 0x2e, 0xae, 0x2a, 0x29, 0x33, 0xc2, 0x6a, 0xe7, 0xe9, 0x3e,
-	0x46, 0x26, 0x85, 0x3f, 0x83, 0x07, 0x91, 0x70, 0x16, 0x58, 0x41, 0x87, 0x71, 0xe2, 0xac, 0x79,
-	0x5f, 0x86, 0x3f, 0xf0, 0x28, 0x79, 0x0f, 0xd9, 0x2e, 0x0d, 0x1c, 0x9f, 0xa7, 0x30, 0x6b, 0xbc,
-	0xfc, 0x7d, 0x55, 0x59, 0x75, 0x9b, 0xc1, 0xa7, 0xce, 0x91, 0xde, 0xa0, 0xc7, 0x35, 0x74, 0x4b,
-	0xfc, 0xac, 0x32, 0xfb, 0x73, 0x2d, 0x38, 0xf5, 0x1c, 0xa6, 0x6f, 0x34, 0x1a, 0x1b, 0xb6, 0xed,
-	0x3b, 0x8c, 0x99, 0x62, 0x3f, 0xd9, 0x81, 0xbc, 0xed, 0x78, 0x94, 0x35, 0x03, 0xea, 0x97, 0xa6,
-	0xee, 0x4a, 0xd6, 0xe3, 0x90, 0xd6, 0x66, 0x26, 0xb2, 0xf6, 0xab, 0x02, 0x8b, 0xfd, 0x4e, 0xa0,
-	0xb9, 0xaf, 0x21, 0x2f, 0x73, 0x0e, 0x4d, 0x98, 0xfa, 0x8b, 0xbb, 0x3d, 0x30, 0x59, 0x09, 0x15,
-	0x30, 0xbc, 0x5c, 0x75, 0x98, 0x02, 0x71, 0x44, 0x28, 0x81, 0x69, 0x67, 0x30, 0xc7, 0x15, 0x1c,
-	0xd0, 0xc0, 0x99, 0xb8, 0x7e, 0xfe, 0x97, 0xfd, 0xda, 0x1b, 0x78, 0x18, 0x3b, 0x1d, 0x53, 0x7f,
-	0x0e, 0x99, 0x70, 0x15, 0x6b, 0x6a, 0x2e, 0x9e, 0x75, 0x88, 0xc3, 0x8c, 0x39, 0x46, 0xf3, 0x80,
-	0x44, 0x04, 0x3d, 0xf3, 0x56, 0x84, 0x3e, 0x69, 0xdc, 0x28, 0x0a, 0x01, 0xba, 0xa5, 0x61, 0xeb,
-	0x78, 0xe2, 0xae, 0xe5, 0x5b, 0xc7, 0x2c, 0x6e, 0x19, 0x0f, 0x1c, 0x86, 0xa9, 0x72, 0xe9, 0x79,
-	0x13, 0x44, 0x68, 0xff, 0xd4, 0x73, 0xb4, 0xef, 0x69, 0x98, 0x4f, 0xec, 0x43, 0xa9, 0x26, 0xcc,
-	0x1e, 0xd0, 0xa0, 0xd9, 0x76, 0x45, 0x1c, 0x93, 0x2e, 0xf5, 0x29, 0x8e, 0xd6, 0x8d, 0x62, 0xa8,
-	0xfc, 0xe7, 0x55, 0x25, 0xb1, 0xcb, 0x4c, 0xbc, 0x91, 0x03, 0xb8, 0xf7, 0x56, 0x14, 0x24, 0x92,
-	0xf6, 0x35, 0x7a, 0x48, 0x9a, 0x00, 0x18, 0x0b, 0xc8, 0x9a, 0xdc, 0x67, 0x26, 0x5f, 0xc9, 0x36,
-	0x14, 0xf6, 0xad, 0x56, 0x0b, 0x53, 0xe0, 0xed, 0x52, 0xa8, 0x3f, 0x8a, 0xb3, 0xc6, 0x96, 0x8d,
-	0x79, 0xe4, 0x8c, 0xef, 0x31, 0xe3, 0x2f, 0xda, 0xb9, 0x82, 0x9e, 0xe0, 0x31, 0x13, 0xd7, 0x5f,
-	0xa2, 0x6b, 0xd3, 0xff, 0xde, 0xb5, 0xda, 0x16, 0x4e, 0xd2, 0x48, 0x08, 0xde, 0xce, 0x1a, 0xcc,
-	0x20, 0x08, 0x2f, 0x66, 0x7e, 0x88, 0x87, 0x58, 0x4d, 0x12, 0xa9, 0x9d, 0xe1, 0x78, 0xc3, 0xe5,
-	0xde, 0x5d, 0xaf, 0x43, 0x0e, 0x31, 0xb2, 0x32, 0xc7, 0xd0, 0x45, 0xd0, 0x5b, 0xd6, 0xe7, 0x26,
-	0xd6, 0x27, 0x37, 0x3a, 0x96, 0x48, 0x36, 0x08, 0x03, 0x98, 0xc6, 0xe0, 0xa5, 0x99, 0x0e, 0xeb,
-	0xb4, 0xe4, 0xd9, 0x02, 0x5b, 0x3f, 0xcf, 0x42, 0x96, 0x73, 0x91, 0x3d, 0xc8, 0xc9, 0x81, 0x43,
-	0xaa, 0xf1, 0xbd, 0xc3, 0xfe, 0x7f, 0xd4, 0xa7, 0x63, 0x10, 0x42, 0x8f, 0x96, 0x22, 0xfb, 0x90,
-	0x8f, 0xa6, 0x1e, 0x19, 0xbd, 0x43, 0x76, 0x98, 0xaa, 0x8d, 0x83, 0x44, 0xac, 0xef, 0x20, 0x13,
-	0x36, 0x38, 0x79, 0x32, 0x80, 0x8e, 0x0d, 0x38, 0x75, 0x69, 0xc4, 0x6a, 0x44, 0xb3, 0x05, 0x59,
-	0x3e, 0x51, 0x26, 0x48, 0xb6, 0x3c, 0x94, 0x8b, 0x25, 0xc8, 0xa6, 0xb1, 0x81, 0x06, 0xb1, 0x89,
-	0x29, 0xa2, 0x56, 0x46, 0xae, 0x47, 0x64, 0xdb, 0x30, 0x83, 0x75, 0x42, 0x06, 0xd1, 0xc9, 0x3e,
-	0x52, 0xab, 0xa3, 0x01, 0x11, 0xdf, 0x1e, 0xe4, 0x64, 0x9d, 0xde, 0xe9, 0x66, 0xfb, 0x8b, 0x9c,
-	0x53, 0x16, 0x62, 0x25, 0x75, 0x27, 0x0b, 0x13, 0xc5, 0xab, 0xa5, 0x0c, 0xe3, 0xe2, 0xba, 0xac,
-	0x5c, 0x5e, 0x97, 0x95, 0x5f, 0xd7, 0x65, 0xe5, 0xdb, 0x4d, 0x39, 0x75, 0x79, 0x53, 0x4e, 0xfd,
-	0xb8, 0x29, 0xa7, 0x3e, 0x2e, 0x8f, 0xed, 0xf9, 0x2f, 0xfc, 0x8b, 0x89, 0x77, 0xfe, 0xd1, 0x34,
-	0xff, 0x68, 0x5a, 0xfb, 0x13, 0x00, 0x00, 0xff, 0xff, 0xf7, 0x8f, 0x85, 0xff, 0xa5, 0x09, 0x00,
-	0x00,
+	// 803 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcf, 0x4f, 0x13, 0x4f,
+	0x14, 0xef, 0x96, 0x16, 0xda, 0x57, 0xbe, 0x5f, 0x71, 0x28, 0x58, 0x37, 0xd2, 0xd6, 0xbd, 0x48,
+	0x14, 0xda, 0x58, 0x82, 0xf1, 0x66, 0x68, 0x34, 0x4a, 0x48, 0xf8, 0xb1, 0x12, 0x0e, 0x5e, 0xc8,
+	0xd2, 0x6e, 0xd6, 0xc6, 0xd2, 0x59, 0x76, 0xb6, 0x8d, 0x24, 0x1c, 0xf4, 0xc4, 0x55, 0xff, 0x2b,
+	0x8e, 0x1c, 0x8d, 0x07, 0x62, 0xe0, 0xbf, 0xf0, 0x64, 0x76, 0xe6, 0xcd, 0x74, 0xb7, 0xed, 0x56,
+	0x50, 0x39, 0xb5, 0xfb, 0xde, 0x67, 0x3e, 0xef, 0xf3, 0x7e, 0xcc, 0xdb, 0x85, 0xf9, 0x06, 0x65,
+	0x87, 0x94, 0x55, 0x1d, 0xda, 0xab, 0x1e, 0x75, 0x6d, 0xef, 0xb8, 0xe2, 0x7a, 0xd4, 0xa7, 0x04,
+	0x84, 0xbd, 0xe2, 0xd0, 0x9e, 0xbe, 0x80, 0x18, 0xee, 0xaf, 0xba, 0x96, 0xd3, 0xea, 0x58, 0x7e,
+	0x8b, 0x76, 0x04, 0x54, 0xcf, 0x3b, 0xd4, 0xa1, 0xfc, 0x6f, 0x35, 0xf8, 0x27, 0xad, 0x21, 0x62,
+	0x87, 0xf6, 0x84, 0xd5, 0x68, 0x42, 0x7e, 0x27, 0x60, 0xd9, 0xf6, 0xa8, 0x4b, 0x99, 0xd5, 0x36,
+	0xed, 0xa3, 0xae, 0xcd, 0x7c, 0x52, 0x82, 0x9c, 0x8b, 0xa6, 0xfd, 0x56, 0xb3, 0xa0, 0x95, 0xb5,
+	0xc5, 0x94, 0x09, 0xd2, 0xb4, 0xde, 0x24, 0x4f, 0x60, 0xc2, 0xb3, 0x8f, 0x0a, 0xc9, 0xb2, 0xb6,
+	0x98, 0xab, 0xdd, 0xaf, 0xa0, 0x3a, 0xa1, 0x78, 0xdb, 0x72, 0x6c, 0x24, 0x32, 0x03, 0x94, 0xb1,
+	0x05, 0x73, 0x03, 0x51, 0x98, 0x4b, 0x3b, 0xcc, 0x26, 0xcf, 0x20, 0x23, 0x39, 0x79, 0x8c, 0x5c,
+	0x2d, 0x5f, 0xe9, 0x27, 0x5a, 0x91, 0xf8, 0x7a, 0xea, 0xec, 0xa2, 0x94, 0x30, 0x15, 0xd6, 0x38,
+	0x4d, 0x0e, 0x30, 0x32, 0x29, 0xfc, 0x11, 0xdc, 0x51, 0xc2, 0x99, 0x6f, 0xf9, 0x5d, 0xc6, 0x89,
+	0xd3, 0xe6, 0xff, 0xd2, 0xfc, 0x96, 0x5b, 0xc9, 0x6b, 0x48, 0xf7, 0xa8, 0x6f, 0x7b, 0x3c, 0x85,
+	0xe9, 0xfa, 0xd3, 0x9f, 0x17, 0xa5, 0x65, 0xa7, 0xe5, 0xbf, 0xef, 0x1e, 0x54, 0x1a, 0xf4, 0xb0,
+	0x8a, 0xd5, 0x12, 0x3f, 0xcb, 0xac, 0xf9, 0xa1, 0xea, 0x1f, 0xbb, 0x36, 0xab, 0xac, 0x35, 0x1a,
+	0x6b, 0xcd, 0xa6, 0x67, 0x33, 0x66, 0x8a, 0xf3, 0x64, 0x0b, 0xb2, 0x4d, 0xdb, 0xa5, 0xac, 0xe5,
+	0x53, 0xaf, 0x30, 0xf1, 0xa7, 0x64, 0x7d, 0x0e, 0x59, 0xda, 0xd4, 0xb5, 0x4a, 0xfb, 0x49, 0x83,
+	0xf9, 0xc1, 0x4a, 0x60, 0x71, 0x9f, 0x43, 0x56, 0xe6, 0x1c, 0x14, 0x61, 0xe2, 0x37, 0xd5, 0xed,
+	0x83, 0xc9, 0x52, 0xa0, 0x80, 0x61, 0x73, 0xf5, 0x51, 0x0a, 0x44, 0x88, 0x40, 0x02, 0x33, 0x4e,
+	0x60, 0x86, 0x2b, 0xd8, 0xa3, 0xbe, 0x7d, 0xed, 0xf9, 0xf9, 0x57, 0xe5, 0x37, 0x5e, 0xc0, 0xdd,
+	0x50, 0x74, 0x4c, 0xfd, 0x31, 0xa4, 0x02, 0x2f, 0xce, 0xd4, 0x4c, 0x38, 0xeb, 0x00, 0x87, 0x19,
+	0x73, 0x8c, 0x61, 0x85, 0x08, 0xd8, 0xed, 0xcc, 0xbf, 0x0b, 0x24, 0x1c, 0x02, 0x45, 0x2e, 0x89,
+	0x12, 0xc8, 0xde, 0xc4, 0xa9, 0x14, 0xa0, 0x1b, 0xf6, 0x64, 0x15, 0x23, 0x6e, 0x5b, 0x9e, 0x75,
+	0x18, 0xc9, 0x8a, 0x1b, 0xf6, 0x83, 0x6a, 0xf2, 0xac, 0xb2, 0x26, 0x08, 0xd3, 0xee, 0xb1, 0x6b,
+	0x1b, 0x5f, 0x93, 0x30, 0x1b, 0x39, 0x87, 0x52, 0x4d, 0x98, 0xde, 0xa3, 0x7e, 0xab, 0xe3, 0x08,
+	0x3b, 0xd6, 0xb5, 0x30, 0xa0, 0x58, 0xf9, 0xeb, 0xf9, 0x40, 0xf9, 0xf7, 0x8b, 0x52, 0xe4, 0x94,
+	0x19, 0x79, 0x22, 0x7b, 0xf0, 0xdf, 0x4b, 0x31, 0xf3, 0x48, 0x3a, 0x50, 0xcb, 0x80, 0x34, 0x02,
+	0xa8, 0xcf, 0x21, 0x6b, 0xf4, 0x9c, 0x19, 0x7d, 0x24, 0x9b, 0x90, 0xdb, 0xb5, 0xda, 0x6d, 0x4c,
+	0x81, 0xdf, 0xc8, 0x5c, 0xed, 0x5e, 0x98, 0x35, 0xe4, 0xae, 0xcf, 0x22, 0x67, 0xf8, 0x8c, 0x19,
+	0x7e, 0x30, 0x4e, 0x35, 0xac, 0x09, 0x86, 0xb9, 0xf6, 0x88, 0x44, 0x16, 0x43, 0xf2, 0xef, 0x17,
+	0x83, 0xb1, 0x81, 0xcb, 0x5a, 0x09, 0xc1, 0xee, 0xac, 0xc0, 0x14, 0x82, 0xb0, 0x31, 0xb3, 0x23,
+	0x6a, 0x88, 0xd3, 0x24, 0x91, 0x6a, 0xf3, 0xa3, 0xfb, 0x96, 0x26, 0xff, 0x04, 0xf7, 0x74, 0x3f,
+	0x0a, 0x6a, 0x5e, 0x85, 0x0c, 0x2a, 0x91, 0xf3, 0x3f, 0x46, 0xb4, 0x82, 0xde, 0xf0, 0x16, 0xc8,
+	0xab, 0xcd, 0xdb, 0x79, 0x3b, 0x09, 0xae, 0xe3, 0x45, 0xc3, 0x10, 0xaa, 0x23, 0x69, 0x3f, 0x30,
+	0x60, 0x3f, 0x86, 0xa7, 0xcf, 0xb4, 0x59, 0xb7, 0x2d, 0xd3, 0x13, 0xd8, 0xda, 0xe7, 0x34, 0xa4,
+	0x39, 0x17, 0xd9, 0x81, 0x8c, 0x5c, 0xce, 0xa4, 0x1c, 0x3e, 0x3b, 0xea, 0x5d, 0xad, 0x3f, 0x1c,
+	0x83, 0x10, 0x7a, 0x8c, 0x04, 0xd9, 0x85, 0xac, 0x7a, 0x43, 0x90, 0xf8, 0x13, 0x72, 0x0c, 0x74,
+	0x63, 0x1c, 0x44, 0xb1, 0xbe, 0x82, 0x54, 0xb0, 0xa9, 0xc8, 0x83, 0x21, 0x74, 0xe8, 0x65, 0xa0,
+	0x2f, 0xc4, 0x78, 0x15, 0xcd, 0x1b, 0x48, 0xf3, 0xd5, 0x48, 0x46, 0x23, 0x95, 0xa8, 0x62, 0x9c,
+	0x5b, 0x31, 0x6d, 0xc0, 0x24, 0xae, 0x81, 0x61, 0x6c, 0x64, 0x17, 0xea, 0xa5, 0x58, 0xbf, 0x22,
+	0xdb, 0x84, 0x29, 0x9c, 0x43, 0x32, 0x8c, 0x8e, 0x6e, 0x03, 0xbd, 0x1c, 0x0f, 0x50, 0x7c, 0x3b,
+	0x90, 0x91, 0xf7, 0x80, 0xc4, 0xe2, 0x59, 0x7c, 0x5b, 0x07, 0x2f, 0x11, 0x97, 0x98, 0x0b, 0xcd,
+	0xd3, 0x88, 0xfa, 0x85, 0x47, 0x7f, 0x44, 0xfd, 0x22, 0x63, 0x6b, 0x24, 0xea, 0xf5, 0xb3, 0xcb,
+	0xa2, 0x76, 0x7e, 0x59, 0xd4, 0x7e, 0x5c, 0x16, 0xb5, 0x2f, 0x57, 0xc5, 0xc4, 0xf9, 0x55, 0x31,
+	0xf1, 0xed, 0xaa, 0x98, 0x78, 0xb7, 0x38, 0x76, 0x6d, 0x7d, 0xe4, 0xdf, 0x95, 0x7c, 0x79, 0x1d,
+	0x4c, 0xf2, 0x4f, 0xcb, 0x95, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa6, 0xef, 0x93, 0x3a, 0xcb,
+	0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -768,15 +947,15 @@ type QueryClient interface {
 	// Vote returns Voted information based on proposalID, voterAddr
 	Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal
-	Votes(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error)
+	Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error)
 	// Params queries all params
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Deposit queries single deposit information based proposalID, depositAddr
 	Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error)
 	// Deposits returns all deposits of a single proposal
-	Deposits(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
+	Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
 	// TallyResult queries the tally of a proposal vote
-	TallyResult(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryTallyResponse, error)
+	TallyResult(ctx context.Context, in *QueryTallyRequest, opts ...grpc.CallOption) (*QueryTallyResponse, error)
 }
 
 type queryClient struct {
@@ -814,7 +993,7 @@ func (c *queryClient) Vote(ctx context.Context, in *QueryVoteRequest, opts ...gr
 	return out, nil
 }
 
-func (c *queryClient) Votes(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error) {
+func (c *queryClient) Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error) {
 	out := new(QueryVotesResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.gov.Query/Votes", in, out, opts...)
 	if err != nil {
@@ -841,7 +1020,7 @@ func (c *queryClient) Deposit(ctx context.Context, in *QueryDepositRequest, opts
 	return out, nil
 }
 
-func (c *queryClient) Deposits(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error) {
+func (c *queryClient) Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error) {
 	out := new(QueryDepositsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.gov.Query/Deposits", in, out, opts...)
 	if err != nil {
@@ -850,7 +1029,7 @@ func (c *queryClient) Deposits(ctx context.Context, in *QueryProposalRequest, op
 	return out, nil
 }
 
-func (c *queryClient) TallyResult(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryTallyResponse, error) {
+func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyRequest, opts ...grpc.CallOption) (*QueryTallyResponse, error) {
 	out := new(QueryTallyResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.gov.Query/TallyResult", in, out, opts...)
 	if err != nil {
@@ -868,15 +1047,15 @@ type QueryServer interface {
 	// Vote returns Voted information based on proposalID, voterAddr
 	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal
-	Votes(context.Context, *QueryProposalRequest) (*QueryVotesResponse, error)
+	Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
 	// Params queries all params
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Deposit queries single deposit information based proposalID, depositAddr
 	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
 	// Deposits returns all deposits of a single proposal
-	Deposits(context.Context, *QueryProposalRequest) (*QueryDepositsResponse, error)
+	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
 	// TallyResult queries the tally of a proposal vote
-	TallyResult(context.Context, *QueryProposalRequest) (*QueryTallyResponse, error)
+	TallyResult(context.Context, *QueryTallyRequest) (*QueryTallyResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -892,7 +1071,7 @@ func (*UnimplementedQueryServer) Proposals(ctx context.Context, req *QueryPropos
 func (*UnimplementedQueryServer) Vote(ctx context.Context, req *QueryVoteRequest) (*QueryVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
 }
-func (*UnimplementedQueryServer) Votes(ctx context.Context, req *QueryProposalRequest) (*QueryVotesResponse, error) {
+func (*UnimplementedQueryServer) Votes(ctx context.Context, req *QueryVotesRequest) (*QueryVotesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Votes not implemented")
 }
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
@@ -901,10 +1080,10 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 func (*UnimplementedQueryServer) Deposit(ctx context.Context, req *QueryDepositRequest) (*QueryDepositResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
 }
-func (*UnimplementedQueryServer) Deposits(ctx context.Context, req *QueryProposalRequest) (*QueryDepositsResponse, error) {
+func (*UnimplementedQueryServer) Deposits(ctx context.Context, req *QueryDepositsRequest) (*QueryDepositsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Deposits not implemented")
 }
-func (*UnimplementedQueryServer) TallyResult(ctx context.Context, req *QueryProposalRequest) (*QueryTallyResponse, error) {
+func (*UnimplementedQueryServer) TallyResult(ctx context.Context, req *QueryTallyRequest) (*QueryTallyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TallyResult not implemented")
 }
 
@@ -967,7 +1146,7 @@ func _Query_Vote_Handler(srv interface{}, ctx context.Context, dec func(interfac
 }
 
 func _Query_Votes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryProposalRequest)
+	in := new(QueryVotesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -979,7 +1158,7 @@ func _Query_Votes_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: "/cosmos.gov.Query/Votes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Votes(ctx, req.(*QueryProposalRequest))
+		return srv.(QueryServer).Votes(ctx, req.(*QueryVotesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1021,7 +1200,7 @@ func _Query_Deposit_Handler(srv interface{}, ctx context.Context, dec func(inter
 }
 
 func _Query_Deposits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryProposalRequest)
+	in := new(QueryDepositsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1033,13 +1212,13 @@ func _Query_Deposits_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/cosmos.gov.Query/Deposits",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Deposits(ctx, req.(*QueryProposalRequest))
+		return srv.(QueryServer).Deposits(ctx, req.(*QueryDepositsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryProposalRequest)
+	in := new(QueryTallyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1051,7 +1230,7 @@ func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/cosmos.gov.Query/TallyResult",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).TallyResult(ctx, req.(*QueryProposalRequest))
+		return srv.(QueryServer).TallyResult(ctx, req.(*QueryTallyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1341,6 +1520,46 @@ func (m *QueryVoteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryVotesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVotesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVotesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Req != nil {
+		{
+			size, err := m.Req.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ProposalId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *QueryVotesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1541,6 +1760,46 @@ func (m *QueryDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryDepositsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDepositsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDepositsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Req != nil {
+		{
+			size, err := m.Req.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ProposalId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *QueryDepositsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1586,6 +1845,46 @@ func (m *QueryDepositsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTallyRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTallyRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTallyRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Req != nil {
+		{
+			size, err := m.Req.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ProposalId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -1731,6 +2030,22 @@ func (m *QueryVoteResponse) Size() (n int) {
 	return n
 }
 
+func (m *QueryVotesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		n += 1 + sovQuery(uint64(m.ProposalId))
+	}
+	if m.Req != nil {
+		l = m.Req.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
 func (m *QueryVotesResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1805,6 +2120,22 @@ func (m *QueryDepositResponse) Size() (n int) {
 	return n
 }
 
+func (m *QueryDepositsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		n += 1 + sovQuery(uint64(m.ProposalId))
+	}
+	if m.Req != nil {
+		l = m.Req.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
 func (m *QueryDepositsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1819,6 +2150,22 @@ func (m *QueryDepositsResponse) Size() (n int) {
 	}
 	if m.Res != nil {
 		l = m.Res.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryTallyRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		n += 1 + sovQuery(uint64(m.ProposalId))
+	}
+	if m.Req != nil {
+		l = m.Req.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -2526,6 +2873,114 @@ func (m *QueryVoteResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *QueryVotesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVotesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVotesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Req == nil {
+				m.Req = &query.PageRequest{}
+			}
+			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QueryVotesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3078,6 +3533,114 @@ func (m *QueryDepositResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *QueryDepositsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDepositsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDepositsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Req == nil {
+				m.Req = &query.PageRequest{}
+			}
+			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QueryDepositsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3174,6 +3737,114 @@ func (m *QueryDepositsResponse) Unmarshal(dAtA []byte) error {
 				m.Res = &query.PageResponse{}
 			}
 			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTallyRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTallyRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTallyRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Req == nil {
+				m.Req = &query.PageRequest{}
+			}
+			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

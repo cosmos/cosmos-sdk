@@ -22,25 +22,25 @@ func TestGRPCProposal(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	pageReq := &query.PageRequest{
+	_, err := queryClient.Proposal(gocontext.Background(), &types.QueryProposalRequest{})
+	require.Error(t, err)
+
+	_ = &query.PageRequest{
 		Key:        nil,
 		Limit:      0,
 		CountTotal: false,
 	}
 
-	req := types.NewQueryProposalRequest(1, pageReq)
+	req := types.NewQueryProposalRequest(1, &query.PageRequest{})
 
-	_, err := queryClient.Proposal(gocontext.Background(), req)
-	require.Error(t, err)
-
-	_, err = queryClient.Proposal(gocontext.Background(), &types.QueryProposalRequest{})
+	_, err = queryClient.Proposal(gocontext.Background(), req)
 	require.Error(t, err)
 
 	testProposal := types.NewTextProposal("Proposal", "testing proposal")
 	submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
 	require.NoError(t, err)
 
-	req = types.NewQueryProposalRequest(submittedProposal.ProposalID, pageReq)
+	req = types.NewQueryProposalRequest(submittedProposal.ProposalID, &query.PageRequest{})
 
 	proposal, err := queryClient.Proposal(gocontext.Background(), req)
 	require.NoError(t, err)
@@ -80,7 +80,7 @@ func TestGRPCProposals(t *testing.T) {
 	// give page limit as 1 and expect NextKey should not to be empty
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, proposals.Proposals)
+	require.Len(t, proposals.Proposals, 1)
 	require.NotEmpty(t, proposals.Res.NextKey)
 
 	pageReq = &query.PageRequest{
@@ -96,7 +96,7 @@ func TestGRPCProposals(t *testing.T) {
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, proposals.Proposals)
+	require.Len(t, proposals.Proposals, 1)
 	require.Empty(t, proposals.Res)
 
 	pageReq = &query.PageRequest{
@@ -111,7 +111,7 @@ func TestGRPCProposals(t *testing.T) {
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, proposals.Proposals)
+	require.Len(t, proposals.Proposals, 2)
 	require.Empty(t, proposals.Res)
 }
 
@@ -181,7 +181,11 @@ func TestGRPCVotes(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req := types.NewQueryProposalRequest(0, pageReq)
+	req := &types.QueryVotesRequest{
+		ProposalId: 0,
+		Req:        pageReq,
+	}
+
 	_, err := queryClient.Votes(gocontext.Background(), req)
 	require.Error(t, err)
 
@@ -193,7 +197,11 @@ func TestGRPCVotes(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryVotesRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	votes, err := queryClient.Votes(gocontext.Background(), req)
 
 	require.NoError(t, err)
@@ -218,10 +226,14 @@ func TestGRPCVotes(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryVotesRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, votes.Votes)
+	require.Len(t, votes.Votes, 1)
 	require.NotEmpty(t, votes.Res)
 
 	// query vote with limit 1, next key and expect NextKey to be nil.
@@ -231,10 +243,14 @@ func TestGRPCVotes(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryVotesRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, votes.Votes)
+	require.Len(t, votes.Votes, 1)
 	require.Empty(t, votes.Res)
 
 	// query vote with limit 2 and expect NextKey to be nil.
@@ -244,10 +260,14 @@ func TestGRPCVotes(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryVotesRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	votes, err = queryClient.Votes(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, votes.Votes)
+	require.Len(t, votes.Votes, 2)
 	require.Empty(t, votes.Res)
 }
 
@@ -347,7 +367,11 @@ func TestGRPCDeposits(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req := types.NewQueryProposalRequest(0, pageReq)
+	req := &types.QueryDepositsRequest{
+		ProposalId: 0,
+		Req:        pageReq,
+	}
+
 	_, err := queryClient.Deposits(gocontext.Background(), req)
 	require.Error(t, err)
 
@@ -356,7 +380,11 @@ func TestGRPCDeposits(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryDepositsRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	deposits, err := queryClient.Deposits(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Empty(t, deposits.Deposits)
@@ -377,11 +405,15 @@ func TestGRPCDeposits(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryDepositsRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	deposits, err = queryClient.Deposits(gocontext.Background(), req)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, deposits.Deposits)
+	require.Len(t, deposits.Deposits, 1)
 	require.NotEmpty(t, deposits.Res.NextKey)
 
 	// query vote with limit 1, next key and expect NextKey to be nil.
@@ -391,10 +423,14 @@ func TestGRPCDeposits(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryDepositsRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	deposits, err = queryClient.Deposits(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, deposits.Deposits)
+	require.Len(t, deposits.Deposits, 1)
 	require.Empty(t, deposits.Res)
 
 	// query vote with limit 2 and expect NextKey to be nil.
@@ -404,10 +440,14 @@ func TestGRPCDeposits(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryDepositsRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	deposits, err = queryClient.Deposits(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, deposits.Deposits)
+	require.Len(t, deposits.Deposits, 2)
 	require.Empty(t, deposits.Res)
 }
 
@@ -432,15 +472,27 @@ func TestGRPCTally(t *testing.T) {
 		CountTotal: false,
 	}
 
-	req := types.NewQueryProposalRequest(0, pageReq)
+	req := &types.QueryTallyRequest{
+		ProposalId: 0,
+		Req:        pageReq,
+	}
+
 	_, err = queryClient.TallyResult(gocontext.Background(), req)
 	require.Error(t, err)
 
-	req = types.NewQueryProposalRequest(2, pageReq)
+	req = &types.QueryTallyRequest{
+		ProposalId: 2,
+		Req:        pageReq,
+	}
+
 	_, err = queryClient.TallyResult(gocontext.Background(), req)
 	require.Error(t, err)
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryTallyRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	tally, err := queryClient.TallyResult(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Equal(t, tally.Tally, types.EmptyTallyResult())
@@ -453,7 +505,11 @@ func TestGRPCTally(t *testing.T) {
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryTallyRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	tally, err = queryClient.TallyResult(gocontext.Background(), req)
 
 	require.NoError(t, err)
@@ -462,7 +518,11 @@ func TestGRPCTally(t *testing.T) {
 	proposal.Status = types.StatusPassed
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	req = types.NewQueryProposalRequest(proposalID, pageReq)
+	req = &types.QueryTallyRequest{
+		ProposalId: proposalID,
+		Req:        pageReq,
+	}
+
 	tally, err = queryClient.TallyResult(gocontext.Background(), req)
 
 	require.NoError(t, err)

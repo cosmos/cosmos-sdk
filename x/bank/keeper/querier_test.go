@@ -133,9 +133,9 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	var resp sdk.Int
+	var resp sdk.Coin
 	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &resp))
-	suite.Require().Equal(test1Supply.Amount, resp)
+	suite.Require().Equal(test1Supply, resp)
 }
 
 func (suite *IntegrationTestSuite) TestQuerierRouteNotFound() {

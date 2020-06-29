@@ -42,6 +42,17 @@ func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHei
 	}
 }
 
+// ParseResponseWithHeight returns the raw result from a JSON-encoded
+// ResponseWithHeight object.
+func ParseResponseWithHeight(cdc codec.JSONMarshaler, bz []byte) ([]byte, error) {
+	r := ResponseWithHeight{}
+	if err := cdc.UnmarshalJSON(bz, &r); err != nil {
+		return nil, err
+	}
+
+	return r.Result, nil
+}
+
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate"`
@@ -424,4 +435,24 @@ func ParseQueryParamBool(r *http.Request, param string) bool {
 	}
 
 	return false
+}
+
+// GetRequest defines a wrapper around an HTTP GET request with a provided URL.
+// An error is returned if the request or reading the body fails.
+func GetRequest(url string) ([]byte, error) {
+	res, err := http.Get(url) // nolint:gosec
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	types2 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	rest2 "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
@@ -26,41 +27,66 @@ func (s *IntegrationTestSuite) TestCoinSend() {
 		initValidatorCoins,
 	)
 
-	account, err := getAccount(val)
+	account, err := getAccountInfo(val)
 	s.Require().NoError(err)
 
-	accnum := account.GetAccountNumber()
-	sequence := account.GetSequence()
-
-	baseReq := rest.NewBaseReq(
-		account.GetAddress().String(), "someMemo", "some-id", "10000", fmt.Sprintf("%f", 1.0), accnum, sequence, types.NewCoins(), nil, false,
+	sendReq := generateSendReq(
+		account,
+		types.Coins{types.NewCoin(s.cfg.BondDenom, types.TokensFromConsensusPower(1))},
 	)
 
-	sendRequest := rest2.SendReq{
-		BaseReq: baseReq,
-		Amount:  types.Coins{types.NewCoin(s.cfg.BondDenom, types.TokensFromConsensusPower(1))},
+	_, err = submitSendReq(val, sendReq)
+	s.Require().NoError(err)
+}
+
+func submitSendReq(val *testutil.Validator, req rest2.SendReq) (types2.StdTx, error) {
+	url := fmt.Sprintf("%s/bank/accounts/%s/transfers", val.APIAddress, val.Address)
+
+	bz, err := val.ClientCtx.JSONMarshaler.MarshalJSON(req)
+	if err != nil {
+		return types2.StdTx{}, errors.Wrap(err, "error encoding SendReq to json")
 	}
 
-	req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(sendRequest)
-	s.Require().NoError(err)
+	resp, err := http.Post(url, "", bytes.NewBuffer(bz))
+	if err != nil {
+		return types2.StdTx{}, errors.Wrap(err, "error while sending post request")
+	}
 
-	url := fmt.Sprintf("%s/bank/accounts/%s/transfers", val.APIAddress, val.Address)
-	resp, err := http.Post(url, "", bytes.NewBuffer(req))
-	s.Require().NoError(err)
-
-	bz, err := ioutil.ReadAll(resp.Body)
-	s.Require().NoError(err)
+	bz, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return types2.StdTx{}, errors.Wrap(err, "error reading SendReq response body")
+	}
 
 	var tx types2.StdTx
 	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, &tx)
-	s.Require().NoError(err)
+	if err != nil {
+		return types2.StdTx{}, errors.Wrap(err, "error unmarshaling to StdTx SendReq response")
+	}
+
+	return tx, nil
 }
 
-func genTx() {
+func generateSendReq(from types2.AccountI, amount types.Coins) rest2.SendReq {
+	baseReq := rest.NewBaseReq(
+		from.GetAddress().String(),
+		"someMemo",
+		"some-id",
+		"10000",
+		fmt.Sprintf("%f", 1.0),
+		from.GetAccountNumber(),
+		from.GetSequence(),
+		types.NewCoins(),
+		nil,
+		false,
+	)
 
+	return rest2.SendReq{
+		BaseReq: baseReq,
+		Amount:  amount,
+	}
 }
 
-func getAccount(val *testutil.Validator) (types2.AccountI, error) {
+func getAccountInfo(val *testutil.Validator) (types2.AccountI, error) {
 	url := fmt.Sprintf("%s/auth/accounts/%s", val.APIAddress, val.Address)
 
 	resp, err := rest.GetRequest(url)

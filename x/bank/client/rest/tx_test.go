@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	types2 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	rest2 "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (s *IntegrationTestSuite) TestCoinSend() {
@@ -35,8 +36,17 @@ func (s *IntegrationTestSuite) TestCoinSend() {
 		types.Coins{types.NewCoin(s.cfg.BondDenom, types.TokensFromConsensusPower(1))},
 	)
 
-	_, err = submitSendReq(val, sendReq)
+	stdTx, err := submitSendReq(val, sendReq)
 	s.Require().NoError(err)
+
+	s.Require().Nil(stdTx.Signatures)
+	s.Require().Equal([]types.Msg{
+		&banktypes.MsgSend{
+			FromAddress: account.GetAddress(),
+			ToAddress:   account.GetAddress(),
+			Amount:      sendReq.Amount,
+		},
+	}, stdTx.GetMsgs())
 }
 
 func submitSendReq(val *testutil.Validator, req rest2.SendReq) (types2.StdTx, error) {

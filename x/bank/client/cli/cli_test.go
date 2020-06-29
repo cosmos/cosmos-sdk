@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
@@ -24,7 +25,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultConfig()
-	cfg.NumValidators = 2
+	cfg.NumValidators = 1
 
 	s.cfg = cfg
 	s.network = testutil.NewTestNetwork(s.T(), cfg)
@@ -42,10 +43,6 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	cmd := cli.GetBalancesCmd(clientCtx)
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
 
 	testCases := []struct {
 		name      string
@@ -93,6 +90,10 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 
 		s.Run(tc.name, func() {
 			buf.Reset()
+
+			cmd := cli.GetBalancesCmd(clientCtx)
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
 			err := cmd.Execute()
@@ -111,10 +112,6 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	cmd := cli.GetCmdQueryTotalSupply(clientCtx)
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
 
 	testCases := []struct {
 		name      string
@@ -160,6 +157,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 
 		s.Run(tc.name, func() {
 			buf.Reset()
+
+			cmd := cli.GetCmdQueryTotalSupply(clientCtx)
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
 			err := cmd.Execute()
@@ -179,10 +180,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
 
-	cmd := cli.NewSendTxCmd(clientCtx)
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
-
 	testCases := []struct {
 		name         string
 		args         []string
@@ -190,14 +187,29 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		respType     fmt.Stringer
 		expectedCode uint32
 	}{
-		// TODO: send gen only
-		// TODO: send invalid fees
-		// TODO: send invalid gas
+		{
+			"valid transaction (gen-only)",
+			[]string{
+				val.Address.String(),
+				val.Address.String(),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				).String(),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			},
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
 		{
 			"valid transaction",
 			[]string{
 				val.Address.String(),
-				s.network.Validators[1].Address.String(),
+				val.Address.String(),
 				sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 					sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
@@ -210,6 +222,41 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			&sdk.TxResponse{},
 			0,
 		},
+		{
+			"not enough fees",
+			[]string{
+				val.Address.String(),
+				val.Address.String(),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				).String(),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
+			},
+			false,
+			&sdk.TxResponse{},
+			sdkerrors.ErrInsufficientFee.ABCICode(),
+		},
+		{
+			"not enough gas",
+			[]string{
+				val.Address.String(),
+				val.Address.String(),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				).String(),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				"--gas=10",
+			},
+			false,
+			&sdk.TxResponse{},
+			sdkerrors.ErrOutOfGas.ABCICode(),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -217,6 +264,10 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 
 		s.Run(tc.name, func() {
 			buf.Reset()
+
+			cmd := cli.NewSendTxCmd(clientCtx)
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
 			err := cmd.Execute()

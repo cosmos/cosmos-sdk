@@ -118,6 +118,9 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
 
 		// --gas can accept integers and "simulate"
+		//
+		// TODO: Remove usage of var in favor of string as this is technical creating
+		// a singleton usage pattern and can cause issues in parallel tests.
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
 			GasFlagAuto, DefaultGasLimit,

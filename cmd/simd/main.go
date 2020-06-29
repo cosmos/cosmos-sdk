@@ -25,8 +25,8 @@ func main() {
 	}
 
 	// Construct Root Command
-	rootComd = addClientCommands(rootComd)
-	rootComd = addDaemonCommands(rootComd)
+	addClientCommands(rootComd)
+	addDaemonCommands(rootComd)
 
 	executor := cli.PrepareMainCmd(rootComd, "GA", simapp.DefaultNodeHome)
 	err := executor.Execute()

@@ -27,7 +27,7 @@ const flagInvCheckPeriod = "inv-check-period"
 
 var invCheckPeriod uint
 
-func addDaemonCommands(rootDaemonCmd *cobra.Command) *cobra.Command {
+func addDaemonCommands(rootDaemonCmd *cobra.Command) {
 	appCodec, cdc := simapp.MakeCodecs()
 
 	ctx := server.NewDefaultContext()
@@ -53,7 +53,6 @@ func addDaemonCommands(rootDaemonCmd *cobra.Command) *cobra.Command {
 	rootDaemonCmd.PersistentFlags().UintVar(&invCheckPeriod, flagInvCheckPeriod,
 		0, "Assert registered invariants every N blocks")
 
-	return rootDaemonCmd
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Application {

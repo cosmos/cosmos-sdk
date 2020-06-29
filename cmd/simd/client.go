@@ -29,7 +29,7 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 }
 
-func addClientCommands(rootClientCmd *cobra.Command) *cobra.Command {
+func addClientCommands(rootClientCmd *cobra.Command) {
 
 	// Add --chain-id to persistent flags and mark it required
 	rootClientCmd.PersistentFlags().String(flags.FlagChainID, "", "Chain ID of tendermint node")
@@ -46,8 +46,6 @@ func addClientCommands(rootClientCmd *cobra.Command) *cobra.Command {
 		keys.Commands(),
 		flags.NewCompletionCmd(rootClientCmd, true),
 	)
-
-	return rootClientCmd
 }
 
 func queryCmd(config simappparams.EncodingConfig) *cobra.Command {

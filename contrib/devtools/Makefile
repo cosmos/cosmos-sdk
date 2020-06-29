@@ -86,6 +86,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 proto-tools: proto-tools-stamp
+
 proto-tools-stamp:
 	@echo "Installing protoc compiler..."
 	@(cd /tmp; \
@@ -94,12 +95,7 @@ proto-tools-stamp:
 	unzip -o ${PROTOC_ZIP} -d $(PREFIX) 'include/*'; \
 	rm -f ${PROTOC_ZIP})
 
-	@echo "Installing protoc-gen-buf-check-breaking..."
-	@curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-breaking-${UNAME_S}-${UNAME_M}" \
-    -o "${BIN}/protoc-gen-buf-check-breaking" && \
-	chmod +x "${BIN}/protoc-gen-buf-check-breaking"
-
+buf: 
 	@echo "Installing buf..."
 	@curl -sSL \
     "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" \

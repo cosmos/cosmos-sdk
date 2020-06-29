@@ -2,24 +2,127 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryConnection() {
-	counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
-	expConn := types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty, types.GetCompatibleVersions())
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConn)
+	var (
+		req           *types.QueryConnectionRequest
+		expConnection types.ConnectionEnd
+	)
 
-	req := &types.QueryConnectionRequest{
-		ConnectionID: testConnectionIDB,
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"invalid connectionID",
+			func() {
+				req = &types.QueryConnectionRequest{}
+			},
+			false,
+		},
+		{"connection not found",
+			func() {
+				req = &types.QueryConnectionRequest{
+					ConnectionID: testConnectionIDB,
+				}
+			},
+			false,
+		},
+		{
+			"sucess",
+			func() {
+				counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+				expConnection = types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty, types.GetCompatibleVersions())
+				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDB, expConnection)
+
+				req = &types.QueryConnectionRequest{
+					ConnectionID: testConnectionIDB,
+				}
+			},
+			true,
+		},
 	}
 
-	connectionRes, err := suite.grpcQueryClient.Connection(context.Background(), req)
-	suite.Require().NoError(err)
-	suite.Require().NotNil(connectionRes)
-	suite.Require().Equal(expConn, connectionRes.Connection)
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+
+			res, err := suite.grpcQueryClient.Connection(context.Background(), req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(&expConnection, res.Connection)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryClientConnections() {
+	var (
+		req      *types.QueryClientConnectionsRequest
+		expPaths []string
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"invalid connectionID",
+			func() {
+				req = &types.QueryClientConnectionsRequest{}
+			},
+			false,
+		},
+		{"connection not found",
+			func() {
+				req = &types.QueryClientConnectionsRequest{
+					ClientID: testClientIDA,
+				}
+			},
+			false,
+		},
+		{
+			"sucess",
+			func() {
+				expPaths = []string{testConnectionIDA, testConnectionIDB}
+				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), testClientIDA, expPaths)
+
+				req = &types.QueryClientConnectionsRequest{
+					ClientID: testClientIDA,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+
+			res, err := suite.grpcQueryClient.ClientConnections(context.Background(), req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expPaths, res.ConnectionPaths)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
 }
 
 // func TestAllProposal() {

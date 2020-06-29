@@ -7,13 +7,11 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	types2 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	rest2 "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

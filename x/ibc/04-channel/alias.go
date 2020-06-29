@@ -19,7 +19,6 @@ const (
 	EventTypeSendPacket            = types.EventTypeSendPacket
 	EventTypeRecvPacket            = types.EventTypeRecvPacket
 	EventTypeAcknowledgePacket     = types.EventTypeAcknowledgePacket
-	EventTypeCleanupPacket         = types.EventTypeCleanupPacket
 	EventTypeTimeoutPacket         = types.EventTypeTimeoutPacket
 	AttributeKeyData               = types.AttributeKeyData
 	AttributeKeyAck                = types.AttributeKeyAck

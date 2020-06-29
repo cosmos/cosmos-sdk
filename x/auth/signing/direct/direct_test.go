@@ -1,7 +1,13 @@
-package direct
+package direct_test
 
 import (
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
+
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/generator"
 
@@ -10,7 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -19,17 +24,19 @@ import (
 )
 
 func TestDirectModeHandler(t *testing.T) {
-	app := simapp.Setup(false)
-	//ctx := app.BaseApp.NewContext(false, abci.Header{})
+	privKey, pubkey, addr := authtypes.KeyTestPubAddr()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	pubKeyCdc := std.DefaultPublicKeyCodec{}
 
-	_, pubkey, addr := authtypes.KeyTestPubAddr()
-	cdc := std.DefaultPublicKeyCodec{}
+	txGen := generator.New(marshaler, pubKeyCdc)
+	txBuilder := txGen.NewTxBuilder()
 
-	tx := generator.NewBuilder(app.AppCodec(), std.DefaultPublicKeyCodec{})
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{authtypes.NewTestMsg(addr)}
 
-	pk, err := cdc.Encode(pubkey)
+	pk, err := pubKeyCdc.Encode(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo
@@ -44,27 +51,27 @@ func TestDirectModeHandler(t *testing.T) {
 		},
 	})
 
+	sigData := &signingtypes.SingleSignatureData{
+		SignMode: signingtypes.SignMode_SIGN_MODE_DIRECT,
+	}
 	sig := signingtypes.SignatureV2{
 		PubKey: pubkey,
-		Data: &signingtypes.SingleSignatureData{
-			SignMode:  signingtypes.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubkey.Bytes(),
-		},
+		Data:   sigData,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
-	err = tx.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
-	tx.SetMemo(memo)
-	tx.SetFeeAmount(fee.Amount)
-	tx.SetGasLimit(fee.GasLimit)
+	txBuilder.SetMemo(memo)
+	txBuilder.SetFeeAmount(fee.Amount)
+	txBuilder.SetGasLimit(fee.GasLimit)
 
-	err = tx.SetSignatures(sig)
+	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
 
 	t.Log("verify modes and default-mode")
-	var directModeHandler ModeHandler
+	directModeHandler := direct.ModeHandler{}
 	require.Equal(t, directModeHandler.DefaultMode(), signingtypes.SignMode_SIGN_MODE_DIRECT)
 	require.Len(t, directModeHandler.Modes(), 1)
 
@@ -74,7 +81,7 @@ func TestDirectModeHandler(t *testing.T) {
 		AccountSequence: 1,
 	}
 
-	signBytes, err := directModeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	signBytes, err := directModeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
 
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
@@ -84,7 +91,7 @@ func TestDirectModeHandler(t *testing.T) {
 		SignerInfos: signerInfo,
 	}
 
-	authInfoBytes := app.AppCodec().MustMarshalBinaryBare(authInfo)
+	authInfoBytes := marshaler.MustMarshalBinaryBare(authInfo)
 
 	anys := make([]*codectypes.Any, len(msgs))
 
@@ -100,7 +107,7 @@ func TestDirectModeHandler(t *testing.T) {
 		Memo:     memo,
 		Messages: anys,
 	}
-	bodyBytes := app.AppCodec().MustMarshalBinaryBare(txBody)
+	bodyBytes := marshaler.MustMarshalBinaryBare(txBody)
 
 	t.Log("verify GetSignBytes with generating sign bytes by marshaling SignDoc")
 	signDoc := txtypes.SignDoc{
@@ -111,13 +118,22 @@ func TestDirectModeHandler(t *testing.T) {
 		ChainId:         "test-chain",
 	}
 
-	signDocBytes, err := signDoc.Marshal()
+	expectedSignBytes, err := signDoc.Marshal()
 	require.NoError(t, err)
-	require.Equal(t, signDocBytes, signBytes)
+	require.Equal(t, expectedSignBytes, signBytes)
+
+	t.Log("verify that setting signature doesn't change sign bytes")
+	sigData.Signature, err = privKey.Sign(signBytes)
+	require.NoError(t, err)
+	err = txBuilder.SetSignatures(sig)
+	require.NoError(t, err)
+	signBytes, err = directModeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
+	require.NoError(t, err)
+	require.Equal(t, expectedSignBytes, signBytes)
 
 	t.Log("verify GetSignBytes with false txBody data")
 	signDoc.BodyBytes = []byte("dfafdasfds")
-	signDocBytes, err = signDoc.Marshal()
+	expectedSignBytes, err = signDoc.Marshal()
 	require.NoError(t, err)
-	require.NotEqual(t, signDocBytes, signBytes)
+	require.NotEqual(t, expectedSignBytes, signBytes)
 }

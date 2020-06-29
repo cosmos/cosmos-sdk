@@ -3,6 +3,8 @@ package generator
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
+
 	"github.com/cosmos/cosmos-sdk/client/testutil"
 
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -30,13 +32,10 @@ type Builder interface {
 	sdk.FeeTx
 	sdk.TxWithMemo
 	testutil.HasSignaturesTx
+	client.TxBuilder
 	GetSignaturesV2() ([]signing.SignatureV2, error)
 
-	tx.ProtoTx
-
-	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-
-	client.TxBuilder
+	direct.ProtoTx
 }
 
 func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Builder {
@@ -73,7 +72,7 @@ type builder struct {
 
 var _ Builder = &builder{}
 
-func (t builder) GetMsgs() []sdk.Msg {
+func (t *builder) GetMsgs() []sdk.Msg {
 	anys := t.tx.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
@@ -86,7 +85,7 @@ func (t builder) GetMsgs() []sdk.Msg {
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-func (t builder) ValidateBasic() error {
+func (t *builder) ValidateBasic() error {
 	theTx := t.tx
 	if theTx == nil {
 		return fmt.Errorf("bad Tx")
@@ -161,7 +160,7 @@ func (t *builder) GetAuthInfoBytes() []byte {
 	return t.authInfoBz
 }
 
-func (t builder) GetSigners() []sdk.AccAddress {
+func (t *builder) GetSigners() []sdk.AccAddress {
 	var signers []sdk.AccAddress
 	seen := map[string]bool{}
 
@@ -177,7 +176,7 @@ func (t builder) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-func (t builder) GetPubKeys() []crypto.PubKey {
+func (t *builder) GetPubKeys() []crypto.PubKey {
 	if t.pubKeys == nil {
 		signerInfos := t.tx.AuthInfo.SignerInfos
 		pubKeys := make([]crypto.PubKey, len(signerInfos))
@@ -199,27 +198,27 @@ func (t builder) GetPubKeys() []crypto.PubKey {
 	return t.pubKeys
 }
 
-func (t builder) GetGas() uint64 {
+func (t *builder) GetGas() uint64 {
 	return t.tx.AuthInfo.Fee.GasLimit
 }
 
-func (t builder) GetFee() sdk.Coins {
+func (t *builder) GetFee() sdk.Coins {
 	return t.tx.AuthInfo.Fee.Amount
 }
 
-func (t builder) FeePayer() sdk.AccAddress {
+func (t *builder) FeePayer() sdk.AccAddress {
 	return t.GetSigners()[0]
 }
 
-func (t builder) GetMemo() string {
+func (t *builder) GetMemo() string {
 	return t.tx.Body.Memo
 }
 
-func (t builder) GetSignatures() [][]byte {
+func (t *builder) GetSignatures() [][]byte {
 	return t.tx.Signatures
 }
 
-func (t builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
+func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := t.tx.AuthInfo.SignerInfos
 	sigs := t.tx.Signatures
 	pubKeys := t.GetPubKeys()
@@ -325,7 +324,7 @@ func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t builder) GetTx() sdk.Tx {
+func (t *builder) GetTx() sdk.Tx {
 	return t
 }
 

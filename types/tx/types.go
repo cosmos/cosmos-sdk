@@ -5,11 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type ProtoTx interface {
-	GetBodyBytes() []byte
-	GetAuthInfoBytes() []byte
-}
-
 func (m *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if m.Body != nil {
 		return m.Body.UnpackInterfaces(unpacker)

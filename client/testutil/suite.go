@@ -5,6 +5,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/cosmos/cosmos-sdk/client"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -25,45 +27,50 @@ func NewTxGeneratorTestSuite(txGenerator client.TxGenerator) *TxGeneratorTestSui
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderGetTx() {
-	stdTxBuilder := s.TxGenerator.NewTxBuilder()
-	tx := stdTxBuilder.GetTx()
+	txBuilder := s.TxGenerator.NewTxBuilder()
+	tx := txBuilder.GetTx()
 	s.Require().NotNil(tx)
 	s.Require().Equal(len(tx.GetMsgs()), 0)
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetFeeAmount() {
-	stdTxBuilder := s.TxGenerator.NewTxBuilder()
+	txBuilder := s.TxGenerator.NewTxBuilder()
 	feeAmount := sdk.Coins{
 		sdk.NewInt64Coin("atom", 20000000),
 	}
-	stdTxBuilder.SetFeeAmount(feeAmount)
-	feeTx := stdTxBuilder.GetTx().(sdk.FeeTx)
+	txBuilder.SetFeeAmount(feeAmount)
+	feeTx := txBuilder.GetTx().(sdk.FeeTx)
 	s.Require().Equal(feeAmount, feeTx.GetFee())
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetGasLimit() {
 	const newGas uint64 = 300000
-	stdTxBuilder := s.TxGenerator.NewTxBuilder()
-	stdTxBuilder.SetGasLimit(newGas)
-	feeTx := stdTxBuilder.GetTx().(sdk.FeeTx)
+	txBuilder := s.TxGenerator.NewTxBuilder()
+	txBuilder.SetGasLimit(newGas)
+	feeTx := txBuilder.GetTx().(sdk.FeeTx)
 	s.Require().Equal(newGas, feeTx.GetGas())
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetMemo() {
 	const newMemo string = "newfoomemo"
-	stdTxBuilder := s.TxGenerator.NewTxBuilder()
-	stdTxBuilder.SetMemo(newMemo)
-	txWithMemo := stdTxBuilder.GetTx().(sdk.TxWithMemo)
+	txBuilder := s.TxGenerator.NewTxBuilder()
+	txBuilder.SetMemo(newMemo)
+	txWithMemo := txBuilder.GetTx().(sdk.TxWithMemo)
 	s.Require().Equal(txWithMemo.GetMemo(), newMemo)
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetMsgs() {
-	stdTxBuilder := s.TxGenerator.NewTxBuilder()
-	tx := stdTxBuilder.GetTx()
-	err := stdTxBuilder.SetMsgs(sdk.NewTestMsg(), sdk.NewTestMsg())
+	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	addr2 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	msg1 := testdata.NewTestMsg(addr1)
+	msg2 := testdata.NewTestMsg(addr2)
+	msgs := []sdk.Msg{msg1, msg2}
+
+	txBuilder := s.TxGenerator.NewTxBuilder()
+
+	err := txBuilder.SetMsgs(msgs...)
 	s.Require().NoError(err)
-	s.Require().NotEqual(tx, stdTxBuilder.GetTx())
-	s.Require().Equal(len(stdTxBuilder.GetTx().GetMsgs()), 2)
+	s.Require().Equal(msgs, txBuilder.GetTx().GetMsgs())
 }
 
 type HasSignaturesTx interface {
@@ -74,37 +81,75 @@ type HasSignaturesTx interface {
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 	priv := secp256k1.GenPrivKey()
+	dummySig := []byte("dummySig")
 
-	stdTxBuilder := s.TxGenerator.NewTxBuilder()
-	tx := stdTxBuilder.GetTx()
-	singleSignatureData := signingtypes.SingleSignatureData{
-		Signature: priv.PubKey().Bytes(),
-		SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	}
+	txBuilder := s.TxGenerator.NewTxBuilder()
 
-	err := stdTxBuilder.SetSignatures(signingtypes.SignatureV2{
+	sig := signingtypes.SignatureV2{
 		PubKey: priv.PubKey(),
-		Data:   &singleSignatureData,
-	})
-	sigTx := stdTxBuilder.GetTx().(HasSignaturesTx)
+		Data: &signingtypes.SingleSignatureData{
+			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: dummySig,
+		},
+	}
+	err := txBuilder.SetSignatures(sig)
 	s.Require().NoError(err)
-	s.Require().NotEqual(tx, stdTxBuilder.GetTx())
-	s.Require().Equal(sigTx.GetSignatures()[0], priv.PubKey().Bytes())
+
+	sigTx := txBuilder.GetTx().(HasSignaturesTx)
+	s.Require().Equal(dummySig, sigTx.GetSignatures()[0])
 }
 
 func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
+	priv := secp256k1.GenPrivKey()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
+	gasLimit := uint64(50000)
+	memo := "foomemo"
+	msg := testdata.NewTestMsg(sdk.AccAddress(priv.PubKey().Address()))
+	dummySig := []byte("dummySig")
+	sig := signingtypes.SignatureV2{
+		PubKey: priv.PubKey(),
+		Data: &signingtypes.SingleSignatureData{
+			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: dummySig,
+		},
+	}
+
 	txBuilder := s.TxGenerator.NewTxBuilder()
-	txBuilder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	txBuilder.SetGasLimit(50000)
-	txBuilder.SetMemo("foomemo")
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo(memo)
+	err := txBuilder.SetMsgs(msg)
+	s.Require().NoError(err)
+	err = txBuilder.SetSignatures(sig)
+	s.Require().NoError(err)
 	tx := txBuilder.GetTx()
 
-	// Encode transaction
+	// encode transaction
 	txBytes, err := s.TxGenerator.TxEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(txBytes)
 
+	// decode transaction
 	tx2, err := s.TxGenerator.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	s.Require().Equal(tx, tx2)
+	s.Require().Equal(feeAmount, tx2.(sdk.FeeTx).GetFee())
+	s.Require().Equal(gasLimit, tx2.(sdk.FeeTx).GetGas())
+	s.Require().Equal(memo, tx2.(sdk.TxWithMemo).GetMemo())
+	s.Require().Equal(dummySig, tx2.(HasSignaturesTx).GetSignatures()[0])
+	s.Require().Equal(priv.PubKey(), tx2.(HasSignaturesTx).GetPubKeys()[0])
+
+	// JSON encode transaction
+	jsonTxBytes, err := s.TxGenerator.TxEncoder()(tx)
+	s.Require().NoError(err)
+	s.Require().NotNil(jsonTxBytes)
+
+	// JSON decode transaction
+	tx2, err = s.TxGenerator.TxDecoder()(txBytes)
+	s.Require().NoError(err)
+	s.Require().Equal(feeAmount, tx2.(sdk.FeeTx).GetFee())
+	s.Require().Equal(gasLimit, tx2.(sdk.FeeTx).GetGas())
+	s.Require().Equal(memo, tx2.(sdk.TxWithMemo).GetMemo())
+	s.Require().Equal([]sdk.Msg{msg}, tx2.GetMsgs())
+	s.Require().Equal(dummySig, tx2.(HasSignaturesTx).GetSignatures()[0])
+	s.Require().Equal(priv.PubKey(), tx2.(HasSignaturesTx).GetPubKeys()[0])
 }

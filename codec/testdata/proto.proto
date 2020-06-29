@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos_sdk.codec.v1;
 
 import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/codec/testdata";
 
@@ -47,4 +48,9 @@ message SayHelloRequest {
 
 message SayHelloResponse {
   string greeting = 1;
+}
+
+// msg type for testing
+message TestMsg {
+  repeated bytes signers = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

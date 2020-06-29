@@ -10,14 +10,14 @@ import (
 
 func DefaultTxEncoder(marshaler codec.Marshaler) types.TxEncoder {
 	return func(tx types.Tx) ([]byte, error) {
-		wrapper, ok := tx.(builder)
+		wrapper, ok := tx.(*builder)
 		if !ok {
 			return nil, fmt.Errorf("expected %T, got %T", builder{}, tx)
 		}
 
 		raw := &tx2.TxRaw{
-			BodyBytes:     wrapper.bodyBz,
-			AuthInfoBytes: wrapper.authInfoBz,
+			BodyBytes:     wrapper.GetBodyBytes(),
+			AuthInfoBytes: wrapper.GetAuthInfoBytes(),
 			Signatures:    wrapper.tx.Signatures,
 		}
 
@@ -27,17 +27,11 @@ func DefaultTxEncoder(marshaler codec.Marshaler) types.TxEncoder {
 
 func DefaultJSONTxEncoder(marshaler codec.Marshaler) types.TxEncoder {
 	return func(tx types.Tx) ([]byte, error) {
-		wrapper, ok := tx.(builder)
+		wrapper, ok := tx.(*builder)
 		if !ok {
 			return nil, fmt.Errorf("expected %T, got %T", builder{}, tx)
 		}
 
-		raw := &tx2.TxRaw{
-			BodyBytes:     wrapper.bodyBz,
-			AuthInfoBytes: wrapper.authInfoBz,
-			Signatures:    wrapper.tx.Signatures,
-		}
-
-		return marshaler.MarshalJSON(raw)
+		return marshaler.MarshalJSON(wrapper.tx)
 	}
 }

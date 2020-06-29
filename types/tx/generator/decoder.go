@@ -1,8 +1,9 @@
 package generator
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -28,7 +29,7 @@ func DefaultTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) 
 			return nil, err
 		}
 
-		return builder{
+		return &builder{
 			tx:          &theTx,
 			bodyBz:      raw.BodyBytes,
 			authInfoBz:  raw.AuthInfoBytes,
@@ -52,7 +53,7 @@ func DefaultJSONTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCod
 			return nil, err
 		}
 
-		return builder{
+		return &builder{
 			tx:          &theTx,
 			pubKeys:     pks,
 			marshaler:   cdc,

@@ -3,6 +3,8 @@ package generator
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -14,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,7 +28,7 @@ func TestTxBuilder(t *testing.T) {
 	cdc := std.DefaultPublicKeyCodec{}
 
 	memo := "sometestmemo"
-	msgs := []sdk.Msg{types.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)

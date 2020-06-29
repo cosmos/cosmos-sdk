@@ -10,6 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+type ProtoTx interface {
+	GetBodyBytes() []byte
+	GetAuthInfoBytes() []byte
+}
+
 type ModeHandler struct{}
 
 func (h ModeHandler) DefaultMode() signingtypes.SignMode {
@@ -27,7 +32,7 @@ func (ModeHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerD
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, mode)
 	}
 
-	protoTx, ok := tx.(types.ProtoTx)
+	protoTx, ok := tx.(ProtoTx)
 	if !ok {
 		return nil, fmt.Errorf("can only get direct sign bytes for a ProtoTx, got %T", tx)
 	}

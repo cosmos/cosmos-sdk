@@ -146,7 +146,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
 * (x/auth) [\#6428](https://github.com/cosmos/cosmos-sdk/issues/6428):
   * `NewAnteHandler` and `NewSigVerificationDecorator` both now take a `SignModeHandler` parameter.
   * `SignatureVerificationGasConsumer` now has the signature: `func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error`.
-  * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has `GetSignatures` and `GetSignBytes` methods.
+  * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has the `GetSignBytes` method.
 
 ### Features
 

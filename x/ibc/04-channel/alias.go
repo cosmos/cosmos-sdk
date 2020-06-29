@@ -34,12 +34,6 @@ const (
 	StoreKey                       = types.StoreKey
 	RouterKey                      = types.RouterKey
 	QuerierRoute                   = types.QuerierRoute
-	QueryAllChannels               = types.QueryAllChannels
-	QueryChannel                   = types.QueryChannel
-	QueryConnectionChannels        = types.QueryConnectionChannels
-	QueryPacketCommitments         = types.QueryPacketCommitments
-	QueryUnrelayedAcknowledgements = types.QueryUnrelayedAcknowledgements
-	QueryUnrelayedPacketSends      = types.QueryUnrelayedPacketSends
 	UNINITIALIZED                  = types.UNINITIALIZED
 	INIT                           = types.INIT
 	TRYOPEN                        = types.TRYOPEN
@@ -52,33 +46,28 @@ const (
 
 var (
 	// functions aliases
-	NewChannel                       = types.NewChannel
-	NewCounterparty                  = types.NewCounterparty
-	NewIdentifiedChannel             = types.NewIdentifiedChannel
-	RegisterCodec                    = types.RegisterCodec
-	RegisterInterfaces               = types.RegisterInterfaces
-	NewPacketAckCommitment           = types.NewPacketAckCommitment
-	NewPacketSequence                = types.NewPacketSequence
-	NewGenesisState                  = types.NewGenesisState
-	DefaultGenesisState              = types.DefaultGenesisState
-	NewMsgChannelOpenInit            = types.NewMsgChannelOpenInit
-	NewMsgChannelOpenTry             = types.NewMsgChannelOpenTry
-	NewMsgChannelOpenAck             = types.NewMsgChannelOpenAck
-	NewMsgChannelOpenConfirm         = types.NewMsgChannelOpenConfirm
-	NewMsgChannelCloseInit           = types.NewMsgChannelCloseInit
-	NewMsgChannelCloseConfirm        = types.NewMsgChannelCloseConfirm
-	NewMsgPacket                     = types.NewMsgPacket
-	NewMsgTimeout                    = types.NewMsgTimeout
-	NewMsgAcknowledgement            = types.NewMsgAcknowledgement
-	CommitPacket                     = types.CommitPacket
-	CommitAcknowledgement            = types.CommitAcknowledgement
-	NewPacket                        = types.NewPacket
-	NewKeeper                        = keeper.NewKeeper
-	QuerierChannels                  = keeper.QuerierChannels
-	QuerierConnectionChannels        = keeper.QuerierConnectionChannels
-	QuerierPacketCommitments         = keeper.QuerierPacketCommitments
-	QuerierUnrelayedAcknowledgements = keeper.QuerierUnrelayedAcknowledgements
-	QuerierUnrelayedPacketSends      = keeper.QuerierUnrelayedPacketSends
+	NewChannel                = types.NewChannel
+	NewCounterparty           = types.NewCounterparty
+	NewIdentifiedChannel      = types.NewIdentifiedChannel
+	RegisterCodec             = types.RegisterCodec
+	RegisterInterfaces        = types.RegisterInterfaces
+	NewPacketAckCommitment    = types.NewPacketAckCommitment
+	NewPacketSequence         = types.NewPacketSequence
+	NewGenesisState           = types.NewGenesisState
+	DefaultGenesisState       = types.DefaultGenesisState
+	NewMsgChannelOpenInit     = types.NewMsgChannelOpenInit
+	NewMsgChannelOpenTry      = types.NewMsgChannelOpenTry
+	NewMsgChannelOpenAck      = types.NewMsgChannelOpenAck
+	NewMsgChannelOpenConfirm  = types.NewMsgChannelOpenConfirm
+	NewMsgChannelCloseInit    = types.NewMsgChannelCloseInit
+	NewMsgChannelCloseConfirm = types.NewMsgChannelCloseConfirm
+	NewMsgPacket              = types.NewMsgPacket
+	NewMsgTimeout             = types.NewMsgTimeout
+	NewMsgAcknowledgement     = types.NewMsgAcknowledgement
+	CommitPacket              = types.CommitPacket
+	CommitAcknowledgement     = types.CommitAcknowledgement
+	NewPacket                 = types.NewPacket
+	NewKeeper                 = keeper.NewKeeper
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc

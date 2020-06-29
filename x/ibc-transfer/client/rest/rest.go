@@ -8,6 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
+const (
+	restChannelID = "channel-id"
+	restPortID    = "port-id"
+)
+
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 	registerTxRoutes(clientCtx, r)

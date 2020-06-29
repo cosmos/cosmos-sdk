@@ -79,7 +79,7 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx)
+	return nil
 }
 
 // RegisterInterfaceTypes registers module concrete types into protobuf Any.

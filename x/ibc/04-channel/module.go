@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // Name returns the IBC channel ICS name.

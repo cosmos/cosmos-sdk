@@ -98,6 +98,7 @@ func NewFactoryFrom_Deprecated(input io.Reader) Factory {
 
 	f := Factory{
 		keybase:            kb,
+		chainID:            viper.GetString(flags.FlagChainID),
 		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
 		sequence:           viper.GetUint64(flags.FlagSequence),
 		gas:                flags.GasFlagVar.Gas,

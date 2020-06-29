@@ -10,7 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 // Query provides defines the gRPC querier service
 service Query {
 	// Parameters queries the parameters of slashing module
-	rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse){ }
+	rpc Params (QueryParametersRequest) returns (QueryParametersResponse){ }
 
 	// SigningInfo queries the signing info of given cons address
 	rpc SigningInfo (QuerySigningInfoRequest) returns (QuerySigningInfoResponse) { }

@@ -114,6 +114,7 @@ func (m *QueryParametersResponse) GetParams() *Params {
 
 // QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC method
 type QuerySigningInfoRequest struct {
+	// cons_address is the address to query signing info of
 	ConsAddress github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,1,opt,name=cons_address,json=consAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"cons_address,omitempty"`
 }
 
@@ -159,6 +160,7 @@ func (m *QuerySigningInfoRequest) GetConsAddress() github_com_cosmos_cosmos_sdk_
 
 // QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method
 type QuerySigningInfoResponse struct {
+	// val_signing_info is the signing info of requested val cons address
 	ValSigningInfo *ValidatorSigningInfo `protobuf:"bytes,1,opt,name=val_signing_info,json=valSigningInfo,proto3" json:"val_signing_info,omitempty"`
 }
 
@@ -249,6 +251,7 @@ func (m *QuerySigningInfosRequest) GetReq() *query.PageRequest {
 
 // QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method
 type QuerySigningInfosResponse struct {
+	// info is the signing info of all validators
 	Info []*ValidatorSigningInfo `protobuf:"bytes,1,rep,name=info,proto3" json:"info,omitempty"`
 	Res  *query.PageResponse     `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
 }

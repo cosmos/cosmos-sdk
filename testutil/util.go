@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
@@ -64,7 +66,7 @@ func startInProcess(cfg Config, val *Validator) error {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithJSONMarshaler(cdc).
-			WithTxGenerator(cfg.EncodingConfig.TxGenerator).
+			WithTxGenerator(simapp.MakeEncodingConfig().TxGenerator).
 			WithClient(val.RPCClient).
 			WithTrustNode(true)
 

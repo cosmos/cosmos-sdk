@@ -6,6 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -18,11 +22,14 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestCoinSend() {
-	authclient.Codec = s.cfg.EncodingConfig.Marshaler
+	encodingConfig := simapp.MakeEncodingConfig()
+	authclient.Codec = encodingConfig.Marshaler
 
 	val := s.network.Validators[0]
+	cliCtx := val.ClientCtx.
+		WithTxGenerator(encodingConfig.TxGenerator)
 
-	initValidatorCoins, err := getCoinsFromValidator(val)
+	initValidatorCoins, err := getCoinsFromValidator(val, cliCtx)
 	s.Require().NoError(err)
 	s.Require().Equal(
 		types.NewCoins(
@@ -122,7 +129,7 @@ func getAccountInfo(val *testutil.Validator) (types2.AccountI, error) {
 	return acc, nil
 }
 
-func getCoinsFromValidator(val *testutil.Validator) (types.Coins, error) {
+func getCoinsFromValidator(val *testutil.Validator, ctx client.Context) (types.Coins, error) {
 	url := fmt.Sprintf("%s/bank/balances/%s", val.APIAddress, val.Address)
 
 	resp, err := rest.GetRequest(url)
@@ -130,7 +137,7 @@ func getCoinsFromValidator(val *testutil.Validator) (types.Coins, error) {
 		return nil, err
 	}
 
-	bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+	bz, err := rest.ParseResponseWithHeight(ctx.JSONMarshaler, resp)
 	var coins types.Coins
 	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, &coins)
 	if err != nil {

@@ -13,8 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -64,7 +62,6 @@ func NewSimApp(val Validator) server.Application {
 // in-process local testing network.
 type Config struct {
 	AppConstructor  AppConstructor             // the ABCI application constructor
-	EncodingConfig  params.EncodingConfig      // The encoding config for the node.
 	GenesisState    map[string]json.RawMessage // custom gensis state to provide
 	TimeoutCommit   time.Duration              // the consensus commitment timeout
 	ChainID         string                     // the network chain-id
@@ -85,7 +82,6 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		AppConstructor:  NewSimApp,
-		EncodingConfig:  simapp.MakeEncodingConfig(),
 		GenesisState:    simapp.ModuleBasics.DefaultGenesis(cdc),
 		TimeoutCommit:   2 * time.Second,
 		ChainID:         "chain-" + tmrand.NewRand().Str(6),

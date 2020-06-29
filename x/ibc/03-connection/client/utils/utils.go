@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 
@@ -15,15 +16,29 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// QueryConnection queries the store to get a connection end and a merkle
-// proof.
+// QueryConnection returns a connection end.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryConnection(
 	clientCtx client.Context, connectionID string, prove bool,
 ) (*types.QueryConnectionResponse, error) {
+	if prove {
+		return queryConnectionABCI(clientCtx, connectionID)
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryConnectionRequest{
+		ConnectionID: connectionID,
+	}
+
+	return queryClient.Connection(context.Background(), req)
+}
+
+func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.QueryConnectionResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyConnection(connectionID),
-		Prove: prove,
+		Prove: true,
 	}
 
 	res, err := clientCtx.QueryABCI(req)
@@ -44,15 +59,29 @@ func QueryConnection(
 	return types.NewQueryConnectionResponse(connection, proofBz, res.Height), nil
 }
 
-// QueryClientConnections queries the store to get the registered connection paths
-// registered for a particular client and a merkle proof.
+// QueryClientConnections queries the connection paths registered for a particular client.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryClientConnections(
 	clientCtx client.Context, clientID string, prove bool,
 ) (*types.QueryClientConnectionsResponse, error) {
+	if prove {
+		return queryClientConnectionsABCI(clientCtx, clientID)
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryClientConnectionsRequest{
+		ClientID: clientID,
+	}
+
+	return queryClient.ClientConnections(context.Background(), req)
+}
+
+func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*types.QueryClientConnectionsResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyClientConnections(clientID),
-		Prove: prove,
+		Prove: true,
 	}
 
 	res, err := clientCtx.QueryABCI(req)

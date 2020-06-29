@@ -46,16 +46,14 @@ type Context struct {
 	SkipConfirm      bool
 	TxGenerator      TxGenerator
 	AccountRetriever AccountRetriever
-
-	// TODO: API and CLI interfaces are migrating to a single binary (i.e be part of
-	// the same process of the application). We need to groom through these fields
-	// and remove any that no longer make sense.
-	NodeURI  string
-	Verifier tmlite.Verifier
+	NodeURI          string
+	Verifier         tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
 }
+
+// TODO: Remove all New* and Init* methods.
 
 // NewContextWithInputAndFrom returns a new initialized Context with parameters from the
 // command line using Viper. It takes a io.Reader and and key name or address and populates
@@ -285,6 +283,12 @@ func (ctx Context) WithSimulation(simulate bool) Context {
 	return ctx
 }
 
+// WithOffline returns a copy of the context with updated Offline value.
+func (ctx Context) WithOffline(offline bool) Context {
+	ctx.Offline = offline
+	return ctx
+}
+
 // WithFromName returns a copy of the context with an updated from account name.
 func (ctx Context) WithFromName(name string) Context {
 	ctx.FromName = name
@@ -302,6 +306,13 @@ func (ctx Context) WithFromAddress(addr sdk.AccAddress) Context {
 // mode.
 func (ctx Context) WithBroadcastMode(mode string) Context {
 	ctx.BroadcastMode = mode
+	return ctx
+}
+
+// WithSkipConfirmation returns a copy of the context with an updated SkipConfirm
+// value.
+func (ctx Context) WithSkipConfirmation(skip bool) Context {
+	ctx.SkipConfirm = skip
 	return ctx
 }
 

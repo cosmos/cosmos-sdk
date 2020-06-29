@@ -122,6 +122,8 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
 			GasFlagAuto, DefaultGasLimit,
 		))
+
+		// TODO: REMOVE VIPER CALLS!
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))

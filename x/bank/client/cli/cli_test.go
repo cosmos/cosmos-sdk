@@ -174,6 +174,60 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestNewSendTxCmd() {
+	buf := new(bytes.Buffer)
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	cmd := cli.NewSendTxCmd(clientCtx)
+	cmd.SetErr(buf)
+	cmd.SetOut(buf)
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  fmt.Stringer
+	}{
+		// TODO: Self send gen only
+		// TODO: Self send invalid fees
+		// TODO: send invalid gas
+		{
+			"valid transaction",
+			[]string{
+				val.Address.String(),
+				val.Address.String(),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+				).String(),
+			},
+			false,
+			&sdk.TxResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			buf.Reset()
+			cmd.SetArgs(tc.args)
+
+			err := cmd.Execute()
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(buf.Bytes(), tc.respType), buf.String())
+
+				fmt.Println(tc.respType)
+				// s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

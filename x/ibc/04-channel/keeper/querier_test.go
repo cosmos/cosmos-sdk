@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 
 	var (
 		clientID string
-		req      types.QueryChannelClientStateRequest
+		req      *types.QueryChannelClientStateRequest
 	)
 
 	testCases := []struct {

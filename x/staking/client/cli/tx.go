@@ -79,12 +79,8 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
 
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-
-	// TODO: Investigate why the the following two required flag, "FlagAmount" and "FlagPubKey", are force to the genTx cmd in x/genutil/client/cli/gentx.go.
-	// To resolved the conflict with genTx, we will temporarily comment the following two line of code:
-
-	// _ = cmd.MarkFlagRequired(FlagAmount)
-	// _ = cmd.MarkFlagRequired(FlagPubKey)
+	_ = cmd.MarkFlagRequired(FlagAmount)
+	_ = cmd.MarkFlagRequired(FlagPubKey)
 	_ = cmd.MarkFlagRequired(FlagMoniker)
 
 	return cmd

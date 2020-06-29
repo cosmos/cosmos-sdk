@@ -64,6 +64,7 @@ func startInProcess(cfg Config, val *Validator) error {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithJSONMarshaler(cdc).
+			WithTxGenerator(cfg.EncodingConfig.TxGenerator).
 			WithClient(val.RPCClient).
 			WithTrustNode(true)
 

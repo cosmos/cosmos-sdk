@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	tmkv "github.com/cosmos/cosmos-sdk/types"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"

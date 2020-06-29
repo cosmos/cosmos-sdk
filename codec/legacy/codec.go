@@ -14,6 +14,5 @@ var Cdc *codec.Codec
 func init() {
 	Cdc = codec.New()
 	cryptocodec.RegisterCrypto(Cdc)
-	codec.RegisterEvidences(Cdc)
 	Cdc.Seal()
 }

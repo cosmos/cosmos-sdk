@@ -1,7 +1,7 @@
 package baseapp
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,7 +19,7 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 }
 
 // Context with current {check, deliver}State of the app used by tests.
-func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
+func (app *BaseApp) NewContext(isCheckTx bool, header tmproto.Header) sdk.Context {
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
@@ -28,6 +28,6 @@ func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	return sdk.NewContext(app.deliverState.ms, header, false, app.logger)
 }
 
-func (app *BaseApp) NewUncachedContext(isCheckTx bool, header abci.Header) sdk.Context {
+func (app *BaseApp) NewUncachedContext(isCheckTx bool, header tmproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }

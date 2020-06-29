@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	tmkv "github.com/cosmos/cosmos-sdk/types"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"

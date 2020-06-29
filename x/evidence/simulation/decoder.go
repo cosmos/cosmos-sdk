@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 
-	tmkv "github.com/cosmos/cosmos-sdk/types"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )

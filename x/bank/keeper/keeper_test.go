@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	tmkv "github.com/cosmos/cosmos-sdk/types"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtime "github.com/tendermint/tendermint/types/time"

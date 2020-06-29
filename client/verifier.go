@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tendermint/tendermint/libs/log"
-	tmlite "github.com/tendermint/tendermint/light"
+	"github.com/tendermint/tendermint/light"
 	tmliteproxy "github.com/tendermint/tendermint/light/proxy"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
@@ -22,7 +22,7 @@ const (
 // or if the verifier could not be created. A Context must at the very least
 // have the chain ID and home directory set. If the Context has TrustNode
 // enabled, no verifier will be created.
-func CreateVerifier(ctx Context, cacheSize int) (tmlite.Verifier, error) {
+func CreateVerifier(ctx Context, cacheSize int) (light.Verifier, error) {
 	if ctx.TrustNode {
 		return nil, nil
 	}

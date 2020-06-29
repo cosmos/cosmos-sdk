@@ -9,12 +9,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	tmliteProxy "github.com/tendermint/tendermint/light"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-
-	tmliteProxy "github.com/tendermint/tendermint/light/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -87,7 +87,7 @@ func BenchmarkInvariants(b *testing.B) {
 		PrintStats(db)
 	}
 
-	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1})
 
 	// 3. Benchmark each invariant separately
 	//

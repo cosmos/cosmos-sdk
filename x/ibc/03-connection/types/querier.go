@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	tmmerkle "github.com/tendermint/tendermint/proto/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto/merkle"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"

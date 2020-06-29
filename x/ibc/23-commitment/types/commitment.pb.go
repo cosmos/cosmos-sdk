@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	merkle "github.com/tendermint/tendermint/proto/crypto/merkle"
+	merkle "github.com/tendermint/tendermint/proto/tendermint/crypto/merkle"
 	io "io"
 	math "math"
 	math_bits "math/bits"

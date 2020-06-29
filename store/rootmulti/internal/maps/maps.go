@@ -5,16 +5,16 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	types "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
 // hash(key) | hash(value). Leaves are sorted before Merkle hashing.
 type merkleMap struct {
-	kvs    types.Pairs
+	kvs    kv.Pairs
 	sorted bool
 }
 
@@ -35,7 +35,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.kvs = append(sm.kvs, types.Pair{
+	sm.kvs = append(sm.kvs, kv.Pair{
 		Key:   []byte(key),
 		Value: vhash,
 	})
@@ -58,19 +58,19 @@ func (sm *merkleMap) sort() {
 
 // kvPair defines a type alias for types.Pair so that we can create bytes to hash
 // when constructing the merkle root. Note, key and values are both length-prefixed.
-type kvPair types.Pair
+type kvPair kv.Pair
 
 // bytes returns a byte slice representation of the kvPair where the key and value
 // are length-prefixed.
 func (kv kvPair) bytes() []byte {
 	var b bytes.Buffer
 
-	err := encodeByteSlice(&b, types.Key)
+	err := encodeByteSlice(&b, kv.Key)
 	if err != nil {
 		panic(err)
 	}
 
-	err = encodeByteSlice(&b, types.Value)
+	err = encodeByteSlice(&b, kv.Value)
 	if err != nil {
 		panic(err)
 	}
@@ -93,13 +93,13 @@ func encodeByteSlice(w io.Writer, bz []byte) error {
 
 // hashKVPairs hashes a kvPair and creates a merkle tree where the leaves are
 // byte slices.
-func hashKVPairs(kvs types.Pairs) []byte {
+func hashKVPairs(kvs kv.Pairs) []byte {
 	kvsH := make([][]byte, len(kvs))
 	for i, kvp := range kvs {
 		kvsH[i] = kvPair(kvp).bytes()
 	}
 
-	return merkle.SimpleHashFromByteSlices(kvsH)
+	return merkle.HashFromByteSlices(kvsH)
 }
 
 // ---------------------------------------------
@@ -204,7 +204,7 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 // SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
 // in the underlying key-value pairs.
 // The keys are sorted before the proofs are computed.
-func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.SimpleProof, []string) {
+func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.Proof, []string) {
 	sm := newSimpleMap()
 	for k, v := range m {
 		sm.Set(k, v)
@@ -217,8 +217,8 @@ func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.Simple
 		kvsBytes[i] = KVPair(kvp).Bytes()
 	}
 
-	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
-	proofs := make(map[string]*merkle.SimpleProof)
+	rootHash, proofList := merkle.ProofsFromByteSlices(kvsBytes)
+	proofs := make(map[string]*merkle.Proof)
 	keys := make([]string, len(proofList))
 	for i, kvp := range kvs {
 		proofs[string(kvp.Key)] = proofList[i]

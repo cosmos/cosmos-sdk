@@ -13,7 +13,7 @@ import (
 )
 
 func BenchmarkBech32ifyPubKey(b *testing.B) {
-	var pk ed25519.PubKeyEd25519
+	var pk ed25519.PubKey
 	rng := rand.New(rand.NewSource(time.Now().Unix()))
 
 	b.ResetTimer()
@@ -29,7 +29,7 @@ func BenchmarkBech32ifyPubKey(b *testing.B) {
 }
 
 func BenchmarkGetPubKeyFromBech32(b *testing.B) {
-	var pk ed25519.PubKeyEd25519
+	var pk ed25519.PubKey
 	rng := rand.New(rand.NewSource(time.Now().Unix()))
 
 	b.ResetTimer()

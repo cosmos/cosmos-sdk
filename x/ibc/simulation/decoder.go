@@ -3,7 +3,7 @@ package simulation
 import (
 	"fmt"
 
-	tmkv "github.com/cosmos/cosmos-sdk/types"
+	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	clientsim "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"

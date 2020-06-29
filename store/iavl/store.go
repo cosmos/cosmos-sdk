@@ -10,7 +10,7 @@ import (
 	tmkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmmerkle "github.com/tendermint/tendermint/proto/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"

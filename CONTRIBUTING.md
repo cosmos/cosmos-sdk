@@ -259,7 +259,7 @@ the next patch release number (currently `0.38.5`) for the `0.38` release series
 and PRs are merged into `master`, if a contributor wishes the PR to be released as SRU into the
 `v0.38.N` point release, the contributor must:
 
-1. Add `0.38-sru` label
+1. Add `0.38.N-backport` label
 2. Pull latest changes on the desired `sru/release/vX.X.N` branch
 3. Create a 2nd PR merging the respective SRU PR into `sru/release/v0.38.N`
 4. Update the PR's description and ensure it contains the following information:

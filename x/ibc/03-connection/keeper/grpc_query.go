@@ -20,7 +20,7 @@ var _ types.QueryServer = Keeper{}
 // Connection implements the Query/Connection gRPC method
 func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest) (*types.QueryConnectionResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := host.ConnectionIdentifierValidator(req.ConnectionID); err != nil {
@@ -45,7 +45,7 @@ func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest)
 // Connections implements the Query/Connections gRPC method
 func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsRequest) (*types.QueryConnectionsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -77,7 +77,7 @@ func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsReques
 // ClientConnections implements the Query/ClientConnections gRPC method
 func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConnectionsRequest) (*types.QueryClientConnectionsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := host.ClientIdentifierValidator(req.ClientID); err != nil {
@@ -102,7 +102,7 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 // ClientsConnections implements the Query/ClientsConnections gRPC method
 func (q Keeper) ClientsConnections(c context.Context, req *types.QueryClientsConnectionsRequest) (*types.QueryClientsConnectionsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

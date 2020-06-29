@@ -95,7 +95,6 @@ var (
 	AttributeValueCategory       = types.AttributeValueCategory
 )
 
-// nolint: golint
 type (
 	IdentifiedChannel      = types.IdentifiedChannel
 	ClientKeeper           = types.ClientKeeper

@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
@@ -33,6 +32,6 @@ func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 }
 
 // RegisterQueryService registers the gRPC query service for IBC connections.
-func RegisterQueryService(server grpc.Server, k keeper.Keeper) {
-	types.RegisterQueryServer(server, k)
+func RegisterQueryService(server grpc.Server, queryServer types.QueryServer) {
+	types.RegisterQueryServer(server, queryServer)
 }

@@ -21,7 +21,7 @@ var _ types.QueryServer = (*Keeper)(nil)
 // Channel implements the Query/Channel gRPC method
 func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*types.QueryChannelResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
@@ -33,7 +33,7 @@ func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*typ
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(types.ErrChannelNotFound, "port-id: , channel-id %s", req.PortID, req.ChannelID).Error(),
+			sdkerrors.Wrapf(types.ErrChannelNotFound, "port-id: %s, channel-id %s", req.PortID, req.ChannelID).Error(),
 		)
 	}
 
@@ -43,7 +43,7 @@ func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*typ
 // Channels implements the Query/Channels gRPC method
 func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*types.QueryChannelsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -75,7 +75,7 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 // ConnectionChannels implements the Query/ConnectionChannels gRPC method
 func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnectionChannelsRequest) (*types.QueryConnectionChannelsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := host.ConnectionIdentifierValidator(req.Connection); err != nil {
@@ -117,7 +117,7 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 // PacketCommitment implements the Query/PacketCommitment gRPC method
 func (q Keeper) PacketCommitment(c context.Context, req *types.QueryPacketCommitmentRequest) (*types.QueryPacketCommitmentResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
@@ -141,7 +141,7 @@ func (q Keeper) PacketCommitment(c context.Context, req *types.QueryPacketCommit
 // PacketCommitments implements the Query/PacketCommitments gRPC method
 func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommitmentsRequest) (*types.QueryPacketCommitmentsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
@@ -180,7 +180,7 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 // UnrelayedPackets implements the Query/UnrelayedPackets gRPC method
 func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPacketsRequest) (*types.QueryUnrelayedPacketsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
@@ -201,7 +201,7 @@ func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPac
 			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
 		}
 
-		store = prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyPacketAcknowledgement(req.PortID, req.ChannelID, seq)))
+		store = prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyPacketAcknowledgement(req.PortID, req.ChannelID, seq))
 		res, err = query.Paginate(store, req.Req, func(_, _ []byte) error {
 			return nil
 		})
@@ -223,7 +223,7 @@ func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPac
 // NextSequenceReceive implements the Query/NextSequenceReceive gRPC method
 func (q Keeper) NextSequenceReceive(c context.Context, req *types.QueryNextSequenceReceiveRequest) (*types.QueryNextSequenceReceiveResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
@@ -235,7 +235,7 @@ func (q Keeper) NextSequenceReceive(c context.Context, req *types.QueryNextSeque
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(types.ErrSequenceReceiveNotFound, "port-id: , channel-id %s", req.PortID, req.ChannelID).Error(),
+			sdkerrors.Wrapf(types.ErrSequenceReceiveNotFound, "port-id: %s, channel-id %s", req.PortID, req.ChannelID).Error(),
 		)
 	}
 

@@ -14,6 +14,12 @@ import (
 // - `[`, `]`, `<`, `>`
 var IsValidID = regexp.MustCompile(`^[a-zA-Z0-9\.\_\+\-\#\[\]\<\>]+$`).MatchString
 
+// IsValidConnectionVersion defines the regular expression to check if the
+// string is a valid semantic version in the form:
+// #.#.#
+// where each # is a non-negative integer.
+var IsValidConnectionVersion = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`).MatchString
+
 // ICS 024 Identifier and Path Validation Implementation
 //
 // This file defines ValidateFn to validate identifier and path strings
@@ -72,6 +78,24 @@ func ChannelIdentifierValidator(id string) error {
 // alphabetic characters,
 func PortIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 2, 20)
+}
+
+// ConnectionVersionValidator is the default validator function for Connection
+// versions. A valid version must be in semantic versioning form and contain
+// only non-negative integers.
+func ConnectionVersionValidator(version string) error {
+	if strings.TrimSpace(version) == "" {
+		return sdkerrors.Wrap(ErrInvalidVersion, "version cannot be blank")
+	}
+
+	if !IsValidConnectionVersion(version) {
+		return sdkerrors.Wrapf(
+			ErrInvalidVersion,
+			"version (%s) must be in semantic version form", version,
+		)
+	}
+
+	return nil
 }
 
 // NewPathValidator takes in a Identifier Validator function and returns

@@ -3,6 +3,8 @@ package direct
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/generator"
+
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
@@ -23,7 +25,7 @@ func TestDirectModeHandler(t *testing.T) {
 	_, pubkey, addr := authtypes.KeyTestPubAddr()
 	cdc := std.DefaultPublicKeyCodec{}
 
-	tx := txtypes.NewBuilder(app.AppCodec(), std.DefaultPublicKeyCodec{})
+	tx := generator.NewBuilder(app.AppCodec(), std.DefaultPublicKeyCodec{})
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{authtypes.NewTestMsg(addr)}
 

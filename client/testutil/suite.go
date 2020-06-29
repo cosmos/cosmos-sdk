@@ -67,9 +67,9 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetMsgs() {
 }
 
 type HasSignaturesTx interface {
-	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
+	GetSignatures() [][]byte
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {

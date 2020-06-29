@@ -1,7 +1,11 @@
-package tx
+package generator
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/client/testutil"
+
+	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -23,8 +27,12 @@ import (
 // crypto.PubKey instances.
 type Builder interface {
 	sdk.Tx
+	sdk.FeeTx
+	sdk.TxWithMemo
+	testutil.HasSignaturesTx
+	GetSignaturesV2() ([]signing.SignatureV2, error)
 
-	ProtoTx
+	tx.ProtoTx
 
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
 
@@ -33,10 +41,10 @@ type Builder interface {
 
 func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Builder {
 	return &builder{
-		tx: &Tx{
-			Body: &TxBody{},
-			AuthInfo: &AuthInfo{
-				Fee: &Fee{},
+		tx: &tx.Tx{
+			Body: &tx.TxBody{},
+			AuthInfo: &tx.AuthInfo{
+				Fee: &tx.Fee{},
 			},
 		},
 		marshaler:   marshaler,
@@ -45,7 +53,7 @@ func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Bui
 }
 
 type builder struct {
-	tx *Tx
+	tx *tx.Tx
 
 	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
 	// from the client using TxRaw if the tx was decoded from the wire
@@ -79,8 +87,8 @@ func (t builder) GetMsgs() []sdk.Msg {
 const MaxGasWanted = uint64((1 << 63) - 1)
 
 func (t builder) ValidateBasic() error {
-	tx := t.tx
-	if tx == nil {
+	theTx := t.tx
+	if theTx == nil {
 		return fmt.Errorf("bad Tx")
 	}
 
@@ -113,7 +121,7 @@ func (t builder) ValidateBasic() error {
 		)
 	}
 
-	sigs := tx.Signatures
+	sigs := theTx.Signatures
 
 	if len(sigs) == 0 {
 		return sdkerrors.ErrNoSignatures
@@ -191,6 +199,48 @@ func (t builder) GetPubKeys() []crypto.PubKey {
 	return t.pubKeys
 }
 
+func (t builder) GetGas() uint64 {
+	return t.tx.AuthInfo.Fee.GasLimit
+}
+
+func (t builder) GetFee() sdk.Coins {
+	return t.tx.AuthInfo.Fee.Amount
+}
+
+func (t builder) FeePayer() sdk.AccAddress {
+	return t.GetSigners()[0]
+}
+
+func (t builder) GetMemo() string {
+	return t.tx.Body.Memo
+}
+
+func (t builder) GetSignatures() [][]byte {
+	return t.tx.Signatures
+}
+
+func (t builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
+	signerInfos := t.tx.AuthInfo.SignerInfos
+	sigs := t.tx.Signatures
+	pubKeys := t.GetPubKeys()
+	n := len(signerInfos)
+	res := make([]signing.SignatureV2, n)
+
+	for i, si := range signerInfos {
+		var err error
+		sigData, err := ModeInfoToSignatureData(si.ModeInfo, sigs[i])
+		if err != nil {
+			return nil, err
+		}
+		res[i] = signing.SignatureV2{
+			PubKey: pubKeys[i],
+			Data:   sigData,
+		}
+	}
+
+	return res, nil
+}
+
 func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 
@@ -219,7 +269,7 @@ func (t *builder) SetMemo(memo string) {
 
 func (t *builder) SetGasLimit(limit uint64) {
 	if t.tx.AuthInfo.Fee == nil {
-		t.tx.AuthInfo.Fee = &Fee{}
+		t.tx.AuthInfo.Fee = &tx.Fee{}
 	}
 
 	t.tx.AuthInfo.Fee.GasLimit = limit
@@ -230,7 +280,7 @@ func (t *builder) SetGasLimit(limit uint64) {
 
 func (t *builder) SetFeeAmount(coins sdk.Coins) {
 	if t.tx.AuthInfo.Fee == nil {
-		t.tx.AuthInfo.Fee = &Fee{}
+		t.tx.AuthInfo.Fee = &tx.Fee{}
 	}
 
 	t.tx.AuthInfo.Fee.Amount = coins
@@ -241,17 +291,17 @@ func (t *builder) SetFeeAmount(coins sdk.Coins) {
 
 func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
-	signerInfos := make([]*SignerInfo, n)
+	signerInfos := make([]*tx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
 
 	for i, sig := range signatures {
-		var modeInfo *ModeInfo
+		var modeInfo *tx.ModeInfo
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
 		pk, err := t.pubkeyCodec.Encode(sig.PubKey)
 		if err != nil {
 			return err
 		}
-		signerInfos[i] = &SignerInfo{
+		signerInfos[i] = &tx.SignerInfo{
 			PublicKey: pk,
 			ModeInfo:  modeInfo,
 		}
@@ -263,7 +313,7 @@ func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 	return nil
 }
 
-func (t *builder) setSignerInfos(infos []*SignerInfo) {
+func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
 	t.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil
@@ -275,21 +325,25 @@ func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*ModeInfo, []byte) {
+func (t builder) GetTx() sdk.Tx {
+	return t
+}
+
+func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []byte) {
 	if data == nil {
 		return nil, nil
 	}
 
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
-		return &ModeInfo{
-			Sum: &ModeInfo_Single_{
-				Single: &ModeInfo_Single{Mode: data.SignMode},
+		return &tx.ModeInfo{
+			Sum: &tx.ModeInfo_Single_{
+				Single: &tx.ModeInfo_Single{Mode: data.SignMode},
 			},
 		}, data.Signature
 	case *signing.MultiSignatureData:
 		n := len(data.Signatures)
-		modeInfos := make([]*ModeInfo, n)
+		modeInfos := make([]*tx.ModeInfo, n)
 		sigs := make([][]byte, n)
 
 		for i, d := range data.Signatures {
@@ -304,9 +358,9 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*ModeInfo, []byt
 			panic(err)
 		}
 
-		return &ModeInfo{
-			Sum: &ModeInfo_Multi_{
-				Multi: &ModeInfo_Multi{
+		return &tx.ModeInfo{
+			Sum: &tx.ModeInfo_Multi_{
+				Multi: &tx.ModeInfo_Multi{
 					Bitarray:  data.BitArray,
 					ModeInfos: modeInfos,
 				},
@@ -317,6 +371,48 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*ModeInfo, []byt
 	}
 }
 
-func (t builder) GetTx() sdk.Tx {
-	return t
+func ModeInfoToSignatureData(modeInfo *tx.ModeInfo, sig []byte) (signing.SignatureData, error) {
+	switch modeInfo := modeInfo.Sum.(type) {
+	case *tx.ModeInfo_Single_:
+		return &signing.SingleSignatureData{
+			SignMode:  modeInfo.Single.Mode,
+			Signature: sig,
+		}, nil
+
+	case *tx.ModeInfo_Multi_:
+		multi := modeInfo.Multi
+
+		sigs, err := DecodeMultisignatures(sig)
+		if err != nil {
+			return nil, err
+		}
+
+		sigv2s := make([]signing.SignatureData, len(sigs))
+		for i, mi := range multi.ModeInfos {
+			sigv2s[i], err = ModeInfoToSignatureData(mi, sigs[i])
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &signing.MultiSignatureData{
+			BitArray:   multi.Bitarray,
+			Signatures: sigv2s,
+		}, nil
+
+	default:
+		panic("unexpected case")
+	}
+}
+
+func DecodeMultisignatures(bz []byte) ([][]byte, error) {
+	multisig := types.MultiSignature{}
+	err := multisig.Unmarshal(bz)
+	if err != nil {
+		return nil, err
+	}
+	if len(multisig.XXX_unrecognized) > 0 {
+		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
+	}
+	return multisig.Signatures, nil
 }

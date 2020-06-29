@@ -1,7 +1,9 @@
-package tx
+package generator
 
 import (
 	"testing"
+
+	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
@@ -16,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestTxWrapper(t *testing.T) {
+func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := authtypes.KeyTestPubAddr()
 
 	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
@@ -30,12 +32,12 @@ func TestTxWrapper(t *testing.T) {
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)
 
-	var signerInfo []*SignerInfo
-	signerInfo = append(signerInfo, &SignerInfo{
+	var signerInfo []*tx2.SignerInfo
+	signerInfo = append(signerInfo, &tx2.SignerInfo{
 		PublicKey: pk,
-		ModeInfo: &ModeInfo{
-			Sum: &ModeInfo_Single_{
-				Single: &ModeInfo_Single{
+		ModeInfo: &tx2.ModeInfo{
+			Sum: &tx2.ModeInfo_Single_{
+				Single: &tx2.ModeInfo_Single{
 					Mode: signing.SignMode_SIGN_MODE_DIRECT,
 				},
 			},
@@ -51,10 +53,10 @@ func TestTxWrapper(t *testing.T) {
 		},
 	}
 
-	fee := Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
+	fee := tx2.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
 	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetAuthInfoBytes")
-	authInfo := &AuthInfo{
+	authInfo := &tx2.AuthInfo{
 		Fee:         &fee,
 		SignerInfos: signerInfo,
 	}
@@ -74,7 +76,7 @@ func TestTxWrapper(t *testing.T) {
 		}
 	}
 
-	txBody := &TxBody{
+	txBody := &tx2.TxBody{
 		Memo:     memo,
 		Messages: anys,
 	}

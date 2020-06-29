@@ -3,6 +3,8 @@ package types
 import (
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,6 +19,11 @@ type ConsensusState struct {
 	Root         commitmentexported.Root `json:"root" yaml:"root"`
 	Height       uint64                  `json:"height" yaml:"height"`
 	ValidatorSet *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
+
+	// Optionally include params
+	UnbondingPeriod time.Duration         `json:"unbonding_period" yaml:"unbonding_period"`
+	ProofSpecs      []*ics23.ProofSpec    `json:"proof_specs" yaml:"proof_specs"`
+	ConsensusParams *abci.ConsensusParams `json:"consensus_params" yaml:"consensus_params"`
 }
 
 // NewConsensusState creates a new ConsensusState instance.
@@ -29,6 +36,23 @@ func NewConsensusState(
 		Root:         root,
 		Height:       height,
 		ValidatorSet: valset,
+	}
+}
+
+// NewConsensusStateWithParams creates a new ConsensusState instance
+// with the given paramaterss for client verification
+func NewConsensusStateWithParams(
+	timestamp time.Time, root commitmentexported.Root, height uint64, valset *tmtypes.ValidatorSet,
+	ubdPeriod time.Duration, proofSpecs []*ics23.ProofSpec, consensusParams *abci.ConsensusParams,
+) ConsensusState {
+	return ConsensusState{
+		Timestamp:       timestamp,
+		Root:            root,
+		Height:          height,
+		ValidatorSet:    valset,
+		UnbondingPeriod: ubdPeriod,
+		ProofSpecs:      proofSpecs,
+		ConsensusParams: consensusParams,
 	}
 }
 
@@ -68,6 +92,13 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if cs.Timestamp.UnixNano() < 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be negative Unix time")
+	}
+	if cs.ProofSpecs != nil {
+		for i, ps := range cs.ProofSpecs {
+			if ps == nil {
+				return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "ProofSpec is nil in ProofSpecs list at position %d", i)
+			}
+		}
 	}
 	return nil
 }

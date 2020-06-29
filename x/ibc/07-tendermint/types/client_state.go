@@ -4,6 +4,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -48,7 +49,11 @@ type ClientState struct {
 	// Last Header that was stored by client
 	LastHeader Header `json:"last_header" yaml:"last_header"`
 
+	// ProofSpecs define proof format for verifying client
 	ProofSpecs []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
+
+	// ConsensusParams define evidence paramaters for the client
+	ConsensusParams *abci.ConsensusParams `json:"consensus_params" yaml:"consensus_params"`
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
@@ -56,7 +61,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 	return Initialize(
 		msg.GetClientID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header, msg.ProofSpecs,
+		msg.Header, msg.ProofSpecs, msg.ConsensusParams,
 	)
 }
 
@@ -65,9 +70,9 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 func Initialize(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header, specs []*ics23.ProofSpec,
+	header Header, specs []*ics23.ProofSpec, consParams *abci.ConsensusParams,
 ) (ClientState, error) {
-	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
+	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs, consParams)
 
 	return clientState, nil
 }
@@ -76,7 +81,7 @@ func Initialize(
 func NewClientState(
 	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header, specs []*ics23.ProofSpec,
+	header Header, specs []*ics23.ProofSpec, consParams *abci.ConsensusParams,
 ) ClientState {
 	return ClientState{
 		ID:              id,
@@ -87,6 +92,7 @@ func NewClientState(
 		LastHeader:      header,
 		FrozenHeight:    0,
 		ProofSpecs:      specs,
+		ConsensusParams: consParams,
 	}
 }
 
@@ -116,6 +122,17 @@ func (cs ClientState) GetLatestHeight() uint64 {
 // GetLatestTimestamp returns latest block time.
 func (cs ClientState) GetLatestTimestamp() time.Time {
 	return cs.LastHeader.Time
+}
+
+// GetProofSpecs returns the format the client expects for proof verification
+// as a string array specifying the proof type for each position in chained proof
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return cs.ProofSpecs
+}
+
+// GetConsensusParams returns the consensus params used for the client
+func (cs ClientState) GetConsensusParams() *abci.ConsensusParams {
+	return cs.ConsensusParams
 }
 
 // IsFrozen returns true if the frozen height has been set.
@@ -157,12 +174,6 @@ func (cs ClientState) Validate() error {
 	}
 
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
-}
-
-// GetProofSpecs returns the format the client expects for proof verification
-// as a string array specifying the proof type for each position in chained proof
-func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
-	return cs.ProofSpecs
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the

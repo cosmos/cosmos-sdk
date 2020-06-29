@@ -206,6 +206,23 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	return consensusState, true
 }
 
+// GetSelfConsensusStateWithParams introspects the (self) past historical info at a given height
+// along with the appropriate client paramaters and returns the expected consensus state at that height
+func (k Keeper) GetSelfConsensusStateWithParams(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
+	consState, ok := k.GetSelfConsensusState(ctx, height)
+	if !ok {
+		return nil, false
+	}
+
+	tmConsState := consState.(ibctmtypes.ConsensusState)
+	// inject introspected parameters
+	tmConsState.ConsensusParams = ctx.ConsensusParams()
+	tmConsState.UnbondingPeriod = k.stakingKeeper.UnbondingTime(ctx)
+	tmConsState.ProofSpecs = commitmenttypes.GetSDKSpecs()
+
+	return consState, true
+}
+
 // IterateClients provides an iterator over all stored light client State
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.

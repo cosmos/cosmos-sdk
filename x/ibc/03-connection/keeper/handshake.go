@@ -58,7 +58,7 @@ func (k Keeper) ConnOpenTry(
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
 	}
 
-	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
+	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusStateWithParams(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrSelfConsensusStateNotFound
 	}
@@ -156,7 +156,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Retrieve chainA's consensus state at consensusheight
-	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
+	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusStateWithParams(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrSelfConsensusStateNotFound
 	}

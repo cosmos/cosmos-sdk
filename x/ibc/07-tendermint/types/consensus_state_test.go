@@ -22,6 +22,18 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 				ValidatorSet: suite.valSet,
 			},
 			true},
+		{
+			"success with params",
+			ibctmtypes.ConsensusState{
+				Timestamp:       suite.now,
+				Height:          height,
+				Root:            commitmenttypes.NewMerkleRoot([]byte("app_hash")),
+				ValidatorSet:    suite.valSet,
+				UnbondingPeriod: 100000,
+				ProofSpecs:      commitmenttypes.GetSDKSpecs(),
+				ConsensusParams: nil,
+			},
+			true},
 		{"root is nil",
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
@@ -62,6 +74,18 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 				ValidatorSet: suite.valSet,
 			},
 			false},
+		{
+			"params failure: nil in proof specs",
+			ibctmtypes.ConsensusState{
+				Timestamp:       suite.now,
+				Height:          height,
+				Root:            commitmenttypes.NewMerkleRoot([]byte("app_hash")),
+				ValidatorSet:    suite.valSet,
+				UnbondingPeriod: 100000,
+				ProofSpecs:      append(commitmenttypes.GetSDKSpecs(), nil),
+				ConsensusParams: nil,
+			},
+			true},
 	}
 
 	for i, tc := range testCases {

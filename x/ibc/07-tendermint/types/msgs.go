@@ -4,6 +4,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
@@ -31,14 +32,15 @@ var (
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID        string             `json:"client_id" yaml:"client_id"`
-	Header          Header             `json:"header" yaml:"header"`
-	TrustLevel      tmmath.Fraction    `json:"trust_level" yaml:"trust_level"`
-	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
-	ProofSpecs      []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
-	Signer          sdk.AccAddress     `json:"address" yaml:"address"`
+	ClientID        string                `json:"client_id" yaml:"client_id"`
+	Header          Header                `json:"header" yaml:"header"`
+	TrustLevel      tmmath.Fraction       `json:"trust_level" yaml:"trust_level"`
+	TrustingPeriod  time.Duration         `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod time.Duration         `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift   time.Duration         `json:"max_clock_drift" yaml:"max_clock_drift"`
+	ProofSpecs      []*ics23.ProofSpec    `json:"proof_specs" yaml:"proof_specs"`
+	ConsensusParams *abci.ConsensusParams `json:"consensus_params" yaml:"consensus_params"`
+	Signer          sdk.AccAddress        `json:"address" yaml:"address"`
 }
 
 // this is a constant to satisfy the linter
@@ -53,7 +55,7 @@ func (msg MsgCreateClient) ProtoMessage()  {}
 func NewMsgCreateClient(
 	id string, header Header, trustLevel tmmath.Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
-	specs []*ics23.ProofSpec, signer sdk.AccAddress,
+	specs []*ics23.ProofSpec, consParams *abci.ConsensusParams, signer sdk.AccAddress,
 ) MsgCreateClient {
 
 	return MsgCreateClient{
@@ -64,6 +66,7 @@ func NewMsgCreateClient(
 		UnbondingPeriod: unbondingPeriod,
 		MaxClockDrift:   maxClockDrift,
 		ProofSpecs:      specs,
+		ConsensusParams: consParams,
 		Signer:          signer,
 	}
 }
@@ -114,6 +117,10 @@ func (msg MsgCreateClient) ValidateBasic() error {
 			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
 		}
 	}
+	// Validate ConsensusParams
+	if msg.ConsensusParams == nil {
+		return sdkerrors.Wrap(ErrInvalidConsensusParams, "consensus params cannot be nil")
+	}
 	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
@@ -142,10 +149,13 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
 	root := commitmenttypes.NewMerkleRoot(msg.Header.AppHash)
 	return ConsensusState{
-		Timestamp:    msg.Header.Time,
-		Root:         root,
-		Height:       uint64(msg.Header.Height),
-		ValidatorSet: msg.Header.ValidatorSet,
+		Timestamp:       msg.Header.Time,
+		Root:            root,
+		Height:          uint64(msg.Header.Height),
+		ValidatorSet:    msg.Header.ValidatorSet,
+		UnbondingPeriod: msg.UnbondingPeriod,
+		ProofSpecs:      msg.ProofSpecs,
+		ConsensusParams: msg.ConsensusParams,
 	}
 }
 

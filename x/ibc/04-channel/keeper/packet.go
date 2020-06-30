@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -72,7 +72,7 @@ func (k Keeper) SendPacket(
 
 	clientState, found := k.clientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
 	if !found {
-		return client.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	// check if packet timeouted on the receiving chain

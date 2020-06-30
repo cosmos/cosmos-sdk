@@ -21,7 +21,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// NewParams creates a new parameter configuration for hte bank module
+// NewParams creates a new parameter configuration for the bank module
 func NewParams(sendEnabledParams SendEnabledParams) Params {
 	return Params{
 		SendEnabled: sendEnabledParams,
@@ -31,6 +31,7 @@ func NewParams(sendEnabledParams SendEnabledParams) Params {
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return Params{
+		// The default send send_enabled value allows send transfers for all coin denoms
 		SendEnabled: SendEnabledParams{DefaultSendEnabled()},
 	}
 }
@@ -57,7 +58,7 @@ func (p Params) IsSendEnabled(denom string) bool {
 		if p.Denom == denom {
 			return p.Enabled
 		}
-		// capture default case
+		// capture default case (indicated by an empty denom)
 		if len(p.Denom) == 0 {
 			defaultSendEnabled = p.Enabled
 		}
@@ -67,7 +68,8 @@ func (p Params) IsSendEnabled(denom string) bool {
 }
 
 // SetSendEnabledParam returns an updated set of Parameters with the given denom
-// send enabled flag set.
+// send enabled flag set.  If the denom is empty the sendEnabled value is set as the
+// global default.
 func (p Params) SetSendEnabledParam(denom string, sendEnabled bool) Params {
 	var sendParams SendEnabledParams
 	for _, p := range p.SendEnabled {
@@ -108,15 +110,17 @@ func validateSendEnabledParams(i interface{}) error {
 	return nil
 }
 
-// DefaultSendEnabled returns the default send enabled parameter
+// DefaultSendEnabled returns the default send enabled parameter indicating
+// send transfers are allowed for all coin denominations
 func DefaultSendEnabled() *SendEnabled {
 	return &SendEnabled{
-		Denom:   "",
-		Enabled: true,
+		Denom:   "",   // an empty denom string is used to match all denoms
+		Enabled: true, // default send_enabled status is allowed
 	}
 }
 
 // NewSendEnabled creates a new SendEnabled object
+// The denom may be left empty to control the global default setting of send_enabled
 func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
 	return &SendEnabled{
 		Denom:   denom,
@@ -135,7 +139,7 @@ func validateSendEnabled(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	// if the denomination is specified it must be valid
+	// if the denomination is specified it must be valid, an empty denom is used for the unspecified default
 	if len(param.Denom) > 0 {
 		return sdk.ValidateDenom(param.Denom)
 	}

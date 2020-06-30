@@ -11,7 +11,7 @@ var (
 
 // GetCompatibleVersions returns a descending ordered set of compatible IBC versions
 // for the caller chain's connection end. The latest supported version should be
-// first and the set should decsend to the oldest supported version.
+// first element and the set should decsend to the oldest supported version.
 func GetCompatibleVersions() []string {
 	return []string{DefaultIBCVersion}
 }

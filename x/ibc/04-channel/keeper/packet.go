@@ -9,7 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -59,13 +59,13 @@ func (k Keeper) SendPacket(
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == int32(connection.UNINITIALIZED) {
+	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
 		return sdkerrors.Wrap(
-			connection.ErrInvalidConnectionState,
+			connectiontypes.ErrInvalidConnectionState,
 			"connection is UNINITIALIZED",
 		)
 	}
@@ -175,13 +175,13 @@ func (k Keeper) RecvPacket(
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return nil, sdkerrors.Wrapf(
-			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
+			connectiontypes.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -356,13 +356,13 @@ func (k Keeper) AcknowledgePacket(
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return nil, sdkerrors.Wrapf(
-			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
+			connectiontypes.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 

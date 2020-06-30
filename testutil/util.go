@@ -13,7 +13,6 @@ import (
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -60,10 +59,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.APIAddress != "" {
-		val.ClientCtx = client.Context{}.
-			WithHomeDir(tmCfg.RootDir).
-			WithChainID(cfg.ChainID).
-			WithJSONMarshaler(cdc).
+		val.ClientCtx = val.ClientCtx.
 			WithClient(val.RPCClient).
 			WithTrustNode(true)
 
@@ -110,7 +106,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 			return err
 		}
 
-		appState, err := genutil.GenAppStateFromConfig(cdc, tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
+		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
 		if err != nil {
 			return err
 		}
@@ -128,19 +124,19 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
-	cdc.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
+	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
 
 	authGenState.Accounts = genAccounts
-	cfg.GenesisState[authtypes.ModuleName] = cdc.MustMarshalJSON(authGenState)
+	cfg.GenesisState[authtypes.ModuleName] = cfg.Codec.MustMarshalJSON(authGenState)
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
-	cdc.MustUnmarshalJSON(cfg.GenesisState[banktypes.ModuleName], &bankGenState)
+	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[banktypes.ModuleName], &bankGenState)
 
 	bankGenState.Balances = genBalances
-	cfg.GenesisState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankGenState)
+	cfg.GenesisState[banktypes.ModuleName] = cfg.Codec.MustMarshalJSON(bankGenState)
 
-	appGenStateJSON, err := codec.MarshalJSONIndent(cdc, cfg.GenesisState)
+	appGenStateJSON, err := codec.MarshalJSONIndent(cfg.Codec, cfg.GenesisState)
 	if err != nil {
 		return err
 	}

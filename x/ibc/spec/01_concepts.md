@@ -13,6 +13,8 @@ During the handshake procedure for connections a version string is agreed upon b
 This occurs during the first 3 steps of the handshake.
 
 During OpenInit, party A is expected to set all the versions they wish to support within their connection state.
+It is expected that this set of versions is from most preferred to least preferred. 
+This is not a strict requirement for the SDK implementation of IBC because the party calling OpenTry will greedily select the latest version it supports that the counterparty supports as well. 
 
 During OpenTry, party B will select a version from the counterparty's supported versions. 
 Priority will be placed on the latest supported version.

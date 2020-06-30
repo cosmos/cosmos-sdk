@@ -69,11 +69,11 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
-	cmd.Flags().AddFlagSet(FsPk)
-	cmd.Flags().AddFlagSet(FsAmount)
-	cmd.Flags().AddFlagSet(fsDescriptionCreate)
-	cmd.Flags().AddFlagSet(FsCommissionCreate)
-	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
+	cmd.Flags().AddFlagSet(FsPk())
+	cmd.Flags().AddFlagSet(FsAmount())
+	cmd.Flags().AddFlagSet(fsDescriptionCreate())
+	cmd.Flags().AddFlagSet(FsCommissionCreate())
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -136,9 +136,9 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsDescriptionEdit)
-	cmd.Flags().AddFlagSet(fsCommissionUpdate)
-	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
+	cmd.Flags().AddFlagSet(fsDescriptionEdit())
+	cmd.Flags().AddFlagSet(fsCommissionUpdate())
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation())
 
 	return cmd
 }
@@ -337,10 +337,10 @@ func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, 
 	fsCreateValidator.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
 	fsCreateValidator.String(FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
-	fsCreateValidator.AddFlagSet(FsCommissionCreate)
-	fsCreateValidator.AddFlagSet(FsMinSelfDelegation)
-	fsCreateValidator.AddFlagSet(FsAmount)
-	fsCreateValidator.AddFlagSet(FsPk)
+	fsCreateValidator.AddFlagSet(FsCommissionCreate())
+	fsCreateValidator.AddFlagSet(FsMinSelfDelegation())
+	fsCreateValidator.AddFlagSet(FsAmount())
+	fsCreateValidator.AddFlagSet(FsPk())
 
 	defaultsDesc = fmt.Sprintf(`
 	delegation amount:           %s

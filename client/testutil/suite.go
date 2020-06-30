@@ -126,7 +126,7 @@ func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
 	// decode transaction
 	tx2, err := s.TxGenerator.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	tx3, ok := tx2.(signing.Tx)
+	tx3, ok := tx2.(signing.SigFeeMemoTx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -143,7 +143,7 @@ func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
 	// JSON decode transaction
 	tx2, err = s.TxGenerator.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	tx3, ok = tx2.(signing.Tx)
+	tx3, ok = tx2.(signing.SigFeeMemoTx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())

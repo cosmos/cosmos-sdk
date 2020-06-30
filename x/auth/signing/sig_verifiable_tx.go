@@ -15,9 +15,9 @@ type SigVerifiableTx interface {
 	GetSignaturesV2() ([]signing.SignatureV2, error)
 }
 
-// Tx defines an interface for transactions that support all standard message, signature,
+// SigFeeMemoTx defines an interface for transactions that support all standard message, signature,
 // fee and memo interfaces.
-type Tx interface {
+type SigFeeMemoTx interface {
 	SigVerifiableTx
 	types.TxWithMemo
 	types.FeeTx

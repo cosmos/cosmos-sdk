@@ -28,7 +28,7 @@ import (
 // SIGN_MODE_DIRECT signing uses raw body and auth_info bytes and b) Tx does does not retain
 // crypto.PubKey instances.
 type Builder interface {
-	authsigning.Tx
+	authsigning.SigFeeMemoTx
 
 	client.TxBuilder
 
@@ -321,7 +321,7 @@ func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t *builder) GetTx() authsigning.Tx {
+func (t *builder) GetTx() authsigning.SigFeeMemoTx {
 	return t
 }
 

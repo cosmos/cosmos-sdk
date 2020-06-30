@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+// FilteredPaginate does pagination of all the results in the PrefixStore based on the
+// provided PageRequest. onResult should be used to do actual unmarshaling and filter the results.
 // If key is provided, the pagination uses the optimized querying.
 // If offset is used, the pagination uses lazy filtering i.e., searches through all the records.
 // The accumulate parameter represents if the response is valid based on the offset given.

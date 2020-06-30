@@ -3,8 +3,8 @@ package ibc_test
 import (
 	lite "github.com/tendermint/tendermint/lite2"
 
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -28,13 +28,13 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		{
 			name: "valid genesis",
 			genState: types.GenesisState{
-				ClientGenesis: client.NewGenesisState(
+				ClientGenesis: clienttypes.NewGenesisState(
 					[]exported.ClientState{
 						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						localhosttypes.NewClientState("chaindID", 10),
 					},
-					[]client.ConsensusStates{
-						client.NewClientConsensusStates(
+					[]clienttypes.ClientConsensusStates{
+						clienttypes.NewClientConsensusStates(
 							clientID,
 							[]exported.ConsensusState{
 								ibctmtypes.NewConsensusState(
@@ -84,7 +84,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		{
 			name: "invalid client genesis",
 			genState: types.GenesisState{
-				ClientGenesis: client.NewGenesisState(
+				ClientGenesis: clienttypes.NewGenesisState(
 					[]exported.ClientState{
 						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						localhosttypes.NewClientState("(chaindID)", 0),
@@ -99,7 +99,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		{
 			name: "invalid connection genesis",
 			genState: types.GenesisState{
-				ClientGenesis: client.DefaultGenesisState(),
+				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
 						connection.NewConnectionEnd(connection.INIT, connectionID, "(CLIENTIDONE)", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
@@ -114,7 +114,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		{
 			name: "invalid channel genesis",
 			genState: types.GenesisState{
-				ClientGenesis:     client.DefaultGenesisState(),
+				ClientGenesis:     clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connection.DefaultGenesisState(),
 				ChannelGenesis: channel.GenesisState{
 					Acknowledgements: []channel.PacketAckCommitment{

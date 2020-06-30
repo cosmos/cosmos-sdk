@@ -6,13 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// FilteredPaginate does pagination of all the results in the PrefixStore based on the
-// provided PageRequest. onResult should be used to do actual unmarshaling and filter the results.
-// if key is provided, the pagination uses the optimized querying
-// if offset is used, the pagination uses lazy filtering i.e., searches through all the records
-// accumulate represents if the response is valid based on the offset given
-// it will be false for the results (filtered) < offset  and true for `offset > accumulate <= end`. This
-// will help to append the result to original client response
+// If key is provided, the pagination uses the optimized querying.
+// If offset is used, the pagination uses lazy filtering i.e., searches through all the records.
+// The accumulate parameter represents if the response is valid based on the offset given.
+// It will be false for the results (filtered) < offset  and true for `offset > accumulate <= end`.
+// When accumulate is set to true the current result should be appended to the result set returned
+// to the client.
 func FilteredPaginate(
 	prefixStore types.KVStore,
 	req *PageRequest,

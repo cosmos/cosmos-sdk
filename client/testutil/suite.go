@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
@@ -79,52 +80,87 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetMsgs() {
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 	privKey, pubkey, addr := authtypes.KeyTestPubAddr()
+	privKey2, pubkey2, _ := authtypes.KeyTestPubAddr()
+	multisigPk := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{pubkey, pubkey2})
 
 	txBuilder := s.TxGenerator.NewTxBuilder()
 
 	// set test msg
 	msg := testdata.NewTestMsg(addr)
-	err := txBuilder.SetMsgs(msg)
+	msg2 := testdata.NewTestMsg(sdk.AccAddress(multisigPk.Address()))
+	err := txBuilder.SetMsgs(msg, msg2)
 	s.Require().NoError(err)
 
 	// check that validation fails
 	s.Require().Error(txBuilder.GetTx().ValidateBasic())
 
-	// set SignatureV2 without actual signature bytes
 	signModeHandler := s.TxGenerator.SignModeHandler()
 	s.Require().Contains(signModeHandler.Modes(), signModeHandler.DefaultMode())
-	sigData := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
-	sig := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData}
-	err = txBuilder.SetSignatures(sig)
+
+	// set SignatureV2 without actual signature bytes
+	sigData1 := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
+	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
+
+	msigData := multisig.NewMultisig(2)
+	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 0)
+	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 1)
+	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+
+	// fail validation without required signers
+	err = txBuilder.SetSignatures(sig1)
 	s.Require().NoError(err)
 	sigTx := txBuilder.GetTx()
-	s.Require().Equal([][]byte{nil}, sigTx.GetSignatures())
+	s.Require().Error(sigTx.ValidateBasic())
+
+	err = txBuilder.SetSignatures(sig1, msig)
+	s.Require().NoError(err)
+	sigTx = txBuilder.GetTx()
+	s.Require().Len(sigTx.GetSignatures(), 2)
 	sigsV2, err := sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Equal([]signingtypes.SignatureV2{sig}, sigsV2)
+	s.Require().Equal([]signingtypes.SignatureV2{sig1, msig}, sigsV2)
 	s.Require().Equal([]sdk.AccAddress{addr}, sigTx.GetSigners())
 	s.Require().NoError(sigTx.ValidateBasic())
 
 	// sign transaction
-	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signing.SignerData{
+	signerData := signing.SignerData{
 		ChainID:         "test",
 		AccountNumber:   1,
 		AccountSequence: 2,
-	}, sigTx)
+	}
+	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
 	sigBz, err := privKey.Sign(signBytes)
 	s.Require().NoError(err)
 
+	signerData = signing.SignerData{
+		ChainID:         "test",
+		AccountNumber:   3,
+		AccountSequence: 4,
+	}
+	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
+	s.Require().NoError(err)
+	mSigBz1, err := privKey.Sign(mSignBytes)
+	s.Require().NoError(err)
+	mSigBz2, err := privKey2.Sign(mSignBytes)
+	s.Require().NoError(err)
+	msigData = multisig.NewMultisig(2)
+	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{
+		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz1}, 0)
+	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{
+		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz2}, 0)
+
 	// set signature
-	sigData.Signature = sigBz
-	sig = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData}
-	err = txBuilder.SetSignatures(sig)
+	sigData1.Signature = sigBz
+	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
+	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
-	s.Require().Equal([][]byte{sigBz}, sigTx.GetSignatures())
 	sigsV2, err = sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Equal([]signingtypes.SignatureV2{sig}, sigsV2)
+	s.Require().Len(sigTx.GetSignatures(), 2)
+	s.Require().Equal([]signingtypes.SignatureV2{sig1, msig}, sigsV2)
 	s.Require().Equal([]sdk.AccAddress{addr}, sigTx.GetSigners())
 	s.Require().NoError(sigTx.ValidateBasic())
 }

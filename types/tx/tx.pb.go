@@ -163,7 +163,9 @@ func (m *TxRaw) GetSignatures() [][]byte {
 }
 
 type SignDoc struct {
-	BodyBytes     []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
+	// body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw.
+	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
+	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in TxRaw.
 	AuthInfoBytes []byte `protobuf:"bytes,2,opt,name=auth_info_bytes,json=authInfoBytes,proto3" json:"auth_info_bytes,omitempty"`
 	// chain_id is the unique identifier of the chain this transaction targets.
 	// It prevents signed transactions from being used on another chain by an

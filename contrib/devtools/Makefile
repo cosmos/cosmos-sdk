@@ -85,7 +85,7 @@ ifeq ($(UNAME_S),Darwin)
   PROTOC_ZIP ?= protoc-3.11.2-osx-x86_64.zip
 endif
 
-proto-tools: proto-tools-stamp buf
+proto-tools: proto-tools-stamp protoc-gen-gocosmos buf
 
 proto-tools-stamp:
 	@echo "Installing protoc compiler..."

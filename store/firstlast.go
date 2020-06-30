@@ -8,10 +8,10 @@ import (
 )
 
 // Gets the first item.
-func First(st KVStore, start, end []byte) (kv kv.Pair, ok bool) {
+func First(st KVStore, start, end []byte) (kv.Pair, bool) {
 	iter := st.Iterator(start, end)
 	if !iter.Valid() {
-		return kv, false
+		return kv.Pair{}, false
 	}
 	defer iter.Close()
 
@@ -19,13 +19,13 @@ func First(st KVStore, start, end []byte) (kv kv.Pair, ok bool) {
 }
 
 // Gets the last item.  `end` is exclusive.
-func Last(st KVStore, start, end []byte) (kv kv.Pair, ok bool) {
+func Last(st KVStore, start, end []byte) (kv.Pair, bool) {
 	iter := st.ReverseIterator(end, start)
 	if !iter.Valid() {
 		if v := st.Get(start); v != nil {
 			return kv.Pair{Key: sdk.CopyBytes(start), Value: sdk.CopyBytes(v)}, true
 		}
-		return kv, false
+		return kv.Pair{}, false
 	}
 	defer iter.Close()
 
@@ -33,7 +33,7 @@ func Last(st KVStore, start, end []byte) (kv kv.Pair, ok bool) {
 		// Skip this one, end is exclusive.
 		iter.Next()
 		if !iter.Valid() {
-			return kv, false
+			return kv.Pair{}, false
 		}
 	}
 

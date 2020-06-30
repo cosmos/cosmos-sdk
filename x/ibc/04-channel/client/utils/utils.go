@@ -47,7 +47,7 @@ func QueryPacket(
 	)
 
 	// FIXME: res.Height+1 is hack, fix later
-	return types.NewPacketResponse(portID, channelID, sequence, packet, res.Proof, res.Height+1), nil
+	return types.NewPacketResponse(portID, channelID, sequence, packet, res.ProofOps, res.Height+1), nil
 }
 
 // QueryChannel queries the store to get a channel and a merkle proof.
@@ -69,7 +69,7 @@ func QueryChannel(
 	if err := ctx.Codec.UnmarshalBinaryBare(res.Value, &channel); err != nil {
 		return types.ChannelResponse{}, err
 	}
-	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
+	return types.NewChannelResponse(portID, channelID, channel, res.Ops, res.Height), nil
 }
 
 // QueryChannelClientState uses the channel Querier to return the ClientState of

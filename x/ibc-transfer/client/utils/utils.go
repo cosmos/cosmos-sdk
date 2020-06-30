@@ -27,7 +27,7 @@ func QueryNextSequenceRecv(
 	}
 
 	sequence := binary.BigEndian.Uint64(res.Value)
-	sequenceRes := channeltypes.NewRecvResponse(portID, channelID, sequence, res.Proof, res.Height)
+	sequenceRes := channeltypes.NewRecvResponse(portID, channelID, sequence, res.ProofOps, res.Height)
 
 	return sequenceRes, nil
 }

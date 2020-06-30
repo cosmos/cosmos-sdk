@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmliteErr "github.com/tendermint/tendermint/light"
+	"github.com/tendermint/tendermint/light"
 	tmliteProxy "github.com/tendermint/tendermint/light/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -136,7 +136,7 @@ func (ctx Context) Verify(height int64) (tmtypes.SignedHeader, error) {
 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
 
 	switch {
-	case tmliteErr.IsErrCommitNotFound(err):
+	case light.IsErrCommitNotFound(err):
 		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
 	case err != nil:
 		return tmtypes.SignedHeader{}, err
@@ -171,14 +171,14 @@ func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error 
 	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
 
 	if resp.Value == nil {
-		err = prt.VerifyAbsence(resp.Proof, commit.Header.AppHash, kp.String())
+		err = prt.VerifyAbsence(resp.ProofOps, commit.Header.AppHash, kp.String())
 		if err != nil {
 			return errors.Wrap(err, "failed to prove merkle proof")
 		}
 		return nil
 	}
 
-	if err := prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value); err != nil {
+	if err := prt.VerifyValue(resp.ProofOps, commit.Header.AppHash, kp.String(), resp.Value); err != nil {
 		return errors.Wrap(err, "failed to prove merkle proof")
 	}
 

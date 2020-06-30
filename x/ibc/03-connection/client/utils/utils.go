@@ -59,7 +59,7 @@ func QueryConnection(
 		return types.ConnectionResponse{}, err
 	}
 
-	connRes := types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height)
+	connRes := types.NewConnectionResponse(connectionID, connection, res.ProofOps, res.Height)
 
 	return connRes, nil
 }
@@ -108,7 +108,7 @@ func QueryClientConnections(
 		return types.ClientConnectionsResponse{}, err
 	}
 
-	connPathsRes := types.NewClientConnectionsResponse(clientID, paths, res.Proof, res.Height)
+	connPathsRes := types.NewClientConnectionsResponse(clientID, paths, res.ProofOps, res.Height)
 	return connPathsRes, nil
 }
 

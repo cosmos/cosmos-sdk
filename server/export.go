@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -73,17 +74,18 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 
 			doc.AppState = appState
 			doc.Validators = validators
-			doc.ConsensusParams = &tmtypes.ConsensusParams{
-				Block: tmtypes.BlockParams{
+			doc.ConsensusParams = &tmproto.ConsensusParams{
+				Block: tmproto.BlockParams{
 					MaxBytes:   cp.Block.MaxBytes,
 					MaxGas:     cp.Block.MaxGas,
 					TimeIotaMs: doc.ConsensusParams.Block.TimeIotaMs,
 				},
-				Evidence: tmtypes.EvidenceParams{
+				Evidence: tmproto.EvidenceParams{
 					MaxAgeNumBlocks: cp.Evidence.MaxAgeNumBlocks,
 					MaxAgeDuration:  cp.Evidence.MaxAgeDuration,
+					// TODO: expand to house other params
 				},
-				Validator: tmtypes.ValidatorParams{
+				Validator: tmproto.ValidatorParams{
 					PubKeyTypes: cp.Validator.PubKeyTypes,
 				},
 			}

@@ -71,6 +71,11 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
 
+	// Ensure validators have addresses.
+	for _, val := range staking.WriteValidators(ctx, app.StakingKeeper) {
+		require.NotEmpty(t, val.Address)
+	}
+
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
 	require.True(t, found)

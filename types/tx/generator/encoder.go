@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
-	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func DefaultTxEncoder(marshaler codec.Marshaler) types.TxEncoder {
@@ -15,7 +15,7 @@ func DefaultTxEncoder(marshaler codec.Marshaler) types.TxEncoder {
 			return nil, fmt.Errorf("expected %T, got %T", builder{}, tx)
 		}
 
-		raw := &tx2.TxRaw{
+		raw := &txtypes.TxRaw{
 			BodyBytes:     wrapper.GetBodyBytes(),
 			AuthInfoBytes: wrapper.GetAuthInfoBytes(),
 			Signatures:    wrapper.tx.Signatures,

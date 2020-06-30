@@ -20,7 +20,7 @@ type StdTxBuilder struct {
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() sdk.Tx {
+func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
 }
 

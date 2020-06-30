@@ -3,9 +3,9 @@ package generator
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/cosmos/cosmos-sdk/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 
 	"github.com/cosmos/cosmos-sdk/types/tx"
 
@@ -28,12 +28,9 @@ import (
 // SIGN_MODE_DIRECT signing uses raw body and auth_info bytes and b) Tx does does not retain
 // crypto.PubKey instances.
 type Builder interface {
-	sdk.Tx
-	sdk.FeeTx
-	sdk.TxWithMemo
-	testutil.HasSignaturesTx
+	authsigning.Tx
+
 	client.TxBuilder
-	GetSignaturesV2() ([]signing.SignatureV2, error)
 
 	direct.ProtoTx
 }
@@ -324,7 +321,7 @@ func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t *builder) GetTx() sdk.Tx {
+func (t *builder) GetTx() authsigning.Tx {
 	return t
 }
 

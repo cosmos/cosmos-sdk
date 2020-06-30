@@ -1,8 +1,8 @@
 package testutil
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
@@ -39,7 +39,7 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetFeeAmount() {
 		sdk.NewInt64Coin("atom", 20000000),
 	}
 	txBuilder.SetFeeAmount(feeAmount)
-	feeTx := txBuilder.GetTx().(sdk.FeeTx)
+	feeTx := txBuilder.GetTx()
 	s.Require().Equal(feeAmount, feeTx.GetFee())
 }
 
@@ -47,7 +47,7 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetGasLimit() {
 	const newGas uint64 = 300000
 	txBuilder := s.TxGenerator.NewTxBuilder()
 	txBuilder.SetGasLimit(newGas)
-	feeTx := txBuilder.GetTx().(sdk.FeeTx)
+	feeTx := txBuilder.GetTx()
 	s.Require().Equal(newGas, feeTx.GetGas())
 }
 
@@ -55,7 +55,7 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetMemo() {
 	const newMemo string = "newfoomemo"
 	txBuilder := s.TxGenerator.NewTxBuilder()
 	txBuilder.SetMemo(newMemo)
-	txWithMemo := txBuilder.GetTx().(sdk.TxWithMemo)
+	txWithMemo := txBuilder.GetTx()
 	s.Require().Equal(txWithMemo.GetMemo(), newMemo)
 }
 
@@ -71,12 +71,6 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetMsgs() {
 	err := txBuilder.SetMsgs(msgs...)
 	s.Require().NoError(err)
 	s.Require().Equal(msgs, txBuilder.GetTx().GetMsgs())
-}
-
-type HasSignaturesTx interface {
-	GetSigners() []sdk.AccAddress
-	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignatures() [][]byte
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
@@ -95,7 +89,7 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 	err := txBuilder.SetSignatures(sig)
 	s.Require().NoError(err)
 
-	sigTx := txBuilder.GetTx().(HasSignaturesTx)
+	sigTx := txBuilder.GetTx().(signing.SigVerifiableTx)
 	s.Require().Equal(dummySig, sigTx.GetSignatures()[0])
 }
 
@@ -132,11 +126,14 @@ func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
 	// decode transaction
 	tx2, err := s.TxGenerator.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	s.Require().Equal(feeAmount, tx2.(sdk.FeeTx).GetFee())
-	s.Require().Equal(gasLimit, tx2.(sdk.FeeTx).GetGas())
-	s.Require().Equal(memo, tx2.(sdk.TxWithMemo).GetMemo())
-	s.Require().Equal(dummySig, tx2.(HasSignaturesTx).GetSignatures()[0])
-	s.Require().Equal(priv.PubKey(), tx2.(HasSignaturesTx).GetPubKeys()[0])
+	tx3, ok := tx2.(signing.Tx)
+	s.Require().True(ok)
+	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
+	s.Require().Equal(feeAmount, tx3.GetFee())
+	s.Require().Equal(gasLimit, tx3.GetGas())
+	s.Require().Equal(memo, tx3.GetMemo())
+	s.Require().Equal(dummySig, tx3.GetSignatures()[0])
+	s.Require().Equal(priv.PubKey(), tx3.GetPubKeys()[0])
 
 	// JSON encode transaction
 	jsonTxBytes, err := s.TxGenerator.TxEncoder()(tx)
@@ -146,10 +143,12 @@ func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
 	// JSON decode transaction
 	tx2, err = s.TxGenerator.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	s.Require().Equal(feeAmount, tx2.(sdk.FeeTx).GetFee())
-	s.Require().Equal(gasLimit, tx2.(sdk.FeeTx).GetGas())
-	s.Require().Equal(memo, tx2.(sdk.TxWithMemo).GetMemo())
-	s.Require().Equal([]sdk.Msg{msg}, tx2.GetMsgs())
-	s.Require().Equal(dummySig, tx2.(HasSignaturesTx).GetSignatures()[0])
-	s.Require().Equal(priv.PubKey(), tx2.(HasSignaturesTx).GetPubKeys()[0])
+	tx3, ok = tx2.(signing.Tx)
+	s.Require().True(ok)
+	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
+	s.Require().Equal(feeAmount, tx3.GetFee())
+	s.Require().Equal(gasLimit, tx3.GetGas())
+	s.Require().Equal(memo, tx3.GetMemo())
+	s.Require().Equal(dummySig, tx3.GetSignatures()[0])
+	s.Require().Equal(priv.PubKey(), tx3.GetPubKeys()[0])
 }

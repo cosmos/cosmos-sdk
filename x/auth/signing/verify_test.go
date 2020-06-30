@@ -3,6 +3,8 @@ package signing_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -31,7 +33,7 @@ func TestVerifySignature(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	types.RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	_ = app.AccountKeeper.NewAccountWithAddress(ctx, addr1)

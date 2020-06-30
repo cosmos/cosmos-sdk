@@ -125,6 +125,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
 * (modules) [\#6311](https://github.com/cosmos/cosmos-sdk/issues/6311) Remove `alias.go` usage
 * (x/auth) [\#6443](https://github.com/cosmos/cosmos-sdk/issues/6443) Move `FeeTx` and `TxWithMemo` interfaces from `x/auth/ante` to `types`.
 * (modules) [\#6447](https://github.com/cosmos/cosmos-sdk/issues/6447) Rename `blacklistedAddrs` to `blockedAddrs`.
+* (x/bank) [\6518](https://github.com/cosmos/cosmos-sdk/pull/6518) Support for per-denomination send_enabled flags.  Existing send_enabled flag has been moved into a Params structure and transformed into an array of: `{denom: string, enabled: bool}`
   
   Migration guide:
 

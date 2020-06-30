@@ -35,6 +35,7 @@ type Builder interface {
 	direct.ProtoTx
 }
 
+// NewBuilder returns a new Builder instance
 func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Builder {
 	return &builder{
 		tx: &tx.Tx{
@@ -224,7 +225,7 @@ func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 
 	for i, si := range signerInfos {
 		var err error
-		sigData, err := ModeInfoToSignatureData(si.ModeInfo, sigs[i])
+		sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
 		if err != nil {
 			return nil, err
 		}
@@ -323,92 +324,4 @@ func (t *builder) setSignatures(sigs [][]byte) {
 
 func (t *builder) GetTx() authsigning.SigFeeMemoTx {
 	return t
-}
-
-func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []byte) {
-	if data == nil {
-		return nil, nil
-	}
-
-	switch data := data.(type) {
-	case *signing.SingleSignatureData:
-		return &tx.ModeInfo{
-			Sum: &tx.ModeInfo_Single_{
-				Single: &tx.ModeInfo_Single{Mode: data.SignMode},
-			},
-		}, data.Signature
-	case *signing.MultiSignatureData:
-		n := len(data.Signatures)
-		modeInfos := make([]*tx.ModeInfo, n)
-		sigs := make([][]byte, n)
-
-		for i, d := range data.Signatures {
-			modeInfos[i], sigs[i] = SignatureDataToModeInfoAndSig(d)
-		}
-
-		multisig := types.MultiSignature{
-			Signatures: sigs,
-		}
-		sig, err := multisig.Marshal()
-		if err != nil {
-			panic(err)
-		}
-
-		return &tx.ModeInfo{
-			Sum: &tx.ModeInfo_Multi_{
-				Multi: &tx.ModeInfo_Multi{
-					Bitarray:  data.BitArray,
-					ModeInfos: modeInfos,
-				},
-			},
-		}, sig
-	default:
-		panic("unexpected case")
-	}
-}
-
-func ModeInfoToSignatureData(modeInfo *tx.ModeInfo, sig []byte) (signing.SignatureData, error) {
-	switch modeInfo := modeInfo.Sum.(type) {
-	case *tx.ModeInfo_Single_:
-		return &signing.SingleSignatureData{
-			SignMode:  modeInfo.Single.Mode,
-			Signature: sig,
-		}, nil
-
-	case *tx.ModeInfo_Multi_:
-		multi := modeInfo.Multi
-
-		sigs, err := DecodeMultisignatures(sig)
-		if err != nil {
-			return nil, err
-		}
-
-		sigv2s := make([]signing.SignatureData, len(sigs))
-		for i, mi := range multi.ModeInfos {
-			sigv2s[i], err = ModeInfoToSignatureData(mi, sigs[i])
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return &signing.MultiSignatureData{
-			BitArray:   multi.Bitarray,
-			Signatures: sigv2s,
-		}, nil
-
-	default:
-		panic("unexpected case")
-	}
-}
-
-func DecodeMultisignatures(bz []byte) ([][]byte, error) {
-	multisig := types.MultiSignature{}
-	err := multisig.Unmarshal(bz)
-	if err != nil {
-		return nil, err
-	}
-	if len(multisig.XXX_unrecognized) > 0 {
-		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
-	}
-	return multisig.Signatures, nil
 }

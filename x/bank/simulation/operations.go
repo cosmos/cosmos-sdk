@@ -141,7 +141,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		for _, i := range inputs {
 			for _, c := range i.Coins {
 				if !bk.GetSendEnabled(ctx, c.Denom) {
-					return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, fmt.Sprintf("%s transfers are currently disabled", c.Denom)), nil, nil
+					return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, fmt.Sprintf("%s transfers are currently disabled", c.Denom)), nil, nil
 				}
 			}
 		}

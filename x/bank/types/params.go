@@ -47,7 +47,7 @@ func (p Params) Validate() error {
 	if err := validateSendEnabledParams(p.SendEnabled); err != nil {
 		return err
 	}
-	return nil
+	return validateIsBool(p.DefaultSendEnabled)
 }
 
 // String implements the Stringer interface.
@@ -98,11 +98,11 @@ func validateSendEnabledParams(i interface{}) error {
 	// ensure each denom is only registered one time.
 	registered := make(map[string]bool)
 	for _, p := range params {
-		if err := validateSendEnabled(*p); err != nil {
-			return err
-		}
 		if _, exists := registered[p.Denom]; exists {
 			return fmt.Errorf("duplicate send enabled parameter found: '%s'", p.Denom)
+		}
+		if err := validateSendEnabled(*p); err != nil {
+			return err
 		}
 		registered[p.Denom] = true
 	}

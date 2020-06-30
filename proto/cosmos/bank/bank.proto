@@ -13,7 +13,9 @@ message Params {
   repeated bank.SendEnabled send_enabled = 1[
     (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\""
   ];
-  bool default_send_enabled = 2;
+  bool default_send_enabled = 2[
+    (gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\""
+  ];
 }
 
 // Send enabled configuration properties for each denomination

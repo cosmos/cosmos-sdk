@@ -95,7 +95,17 @@ func Test_validateParams(t *testing.T) {
   enabled: false
 - denom: foodenom2
   enabled: false
-defaultsendenabled: true
+default_send_enabled: true
+`
+	require.Equal(t, paramYaml, params.String())
+
+	// Ensure proper format of yaml output when false
+	params.DefaultSendEnabled = false
+	paramYaml = `send_enabled:
+- denom: foodenom
+  enabled: false
+- denom: foodenom2
+  enabled: false
 `
 	require.Equal(t, paramYaml, params.String())
 

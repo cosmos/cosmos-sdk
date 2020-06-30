@@ -712,7 +712,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	// setup an ante handler that only accepts PubKeyEd25519
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
 		switch pubkey := sig.PubKey.(type) {
-		case ed25519.PubKeyEd25519:
+		case ed25519.PubKey:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil
 		default:

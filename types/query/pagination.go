@@ -51,7 +51,9 @@ func Paginate(
 				nextKey = iterator.Key()
 				break
 			}
-
+			if iterator.Error() != nil {
+				return nil, iterator.Error()
+			}
 			err := onResult(iterator.Key(), iterator.Value())
 			if err != nil {
 				return nil, err
@@ -90,6 +92,9 @@ func Paginate(
 			if !countTotal {
 				break
 			}
+		}
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
 		}
 	}
 

@@ -53,6 +53,10 @@ func FilteredPaginate(
 				break
 			}
 
+			if iterator.Error() != nil {
+				return nil, iterator.Error()
+			}
+
 			hit, err := onResult(iterator.Key(), iterator.Value(), true)
 			if err != nil {
 				return nil, err
@@ -77,7 +81,10 @@ func FilteredPaginate(
 	var nextKey []byte
 
 	for ; iterator.Valid(); iterator.Next() {
-		accumulate := numHits > offset && numHits <= end
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
+		}
+		accumulate := numHits >= offset && numHits < end
 		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
 		if err != nil {
 			return nil, err

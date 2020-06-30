@@ -36,17 +36,24 @@ func TestFilteredPaginations(t *testing.T) {
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
 	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
 
-	// verify pagination with limit > total values
-	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
-	balances, res, err := execFilterPaginate(store, pageReq, appCodec)
+	// // verify pagination with limit > total values
+	// pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
+	// balances, res, err := execFilterPaginate(store, pageReq, appCodec)
+	//
+	// require.NoError(t, err)
+	// require.NotNil(t, res)
+	// require.Equal(t, 4, len(balances))
+
+	// verify empty request
+	balances, res, err := execFilterPaginate(store, nil, appCodec)
 
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	t.Log(balances)
 	require.Equal(t, 4, len(balances))
+	require.Equal(t, uint64(4), res.Total)
 
 	// verify next key is returned
-	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
+	pageReq := &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
 
 	require.NoError(t, err)
@@ -76,7 +83,6 @@ func TestFilteredPaginations(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 4, len(balances))
-	t.Log(res.Total)
 	require.Equal(t, uint64(4), res.Total)
 
 	// verify offset

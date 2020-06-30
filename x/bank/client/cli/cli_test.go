@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		respType  fmt.Stringer
 		expected  fmt.Stringer
 	}{
-		{"no address provided", nil, true, nil, nil},
+		{"no address provided", []string{}, true, nil, nil},
 		{
 			"total account balance",
 			[]string{

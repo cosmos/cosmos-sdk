@@ -76,7 +76,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 }
 
 // TODO: Remove in favor of NewFactoryCLI
-func NewFactoryFrom_Deprecated(input io.Reader) Factory {
+func NewFactoryFromDeprecated(input io.Reader) Factory {
 	kb, err := keyring.New(
 		sdk.KeyringServiceName(),
 		viper.GetString(flags.FlagKeyringBackend),

@@ -33,7 +33,7 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 //
 // TODO: Remove in favor of GenerateOrBroadcastTxCLI
 func GenerateOrBroadcastTx(clientCtx client.Context, msgs ...sdk.Msg) error {
-	txf := NewFactoryFrom_Deprecated(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+	txf := NewFactoryFromDeprecated(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 

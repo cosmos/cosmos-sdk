@@ -7,7 +7,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionkeeper "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -28,16 +29,16 @@ func NewQuerier(k Keeper) sdk.Querier {
 			default:
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", clienttypes.SubModuleName)
 			}
-		case connection.SubModuleName:
+		case connectiontypes.SubModuleName:
 			switch path[1] {
-			case connection.QueryAllConnections:
-				res, err = connection.QuerierConnections(ctx, req, k.ConnectionKeeper)
-			case connection.QueryAllClientConnections:
-				res, err = connection.QuerierAllClientConnections(ctx, req, k.ConnectionKeeper)
-			case connection.QueryClientConnections:
-				res, err = connection.QuerierClientConnections(ctx, req, k.ConnectionKeeper)
+			case connectiontypes.QueryAllConnections:
+				res, err = connectionkeeper.QuerierConnections(ctx, req, k.ConnectionKeeper)
+			case connectiontypes.QueryAllClientConnections:
+				res, err = connectionkeeper.QuerierAllClientConnections(ctx, req, k.ConnectionKeeper)
+			case connectiontypes.QueryClientConnections:
+				res, err = connectionkeeper.QuerierClientConnections(ctx, req, k.ConnectionKeeper)
 			default:
-				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", connection.SubModuleName)
+				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", connectiontypes.SubModuleName)
 			}
 		case channeltypes.SubModuleName:
 			switch path[1] {

@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		{"couldn't add connection to client", func() {}, false},
 	}
 
-	counterparty := connection.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+	counterparty := connectiontypes.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 
 	for i, tc := range testCases {
 		tc := tc
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 // connection on Chain A (ID #1) is INIT
 func (suite *KeeperTestSuite) TestConnOpenTry() {
 	// counterparty for A on B
-	counterparty := connection.NewCounterparty(
+	counterparty := connectiontypes.NewCounterparty(
 		testClientIDB, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
 	)
 
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 				suite.chainB.GetContext(), testConnectionIDB, counterparty, testClientIDA,
-				connection.GetCompatibleVersions(), proofInit, proofConsensus,
+				connectiontypes.GetCompatibleVersions(), proofInit, proofConsensus,
 				proofHeight+1, consensusHeight,
 			)
 
@@ -140,7 +140,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 // TestConnOpenAck - Chain A (ID #1) calls TestConnOpenAck to acknowledge (ACK state)
 // the initialization (TRYINIT) of the connection on  Chain B (ID #2).
 func (suite *KeeperTestSuite) TestConnOpenAck() {
-	version := connection.GetCompatibleVersions()[0]
+	version := connectiontypes.GetCompatibleVersions()[0]
 
 	testCases := []struct {
 		msg      string

@@ -7,8 +7,8 @@
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp simapp simd start
 #
 # Client: (Note the simapp binary always looks at ~/.simapp we can bind to different local storage)
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simcli keys add foo
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simcli keys list
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys add foo
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys list
 # TODO: demo connecting rest-server (or is this in server now?)
 FROM golang:alpine AS build-env
 
@@ -38,7 +38,6 @@ WORKDIR /root
 
 # Copy over binaries from the build-env
 COPY --from=build-env /go/bin/simd /usr/bin/simd
-COPY --from=build-env /go/bin/simcli /usr/bin/simcli
 
 EXPOSE 26656 26657 1317
 

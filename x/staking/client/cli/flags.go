@@ -46,13 +46,6 @@ func FsAmount() *flag.FlagSet {
 	return f
 }
 
-func fsShares() *flag.FlagSet {
-	f := flag.NewFlagSet("", flag.ContinueOnError)
-	f.String(FlagSharesAmount, "", "Amount of source-shares to either unbond or redelegate as a positive integer or decimal")
-	f.String(FlagSharesFraction, "", "Fraction of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")
-	return f
-}
-
 func fsDescriptionCreate() *flag.FlagSet {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	f.String(FlagMoniker, "", "The validator's name")
@@ -90,18 +83,5 @@ func fsDescriptionEdit() *flag.FlagSet {
 	f.String(FlagWebsite, types.DoNotModifyDesc, "The validator's (optional) website")
 	f.String(FlagSecurityContact, types.DoNotModifyDesc, "The validator's (optional) security contact email")
 	f.String(FlagDetails, types.DoNotModifyDesc, "The validator's (optional) details")
-	return f
-}
-
-func fsValidator() *flag.FlagSet {
-	f := flag.NewFlagSet("", flag.ContinueOnError)
-	f.String(FlagAddressValidator, "", "The Bech32 address of the validator")
-	return f
-}
-
-func fsRedelegation() *flag.FlagSet {
-	f := flag.NewFlagSet("", flag.ContinueOnError)
-	f.String(FlagAddressValidatorSrc, "", "The Bech32 address of the source validator")
-	f.String(FlagAddressValidatorDst, "", "The Bech32 address of the destination validator")
 	return f
 }

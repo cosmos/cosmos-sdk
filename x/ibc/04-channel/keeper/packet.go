@@ -178,7 +178,7 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
@@ -359,7 +359,7 @@ func (k Keeper) AcknowledgePacket(
 		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),

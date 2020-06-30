@@ -315,6 +315,7 @@ func TestGRPCQueryRedelegation(t *testing.T) {
 
 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
 	require.True(t, found)
+	t.Log(redel)
 
 	// delegator redelegations
 	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
@@ -327,10 +328,14 @@ func TestGRPCQueryRedelegation(t *testing.T) {
 	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
 	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
 
+	redels := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, val1.OperatorAddress)
+	require.True(t, found)
+	t.Log(redels)
+
 	redelResp, err = queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
 		SrcValidatorAddr: val1.GetOperator(), Req: &query.PageRequest{}})
 	require.NoError(t, err)
-
+	t.Log(val1.OperatorAddress)
 	require.Len(t, redelResp.RedelegationResponses, 1)
 	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
 	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)

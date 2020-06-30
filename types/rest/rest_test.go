@@ -345,10 +345,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() { res.Body.Close() })
-	require.Equal(t, `{
-  "s": "test",
-  "x": "10"
-}`, string(got))
+	require.Equal(t, "{\"x\":\"10\",\"s\":\"test\"}", string(got))
 
 	// write struct, don't indent response
 	clientCtx = client.Context{}.WithCodec(codec.New())

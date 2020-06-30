@@ -189,7 +189,7 @@ func WaitForRPC(laddr string) {
 		panic(fmt.Sprintf("failed to create Tendermint RPC client: %s", err))
 	}
 
-	ctypes.RegisterAmino(client.Codec())
+	// ctypes.RegisterAmino(client.Codec())
 	result := new(ctypes.ResultStatus)
 	for {
 		_, err := client.Call("status", map[string]interface{}{}, result)
@@ -228,8 +228,8 @@ func NewTestCaseDir(t NamedTestingT) (string, func()) {
 
 var cdc = codec.New()
 
-func init() {
-	ctypes.RegisterAmino(cdc.Amino)
-}
+// func init() {
+// 	ctypes.RegisterAmino(cdc.Amino)
+// }
 
 //DONTCOVER

@@ -178,8 +178,10 @@ func (pi *prefixIterator) Value() []byte {
 }
 
 // Implements Iterator
-func (pi *prefixIterator) Close() {
+func (pi *prefixIterator) Close() error {
 	pi.iter.Close()
+
+	return nil
 }
 
 // Error returns an error if the prefixIterator is invalid defined by the Valid

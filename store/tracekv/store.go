@@ -145,8 +145,10 @@ func (ti *traceIterator) Value() []byte {
 }
 
 // Close implements the Iterator interface.
-func (ti *traceIterator) Close() {
+func (ti *traceIterator) Close() error {
 	ti.parent.Close()
+
+	return nil
 }
 
 // Error delegates the Error call to the parent iterator.

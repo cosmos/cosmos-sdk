@@ -150,11 +150,20 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	// Check that ChainB's proposed version is one of chainA's accepted versions
-	if !types.IsSupportedVersion(version, types.GetCompatibleVersions()) {
+	// Check that ChainB's proposed version number is supported by chainA
+	supportedVersion, found := types.FindSupportedVersion(version, types.GetCompatibleVersions())
+	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrVersionNegotiationFailed,
 			"connection version provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
+		)
+	}
+
+	// Check that ChainB's proposed feature set is supported by chainA
+	if !types.VerifyProposedFeatureSet(version, supportedVersion) {
+		return sdkerrors.Wrapf(
+			types.ErrVersionNegotiationFailed,
+			"connection version feature set provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
 		)
 	}
 

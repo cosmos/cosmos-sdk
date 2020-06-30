@@ -33,9 +33,7 @@ func TestFilteredPaginations(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
 
-	// .Log("verify empty page request results a max of defaultLimit records and counts total records")
-
-	pageReq := &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
+	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
 
 	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
@@ -59,8 +57,8 @@ func TestFilteredPaginations(t *testing.T) {
 
 		return false, nil
 	})
-
+	t.Log(balResult)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t, 2, len(balResult))
+	require.Equal(t, 4, len(balResult))
 }

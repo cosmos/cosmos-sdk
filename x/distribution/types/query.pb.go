@@ -219,46 +219,141 @@ func (m *QueryValidatorOutstandingRewardsResponse) GetRes() *query.PageResponse 
 	return nil
 }
 
+type QueryDelegatorWithdrawAddressRequest struct {
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
+}
+
+func (m *QueryDelegatorWithdrawAddressRequest) Reset()         { *m = QueryDelegatorWithdrawAddressRequest{} }
+func (m *QueryDelegatorWithdrawAddressRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDelegatorWithdrawAddressRequest) ProtoMessage()    {}
+func (*QueryDelegatorWithdrawAddressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{4}
+}
+func (m *QueryDelegatorWithdrawAddressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDelegatorWithdrawAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDelegatorWithdrawAddressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDelegatorWithdrawAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDelegatorWithdrawAddressRequest.Merge(m, src)
+}
+func (m *QueryDelegatorWithdrawAddressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDelegatorWithdrawAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDelegatorWithdrawAddressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDelegatorWithdrawAddressRequest proto.InternalMessageInfo
+
+func (m *QueryDelegatorWithdrawAddressRequest) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.DelegatorAddress
+	}
+	return nil
+}
+
+type QueryDelegatorWithdrawAddressResponse struct {
+	WithdrawAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty"`
+}
+
+func (m *QueryDelegatorWithdrawAddressResponse) Reset()         { *m = QueryDelegatorWithdrawAddressResponse{} }
+func (m *QueryDelegatorWithdrawAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDelegatorWithdrawAddressResponse) ProtoMessage()    {}
+func (*QueryDelegatorWithdrawAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{5}
+}
+func (m *QueryDelegatorWithdrawAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDelegatorWithdrawAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDelegatorWithdrawAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDelegatorWithdrawAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDelegatorWithdrawAddressResponse.Merge(m, src)
+}
+func (m *QueryDelegatorWithdrawAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDelegatorWithdrawAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDelegatorWithdrawAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDelegatorWithdrawAddressResponse proto.InternalMessageInfo
+
+func (m *QueryDelegatorWithdrawAddressResponse) GetWithdrawAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.WithdrawAddress
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.distribution.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.distribution.QueryParamsResponse")
 	proto.RegisterType((*QueryValidatorOutstandingRewardsRequest)(nil), "cosmos.distribution.QueryValidatorOutstandingRewardsRequest")
 	proto.RegisterType((*QueryValidatorOutstandingRewardsResponse)(nil), "cosmos.distribution.QueryValidatorOutstandingRewardsResponse")
+	proto.RegisterType((*QueryDelegatorWithdrawAddressRequest)(nil), "cosmos.distribution.QueryDelegatorWithdrawAddressRequest")
+	proto.RegisterType((*QueryDelegatorWithdrawAddressResponse)(nil), "cosmos.distribution.QueryDelegatorWithdrawAddressResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/distribution/query.proto", fileDescriptor_2111c1b119d22af6) }
 
 var fileDescriptor_2111c1b119d22af6 = []byte{
-	// 452 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0xbf, 0x8e, 0xd3, 0x30,
-	0x18, 0x8f, 0xef, 0x44, 0x91, 0x7c, 0x88, 0x3f, 0xbe, 0x1b, 0x4a, 0x4e, 0x24, 0xa7, 0x0c, 0x5c,
-	0xa4, 0xe3, 0x12, 0x5d, 0x6f, 0x85, 0x81, 0x94, 0x8d, 0x81, 0x92, 0xa1, 0x43, 0x25, 0x8a, 0xdc,
-	0xc6, 0x0a, 0x16, 0x6d, 0x9c, 0xda, 0x0e, 0xd0, 0x07, 0x60, 0xe7, 0x01, 0x78, 0x02, 0x1e, 0x00,
-	0xf1, 0x08, 0x1d, 0x3b, 0x32, 0x15, 0xd4, 0xbe, 0x45, 0x27, 0x14, 0xdb, 0x41, 0xad, 0x08, 0x2d,
-	0x62, 0x73, 0xbe, 0xfc, 0xfe, 0x7d, 0xdf, 0x67, 0x43, 0x77, 0xc8, 0xc4, 0x98, 0x89, 0x30, 0xa1,
-	0x42, 0x72, 0x3a, 0x28, 0x24, 0x65, 0x59, 0x38, 0x29, 0x08, 0x9f, 0x06, 0x39, 0x67, 0x92, 0xa1,
-	0x63, 0x0d, 0x08, 0x36, 0x01, 0xf6, 0x03, 0xc3, 0x52, 0xc0, 0x30, 0xc7, 0x29, 0xcd, 0x70, 0xf9,
-	0x43, 0x73, 0xec, 0x93, 0x94, 0xa5, 0x4c, 0x1d, 0xc3, 0xf2, 0x64, 0xaa, 0x0f, 0xeb, 0xac, 0x36,
-	0x3f, 0x0c, 0xce, 0x38, 0x86, 0xc6, 0x58, 0x15, 0xbd, 0x13, 0x88, 0x5e, 0x96, 0x66, 0x1d, 0xcc,
-	0xf1, 0x58, 0xc4, 0x64, 0x52, 0x10, 0x21, 0xbd, 0x1e, 0x3c, 0xde, 0xaa, 0x8a, 0x9c, 0x65, 0x82,
-	0xa0, 0x36, 0x6c, 0xe4, 0xaa, 0xd2, 0x04, 0x67, 0xc0, 0x3f, 0x6a, 0x9d, 0x06, 0x35, 0x4d, 0x04,
-	0x9a, 0x14, 0xdd, 0x9e, 0x2d, 0x5c, 0x6b, 0xbd, 0x70, 0x1b, 0x46, 0xc4, 0x50, 0xbd, 0xaf, 0x00,
-	0x9e, 0x2b, 0xf1, 0x2e, 0x1e, 0xd1, 0x04, 0x4b, 0xc6, 0x5f, 0x14, 0x52, 0x48, 0x9c, 0x25, 0x34,
-	0x4b, 0x63, 0xf2, 0x1e, 0xf3, 0xa4, 0xca, 0x81, 0xfa, 0xf0, 0xde, 0xbb, 0x0a, 0xf5, 0x1a, 0x27,
-	0x09, 0x27, 0x42, 0x7b, 0xdf, 0x8a, 0xae, 0xd6, 0x0b, 0xf7, 0x32, 0xa5, 0xf2, 0x4d, 0x31, 0x08,
-	0x86, 0x6c, 0x1c, 0x6e, 0x35, 0x77, 0x29, 0x92, 0xb7, 0xa1, 0x9c, 0xe6, 0x44, 0x04, 0x5d, 0x3c,
-	0x7a, 0xaa, 0x89, 0xf1, 0xdd, 0xdf, 0x5a, 0xa6, 0x82, 0x2e, 0xe0, 0x21, 0x27, 0x93, 0xe6, 0x81,
-	0xea, 0xe6, 0x7e, 0xd5, 0x8d, 0x5e, 0x53, 0x07, 0xa7, 0xc4, 0xe4, 0x88, 0x4b, 0x94, 0xf7, 0x0d,
-	0x40, 0x7f, 0x7f, 0x70, 0x33, 0xaa, 0x3e, 0xbc, 0xc9, 0x75, 0xa9, 0x09, 0xce, 0x0e, 0xfd, 0xa3,
-	0xd6, 0x9d, 0x4a, 0xfd, 0x19, 0x19, 0xb6, 0x19, 0xcd, 0xa2, 0xeb, 0x72, 0x3e, 0x5f, 0x7e, 0xb8,
-	0x17, 0xff, 0xd0, 0x84, 0xe1, 0x88, 0xb8, 0x12, 0x45, 0x8f, 0xca, 0xe4, 0xc2, 0x24, 0xb7, 0xeb,
-	0x92, 0xeb, 0x20, 0x65, 0x74, 0xd1, 0xfa, 0x78, 0x00, 0x6f, 0xa8, 0xe8, 0xe8, 0x15, 0x34, 0xfb,
-	0x40, 0xe7, 0xb5, 0xcb, 0xfb, 0xf3, 0x32, 0xd8, 0xfe, 0x7e, 0xa0, 0xf6, 0xf2, 0x2c, 0xf4, 0x19,
-	0xc0, 0xd3, 0x1d, 0xe3, 0x41, 0x8f, 0xff, 0xae, 0xb5, 0xff, 0x3a, 0xd8, 0x4f, 0xfe, 0x93, 0x5d,
-	0xc5, 0x8b, 0x9e, 0xcf, 0x96, 0x0e, 0x98, 0x2f, 0x1d, 0xf0, 0x73, 0xe9, 0x80, 0x4f, 0x2b, 0xc7,
-	0x9a, 0xaf, 0x1c, 0xeb, 0xfb, 0xca, 0xb1, 0x7a, 0x57, 0x3b, 0xb7, 0xf0, 0x61, 0xfb, 0x71, 0xa9,
-	0xa5, 0x0c, 0x1a, 0xea, 0x05, 0x5d, 0xff, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x73, 0x51, 0x67, 0xbc,
-	0xeb, 0x03, 0x00, 0x00,
+	// 536 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0x41, 0x6f, 0xd3, 0x30,
+	0x14, 0xc7, 0x6b, 0x2a, 0x8a, 0xe4, 0x21, 0x36, 0xbc, 0x1d, 0x4a, 0x26, 0x92, 0x29, 0x02, 0x56,
+	0x69, 0x2c, 0xd1, 0xba, 0x13, 0x08, 0x0e, 0xeb, 0x76, 0xe3, 0xc0, 0xc8, 0x61, 0x48, 0x13, 0x0c,
+	0xb9, 0x89, 0x95, 0x59, 0xb4, 0x71, 0x6a, 0x3b, 0x94, 0x7d, 0x00, 0x38, 0x23, 0x71, 0x84, 0x4f,
+	0xc0, 0x07, 0x40, 0x7c, 0x84, 0x1d, 0x77, 0xe4, 0x54, 0x50, 0xfb, 0x2d, 0x76, 0x42, 0xb1, 0x9d,
+	0xb2, 0x8a, 0x76, 0x41, 0xdd, 0x2d, 0x79, 0x79, 0xff, 0xff, 0xfb, 0xbd, 0xe7, 0x17, 0x43, 0x27,
+	0x64, 0xa2, 0xcb, 0x84, 0x1f, 0x51, 0x21, 0x39, 0x6d, 0x67, 0x92, 0xb2, 0xc4, 0xef, 0x65, 0x84,
+	0x9f, 0x78, 0x29, 0x67, 0x92, 0xa1, 0x65, 0x9d, 0xe0, 0x5d, 0x4c, 0xb0, 0xee, 0x1a, 0x95, 0x4a,
+	0xf4, 0x53, 0x1c, 0xd3, 0x04, 0xe7, 0x1f, 0xb4, 0xc6, 0x5a, 0x89, 0x59, 0xcc, 0xd4, 0xa3, 0x9f,
+	0x3f, 0x99, 0xe8, 0x83, 0x69, 0xa5, 0x2e, 0xbe, 0x98, 0x3c, 0x53, 0xd1, 0x37, 0x85, 0x55, 0xd0,
+	0x5d, 0x81, 0xe8, 0x45, 0x5e, 0x6c, 0x1f, 0x73, 0xdc, 0x15, 0x01, 0xe9, 0x65, 0x44, 0x48, 0xf7,
+	0x10, 0x2e, 0x4f, 0x44, 0x45, 0xca, 0x12, 0x41, 0xd0, 0x2e, 0xac, 0xa5, 0x2a, 0x52, 0x07, 0x6b,
+	0xa0, 0xb1, 0xd0, 0x5c, 0xf5, 0xa6, 0x34, 0xe1, 0x69, 0x51, 0xeb, 0xd6, 0xe9, 0xc0, 0xa9, 0x9c,
+	0x0f, 0x9c, 0x9a, 0x31, 0x31, 0x52, 0xf7, 0x3b, 0x80, 0xeb, 0xca, 0xfc, 0x00, 0x77, 0x68, 0x84,
+	0x25, 0xe3, 0xcf, 0x33, 0x29, 0x24, 0x4e, 0x22, 0x9a, 0xc4, 0x01, 0xe9, 0x63, 0x1e, 0x15, 0x1c,
+	0xe8, 0x08, 0xde, 0x7e, 0x57, 0x64, 0xbd, 0xc1, 0x51, 0xc4, 0x89, 0xd0, 0xb5, 0x6f, 0xb6, 0xb6,
+	0xce, 0x07, 0xce, 0x66, 0x4c, 0xe5, 0x71, 0xd6, 0xf6, 0x42, 0xd6, 0xf5, 0x27, 0x9a, 0xdb, 0x14,
+	0xd1, 0x5b, 0x5f, 0x9e, 0xa4, 0x44, 0x78, 0x07, 0xb8, 0xb3, 0xa3, 0x85, 0xc1, 0xd2, 0xd8, 0xcb,
+	0x44, 0xd0, 0x06, 0xac, 0x72, 0xd2, 0xab, 0x5f, 0x53, 0xdd, 0xdc, 0x29, 0xba, 0xd1, 0xc7, 0xb4,
+	0x8f, 0x63, 0x62, 0x38, 0x82, 0x3c, 0xcb, 0xfd, 0x01, 0x60, 0xa3, 0x1c, 0xdc, 0x8c, 0xea, 0x08,
+	0xde, 0xe0, 0x3a, 0x54, 0x07, 0x6b, 0xd5, 0xc6, 0x42, 0x73, 0xb1, 0x70, 0xdf, 0x23, 0xe1, 0x2e,
+	0xa3, 0x49, 0x6b, 0x3b, 0x9f, 0xcf, 0xb7, 0x5f, 0xce, 0xc6, 0x7f, 0x34, 0x61, 0x34, 0x22, 0x28,
+	0x4c, 0xd1, 0xc3, 0x9c, 0x5c, 0x18, 0x72, 0x6b, 0x1a, 0xb9, 0x06, 0xc9, 0xd1, 0x85, 0xfb, 0x11,
+	0xc0, 0x7b, 0x0a, 0x7d, 0x8f, 0x74, 0x48, 0x9c, 0xa3, 0xbf, 0xa4, 0xf2, 0x38, 0xe2, 0xb8, 0x5f,
+	0xcc, 0xe6, 0xef, 0xc0, 0xa3, 0x22, 0x65, 0xce, 0x81, 0xef, 0x84, 0xe1, 0x78, 0xe0, 0x63, 0x2f,
+	0x13, 0x71, 0x3f, 0x00, 0x78, 0xbf, 0x04, 0xc4, 0x0c, 0xf0, 0x15, 0x5c, 0xea, 0x9b, 0x4f, 0x57,
+	0x07, 0x59, 0xec, 0x4f, 0x56, 0x69, 0x7e, 0xa9, 0xc2, 0xeb, 0x8a, 0x03, 0xbd, 0x86, 0x66, 0x41,
+	0xd1, 0xfa, 0xd4, 0x6d, 0xfe, 0xf7, 0xef, 0xb0, 0x1a, 0xe5, 0x89, 0xba, 0x09, 0xb7, 0x82, 0xbe,
+	0x02, 0xb8, 0x7a, 0xc9, 0xbe, 0xa0, 0x27, 0xb3, 0xbd, 0xca, 0xff, 0x0f, 0xeb, 0xe9, 0x9c, 0xea,
+	0x31, 0xde, 0x67, 0x00, 0xeb, 0xb3, 0x8e, 0x02, 0x3d, 0x9a, 0xed, 0x5e, 0xb2, 0x47, 0xd6, 0xe3,
+	0x79, 0xa4, 0x05, 0x55, 0xeb, 0xd9, 0xe9, 0xd0, 0x06, 0x67, 0x43, 0x1b, 0xfc, 0x1e, 0xda, 0xe0,
+	0xd3, 0xc8, 0xae, 0x9c, 0x8d, 0xec, 0xca, 0xcf, 0x91, 0x5d, 0x39, 0xdc, 0xba, 0xf4, 0xdc, 0xdf,
+	0x4f, 0xde, 0x81, 0x6a, 0x0d, 0xda, 0x35, 0x75, 0xd1, 0x6d, 0xff, 0x09, 0x00, 0x00, 0xff, 0xff,
+	0xe7, 0xdb, 0x1b, 0xd0, 0x92, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -277,6 +372,7 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address
 	ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
+	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
 }
 
 type queryClient struct {
@@ -305,12 +401,22 @@ func (c *queryClient) ValidatorOutstandingRewards(ctx context.Context, in *Query
 	return out, nil
 }
 
+func (c *queryClient) DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error) {
+	out := new(QueryDelegatorWithdrawAddressResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.Query/DelegatorWithdrawAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries params of distribution module
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address
 	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
+	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -322,6 +428,9 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 }
 func (*UnimplementedQueryServer) ValidatorOutstandingRewards(ctx context.Context, req *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorOutstandingRewards not implemented")
+}
+func (*UnimplementedQueryServer) DelegatorWithdrawAddress(ctx context.Context, req *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegatorWithdrawAddress not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -364,6 +473,24 @@ func _Query_ValidatorOutstandingRewards_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DelegatorWithdrawAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDelegatorWithdrawAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DelegatorWithdrawAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.Query/DelegatorWithdrawAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DelegatorWithdrawAddress(ctx, req.(*QueryDelegatorWithdrawAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.distribution.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -375,6 +502,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidatorOutstandingRewards",
 			Handler:    _Query_ValidatorOutstandingRewards_Handler,
+		},
+		{
+			MethodName: "DelegatorWithdrawAddress",
+			Handler:    _Query_DelegatorWithdrawAddress_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -528,6 +659,66 @@ func (m *QueryValidatorOutstandingRewardsResponse) MarshalToSizedBuffer(dAtA []b
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryDelegatorWithdrawAddressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDelegatorWithdrawAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDelegatorWithdrawAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DelegatorAddress) > 0 {
+		i -= len(m.DelegatorAddress)
+		copy(dAtA[i:], m.DelegatorAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DelegatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryDelegatorWithdrawAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDelegatorWithdrawAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDelegatorWithdrawAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.WithdrawAddress) > 0 {
+		i -= len(m.WithdrawAddress)
+		copy(dAtA[i:], m.WithdrawAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.WithdrawAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -590,6 +781,32 @@ func (m *QueryValidatorOutstandingRewardsResponse) Size() (n int) {
 	}
 	if m.Res != nil {
 		l = m.Res.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryDelegatorWithdrawAddressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DelegatorAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryDelegatorWithdrawAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.WithdrawAddress)
+	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -960,6 +1177,180 @@ func (m *QueryValidatorOutstandingRewardsResponse) Unmarshal(dAtA []byte) error 
 			}
 			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDelegatorWithdrawAddressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDelegatorWithdrawAddressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDelegatorWithdrawAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.DelegatorAddress == nil {
+				m.DelegatorAddress = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDelegatorWithdrawAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDelegatorWithdrawAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDelegatorWithdrawAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.WithdrawAddress = append(m.WithdrawAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.WithdrawAddress == nil {
+				m.WithdrawAddress = []byte{}
 			}
 			iNdEx = postIndex
 		default:

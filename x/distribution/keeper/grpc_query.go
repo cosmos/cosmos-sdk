@@ -51,3 +51,16 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards, Res: res}, nil
 }
+
+// DelegatorWithdrawAddress queries Query/delegatorWithdrawAddress
+func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDelegatorWithdrawAddressRequest) (*types.QueryDelegatorWithdrawAddressResponse, error) {
+
+	if req.String() == "" || req.DelegatorAddress.Empty() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, req.DelegatorAddress)
+
+	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr}, nil
+}

@@ -65,3 +65,25 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	require.NotEmpty(t, validatorOutstandingRewards.Rewards)
 	require.NotNil(t, validatorOutstandingRewards.Res.NextKey)
 }
+
+func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+
+	err := app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
+	require.Nil(t, err)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	_, err = queryClient.DelegatorWithdrawAddress(gocontext.Background(), &types.QueryDelegatorWithdrawAddressRequest{})
+	require.Error(t, err)
+
+	withdrawAddress, err := queryClient.DelegatorWithdrawAddress(gocontext.Background(),
+		&types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addr[0]})
+	require.NoError(t, err)
+	require.Equal(t, withdrawAddress.WithdrawAddress, addr[1])
+}

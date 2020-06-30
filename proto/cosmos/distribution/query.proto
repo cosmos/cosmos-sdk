@@ -14,6 +14,8 @@ service Query {
 
   // ValidatorOutstandingRewards queries rewards of a validator address
   rpc ValidatorOutstandingRewards(QueryValidatorOutstandingRewardsRequest) returns (QueryValidatorOutstandingRewardsResponse) {}
+
+  rpc DelegatorWithdrawAddress (QueryDelegatorWithdrawAddressRequest) returns (QueryDelegatorWithdrawAddressResponse) {}
 }
 
 message QueryParamsRequest { }
@@ -35,4 +37,12 @@ message QueryValidatorOutstandingRewardsResponse {
   ];
 
   cosmos.query.PageResponse res = 2;
+}
+
+message QueryDelegatorWithdrawAddressRequest {
+  bytes delegator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+message QueryDelegatorWithdrawAddressResponse {
+  bytes withdraw_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

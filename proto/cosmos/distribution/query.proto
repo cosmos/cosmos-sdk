@@ -1,0 +1,38 @@
+syntax = "proto3";
+package cosmos.distribution;
+
+import "cosmos/query/pagination.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/distribution/distribution.proto";
+import "cosmos/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+
+service Query {
+  // Params queries params of distribution module
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {}
+
+  // ValidatorOutstandingRewards queries rewards of a validator address
+  rpc ValidatorOutstandingRewards(QueryValidatorOutstandingRewardsRequest) returns (QueryValidatorOutstandingRewardsResponse) {}
+}
+
+message QueryParamsRequest { }
+
+message QueryParamsResponse { 
+  cosmos.distribution.Params params = 1 [(gogoproto.nullable) = false, (gogoproto.casttype) = "Params"];
+}
+
+message QueryValidatorOutstandingRewardsRequest {
+  bytes validator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+
+  cosmos.query.PageRequest req = 2;
+}
+
+message QueryValidatorOutstandingRewardsResponse {
+  repeated cosmos.DecCoin rewards = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+
+  cosmos.query.PageResponse res = 2;
+}

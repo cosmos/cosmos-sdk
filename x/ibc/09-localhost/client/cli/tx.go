@@ -26,7 +26,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(fmt.Sprintf(`create new localhost (loopback) client:	
 Example:	
 $ %s tx ibc client localhost create --from node0 --home ../node0/<app>cli --chain-id $CID	
-`, version.ClientName),
+`, version.AppName),
 		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {

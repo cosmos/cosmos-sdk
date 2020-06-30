@@ -77,7 +77,7 @@ func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s debug pubkey TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
 $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			`, version.ClientName, version.ClientName),
+			`, version.AppName, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pk, err := getPubKeyFromString(args[0])
@@ -127,7 +127,7 @@ func AddrCmd() *cobra.Command {
 			
 Example:
 $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			`, version.ClientName),
+			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -171,7 +171,7 @@ func RawBytesCmd() *cobra.Command {
 			
 Example:
 $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
-			`, version.ClientName),
+			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stringBytes := args[0]

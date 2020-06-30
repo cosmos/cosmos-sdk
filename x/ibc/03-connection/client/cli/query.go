@@ -24,9 +24,9 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 
 Example:
 $ %s query ibc connection connections
-		`, version.ClientName),
+		`, version.AppName),
 		),
-		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc connection connections", version.AppName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
@@ -58,9 +58,9 @@ func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 		
 Example:
 $ %s query ibc connection end [connection-id]
-		`, version.ClientName),
+		`, version.AppName),
 		),
-		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
@@ -91,9 +91,9 @@ func GetCmdQueryAllClientConnections(clientCtx client.Context) *cobra.Command {
 		
 Example:
 $ %s query ibc connection paths
-		`, version.ClientName),
+		`, version.AppName),
 		),
-		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc connection paths", version.AppName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
@@ -125,9 +125,9 @@ func GetCmdQueryClientConnections(clientCtx client.Context) *cobra.Command {
 		
 Example:
 $ %s query ibc connection path [client-id]
-		`, version.ClientName),
+		`, version.AppName),
 		),
-		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()

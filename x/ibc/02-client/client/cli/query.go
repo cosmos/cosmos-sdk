@@ -27,9 +27,9 @@ func GetCmdQueryClientStates(clientCtx client.Context) *cobra.Command {
 
 Example:
 $ %s query ibc client states
-		`, version.ClientName),
+		`, version.AppName),
 		),
-		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc client states", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 
@@ -61,7 +61,7 @@ func GetCmdQueryClientState(clientCtx client.Context) *cobra.Command {
 
 Example:
 $ %s query ibc client state [client-id]
-		`, version.ClientName),
+		`, version.AppName),
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -94,7 +94,7 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 		Use:     "consensus-state [client-id] [height]",
 		Short:   "Query the consensus state of a client at a given height",
 		Long:    "Query the consensus state for a particular light client at a given height",
-		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
@@ -130,7 +130,7 @@ func GetCmdQueryHeader(clientCtx client.Context) *cobra.Command {
 		Use:     "header",
 		Short:   "Query the latest header of the running chain",
 		Long:    "Query the latest Tendermint header of the running chain",
-		Example: fmt.Sprintf("%s query ibc client header", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc client header", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 
@@ -156,7 +156,7 @@ func GetCmdNodeConsensusState(clientCtx client.Context) *cobra.Command {
 
 Example:
 $ %s query ibc client node-state
-		`, version.ClientName),
+		`, version.AppName),
 		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {

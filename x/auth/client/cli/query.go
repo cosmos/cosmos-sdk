@@ -115,7 +115,7 @@ documents its respective events under 'xx_events.md'.
 
 Example:
 $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator_reward' --page 1 --limit 30
-`, eventFormat, version.ClientName, flagEvents),
+`, eventFormat, version.AppName, flagEvents),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			eventsStr := strings.Trim(viper.GetString(flagEvents), "'")

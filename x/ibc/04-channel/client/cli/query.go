@@ -21,7 +21,7 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 		Short: "Query a channel end",
 		Long:  "Query an IBC channel end from a port and channel identifiers",
 		Example: fmt.Sprintf(
-			"%s query %s %s end [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName,
+			"%s query %s %s end [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -51,7 +51,7 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 		Use:     "client-state [port-id] [channel-id]",
 		Short:   "Query the client state associated with a channel",
 		Long:    "Query the client state associated with a channel, by providing its port and channel identifiers.",
-		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()

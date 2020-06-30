@@ -90,7 +90,7 @@ $ %s query %s total
 To query for the total supply of a specific coin denomination use:
 $ %s query %s total stake
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

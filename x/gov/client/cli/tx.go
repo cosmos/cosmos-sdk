@@ -101,7 +101,7 @@ Which is equivalent to:
 
 $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -154,7 +154,7 @@ find the proposal-id by running "%s query gov proposals".
 Example:
 $ %s tx gov deposit 1 10stake --from mykey
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -200,7 +200,7 @@ find the proposal-id by running "%s query gov proposals".
 Example:
 $ %s tx gov vote 1 yes --from mykey
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

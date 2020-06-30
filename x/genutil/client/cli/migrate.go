@@ -63,7 +63,7 @@ func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
 
 Example:
 $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
-`, version.ServerName),
+`, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error

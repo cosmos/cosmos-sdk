@@ -23,9 +23,9 @@ func GetCmdQueryNextSequence(clientCtx client.Context) *cobra.Command {
 		
 Example:
 $ %s query ibc-transfer next-recv [port-id] [channel-id]
-		`, version.ClientName),
+		`, version.AppName),
 		),
-		Example: fmt.Sprintf("%s query ibc-transfer next-recv [port-id] [channel-id]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc-transfer next-recv [port-id] [channel-id]", version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()

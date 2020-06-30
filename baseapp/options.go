@@ -44,9 +44,9 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
-// SetDebug will turn on or off debug flag
-func SetDebug(debug bool) func(*BaseApp) {
-	return func(app *BaseApp) { app.setDebug(debug) }
+// SetTrace will turn on or off trace flag
+func SetTrace(trace bool) func(*BaseApp) {
+	return func(app *BaseApp) { app.setTrace(trace) }
 }
 
 func (app *BaseApp) SetName(name string) {

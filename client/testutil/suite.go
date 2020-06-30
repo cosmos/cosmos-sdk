@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
@@ -74,23 +75,48 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetMsgs() {
 }
 
 func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
-	priv := secp256k1.GenPrivKey()
-	dummySig := []byte("dummySig")
+	privKey, pubkey, addr := authtypes.KeyTestPubAddr()
 
 	txBuilder := s.TxGenerator.NewTxBuilder()
 
-	sig := signingtypes.SignatureV2{
-		PubKey: priv.PubKey(),
-		Data: &signingtypes.SingleSignatureData{
-			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-			Signature: dummySig,
-		},
-	}
-	err := txBuilder.SetSignatures(sig)
+	// set test msg
+	msg := testdata.NewTestMsg(addr)
+	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
 
+	// set SignatureV2 without actual signature bytes
+	signModeHandler := s.TxGenerator.SignModeHandler()
+	s.Require().Contains(signModeHandler.Modes(), signModeHandler.DefaultMode())
+	sigData := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
+	sig := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData}
+	err = txBuilder.SetSignatures(sig)
+	s.Require().NoError(err)
 	sigTx := txBuilder.GetTx().(signing.SigVerifiableTx)
-	s.Require().Equal(dummySig, sigTx.GetSignatures()[0])
+	s.Require().Equal([][]byte{nil}, sigTx.GetSignatures())
+	sigsV2, err := sigTx.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, sigsV2)
+
+	// sign transaction
+	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signing.SignerData{
+		ChainID:         "test",
+		AccountNumber:   1,
+		AccountSequence: 2,
+	}, sigTx)
+	s.Require().NoError(err)
+	sigBz, err := privKey.Sign(signBytes)
+	s.Require().NoError(err)
+
+	// set signature
+	sigData.Signature = sigBz
+	sig = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData}
+	err = txBuilder.SetSignatures(sig)
+	s.Require().NoError(err)
+	sigTx = txBuilder.GetTx().(signing.SigVerifiableTx)
+	s.Require().Equal([][]byte{nil}, sigTx.GetSignatures())
+	sigsV2, err = sigTx.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, sigsV2)
 }
 
 func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
@@ -136,12 +162,12 @@ func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(priv.PubKey(), tx3.GetPubKeys()[0])
 
 	// JSON encode transaction
-	jsonTxBytes, err := s.TxGenerator.TxEncoder()(tx)
+	jsonTxBytes, err := s.TxGenerator.TxJSONEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(jsonTxBytes)
 
 	// JSON decode transaction
-	tx2, err = s.TxGenerator.TxDecoder()(txBytes)
+	tx2, err = s.TxGenerator.TxJSONDecoder()(txBytes)
 	s.Require().NoError(err)
 	tx3, ok = tx2.(signing.SigFeeMemoTx)
 	s.Require().True(ok)

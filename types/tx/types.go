@@ -5,6 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if m.Body != nil {
 		return m.Body.UnpackInterfaces(unpacker)
@@ -12,6 +15,7 @@ func (m *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return nil
 }
 
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
 		var msg sdk.Msg

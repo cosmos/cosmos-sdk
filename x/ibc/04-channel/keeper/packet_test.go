@@ -330,7 +330,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainA.QueryProof(packetKey)
 
-			_, err := suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(suite.chainB.GetContext(), packet, proof, proofHeight)
+			err := suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(suite.chainB.GetContext(), packet, proof, proofHeight)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -581,7 +581,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
-			_, err := suite.chainA.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.chainA.GetContext(), packet, ack, proof, proofHeight)
+			err := suite.chainA.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.chainA.GetContext(), packet, ack, proof, proofHeight)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

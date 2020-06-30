@@ -3,8 +3,10 @@ package simulation
 // DONTCOVER
 
 import (
+	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -15,8 +17,8 @@ const (
 	KeySendEnabled = "SendEnabled"
 )
 
-// RandomGenesisParams randomized Parameters for the bank module
-func RandomGenesisParams(r *rand.Rand) types.Params {
+// RandomGenesisSendParams randomized Parameters for the bank module
+func RandomGenesisSendParams(r *rand.Rand) types.SendEnabledParams {
 	params := types.DefaultParams()
 
 	// 10% chance of transfers being disabled or P(a) = 0.9 for success
@@ -34,7 +36,7 @@ func RandomGenesisParams(r *rand.Rand) types.Params {
 	}
 
 	// overall probability of enabled for bond denom is 94.75% (P(a)+P(b) - P(a)*P(b))
-	return params
+	return params.SendEnabled
 }
 
 // RandomGenesisAccounts returns a slice of account balances. Each account has
@@ -54,16 +56,24 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
-	var params types.Params
+	var sendEnabledParams types.SendEnabledParams
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, KeySendEnabled, &params, simState.Rand,
-		func(r *rand.Rand) { params = RandomGenesisParams(r) },
+		simState.Cdc, KeySendEnabled, &sendEnabledParams, simState.Rand,
+		func(r *rand.Rand) { sendEnabledParams = RandomGenesisSendParams(r) },
 	)
 
 	numAccs := int64(len(simState.Accounts))
 	totalSupply := sdk.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
 	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))
 
-	bankGenesis := types.NewGenesisState(params, RandomGenesisBalances(simState), supply)
+	bankGenesis := types.GenesisState{
+		Params: types.Params{
+			SendEnabled: sendEnabledParams,
+		},
+		Balances: RandomGenesisBalances(simState),
+		Supply:   supply,
+	}
+
+	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, bankGenesis.Params))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenesis)
 }

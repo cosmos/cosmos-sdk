@@ -20,7 +20,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keySendEnabled,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%s", types.ModuleCdc.MustMarshalJSON(RandomGenesisParams(r).SendEnabled))
+				return fmt.Sprintf("%s", types.ModuleCdc.MustMarshalJSON(RandomGenesisSendParams(r)))
 			},
 		),
 	}

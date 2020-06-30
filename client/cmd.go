@@ -63,20 +63,18 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // flags that do not necessarily change with context. These must be checked if
 // the caller explicitly changed the values.
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
-	if flagSet.Changed(flags.FlagTrustNode) {
-		trustNode, err := flagSet.GetBool(flags.FlagTrustNode)
-		if err != nil {
-			return clientCtx, err
-		}
+	if flagSet.Changed(flags.FlagChainID) {
+		chainID, _ := flagSet.GetString(flags.FlagChainID)
+		clientCtx = clientCtx.WithChainID(chainID)
+	}
 
+	if flagSet.Changed(flags.FlagTrustNode) {
+		trustNode, _ := flagSet.GetBool(flags.FlagTrustNode)
 		clientCtx = clientCtx.WithTrustNode(trustNode)
 	}
 
 	if flagSet.Changed(flags.FlagKeyringBackend) {
-		keyringBackend, err := flagSet.GetString(flags.FlagKeyringBackend)
-		if err != nil {
-			return clientCtx, err
-		}
+		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
 		kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
 		if err != nil {
@@ -87,11 +85,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 	}
 
 	if flagSet.Changed(flags.FlagNode) {
-		rpcURI, err := flagSet.GetString(flags.FlagNode)
-		if err != nil {
-			return clientCtx, err
-		}
-
+		rpcURI, _ := flagSet.GetString(flags.FlagNode)
 		clientCtx = clientCtx.WithNodeURI(rpcURI)
 	}
 

@@ -69,7 +69,7 @@ func QueryChannel(
 	if err := ctx.Codec.UnmarshalBinaryBare(res.Value, &channel); err != nil {
 		return types.ChannelResponse{}, err
 	}
-	return types.NewChannelResponse(portID, channelID, channel, res.Ops, res.Height), nil
+	return types.NewChannelResponse(portID, channelID, channel, res.ProofOps, res.Height), nil
 }
 
 // QueryChannelClientState uses the channel Querier to return the ClientState of

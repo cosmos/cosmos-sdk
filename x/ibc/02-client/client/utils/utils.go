@@ -14,6 +14,11 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+var (
+	page    *int
+	perPage *int
+)
+
 // QueryAllClientStates returns all the light client states. It _does not_ return
 // any merkle proof.
 func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported.ClientState, int64, error) {
@@ -109,7 +114,12 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 		return ibctmtypes.Header{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, &0, &10000)
+	page := new(int)
+	*page = 0
+	perPage := new(int)
+	*perPage = 10_000
+
+	validators, err := node.Validators(&height, page, perPage)
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
@@ -142,7 +152,12 @@ func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusStat
 		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, 0, 10000)
+	page := new(int)
+	*page = 0
+	perPage := new(int)
+	*perPage = 10_000
+
+	validators, err := node.Validators(&height, page, perPage)
 	if err != nil {
 		return ibctmtypes.ConsensusState{}, 0, err
 	}

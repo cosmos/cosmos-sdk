@@ -5,23 +5,20 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 const (
@@ -186,7 +183,7 @@ func ExamplePaginate() {
 
 func setupTest() (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	appCodec := app.AppCodec()
 
 	db := dbm.NewMemDB()

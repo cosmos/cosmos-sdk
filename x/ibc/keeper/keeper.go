@@ -6,7 +6,7 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionkeeper "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 )
@@ -17,7 +17,7 @@ type Keeper struct {
 	cdc      codec.Marshaler
 
 	ClientKeeper     clientkeeper.Keeper
-	ConnectionKeeper connection.Keeper
+	ConnectionKeeper connectionkeeper.Keeper
 	ChannelKeeper    channel.Keeper
 	PortKeeper       port.Keeper
 	Router           *port.Router
@@ -28,7 +28,7 @@ func NewKeeper(
 	aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
 	clientKeeper := clientkeeper.NewKeeper(aminoCdc, key, stakingKeeper)
-	connectionKeeper := connection.NewKeeper(aminoCdc, cdc, key, clientKeeper)
+	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
 	portKeeper := port.NewKeeper(scopedKeeper)
 	channelKeeper := channel.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 

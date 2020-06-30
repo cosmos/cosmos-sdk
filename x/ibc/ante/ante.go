@@ -2,8 +2,8 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 )
 
@@ -11,12 +11,12 @@ import (
 // including MsgPacket, MsgAcknowledgement, MsgTimeout.
 // MsgUpdateClients are also handled here to perform atomic multimsg transaction
 type ProofVerificationDecorator struct {
-	clientKeeper  client.Keeper
+	clientKeeper  clientkeeper.Keeper
 	channelKeeper channel.Keeper
 }
 
 // NewProofVerificationDecorator constructs new ProofverificationDecorator
-func NewProofVerificationDecorator(clientKeeper client.Keeper, channelKeeper channel.Keeper) ProofVerificationDecorator {
+func NewProofVerificationDecorator(clientKeeper clientkeeper.Keeper, channelKeeper channel.Keeper) ProofVerificationDecorator {
 	return ProofVerificationDecorator{
 		clientKeeper:  clientKeeper,
 		channelKeeper: channelKeeper,

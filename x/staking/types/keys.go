@@ -233,7 +233,7 @@ func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 // GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
 func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte
-	if len(indexKey) != 3*sdk.AddrLen+1 {
+	if len(indexKey) != 2*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
 

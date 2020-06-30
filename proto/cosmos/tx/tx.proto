@@ -39,6 +39,7 @@ message TxRaw {
   repeated bytes signatures = 3;
 }
 
+// SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT
 message SignDoc {
   // body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw.
   bytes body_bytes = 1;

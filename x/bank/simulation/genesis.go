@@ -12,20 +12,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// Simulation parameter constants
-const (
-	KeySendEnabled = "SendEnabled"
-)
+// RandomGenesisDefaultSendParam computes randomized allow all send transfers param for the bank module
+func RandomGenesisDefaultSendParam(r *rand.Rand) bool {
+	// 90% chance of transfers being enable or P(a) = 0.9 for success
+	return r.Int63n(101) <= 90
+}
 
 // RandomGenesisSendParams randomized Parameters for the bank module
 func RandomGenesisSendParams(r *rand.Rand) types.SendEnabledParams {
 	params := types.DefaultParams()
-
-	// 10% chance of transfers being disabled or P(a) = 0.9 for success
-	if r.Int63n(101) <= 10 {
-		params = params.SetSendEnabledParam("", false)
-	}
-
+	// 90% chance of transfers being DefaultSendEnabled=true or P(a) = 0.9 for success
 	// 50% of the time add an additional denom specific record (P(b) = 0.475 = 0.5 * 0.95)
 	if r.Int63n(101) <= 50 {
 		// set send enabled 95% of the time
@@ -58,8 +54,14 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 func RandomizedGenState(simState *module.SimulationState) {
 	var sendEnabledParams types.SendEnabledParams
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, KeySendEnabled, &sendEnabledParams, simState.Rand,
+		simState.Cdc, string(types.KeySendEnabled), &sendEnabledParams, simState.Rand,
 		func(r *rand.Rand) { sendEnabledParams = RandomGenesisSendParams(r) },
+	)
+
+	var defaultSendEnabledParam bool
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand,
+		func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendParam(r) },
 	)
 
 	numAccs := int64(len(simState.Accounts))
@@ -68,7 +70,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	bankGenesis := types.GenesisState{
 		Params: types.Params{
-			SendEnabled: sendEnabledParams,
+			SendEnabled:        sendEnabledParams,
+			DefaultSendEnabled: defaultSendEnabledParam,
 		},
 		Balances: RandomGenesisBalances(simState),
 		Supply:   supply,

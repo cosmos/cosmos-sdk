@@ -11,8 +11,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 message Params {
   option (gogoproto.goproto_stringer) = false;
   repeated bank.SendEnabled send_enabled = 1[
-    (gogoproto.moretags) = "yaml:\"send_enabled\""
+    (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\""
   ];
+  bool default_send_enabled = 2;
 }
 
 // Send enabled configuration properties for each denomination
@@ -20,7 +21,7 @@ message SendEnabled {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;
   string denom = 1[
-    (gogoproto.moretags) = "yaml:\"denom,omitempty\""
+    (gogoproto.moretags) = "yaml:\"denom\""
   ];
   bool enabled = 2[
     (gogoproto.moretags) = "yaml:\"enabled\""

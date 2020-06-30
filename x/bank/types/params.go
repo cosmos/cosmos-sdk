@@ -13,8 +13,12 @@ const (
 	DefaultParamspace = ModuleName
 )
 
-// KeySendEnabled is store's key for SendEnabled Params
-var KeySendEnabled = []byte("SendEnabled")
+var (
+	// KeySendEnabled is store's key for SendEnabled Params
+	KeySendEnabled = []byte("SendEnabled")
+	// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
+	KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
+)
 
 // ParamKeyTable for bank module.
 func ParamKeyTable() paramtypes.KeyTable {
@@ -22,17 +26,19 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new parameter configuration for the bank module
-func NewParams(sendEnabledParams SendEnabledParams) Params {
+func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Params {
 	return Params{
-		SendEnabled: sendEnabledParams,
+		SendEnabled:        sendEnabledParams,
+		DefaultSendEnabled: defaultSendEnabled,
 	}
 }
 
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return Params{
-		// The default send send_enabled value allows send transfers for all coin denoms
-		SendEnabled: SendEnabledParams{DefaultSendEnabled()},
+		SendEnabled: SendEnabledParams{},
+		// The default send enabled value allows send transfers for all coin denoms
+		DefaultSendEnabled: true,
 	}
 }
 
@@ -52,24 +58,16 @@ func (p Params) String() string {
 
 // IsSendEnabled returns true if the given denom is enabled for sending
 func (p Params) IsSendEnabled(denom string) bool {
-	var defaultSendEnabled = true
-
-	for _, p := range p.SendEnabled {
-		if p.Denom == denom {
-			return p.Enabled
-		}
-		// capture default case (indicated by an empty denom)
-		if len(p.Denom) == 0 {
-			defaultSendEnabled = p.Enabled
+	for _, pse := range p.SendEnabled {
+		if pse.Denom == denom {
+			return pse.Enabled
 		}
 	}
-
-	return defaultSendEnabled
+	return p.DefaultSendEnabled
 }
 
 // SetSendEnabledParam returns an updated set of Parameters with the given denom
-// send enabled flag set.  If the denom is empty the sendEnabled value is set as the
-// global default.
+// send enabled flag set.
 func (p Params) SetSendEnabledParam(denom string, sendEnabled bool) Params {
 	var sendParams SendEnabledParams
 	for _, p := range p.SendEnabled {
@@ -78,13 +76,14 @@ func (p Params) SetSendEnabledParam(denom string, sendEnabled bool) Params {
 		}
 	}
 	sendParams = append(sendParams, NewSendEnabled(denom, sendEnabled))
-	return NewParams(sendParams)
+	return NewParams(p.DefaultSendEnabled, sendParams)
 }
 
 // ParamSetPairs implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeySendEnabled, &p.SendEnabled, validateSendEnabledParams),
+		paramtypes.NewParamSetPair(KeyDefaultSendEnabled, &p.DefaultSendEnabled, validateIsBool),
 	}
 }
 
@@ -110,15 +109,6 @@ func validateSendEnabledParams(i interface{}) error {
 	return nil
 }
 
-// DefaultSendEnabled returns the default send enabled parameter indicating
-// send transfers are allowed for all coin denominations
-func DefaultSendEnabled() *SendEnabled {
-	return &SendEnabled{
-		Denom:   "",   // an empty denom string is used to match all denoms
-		Enabled: true, // default send_enabled status is allowed
-	}
-}
-
 // NewSendEnabled creates a new SendEnabled object
 // The denom may be left empty to control the global default setting of send_enabled
 func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
@@ -139,9 +129,13 @@ func validateSendEnabled(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	// if the denomination is specified it must be valid, an empty denom is used for the unspecified default
-	if len(param.Denom) > 0 {
-		return sdk.ValidateDenom(param.Denom)
+	return sdk.ValidateDenom(param.Denom)
+}
+
+func validateIsBool(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
 }

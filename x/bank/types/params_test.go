@@ -17,10 +17,9 @@ func Test_validateSendEnabledParam(t *testing.T) {
 		wantErr bool
 	}{
 		{"invalid type", args{sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())}, true},
-		{"valid default params", args{*DefaultParams().SendEnabled[0]}, false},
 
-		{"valid empty denom send enabled", args{*NewSendEnabled("", true)}, false},
-		{"valid empty denom send disabled", args{*NewSendEnabled("", false)}, false},
+		{"invalid empty denom send enabled", args{*NewSendEnabled("", true)}, true},
+		{"invalid empty denom send disabled", args{*NewSendEnabled("", false)}, true},
 
 		{"valid denom send enabled", args{*NewSendEnabled(sdk.DefaultBondDenom, true)}, false},
 		{"valid denom send disabled", args{*NewSendEnabled(sdk.DefaultBondDenom, false)}, false},
@@ -37,8 +36,8 @@ func Test_validateSendEnabledParam(t *testing.T) {
 }
 
 func Test_sendParamEqual(t *testing.T) {
-	paramsA := DefaultSendEnabled()
-	paramsB := NewSendEnabled("", true)
+	paramsA := NewSendEnabled(sdk.DefaultBondDenom, true)
+	paramsB := NewSendEnabled(sdk.DefaultBondDenom, true)
 	paramsC := NewSendEnabled("foodenom", false)
 
 	ok := paramsA.Equal(paramsB)
@@ -49,12 +48,6 @@ func Test_sendParamEqual(t *testing.T) {
 }
 
 func Test_sendParamString(t *testing.T) {
-	// verify denom attribute is omitted when empty
-	noDenomString := "enabled: true\n"
-	noDenom := NewSendEnabled("", true)
-
-	require.Equal(t, noDenomString, noDenom.String())
-
 	paramString := "denom: foo\nenabled: false\n"
 	param := NewSendEnabled("foo", false)
 
@@ -71,13 +64,15 @@ func Test_validateParams(t *testing.T) {
 	require.True(t, params.IsSendEnabled(sdk.DefaultBondDenom))
 	require.True(t, params.IsSendEnabled("foodenom"))
 
-	params = params.SetSendEnabledParam("", false).SetSendEnabledParam("foodenom", true)
+	params.DefaultSendEnabled = false
+	params = params.SetSendEnabledParam("foodenom", true)
 
 	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
 	require.True(t, params.IsSendEnabled("foodenom"))
 	require.False(t, params.IsSendEnabled(sdk.DefaultBondDenom))
 
-	params = params.SetSendEnabledParam("foodenom", false).SetSendEnabledParam("", true)
+	params.DefaultSendEnabled = true
+	params = params.SetSendEnabledParam("foodenom", false)
 
 	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
 	require.False(t, params.IsSendEnabled("foodenom"))
@@ -96,16 +91,15 @@ func Test_validateParams(t *testing.T) {
 	require.False(t, params.IsSendEnabled("foodenom2"))
 
 	paramYaml := `send_enabled:
-- enabled: true
 - denom: foodenom
   enabled: false
 - denom: foodenom2
   enabled: false
+defaultsendenabled: true
 `
 	require.Equal(t, paramYaml, params.String())
 
-	params = NewParams(SendEnabledParams{
-		NewSendEnabled("", true),
+	params = NewParams(true, SendEnabledParams{
 		NewSendEnabled("foodenom", false),
 		NewSendEnabled("foodenom", true), // this is not allowed
 	})
@@ -114,7 +108,7 @@ func Test_validateParams(t *testing.T) {
 	require.Error(t, params.Validate())
 
 	// fails due to invalid type
-	require.Error(t, validateSendEnabledParams(DefaultSendEnabled()))
+	require.Error(t, validateSendEnabledParams(NewSendEnabled("foodenom", true)))
 
 	require.Error(t, validateSendEnabledParams(SendEnabledParams{NewSendEnabled("INVALIDDENOM", true)}))
 }

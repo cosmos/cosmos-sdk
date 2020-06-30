@@ -456,13 +456,16 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app, ctx := suite.app, suite.ctx
 	enabled := true
 	params := types.DefaultParams()
+	suite.Require().Equal(enabled, params.DefaultSendEnabled)
+
 	app.BankKeeper.SetParams(ctx, params)
 
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 	fooCoin := sdk.NewCoin("foocoin", sdk.OneInt())
 	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
-	// assert with default (all denom) send enabled both default and Bond Denom are enabled
-	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, ""))
+
+	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
+	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, barCoin.Denom))
 	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, bondCoin.Denom))
 
 	// Both coins should be send enabled.
@@ -470,12 +473,13 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	suite.Require().NoError(err)
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
-	params = params.SetSendEnabledParam("", !enabled).SetSendEnabledParam(fooCoin.Denom, enabled)
+	params.DefaultSendEnabled = !enabled
+	params = params.SetSendEnabledParam(fooCoin.Denom, enabled)
 	app.BankKeeper.SetParams(ctx, params)
 
 	// Expect our specific override to be enabled, others to be !enabled.
 	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, fooCoin.Denom))
-	suite.Require().Equal(!enabled, app.BankKeeper.GetSendEnabled(ctx, ""))
+	suite.Require().Equal(!enabled, app.BankKeeper.GetSendEnabled(ctx, barCoin.Denom))
 	suite.Require().Equal(!enabled, app.BankKeeper.GetSendEnabled(ctx, sdk.DefaultBondDenom))
 
 	// Foo coin should be send enabled.

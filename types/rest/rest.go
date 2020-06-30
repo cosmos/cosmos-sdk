@@ -288,11 +288,6 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body int
 
 	default:
 		resp, err = marshaler.MarshalJSON(body)
-
-		if ctx.Indent && err == nil {
-			resp, err = codec.MarshalIndentFromJSON(resp)
-		}
-
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -332,11 +327,6 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 
 	default:
 		result, err = marshaler.MarshalJSON(resp)
-
-		if ctx.Indent && err == nil {
-			result, err = codec.MarshalIndentFromJSON(result)
-		}
-
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -345,10 +335,6 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 	wrappedResp := NewResponseWithHeight(ctx.Height, result)
 
 	output, err := marshaler.MarshalJSON(wrappedResp)
-	if ctx.Indent && err == nil {
-		output, err = codec.MarshalIndentFromJSON(output)
-	}
-
 	if CheckInternalServerError(w, err) {
 		return
 	}

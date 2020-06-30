@@ -127,5 +127,5 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	suite.Require().Equal(test1Supply.Amount, res.Amount)
+	suite.Require().Equal(test1Supply, res.Amount)
 }

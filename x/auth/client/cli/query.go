@@ -155,13 +155,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				return err
 			}
 
-			var output []byte
-			if clientCtx.Indent {
-				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
-			} else {
-				output, err = cdc.MarshalJSON(txs)
-			}
-
+			output, err := cdc.MarshalJSON(txs)
 			if err != nil {
 				return err
 			}

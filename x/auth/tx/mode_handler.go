@@ -1,4 +1,4 @@
-package generator
+package tx
 
 import (
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"

@@ -3,13 +3,13 @@ package direct_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/generator"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
@@ -30,7 +30,7 @@ func TestDirectModeHandler(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	pubKeyCdc := std.DefaultPublicKeyCodec{}
 
-	txGen := generator.New(marshaler, pubKeyCdc, generator.DefaultSignModeHandler())
+	txGen := tx.New(marshaler, pubKeyCdc, tx.DefaultSignModeHandler())
 	txBuilder := txGen.NewTxBuilder()
 
 	memo := "sometestmemo"

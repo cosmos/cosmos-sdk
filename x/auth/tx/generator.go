@@ -1,4 +1,4 @@
-package generator
+package tx
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"

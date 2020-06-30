@@ -1,4 +1,4 @@
-package generator
+package tx
 
 import (
 	"testing"

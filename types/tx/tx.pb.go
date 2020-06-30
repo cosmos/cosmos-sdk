@@ -162,6 +162,7 @@ func (m *TxRaw) GetSignatures() [][]byte {
 	return nil
 }
 
+// SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT
 type SignDoc struct {
 	// body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw.
 	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`

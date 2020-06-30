@@ -112,8 +112,6 @@ message MsgUndelegate {
 // HistoricalInfo contains the historical information that gets stored at
 // each height.
 message HistoricalInfo {
-  option (gogoproto.equal) = true;
-
   tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
   repeated Validator      valset = 2 [(gogoproto.nullable) = false];
 }

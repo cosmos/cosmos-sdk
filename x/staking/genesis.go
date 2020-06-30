@@ -133,7 +133,10 @@ func InitGenesis(
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}
 
-			update := validator.ABCIValidatorUpdate()
+			update, err := validator.ABCIValidatorUpdate()
+			if err != nil {
+				panic(err) //todo see if returning error is possible
+			}
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
 			res = append(res, update)
 		}

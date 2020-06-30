@@ -6,52 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// Example Code
-/*
-func (...) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {
-	var filteredProposals []types.Proposal
-
-	pageReq := &query.PageRequest{Key: nil, Limit: 10, Offset: 10, CountTotal: true}
-	res, err := query.FilteredPaginate(accountStore, request.Req, func(key []byte, value []byte, accumulate bool) (hit, error) {
-		var p types.Proposal
-		err := app.Codec().UnmarshalBinaryBare(value, &p)
-		if err != nil {
-			return false, err
-		}
-
-		matchVoter, matchDepositor, matchStatus := true, true, true
-
-		// match status (if supplied/valid)
-		if types.ValidProposalStatus(params.ProposalStatus) {
-			matchStatus = p.Status == params.ProposalStatus
-		}
-
-		// match voter address (if supplied)
-		if len(params.Voter) > 0 {
-			_, matchVoter = keeper.GetVote(ctx, p.ProposalID, params.Voter)
-		}
-
-		// match depositor (if supplied)
-		if len(params.Depositor) > 0 {
-			_, matchDepositor = keeper.GetDeposit(ctx, p.ProposalID, params.Depositor)
-		}
-
-		if matchVoter && matchDepositor && matchStatus {
-			if accumulate {
-				filteredProposals = append(filteredProposals, p)
-			}
-
-			return true, nil
-		}
-
-		return false, nil
-	})
-
-	// handle error
-
-	return types.QueryProposalsResponse{Proposals: filteredProposals, Res: res}
-*/
-
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling and filter the results.
 // if key is provided, the pagination uses the optimized querying

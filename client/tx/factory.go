@@ -52,10 +52,23 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
 	memo, _ := flagSet.GetString(flags.FlagMemo)
 
+	kr := clientCtx.Keyring
+	if kr == nil {
+		var err error
+
+		krBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
+		home, _ := flagSet.GetString(flags.FlagHome)
+
+		kr, err = keyring.New(sdk.KeyringServiceName(), krBackend, home, clientCtx.Input)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	f := Factory{
 		txGenerator:        clientCtx.TxGenerator,
 		accountRetriever:   clientCtx.AccountRetriever,
-		keybase:            clientCtx.Keyring,
+		keybase:            kr,
 		chainID:            clientCtx.ChainID,
 		gas:                flags.GasFlagVar.Gas,
 		simulateAndExecute: flags.GasFlagVar.Simulate,

@@ -13,9 +13,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// TODO: REMOVE OR COMPLETELY REFACTOR THIS FILE.
+
 // TxSend is simcli tx send
 func TxSend(f *cli.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from,
+	cmd := fmt.Sprintf("%s tx send --chain-id=%s --keyring-backend=test %s %s %s %v", f.SimcliBinary, f.ChainID, from,
 		to, amount, f.Flags())
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }

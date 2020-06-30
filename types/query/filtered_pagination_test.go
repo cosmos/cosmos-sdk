@@ -30,22 +30,23 @@ func TestFilteredPaginations(t *testing.T) {
 		denom := fmt.Sprintf("test%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
+
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
 	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
 
-	// // verify pagination with limit > total values
-	// pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
-	// balances, res, err := execFilterPaginate(store, pageReq, appCodec)
-	//
-	// require.NoError(t, err)
-	// require.NotNil(t, res)
-	// require.Equal(t, 4, len(balances))
+	// verify pagination with limit > total values
+	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
+	balances, res, err := execFilterPaginate(store, pageReq, appCodec)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, 4, len(balances))
 
 	// verify empty request
-	balances, res, err := execFilterPaginate(store, nil, appCodec)
+	balances, res, err = execFilterPaginate(store, nil, appCodec)
 
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -53,7 +54,7 @@ func TestFilteredPaginations(t *testing.T) {
 	require.Equal(t, uint64(4), res.Total)
 
 	// verify next key is returned
-	pageReq := &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
+	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
 
 	require.NoError(t, err)
@@ -63,12 +64,12 @@ func TestFilteredPaginations(t *testing.T) {
 	require.Equal(t, uint64(4), res.Total)
 
 	// use next key for query
-	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, CountTotal: true}
+	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
 
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t, 1, len(balances))
+	require.Equal(t, 2, len(balances))
 	require.NotNil(t, res.NextKey)
 
 	// verify both key and offset can't be given
@@ -129,6 +130,7 @@ func ExampleFilteredPaginate() {
 			return false, err
 		}
 
+		// filter balances with amount greater than 100
 		if bal.Amount.Int64() > int64(100) {
 			if accumulate {
 				balResult = append(balResult, bal)
@@ -145,7 +147,7 @@ func ExampleFilteredPaginate() {
 	}
 	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
 	// Output:
-	// balances:<denom:"test1denom" amount:"250" > res:<next_key:"test0denom" total:5 >
+	// balances:<denom:"test0denom" amount:"250" > res:<next_key:"test0denom" total:5 >
 }
 
 func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Marshaler) (balances sdk.Coins, res *query.PageResponse, err error) {
@@ -160,6 +162,7 @@ func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec 
 			return false, err
 		}
 
+		// filter balances with amount greater than 100
 		if bal.Amount.Int64() > int64(100) {
 			if accumulate {
 				balResult = append(balResult, bal)

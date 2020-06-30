@@ -212,9 +212,6 @@ func TestProcessPostResponse(t *testing.T) {
 	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
 
-	expectedWithIndent, err := codec.MarshalIndentFromJSON(expectedNoIndent)
-	require.Nil(t, err)
-
 	// check that negative height writes an error
 	w := httptest.NewRecorder()
 	ctx = ctx.WithHeight(-1)
@@ -224,9 +221,6 @@ func TestProcessPostResponse(t *testing.T) {
 	// check that height returns expected response
 	ctx = ctx.WithHeight(height)
 	runPostProcessResponse(t, ctx, acc, expectedNoIndent)
-
-	// check height with indent
-	runPostProcessResponse(t, ctx, acc, expectedWithIndent)
 }
 
 func TestReadRESTReq(t *testing.T) {

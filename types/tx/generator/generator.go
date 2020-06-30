@@ -5,10 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
-	types2 "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type generator struct {
@@ -21,11 +18,12 @@ type generator struct {
 	jsonEncoder sdk.TxEncoder
 }
 
-func New(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) client.TxGenerator {
+// New returns a new protobuf TxGenerator using the provided Marshaler, PublicKeyCodec and SignModeHandler.
+func New(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxGenerator {
 	return &generator{
 		marshaler:   marshaler,
 		pubkeyCodec: pubkeyCodec,
-		handler:     DefaultSignModeHandler(),
+		handler:     signModeHandler,
 		decoder:     DefaultTxDecoder(marshaler, pubkeyCodec),
 		encoder:     DefaultTxEncoder(marshaler),
 		jsonDecoder: DefaultJSONTxDecoder(marshaler, pubkeyCodec),
@@ -55,14 +53,4 @@ func (g generator) TxJSONEncoder() sdk.TxEncoder {
 
 func (g generator) TxJSONDecoder() sdk.TxDecoder {
 	return g.jsonDecoder
-}
-
-func DefaultSignModeHandler() signing.SignModeHandler {
-	return signing.NewSignModeHandlerMap(
-		signing2.SignMode_SIGN_MODE_DIRECT,
-		[]signing.SignModeHandler{
-			types2.LegacyAminoJSONHandler{},
-			direct.ModeHandler{},
-		},
-	)
 }

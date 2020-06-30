@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -100,10 +101,15 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	// simulate gas cost for signatures in simulate mode
 	if simulate {
 		// in simulate mode, each element should be a nil signature
-		sigs := sigTx.GetSignatures()
+		sigs, err := sigTx.GetSignaturesV2()
+		if err != nil {
+			return ctx, err
+		}
+		n := len(sigs)
+
 		for i, signer := range sigTx.GetSigners() {
 			// if signature is already filled in, no need to simulate gas cost
-			if sigs[i] != nil {
+			if i < n && !isIncompleteSignature(sigs[i].Data) {
 				continue
 			}
 
@@ -138,4 +144,24 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+// isIncompleteSignature tests whether SignatureData is fully filled in for simulation purposes
+func isIncompleteSignature(data signing.SignatureData) bool {
+	if data == nil {
+		return true
+	}
+
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		return len(data.Signature) == 0
+	case *signing.MultiSignatureData:
+		for _, s := range data.Signatures {
+			if isIncompleteSignature(s) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

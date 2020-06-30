@@ -43,7 +43,6 @@ type SigVerifiableTx interface {
 	sdk.Tx
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignatures() [][]byte
 	GetSignaturesV2() ([]signing.SignatureV2, error)
 }
 

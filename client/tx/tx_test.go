@@ -111,7 +111,9 @@ func TestBuildUnsignedTx(t *testing.T) {
 	tx, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
-	require.Empty(t, tx.GetTx().(ante.SigVerifiableTx).GetSignatures())
+	sigs, err := tx.GetTx().(ante.SigVerifiableTx).GetSignaturesV2()
+	require.NoError(t, err)
+	require.Empty(t, sigs)
 }
 
 func TestSign(t *testing.T) {

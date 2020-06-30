@@ -28,6 +28,7 @@ type SendKeeper interface {
 	SetParams(ctx sdk.Context, params types.Params)
 
 	GetSendEnabled(ctx sdk.Context, denom string) bool
+	CoinsSendEnabled(ctx sdk.Context, coins ...sdk.Coin) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -272,7 +273,19 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	return nil
 }
 
-// GetSendEnabled returns the current SendEnabled
+// CoinsSendEnabled checks the coins provide and returns an ErrSendDisabled if
+// any of the coins are not configured for sending.  Returns nil if sending is enabled
+// for all provided coin
+func (k BaseSendKeeper) CoinsSendEnabled(ctx sdk.Context, coins ...sdk.Coin) error {
+	for _, coin := range coins {
+		if !k.GetSendEnabled(ctx, coin.Denom) {
+			return sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", coin.Denom)
+		}
+	}
+	return nil
+}
+
+// GetSendEnabled returns the current SendEnabled status of the provided denom
 func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context, denom string) bool {
 	return k.GetParams(ctx).IsSendEnabled(denom)
 }

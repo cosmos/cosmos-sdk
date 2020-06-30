@@ -35,7 +35,8 @@ type Tx struct {
 	// auth_info is the authorization related content of the transaction, specifically
 	// signers, signer modes and fee
 	AuthInfo *AuthInfo `protobuf:"bytes,2,opt,name=auth_info,json=authInfo,proto3" json:"auth_info,omitempty"`
-	// signatures are the raw binary signatures of signers specified by body and auth_info
+	// signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to
+	// allow connecting signature meta information like public key and signing mode by position.
 	Signatures [][]byte `protobuf:"bytes,3,rep,name=signatures,proto3" json:"signatures,omitempty"`
 }
 
@@ -93,10 +94,17 @@ func (m *Tx) GetSignatures() [][]byte {
 	return nil
 }
 
+// TxRaw is a variant of Tx that pins the signer's exact binary representation of body and
+// auth_info. This is used for signing, broadcasting and verification. The binary
+// `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
+// becomes the "txhash", commonly used as the transaction ID.
 type TxRaw struct {
-	BodyBytes     []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
+	// body_bytes is a protobuf serialization of a TxBody that matches the representation in SignDoc.
+	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
+	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in SignDoc.
 	AuthInfoBytes []byte `protobuf:"bytes,2,opt,name=auth_info_bytes,json=authInfoBytes,proto3" json:"auth_info_bytes,omitempty"`
-	// signatures are the raw binary signatures of signers specified by body and auth_info
+	// signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to
+	// allow connecting signature meta information like public key and signing mode by position.
 	Signatures [][]byte `protobuf:"bytes,3,rep,name=signatures,proto3" json:"signatures,omitempty"`
 }
 
@@ -238,7 +246,12 @@ func (m *SignDoc) GetAccountSequence() uint64 {
 
 // TxBody is the body of a transaction that all signers sign over
 type TxBody struct {
-	// messages are the processable content of the transaction
+	// messages is a list of messages to be executed. The required signers of those messages define
+	// the number and order of elements in AuthInfo's signer_infos and Tx's signatures.
+	// Each required signer address is added to the list only the first time it occurs.
+	//
+	// By convention, the first required signer (usually from the first message) is referred
+	// to as the primary signer and pays the fee for the whole transaction.
 	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	// memo is any arbitrary memo to be added to the transaction
 	Memo string `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
@@ -325,12 +338,14 @@ func (m *TxBody) GetNonCriticalExtensionOptions() []*types.Any {
 
 // AuthInfo describes the fee and signer modes that are used to sign a transaction
 type AuthInfo struct {
-	// signer_infos is the list of signer infos which corresponds with
-	// Tx.signatures and expected signers derived from TxBody.messages. All signers
-	// are expected to occur in the same order in each of these locations
+	// signer_infos defines the signing modes for the required signers. The number
+	// and order of elements must match the required signers from TxBody's messages.
+	// The first element is the primary signer and the one which pays the fee.
 	SignerInfos []*SignerInfo `protobuf:"bytes,1,rep,name=signer_infos,json=signerInfos,proto3" json:"signer_infos,omitempty"`
 	// Fee is the fee and gas limit for the transaction. The first signer is the
-	// primary signer and the one which pays the fee
+	// primary signer and the one which pays the fee. The fee can be calculated
+	// based on the cost of evaluating the body and doing signature verification
+	// of the signers. This can be estimated via simulation.
 	Fee *Fee `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee,omitempty"`
 }
 
@@ -384,7 +399,8 @@ func (m *AuthInfo) GetFee() *Fee {
 // SignerInfo describes the public key and signing mode of a single top-level signer
 type SignerInfo struct {
 	// public_key is the public key of the signer. It is optional for accounts
-	// that already exist in state
+	// that already exist in state. If unset, the verifier can use the required \
+	// signer address for this position and lookup the public key.
 	PublicKey *types1.PublicKey `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	// mode_info describes the signing mode of the signer and is a nested
 	// structure to support nested multisig pubkey's

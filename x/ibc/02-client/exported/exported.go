@@ -27,6 +27,17 @@ type ClientState interface {
 
 	// State verification functions
 
+	VerifyClientState(
+		store sdk.KVStore,
+		cdc codec.Marshaler,
+		aminoCdc *codec.Codec,
+		height uint64,
+		counterpartyClientIdentifier string,
+		prefix commitmentexported.Prefix,
+		proof []byte,
+		clientState ClientState,
+		consensusState ConsensusState,
+	) error
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.Marshaler,

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -204,6 +206,45 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),
 	}
 	return consensusState, true
+}
+
+// VerifyClient verifies that the provided ClientState is a valid client of this chain
+func (k Keeper) VerifyClient(ctx sdk.Context, clientState exported.ClientState) error {
+	consensusHeight := clientState.GetLatestHeight()
+	if consensusHeight > uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
+	}
+
+	tmClientState, ok := clientState.(ibctmtypes.ClientState)
+	if !ok {
+		return sdkerrors.Wrap(types.ErrInvalidClientType, "client for this chain must be tendermint client")
+	}
+
+	// check that initial consensus state is valid
+	expectedConsensusState, found := k.GetSelfConsensusState(ctx, consensusHeight)
+	if !found {
+		return sdkerrors.Wrapf(types.ErrSelfConsensusStateNotFound, "could not find consensus state at height: %d")
+	}
+
+	consState := tmClientState.LastHeader.ConsensusState()
+	if !reflect.DeepEqual(expectedConsensusState, consState) {
+		return sdkerrors.Wrapf(types.ErrInvalidConsensus, "consensus state of client does not match expected consenus state on chain. expected: %v, got %v",
+			expectedConsensusState, consState)
+	}
+
+	// check that client paramaters are valid
+	expectedUnbonding := k.stakingKeeper.UnbondingTime(ctx)
+	if tmClientState.UnbondingPeriod != expectedUnbonding {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "unbonding period for client is incorrect. expected: %v, got %v",
+			expectedUnbonding, tmClientState.UnbondingPeriod)
+	}
+
+	if !reflect.DeepEqual(tmClientState.ProofSpecs, commitmenttypes.GetSDKSpecs()) {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "invalid proof specs. expected: %v, got %v",
+			commitmenttypes.GetSDKSpecs(), tmClientState.ProofSpecs)
+	}
+
+	return nil
 }
 
 // IterateClients provides an iterator over all stored light client State

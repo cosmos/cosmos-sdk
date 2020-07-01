@@ -81,6 +81,22 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
+// VerifyClientState vieries a proof of the loopback client state
+// No-op on loopback client, since it is by definition valid
+func (cs ClientState) VerifyClientState(
+	_ sdk.KVStore,
+	_ codec.Marshaler,
+	_ *codec.Codec,
+	_ uint64,
+	_ string,
+	_ commitmentexported.Prefix,
+	_ []byte,
+	_ clientexported.ClientState,
+	_ clientexported.ConsensusState,
+) error {
+	return nil
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus
 // state of the loop-back client.
 // VerifyClientConsensusState verifies a proof of the consensus state of the

@@ -9,6 +9,33 @@ import (
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 )
 
+// VerifyClientState verifies a proof of the client state of the specified client
+// stored on target machine
+func (k Keeper) VerifyClientState(
+	ctx sdk.Context,
+	connection exported.ConnectionI,
+	height uint64,
+	proof []byte,
+	counterpartyClientState clientexported.ClientState,
+) error {
+	clientID := connection.GetClientID()
+	clientState, found := k.clientKeeper.GetClientState(ctx, clientID)
+	if !found {
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
+	}
+
+	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
+	if !found {
+		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
+	}
+
+	return clientState.VerifyClientState(
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, k.aminoCdc, height,
+		connection.GetCounterparty().GetClientID(), connection.GetCounterparty().GetPrefix(),
+		proof, counterpartyClientState, targetConsState,
+	)
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // specified client stored on the target machine.
 func (k Keeper) VerifyClientConsensusState(

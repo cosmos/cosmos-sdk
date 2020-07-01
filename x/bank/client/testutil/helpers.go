@@ -22,6 +22,7 @@ func TxSend(f *cli.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, fl
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
+// SendTx sends a transaction using Client Command and returns the response as bytes or error if there is ap problem.
 func SendTx(ctx client.Context, from string, to string, amount sdk.Coins, flags ...string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	ctx = ctx.WithOutput(buf)

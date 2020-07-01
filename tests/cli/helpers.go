@@ -141,8 +141,7 @@ func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, i
 
 // KeysShow is simcli keys show
 func (f *Fixtures) KeysShow(name string, flags ...string) keyring.KeyOutput {
-	cmd := fmt.Sprintf("%s keys show --keyring-backend=test --home=%s %s", f.SimcliBinary,
-		f.SimcliHome, name)
+	cmd := fmt.Sprintf("%s keys show --keyring-backend=test --home=%s %s --output=json", f.SimcliBinary, f.SimcliHome, name)
 	out, _ := tests.ExecuteT(f.T, AddFlags(cmd, flags), "")
 	var ko keyring.KeyOutput
 	err := clientkeys.UnmarshalJSON([]byte(out), &ko)
@@ -171,15 +170,6 @@ func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsRes
 	err := f.Cdc.UnmarshalJSON([]byte(out), &result)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return &result
-}
-
-//___________________________________________________________________________________
-// simcli config
-
-// CLIConfig is simcli config
-func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
-	cmd := fmt.Sprintf("%s config --home=%s %s %s", f.SimcliBinary, f.SimcliHome, key, value)
-	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
 
 //utils

@@ -59,7 +59,7 @@ func submitSendReq(val *testutil.Validator, req bankrest.SendReq) (authtypes.Std
 		return authtypes.StdTx{}, errors.Wrap(err, "error encoding SendReq to json")
 	}
 
-	res, err := rest.PostRequest(url, "", bz)
+	res, err := rest.PostRequest(url, "application/json", bz)
 	if err != nil {
 		return authtypes.StdTx{}, err
 	}

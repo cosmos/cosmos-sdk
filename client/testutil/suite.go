@@ -1,6 +1,8 @@
 package testutil
 
 import (
+	"bytes"
+
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -87,7 +89,8 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 
 	// set test msg
 	msg := testdata.NewTestMsg(addr)
-	msg2 := testdata.NewTestMsg(sdk.AccAddress(multisigPk.Address()))
+	msigAddr := sdk.AccAddress(multisigPk.Address())
+	msg2 := testdata.NewTestMsg(msigAddr)
 	err := txBuilder.SetMsgs(msg, msg2)
 	s.Require().NoError(err)
 
@@ -118,8 +121,10 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Len(sigTx.GetSignatures(), 2)
 	sigsV2, err := sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Equal([]signingtypes.SignatureV2{sig1, msig}, sigsV2)
-	s.Require().Equal([]sdk.AccAddress{addr}, sigTx.GetSigners())
+	s.Require().Len(sigsV2, 2)
+	s.Require().True(sigEquals(sig1, sigsV2[0]))
+	s.Require().True(sigEquals(msig, sigsV2[1]))
+	s.Require().Equal([]sdk.AccAddress{addr, msigAddr}, sigTx.GetSigners())
 	s.Require().NoError(sigTx.ValidateBasic())
 
 	// sign transaction
@@ -157,12 +162,69 @@ func (s *TxGeneratorTestSuite) TestTxBuilderSetSignatures() {
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
+	s.Require().Len(sigTx.GetSignatures(), 2)
 	sigsV2, err = sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Len(sigTx.GetSignatures(), 2)
-	s.Require().Equal([]signingtypes.SignatureV2{sig1, msig}, sigsV2)
-	s.Require().Equal([]sdk.AccAddress{addr}, sigTx.GetSigners())
+	s.Require().Len(sigsV2, 2)
+	s.Require().True(sigEquals(sig1, sigsV2[0]))
+	s.Require().True(sigEquals(msig, sigsV2[1]))
+	s.Require().Equal([]sdk.AccAddress{addr, msigAddr}, sigTx.GetSigners())
 	s.Require().NoError(sigTx.ValidateBasic())
+}
+
+func sigEquals(sig1, sig2 signingtypes.SignatureV2) bool {
+	if !sig1.PubKey.Equals(sig2.PubKey) {
+		return false
+	}
+
+	if sig1.Data == nil && sig2.Data == nil {
+		return true
+	}
+
+	return sigDataEquals(sig1.Data, sig2.Data)
+}
+
+func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
+	switch data1 := data1.(type) {
+	case *signingtypes.SingleSignatureData:
+		data2, ok := data2.(*signingtypes.SingleSignatureData)
+		if !ok {
+			return false
+		}
+
+		if data1.SignMode != data2.SignMode {
+			return false
+		}
+
+		return bytes.Equal(data1.Signature, data2.Signature)
+	case *signingtypes.MultiSignatureData:
+		data2, ok := data2.(*signingtypes.MultiSignatureData)
+		if !ok {
+			return false
+		}
+
+		if data1.BitArray.ExtraBitsStored != data2.BitArray.ExtraBitsStored {
+			return false
+		}
+
+		if !bytes.Equal(data1.BitArray.Elems, data2.BitArray.Elems) {
+			return false
+		}
+
+		if len(data1.Signatures) != len(data2.Signatures) {
+			return false
+		}
+
+		for i, s := range data1.Signatures {
+			if !sigDataEquals(s, data2.Signatures[i]) {
+				return false
+			}
+		}
+
+		return true
+	default:
+		return false
+	}
 }
 
 func (s *TxGeneratorTestSuite) TestTxEncodeDecode() {

@@ -110,7 +110,7 @@ func TestContext_PrintOutput(t *testing.T) {
 	err = ctx.PrintOutput(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
-		`{"animal":{"@type":"/cosmos_sdk.codec.v1.Dog","size":"big","name":"Spot"},"x":"10"}
+		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
 `, string(buf.Bytes()))
 
 	// json indent
@@ -123,7 +123,7 @@ func TestContext_PrintOutput(t *testing.T) {
 	require.Equal(t,
 		`{
   "animal": {
-    "@type": "/cosmos_sdk.codec.v1.Dog",
+    "@type": "/testdata.Dog",
     "name": "Spot",
     "size": "big"
   },
@@ -140,7 +140,7 @@ func TestContext_PrintOutput(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t,
 		`animal:
-  '@type': /cosmos_sdk.codec.v1.Dog
+  '@type': /testdata.Dog
   name: Spot
   size: big
 x: "10"

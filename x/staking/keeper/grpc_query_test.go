@@ -100,11 +100,11 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	res, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorParamsRequest{})
+	res, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorValidatorsRequest{})
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	delegatorParamsReq := &types.QueryDelegatorParamsRequest{
+	delegatorParamsReq := &types.QueryDelegatorValidatorsRequest{
 		DelegatorAddr: addrAcc2,
 		Req:           &query.PageRequest{},
 	}
@@ -118,26 +118,26 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.ElementsMatch(t, delValidators, res.Validators)
 
 	// Query bonded validator
-	valResp, err := queryClient.DelegatorValidator(gocontext.Background(), &types.QueryBondParamsRequest{})
+	valResp, err := queryClient.DelegatorValidator(gocontext.Background(), &types.QueryDelegatorValidatorRequest{})
 	require.Error(t, err)
 	require.Nil(t, valResp)
 
-	req := &types.QueryBondParamsRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1}
+	req := &types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1}
 	valResp, err = queryClient.DelegatorValidator(gocontext.Background(), req)
 	require.NoError(t, err)
 
 	require.Equal(t, delValidators[0], valResp.Validator)
 
 	// Query delegation
-	delegationResp, err := queryClient.DelegationQ(gocontext.Background(), &types.QueryBondParamsRequest{})
+	delegationResp, err := queryClient.DelegationQ(gocontext.Background(), &types.QueryDelegationRequest{})
 	require.Error(t, err)
 	require.Nil(t, delegationResp)
 
-	req = &types.QueryBondParamsRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
+	delReq := &types.QueryDelegationRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	delegationResp, err = queryClient.DelegationQ(gocontext.Background(), req)
+	delegationResp, err = queryClient.DelegationQ(gocontext.Background(), delReq)
 	require.NoError(t, err)
 
 	require.Equal(t, delegation.ValidatorAddress, delegationResp.DelegationResponse.Delegation.ValidatorAddress)
@@ -145,12 +145,12 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationResp.DelegationResponse.Balance)
 
 	// Query Delegator Delegations
-	delegatorDel, err := queryClient.DelegatorDelegations(gocontext.Background(), &types.QueryDelegatorParamsRequest{})
+	delegatorDel, err := queryClient.DelegatorDelegations(gocontext.Background(), &types.QueryDelegatorDelegationsRequest{})
 	require.Error(t, err)
 	require.Nil(t, delegatorDel)
 
-	delReq := &types.QueryDelegatorParamsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
-	delegatorDelegations, err := queryClient.DelegatorDelegations(gocontext.Background(), delReq)
+	delDelReq := &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
+	delegatorDelegations, err := queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
 	require.NoError(t, err)
 	require.NotNil(t, delegatorDelegations)
 
@@ -160,11 +160,11 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegations.DelegationResponses[0].Balance)
 
 	// Query validator delegations
-	validatorDelegations, err := queryClient.ValidatorDelegations(gocontext.Background(), &types.QueryValidatorRequest{})
+	validatorDelegations, err := queryClient.ValidatorDelegations(gocontext.Background(), &types.QueryValidatorDelegationsRequest{})
 	require.Error(t, err)
 	require.Nil(t, validatorDelegations)
 
-	valReq := &types.QueryValidatorRequest{ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
+	valReq := &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
 	delegationsRes, err := queryClient.ValidatorDelegations(gocontext.Background(), valReq)
 
 	require.NoError(t, err)
@@ -178,11 +178,11 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
 	require.NoError(t, err)
 
-	unbondRes, err := queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryBondParamsRequest{})
+	unbondRes, err := queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{})
 	require.Error(t, err)
 	require.Nil(t, unbondRes)
 
-	unbondReq := &types.QueryBondParamsRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
+	unbondReq := &types.QueryUnbondingDelegationRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
 	unbondRes, err = queryClient.UnbondingDelegation(gocontext.Background(), unbondReq)
 
 	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
@@ -191,11 +191,11 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.Equal(t, unbond, unbondRes.Unbond)
 
 	// Query Delegator Unbonding Delegations
-	delegatorUbds, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), &types.QueryDelegatorParamsRequest{})
+	delegatorUbds, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), &types.QueryDelegatorUnbondingDelegationsRequest{})
 	require.Error(t, err)
 	require.Nil(t, delegatorUbds)
 
-	unbReq := &types.QueryDelegatorParamsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
+	unbReq := &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
 	delegatorUbds, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
 	require.NoError(t, err)
 	require.Equal(t, unbond, delegatorUbds.UnbondingResponses[0])

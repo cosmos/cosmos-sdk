@@ -60,7 +60,7 @@ func (k Keeper) ValidatorQ(c context.Context, req *types.QueryValidatorRequest) 
 	return &types.QueryValidatorResponse{Validator: validator}, nil
 }
 
-func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorDelegationsResponse, error) {
+func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidatorDelegationsRequest) (*types.QueryValidatorDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -79,7 +79,7 @@ func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidato
 	return &types.QueryValidatorDelegationsResponse{DelegationResponses: delResponses}, nil
 }
 
-func (k Keeper) ValidatorUnbondingDelegations(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorUnbondingDelegationsResponse, error) {
+func (k Keeper) ValidatorUnbondingDelegations(c context.Context, req *types.QueryValidatorUnbondingDelegationsRequest) (*types.QueryValidatorUnbondingDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -103,7 +103,7 @@ func (k Keeper) ValidatorUnbondingDelegations(c context.Context, req *types.Quer
 	return &types.QueryValidatorUnbondingDelegationsResponse{UnbondingResponses: ubds, Res: res}, nil
 }
 
-func (k Keeper) DelegationQ(c context.Context, req *types.QueryBondParamsRequest) (*types.QueryDelegationResponse, error) {
+func (k Keeper) DelegationQ(c context.Context, req *types.QueryDelegationRequest) (*types.QueryDelegationResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -127,7 +127,7 @@ func (k Keeper) DelegationQ(c context.Context, req *types.QueryBondParamsRequest
 	return &types.QueryDelegationResponse{DelegationResponse: &delResponse}, nil
 }
 
-func (k Keeper) UnbondingDelegation(c context.Context, req *types.QueryBondParamsRequest) (*types.QueryUnbondingDelegationResponse, error) {
+func (k Keeper) UnbondingDelegation(c context.Context, req *types.QueryUnbondingDelegationRequest) (*types.QueryUnbondingDelegationResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -142,7 +142,7 @@ func (k Keeper) UnbondingDelegation(c context.Context, req *types.QueryBondParam
 	return &types.QueryUnbondingDelegationResponse{Unbond: unbond}, nil
 }
 
-func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegatorParamsRequest) (*types.QueryDelegatorDelegationsResponse, error) {
+func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegatorDelegationsRequest) (*types.QueryDelegatorDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -180,7 +180,7 @@ func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegato
 
 }
 
-func (k Keeper) DelegatorValidator(c context.Context, req *types.QueryBondParamsRequest) (*types.QueryDelegatorValidatorResponse, error) {
+func (k Keeper) DelegatorValidator(c context.Context, req *types.QueryDelegatorValidatorRequest) (*types.QueryDelegatorValidatorResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -197,7 +197,7 @@ func (k Keeper) DelegatorValidator(c context.Context, req *types.QueryBondParams
 	return &types.QueryDelegatorValidatorResponse{Validator: validator}, nil
 }
 
-func (k Keeper) DelegatorUnbondingDelegations(c context.Context, req *types.QueryDelegatorParamsRequest) (*types.QueryUnbondingDelegatorDelegationsResponse, error) {
+func (k Keeper) DelegatorUnbondingDelegations(c context.Context, req *types.QueryDelegatorUnbondingDelegationsRequest) (*types.QueryDelegatorUnnbondingDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -223,7 +223,7 @@ func (k Keeper) DelegatorUnbondingDelegations(c context.Context, req *types.Quer
 		return nil, err
 	}
 
-	return &types.QueryUnbondingDelegatorDelegationsResponse{UnbondingResponses: unbondingDelegations, Res: res}, nil
+	return &types.QueryDelegatorUnnbondingDelegationsResponse{UnbondingResponses: unbondingDelegations, Res: res}, nil
 }
 
 func (k Keeper) HistoricalInfo(c context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) {
@@ -273,7 +273,7 @@ func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRe
 	return &types.QueryRedelegationsResponse{RedelegationResponses: redelResponses, Res: res}, nil
 }
 
-func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegatorParamsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
+func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

@@ -415,10 +415,12 @@ message Pool{
   option (gogoproto.description) = true;
   option (gogoproto.equal) = true;
   string NotBondedTokens = 1 [
-                     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-                     (gogoproto.nullable)   = false
+                             (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+                             (gogoproto.jsontag) = "not_bonded_tokens",
+                             (gogoproto.nullable)   = false
                      ];
   string BondedTokens = 2 [
+                          (gogoproto.jsontag) = "bonded_tokens",
                           (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
                           (gogoproto.nullable)   = false,
                           (gogoproto.moretags) = "yaml:\"bonded_tokens\""];

@@ -8,6 +8,7 @@ import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
+// Query creates service with Account and Parameters as rpc
 service Query{
     // Account returns account details based on address
     rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {}

@@ -13,9 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var _ types.QueryServer = Keeper{}
+type Querier struct {
+	keeper Keeper
+}
 
-func (k Keeper) Validators(c context.Context, req *types.QueryValidatorsRequest) (*types.QueryValidatorsResponse, error) {
+var _ types.QueryServer = Querier{}
+
+func (q Querier) Validators(c context.Context, req *types.QueryValidatorsRequest) (*types.QueryValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -27,11 +31,11 @@ func (k Keeper) Validators(c context.Context, req *types.QueryValidatorsRequest)
 	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(q.keeper.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
 	res, err := query.Paginate(valStore, req.Req, func(key []byte, value []byte) error {
-		val := types.MustUnmarshalValidator(k.cdc, value)
+		val := types.MustUnmarshalValidator(q.keeper.cdc, value)
 		if strings.EqualFold(val.GetStatus().String(), req.Status) {
 			validators = append(validators, val)
 		}
@@ -46,13 +50,13 @@ func (k Keeper) Validators(c context.Context, req *types.QueryValidatorsRequest)
 
 }
 
-func (k Keeper) ValidatorQ(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorResponse, error) {
+func (q Querier) Validator(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	validator, found := k.GetValidator(ctx, req.ValidatorAddr)
+	validator, found := q.keeper.GetValidator(ctx, req.ValidatorAddr)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
 	}

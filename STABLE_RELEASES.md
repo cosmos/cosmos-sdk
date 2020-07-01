@@ -65,7 +65,7 @@ alive, the core contributor team will strive to permit special repo privileges
 to developers who show an aptitude towards developing with this code base.
 
 Several different kinds of privileges may be granted however most common
-privileges to be granted are merge rights to either part of, or the entire the
+privileges to be granted are merge rights to either part of, or the entirety of the
 code base (though the github `CODEOWNERS` file). The on-boarding process for
 new code owners is as follows: On a bi-monthly basis (or more frequently if
 agreeable) all the existing code owners will privately convene to discuss

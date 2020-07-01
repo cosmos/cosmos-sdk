@@ -1,7 +1,7 @@
 package types_test
 
 import (
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -86,13 +86,13 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
-	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connection.NewConnectionEnd(connection.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name        string
 		clientState types.ClientState
-		connection  connection.End
+		connection  connectiontypes.ConnectionEnd
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool

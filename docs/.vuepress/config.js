@@ -123,15 +123,15 @@ module.exports = {
           children: [
             {
               title: "Cosmos SDK",
-              url: "https://cosmos.network/docs"
+              url: "https://docs.cosmos.network"
             },
             {
               title: "Cosmos Hub",
-              url: "https://hub.cosmos.network/"
+              url: "https://hub.cosmos.network"
             },
             {
               title: "Tendermint Core",
-              url: "https://docs.tendermint.com/"
+              url: "https://docs.tendermint.com"
             }
           ]
         },
@@ -140,15 +140,15 @@ module.exports = {
           children: [
             {
               title: "Cosmos blog",
-              url: "https://blog.cosmos.network/"
+              url: "https://blog.cosmos.network"
             },
             {
               title: "Forum",
-              url: "https://forum.cosmos.network/"
+              url: "https://forum.cosmos.network"
             },
             {
               title: "Chat",
-              url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org"
+              url: "https://discord.gg/W8trcGV"
             }
           ]
         },

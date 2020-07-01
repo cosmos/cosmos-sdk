@@ -32,6 +32,10 @@ func init() {
 
 func addClientCommands(rootClientCmd *cobra.Command) {
 
+	// TODO: setup keybase, viper object, etc. to be passed into
+	// the below functions and eliminate global vars, like we do
+	// with the cdc
+
 	// Add --chain-id to persistent flags and mark it required
 	rootClientCmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
 

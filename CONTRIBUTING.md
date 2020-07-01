@@ -144,7 +144,7 @@ We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along 
 
 For linting and checking breaking changes, we use [buf](https://buf.build/). There are two options for linting and to check if your changes will cause a break. The first is that you can install [buf](https://buf.build/docs/installation) locally, the commands for running buf after installing are `make proto-lint` and the breaking changes check will be `make proto-check-breaking`. If you do not want to install buf and have docker installed already then you can use these commands `make proto-lint-docker` and `make proto-check-breaking-docker`.
 
-To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make protoc` & `make protoc-gen-gocosmos`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
+To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make proto-tools`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
 
 In order for imports to properly compile in your IDE, you may need to manually set your protobuf path in your IDE's workspace settings/config.
 

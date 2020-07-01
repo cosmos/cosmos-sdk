@@ -6,6 +6,7 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
@@ -25,16 +26,16 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return &sdk.Result{}, nil
 
 		// IBC connection  msgs
-		case *connection.MsgConnectionOpenInit:
+		case *connectiontypes.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)
 
-		case *connection.MsgConnectionOpenTry:
+		case *connectiontypes.MsgConnectionOpenTry:
 			return connection.HandleMsgConnectionOpenTry(ctx, k.ConnectionKeeper, msg)
 
-		case *connection.MsgConnectionOpenAck:
+		case *connectiontypes.MsgConnectionOpenAck:
 			return connection.HandleMsgConnectionOpenAck(ctx, k.ConnectionKeeper, msg)
 
-		case *connection.MsgConnectionOpenConfirm:
+		case *connectiontypes.MsgConnectionOpenConfirm:
 			return connection.HandleMsgConnectionOpenConfirm(ctx, k.ConnectionKeeper, msg)
 
 		// IBC channel msgs

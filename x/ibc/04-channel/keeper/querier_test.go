@@ -4,7 +4,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -18,7 +19,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 	)
 
 	params := types.NewQueryAllChannelsParams(1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
+	data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
 	suite.Require().NoError(err)
 
 	query := abci.RequestQuery{
@@ -33,88 +34,83 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 		{
 			"success with different connection channels",
 			func() {
-				suite.SetupTest()
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
-				// create channels on different connections
-				suite.chainA.createConnection(
-					testConnectionIDA, testConnectionIDB,
-					testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
+				// create first connection/channel
+				clientA, clientB, _, _, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort1, testChannel1,
-						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-							types.OPEN, types.ORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA0.PortID,
+						channelA0.ID,
+						suite.chainA.GetChannel(channelA0),
 					),
 				)
 
-				suite.chainA.createConnection(
-					testConnectionIDB, testConnectionIDA,
-					testClientIDB, testClientIDA,
-					connection.OPEN,
-				)
+				// create second connection
+				connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
+
+				// create second channel on second connection
+				channelA1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA1, connB1, types.ORDERED)
+
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort2, testChannel2,
-						suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1,
-							types.OPEN, types.ORDERED, testConnectionIDB,
-						),
+					types.NewIdentifiedChannel(
+						channelA1.PortID,
+						channelA1.ID,
+						suite.chainA.GetChannel(channelA1),
 					),
 				)
 
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"success with singular connection channels",
 			func() {
-				suite.SetupTest()
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
-				// create channels on singular connections
-				suite.chainA.createConnection(
-					testConnectionIDA, testConnectionIDB,
-					testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
+				// create first connection/channel
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort1, testChannel1,
-						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-							types.OPEN, types.ORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA0.PortID,
+						channelA0.ID,
+						suite.chainA.GetChannel(channelA0),
 					),
 				)
+
+				// create second channel on the same connection
+				channelA1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort2, testChannel2,
-						suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1,
-							types.OPEN, types.UNORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA1.PortID,
+						channelA1.ID,
+						suite.chainA.GetChannel(channelA1),
 					),
 				)
 
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"success no channels",
 			func() {
-				suite.SetupTest()
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, []types.IdentifiedChannel{})
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []types.IdentifiedChannel{})
 				suite.Require().NoError(err)
 			},
 		},
 	}
 
 	for i, tc := range testCases {
+		suite.SetupTest() // reset
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
+		bz, err := suite.chainA.Querier(suite.chainA.GetContext(), path, query)
 
 		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Require().Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
@@ -127,17 +123,9 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 	var (
 		expRes []byte
+		params types.QueryConnectionChannelsParams
 		err    error
 	)
-
-	params := types.NewQueryConnectionChannelsParams(testConnectionIDA, 1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
-	suite.Require().NoError(err)
-
-	query := abci.RequestQuery{
-		Path: "",
-		Data: data,
-	}
 
 	testCases := []struct {
 		name  string
@@ -146,101 +134,106 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 		{
 			"success with singular connection channels",
 			func() {
-				suite.SetupTest()
 				channels := make([]types.IdentifiedChannel, 0, 2)
 
-				// create channels on singular connections
-				suite.chainA.createConnection(
-					testConnectionIDA, testConnectionIDB,
-					testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
+				// create first connection/channel
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort1, testChannel1,
-						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-							types.OPEN, types.ORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA0.PortID,
+						channelA0.ID,
+						suite.chainA.GetChannel(channelA0),
 					),
 				)
+
+				// create second channel on the same connection
+				channelA1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort2, testChannel2,
-						suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1,
-							types.OPEN, types.UNORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA1.PortID,
+						channelA1.ID,
+						suite.chainA.GetChannel(channelA1),
 					),
 				)
+
+				params = types.NewQueryConnectionChannelsParams(connA.ID, 1, 100)
 
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"success multiple connection channels",
 			func() {
-				suite.SetupTest()
 				channels := make([]types.IdentifiedChannel, 0, 1)
 
-				// create channels on different connections
-				suite.chainA.createConnection(
-					testConnectionIDA, testConnectionIDB,
-					testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
+				// create first connection/channel
+				clientA, clientB, connA, _, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
 				channels = append(channels,
-					types.NewIdentifiedChannel(testPort1, testChannel1,
-						suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-							types.OPEN, types.ORDERED, testConnectionIDA,
-						),
+					types.NewIdentifiedChannel(
+						channelA0.PortID,
+						channelA0.ID,
+						suite.chainA.GetChannel(channelA0),
 					),
 				)
 
-				suite.chainA.createConnection(
-					testConnectionIDB, testConnectionIDA,
-					testClientIDB, testClientIDA,
-					connection.OPEN,
-				)
-				suite.chainA.createChannel(
-					testPort2, testChannel2, testPort1, testChannel1,
-					types.OPEN, types.ORDERED, testConnectionIDB,
-				)
+				// create second connection
+				connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
+
+				// create second channel on second connection
+				suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA1, connB1, types.ORDERED)
+
+				params = types.NewQueryConnectionChannelsParams(connA.ID, 1, 100)
 
 				// set expected result
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, channels)
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), channels)
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"success no channels",
 			func() {
-				suite.SetupTest()
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, []types.IdentifiedChannel{})
+				// create connection but no channels
+				_, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				params = types.NewQueryConnectionChannelsParams(connA.ID, 1, 100)
+
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []types.IdentifiedChannel{})
 				suite.Require().NoError(err)
 			},
 		},
 	}
 
 	for i, tc := range testCases {
+		suite.SetupTest() // reset
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
+		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
+		suite.Require().NoError(err)
+
+		query := abci.RequestQuery{
+			Path: "",
+			Data: data,
+		}
+
+		bz, err := suite.chainA.Querier(suite.chainA.GetContext(), path, query)
 
 		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Require().Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
 	}
 }
 
+// TestQuerierChannelClientState verifies correct querying of client state associated
+// with a channel end.
 func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 	path := []string{types.SubModuleName, types.QueryChannelClientState}
-	params := types.NewQueryChannelClientStateParams(testPort1, testChannel1)
-	data, err := suite.cdc.MarshalJSON(params)
-	suite.Require().NoError(err)
 
-	query := abci.RequestQuery{
-		Path: "",
-		Data: data,
-	}
+	var (
+		clientID string
+		params   types.QueryChannelClientStateParams
+	)
 
 	testCases := []struct {
 		name    string
@@ -249,77 +242,81 @@ func (suite *KeeperTestSuite) TestQuerierChannelClientState() {
 	}{
 		{
 			"channel not found",
-			func() {},
+			func() {
+				clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)
+				suite.Require().NoError(err)
+
+				clientID = clientA
+				params = types.NewQueryChannelClientStateParams("doesnotexist", "doesnotexist")
+			},
 			false,
 		},
 		{
 			"connection for channel not found",
 			func() {
-				_ = suite.chainA.createChannel(
-					testPort1, testChannel1, testPort2, testChannel2,
-					types.OPEN, types.ORDERED, testConnectionIDA,
-				)
+				// connection for channel is deleted from state
+				clientA, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				channel := suite.chainA.GetChannel(channelA)
+				channel.ConnectionHops[0] = "doesnotexist"
+
+				// set connection hops to wrong connection ID
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
+
+				clientID = clientA
+				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ID)
+
 			},
 			false,
 		},
 		{
 			"client state for channel's connection not found",
 			func() {
-				_ = suite.chainA.createConnection(
-					testConnectionIDA, testConnectionIDB,
-					testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
-				_ = suite.chainA.createChannel(
-					testPort1, testChannel1, testPort2, testChannel2,
-					types.OPEN, types.ORDERED, testConnectionIDA,
-				)
+				clientA, _, connA, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				// setting connection to empty results in wrong clientID used
+				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connectiontypes.ConnectionEnd{})
+
+				clientID = clientA
+				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ID)
 			},
 			false,
 		},
 		{
 			"success",
 			func() {
-				err = suite.chainA.CreateClient(suite.chainB)
-				suite.Require().NoError(err)
-				err = suite.chainB.CreateClient(suite.chainA)
-				suite.Require().NoError(err)
-				suite.chainA.createConnection(
-					testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-					connection.OPEN,
-				)
-				suite.chainB.createConnection(
-					testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-					connection.OPEN,
-				)
-				suite.chainA.createChannel(
-					testPort1, testChannel1, testPort2, testChannel2, types.INIT,
-					types.ORDERED, testConnectionIDB,
-				)
-				suite.chainB.createChannel(
-					testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
-					types.ORDERED, testConnectionIDA,
-				)
+				clientA, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				clientID = clientA
+				params = types.NewQueryChannelClientStateParams(channelA.PortID, channelA.ID)
 			},
 			true,
 		},
 	}
 
 	for i, tc := range testCases {
+		suite.SetupTest() // reset
 		tc.setup()
 
-		clientState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), testClientIDB)
-		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
+		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
+		suite.Require().NoError(err)
+
+		query := abci.RequestQuery{
+			Path: "",
+			Data: data,
+		}
+
+		clientState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientID)
+		bz, err := suite.chainA.Querier(suite.chainA.GetContext(), path, query)
 
 		if tc.expPass {
 			// set expected result
-			expRes, merr := codec.MarshalJSONIndent(suite.cdc, clientState)
+			expRes, merr := codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), clientState)
 			suite.Require().NoError(merr)
-			suite.Require().True(found)
+			suite.Require().True(found, "test case %d failed: %s", i, tc.name)
 			suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
 			suite.Require().Equal(string(expRes), string(bz), "test case %d failed: %s", i, tc.name)
 		} else {
-			suite.Require().False(found)
 			suite.Require().Error(err, "test case %d passed: %s", i, tc.name)
 			suite.Require().Nil(bz, "test case %d passed: %s", i, tc.name)
 		}
@@ -332,16 +329,9 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 
 	var (
 		expRes []byte
+		params types.QueryPacketCommitmentsParams
+		err    error
 	)
-
-	params := types.NewQueryPacketCommitmentsParams(testPort1, testChannel1, 1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
-	suite.Require().NoError(err)
-
-	query := abci.RequestQuery{
-		Path: "",
-		Data: data,
-	}
 
 	testCases := []struct {
 		name  string
@@ -350,58 +340,77 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 		{
 			"success",
 			func() {
-				suite.SetupTest()
-				ctx := suite.chainA.GetContext()
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
 				seq := uint64(1)
 				commitments := []uint64{}
 
 				// create several commitments on the same channel and port
 				for i := seq; i < 10; i++ {
-					suite.chainA.storePacketCommitment(ctx, testPort1, testChannel1, i)
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, i, []byte("ack"))
 					commitments = append(commitments, i)
 				}
 
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, commitments)
+				params = types.NewQueryPacketCommitmentsParams(channelA.PortID, channelA.ID, 1, 100)
+
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), commitments)
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"success with multiple channels",
 			func() {
-				suite.SetupTest()
-				ctx := suite.chainA.GetContext()
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
 				seq := uint64(1)
 				commitments := []uint64{}
 
 				// create several commitments on the same channel and port
 				for i := seq; i < 10; i++ {
-					suite.chainA.storePacketCommitment(ctx, testPort1, testChannel1, i)
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA0.PortID, channelA0.ID, i, []byte("ack"))
 					commitments = append(commitments, i)
 				}
 
+				// create second channel
+				channelA1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+
 				// create several commitments on a different channel and port
 				for i := seq; i < 10; i++ {
-					suite.chainA.storePacketCommitment(ctx, testPort2, testChannel2, i)
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA1.PortID, channelA1.ID, i, []byte("ack"))
 				}
 
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, commitments)
+				params = types.NewQueryPacketCommitmentsParams(channelA0.PortID, channelA1.ID, 1, 100)
+
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), commitments)
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"success no packet commitments",
 			func() {
-				suite.SetupTest()
-				expRes, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				params = types.NewQueryPacketCommitmentsParams(channelA.PortID, channelA.ID, 1, 100)
+
+				expRes, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []uint64{})
 				suite.Require().NoError(err)
 			},
 		},
 	}
 
 	for i, tc := range testCases {
+		suite.SetupTest() // reset
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), path, query)
+		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
+		suite.Require().NoError(err)
+
+		query := abci.RequestQuery{
+			Path: "",
+			Data: data,
+		}
+
+		bz, err := suite.chainA.Querier(suite.chainA.GetContext(), path, query)
 
 		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Require().Equal(expRes, bz, "test case %d failed: %s", i, tc.name)
@@ -419,16 +428,9 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 	var (
 		expResAck  []byte
 		expResSend []byte
+		params     types.QueryUnrelayedPacketsParams
+		err        error
 	)
-
-	params := types.NewQueryUnrelayedPacketsParams(testPort1, testChannel1, sequences, 1, 100)
-	data, err := suite.cdc.MarshalJSON(params)
-	suite.Require().NoError(err)
-
-	query := abci.RequestQuery{
-		Path: "",
-		Data: data,
-	}
 
 	testCases := []struct {
 		name  string
@@ -437,25 +439,27 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"success",
 			func() {
-				suite.SetupTest()
-				ctx := suite.chainA.GetContext()
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
 				unrelayedAcks := []uint64{}
 				unrelayedSends := []uint64{}
 
 				// create acknowledgements for first 3 sequences
 				for _, seq := range sequences {
 					if seq < 4 {
-						suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, []byte("ack"))
 						unrelayedAcks = append(unrelayedAcks, seq)
 					} else {
 						unrelayedSends = append(unrelayedSends, seq)
 					}
 				}
 
-				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				params = types.NewQueryUnrelayedPacketsParams(channelA.PortID, channelA.ID, sequences, 1, 100)
+
+				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedAcks)
 				suite.Require().NoError(err)
 
-				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
+				expResSend, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedSends)
 				suite.Require().NoError(err)
 
 			},
@@ -463,64 +467,80 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"success with multiple channels",
 			func() {
-				suite.SetupTest()
-				ctx := suite.chainA.GetContext()
+				_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				ctxA := suite.chainA.GetContext()
+
 				unrelayedAcks := []uint64{}
 				unrelayedSends := []uint64{}
 
 				// create acknowledgements for first 3 sequences
 				for _, seq := range sequences {
 					if seq < 4 {
-						suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA0.PortID, channelA0.ID, seq, []byte("ack"))
 						unrelayedAcks = append(unrelayedAcks, seq)
 					} else {
 						unrelayedSends = append(unrelayedSends, seq)
 					}
 				}
 
+				// create second channel
+				channelA1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
+
 				// create acknowledgements for other sequences on different channel/port
 				for _, seq := range sequences {
 					if seq >= 4 {
-						suite.chainA.storeAcknowledgement(ctx, testPort2, testChannel2, seq)
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA1.PortID, channelA1.ID, seq, []byte("ack"))
 					}
 				}
 
-				expResAck, err = codec.MarshalJSONIndent(suite.cdc, unrelayedAcks)
+				params = types.NewQueryUnrelayedPacketsParams(channelA0.PortID, channelA0.ID, sequences, 1, 100)
+
+				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedAcks)
 				suite.Require().NoError(err)
 
-				expResSend, err = codec.MarshalJSONIndent(suite.cdc, unrelayedSends)
+				expResSend, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), unrelayedSends)
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"success no unrelayed acks",
 			func() {
-				suite.SetupTest()
-				ctx := suite.chainA.GetContext()
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				// create acknowledgements for all sequences
 				for _, seq := range sequences {
-					suite.chainA.storeAcknowledgement(ctx, testPort1, testChannel1, seq)
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, []byte("ack"))
 				}
 
-				expResSend, err = codec.MarshalJSONIndent(suite.cdc, []uint64{})
+				params = types.NewQueryUnrelayedPacketsParams(channelA.PortID, channelA.ID, sequences, 1, 100)
+
+				expResSend, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), []uint64{})
 				suite.Require().NoError(err)
 
-				expResAck, err = codec.MarshalJSONIndent(suite.cdc, sequences)
+				expResAck, err = codec.MarshalJSONIndent(suite.chainA.App.AppCodec(), sequences)
 				suite.Require().NoError(err)
 			},
 		},
 	}
 
 	for i, tc := range testCases {
+		suite.SetupTest() // reset
 		tc.setup()
 
-		bz, err := suite.querier(suite.chainA.GetContext(), pathAck, query)
+		data, err := suite.chainA.App.AppCodec().MarshalJSON(params)
+		suite.Require().NoError(err)
+
+		query := abci.RequestQuery{
+			Path: "",
+			Data: data,
+		}
+
+		bz, err := suite.chainA.Querier(suite.chainA.GetContext(), pathAck, query)
 
 		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Require().Equal(expResAck, bz, "test case %d failed: %s", i, tc.name)
 
-		bz, err = suite.querier(suite.chainA.GetContext(), pathSend, query)
+		bz, err = suite.chainA.Querier(suite.chainA.GetContext(), pathSend, query)
 
 		suite.Require().NoError(err, "test case %d failed: %s", i, tc.name)
 		suite.Require().Equal(expResSend, bz, "test case %d failed: %s", i, tc.name)

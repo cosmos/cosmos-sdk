@@ -2,8 +2,8 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 )
 
@@ -11,12 +11,12 @@ import (
 // including MsgPacket, MsgAcknowledgement, MsgTimeout.
 // MsgUpdateClients are also handled here to perform atomic multimsg transaction
 type ProofVerificationDecorator struct {
-	clientKeeper  client.Keeper
+	clientKeeper  clientkeeper.Keeper
 	channelKeeper channel.Keeper
 }
 
 // NewProofVerificationDecorator constructs new ProofverificationDecorator
-func NewProofVerificationDecorator(clientKeeper client.Keeper, channelKeeper channel.Keeper) ProofVerificationDecorator {
+func NewProofVerificationDecorator(clientKeeper clientkeeper.Keeper, channelKeeper channel.Keeper) ProofVerificationDecorator {
 	return ProofVerificationDecorator{
 		clientKeeper:  clientKeeper,
 		channelKeeper: channelKeeper,
@@ -32,11 +32,11 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		case clientexported.MsgUpdateClient:
 			_, err = pvr.clientKeeper.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
 		case *channel.MsgPacket:
-			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
+			err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
 		case *channel.MsgAcknowledgement:
-			_, err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+			err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
 		case *channel.MsgTimeout:
-			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+			err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
 		default:
 			// don't emit sender event for other msg types
 			continue

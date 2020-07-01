@@ -106,41 +106,21 @@ func TestContext_PrintOutput(t *testing.T) {
 	buf := &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "json"
-	ctx.Indent = false
 	err = ctx.PrintOutput(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
-		`{"animal":{"@type":"/cosmos_sdk.codec.v1.Dog","size":"big","name":"Spot"},"x":"10"}
-`, string(buf.Bytes()))
-
-	// json indent
-	buf = &bytes.Buffer{}
-	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "json"
-	ctx.Indent = true
-	err = ctx.PrintOutput(hasAnimal)
-	require.NoError(t, err)
-	require.Equal(t,
-		`{
-  "animal": {
-    "@type": "/cosmos_sdk.codec.v1.Dog",
-    "name": "Spot",
-    "size": "big"
-  },
-  "x": "10"
-}
+		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
 `, string(buf.Bytes()))
 
 	// yaml
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "text"
-	ctx.Indent = false
 	err = ctx.PrintOutput(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`animal:
-  '@type': /cosmos_sdk.codec.v1.Dog
+  '@type': /testdata.Dog
   name: Spot
   size: big
 x: "10"
@@ -156,41 +136,16 @@ x: "10"
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "json"
-	ctx.Indent = false
 	err = ctx.PrintOutput(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`{"type":"testdata/HasAnimal","value":{"animal":{"type":"testdata/Dog","value":{"size":"big","name":"Spot"}},"x":"10"}}
 `, string(buf.Bytes()))
 
-	// json indent
-	buf = &bytes.Buffer{}
-	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "json"
-	ctx.Indent = true
-	err = ctx.PrintOutput(hasAnimal)
-	require.NoError(t, err)
-	require.Equal(t,
-		`{
-  "type": "testdata/HasAnimal",
-  "value": {
-    "animal": {
-      "type": "testdata/Dog",
-      "value": {
-        "name": "Spot",
-        "size": "big"
-      }
-    },
-    "x": "10"
-  }
-}
-`, string(buf.Bytes()))
-
 	// yaml
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "text"
-	ctx.Indent = false
 	err = ctx.PrintOutput(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,

@@ -32,7 +32,7 @@ func NewTxGenerator(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec,
 }
 
 func (g generator) NewTxBuilder() client.TxBuilder {
-	return NewBuilder(g.marshaler, g.pubkeyCodec)
+	return newBuilder(g.marshaler, g.pubkeyCodec)
 }
 
 func (g generator) SignModeHandler() signing.SignModeHandler {

@@ -23,7 +23,7 @@ func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := authtypes.KeyTestPubAddr()
 
 	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
-	tx := NewBuilder(marshaler, std.DefaultPublicKeyCodec{})
+	tx := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}
 

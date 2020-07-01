@@ -3,13 +3,12 @@ package tx
 import (
 	"fmt"
 
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
@@ -22,32 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-// Builder defines a type that is to be used for building, signing and verifying
-// protobuf transactions. The protobuf Tx type is not used directly because a) protobuf
-// SIGN_MODE_DIRECT signing uses raw body and auth_info bytes and b) Tx does does not retain
-// crypto.PubKey instances.
-type Builder interface {
-	authsigning.SigFeeMemoTx
-
-	client.TxBuilder
-
-	direct.ProtoTx
-}
-
-// NewBuilder returns a new Builder instance
-func NewBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) Builder {
-	return &builder{
-		tx: &tx.Tx{
-			Body: &tx.TxBody{},
-			AuthInfo: &tx.AuthInfo{
-				Fee: &tx.Fee{},
-			},
-		},
-		marshaler:   marshaler,
-		pubkeyCodec: pubkeyCodec,
-	}
-}
 
 type builder struct {
 	tx *tx.Tx
@@ -68,7 +41,24 @@ type builder struct {
 	pubkeyCodec types.PublicKeyCodec
 }
 
-var _ Builder = &builder{}
+var (
+	_ authsigning.SigFeeMemoTx = &builder{}
+	_ client.TxBuilder         = &builder{}
+	_ direct.ProtoTx           = &builder{}
+)
+
+func newBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) *builder {
+	return &builder{
+		tx: &tx.Tx{
+			Body: &tx.TxBody{},
+			AuthInfo: &tx.AuthInfo{
+				Fee: &tx.Fee{},
+			},
+		},
+		marshaler:   marshaler,
+		pubkeyCodec: pubkeyCodec,
+	}
+}
 
 func (t *builder) GetMsgs() []sdk.Msg {
 	anys := t.tx.Body.Messages

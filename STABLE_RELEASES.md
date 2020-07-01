@@ -31,7 +31,7 @@ poorly tested code. We never assume that any change, no matter how little or non
 of regression risks.
 
 Therefore, the requirements for stable changes are different than those that are candidates to be merged in
-the `master` branch. When preparing future major releases, our aim to design the most elegant, user-friendly and
+the `master` branch. When preparing future major releases, our aim is to design the most elegant, user-friendly and
 maintainable SDK possible often entails fundamental changes to the SDK's architecture design, rearranging and/or
 renaming packages, reducing code duplication so that we maintain common functions and data structures in one
 place rather than leaving them scattered all over the code base. However, once a release is published, the

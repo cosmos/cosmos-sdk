@@ -18,7 +18,7 @@ Subkeys can be used for grouping or dynamic parameter key generation during runt
 
 ## KeyTable
 
-All of the paramter keys that will be used should be registered at the compile 
+All of the parameter keys that will be used should be registered at the compile 
 time. `KeyTable` is essentially a `map[string]attribute`, where the `string` is a parameter key.
 
 Currently, `attribute` only consists of `reflect.Type`, which indicates the parameter 

@@ -1,10 +1,7 @@
 package rest_test
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -62,18 +59,13 @@ func submitSendReq(val *testutil.Validator, req bankrest.SendReq) (authtypes.Std
 		return authtypes.StdTx{}, errors.Wrap(err, "error encoding SendReq to json")
 	}
 
-	resp, err := http.Post(url, "", bytes.NewBuffer(bz))
+	res, err := rest.PostRequest(url, "", bz)
 	if err != nil {
-		return authtypes.StdTx{}, errors.Wrap(err, "error while sending post request")
-	}
-
-	bz, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return authtypes.StdTx{}, errors.Wrap(err, "error reading SendReq response body")
+		return authtypes.StdTx{}, err
 	}
 
 	var tx authtypes.StdTx
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, &tx)
+	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &tx)
 	if err != nil {
 		return authtypes.StdTx{}, errors.Wrap(err, "error unmarshaling to StdTx SendReq response")
 	}

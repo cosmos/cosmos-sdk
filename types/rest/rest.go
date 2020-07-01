@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	errors2 "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/tendermint/types"
 
@@ -441,4 +444,22 @@ func GetRequest(url string) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
+	res, err := http.Post(url, contentType, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, errors2.Wrap(err, "error while sending post request")
+	}
+
+	bz, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors2.Wrap(err, "error reading SendReq response body")
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, err
+	}
+
+	return bz, nil
 }

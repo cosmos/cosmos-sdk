@@ -63,6 +63,11 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // flags that do not necessarily change with context. These must be checked if
 // the caller explicitly changed the values.
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	if flagSet.Changed(flags.FlagHome) {
+		homeDir, _ := flagSet.GetString(flags.FlagHome)
+		clientCtx = clientCtx.WithHomeDir(homeDir)
+	}
+
 	if flagSet.Changed(flags.FlagChainID) {
 		chainID, _ := flagSet.GetString(flags.FlagChainID)
 		clientCtx = clientCtx.WithChainID(chainID)

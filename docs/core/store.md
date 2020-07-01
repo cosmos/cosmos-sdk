@@ -149,7 +149,7 @@ The default implementation of `KVStore` and `CommitKVStore` used in `baseapp` is
 
 - `Get` and `Set` operations are O(log n), where n is the number of elements in the tree.
 - Iteration efficiently returns the sorted elements within the range.
-- Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings). 
+- Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings).
 
 The documentation on the IAVL Tree is located [here](https://github.com/cosmos/iavl/blob/f9d4b446a226948ed19286354f0d433a887cc4a3/docs/overview.md).
 

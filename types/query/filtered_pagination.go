@@ -6,16 +6,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// defaultLimit is the default `limit` for queries
-// if the `limit` is not supplied, paginate will use `defaultLimit`
-const defaultLimit = 100
-
-// Paginate does pagination of all the results in the PrefixStore based on the
-// provided PageRequest. onResult should be used to do actual unmarshaling.
-func Paginate(
+// FilteredPaginate does pagination of all the results in the PrefixStore based on the
+// provided PageRequest. onResult should be used to do actual unmarshaling and filter the results.
+// If key is provided, the pagination uses the optimized querying.
+// If offset is used, the pagination uses lazy filtering i.e., searches through all the records.
+// The accumulate parameter represents if the response is valid based on the offset given.
+// It will be false for the results (filtered) < offset  and true for `offset > accumulate <= end`.
+// When accumulate is set to true the current result should be appended to the result set returned
+// to the client.
+func FilteredPaginate(
 	prefixStore types.KVStore,
 	req *PageRequest,
-	onResult func(key []byte, value []byte) error,
+	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
 
 	// if the PageRequest is nil, use default PageRequest
@@ -43,23 +45,27 @@ func Paginate(
 		iterator := prefixStore.Iterator(key, nil)
 		defer iterator.Close()
 
-		var count uint64
+		var numHits uint64
 		var nextKey []byte
 
 		for ; iterator.Valid(); iterator.Next() {
-			if count == limit {
+			if numHits == limit {
 				nextKey = iterator.Key()
 				break
 			}
+
 			if iterator.Error() != nil {
 				return nil, iterator.Error()
 			}
-			err := onResult(iterator.Key(), iterator.Value())
+
+			hit, err := onResult(iterator.Key(), iterator.Value(), true)
 			if err != nil {
 				return nil, err
 			}
 
-			count++
+			if hit {
+				numHits++
+			}
 		}
 
 		return &PageResponse{
@@ -72,35 +78,35 @@ func Paginate(
 
 	end := offset + limit
 
-	var count uint64
+	var numHits uint64
 	var nextKey []byte
 
 	for ; iterator.Valid(); iterator.Next() {
-		count++
-
-		if count <= offset {
-			continue
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
 		}
-		if count <= end {
-			err := onResult(iterator.Key(), iterator.Value())
-			if err != nil {
-				return nil, err
-			}
-		} else if count == end+1 {
+		accumulate := numHits >= offset && numHits < end
+		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
+		if err != nil {
+			return nil, err
+		}
+
+		if hit {
+			numHits++
+		}
+
+		if numHits == end {
 			nextKey = iterator.Key()
 
 			if !countTotal {
 				break
 			}
 		}
-		if iterator.Error() != nil {
-			return nil, iterator.Error()
-		}
 	}
 
 	res := &PageResponse{NextKey: nextKey}
 	if countTotal {
-		res.Total = count
+		res.Total = numHits
 	}
 
 	return res, nil

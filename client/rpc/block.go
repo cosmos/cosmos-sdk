@@ -13,8 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -25,49 +23,30 @@ func BlockCommand() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  printBlock,
 	}
+
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
-	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
+
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
+
 	return cmd
 }
 
 func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
-	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
-	// header -> BlockchainInfo
-	// header, tx -> Block
-	// results -> BlockResults
 	res, err := node.Block(height)
 	if err != nil {
 		return nil, err
 	}
 
-	if !clientCtx.TrustNode {
-		check, err := clientCtx.Verify(res.Block.Height)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := tmliteProxy.ValidateHeader(&res.Block.Header, check); err != nil {
-			return nil, err
-		}
-
-		if err = tmliteProxy.ValidateBlock(res.Block, check); err != nil {
-			return nil, err
-		}
-	}
-
 	return legacy.Cdc.MarshalJSON(res)
 }
 
-// get the current blockchain height
 func GetChainHeight(clientCtx client.Context) (int64, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {

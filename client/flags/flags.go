@@ -45,7 +45,6 @@ const (
 	FlagNode             = "node"
 	FlagHeight           = "height"
 	FlagGasAdjustment    = "gas-adjustment"
-	FlagTrustNode        = "trust-node"
 	FlagFrom             = "from"
 	FlagName             = "name"
 	FlagAccountNumber    = "account-number"
@@ -76,14 +75,12 @@ var (
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
 		// TODO: REMOVE VIPER CALLS!
-		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 		viper.BindPFlag(FlagKeyringBackend, c.Flags().Lookup(FlagKeyringBackend))
@@ -109,7 +106,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
 		c.Flags().StringP(FlagBroadcastMode, "b", BroadcastSync, "Transaction broadcasting mode (sync|async|block)")
-		c.Flags().Bool(FlagTrustNode, true, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 		c.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible)")
 		c.Flags().Bool(FlagOffline, false, "Offline mode (does not allow any online functionality")
@@ -127,7 +123,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		))
 
 		// TODO: REMOVE VIPER CALLS!
-		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 		viper.BindPFlag(FlagKeyringBackend, c.Flags().Lookup(FlagKeyringBackend))

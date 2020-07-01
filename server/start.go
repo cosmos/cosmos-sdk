@@ -209,15 +209,12 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			return err
 		}
 
-		// TODO: Since this is running in process, do we need to provide a verifier
-		// and set TrustNode=false? If so, we need to add additional logic that
-		// waits for a block to be committed first before starting the API server.
+		// TODO: Use local client
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
 			WithJSONMarshaler(cdc).
-			WithClient(local.New(tmNode)).
-			WithTrustNode(true)
+			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)

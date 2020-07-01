@@ -12,7 +12,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/cli"
-	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
@@ -38,7 +37,6 @@ type Context struct {
 	From             string
 	BroadcastMode    string
 	FromName         string
-	TrustNode        bool
 	UseLedger        bool
 	Simulate         bool
 	GenerateOnly     bool
@@ -46,8 +44,6 @@ type Context struct {
 	SkipConfirm      bool
 	TxGenerator      TxGenerator
 	AccountRetriever AccountRetriever
-	NodeURI          string
-	Verifier         tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
@@ -91,39 +87,16 @@ func NewContextWithInput(input io.Reader) Context {
 func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
 	input = bufio.NewReader(input)
 
-	var (
-		nodeURI string
-		rpc     rpcclient.Client
-		err     error
-	)
-
-	offline := viper.GetBool(flags.FlagOffline)
-	if !offline {
-		nodeURI = viper.GetString(flags.FlagNode)
-		if nodeURI != "" {
-			rpc, err = rpchttp.New(nodeURI, "/websocket")
-			if err != nil {
-				fmt.Printf("failted to get client: %v\n", err)
-				os.Exit(1)
-			}
-		}
-	}
-
-	trustNode := viper.GetBool(flags.FlagTrustNode)
-
-	ctx.Client = rpc
 	ctx.ChainID = viper.GetString(flags.FlagChainID)
 	ctx.Input = input
 	ctx.Output = os.Stdout
-	ctx.NodeURI = nodeURI
 	ctx.From = viper.GetString(flags.FlagFrom)
 	ctx.OutputFormat = viper.GetString(cli.OutputFlag)
 	ctx.Height = viper.GetInt64(flags.FlagHeight)
-	ctx.TrustNode = trustNode
 	ctx.UseLedger = viper.GetBool(flags.FlagUseLedger)
 	ctx.BroadcastMode = viper.GetString(flags.FlagBroadcastMode)
 	ctx.Simulate = viper.GetBool(flags.FlagDryRun)
-	ctx.Offline = offline
+	ctx.Offline = viper.GetBool(flags.FlagOffline)
 	ctx.SkipConfirm = viper.GetBool(flags.FlagSkipConfirmation)
 	ctx.HomeDir = viper.GetString(flags.FlagHome)
 	ctx.GenerateOnly = viper.GetBool(flags.FlagGenerateOnly)
@@ -148,18 +121,6 @@ func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
 	ctx.FromAddress = fromAddress
 	ctx.FromName = fromName
 
-	if offline {
-		return ctx
-	}
-
-	// create a verifier for the specific chain ID and RPC client
-	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && !trustNode {
-		fmt.Printf("failed to create verifier: %s\n", err)
-		os.Exit(1)
-	}
-
-	ctx.Verifier = verifier
 	return ctx
 }
 
@@ -216,15 +177,8 @@ func (ctx Context) WithFrom(from string) Context {
 	return ctx
 }
 
-// WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx Context) WithTrustNode(trustNode bool) Context {
-	ctx.TrustNode = trustNode
-	return ctx
-}
-
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx Context) WithNodeURI(nodeURI string) Context {
-	ctx.NodeURI = nodeURI
 	client, err := rpchttp.New(nodeURI, "/websocket")
 	if err != nil {
 		panic(err)
@@ -250,12 +204,6 @@ func (ctx Context) WithClient(client rpcclient.Client) Context {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
-	return ctx
-}
-
-// WithVerifier returns a copy of the context with an updated Verifier.
-func (ctx Context) WithVerifier(verifier tmlite.Verifier) Context {
-	ctx.Verifier = verifier
 	return ctx
 }
 

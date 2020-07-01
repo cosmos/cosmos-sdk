@@ -56,13 +56,10 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	if val.RPCAddress != "" {
 		val.RPCClient = local.New(tmNode)
+		val.ClientCtx = val.ClientCtx.WithClient(val.RPCClient)
 	}
 
 	if val.APIAddress != "" {
-		val.ClientCtx = val.ClientCtx.
-			WithClient(val.RPCClient).
-			WithTrustNode(true)
-
 		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
 

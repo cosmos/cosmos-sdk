@@ -6,7 +6,7 @@ import (
 	lite "github.com/tendermint/tendermint/lite2"
 
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -246,13 +246,13 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyChannelState() {
-	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(channel.OPEN, channel.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
+	ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name           string
 		clientState    ibctmtypes.ClientState
-		channel        channel.Channel
+		channel        channeltypes.Channel
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte

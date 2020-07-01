@@ -3,12 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
-
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,6 +21,12 @@ import (
 
 var (
 	encodingConfig = simapp.MakeEncodingConfig()
+	initClientCtx  = client.Context{}.
+			WithJSONMarshaler(encodingConfig.Marshaler).
+			WithTxGenerator(encodingConfig.TxGenerator).
+			WithCodec(encodingConfig.Amino).
+			WithInput(os.Stdin).
+			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler))
 )
 
 func init() {
@@ -48,21 +50,17 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:   "simcli",
-		Short: "Command line interface for interacting with simd",
+		Short: "Command line interface for interacting with simapp",
 	}
 
 	// Add --chain-id to persistent flags and mark it required
-	rootCmd.PersistentFlags().String(flags.FlagChainID, "", "Chain ID of tendermint node")
-	rootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
-		return initConfig(rootCmd)
-	}
+	rootCmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
 
 	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		client.ConfigCmd(simapp.DefaultCLIHome),
-		queryCmd(encodingConfig),
-		txCmd(encodingConfig),
+		queryCmd(),
+		txCmd(),
 		flags.LineBreak,
 		flags.LineBreak,
 		keys.Commands(),
@@ -80,7 +78,7 @@ func main() {
 	}
 }
 
-func queryCmd(config simappparams.EncodingConfig) *cobra.Command {
+func queryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -90,30 +88,22 @@ func queryCmd(config simappparams.EncodingConfig) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cdc := config.Amino
-
 	queryCmd.AddCommand(
-		authcmd.GetAccountCmd(cdc),
+		authcmd.GetAccountCmd(encodingConfig.Amino),
 		flags.LineBreak,
-		rpc.ValidatorCommand(cdc),
+		rpc.ValidatorCommand(encodingConfig.Amino),
 		rpc.BlockCommand(),
-		authcmd.QueryTxsByEventsCmd(cdc),
-		authcmd.QueryTxCmd(cdc),
+		authcmd.QueryTxsByEventsCmd(encodingConfig.Amino),
+		authcmd.QueryTxCmd(encodingConfig.Amino),
 		flags.LineBreak,
 	)
 
-	// add modules' query commands
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
-		WithJSONMarshaler(config.Marshaler).
-		WithCodec(cdc)
-
-	simapp.ModuleBasics.AddQueryCommands(queryCmd, clientCtx)
+	simapp.ModuleBasics.AddQueryCommands(queryCmd, initClientCtx)
 
 	return queryCmd
 }
 
-func txCmd(config simappparams.EncodingConfig) *cobra.Command {
+func txCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -122,53 +112,21 @@ func txCmd(config simappparams.EncodingConfig) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cdc := config.Amino
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
-		WithJSONMarshaler(config.Marshaler).
-		WithTxGenerator(config.TxGenerator).
-		WithAccountRetriever(types.NewAccountRetriever(config.Marshaler)).
-		WithCodec(cdc)
-
 	txCmd.AddCommand(
-		bankcmd.NewSendTxCmd(clientCtx),
+		bankcmd.NewSendTxCmd(initClientCtx),
 		flags.LineBreak,
-		authcmd.GetSignCommand(clientCtx),
-		authcmd.GetSignBatchCommand(cdc),
-		authcmd.GetMultiSignCommand(clientCtx),
-		authcmd.GetValidateSignaturesCommand(clientCtx),
+		authcmd.GetSignCommand(initClientCtx),
+		authcmd.GetSignBatchCommand(encodingConfig.Amino),
+		authcmd.GetMultiSignCommand(initClientCtx),
+		authcmd.GetValidateSignaturesCommand(initClientCtx),
 		flags.LineBreak,
-		authcmd.GetBroadcastCommand(clientCtx),
-		authcmd.GetEncodeCommand(clientCtx),
-		authcmd.GetDecodeCommand(clientCtx),
+		authcmd.GetBroadcastCommand(initClientCtx),
+		authcmd.GetEncodeCommand(initClientCtx),
+		authcmd.GetDecodeCommand(initClientCtx),
 		flags.LineBreak,
 	)
 
-	// add modules' tx commands
-	simapp.ModuleBasics.AddTxCommands(txCmd, clientCtx)
+	simapp.ModuleBasics.AddTxCommands(txCmd, initClientCtx)
 
 	return txCmd
-}
-
-func initConfig(cmd *cobra.Command) error {
-	home, err := cmd.PersistentFlags().GetString(cli.HomeFlag)
-	if err != nil {
-		return err
-	}
-
-	cfgFile := path.Join(home, "config", "config.toml")
-	if _, err := os.Stat(cfgFile); err == nil {
-		viper.SetConfigFile(cfgFile)
-
-		if err := viper.ReadInConfig(); err != nil {
-			return err
-		}
-	}
-	if err := viper.BindPFlag(flags.FlagChainID, cmd.PersistentFlags().Lookup(flags.FlagChainID)); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag(cli.EncodingFlag, cmd.PersistentFlags().Lookup(cli.EncodingFlag)); err != nil {
-		return err
-	}
-	return viper.BindPFlag(cli.OutputFlag, cmd.PersistentFlags().Lookup(cli.OutputFlag))
 }

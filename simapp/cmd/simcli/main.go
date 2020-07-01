@@ -88,7 +88,7 @@ func queryCmd() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PersistentPreRunE:          client.SetCmdClientContextHandler,
+		PreRunE:                    client.SetCmdClientContextHandler,
 		RunE:                       client.ValidateCmd,
 	}
 
@@ -113,7 +113,7 @@ func txCmd() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PersistentPreRunE:          client.SetCmdClientContextHandler,
+		PreRunE:                    client.SetCmdClientContextHandler,
 		RunE:                       client.ValidateCmd,
 	}
 

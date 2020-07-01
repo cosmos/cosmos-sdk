@@ -13,8 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	errors2 "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -451,12 +449,12 @@ func GetRequest(url string) ([]byte, error) {
 func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
 	res, err := http.Post(url, contentType, bytes.NewBuffer(data))
 	if err != nil {
-		return nil, errors2.Wrap(err, "error while sending post request")
+		return nil, fmt.Errorf("error while sending post request: %w", err)
 	}
 
 	bz, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, errors2.Wrap(err, "error reading SendReq response body")
+		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
 	if err = res.Body.Close(); err != nil {

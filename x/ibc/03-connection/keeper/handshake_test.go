@@ -307,7 +307,7 @@ func TestOpenTryVersionNegotiation(t *testing.T) {
 	}{
 		{"valid counterparty versions", types.GetCompatibleVersions(), true},
 		{"empty counterparty versions", []string{}, false},
-		{"no counterparty match", []string{"not a valid version"}, false},
+		{"no counterparty match", []string{"(version won't match,[])"}, false},
 	}
 
 	// Test OpenTry variety of cases using counterpartyVersions
@@ -359,7 +359,7 @@ func TestOpenAckVersionNegotiation(t *testing.T) {
 	}{
 		{"valid selected version", types.DefaultIBCVersion, true},
 		{"empty selected versions", "", false},
-		{"selected version not supported", "not a valid version", false},
+		{"selected version not supported", "(not supported,[])", false},
 	}
 
 	// Test OpenTry variety of cases using counterpartyVersions

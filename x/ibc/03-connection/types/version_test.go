@@ -8,24 +8,60 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-func TestIsSupportedVersion(t *testing.T) {
+// testing of invalid version formats exist within 24-host/validate_test.go
+func TestUnpackVersion(t *testing.T) {
+	testCases := []struct {
+		name          string
+		version       string
+		expIdentifier string
+		expFeatures   []string
+		expPass       bool
+	}{
+		{"valid version", "(1,[ORDERED channel,UNORDERED channel])", "1", []string{"ORDERED channel", "UNORDERED channel"}, true},
+		{"valid empty features", "(1,[])", "1", []string{}, true},
+		{"empty identifier", "(,[features])", "", []string{}, false},
+		{"invalid version", "identifier,[features]", "", []string{}, false},
+		{"empty string", "  ", "", []string{}, false},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			identifier, features, err := types.UnpackVersion(tc.version)
+
+			if tc.expPass {
+				require.NoError(t, err)
+				require.Equal(t, tc.expIdentifier, identifier)
+				require.Equal(t, tc.expFeatures, features)
+			} else {
+				require.Error(t, err)
+			}
+		})
+	}
+}
+
+func TestFindSupportedVersion(t *testing.T) {
 	testCases := []struct {
 		name              string
 		version           string
 		supportedVersions []string
-		expRes            bool
+		expVersion        string
+		expFound          bool
 	}{
-		{"valid supported version", types.DefaultIBCVersion, types.GetCompatibleVersions(), true},
-		{"empty version", "", types.GetCompatibleVersions(), false},
-		{"empty supported versions", types.DefaultIBCVersion, []string{}, false},
-		{"desired version is last", types.DefaultIBCVersion, []string{"1", "2  ", "  3", types.DefaultIBCVersion}, true},
-		{"version not supported", "2.0.0", types.GetCompatibleVersions(), false},
+		{"valid supported version", types.DefaultIBCVersion, types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
+		{"empty (invalid) version", "", types.GetCompatibleVersions(), "", false},
+		{"empty supported versions", types.DefaultIBCVersion, []string{}, "", false},
+		{"desired version is last", types.DefaultIBCVersion, []string{"(validversion,[])", "(2,[feature])", "(3,[])", types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
+		{"desired version identifier with different feature set", "(1,[features])", types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
+		{"version not supported", "(2,[DAG])", types.GetCompatibleVersions(), "", false},
 	}
 
 	for i, tc := range testCases {
-		res := types.IsSupportedVersion(tc.version, tc.supportedVersions)
+		version, found := types.FindSupportedVersion(tc.version, tc.supportedVersions)
 
-		require.Equal(t, tc.expRes, res, "test case %d: %s", i, tc.name)
+		require.Equal(t, tc.expVersion, version, "test case %d: %s", i, tc.name)
+		require.Equal(t, tc.expFound, found, "test case %d: %s", i, tc.name)
 	}
 }
 
@@ -37,9 +73,10 @@ func TestPickVersion(t *testing.T) {
 		expPass              bool
 	}{
 		{"valid default ibc version", types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
-		{"valid version in counterparty versions", []string{"1", "2.0.0", types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
+		{"valid version in counterparty versions", []string{"(version1,[])", "(2.0.0,[DAG,ZK])", types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
+		{"valid identifier match but empty feature set", []string{"(1,[DAG,ORDERED-ZK,UNORDERED-zk])"}, "(1,[])", true},
 		{"empty counterparty versions", []string{}, "", false},
-		{"non-matching counterparty versions", []string{"2.0.0"}, "", false},
+		{"non-matching counterparty versions", []string{"(2.0.0,[])"}, "", false},
 	}
 
 	for i, tc := range testCases {

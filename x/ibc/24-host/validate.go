@@ -15,10 +15,13 @@ import (
 var IsValidID = regexp.MustCompile(`^[a-zA-Z0-9\.\_\+\-\#\[\]\<\>]+$`).MatchString
 
 // IsValidConnectionVersion defines the regular expression to check if the
-// string is a valid semantic version in the form:
-// #.#.#
-// where each # is a non-negative integer.
-var IsValidConnectionVersion = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`).MatchString
+// string is in the form of a tuple consisting of a string identifier and
+// a set of features. The entire version tuple must be enclosed in parentheses.
+// The version identifier must not contain any commas. The set of features
+// must be enclosed in brackets and separated by commas.
+//
+// valid connection version = ([version_identifier], [feature_0, feature_1, etc])
+var IsValidConnectionVersion = regexp.MustCompile(`^\([^,]+\,\[([^,]+(\,[^,]+)*)?\]\)$`).MatchString
 
 // ICS 024 Identifier and Path Validation Implementation
 //
@@ -91,7 +94,7 @@ func ConnectionVersionValidator(version string) error {
 	if !IsValidConnectionVersion(version) {
 		return sdkerrors.Wrapf(
 			ErrInvalidVersion,
-			"version (%s) must be in semantic version form", version,
+			"version '%s' must be in '(version_identifier,[feature_0, feature_1])' with no extra spacing", version,
 		)
 	}
 

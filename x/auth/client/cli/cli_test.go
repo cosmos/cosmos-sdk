@@ -1,12 +1,9 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"testing"
-
-	cli2 "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -47,24 +44,21 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	val := s.network.Validators[0]
-	buf := new(bytes.Buffer)
-
-	val.ClientCtx = val.ClientCtx.WithOutput(buf)
-	cmd := cli2.NewSendTxCmd(val.ClientCtx)
-	cmd.SetArgs([]string{
+	tx, err := bankcli.SendTx(
+		val.ClientCtx,
 		val.Address.String(),
 		val.Address.String(),
 		sdk.NewCoins(
 			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-		).String(),
+		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	})
-	err := cmd.Execute()
+	)
 	s.Require().NoError(err)
+	fmt.Printf("%s", tx)
 }
 
 func TestCLIValidateSignatures(t *testing.T) {

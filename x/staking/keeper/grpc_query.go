@@ -258,7 +258,7 @@ func (k Keeper) Redelegations(c context.Context, req *types.QueryRedelegationsRe
 			return nil, types.ErrNoRedelegation
 		}
 	case req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && req.DstValidatorAddr.Empty():
-		redels, res, err = queryRedelegationsFromSrcValidator(ctx, k, req)
+		redels, res, err = queryRedelegationsFromSrcValidator(store, k, req)
 	default:
 		redels, res, err = queryAllRedelegations(store, k, req)
 	}
@@ -350,22 +350,21 @@ func queryRedelegation(store sdk.KVStore, k Keeper, req *types.QueryRedelegation
 	return redels, res, err
 }
 
-func queryRedelegationsFromSrcValidator(ctx sdk.Context, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	// redStore := prefix.NewStore(store, types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr))
-	// iterator := sdk.KVStorePrefixIterator(store, types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr))
-	//
+func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Keeper, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+	redStore := prefix.NewStore(store, types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr))
 	// redSrcStore := prefix.NewStore(redStore, types.GetREDKeyFromValSrcIndexKey(iterator.Key()))
-	// res, err = query.Paginate(redSrcStore, req.Req, func(key []byte, value []byte) error {
-	// 	storeKey := types.GetREDKeyFromValSrcIndexKey(key)
-	// 	storeValue := redStore.Get(storeKey)
-	// 	red, err := types.UnmarshalRED(k.cdc, storeValue)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	redels = append(redels, red)
-	// 	return nil
-	// })
-	k.GetRedelegationsFromSrcValidator(ctx, req.SrcValidatorAddr)
+	res, err = query.Paginate(redStore, req.Req, func(key []byte, value []byte) error {
+		key = types.GetREDKeyFromValSrcIndexKey(key)
+		storeKey := types.GetREDKeyFromValSrcIndexKey(key)
+		storeValue := redStore.Get(storeKey)
+		red, err := types.UnmarshalRED(k.cdc, storeValue)
+		if err != nil {
+			return err
+		}
+		redels = append(redels, red)
+		return nil
+	})
+
 	return redels, res, err
 }
 

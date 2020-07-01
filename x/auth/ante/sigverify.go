@@ -349,7 +349,7 @@ func ConsumeMultisignatureVerificationGas(
 	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey, params types.Params,
 ) error {
 
-	size := sig.BitArray.Size()
+	size := sig.BitArray.Count()
 	sigIndex := 0
 
 	for i := 0; i < size; i++ {

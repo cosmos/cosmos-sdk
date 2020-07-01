@@ -39,7 +39,7 @@ priority is to minimise the risk caused by changes not strictly required to fix 
 be correlated with minimising the size of such changes. As such, the same bug may need to be fixed in different
 ways in stable releases and `master` branch.
 
-### What qualifies as SRU
+### What qualifies as a Stable Release Update (SRU)
 
 * **High-impact bugs**
   * Bugs that may directly cause a security vulnerability.

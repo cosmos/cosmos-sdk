@@ -6,6 +6,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // ValidateCmd returns unknown command error or Help display if help flag set
@@ -54,4 +57,96 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	return cmd.Help()
+}
+
+// ReadPersistentCommandFlags returns a Context with fields set for "persistent"
+// flags that do not necessarily change with context. These must be checked if
+// the caller explicitly changed the values.
+func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	if flagSet.Changed(flags.FlagChainID) {
+		chainID, _ := flagSet.GetString(flags.FlagChainID)
+		clientCtx = clientCtx.WithChainID(chainID)
+	}
+
+	if flagSet.Changed(flags.FlagTrustNode) {
+		trustNode, _ := flagSet.GetBool(flags.FlagTrustNode)
+		clientCtx = clientCtx.WithTrustNode(trustNode)
+	}
+
+	if flagSet.Changed(flags.FlagKeyringBackend) {
+		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
+
+		kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+		if err != nil {
+			return clientCtx, err
+		}
+
+		clientCtx = clientCtx.WithKeyring(kr)
+	}
+
+	if flagSet.Changed(flags.FlagNode) {
+		rpcURI, _ := flagSet.GetString(flags.FlagNode)
+		clientCtx = clientCtx.WithNodeURI(rpcURI)
+	}
+
+	return clientCtx, nil
+}
+
+// ReadQueryCommandFlags returns an updated Context with fields set based on flags
+// defined in GetCommands. An error is returned if any flag query fails.
+//
+// Certain flags are naturally command and context dependent, so for these flags
+// we do not check if they've been explicitly set by the caller. Other flags can
+// be considered "persistent" (e.g. KeyBase or Client) and these should be checked
+// if the caller explicitly set those.
+func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	height, _ := flagSet.GetInt64(flags.FlagHeight)
+	clientCtx = clientCtx.WithHeight(height)
+
+	useLedger, _ := flagSet.GetBool(flags.FlagUseLedger)
+	clientCtx = clientCtx.WithUseLedger(useLedger)
+
+	return ReadPersistentCommandFlags(clientCtx, flagSet)
+}
+
+// ReadTxCommandFlags returns an updated Context with fields set based on flags
+// defined in PostCommands. An error is returned if any flag query fails.
+//
+// Certain flags are naturally command and context dependent, so for these flags
+// we do not check if they've been explicitly set by the caller. Other flags can
+// be considered "persistent" (e.g. KeyBase or Client) and these should be checked
+// if the caller explicitly set those.
+func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	clientCtx, err := ReadPersistentCommandFlags(clientCtx, flagSet)
+	if err != nil {
+		return clientCtx, err
+	}
+
+	genOnly, _ := flagSet.GetBool(flags.FlagGenerateOnly)
+	clientCtx = clientCtx.WithGenerateOnly(genOnly)
+
+	dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
+	clientCtx = clientCtx.WithSimulation(dryRun)
+
+	offline, _ := flagSet.GetBool(flags.FlagOffline)
+	clientCtx = clientCtx.WithOffline(offline)
+
+	useLedger, _ := flagSet.GetBool(flags.FlagUseLedger)
+	clientCtx = clientCtx.WithUseLedger(useLedger)
+
+	bMode, _ := flagSet.GetString(flags.FlagBroadcastMode)
+	clientCtx = clientCtx.WithBroadcastMode(bMode)
+
+	skipConfirm, _ := flagSet.GetBool(flags.FlagSkipConfirmation)
+	clientCtx = clientCtx.WithSkipConfirmation(skipConfirm)
+
+	from, _ := flagSet.GetString(flags.FlagFrom)
+	fromAddr, fromName, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
+	if err != nil {
+		return clientCtx, err
+	}
+
+	clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
+
+	return clientCtx, nil
 }

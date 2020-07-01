@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -85,7 +84,6 @@ hexadecimal into bech32 cosmos prefixed format and vice versa.
 		Args: cobra.ExactArgs(1),
 		RunE: parseKey,
 	}
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Indent JSON output")
 
 	return cmd
 }
@@ -145,11 +143,7 @@ func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer) {
 		out, err = yaml.Marshal(&stringer)
 
 	case OutputFormatJSON:
-		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = KeysCdc.MarshalJSONIndent(stringer, "", "  ")
-		} else {
-			out = KeysCdc.MustMarshalJSON(stringer)
-		}
+		out, err = KeysCdc.MarshalJSON(stringer)
 	}
 
 	if err != nil {

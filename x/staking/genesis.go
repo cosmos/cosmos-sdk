@@ -185,9 +185,10 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator exported.ValidatorI) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
-			PubKey: validator.GetConsPubKey(),
-			Power:  validator.GetConsensusPower(),
-			Name:   validator.GetMoniker(),
+			Address: validator.GetConsAddr().Bytes(),
+			PubKey:  validator.GetConsPubKey(),
+			Power:   validator.GetConsensusPower(),
+			Name:    validator.GetMoniker(),
 		})
 
 		return false

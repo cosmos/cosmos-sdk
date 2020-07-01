@@ -20,7 +20,7 @@ func ListKeysCmd() *cobra.Command {
 along with their associated name and address.`,
 		RunE: runListCmd,
 	}
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+
 	cmd.Flags().BoolP(flagListNames, "n", false, "List names only")
 	return cmd
 }

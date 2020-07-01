@@ -3,12 +3,16 @@ package ante
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
+
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,15 +36,15 @@ func init() {
 // SignatureVerificationGasConsumer is the type of function that is used to both
 // consume gas when verifying signatures and also to accept or reject different types of pubkeys
 // This is where apps can define their own PubKey
-type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error
+type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 
 // SigVerifiableTx defines a Tx interface for all signature verification decorators
 type SigVerifiableTx interface {
 	sdk.Tx
-	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignBytes(ctx sdk.Context, acc types.AccountI) []byte
+	GetSignatures() [][]byte
+	GetSignaturesV2() ([]signing.SignatureV2, error)
 }
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
@@ -120,7 +124,10 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}
 
 	params := sgcd.ak.GetParams(ctx)
-	sigs := sigTx.GetSignatures()
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return ctx, err
+	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
@@ -131,18 +138,24 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		if err != nil {
 			return ctx, err
 		}
+
 		pubKey := signerAcc.GetPubKey()
 
+		// In simulate mode the transaction comes with no signatures, thus if the
+		// account's pubkey is nil, both signature verification and gasKVStore.Set()
+		// shall consume the largest amount, i.e. it takes more gas to verify
+		// secp256k1 keys than ed25519 ones.
 		if simulate && pubKey == nil {
-			// In simulate mode the transaction comes with no signatures, thus if the
-			// account's pubkey is nil, both signature verification and gasKVStore.Set()
-			// shall consume the largest amount, i.e. it takes more gas to verify
-			// secp256k1 keys than ed25519 ones.
-			if pubKey == nil {
-				pubKey = simSecp256k1Pubkey
-			}
+			pubKey = simSecp256k1Pubkey
 		}
-		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, pubKey, params)
+
+		// make a SignatureV2 with PubKey filled in from above
+		sig = signing.SignatureV2{
+			PubKey: pubKey,
+			Data:   sig.Data,
+		}
+
+		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, params)
 		if err != nil {
 			return ctx, err
 		}
@@ -157,12 +170,14 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak AccountKeeper
+	ak              AccountKeeper
+	signModeHandler authsigning.SignModeHandler
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.SignModeHandler) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		ak: ak,
+		ak:              ak,
+		signModeHandler: signModeHandler,
 	}
 }
 
@@ -178,7 +193,10 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
-	sigs := sigTx.GetSignatures()
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return ctx, err
+	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
@@ -191,13 +209,12 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	for i, sig := range sigs {
-		signerAccs[i], err = GetSignerAcc(ctx, svd.ak, signerAddrs[i])
+		acc, err := GetSignerAcc(ctx, svd.ak, signerAddrs[i])
 		if err != nil {
 			return ctx, err
 		}
 
-		// retrieve signBytes of tx
-		signBytes := sigTx.GetSignBytes(ctx, signerAccs[i])
+		signerAccs[i] = acc
 
 		// retrieve pubkey
 		pubKey := signerAccs[i].GetPubKey()
@@ -205,11 +222,26 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		// verify signature
-		if !simulate && !pubKey.VerifyBytes(signBytes, sig) {
-			return ctx, sdkerrors.Wrapf(
-				sdkerrors.ErrUnauthorized,
-				"signature verification failed; verify correct account sequence (%d) and chain-id (%s)", signerAccs[i].GetSequence(), ctx.ChainID())
+		// retrieve signer data
+		genesis := ctx.BlockHeight() == 0
+		chainID := ctx.ChainID()
+		var accNum uint64
+		if !genesis {
+			accNum = acc.GetAccountNumber()
+		}
+		signerData := authsigning.SignerData{
+			ChainID:         chainID,
+			AccountNumber:   accNum,
+			AccountSequence: acc.GetSequence(),
+		}
+
+		if !simulate {
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
+			if err != nil {
+				return ctx, sdkerrors.Wrapf(
+					sdkerrors.ErrUnauthorized,
+					"signature verification failed; verify correct account sequence (%d) and chain-id (%s)", signerAccs[i].GetSequence(), ctx.ChainID())
+			}
 		}
 	}
 
@@ -293,8 +325,9 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 // for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
 func DefaultSigVerificationGasConsumer(
-	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params,
+	meter sdk.GasMeter, sig signing.SignatureV2, params types.Params,
 ) error {
+	pubkey := sig.PubKey
 
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKeyEd25519:
@@ -305,11 +338,15 @@ func DefaultSigVerificationGasConsumer(
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 		return nil
 
-	case multisig.PubKeyMultisigThreshold:
-		var multisignature multisig.AminoMultisignature
-		legacy.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
-
-		ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
+	case multisig.PubKey:
+		multisignature, ok := sig.Data.(*signing.MultiSignatureData)
+		if !ok {
+			return fmt.Errorf("expected %T, got, %T", &signing.MultiSignatureData{}, sig.Data)
+		}
+		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
+		if err != nil {
+			return err
+		}
 		return nil
 
 	default:
@@ -319,18 +356,28 @@ func DefaultSigVerificationGasConsumer(
 
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
 func ConsumeMultisignatureVerificationGas(
-	meter sdk.GasMeter, sig multisig.AminoMultisignature, pubkey multisig.PubKeyMultisigThreshold, params types.Params,
-) {
+	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey, params types.Params,
+) error {
 
 	size := sig.BitArray.Size()
 	sigIndex := 0
 
 	for i := 0; i < size; i++ {
-		if sig.BitArray.GetIndex(i) {
-			DefaultSigVerificationGasConsumer(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
-			sigIndex++
+		if !sig.BitArray.GetIndex(i) {
+			continue
 		}
+		sigV2 := signing.SignatureV2{
+			PubKey: pubkey.GetPubKeys()[i],
+			Data:   sig.Signatures[sigIndex],
+		}
+		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
+		if err != nil {
+			return err
+		}
+		sigIndex++
 	}
+
+	return nil
 }
 
 // GetSignerAcc returns an account for a given address that is expected to sign

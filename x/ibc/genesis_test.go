@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -53,29 +53,29 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
 					},
 				),
-				ChannelGenesis: channel.NewGenesisState(
-					[]channel.IdentifiedChannel{
-						channel.NewIdentifiedChannel(
-							port1, channel1, channel.NewChannel(
-								channel.INIT, channelOrder,
-								channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
+				ChannelGenesis: channeltypes.NewGenesisState(
+					[]channeltypes.IdentifiedChannel{
+						channeltypes.NewIdentifiedChannel(
+							port1, channel1, channeltypes.NewChannel(
+								channeltypes.INIT, channelOrder,
+								channeltypes.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
 							),
 						),
 					},
-					[]channel.PacketAckCommitment{
-						channel.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
+					[]channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
 					},
-					[]channel.PacketAckCommitment{
-						channel.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
+					[]channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
 					},
-					[]channel.PacketSequence{
-						channel.NewPacketSequence(port1, channel1, 1),
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port1, channel1, 1),
 					},
-					[]channel.PacketSequence{
-						channel.NewPacketSequence(port2, channel2, 1),
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
-					[]channel.PacketSequence{
-						channel.NewPacketSequence(port2, channel2, 1),
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
 				),
 			},
@@ -116,9 +116,9 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: types.GenesisState{
 				ClientGenesis:     clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
-				ChannelGenesis: channel.GenesisState{
-					Acknowledgements: []channel.PacketAckCommitment{
-						channel.NewPacketAckCommitment("(portID)", channel1, 1, []byte("ack")),
+				ChannelGenesis: channeltypes.GenesisState{
+					Acknowledgements: []channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment("(portID)", channel1, 1, []byte("ack")),
 					},
 				},
 			},

@@ -11,10 +11,8 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,12 +83,9 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, clientCtx client.Cont
 			return err
 		}
 
-		json := clientCtx.JSONMarshaler.MustMarshalJSON(stdSignMsg)
-		if viper.GetBool(flags.FlagIndentResponse) {
-			json, err = codec.MarshalIndentFromJSON(json)
-			if err != nil {
-				panic(err)
-			}
+		json, err := clientCtx.JSONMarshaler.MarshalJSON(stdSignMsg)
+		if err != nil {
+			return err
 		}
 
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
@@ -162,13 +157,6 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, ms
 	json, err := clientCtx.JSONMarshaler.MarshalJSON(stdTx)
 	if err != nil {
 		return err
-	}
-
-	if viper.GetBool(flags.FlagIndentResponse) {
-		json, err = codec.MarshalIndentFromJSON(json)
-		if err != nil {
-			return err
-		}
 	}
 
 	_, _ = fmt.Fprintf(clientCtx.Output, "%s\n", json)

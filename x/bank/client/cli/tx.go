@@ -32,7 +32,11 @@ func NewSendTxCmd(clientCtx client.Context) *cobra.Command {
 		Short: "Create and/or sign and broadcast a MsgSend transaction",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInputAndFrom(cmd.InOrStdin(), args[0])
+			cmd.Flags().Set(flags.FlagFrom, args[0])
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			toAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
@@ -49,7 +53,7 @@ func NewSendTxCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

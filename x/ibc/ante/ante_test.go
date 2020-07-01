@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -89,13 +88,13 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 		suite.chainA.App.IBCKeeper.ChannelKeeper,
 	))
 
-	packet := channel.NewPacket(newPacket(12345).GetData(), 1, portid, chanid, cpportid, cpchanid, 100, 0)
+	packet := channeltypes.NewPacket(newPacket(12345).GetData(), 1, portid, chanid, cpportid, cpchanid, 100, 0)
 
 	ctx := suite.chainA.GetContext()
 	cctx, _ := ctx.CacheContext()
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, packet.SourcePort, packet.SourceChannel, 1)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet))
-	msg := channel.NewMsgPacket(packet, []byte{}, 0, addr1)
+	msg := channeltypes.NewMsgPacket(packet, []byte{}, 0, addr1)
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
 
@@ -104,7 +103,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	ctx = suite.chainA.GetContext()
 	packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
-	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+	msg = channeltypes.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 	_, err = handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // invalid proof
 
@@ -115,7 +114,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	// ctx = suite.chainA.GetContext()
 
 	proof, proofHeight = queryProof(suite.chainB, packetCommitmentPath)
-	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+	msg = channeltypes.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 
 	for i := 0; i < 10; i++ {
 		cctx, write := suite.chainA.GetContext().CacheContext()
@@ -148,7 +147,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	var packet channeltypes.Packet
 	for i := 0; i < 5; i++ {
-		packet = channel.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100, 0)
+		packet = channeltypes.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100, 0)
 		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, uint64(i), channeltypes.CommitPacket(packet))
 	}
 
@@ -160,10 +159,10 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	for i := 10; i >= 0; i-- {
 		cctx, write := suite.chainA.GetContext().CacheContext()
-		packet = channel.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100, 0)
+		packet = channeltypes.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100, 0)
 		packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
 		proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
-		msg := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+		msg := channeltypes.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 		_, err := handler(cctx, suite.newTx(msg), false)
 		if i < 5 {
 			suite.NoError(err, "%d", i) // successfully executed

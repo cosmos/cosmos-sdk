@@ -116,7 +116,7 @@ func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 				return err
 			}
 
-			json, err := getSignatureJSON(cdc, stdTx, clientCtx.Indent, generateSignatureOnly)
+			json, err := getSignatureJSON(cdc, stdTx, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -232,7 +232,7 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 			return err
 		}
 
-		json, err := getSignatureJSON(clientCtx.Codec, newTx, clientCtx.Indent, generateSignatureOnly)
+		json, err := getSignatureJSON(clientCtx.Codec, newTx, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -256,23 +256,10 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 	}
 }
 
-func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
-	switch generateSignatureOnly {
-	case true:
-		switch indent {
-		case true:
-			return cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-
-		default:
-			return cdc.MarshalJSON(newTx.Signatures[0])
-		}
-	default:
-		switch indent {
-		case true:
-			return cdc.MarshalJSONIndent(newTx, "", "  ")
-
-		default:
-			return cdc.MarshalJSON(newTx)
-		}
+func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, generateSignatureOnly bool) ([]byte, error) {
+	if generateSignatureOnly {
+		return cdc.MarshalJSON(newTx.Signatures[0])
 	}
+
+	return cdc.MarshalJSON(newTx)
 }

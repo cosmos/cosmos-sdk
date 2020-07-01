@@ -2,21 +2,6 @@
 layout: homepage
 title: Cosmos SDK Documentation
 description: Cosmos SDK is the world’s most popular framework for building application-specific blockchains.
-features:
-  - cta: Read
-    title: Introduction to Cosmos SDK
-    desc: Learn about all the parts of the Cosmos SDK.
-    label: 5 min
-    url: /intro/overview.html
-    image: spaceship
-  - cta: Learn
-    title: SDK Tutorials
-    desc: Build a complete blockchain application from scratch.
-    label: 30-40 min
-    special: dark
-    h3: View tutorials
-    url: https://tutorials.cosmos.network/
-    image: window
 sections:
   - title: Introduction
     desc: High-level overview of the Cosmos SDK.

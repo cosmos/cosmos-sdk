@@ -60,7 +60,7 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf := tx.NewFactoryFromDeprecated(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			txf, msg, err := NewBuildCreateValidatorMsg(clientCtx, txf)
 			if err != nil {

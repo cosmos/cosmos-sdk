@@ -73,6 +73,7 @@ func queryCmd(config simappparams.EncodingConfig) *cobra.Command {
 	clientCtx = clientCtx.
 		WithJSONMarshaler(config.Marshaler).
 		WithCodec(cdc)
+
 	simapp.ModuleBasics.AddQueryCommands(queryCmd, clientCtx)
 
 	return queryCmd

@@ -73,7 +73,7 @@ func main() {
 	executor := cli.PrepareMainCmd(rootCmd, "GA", simapp.DefaultCLIHome)
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
+	ctx = context.WithValue(ctx, client.ClientContextKey, &initClientCtx)
 
 	if err := executor.ExecuteContext(ctx); err != nil {
 		fmt.Printf("failed execution: %s, exiting...\n", err)

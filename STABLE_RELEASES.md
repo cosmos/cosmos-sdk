@@ -56,7 +56,6 @@ ways in stable releases and `master` branch.
 * State machine changes.
 * New features that introduces API breakages (e.g. public functions removal/renaming).
 * Cosmetic fixes, such as formatting or linter warning fixes.
-* Documentation fixes.
 
 ## Code Owner Membership
 

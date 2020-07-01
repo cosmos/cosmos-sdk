@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	query "github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // DONTCOVER
@@ -99,23 +98,5 @@ func NewQueryProposalsParams(page, limit int, status ProposalStatus, voter, depo
 		Voter:          voter,
 		Depositor:      depositor,
 		ProposalStatus: status,
-	}
-}
-
-// NewQueryProposalsRequest creates a new instance of QueryAllProposalsRequest.
-func NewQueryProposalsRequest(status int32, voter, depositor sdk.AccAddress, req *query.PageRequest) *QueryProposalsRequest {
-	return &QueryProposalsRequest{
-		ProposalStatus: status,
-		Voter:          voter,
-		Depositor:      depositor,
-		Req:            req,
-	}
-}
-
-// NewQueryProposalRequest creates a new instance of QueryProposalRequest.
-func NewQueryProposalRequest(proposalID uint64, req *query.PageRequest) *QueryProposalRequest {
-	return &QueryProposalRequest{
-		ProposalId: proposalID,
-		Req:        req,
 	}
 }

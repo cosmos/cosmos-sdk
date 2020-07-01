@@ -92,7 +92,11 @@ func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 		}
 	}()
 
-	return dbm.NewDB(name, backend, dir), err
+	if err != nil {
+		return nil, err
+	}
+
+	return dbm.NewDB(name, backend, dir)
 }
 
 // copy bytes

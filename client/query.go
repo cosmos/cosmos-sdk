@@ -9,8 +9,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/light"
-	tmliteProxy "github.com/tendermint/tendermint/light/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -129,27 +127,28 @@ func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, erro
 
 // Verify verifies the consensus proof at given height.
 func (ctx Context) Verify(height int64) (tmtypes.SignedHeader, error) {
-	if ctx.Verifier == nil {
-		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
-	}
+	// if ctx.Verifier == nil {
+	// 	return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
+	// }
 
-	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
+	// TODO: fix when introduce light client
+	// check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
 
-	switch {
-	case light.IsErrCommitNotFound(err):
-		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
-	case err != nil:
-		return tmtypes.SignedHeader{}, err
-	}
+	// switch {
+	// case tmliteErr.IsErrCommitNotFound(err):
+	// 	return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
+	// case err != nil:
+	// 	return tmtypes.SignedHeader{}, err
+	// }
 
-	return check, nil
+	return tmtypes.SignedHeader{}, nil
 }
 
 // verifyProof perform response proof verification.
 func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error {
-	if ctx.Verifier == nil {
-		return fmt.Errorf("missing valid certifier to verify data from distrusted node")
-	}
+	// if ctx.Verifier == nil {
+	// 	return fmt.Errorf("missing valid certifier to verify data from distrusted node")
+	// }
 
 	// the AppHash for height H is in header H+1
 	commit, err := ctx.Verify(resp.Height + 1)

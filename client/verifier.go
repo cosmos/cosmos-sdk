@@ -1,15 +1,5 @@
 package client
 
-import (
-	"path/filepath"
-
-	"github.com/pkg/errors"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/light"
-	tmliteproxy "github.com/tendermint/tendermint/light/proxy"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-)
-
 const (
 	verifierDir = ".lite_verifier"
 
@@ -22,35 +12,36 @@ const (
 // or if the verifier could not be created. A Context must at the very least
 // have the chain ID and home directory set. If the Context has TrustNode
 // enabled, no verifier will be created.
-func CreateVerifier(ctx Context, cacheSize int) (light.Verifier, error) {
-	if ctx.TrustNode {
-		return nil, nil
-	}
+// TODO: fix when introduce light client
+// func CreateVerifier(ctx Context, cacheSize int) (light.Verifier, error) {
+// 	if ctx.TrustNode {
+// 		return nil, nil
+// 	}
 
-	switch {
-	case ctx.ChainID == "":
-		return nil, errors.New("must provide a valid chain ID to create verifier")
+// 	switch {
+// 	case ctx.ChainID == "":
+// 		return nil, errors.New("must provide a valid chain ID to create verifier")
 
-	case ctx.HomeDir == "":
-		return nil, errors.New("must provide a valid home directory to create verifier")
+// 	case ctx.HomeDir == "":
+// 		return nil, errors.New("must provide a valid home directory to create verifier")
 
-	case ctx.Client == nil && ctx.NodeURI == "":
-		return nil, errors.New("must provide a valid RPC client or RPC URI to create verifier")
-	}
+// 	case ctx.Client == nil && ctx.NodeURI == "":
+// 		return nil, errors.New("must provide a valid RPC client or RPC URI to create verifier")
+// 	}
 
-	var err error
+// 	var err error
 
-	// create an RPC client based off of the RPC URI if no RPC client exists
-	client := ctx.Client
-	if client == nil {
-		client, err = rpchttp.New(ctx.NodeURI, "/websocket")
-		if err != nil {
-			return nil, err
-		}
-	}
+// 	// create an RPC client based off of the RPC URI if no RPC client exists
+// 	client := ctx.Client
+// 	if client == nil {
+// 		client, err = rpchttp.New(ctx.NodeURI, "/websocket")
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
 
-	return tmliteproxy.NewVerifier(
-		ctx.ChainID, filepath.Join(ctx.HomeDir, ctx.ChainID, verifierDir),
-		client, log.NewNopLogger(), cacheSize,
-	)
-}
+// 	return tmliteproxy.NewVerifier(
+// 		ctx.ChainID, filepath.Join(ctx.HomeDir, ctx.ChainID, verifierDir),
+// 		client, log.NewNopLogger(), cacheSize,
+// 	)
+// }

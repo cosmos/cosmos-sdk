@@ -106,6 +106,9 @@ type BaseApp struct { // nolint: maligned
 
 	// application's version string
 	appVersion string
+
+	// trace set will return full stack traces for errors in ABCI Log field
+	trace bool
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -127,6 +130,7 @@ func NewBaseApp(
 		queryRouter:    NewQueryRouter(),
 		txDecoder:      txDecoder,
 		fauxMerkleMode: false,
+		trace:          false,
 	}
 	for _, option := range options {
 		option(app)
@@ -352,6 +356,10 @@ func (app *BaseApp) setHaltTime(haltTime uint64) {
 
 func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 	app.interBlockCache = cache
+}
+
+func (app *BaseApp) setTrace(trace bool) {
+	app.trace = trace
 }
 
 // Router returns the router of the BaseApp.

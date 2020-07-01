@@ -24,6 +24,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// GenesisState is currently only used to ensure that the InitGenesis gets run
+// by the module manager
 type GenesisState struct {
 	PortID string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 }

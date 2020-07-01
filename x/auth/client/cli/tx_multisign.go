@@ -128,18 +128,15 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                        //nolint:staticcheck
 		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo()) //nolint:staticcheck
 
-		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
-		switch {
-		case sigOnly && clientCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-		case sigOnly && !clientCtx.Indent:
+
+		sigOnly := viper.GetBool(flagSigOnly)
+		if sigOnly {
 			json, err = cdc.MarshalJSON(newTx.Signatures[0])
-		case !sigOnly && clientCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
-		default:
+		} else {
 			json, err = cdc.MarshalJSON(newTx)
 		}
+
 		if err != nil {
 			return err
 		}

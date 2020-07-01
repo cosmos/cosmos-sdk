@@ -24,12 +24,19 @@ func GetCompatibleVersions() []string {
 
 // CreateVersionString constructs a valid connection version given a
 // version identifier and feature set. The format is written as:
+//
 // ([version_identifier],[feature_0,feature_1,feature_2...])
+//
+// A connection version is considered invalid if it is not in this format
+// or violates one of these rules:
+// - the version identifier is empty or contains commas
+// - a specified feature contains commas
 func CreateVersionString(identifier string, featureSet []string) string {
 	return fmt.Sprintf("(%s,%s)", identifier, featureSet)
 }
 
-// GetVersionNumber returns the version identifier of a given connection version.
+// UnpackVersion parses a version string and returns the identifier and the
+// feature set of a version. An error is returned if the version is not valid.
 func UnpackVersion(version string) (string, []string, error) {
 	// validate version so valid splitting assumptions can be made
 	if err := host.ConnectionVersionValidator(version); err != nil {
@@ -58,7 +65,7 @@ func UnpackVersion(version string) (string, []string, error) {
 	return identifier, features, nil
 }
 
-// FindSupportedVersion returns the version with a matching version number
+// FindSupportedVersion returns the version with a matching version identifier
 // if it exists. The returned boolean is true if the version is found and
 // false otherwise.
 func FindSupportedVersion(version string, supportedVersions []string) (string, bool) {
@@ -81,8 +88,11 @@ func FindSupportedVersion(version string, supportedVersions []string) (string, b
 }
 
 // PickVersion iterates over the descending ordered set of compatible IBC
-// versions and selects the first version that is supported by the counterparty.
-// This function is called in the ConnOpenTry handshake procedure.
+// versions and selects the first version with a version identifier that is
+// supported by the counterparty. The returned version contains a feature
+// set with the intersection of the features supported by the source and
+// counterparty chains. This function is called in the ConnOpenTry handshake
+// procedure.
 func PickVersion(counterpartyVersions []string) (string, error) {
 	versions := GetCompatibleVersions()
 
@@ -99,8 +109,6 @@ func PickVersion(counterpartyVersions []string) (string, error) {
 				return "", err
 			}
 
-			// find the feature set intersection between the source and
-			// counterparty versions
 			featureSet := GetFeatureSetIntersection(sourceFeatures, counterpartyFeatures)
 
 			version := CreateVersionString(sourceIdentifier, featureSet)

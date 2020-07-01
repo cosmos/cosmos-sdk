@@ -11,6 +11,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
+type contextKey string
+
+// ClientContextKey defines the context key used to retrieve a client.Context from
+// a command's Context.
+const ClientContextKey = contextKey("client.context")
+
+// SetCmdClientContextHandler is to be used as a command pre-hook execution to
+// read flags that populate a client.Context and sets that client.Context on the
+// command's Context.
+func SetCmdClientContextHandler(cmd *cobra.Command, _ []string) (err error) {
+	clientCtx := GetClientContextFromCmd(cmd)
+	clientCtx, err = ReadPersistentCommandFlags(clientCtx, cmd.Flags())
+	if err != nil {
+		return err
+	}
+
+	return SetCmdClientContext(cmd, clientCtx)
+}
+
 // ValidateCmd returns unknown command error or Help display if help flag set
 func ValidateCmd(cmd *cobra.Command, args []string) error {
 	var unknownCmd string
@@ -154,4 +173,29 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 
 	return clientCtx, nil
+}
+
+// GetClientContextFromCmd returns a client.Context from a command or an empty
+// client.Context if it has not been set.
+func GetClientContextFromCmd(cmd *cobra.Command) Context {
+	if v := cmd.Context().Value(ClientContextKey); v != nil {
+		clientCtxPtr := v.(*Context)
+		return *clientCtxPtr
+	}
+
+	return Context{}
+}
+
+// SetCmdClientContext set's a command's Context client.Context to the provided
+// argument.
+func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
+	v := cmd.Context().Value(ClientContextKey)
+	if v == nil {
+		return errors.New("client context not set")
+	}
+
+	clientCtxPtr := v.(*Context)
+	*clientCtxPtr = clientCtx
+
+	return nil
 }

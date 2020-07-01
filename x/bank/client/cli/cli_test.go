@@ -2,16 +2,19 @@ package cli_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
 type IntegrationTestSuite struct {
@@ -43,6 +46,9 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
@@ -96,7 +102,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -112,6 +118,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
@@ -163,7 +172,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -179,6 +188,9 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name         string
@@ -265,12 +277,15 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			buf.Reset()
 
-			cmd := cli.NewSendTxCmd(clientCtx)
+			cmd := cli.NewSendTxCmd()
 			cmd.SetErr(buf)
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
+
+			banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args)
+
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -71,9 +72,11 @@ func main() {
 	// Add flags and prefix all env exposed with GA
 	executor := cli.PrepareMainCmd(rootCmd, "GA", simapp.DefaultCLIHome)
 
-	err := executor.Execute()
-	if err != nil {
-		fmt.Printf("Failed executing CLI command: %s, exiting...\n", err)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
+
+	if err := executor.ExecuteContext(ctx); err != nil {
+		fmt.Printf("failed execution: %s, exiting...\n", err)
 		os.Exit(1)
 	}
 }
@@ -85,6 +88,7 @@ func queryCmd() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
+		PreRunE:                    client.SetCmdClientContextHandler,
 		RunE:                       client.ValidateCmd,
 	}
 
@@ -109,11 +113,12 @@ func txCmd() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
+		PreRunE:                    client.SetCmdClientContextHandler,
 		RunE:                       client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(
-		bankcmd.NewSendTxCmd(initClientCtx),
+		bankcmd.NewSendTxCmd(),
 		flags.LineBreak,
 		authcmd.GetSignCommand(initClientCtx),
 		authcmd.GetSignBatchCommand(encodingConfig.Amino),

@@ -30,7 +30,7 @@ a low risk of regressions, i.e. even one-line changes could cause unexpected reg
 poorly tested code. We never assume that any change, no matter how little or non-intrusive, is completely exempt
 of regression risks.
 
-Therefore, the requirements for stable changesets are different than those that are candidate to be merged in
+Therefore, the requirements for stable changes are different than those that are candidates to be merged in
 the `master` branch. When preparing future major releases, our aim to design the most elegant, user-friendly and
 maintainable SDK possible often entails fundamental changes to the SDK's architecture design, rearranging and/or
 renaming packages, reducing code duplication so that we maintain common functions and data structures in one

@@ -9,40 +9,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueryAccount(t *testing.T) {
+func TestGRPCQueryAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
-	cdc := app.Codec()
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
 	types.RegisterQueryServer(queryHelper, app.AccountKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	res, err := queryClient.Account(gocontext.Background(), []byte{})
+	res, err := queryClient.Account(gocontext.Background(), &types.QueryAccountRequest{Address: []byte{}})
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	req := cdc.MustMarshalJSON(types.NewQueryAccountParams([]byte("")))
-	res, err = queryClient.Account(gocontext.Background(), req)
+	res, err = queryClient.Account(gocontext.Background(), &types.QueryAccountRequest{Address: []byte("")})
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	_, _, addr := types.KeyTestPubAddr()
-	req = cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
-	res, err = queryClient.Account(gocontext.Background(), req)
+	res, err = queryClient.Account(gocontext.Background(), &types.QueryAccountRequest{Address: addr})
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addr))
-	res, err = queryClient.Account(gocontext.Background(), req)
+	res, err = queryClient.Account(gocontext.Background(), &types.QueryAccountRequest{Address: addr})
 	require.NoError(t, err)
 	require.NotNil(t, res)
-
-	var account types.AccountI
-	err2 := cdc.UnmarshalJSON(res, &account)
-	require.Nil(t, err2)
 }
 
-func TestQueryParameters(t *testing.T) {
+func TestGRPCQueryParameters(t *testing.T) {
 	app, ctx := createTestApp(true)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
 	types.RegisterQueryServer(queryHelper, app.AccountKeeper)

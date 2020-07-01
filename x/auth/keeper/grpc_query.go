@@ -2,12 +2,15 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 var _ types.QueryServer = AccountKeeper{}
@@ -24,7 +27,12 @@ func (k AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
 
-	return &types.QueryAccountResponse{Account: account}, nil
+	acc, err := ConvertAccount(account)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAccountResponse{Account: acc}, nil
 }
 
 // Parameters returns parameters of auth module
@@ -33,4 +41,19 @@ func (k AccountKeeper) Parameters(c context.Context, req *types.QueryParametersR
 	params := k.GetParams(ctx)
 
 	return &types.QueryParametersResponse{Params: params}, nil
+}
+
+// ConvertAccount converts AccountI to Any type
+func ConvertAccount(account types.AccountI) (*codectypes.Any, error) {
+	msg, ok := account.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("can't protomarshal %T", msg)
+	}
+
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return any, nil
 }

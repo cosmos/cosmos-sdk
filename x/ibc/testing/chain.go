@@ -255,19 +255,36 @@ func (chain *TestChain) NewClientID(counterpartyChainID string) string {
 	return clientID
 }
 
-// NewConnection appends a new TestConnection which contains references to the connection id,
-// client id and counterparty client id. The connection id format:
+// AddTestConnection appends a new TestConnection which contains references
+// to the connection id, client id and counterparty client id.
+func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	conn := chain.ConstructNextTestConnection(clientID, counterpartyClientID)
+
+	chain.Connections = append(chain.Connections, conn)
+	return conn
+}
+
+// ConstructNextTestConnection constructs the next test connection to be
+// created given a clientID and counterparty clientID. The connection id
+// format:
 // connectionid<index>
-func (chain *TestChain) NewTestConnection(clientID, counterpartyClientID string) *TestConnection {
+func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
 	connectionID := ConnectionIDPrefix + strconv.Itoa(len(chain.Connections))
-	conn := &TestConnection{
+	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
 		CounterpartyClientID: counterpartyClientID,
 	}
+}
 
-	chain.Connections = append(chain.Connections, conn)
-	return conn
+// FirstTestConnection returns the first test connection for a given clientID.
+// The connection may or may not exist in the chain state.
+func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	if len(chain.Connections) > 0 {
+		return chain.Connections[0]
+	}
+
+	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty

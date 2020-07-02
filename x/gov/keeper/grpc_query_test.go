@@ -14,7 +14,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func TestGRPCProposal(t *testing.T) {
+func TestGRPCQueryProposal(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -22,32 +22,24 @@ func TestGRPCProposal(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	_, err := queryClient.Proposal(gocontext.Background(), &types.QueryProposalRequest{})
+	res, err := queryClient.Proposal(gocontext.Background(), &types.QueryProposalRequest{})
 	require.Error(t, err)
+	require.Nil(t, res)
 
-	_ = &query.PageRequest{
-		Key:        nil,
-		Limit:      0,
-		CountTotal: false,
-	}
-
-	req := types.NewQueryProposalRequest(1, &query.PageRequest{})
-
-	_, err = queryClient.Proposal(gocontext.Background(), req)
+	res, err = queryClient.Proposal(gocontext.Background(), &types.QueryProposalRequest{ProposalId: 1})
 	require.Error(t, err)
+	require.Nil(t, res)
 
 	testProposal := types.NewTextProposal("Proposal", "testing proposal")
 	submittedProposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
 	require.NoError(t, err)
 
-	req = types.NewQueryProposalRequest(submittedProposal.ProposalID, &query.PageRequest{})
-
-	proposal, err := queryClient.Proposal(gocontext.Background(), req)
+	proposal, err := queryClient.Proposal(gocontext.Background(), &types.QueryProposalRequest{ProposalId: submittedProposal.ProposalID})
 	require.NoError(t, err)
 	require.Equal(t, proposal.Proposal.ProposalID, uint64(1))
 }
 
-func TestGRPCProposals(t *testing.T) {
+func TestGRPCQueryProposals(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -56,13 +48,7 @@ func TestGRPCProposals(t *testing.T) {
 	queryClient := types.NewQueryClient(queryHelper)
 
 	// check for the proposals with no proposal added should return null.
-	pageReq := &query.PageRequest{
-		Key:        nil,
-		Limit:      1,
-		CountTotal: false,
-	}
-
-	req := types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+	req := &types.QueryProposalsRequest{Req: &query.PageRequest{Limit: 1}}
 
 	proposals, err := queryClient.Proposals(gocontext.Background(), req)
 	require.NoError(t, err)
@@ -83,13 +69,12 @@ func TestGRPCProposals(t *testing.T) {
 	require.Len(t, proposals.Proposals, 1)
 	require.NotEmpty(t, proposals.Res.NextKey)
 
-	pageReq = &query.PageRequest{
-		Key:        proposals.Res.NextKey,
-		Limit:      1,
-		CountTotal: false,
+	pageReq := &query.PageRequest{
+		Key:   proposals.Res.NextKey,
+		Limit: 1,
 	}
 
-	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+	req = &types.QueryProposalsRequest{Req: pageReq}
 
 	// query for the next page which is 2nd proposal at present context.
 	// and expect NextKey should be empty
@@ -99,13 +84,7 @@ func TestGRPCProposals(t *testing.T) {
 	require.Len(t, proposals.Proposals, 1)
 	require.Empty(t, proposals.Res)
 
-	pageReq = &query.PageRequest{
-		Key:        nil,
-		Limit:      2,
-		CountTotal: false,
-	}
-
-	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+	req = &types.QueryProposalsRequest{Req: &query.PageRequest{Limit: 2}}
 
 	// Query the page with limit 2 and expect NextKey should ne nil
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
@@ -115,7 +94,7 @@ func TestGRPCProposals(t *testing.T) {
 	require.Empty(t, proposals.Res)
 }
 
-func TestGRPCVote(t *testing.T) {
+func TestGRPCQueryVote(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -130,10 +109,7 @@ func TestGRPCVote(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	req := &types.QueryVoteRequest{
-		ProposalId: proposalID,
-		Voter:      nil,
-	}
+	req := &types.QueryVoteRequest{ProposalId: proposalID}
 
 	_, err = queryClient.Vote(gocontext.Background(), req)
 	require.Error(t, err)
@@ -164,7 +140,7 @@ func TestGRPCVote(t *testing.T) {
 	require.Equal(t, vote.Vote.Option, types.OptionAbstain)
 }
 
-func TestGRPCVotes(t *testing.T) {
+func TestGRPCQueryVotes(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -175,11 +151,7 @@ func TestGRPCVotes(t *testing.T) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 
 	// query vote when no vote registered and expect null.
-	pageReq := &query.PageRequest{
-		Key:        nil,
-		Limit:      1,
-		CountTotal: false,
-	}
+	pageReq := &query.PageRequest{Limit: 1}
 
 	req := &types.QueryVotesRequest{
 		ProposalId: 0,
@@ -220,11 +192,7 @@ func TestGRPCVotes(t *testing.T) {
 	require.True(t, found)
 
 	// query vote with limit 1 and expect next should not be nil.
-	pageReq = &query.PageRequest{
-		Key:        nil,
-		Limit:      1,
-		CountTotal: false,
-	}
+	pageReq = &query.PageRequest{Limit: 1}
 
 	req = &types.QueryVotesRequest{
 		ProposalId: proposalID,
@@ -239,9 +207,8 @@ func TestGRPCVotes(t *testing.T) {
 
 	// query vote with limit 1, next key and expect NextKey to be nil.
 	pageReq = &query.PageRequest{
-		Key:        votes.Res.NextKey,
-		Limit:      1,
-		CountTotal: false,
+		Key:   votes.Res.NextKey,
+		Limit: 1,
 	}
 
 	req = &types.QueryVotesRequest{
@@ -256,11 +223,7 @@ func TestGRPCVotes(t *testing.T) {
 	require.Empty(t, votes.Res)
 
 	// query vote with limit 2 and expect NextKey to be nil.
-	pageReq = &query.PageRequest{
-		Key:        nil,
-		Limit:      2,
-		CountTotal: false,
-	}
+	pageReq = &query.PageRequest{Limit: 2}
 
 	req = &types.QueryVotesRequest{
 		ProposalId: proposalID,
@@ -273,7 +236,7 @@ func TestGRPCVotes(t *testing.T) {
 	require.Empty(t, votes.Res)
 }
 
-func TestGRPCParams(t *testing.T) {
+func TestGRPCQueryParams(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -310,7 +273,7 @@ func TestGRPCParams(t *testing.T) {
 	require.False(t, params.TallyParams.Veto.IsZero())
 }
 
-func TestGRPCDeposit(t *testing.T) {
+func TestGRPCQueryDeposit(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -325,10 +288,7 @@ func TestGRPCDeposit(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	req := &types.QueryDepositRequest{
-		ProposalId: proposalID,
-		Depositor:  nil,
-	}
+	req := &types.QueryDepositRequest{ProposalId: proposalID}
 
 	_, err = queryClient.Deposit(gocontext.Background(), req)
 	require.Error(t, err)
@@ -357,7 +317,7 @@ func TestGRPCDeposit(t *testing.T) {
 	require.Equal(t, d.Deposit.Amount, depositCoins)
 }
 
-func TestGRPCDeposits(t *testing.T) {
+func TestGRPCQueryDeposits(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -367,11 +327,7 @@ func TestGRPCDeposits(t *testing.T) {
 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 
-	pageReq := &query.PageRequest{
-		Key:        nil,
-		Limit:      1,
-		CountTotal: false,
-	}
+	pageReq := &query.PageRequest{Limit: 1}
 
 	req := &types.QueryDepositsRequest{
 		ProposalId: 0,
@@ -407,11 +363,7 @@ func TestGRPCDeposits(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	pageReq = &query.PageRequest{
-		Key:        nil,
-		Limit:      1,
-		CountTotal: false,
-	}
+	pageReq = &query.PageRequest{Limit: 1}
 
 	req = &types.QueryDepositsRequest{
 		ProposalId: proposalID,
@@ -444,11 +396,7 @@ func TestGRPCDeposits(t *testing.T) {
 	require.Empty(t, deposits.Res)
 
 	// query vote with limit 2 and expect NextKey to be nil.
-	pageReq = &query.PageRequest{
-		Key:        nil,
-		Limit:      2,
-		CountTotal: false,
-	}
+	pageReq = &query.PageRequest{Limit: 2}
 
 	req = &types.QueryDepositsRequest{
 		ProposalId: proposalID,
@@ -461,7 +409,7 @@ func TestGRPCDeposits(t *testing.T) {
 	require.Empty(t, deposits.Res)
 }
 
-func TestGRPCTally(t *testing.T) {
+func TestGRPCQueryTally(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -476,33 +424,15 @@ func TestGRPCTally(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	pageReq := &query.PageRequest{
-		Key:        nil,
-		Limit:      0,
-		CountTotal: false,
-	}
-
-	req := &types.QueryTallyRequest{
-		ProposalId: 0,
-		Req:        pageReq,
-	}
-
+	req := &types.QueryTallyRequest{ProposalId: 0}
 	_, err = queryClient.TallyResult(gocontext.Background(), req)
 	require.Error(t, err)
 
-	req = &types.QueryTallyRequest{
-		ProposalId: 2,
-		Req:        pageReq,
-	}
-
+	req = &types.QueryTallyRequest{ProposalId: 2}
 	_, err = queryClient.TallyResult(gocontext.Background(), req)
 	require.Error(t, err)
 
-	req = &types.QueryTallyRequest{
-		ProposalId: proposalID,
-		Req:        pageReq,
-	}
-
+	req = &types.QueryTallyRequest{ProposalId: proposalID}
 	tally, err := queryClient.TallyResult(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Equal(t, tally.Tally, types.EmptyTallyResult())
@@ -515,11 +445,7 @@ func TestGRPCTally(t *testing.T) {
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 
-	req = &types.QueryTallyRequest{
-		ProposalId: proposalID,
-		Req:        pageReq,
-	}
-
+	req = &types.QueryTallyRequest{ProposalId: proposalID}
 	tally, err = queryClient.TallyResult(gocontext.Background(), req)
 
 	require.NoError(t, err)
@@ -529,11 +455,7 @@ func TestGRPCTally(t *testing.T) {
 	proposal.Status = types.StatusPassed
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	req = &types.QueryTallyRequest{
-		ProposalId: proposalID,
-		Req:        pageReq,
-	}
-
+	req = &types.QueryTallyRequest{ProposalId: proposalID}
 	tally, err = queryClient.TallyResult(gocontext.Background(), req)
 
 	require.NoError(t, err)

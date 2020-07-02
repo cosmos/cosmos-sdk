@@ -37,8 +37,6 @@ service Query {
 message QueryProposalRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
-
-  cosmos.query.PageRequest req = 2;
 }
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method

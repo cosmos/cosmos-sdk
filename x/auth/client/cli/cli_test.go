@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
@@ -44,10 +45,10 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	val := s.network.Validators[0]
-	tx, err := bankcli.SendTx(
+	res, err := bankcli.MsgSendExec(
 		val.ClientCtx,
-		val.Address.String(),
-		val.Address.String(),
+		val.Address,
+		val.Address,
 		sdk.NewCoins(
 			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
@@ -58,7 +59,19 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
-	fmt.Printf("%s", tx)
+
+	var tx types.StdTx
+	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &tx)
+	s.Require().NoError(err)
+
+	// write  unsigned tx to file
+	unsignedTx, cleanup := tests.WriteToNewTempFile(s.T(), string(res))
+	defer cleanup()
+
+	exec, err := authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
+	s.Require().NoError(err)
+
+	fmt.Printf("%s", exec)
 }
 
 func TestCLIValidateSignatures(t *testing.T) {

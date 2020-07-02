@@ -1,12 +1,49 @@
 package testutil
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+
+	"github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 )
+
+func TxSignExec(clientCtx client.Context, from types.Address, filename string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	clientCtx = clientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := cli2.GetSignCommand(clientCtx)
+	cmd.SetErr(buf)
+	cmd.SetOut(buf)
+
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendFile),
+		fmt.Sprintf("--from=%s", from.String()),
+		filename,
+	}
+
+	cmd.SetArgs(args)
+
+	if err := cmd.Execute(); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
 
 // TxSign is simcli sign
 func TxSign(f *cli.Fixtures, signer, fileName string, flags ...string) (bool, string, string) {

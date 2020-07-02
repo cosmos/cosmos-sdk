@@ -50,7 +50,7 @@ import (
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	ibcclienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -267,7 +267,7 @@ func NewSimApp(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
-	ibcRouter := port.NewRouter()
+	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 

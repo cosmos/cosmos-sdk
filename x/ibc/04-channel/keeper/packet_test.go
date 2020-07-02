@@ -232,8 +232,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			suite.Require().NoError(err)
 			// attempts to receive packet 2 without receiving packet 1
 		}, true},
-		// TODO: uncomment with implementation of issue: https://github.com/cosmos/cosmos-sdk/issues/6519
-		/*	{"out of order packet failure with ORDERED channel", func() {
+		{"out of order packet failure with ORDERED channel", func() {
 			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
@@ -246,7 +245,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			err = suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 			// attempts to receive packet 2 without receiving packet 1
-		}, false}, */
+		}, false},
 		{"channel not found", func() {
 			// use wrong channel naming
 			_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)

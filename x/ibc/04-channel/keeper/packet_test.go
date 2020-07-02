@@ -312,7 +312,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			// write packet acknowledgement
 			suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
 		}, false},
-		{"next receive sequence does not found", func() {
+		{"next receive sequence is not found", func() {
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 			channelA := connA.NextTestChannel()
 			channelB := connB.NextTestChannel()

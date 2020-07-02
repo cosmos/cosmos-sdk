@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -33,8 +34,10 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 }
 
+// TODO: setup keybase, viper object, etc. to be passed into
+// the below functions and eliminate global vars, like we do
+// with the cdc
 func main() {
-	// Configure cobra to sort commands
 	cobra.EnableCommandSorting = false
 
 	// Read in the configuration file for the sdk
@@ -44,19 +47,13 @@ func main() {
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 	config.Seal()
 
-	// TODO: setup keybase, viper object, etc. to be passed into
-	// the below functions and eliminate global vars, like we do
-	// with the cdc
-
 	rootCmd := &cobra.Command{
 		Use:   "simcli",
 		Short: "Command line interface for interacting with simapp",
 	}
 
-	// Add --chain-id to persistent flags and mark it required
 	rootCmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
 
-	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCmd(),
@@ -71,9 +68,11 @@ func main() {
 	// Add flags and prefix all env exposed with GA
 	executor := cli.PrepareMainCmd(rootCmd, "GA", simapp.DefaultCLIHome)
 
-	err := executor.Execute()
-	if err != nil {
-		fmt.Printf("Failed executing CLI command: %s, exiting...\n", err)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
+
+	if err := executor.ExecuteContext(ctx); err != nil {
+		fmt.Printf("failed execution: %s, exiting...\n", err)
 		os.Exit(1)
 	}
 }
@@ -85,7 +84,10 @@ func queryCmd() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return client.SetCmdClientContextHandler(initClientCtx, cmd)
+		},
+		RunE: client.ValidateCmd,
 	}
 
 	queryCmd.AddCommand(
@@ -109,11 +111,14 @@ func txCmd() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return client.SetCmdClientContextHandler(initClientCtx, cmd)
+		},
+		RunE: client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(
-		bankcmd.NewSendTxCmd(initClientCtx),
+		bankcmd.NewSendTxCmd(),
 		flags.LineBreak,
 		authcmd.GetSignCommand(initClientCtx),
 		authcmd.GetSignBatchCommand(encodingConfig.Amino),

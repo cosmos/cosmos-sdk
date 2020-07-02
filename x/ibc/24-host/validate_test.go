@@ -115,9 +115,9 @@ func TestCustomPathValidator(t *testing.T) {
 func TestConnectionVersionValidator(t *testing.T) {
 	testCases := []testCase{
 		{"valid connection version", "(my-test-version 1.0,[feature0, feature1])", true},
-		{"valid random character version, no commas", "(a!@!#$%^&34,[)(*&^),....,feautre_2])", true},
+		{"valid random character version, no commas", "(a!@!#$%^&34,[)(*&^),....,feature_2])", true},
 		{"valid: empty features", "(identifier,[])", true},
-		{"invalid: emtpy features with spacing", "(identifier, [     ])", false},
+		{"invalid: empty features with spacing", "(identifier, [     ])", false},
 		{"missing identifier", "(   , [feature_0])", false},
 		{"no features bracket", "(identifier, feature_0, feature_1)", false},
 		{"no tuple parentheses", "identifier, [feature$%#]", false},

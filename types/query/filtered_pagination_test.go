@@ -55,7 +55,6 @@ func TestFilteredPaginations(t *testing.T) {
 		"and nextKey should be as expected")
 	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-	t.Log(balances)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 2, len(balances))

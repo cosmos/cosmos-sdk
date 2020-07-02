@@ -91,3 +91,24 @@ func TestPickVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestVerifyProposedFeatureSet(t *testing.T) {
+	testCases := []struct {
+		name             string
+		proposedVersion  string
+		supportedVersion string
+		expPass          bool
+	}{
+		{"entire feature set supported", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDERED", "UNORDERED", "DAG"}), true},
+		{"empty feature sets", types.CreateVersionString("1", []string{}), types.DefaultIBCVersion, true},
+		{"one feature missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"UNORDERED", "DAG"}), false},
+		{"both features missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"DAG"}), false},
+	}
+
+	for i, tc := range testCases {
+		supported := types.VerifyProposedFeatureSet(tc.proposedVersion, tc.supportedVersion)
+
+		require.Equal(t, tc.expPass, supported, "test case %d: %s", i, tc.name)
+	}
+
+}

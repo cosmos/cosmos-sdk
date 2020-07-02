@@ -31,21 +31,21 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // QueryParametersRequest is the request type for the Query/Parameters RPC method
-type QueryParametersRequest struct {
+type QueryParamsRequest struct {
 }
 
-func (m *QueryParametersRequest) Reset()         { *m = QueryParametersRequest{} }
-func (m *QueryParametersRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryParametersRequest) ProtoMessage()    {}
-func (*QueryParametersRequest) Descriptor() ([]byte, []int) {
+func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
+func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsRequest) ProtoMessage()    {}
+func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_12bf00fd6c136588, []int{0}
 }
-func (m *QueryParametersRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryParametersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryParametersRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -55,35 +55,35 @@ func (m *QueryParametersRequest) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *QueryParametersRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryParametersRequest.Merge(m, src)
+func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
 }
-func (m *QueryParametersRequest) XXX_Size() int {
+func (m *QueryParamsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryParametersRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryParametersRequest.DiscardUnknown(m)
+func (m *QueryParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryParametersRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryParametersResponse is the response type for the Query/Parameters RPC method
-type QueryParametersResponse struct {
-	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+type QueryParamsResponse struct {
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
-func (m *QueryParametersResponse) Reset()         { *m = QueryParametersResponse{} }
-func (m *QueryParametersResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryParametersResponse) ProtoMessage()    {}
-func (*QueryParametersResponse) Descriptor() ([]byte, []int) {
+func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
+func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsResponse) ProtoMessage()    {}
+func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_12bf00fd6c136588, []int{1}
 }
-func (m *QueryParametersResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryParametersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryParametersResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -93,23 +93,23 @@ func (m *QueryParametersResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *QueryParametersResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryParametersResponse.Merge(m, src)
+func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
 }
-func (m *QueryParametersResponse) XXX_Size() int {
+func (m *QueryParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryParametersResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryParametersResponse.DiscardUnknown(m)
+func (m *QueryParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryParametersResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
-func (m *QueryParametersResponse) GetParams() *Params {
+func (m *QueryParamsResponse) GetParams() Params {
 	if m != nil {
 		return m.Params
 	}
-	return nil
+	return Params{}
 }
 
 // QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC method
@@ -304,8 +304,8 @@ func (m *QuerySigningInfosResponse) GetRes() *query.PageResponse {
 }
 
 func init() {
-	proto.RegisterType((*QueryParametersRequest)(nil), "cosmos.slashing.QueryParametersRequest")
-	proto.RegisterType((*QueryParametersResponse)(nil), "cosmos.slashing.QueryParametersResponse")
+	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.slashing.QueryParamsRequest")
+	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.slashing.QueryParamsResponse")
 	proto.RegisterType((*QuerySigningInfoRequest)(nil), "cosmos.slashing.QuerySigningInfoRequest")
 	proto.RegisterType((*QuerySigningInfoResponse)(nil), "cosmos.slashing.QuerySigningInfoResponse")
 	proto.RegisterType((*QuerySigningInfosRequest)(nil), "cosmos.slashing.QuerySigningInfosRequest")
@@ -315,36 +315,36 @@ func init() {
 func init() { proto.RegisterFile("cosmos/slashing/query.proto", fileDescriptor_12bf00fd6c136588) }
 
 var fileDescriptor_12bf00fd6c136588 = []byte{
-	// 452 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xcd, 0x8e, 0xd3, 0x30,
-	0x10, 0x4e, 0x76, 0x61, 0x0f, 0x6e, 0x05, 0xc8, 0x42, 0x6c, 0x36, 0x88, 0x80, 0x22, 0x21, 0x96,
-	0x9f, 0x4d, 0xa4, 0x72, 0xe2, 0xc8, 0x72, 0x58, 0xc1, 0x85, 0x12, 0x04, 0x07, 0x2e, 0x95, 0x9b,
-	0xb8, 0xae, 0xd5, 0xd4, 0x4e, 0x33, 0x69, 0x45, 0xef, 0x3c, 0x00, 0xaf, 0xc3, 0x1b, 0x70, 0xec,
-	0x91, 0x13, 0x42, 0xed, 0x5b, 0x70, 0x42, 0xb1, 0x9d, 0x36, 0x6a, 0xca, 0xb6, 0x27, 0x8f, 0x3d,
-	0xdf, 0x7c, 0xdf, 0x37, 0xf6, 0x18, 0xdd, 0x8f, 0x25, 0x8c, 0x25, 0x84, 0x90, 0x12, 0x18, 0x72,
-	0xc1, 0xc2, 0xc9, 0x94, 0xe6, 0xf3, 0x20, 0xcb, 0x65, 0x21, 0xf1, 0x6d, 0x9d, 0x0c, 0xaa, 0xa4,
-	0xfb, 0xc0, 0xa0, 0x15, 0x28, 0xcc, 0x08, 0xe3, 0x82, 0x14, 0x5c, 0x0a, 0x8d, 0x77, 0xef, 0x32,
-	0xc9, 0xa4, 0x0a, 0xc3, 0x32, 0x32, 0xa7, 0xde, 0xb6, 0x44, 0x15, 0xe8, 0xbc, 0xef, 0xa0, 0x7b,
-	0x1f, 0x4a, 0xbe, 0x2e, 0xc9, 0xc9, 0x98, 0x16, 0x34, 0x87, 0x88, 0x4e, 0xa6, 0x14, 0x0a, 0xff,
-	0x1d, 0x3a, 0x6d, 0x64, 0x20, 0x93, 0x02, 0x28, 0x0e, 0xd1, 0x49, 0x56, 0x9e, 0x82, 0x63, 0x3f,
-	0xb2, 0xcf, 0x5b, 0x9d, 0xd3, 0x60, 0xcb, 0x6b, 0xa0, 0x8a, 0x20, 0x32, 0x30, 0x3f, 0x33, 0x5c,
-	0x1f, 0x39, 0x13, 0x5c, 0xb0, 0xb7, 0x62, 0x20, 0x8d, 0x0c, 0xfe, 0x84, 0xda, 0xb1, 0x14, 0xd0,
-	0x23, 0x49, 0x92, 0x53, 0xd0, 0x8c, 0xed, 0xcb, 0xce, 0xdf, 0xdf, 0x0f, 0x03, 0xc6, 0x8b, 0xe1,
-	0xb4, 0x1f, 0xc4, 0x72, 0x1c, 0x9a, 0x2e, 0xf4, 0x72, 0x01, 0xc9, 0x28, 0x2c, 0xe6, 0x19, 0x85,
-	0xe0, 0x8d, 0x14, 0xf0, 0x5a, 0x57, 0x46, 0xad, 0x78, 0xb3, 0xf1, 0x47, 0xc8, 0x69, 0x2a, 0x1a,
-	0xfb, 0xef, 0xd1, 0x9d, 0x19, 0x49, 0x7b, 0xa0, 0x53, 0x3d, 0x2e, 0x06, 0xd2, 0x34, 0xf2, 0xb8,
-	0xd1, 0xc8, 0x67, 0x92, 0xf2, 0x84, 0x14, 0x32, 0xaf, 0x13, 0xdd, 0x9a, 0x91, 0xb4, 0xb6, 0xf7,
-	0xaf, 0x9a, 0x62, 0xd5, 0x35, 0xe2, 0xe7, 0xe8, 0x38, 0xa7, 0x13, 0xc3, 0x7f, 0x56, 0xf1, 0xeb,
-	0x87, 0xee, 0x12, 0x46, 0x0d, 0x2e, 0x2a, 0x51, 0xfe, 0x37, 0x1b, 0x9d, 0xed, 0x60, 0x32, 0xbe,
-	0x5f, 0xa1, 0x1b, 0xc6, 0xeb, 0xf1, 0xe1, 0x5e, 0x55, 0x09, 0x7e, 0x51, 0xba, 0x00, 0xe7, 0x48,
-	0xb9, 0x70, 0x77, 0xb9, 0xd0, 0x1a, 0xa5, 0x0d, 0xe8, 0xfc, 0x38, 0x42, 0x37, 0x95, 0x0d, 0x4c,
-	0x10, 0xda, 0xbc, 0x3f, 0x7e, 0xd2, 0x90, 0xdc, 0x3d, 0x3b, 0xee, 0xf9, 0x7e, 0xa0, 0xd6, 0xf3,
-	0x2d, 0x9c, 0xa0, 0x56, 0xcd, 0x2f, 0xfe, 0x4f, 0x69, 0x73, 0x72, 0xdc, 0xa7, 0x07, 0x20, 0xd7,
-	0x2a, 0x0c, 0xb5, 0xeb, 0x77, 0x8a, 0xf7, 0x17, 0xaf, 0x9b, 0x79, 0x76, 0x08, 0xb4, 0x12, 0xba,
-	0xbc, 0xfa, 0xb9, 0xf4, 0xec, 0xc5, 0xd2, 0xb3, 0xff, 0x2c, 0x3d, 0xfb, 0xfb, 0xca, 0xb3, 0x16,
-	0x2b, 0xcf, 0xfa, 0xb5, 0xf2, 0xac, 0x2f, 0x17, 0xd7, 0xce, 0xf3, 0xd7, 0xcd, 0x17, 0x55, 0xa3,
-	0xdd, 0x3f, 0x51, 0x1f, 0xf4, 0xe5, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x13, 0x98, 0x88, 0xb6,
-	0x25, 0x04, 0x00, 0x00,
+	// 460 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0xb6, 0xdb, 0x92, 0xc3, 0x26, 0x02, 0xb4, 0x54, 0x6a, 0x6a, 0x84, 0x8b, 0x0c, 0x48, 0xe5,
+	0xa7, 0xb6, 0x14, 0xc4, 0x81, 0x23, 0xe1, 0x50, 0x21, 0x21, 0x51, 0x8c, 0xca, 0x81, 0x4b, 0xb4,
+	0xb5, 0xb7, 0xdb, 0x55, 0x9d, 0x5d, 0xc7, 0xe3, 0x54, 0xe4, 0xce, 0x03, 0xf0, 0x22, 0xbc, 0x47,
+	0x8e, 0x39, 0x72, 0x8a, 0x50, 0xf2, 0x16, 0x9c, 0x90, 0x77, 0xd7, 0x89, 0x89, 0xa3, 0x34, 0x27,
+	0x8f, 0x67, 0xbe, 0xf9, 0xbe, 0x6f, 0x76, 0x67, 0xd1, 0xc3, 0x48, 0x42, 0x5f, 0x42, 0x00, 0x09,
+	0x81, 0x2b, 0x2e, 0x58, 0x30, 0x18, 0xd2, 0x6c, 0xe4, 0xa7, 0x99, 0xcc, 0x25, 0xbe, 0xa7, 0x8b,
+	0x7e, 0x59, 0x74, 0x1e, 0x19, 0xb4, 0x02, 0x05, 0x29, 0x61, 0x5c, 0x90, 0x9c, 0x4b, 0xa1, 0xf1,
+	0xce, 0x3e, 0x93, 0x4c, 0xaa, 0x30, 0x28, 0x22, 0x93, 0x75, 0x57, 0x25, 0xca, 0x40, 0xd7, 0xbd,
+	0x7d, 0x84, 0x3f, 0x17, 0x7c, 0x67, 0x24, 0x23, 0x7d, 0x08, 0xe9, 0x60, 0x48, 0x21, 0xf7, 0x3e,
+	0xa2, 0x07, 0xff, 0x65, 0x21, 0x95, 0x02, 0x28, 0x7e, 0x83, 0x1a, 0xa9, 0xca, 0xb4, 0xed, 0xc7,
+	0xf6, 0x71, 0xb3, 0x73, 0xe0, 0xaf, 0x78, 0xf4, 0x75, 0x43, 0x77, 0x6f, 0x3c, 0x3d, 0xb2, 0x42,
+	0x03, 0xf6, 0x52, 0x74, 0xa0, 0xd8, 0xbe, 0x70, 0x26, 0xb8, 0x60, 0x1f, 0xc4, 0xa5, 0x34, 0x42,
+	0xf8, 0x1c, 0xb5, 0x22, 0x29, 0xa0, 0x47, 0xe2, 0x38, 0xa3, 0xa0, 0x79, 0x5b, 0xdd, 0xce, 0xdf,
+	0xe9, 0x91, 0xcf, 0x78, 0x7e, 0x35, 0xbc, 0xf0, 0x23, 0xd9, 0x0f, 0xcc, 0x0c, 0xfa, 0x73, 0x02,
+	0xf1, 0x75, 0x90, 0x8f, 0x52, 0x0a, 0xfe, 0x7b, 0x29, 0xe0, 0x9d, 0xee, 0x0c, 0x9b, 0xd1, 0xf2,
+	0xc7, 0xbb, 0x46, 0xed, 0xba, 0xa2, 0x19, 0xe2, 0x13, 0xba, 0x7f, 0x43, 0x92, 0x1e, 0xe8, 0x52,
+	0x8f, 0x8b, 0x4b, 0x69, 0xc6, 0x79, 0x56, 0x1b, 0xe7, 0x2b, 0x49, 0x78, 0x4c, 0x72, 0x99, 0x55,
+	0x89, 0xee, 0xde, 0x90, 0xa4, 0xf2, 0xef, 0x9d, 0xd6, 0xc5, 0xca, 0x83, 0xc4, 0x2f, 0xd1, 0x6e,
+	0x46, 0x07, 0x86, 0xff, 0xb0, 0xe4, 0xd7, 0xd7, 0x7c, 0x46, 0x18, 0x35, 0xb8, 0xb0, 0x40, 0x79,
+	0x3f, 0x6c, 0x74, 0xb8, 0x86, 0xc9, 0xf8, 0x7e, 0x8b, 0xf6, 0x8c, 0xd7, 0xdd, 0xed, 0xbd, 0xaa,
+	0x16, 0xfc, 0xaa, 0x70, 0x01, 0xed, 0x1d, 0xe5, 0xc2, 0x59, 0xe7, 0x42, 0x6b, 0x14, 0x36, 0xa0,
+	0xf3, 0x6b, 0x07, 0xdd, 0x51, 0x36, 0xf0, 0x39, 0x6a, 0xe8, 0x0b, 0xc5, 0x4f, 0x6a, 0x72, 0xf5,
+	0xad, 0x71, 0x9e, 0x6e, 0x06, 0x69, 0x0d, 0xcf, 0xc2, 0x31, 0x6a, 0x56, 0x3c, 0xe2, 0xe3, 0xf5,
+	0x6d, 0xf5, 0x6d, 0x71, 0x9e, 0x6f, 0x81, 0x5c, 0xa8, 0x30, 0xd4, 0xaa, 0x9e, 0x23, 0xbe, 0xbd,
+	0x79, 0x31, 0xc8, 0x8b, 0x6d, 0xa0, 0xa5, 0x50, 0xf7, 0x74, 0x3c, 0x73, 0xed, 0xc9, 0xcc, 0xb5,
+	0xff, 0xcc, 0x5c, 0xfb, 0xe7, 0xdc, 0xb5, 0x26, 0x73, 0xd7, 0xfa, 0x3d, 0x77, 0xad, 0x6f, 0x27,
+	0x1b, 0x77, 0xf8, 0xfb, 0xf2, 0x51, 0xaa, 0x75, 0xbe, 0x68, 0xa8, 0x27, 0xf9, 0xfa, 0x5f, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x32, 0x0d, 0x33, 0x0f, 0x17, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -360,7 +360,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	// Parameters queries the parameters of slashing module
-	Parameters(ctx context.Context, in *QueryParametersRequest, opts ...grpc.CallOption) (*QueryParametersResponse, error)
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// SigningInfo queries the signing info of given cons address
 	SigningInfo(ctx context.Context, in *QuerySigningInfoRequest, opts ...grpc.CallOption) (*QuerySigningInfoResponse, error)
 	// SigningInfos queries signing info of all validators
@@ -375,9 +375,9 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) Parameters(ctx context.Context, in *QueryParametersRequest, opts ...grpc.CallOption) (*QueryParametersResponse, error) {
-	out := new(QueryParametersResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.slashing.Query/Parameters", in, out, opts...)
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.slashing.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +405,7 @@ func (c *queryClient) SigningInfos(ctx context.Context, in *QuerySigningInfosReq
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of slashing module
-	Parameters(context.Context, *QueryParametersRequest) (*QueryParametersResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// SigningInfo queries the signing info of given cons address
 	SigningInfo(context.Context, *QuerySigningInfoRequest) (*QuerySigningInfoResponse, error)
 	// SigningInfos queries signing info of all validators
@@ -416,8 +416,8 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) Parameters(ctx context.Context, req *QueryParametersRequest) (*QueryParametersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Parameters not implemented")
+func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
 func (*UnimplementedQueryServer) SigningInfo(ctx context.Context, req *QuerySigningInfoRequest) (*QuerySigningInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SigningInfo not implemented")
@@ -430,20 +430,20 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_Parameters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryParametersRequest)
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Parameters(ctx, in)
+		return srv.(QueryServer).Params(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.slashing.Query/Parameters",
+		FullMethod: "/cosmos.slashing.Query/Params",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Parameters(ctx, req.(*QueryParametersRequest))
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -489,8 +489,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Parameters",
-			Handler:    _Query_Parameters_Handler,
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
 		},
 		{
 			MethodName: "SigningInfo",
@@ -505,7 +505,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cosmos/slashing/query.proto",
 }
 
-func (m *QueryParametersRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryParamsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -515,12 +515,12 @@ func (m *QueryParametersRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryParametersRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryParamsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryParametersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -528,7 +528,7 @@ func (m *QueryParametersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryParametersResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -538,28 +538,26 @@ func (m *QueryParametersResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryParametersResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryParamsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryParametersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Params != nil {
-		{
-			size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0xa
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -723,7 +721,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryParametersRequest) Size() (n int) {
+func (m *QueryParamsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -732,16 +730,14 @@ func (m *QueryParametersRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryParametersResponse) Size() (n int) {
+func (m *QueryParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Params != nil {
-		l = m.Params.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
@@ -809,7 +805,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryParametersRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -832,10 +828,10 @@ func (m *QueryParametersRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryParametersRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryParametersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -862,7 +858,7 @@ func (m *QueryParametersRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryParametersResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -885,10 +881,10 @@ func (m *QueryParametersResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryParametersResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryParametersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -919,9 +915,6 @@ func (m *QueryParametersResponse) Unmarshal(dAtA []byte) error {
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.Params == nil {
-				m.Params = &Params{}
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

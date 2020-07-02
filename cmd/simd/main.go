@@ -25,12 +25,11 @@ func main() {
 	}
 
 	// Construct Root Command
-	addClientCommands(rootComd)
+	ctx := addClientCommands(rootComd)
 	addDaemonCommands(rootComd)
 
 	executor := cli.PrepareMainCmd(rootComd, "GA", simapp.DefaultNodeHome)
-	err := executor.Execute()
-	if err != nil {
+	if err := executor.ExecuteContext(ctx); err != nil {
 		panic(err)
 	}
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -30,12 +31,10 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 }
 
-func addClientCommands(rootClientCmd *cobra.Command) {
-
-	// TODO: setup keybase, viper object, etc. to be passed into
-	// the below functions and eliminate global vars, like we do
-	// with the cdc
-
+// TODO: setup keybase, viper object, etc. to be passed into
+// the below functions and eliminate global vars, like we do
+// with the cdc
+func addClientCommands(rootClientCmd *cobra.Command) context.Context {
 	// Add --chain-id to persistent flags and mark it required
 	rootClientCmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
 
@@ -47,6 +46,11 @@ func addClientCommands(rootClientCmd *cobra.Command) {
 		keys.Commands(),
 		flags.NewCompletionCmd(rootClientCmd, true),
 	)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
+
+	return ctx
 }
 
 func queryCmd() *cobra.Command {
@@ -56,7 +60,10 @@ func queryCmd() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return client.SetCmdClientContextHandler(initClientCtx, cmd)
+		},
+		RunE: client.ValidateCmd,
 	}
 
 	queryCmd.AddCommand(
@@ -78,11 +85,14 @@ func txCmd() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			return client.SetCmdClientContextHandler(initClientCtx, cmd)
+		},
+		RunE: client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(
-		bankcmd.NewSendTxCmd(initClientCtx),
+		bankcmd.NewSendTxCmd(),
 		flags.LineBreak,
 		authcmd.GetSignCommand(initClientCtx),
 		authcmd.GetSignBatchCommand(encodingConfig.Amino),

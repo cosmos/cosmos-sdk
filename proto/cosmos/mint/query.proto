@@ -7,20 +7,24 @@ import "cosmos/mint/mint.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 
 service Query {
-  rpc Params (QueryEmptyRequest) returns (QueryParamsResponse) {}
-  rpc Inflation (QueryEmptyRequest) returns (QueryInflationResponse) {}
-  rpc AnnualProvisions (QueryEmptyRequest) returns (QueryAnnualProvisionsResponse) {}
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {}
+  rpc Inflation (QueryInflationRequest) returns (QueryInflationResponse) {}
+  rpc AnnualProvisions (QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {}
 }
 
-message QueryEmptyRequest { }
+message QueryParamsRequest { }
 
 message QueryParamsResponse {
   cosmos.mint.Params params = 1 [(gogoproto.casttype) = "Params", (gogoproto.nullable) = false];
 }
 
+message QueryInflationRequest { }
+
 message QueryInflationResponse {
   bytes inflation = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
+
+message QueryAnnualProvisionsRequest { }
 
 message QueryAnnualProvisionsResponse {
   bytes annual_provisions = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];

@@ -95,6 +95,10 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.ValidatorAddr == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
 	ubdStore := prefix.NewStore(store, types.GetUBDsByValIndexKey(req.ValidatorAddr))

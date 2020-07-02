@@ -39,7 +39,9 @@ feature set
 - each feature must not contain any commas
 - each feature must be separated by commas
 
-::: warning A set of versions should not contain two versions with the same 
+::: warning
+A set of versions should not contain two versions with the same 
 identifier, but differing feature sets. This will result in undefined behavior
 with regards to version selection in `ConnOpenTry`. Each version in a set of 
-versions should have a unique version identifier. :::
+versions should have a unique version identifier.
+:::

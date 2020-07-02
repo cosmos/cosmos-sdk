@@ -11,7 +11,7 @@ import (
 var (
 	// DefaultIBCVersion represents the latest supported version of IBC.
 	// The current version supports only ORDERED and UNORDERED channels.
-	DefaultIBCVersion = CreateVersionString("1", []string{"ORDERED channel", "UNORDERED channel"})
+	DefaultIBCVersion = CreateVersionString("1", []string{"ORDERED", "UNORDERED"})
 )
 
 // GetCompatibleVersions returns a descending ordered set of compatible IBC

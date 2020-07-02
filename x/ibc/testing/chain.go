@@ -256,7 +256,7 @@ func (chain *TestChain) NewClientID(counterpartyChainID string) string {
 }
 
 // AddTestConnection appends a new TestConnection which contains references
-// to the connection id, client id and counterparty client id.i
+// to the connection id, client id and counterparty client id.
 func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string) *TestConnection {
 	conn := chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 

@@ -87,8 +87,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			// consensus height is retreived using latest client height, so incrementing by one is enough
-			consensusHeightDiff = 1
+			// use the last height for chainB since it isn't set until block height H + 1
+			consensusHeightDiff = uint64(suite.chainB.GetContext().BlockHeight()) - 1
 		}, false},
 		{"connection state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -240,8 +240,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			version = "2.0"
 		}, false},
 		{"self consensus state not found", func() {
-			// consensus height is retreived using latest client height, so incrementing by one is enough
-			consensusHeightDiff = 1
+			// use the last height for chainA since it isn't set until block height H + 1
+			consensusHeightDiff = uint64(suite.chainB.GetContext().BlockHeight()) - 1
 
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)

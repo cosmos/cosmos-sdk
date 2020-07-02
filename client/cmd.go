@@ -17,11 +17,9 @@ type contextKey string
 // a command's Context.
 const ClientContextKey = contextKey("client.context")
 
-// SetCmdClientContextHandler is to be used as a command pre-hook execution to
-// read flags that populate a client.Context and sets that client.Context on the
-// command's Context.
-func SetCmdClientContextHandler(cmd *cobra.Command, _ []string) (err error) {
-	clientCtx := GetClientContextFromCmd(cmd)
+// SetCmdClientContextHandler is to be used in a command pre-hook execution to
+// read flags that populate a Context and sets that to the command's Context.
+func SetCmdClientContextHandler(clientCtx Context, cmd *cobra.Command) (err error) {
 	clientCtx, err = ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 	if err != nil {
 		return err
@@ -175,8 +173,8 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	return clientCtx, nil
 }
 
-// GetClientContextFromCmd returns a client.Context from a command or an empty
-// client.Context if it has not been set.
+// GetClientContextFromCmd returns a Context from a command or an empty Context
+// if it has not been set.
 func GetClientContextFromCmd(cmd *cobra.Command) Context {
 	if v := cmd.Context().Value(ClientContextKey); v != nil {
 		clientCtxPtr := v.(*Context)
@@ -186,8 +184,7 @@ func GetClientContextFromCmd(cmd *cobra.Command) Context {
 	return Context{}
 }
 
-// SetCmdClientContext set's a command's Context client.Context to the provided
-// argument.
+// SetCmdClientContext sets a command's Context value to the provided argument.
 func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
 	v := cmd.Context().Value(ClientContextKey)
 	if v == nil {

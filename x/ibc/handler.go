@@ -9,7 +9,7 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
 
@@ -54,7 +54,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 			err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version)
 			if err != nil {
@@ -76,7 +76,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 			err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion)
 			if err != nil {
@@ -94,7 +94,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanOpenAck(ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion)
@@ -112,7 +112,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanOpenConfirm(ctx, msg.PortID, msg.ChannelID)
@@ -130,7 +130,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanCloseInit(ctx, msg.PortID, msg.ChannelID)
@@ -148,7 +148,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanCloseConfirm(ctx, msg.PortID, msg.ChannelID)
@@ -168,7 +168,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			// Perform application logic callback
@@ -194,7 +194,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			// Perform application logic callback
@@ -220,7 +220,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			// Perform application logic callback

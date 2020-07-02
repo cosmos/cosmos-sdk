@@ -114,7 +114,6 @@ func TestGRPCQueryProposals(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 2)
 	require.Empty(t, proposals.Res)
-	require.NotNil(t, nil)
 }
 
 func TestGRPCQueryVote(t *testing.T) {

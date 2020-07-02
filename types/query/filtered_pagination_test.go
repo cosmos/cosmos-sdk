@@ -30,8 +30,6 @@ func TestFilteredPaginations(t *testing.T) {
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
 
-	t.Log("length", len(balances))
-
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)

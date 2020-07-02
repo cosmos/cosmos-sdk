@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.38.5] - TBD
+## [v0.38.5] - 2020-07-02
 
 ### Improvements
 

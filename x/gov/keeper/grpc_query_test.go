@@ -51,10 +51,16 @@ func TestGRPCQueryProposals(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	// check for the proposals with no proposal added should return null.
-	req := &types.QueryProposalsRequest{Req: &query.PageRequest{Limit: 1}}
-
+	// req := &types.QueryProposalsRequest{Req: &query.PageRequest{}}
+	req := &types.QueryProposalsRequest{}
 	proposals, err := queryClient.Proposals(gocontext.Background(), req)
+	require.Error(t, err)
+	require.Empty(t, proposals)
+
+	// check for the proposals with no proposal added should return null.
+	req = &types.QueryProposalsRequest{Req: &query.PageRequest{Limit: 1}}
+
+	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Empty(t, proposals.Proposals)
 

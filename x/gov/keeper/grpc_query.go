@@ -17,15 +17,11 @@ var _ types.QueryServer = Keeper{}
 
 // Proposal returns proposal details based on ProposalID
 func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*types.QueryProposalResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	if req == nil || req.ProposalId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	if req.ProposalId == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
-	}
 
 	proposal, found := q.GetProposal(ctx, req.ProposalId)
 	if !found {
@@ -37,8 +33,8 @@ func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*t
 
 // Proposals implements the Query/Proposals gRPC method
 func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (*types.QueryProposalsResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	if req == nil || req.String() == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	var proposals types.Proposals
@@ -67,15 +63,11 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 
 // Vote returns Voted information based on proposalID, voterAddr
 func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.QueryVoteResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	if req == nil || req.ProposalId == 0 || req.Voter == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	if req.ProposalId == 0 || req.Voter == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
-	}
 
 	vote, found := q.GetVote(ctx, req.ProposalId, req.Voter)
 	if !found {
@@ -88,11 +80,7 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 
 // Votes returns single proposal's votes
 func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if req.ProposalId == 0 {
+	if req == nil || req.ProposalId == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
@@ -121,11 +109,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 
 // Params queries all params
 func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if req.ParamsType == "" {
+	if req == nil || req.ParamsType == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
@@ -154,11 +138,7 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 
 // Deposit queries single deposit information based proposalID, depositAddr
 func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if req.ProposalId == 0 || req.Depositor == nil {
+	if req == nil || req.ProposalId == 0 || req.Depositor == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
@@ -175,11 +155,7 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 
 // Deposits returns single proposal's all deposits
 func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if req.ProposalId == 0 {
+	if req == nil || req.ProposalId == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
@@ -208,11 +184,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 
 // TallyResult queries the tally of a proposal vote
 func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyRequest) (*types.QueryTallyResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if req.ProposalId == 0 {
+	if req == nil || req.ProposalId == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 

@@ -8,7 +8,8 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionkeeper "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
+	portkeeper "github.com/cosmos/cosmos-sdk/x/ibc/05-port/keeper"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 )
 
 // Keeper defines each ICS keeper for IBC
@@ -19,8 +20,8 @@ type Keeper struct {
 	ClientKeeper     clientkeeper.Keeper
 	ConnectionKeeper connectionkeeper.Keeper
 	ChannelKeeper    channelkeeper.Keeper
-	PortKeeper       port.Keeper
-	Router           *port.Router
+	PortKeeper       portkeeper.Keeper
+	Router           *porttypes.Router
 }
 
 // NewKeeper creates a new ibc Keeper
@@ -29,7 +30,7 @@ func NewKeeper(
 ) *Keeper {
 	clientKeeper := clientkeeper.NewKeeper(aminoCdc, key, stakingKeeper)
 	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
-	portKeeper := port.NewKeeper(scopedKeeper)
+	portKeeper := portkeeper.NewKeeper(scopedKeeper)
 	channelKeeper := channelkeeper.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return &Keeper{
@@ -49,7 +50,7 @@ func (k Keeper) Codecs() (codec.Marshaler, *codec.Codec) {
 
 // SetRouter sets the Router in IBC Keeper and seals it. The method panics if
 // there is an existing router that's already sealed.
-func (k *Keeper) SetRouter(rtr *port.Router) {
+func (k *Keeper) SetRouter(rtr *porttypes.Router) {
 	if k.Router != nil && k.Router.Sealed() {
 		panic("cannot reset a sealed router")
 	}

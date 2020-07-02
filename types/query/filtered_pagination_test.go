@@ -16,7 +16,7 @@ import (
 
 var addr1 = sdk.AccAddress([]byte("addr1"))
 
-func TestFilteredPaginate(t *testing.T) {
+func TestFilteredPaginations(t *testing.T) {
 	app, ctx, appCodec := setupTest()
 
 	var balances sdk.Coins

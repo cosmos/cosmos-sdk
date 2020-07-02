@@ -298,62 +298,62 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 	require.Equal(t, &hi, hist.Hist)
 }
 
-// func TestGRPCQueryRedelegation(t *testing.T) {
-// 	_, app, ctx := createTestInput()
-// 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
-// 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
-// 	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
-// 	querier := keeper.Querier{app.StakingKeeper}
-//
-// 	// Create Validators and Delegation
-// 	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
-// 	val2 := types.NewValidator(addrVal2, PKs[1], types.Description{})
-// 	app.StakingKeeper.SetValidator(ctx, val1)
-// 	app.StakingKeeper.SetValidator(ctx, val2)
-//
-// 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-// 	types.RegisterQueryServer(queryHelper, querier)
-// 	queryClient := types.NewQueryClient(queryHelper)
-//
-// 	delAmount := sdk.TokensFromConsensusPower(100)
-// 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, sdk.Unbonded, val1, true)
-// 	require.NoError(t, err)
-// 	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-// 	rdAmount := sdk.TokensFromConsensusPower(20)
-// 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
-// 	require.NoError(t, err)
-// 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-// 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
-// 	require.True(t, found)
-// 	t.Log(redel)
-//
-// 	// delegator redelegations
-// 	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
-// 		DelegatorAddr: addrAcc2, SrcValidatorAddr: val1.OperatorAddress, Req: &query.PageRequest{}})
-// 	require.NoError(t, err)
-//
-// 	require.Len(t, redelResp.RedelegationResponses, 1)
-// 	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
-// 	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
-// 	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
-// 	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
-//
-// 	redels := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, val1.OperatorAddress)
-// 	require.True(t, found)
-// 	t.Log(redels)
-//
-// 	redelResp, err = queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
-// 		SrcValidatorAddr: val1.GetOperator(), Req: &query.PageRequest{}})
-// 	require.NoError(t, err)
-// 	t.Log(val1.OperatorAddress)
-// 	require.Len(t, redelResp.RedelegationResponses, 1)
-// 	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
-// 	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
-// 	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
-// 	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
-// }
+func TestGRPCQueryRedelegation(t *testing.T) {
+	_, app, ctx := createTestInput()
+	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
+	addrAcc1, addrAcc2 := addrs[0], addrs[1]
+	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
+	querier := keeper.Querier{app.StakingKeeper}
+
+	// Create Validators and Delegation
+	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
+	val2 := types.NewValidator(addrVal2, PKs[1], types.Description{})
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidator(ctx, val2)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	types.RegisterQueryServer(queryHelper, querier)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	delAmount := sdk.TokensFromConsensusPower(100)
+	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, sdk.Unbonded, val1, true)
+	require.NoError(t, err)
+	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	rdAmount := sdk.TokensFromConsensusPower(20)
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
+	require.NoError(t, err)
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+	require.True(t, found)
+	t.Log(redel)
+
+	// delegator redelegations
+	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
+		DelegatorAddr: addrAcc2, SrcValidatorAddr: val1.OperatorAddress, Req: &query.PageRequest{}})
+	require.NoError(t, err)
+
+	require.Len(t, redelResp.RedelegationResponses, 1)
+	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
+
+	redels := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, val1.OperatorAddress)
+	require.True(t, found)
+	t.Log(redels)
+
+	redelResp, err = queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
+		SrcValidatorAddr: val1.GetOperator(), Req: &query.PageRequest{}})
+	require.NoError(t, err)
+	t.Log(val1.OperatorAddress)
+	require.Len(t, redelResp.RedelegationResponses, 1)
+	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
+}
 
 func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	_, app, ctx := createTestInput()

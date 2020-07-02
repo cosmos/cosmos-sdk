@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -314,58 +313,70 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	}
 }
 
-// TestConnOpenConfirm - Chain B (ID #2) calls ConnOpenConfirm to confirm that
-// Chain A (ID #1) state is now OPEN.
+// TestConnOpenConfirm - chainB calls ConnOpenConfirm to confirm that
+// chainA state is now OPEN.
 func (suite *KeeperTestSuite) TestConnOpenConfirm() {
+	var (
+		clientA string
+		clientB string
+	)
 	testCases := []struct {
 		msg      string
 		malleate func()
 		expPass  bool
 	}{
 		{"success", func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-			suite.oldchainA.CreateClient(suite.oldchainB)
-			suite.oldchainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
-			suite.oldchainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, types.TRYOPEN)
-			suite.oldchainB.updateClient(suite.oldchainA)
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.ConnOpenAck(suite.chainA, suite.chainB, connA, connB)
+			suite.Require().NoError(err)
 		}, true},
-		{"connection not found", func() {}, false},
+		{"connection not found", func() {
+			// connections are never created
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+		}, false},
 		{"chain B's connection state is not TRYOPEN", func() {
-			suite.oldchainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, types.UNINITIALIZED)
-			suite.oldchainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, types.OPEN)
-			suite.oldchainA.updateClient(suite.oldchainB)
+			// connections are OPEN
+			clientA, clientB, _, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 		}, false},
 		{"connection state verification failed", func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-			suite.oldchainA.CreateClient(suite.oldchainB)
-			suite.oldchainB.updateClient(suite.oldchainA)
-			suite.oldchainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.INIT)
-			suite.oldchainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, types.TRYOPEN)
-			suite.oldchainA.updateClient(suite.oldchainA)
+			// chainA is in INIT
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+			suite.Require().NoError(err)
 		}, false},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
-		i := i
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+
+		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
 
-			connectionKey := host.KeyConnection(testConnectionIDA)
-			proofAck, proofHeight := queryProof(suite.oldchainA, connectionKey)
+			connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
+			connB := suite.chainA.GetFirstTestConnection(clientB, clientA)
+
+			connectionKey := host.KeyConnection(connA.ID)
+			proofAck, proofHeight := suite.chainA.QueryProof(connectionKey)
+
+			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
+				suite.chainB.GetContext(), connB.ID, proofAck, proofHeight,
+			)
 
 			if tc.expPass {
-				err := suite.oldchainB.App.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
-					suite.oldchainB.GetContext(), testConnectionIDB, proofAck, proofHeight+1,
-				)
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err)
 			} else {
-				err := suite.oldchainB.App.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
-					suite.oldchainB.GetContext(), testConnectionIDB, proofAck, proofHeight+1,
-				)
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}

@@ -146,7 +146,7 @@ func ExampleFilteredPaginate() {
 	}
 	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
 	// Output:
-	// balances:<denom:"test0denom" amount:"250" > res:<next_key:"test0denom" total:5 >
+	// balances:<denom:"test0denom" amount:"250" > res:<next_key:"test1denom" total:5 >
 }
 
 func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Marshaler) (balances sdk.Coins, res *query.PageResponse, err error) {

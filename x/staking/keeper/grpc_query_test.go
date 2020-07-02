@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -18,6 +19,7 @@ func TestGRPCQueryValidators(t *testing.T) {
 	_, app, ctx := createTestInput()
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
+	querier := keeper.Querier{app.StakingKeeper}
 
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	status := []sdk.BondStatus{sdk.Bonded, sdk.Unbonded, sdk.Unbonding}
@@ -33,7 +35,7 @@ func TestGRPCQueryValidators(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, validators[2])
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
+	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	vals, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
@@ -58,12 +60,12 @@ func TestGRPCQueryValidators(t *testing.T) {
 	// require.Equal(t, 1, len(res.Validators))
 	require.NotNil(t, res.Res.NextKey)
 
-	valRes, err := queryClient.ValidatorQ(gocontext.Background(), &types.QueryValidatorRequest{})
+	valRes, err := queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{})
 	require.Error(t, err)
 	require.Nil(t, valRes)
 
 	for _, validator := range validators {
-		valRes, err = queryClient.ValidatorQ(gocontext.Background(), &types.QueryValidatorRequest{ValidatorAddr: validator.OperatorAddress})
+		valRes, err = queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{ValidatorAddr: validator.OperatorAddress})
 		require.NoError(t, err)
 		require.Equal(t, validator, valRes.Validator)
 	}
@@ -72,6 +74,7 @@ func TestGRPCQueryValidators(t *testing.T) {
 func TestGRPCQueryDelegation(t *testing.T) {
 	_, app, ctx := createTestInput()
 	params := app.StakingKeeper.GetParams(ctx)
+	querier := keeper.Querier{app.StakingKeeper}
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -97,7 +100,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
+	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	res, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorValidatorsRequest{})
@@ -129,7 +132,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.Equal(t, delValidators[0], valResp.Validator)
 
 	// Query delegation
-	delegationResp, err := queryClient.DelegationQ(gocontext.Background(), &types.QueryDelegationRequest{})
+	delegationResp, err := queryClient.Delegation(gocontext.Background(), &types.QueryDelegationRequest{})
 	require.Error(t, err)
 	require.Nil(t, delegationResp)
 
@@ -137,7 +140,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	delegationResp, err = queryClient.DelegationQ(gocontext.Background(), delReq)
+	delegationResp, err = queryClient.Delegation(gocontext.Background(), delReq)
 	require.NoError(t, err)
 
 	require.Equal(t, delegation.ValidatorAddress, delegationResp.DelegationResponse.Delegation.ValidatorAddress)
@@ -201,10 +204,9 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	require.Equal(t, unbond, delegatorUbds.UnbondingResponses[0])
 
 	// Query Redelegations
-	// TODO: Uncomment after nil check added to Paginate
-	// redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
-	// require.Error(t, err)
-	// require.Nil(t, redelResp)
+	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
+	require.Error(t, err)
+	require.Nil(t, redelResp)
 
 	redelegationTokens := sdk.TokensFromConsensusPower(10)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
@@ -216,7 +218,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 	redelReq := &types.QueryRedelegationsRequest{
 		DelegatorAddr: addrAcc2, SrcValidatorAddr: val1.OperatorAddress, DstValidatorAddr: val2.OperatorAddress,
 		Req: &query.PageRequest{}}
-	redelResp, err := queryClient.Redelegations(gocontext.Background(), redelReq)
+	redelResp, err = queryClient.Redelegations(gocontext.Background(), redelReq)
 
 	require.NoError(t, err)
 	require.Len(t, redelResp.RedelegationResponses, 1)
@@ -229,9 +231,10 @@ func TestGRPCQueryDelegation(t *testing.T) {
 func TestGRPCQueryPoolParameters(t *testing.T) {
 	_, app, ctx := createTestInput()
 	bondDenom := sdk.DefaultBondDenom
+	querier := keeper.Querier{app.StakingKeeper}
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
+	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	// Query pool
@@ -250,6 +253,7 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 
 func TestGRPCHistoricalInfo(t *testing.T) {
 	_, app, ctx := createTestInput()
+	querier := keeper.Querier{app.StakingKeeper}
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -263,7 +267,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
+	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	header := abci.Header{
@@ -292,6 +296,7 @@ func TestGRPCQueryRedelegation(t *testing.T) {
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
 	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
+	querier := keeper.Querier{app.StakingKeeper}
 
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
@@ -300,7 +305,7 @@ func TestGRPCQueryRedelegation(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	types.RegisterQueryServer(queryHelper, app.StakingKeeper)
+	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	delAmount := sdk.TokensFromConsensusPower(100)

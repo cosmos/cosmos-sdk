@@ -75,6 +75,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 }
 
 func TestCLIValidateSignatures(t *testing.T) {
+	t.SkipNow()
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -129,6 +130,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 }
 
 func TestCLISignBatch(t *testing.T) {
+	t.SkipNow()
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -180,6 +182,7 @@ func TestCLISignBatch(t *testing.T) {
 }
 
 func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
+	t.SkipNow()
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -280,6 +283,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 }
 
 func TestCLIMultisignInsufficientCosigners(t *testing.T) {
+	t.SkipNow()
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -333,6 +337,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 }
 
 func TestCLIEncode(t *testing.T) {
+	t.SkipNow()
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -364,6 +369,7 @@ func TestCLIEncode(t *testing.T) {
 }
 
 func TestCLIMultisignSortSignatures(t *testing.T) {
+	t.SkipNow()
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -428,6 +434,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 }
 
 func TestCLIMultisign(t *testing.T) {
+	t.SkipNow()
 	t.Parallel()
 	f := cli.InitFixtures(t)
 

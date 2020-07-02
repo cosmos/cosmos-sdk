@@ -47,7 +47,7 @@ message QueryProposalResponse {
 // QueryProposalsRequest is the request type for the Query/Proposals RPC method
 message QueryProposalsRequest {
   // status of the proposals.
-  int32 proposal_status = 1;
+  ProposalStatus proposal_status = 1 [(gogoproto.customtype) = "ProposalStatus", (gogoproto.nullable) = false];
   
   // Voter address for the proposals.
   bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"]; 

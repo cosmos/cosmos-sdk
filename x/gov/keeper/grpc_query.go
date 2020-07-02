@@ -37,28 +37,49 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
-	var proposals types.Proposals
+	var filteredProposals types.Proposals
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// TODO: update to use conditional store
 	store := ctx.KVStore(q.storeKey)
 	proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
-	res, err := query.Paginate(proposalStore, req.Req, func(key []byte, value []byte) error {
-		var result types.Proposal
-		err := q.cdc.UnmarshalBinaryBare(value, &result)
+	res, err := query.FilteredPaginate(proposalStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var p types.Proposal
+		err := q.cdc.UnmarshalBinaryBare(value, &p)
 		if err != nil {
-			return err
+			return false, err
 		}
-		proposals = append(proposals, result)
-		return nil
+
+		matchVoter, matchDepositor, matchStatus := true, true, true
+
+		// match status (if supplied/valid)
+		if types.ValidProposalStatus(req.ProposalStatus) {
+			matchStatus = p.Status == req.ProposalStatus
+		}
+
+		// match voter address (if supplied)
+		if len(req.Voter) > 0 {
+			_, matchVoter = q.GetVote(ctx, p.ProposalID, req.Voter)
+		}
+
+		// match depositor (if supplied)
+		if len(req.Depositor) > 0 {
+			_, matchDepositor = q.GetDeposit(ctx, p.ProposalID, req.Depositor)
+		}
+
+		if matchVoter && matchDepositor && matchStatus {
+			filteredProposals = append(filteredProposals, p)
+			return true, nil
+		}
+
+		return false, nil
 	})
 
 	if err != nil {
 		return &types.QueryProposalsResponse{}, err
 	}
 
-	return &types.QueryProposalsResponse{Proposals: proposals, Res: res}, nil
+	return &types.QueryProposalsResponse{Proposals: filteredProposals, Res: res}, nil
 }
 
 // Vote returns Voted information based on proposalID, voterAddr

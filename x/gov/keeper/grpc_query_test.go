@@ -75,15 +75,15 @@ func TestGRPCQueryProposals(t *testing.T) {
 
 	// Query for proposals after adding 2 proposals to the store.
 	// give page limit as 1 and expect NextKey should not to be empty
+
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
-
-	proposalFromKeeper1, found := app.GovKeeper.GetProposal(ctx, proposals.Proposals[0].ProposalID)
-	require.True(t, found)
-	require.NotEmpty(t, proposalFromKeeper1)
-
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 1)
 	require.NotEmpty(t, proposals.Res.NextKey)
+
+	proposalFromKeeper1, found := app.GovKeeper.GetProposal(ctx, 1)
+	require.True(t, found)
+	require.NotEmpty(t, proposalFromKeeper1)
 	require.Equal(t, proposals.Proposals[0].Content.GetValue(), proposalFromKeeper1.Content.GetValue())
 
 	pageReq := &query.PageRequest{
@@ -96,13 +96,14 @@ func TestGRPCQueryProposals(t *testing.T) {
 	// query for the next page which is 2nd proposal at present context.
 	// and expect NextKey should be empty
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
-	proposalFromKeeper2, found := app.GovKeeper.GetProposal(ctx, proposals.Proposals[0].ProposalID)
-	require.True(t, found)
-	require.NotEmpty(t, proposalFromKeeper2)
 
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 1)
 	require.Empty(t, proposals.Res)
+
+	proposalFromKeeper2, found := app.GovKeeper.GetProposal(ctx, 2)
+	require.True(t, found)
+	require.NotEmpty(t, proposalFromKeeper2)
 	require.Equal(t, proposals.Proposals[0].Content.GetValue(), proposalFromKeeper2.Content.GetValue())
 
 	req = &types.QueryProposalsRequest{Req: &query.PageRequest{Limit: 2}}
@@ -113,6 +114,7 @@ func TestGRPCQueryProposals(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 2)
 	require.Empty(t, proposals.Res)
+	require.NotNil(t, nil)
 }
 
 func TestGRPCQueryVote(t *testing.T) {

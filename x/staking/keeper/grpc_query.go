@@ -366,9 +366,11 @@ func queryRedelegation(store sdk.KVStore, k Querier, req *types.QueryRedelegatio
 }
 
 func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	redStore := prefix.NewStore(store, types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr))
+	srcValPrefix := types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr)
+	redStore := prefix.NewStore(store, srcValPrefix)
 	// redSrcStore := prefix.NewStore(redStore, types.GetREDKeyFromValSrcIndexKey(iterator.Key()))
 	res, err = query.Paginate(redStore, req.Req, func(key []byte, value []byte) error {
+		key = append(srcValPrefix, key...)
 		key = types.GetREDKeyFromValSrcIndexKey(key)
 		storeKey := types.GetREDKeyFromValSrcIndexKey(key)
 		storeValue := redStore.Get(storeKey)

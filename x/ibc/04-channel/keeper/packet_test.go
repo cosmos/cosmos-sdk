@@ -569,7 +569,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, packet.GetSequence(), ibctesting.TestHash)
 
 			// manually set packet acknowledgement
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelB.PortID, channelB.ID, packet.GetSequence(), ibctesting.TestHash)
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainB.GetContext(), channelB.PortID, channelB.ID, packet.GetSequence(), ibctesting.TestHash)
 		}, false},
 		{"next ack sequence mismatch", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)

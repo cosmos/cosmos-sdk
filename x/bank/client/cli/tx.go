@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -37,7 +35,6 @@ func NewSendTxCmd() *cobra.Command {
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			fmt.Println("clientCtx:", clientCtx)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err

@@ -51,8 +51,7 @@ func TestFilteredPaginations(t *testing.T) {
 	require.Equal(t, uint64(4), res.Total)
 	require.Nil(t, res.NextKey)
 
-	t.Log("verify next key is returned if there are more results " +
-		"and nextKey should be as expected")
+	t.Log("verify nextKey is returned if there are more results")
 	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
 	require.NoError(t, err)
@@ -67,8 +66,7 @@ func TestFilteredPaginations(t *testing.T) {
 	_, _, err = execFilterPaginate(store, pageReq, appCodec)
 	require.Error(t, err)
 
-	t.Log("use next key for query, " +
-		"nextKey should be nil if there are no more filtered records")
+	t.Log("use nextKey for query")
 	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
 	require.NoError(t, err)

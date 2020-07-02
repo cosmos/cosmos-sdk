@@ -292,14 +292,6 @@ func (k Keeper) PacketExecuted(
 			)
 		}
 
-		// sanity check
-		if packet.GetSequence() != nextSequenceRecv {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidPacket,
-				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
-			)
-		}
-
 		nextSequenceRecv++
 
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)

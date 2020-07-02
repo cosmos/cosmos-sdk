@@ -408,17 +408,6 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 			suite.chainB.CreateChannelCapability(channelB.PortID, channelB.ID)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
-		{"packet sequence ≠ next sequence receive", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
-			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
-			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
-
-			// increments sequence receive
-			err := suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
-			suite.Require().NoError(err)
-		}, false},
 		{"capability not found", func() {
 			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, types.ORDERED)

@@ -32,7 +32,7 @@ func GetCompatibleVersions() []string {
 // - the version identifier is empty or contains commas
 // - a specified feature contains commas
 func CreateVersionString(identifier string, featureSet []string) string {
-	return fmt.Sprintf("(%s,%s)", identifier, featureSet)
+	return fmt.Sprintf("(%s,[%s])", identifier, strings.Join(featureSet, ","))
 }
 
 // UnpackVersion parses a version string and returns the identifier and the

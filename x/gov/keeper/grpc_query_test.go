@@ -51,6 +51,8 @@ func TestGRPCQueryProposals(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+
 	// req := &types.QueryProposalsRequest{Req: &query.PageRequest{}}
 	req := &types.QueryProposalsRequest{}
 	proposals, err := queryClient.Proposals(gocontext.Background(), req)
@@ -75,7 +77,6 @@ func TestGRPCQueryProposals(t *testing.T) {
 
 	// Query for proposals after adding 2 proposals to the store.
 	// give page limit as 1 and expect NextKey should not to be empty
-
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 1)
@@ -114,6 +115,52 @@ func TestGRPCQueryProposals(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 2)
 	require.Empty(t, proposals.Res)
+
+	proposal, found := app.GovKeeper.GetProposal(ctx, 1)
+	require.True(t, found)
+	require.NotNil(t, proposal)
+
+	// filter proposals
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	req = &types.QueryProposalsRequest{
+		ProposalStatus: types.StatusVotingPeriod,
+		Req:            &query.PageRequest{Limit: 1},
+	}
+
+	proposals, err = queryClient.Proposals(gocontext.Background(), req)
+	require.NoError(t, err)
+	require.Len(t, proposals.Proposals, 1)
+	require.Empty(t, proposals.Res)
+	require.Equal(t, proposals.Proposals[0].Status, types.StatusVotingPeriod)
+
+	req = &types.QueryProposalsRequest{
+		Depositor: addrs[0],
+		Req:       &query.PageRequest{Limit: 1},
+	}
+
+	depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20)))
+	deposit := types.NewDeposit(1, addrs[0], depositCoins)
+	app.GovKeeper.SetDeposit(ctx, deposit)
+
+	proposals, err = queryClient.Proposals(gocontext.Background(), req)
+	require.NoError(t, err)
+	require.Len(t, proposals.Proposals, 1)
+	require.Empty(t, proposals.Res)
+	require.Equal(t, proposals.Proposals[0].ProposalID, uint64(1))
+
+	req = &types.QueryProposalsRequest{
+		Voter: addrs[0],
+		Req:   &query.PageRequest{Limit: 1},
+	}
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, 1, addrs[0], types.OptionAbstain))
+
+	require.NoError(t, err)
+	require.Len(t, proposals.Proposals, 1)
+	require.Empty(t, proposals.Res)
+	require.Equal(t, proposals.Proposals[0].ProposalID, uint64(1))
 }
 
 func TestGRPCQueryVote(t *testing.T) {

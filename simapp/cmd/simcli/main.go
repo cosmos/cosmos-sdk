@@ -27,7 +27,8 @@ var (
 			WithTxGenerator(encodingConfig.TxGenerator).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler))
+			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
+			WithBroadcastMode(flags.BroadcastBlock)
 )
 
 func init() {
@@ -87,8 +88,7 @@ func queryCmd() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	queryCmd.AddCommand(

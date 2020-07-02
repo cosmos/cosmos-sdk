@@ -91,5 +91,5 @@ func (q BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 	ctx := sdk.UnwrapSDKContext(c)
 	supply := q.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
 
-	return &types.QuerySupplyOfResponse{Amount: supply}, nil
+	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply)}, nil
 }

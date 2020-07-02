@@ -4,9 +4,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	connectionkeeper "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
+	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 )
 
@@ -15,21 +16,21 @@ type Keeper struct {
 	aminoCdc *codec.Codec
 	cdc      codec.Marshaler
 
-	ClientKeeper     client.Keeper
-	ConnectionKeeper connection.Keeper
-	ChannelKeeper    channel.Keeper
+	ClientKeeper     clientkeeper.Keeper
+	ConnectionKeeper connectionkeeper.Keeper
+	ChannelKeeper    channelkeeper.Keeper
 	PortKeeper       port.Keeper
 	Router           *port.Router
 }
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
+	aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
-	clientKeeper := client.NewKeeper(aminoCdc, key, stakingKeeper)
-	connectionKeeper := connection.NewKeeper(aminoCdc, cdc, key, clientKeeper)
+	clientKeeper := clientkeeper.NewKeeper(aminoCdc, key, stakingKeeper)
+	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
 	portKeeper := port.NewKeeper(scopedKeeper)
-	channelKeeper := channel.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
+	channelKeeper := channelkeeper.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return &Keeper{
 		aminoCdc:         aminoCdc,

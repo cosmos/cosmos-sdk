@@ -227,3 +227,26 @@ func TestSignatureV2Conversions(t *testing.T) {
 	require.Equal(t, multiPK, sigV2.PubKey)
 	require.Equal(t, msigData, sigV2.Data)
 }
+
+func TestGetSignaturesV2(t *testing.T) {
+	_, pubKey, _ := KeyTestPubAddr()
+	dummy := []byte("dummySig")
+
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	RegisterCodec(cdc)
+
+	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	stdTx := NewStdTx([]sdk.Msg{NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
+
+	sigs, err := stdTx.GetSignaturesV2()
+	require.Nil(t, err)
+	require.Equal(t, len(sigs), 1)
+
+	require.Equal(t, sigs[0].PubKey.Bytes(), sig.GetPubKey().Bytes())
+	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Signature: sig.GetSignature(),
+	})
+}

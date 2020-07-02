@@ -6,7 +6,9 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
@@ -25,20 +27,20 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return &sdk.Result{}, nil
 
 		// IBC connection  msgs
-		case *connection.MsgConnectionOpenInit:
+		case *connectiontypes.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)
 
-		case *connection.MsgConnectionOpenTry:
+		case *connectiontypes.MsgConnectionOpenTry:
 			return connection.HandleMsgConnectionOpenTry(ctx, k.ConnectionKeeper, msg)
 
-		case *connection.MsgConnectionOpenAck:
+		case *connectiontypes.MsgConnectionOpenAck:
 			return connection.HandleMsgConnectionOpenAck(ctx, k.ConnectionKeeper, msg)
 
-		case *connection.MsgConnectionOpenConfirm:
+		case *connectiontypes.MsgConnectionOpenConfirm:
 			return connection.HandleMsgConnectionOpenConfirm(ctx, k.ConnectionKeeper, msg)
 
 		// IBC channel msgs
-		case *channel.MsgChannelOpenInit:
+		case *channeltypes.MsgChannelOpenInit:
 			// Lookup module by port capability
 			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
 			if err != nil {
@@ -61,7 +63,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgChannelOpenTry:
+		case *channeltypes.MsgChannelOpenTry:
 			// Lookup module by port capability
 			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
 			if err != nil {
@@ -83,7 +85,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgChannelOpenAck:
+		case *channeltypes.MsgChannelOpenAck:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -101,7 +103,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 
-		case *channel.MsgChannelOpenConfirm:
+		case *channeltypes.MsgChannelOpenConfirm:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -119,7 +121,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 
-		case *channel.MsgChannelCloseInit:
+		case *channeltypes.MsgChannelCloseInit:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -137,7 +139,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, cap, msg)
 
-		case *channel.MsgChannelCloseConfirm:
+		case *channeltypes.MsgChannelCloseConfirm:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -156,7 +158,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, cap, msg)
 
 		// IBC packet msgs get routed to the appropriate module callback
-		case *channel.MsgPacket:
+		case *channeltypes.MsgPacket:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
 			if err != nil {
@@ -182,7 +184,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgAcknowledgement:
+		case *channeltypes.MsgAcknowledgement:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if err != nil {
@@ -208,7 +210,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgTimeout:
+		case *channeltypes.MsgTimeout:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if err != nil {

@@ -60,9 +60,9 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 // connection on chainA is INIT
 func (suite *KeeperTestSuite) TestConnOpenTry() {
 	var (
-		clientA             string
-		clientB             string
-		consensusHeightDiff uint64
+		clientA         string
+		clientB         string
+		consensusHeight uint64
 	)
 
 	testCases := []struct {
@@ -80,15 +80,14 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			consensusHeightDiff = 20
+			consensusHeight = uint64(suite.chainB.GetContext().BlockHeight()) + 1
 		}, false},
 		{"self consensus state not found", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			// use the last height for chainB since it isn't set until block height H + 1
-			consensusHeightDiff = uint64(suite.chainB.GetContext().BlockHeight()) - 1
+			consensusHeight = 1
 		}, false},
 		{"connection state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -126,8 +125,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		tc := tc
 
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()       // reset
-			consensusHeightDiff = 0 // must be explicity changed in malleate
+			suite.SetupTest()   // reset
+			consensusHeight = 0 // must be explicity changed in malleate
 
 			tc.malleate()
 
@@ -142,14 +141,16 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			consState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), clientA)
 			suite.Require().True(found)
 
-			consensusHeight := consState.GetHeight()
+			if consensusHeight == 0 {
+				consensusHeight = consState.GetHeight()
+			}
 			consensusKey := host.FullKeyClientPath(clientA, host.KeyConsensusState(consensusHeight))
 			proofConsensus, _ := suite.chainA.QueryProof(consensusKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 				suite.chainB.GetContext(), connB.ID, counterparty, clientB,
 				types.GetCompatibleVersions(), proofInit, proofConsensus,
-				proofHeight, consensusHeight+consensusHeightDiff,
+				proofHeight, consensusHeight,
 			)
 
 			if tc.expPass {
@@ -165,10 +166,10 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 // the initialization (TRYINIT) of the connection on  Chain B (ID #2).
 func (suite *KeeperTestSuite) TestConnOpenAck() {
 	var (
-		clientA             string
-		clientB             string
-		consensusHeightDiff uint64
-		version             string
+		clientA         string
+		clientB         string
+		consensusHeight uint64
+		version         string
 	)
 
 	testCases := []struct {
@@ -210,7 +211,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			consensusHeightDiff = 20
+			consensusHeight = uint64(suite.chainA.GetContext().BlockHeight()) + 1
 		}, false},
 		{"connection not found", func() {
 			// connections are never created
@@ -240,15 +241,14 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			version = "2.0"
 		}, false},
 		{"self consensus state not found", func() {
-			// use the last height for chainA since it isn't set until block height H + 1
-			consensusHeightDiff = uint64(suite.chainB.GetContext().BlockHeight()) - 1
-
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
+
+			consensusHeight = 1
 		}, false},
 		{"connection state verification failed", func() {
 			// chainB connection is not in INIT
@@ -281,7 +281,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()                          // reset
 			version = types.GetCompatibleVersions()[0] // must be explicitly changed in malleate
-			consensusHeightDiff = 0                    // must be explicitly changed in malleate
+			consensusHeight = 0                        // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -295,13 +295,15 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			consState, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainB.GetContext(), clientB)
 			suite.Require().True(found)
 
-			consensusHeight := consState.GetHeight()
+			if consensusHeight == 0 {
+				consensusHeight = consState.GetHeight()
+			}
 			consensusKey := host.FullKeyClientPath(clientB, host.KeyConsensusState(consensusHeight))
 			proofConsensus, _ := suite.chainB.QueryProof(consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), connA.ID, version,
-				proofTry, proofConsensus, proofHeight, consensusHeight+consensusHeightDiff,
+				proofTry, proofConsensus, proofHeight, consensusHeight,
 			)
 
 			if tc.expPass {

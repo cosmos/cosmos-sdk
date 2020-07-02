@@ -2,17 +2,19 @@ package cli_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	banktest "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
 type IntegrationTestSuite struct {
@@ -44,6 +46,9 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
@@ -97,7 +102,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -113,6 +118,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
@@ -164,7 +172,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
 
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -177,12 +185,16 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
+	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name         string
-		from         string
-		to           string
+		from, to     sdk.AccAddress
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
@@ -191,8 +203,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}{
 		{
 			"valid transaction (gen-only)",
-			val.Address.String(),
-			val.Address.String(),
+			val.Address,
+			val.Address,
 			sdk.NewCoins(
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
@@ -209,8 +221,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		},
 		{
 			"valid transaction",
-			val.Address.String(),
-			val.Address.String(),
+			val.Address,
+			val.Address,
 			sdk.NewCoins(
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
@@ -226,8 +238,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		},
 		{
 			"not enough fees",
-			val.Address.String(),
-			val.Address.String(),
+			val.Address,
+			val.Address,
 			sdk.NewCoins(
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
@@ -243,8 +255,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		},
 		{
 			"not enough gas",
-			val.Address.String(),
-			val.Address.String(),
+			val.Address,
+			val.Address,
 			sdk.NewCoins(
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
@@ -265,12 +277,19 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			res, err := banktest.SendTx(val.ClientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			buf.Reset()
+
+			cmd := cli.NewSendTxCmd()
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
+			cmd.SetArgs(tc.args)
+
+			out, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.respType), string(res))
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out, tc.respType), string(out))
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)

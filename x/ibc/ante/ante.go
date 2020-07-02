@@ -4,7 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // ProofVerificationDecorator handles messages that contains application specific packet types,
@@ -12,11 +13,11 @@ import (
 // MsgUpdateClients are also handled here to perform atomic multimsg transaction
 type ProofVerificationDecorator struct {
 	clientKeeper  clientkeeper.Keeper
-	channelKeeper channel.Keeper
+	channelKeeper channelkeeper.Keeper
 }
 
 // NewProofVerificationDecorator constructs new ProofverificationDecorator
-func NewProofVerificationDecorator(clientKeeper clientkeeper.Keeper, channelKeeper channel.Keeper) ProofVerificationDecorator {
+func NewProofVerificationDecorator(clientKeeper clientkeeper.Keeper, channelKeeper channelkeeper.Keeper) ProofVerificationDecorator {
 	return ProofVerificationDecorator{
 		clientKeeper:  clientKeeper,
 		channelKeeper: channelKeeper,
@@ -31,11 +32,11 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		switch msg := msg.(type) {
 		case clientexported.MsgUpdateClient:
 			_, err = pvr.clientKeeper.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
-		case *channel.MsgPacket:
+		case *channeltypes.MsgPacket:
 			err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
-		case *channel.MsgAcknowledgement:
+		case *channeltypes.MsgAcknowledgement:
 			err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
-		case *channel.MsgTimeout:
+		case *channeltypes.MsgTimeout:
 			err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
 		default:
 			// don't emit sender event for other msg types

@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
@@ -45,13 +44,7 @@ func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOut
 		printTextInfos(w, []cryptokeyring.KeyOutput{ko})
 
 	case OutputFormatJSON:
-		var out []byte
-		var err error
-		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = KeysCdc.MarshalJSONIndent(ko, "", "  ")
-		} else {
-			out, err = KeysCdc.MarshalJSON(ko)
-		}
+		out, err := KeysCdc.MarshalJSON(ko)
 		if err != nil {
 			panic(err)
 		}
@@ -71,18 +64,11 @@ func printInfos(w io.Writer, infos []cryptokeyring.Info) {
 		printTextInfos(w, kos)
 
 	case OutputFormatJSON:
-		var out []byte
-		var err error
-
-		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = KeysCdc.MarshalJSONIndent(kos, "", "  ")
-		} else {
-			out, err = KeysCdc.MarshalJSON(kos)
-		}
-
+		out, err := KeysCdc.MarshalJSON(kos)
 		if err != nil {
 			panic(err)
 		}
+
 		fmt.Fprintf(w, "%s", out)
 	}
 }

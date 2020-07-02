@@ -34,12 +34,20 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
-	res, err := query.Paginate(valStore, req.Req, func(key []byte, value []byte) error {
-		val := types.MustUnmarshalValidator(k.cdc, value)
-		if strings.EqualFold(val.GetStatus().String(), req.Status) {
-			validators = append(validators, val)
+	res, err := query.FilteredPaginate(valStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		val, err := types.UnmarshalValidator(k.cdc, value)
+		if err != nil {
+			return false, err
 		}
-		return nil
+
+		if strings.EqualFold(val.GetStatus().String(), req.Status) {
+			if accumulate {
+				validators = append(validators, val)
+			}
+
+			return true, nil
+		}
+		return false, nil
 	})
 
 	if err != nil {
@@ -47,7 +55,6 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	}
 
 	return &types.QueryValidatorsResponse{Validators: validators, Res: res}, nil
-
 }
 
 func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorResponse, error) {
@@ -201,7 +208,7 @@ func (k Querier) DelegatorValidator(c context.Context, req *types.QueryDelegator
 	return &types.QueryDelegatorValidatorResponse{Validator: validator}, nil
 }
 
-func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.QueryDelegatorUnbondingDelegationsRequest) (*types.QueryDelegatorUnnbondingDelegationsResponse, error) {
+func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.QueryDelegatorUnbondingDelegationsRequest) (*types.QueryDelegatorUnbondingDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -227,7 +234,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 		return nil, err
 	}
 
-	return &types.QueryDelegatorUnnbondingDelegationsResponse{UnbondingResponses: unbondingDelegations, Res: res}, nil
+	return &types.QueryDelegatorUnbondingDelegationsResponse{UnbondingResponses: unbondingDelegations, Res: res}, nil
 }
 
 func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) {

@@ -31,25 +31,25 @@ service Query {
   rpc DelegatorDelegations (QueryDelegatorDelegationsRequest) returns (QueryDelegatorDelegationsResponse) {}
 
   // DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
-  rpc DelegatorUnbondingDelegations (QueryDelegatorUnbondingDelegationsRequest) returns (QueryDelegatorUnnbondingDelegationsResponse) {}
+  rpc DelegatorUnbondingDelegations (QueryDelegatorUnbondingDelegationsRequest) returns (QueryDelegatorUnbondingDelegationsResponse) {}
 
   // Redelegations queries redelegations of given address
-  rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) { }
+  rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) {}
 
   // DelegatorValidators queries all validator info for given delegator address
-  rpc DelegatorValidators (QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) { }
+  rpc DelegatorValidators (QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {}
 
   // DelegatorValidator queries validator info for given delegator validator pair
-  rpc DelegatorValidator (QueryDelegatorValidatorRequest) returns (QueryDelegatorValidatorResponse) { }
+  rpc DelegatorValidator (QueryDelegatorValidatorRequest) returns (QueryDelegatorValidatorResponse) {}
 
   // HistoricalInfo queries the historical info for given height
-  rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) { }
+  rpc HistoricalInfo (QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) {}
 
   // Pool queries the pool info
-  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) { }
+  rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) {}
 
   // Parameters queries the staking parameters
-  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) { }
+  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) {}
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method
@@ -155,7 +155,7 @@ message QueryDelegatorUnbondingDelegationsRequest{
   cosmos.query.PageRequest req = 2;
 }
 // QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method
-message QueryDelegatorUnnbondingDelegationsResponse {
+message QueryDelegatorUnbondingDelegationsResponse {
   repeated cosmos.staking.UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;

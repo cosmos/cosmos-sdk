@@ -1,10 +1,25 @@
 package types
 
+import (
+	query "github.com/cosmos/cosmos-sdk/types/query"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+)
+
 // Querier routes for the evidence module
 const (
 	QueryEvidence    = "evidence"
 	QueryAllEvidence = "all_evidence"
 )
+
+// NewQueryEvidenceRequest creates a new instance of QueryEvidenceRequest.
+func NewQueryEvidenceRequest(hash tmbytes.HexBytes) *QueryEvidenceRequest {
+	return &QueryEvidenceRequest{EvidenceHash: hash}
+}
+
+// NewQueryAllEvidencesRequest creates a new instance of QueryAllEvidencesRequest.
+func NewQueryAllEvidencesRequest(req *query.PageRequest) *QueryAllEvidencesRequest {
+	return &QueryAllEvidencesRequest{Req: req}
+}
 
 // QueryEvidenceParams defines the parameters necessary for querying Evidence.
 type QueryEvidenceParams struct {

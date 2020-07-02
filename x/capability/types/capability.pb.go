@@ -159,9 +159,7 @@ func init() {
 	proto.RegisterType((*CapabilityOwners)(nil), "cosmos.capability.CapabilityOwners")
 }
 
-func init() {
-	proto.RegisterFile("cosmos/capability/capability.proto", fileDescriptor_ed9f06ee1908474a)
-}
+func init() { proto.RegisterFile("cosmos/capability/capability.proto", fileDescriptor_ed9f06ee1908474a) }
 
 var fileDescriptor_ed9f06ee1908474a = []byte{
 	// 288 bytes of a gzipped FileDescriptorProto

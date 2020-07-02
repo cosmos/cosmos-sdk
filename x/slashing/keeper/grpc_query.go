@@ -20,7 +20,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
-	return &types.QueryParamsResponse{Params: &params}, nil
+	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 func (k Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoRequest) (*types.QuerySigningInfoResponse, error) {
@@ -42,6 +42,6 @@ func (k Keeper) SigningInfos(c context.Context, req *types.QuerySigningInfosRequ
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	_ := sdk.UnwrapSDKContext(c)
+	_ = sdk.UnwrapSDKContext(c)
 	return nil, nil
 }

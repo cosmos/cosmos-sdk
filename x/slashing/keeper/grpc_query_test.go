@@ -22,8 +22,8 @@ func TestGRPCQueryParams(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.SlashingKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	params, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	paramsResp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	require.NoError(t, err)
 
-	require.Equal(t, keeper.TestParams(), params)
+	require.Equal(t, keeper.TestParams(), paramsResp.Params)
 }

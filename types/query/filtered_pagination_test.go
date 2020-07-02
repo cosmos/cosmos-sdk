@@ -16,11 +16,10 @@ import (
 
 var addr1 = sdk.AccAddress([]byte("addr1"))
 
-func TestFilteredPaginations(t *testing.T) {
+func TestFilteredPaginate(t *testing.T) {
 	app, ctx, appCodec := setupTest()
 
 	var balances sdk.Coins
-
 	for i := 0; i < numBalances; i++ {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
@@ -31,6 +30,8 @@ func TestFilteredPaginations(t *testing.T) {
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
 
+	t.Log("length", len(balances))
+
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
@@ -40,56 +41,55 @@ func TestFilteredPaginations(t *testing.T) {
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
 	balances, res, err := execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 4, len(balances))
 
-	// verify empty request
+	t.Log("verify empty request")
 	balances, res, err = execFilterPaginate(store, nil, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 4, len(balances))
 	require.Equal(t, uint64(4), res.Total)
+	require.Nil(t, res.NextKey)
 
-	// verify next key is returned
+	t.Log("verify next key is returned if there are more results " +
+		"and nextKey should be as expected")
 	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
+	t.Log(balances)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 2, len(balances))
 	require.NotNil(t, res.NextKey)
+	require.Equal(t, string(res.NextKey), fmt.Sprintf("test2denom"))
 	require.Equal(t, uint64(4), res.Total)
 
-	// use next key for query
+	t.Log("verify both key and offset can't be given")
+	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, Offset: 2, CountTotal: true}
+	_, _, err = execFilterPaginate(store, pageReq, appCodec)
+	require.Error(t, err)
+
+	t.Log("use next key for query, " +
+		"nextKey should be nil if there are no more filtered records")
 	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 2, len(balances))
-	require.NotNil(t, res.NextKey)
+	require.Nil(t, res.NextKey)
 
-	// verify both key and offset can't be given
-	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, Offset: 2, CountTotal: true}
-	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-	require.Error(t, err)
-
-	// verify default limit
+	t.Log("verify default limit")
 	pageReq = &query.PageRequest{Key: nil, Limit: 0}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 4, len(balances))
 	require.Equal(t, uint64(4), res.Total)
 
-	// verify offset
+	t.Log("verify with offset")
 	pageReq = &query.PageRequest{Offset: 2, Limit: 2}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.LessOrEqual(t, len(balances), 2)
@@ -99,7 +99,6 @@ func ExampleFilteredPaginate() {
 	app, ctx, appCodec := setupTest()
 
 	var balances sdk.Coins
-
 	for i := 0; i < numBalances; i++ {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))

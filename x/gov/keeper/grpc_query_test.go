@@ -37,6 +37,10 @@ func TestGRPCQueryProposal(t *testing.T) {
 	proposal, err := queryClient.Proposal(gocontext.Background(), &types.QueryProposalRequest{ProposalId: submittedProposal.ProposalID})
 	require.NoError(t, err)
 	require.Equal(t, proposal.Proposal.ProposalID, uint64(1))
+
+	proposalFromKeeper, found := app.GovKeeper.GetProposal(ctx, submittedProposal.ProposalID)
+	require.True(t, found)
+	require.Equal(t, proposal.Proposal.Content.GetValue(), proposalFromKeeper.Content.GetValue())
 }
 
 func TestGRPCQueryProposals(t *testing.T) {
@@ -58,16 +62,23 @@ func TestGRPCQueryProposals(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		num := strconv.Itoa(i + 1)
 		testProposal := types.NewTextProposal("Proposal"+num, "testing proposal "+num)
-		_, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
+		proposal, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
+		require.NotEmpty(t, proposal)
 		require.NoError(t, err)
 	}
 
 	// Query for proposals after adding 2 proposals to the store.
 	// give page limit as 1 and expect NextKey should not to be empty
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
+
+	proposalFromKeeper1, found := app.GovKeeper.GetProposal(ctx, proposals.Proposals[0].ProposalID)
+	require.True(t, found)
+	require.NotEmpty(t, proposalFromKeeper1)
+
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 1)
 	require.NotEmpty(t, proposals.Res.NextKey)
+	require.Equal(t, proposals.Proposals[0].Content.GetValue(), proposalFromKeeper1.Content.GetValue())
 
 	pageReq := &query.PageRequest{
 		Key:   proposals.Res.NextKey,
@@ -79,10 +90,14 @@ func TestGRPCQueryProposals(t *testing.T) {
 	// query for the next page which is 2nd proposal at present context.
 	// and expect NextKey should be empty
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
+	proposalFromKeeper2, found := app.GovKeeper.GetProposal(ctx, proposals.Proposals[0].ProposalID)
+	require.True(t, found)
+	require.NotEmpty(t, proposalFromKeeper2)
 
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 1)
 	require.Empty(t, proposals.Res)
+	require.Equal(t, proposals.Proposals[0].Content.GetValue(), proposalFromKeeper2.Content.GetValue())
 
 	req = &types.QueryProposalsRequest{Req: &query.PageRequest{Limit: 2}}
 
@@ -111,33 +126,37 @@ func TestGRPCQueryVote(t *testing.T) {
 
 	req := &types.QueryVoteRequest{ProposalId: proposalID}
 
-	_, err = queryClient.Vote(gocontext.Background(), req)
+	vote, err := queryClient.Vote(gocontext.Background(), req)
 	require.Error(t, err)
+	require.Nil(t, vote)
 
 	req = &types.QueryVoteRequest{
 		ProposalId: proposalID,
 		Voter:      addrs[0],
 	}
 
-	_, err = queryClient.Vote(gocontext.Background(), req)
+	vote, err = queryClient.Vote(gocontext.Background(), req)
 	require.Error(t, err)
+	require.Nil(t, vote)
 
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionAbstain))
-	_, found := app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
+	voteFromKeeper, found := app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
+	require.NotEmpty(t, voteFromKeeper)
 
 	req = &types.QueryVoteRequest{
 		ProposalId: proposalID,
 		Voter:      addrs[0],
 	}
 
-	vote, err := queryClient.Vote(gocontext.Background(), req)
+	vote, err = queryClient.Vote(gocontext.Background(), req)
 
 	require.NoError(t, err)
 	require.Equal(t, vote.Vote.Option, types.OptionAbstain)
+	require.Equal(t, voteFromKeeper, vote.Vote)
 }
 
 func TestGRPCQueryVotes(t *testing.T) {
@@ -259,11 +278,13 @@ func TestGRPCQueryParams(t *testing.T) {
 	params, err := queryClient.Params(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.False(t, params.DepositParams.MinDeposit.IsZero())
+	require.Equal(t, app.GovKeeper.GetDepositParams(ctx), params.DepositParams)
 
 	req.ParamsType = types.ParamVoting
 	params, err = queryClient.Params(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.NotZero(t, params.VotingParams.VotingPeriod)
+	require.Equal(t, app.GovKeeper.GetVotingParams(ctx), params.VotingParams)
 
 	req.ParamsType = types.ParamTallying
 	params, err = queryClient.Params(gocontext.Background(), req)
@@ -271,6 +292,7 @@ func TestGRPCQueryParams(t *testing.T) {
 	require.False(t, params.TallyParams.Quorum.IsZero())
 	require.False(t, params.TallyParams.Threshold.IsZero())
 	require.False(t, params.TallyParams.Veto.IsZero())
+	require.Equal(t, app.GovKeeper.GetTallyParams(ctx), params.TallyParams)
 }
 
 func TestGRPCQueryDeposit(t *testing.T) {
@@ -315,6 +337,10 @@ func TestGRPCQueryDeposit(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, d.Deposit.Empty())
 	require.Equal(t, d.Deposit.Amount, depositCoins)
+
+	depositFromKeeper, found := app.GovKeeper.GetDeposit(ctx, proposalID, addrs[0])
+	require.True(t, found)
+	require.Equal(t, depositFromKeeper, d.Deposit)
 }
 
 func TestGRPCQueryDeposits(t *testing.T) {
@@ -441,6 +467,8 @@ func TestGRPCQueryTally(t *testing.T) {
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)

@@ -64,10 +64,6 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 		}
 	}
 
-	if clientCtx.Indent {
-		return legacy.Cdc.MarshalJSONIndent(res, "", "  ")
-	}
-
 	return legacy.Cdc.MarshalJSON(res)
 }
 

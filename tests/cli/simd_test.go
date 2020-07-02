@@ -33,9 +33,6 @@ func TestCLISimdCollectGentxs(t *testing.T) {
 	// Initialize keys
 	f.KeysAdd(cli.KeyFoo)
 
-	// Configure json output
-	f.CLIConfig("output", "json")
-
 	// Run init
 	f.SDInit(cli.KeyFoo)
 
@@ -79,9 +76,6 @@ func TestCLISimdAddGenesisAccount(t *testing.T) {
 	f.KeysAdd(cli.KeyFoo)
 	f.KeysAdd(cli.KeyBar)
 	f.KeysAdd(cli.KeyBaz)
-
-	// Configure json output
-	f.CLIConfig("output", "json")
 
 	// Run init
 	f.SDInit(cli.KeyFoo)

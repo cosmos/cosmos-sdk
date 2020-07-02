@@ -1,4 +1,4 @@
-package rootmulti
+package maps
 
 import (
 	"fmt"

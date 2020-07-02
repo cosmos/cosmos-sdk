@@ -499,6 +499,10 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	)
 	event1.Attributes = append(
 		event1.Attributes,
+		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+	)
+	event1.Attributes = append(
+		event1.Attributes,
 		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
 	)
 	event2 := sdk.Event{

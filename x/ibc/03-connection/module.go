@@ -7,11 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
 // Name returns the IBC connection ICS name
 func Name() string {
-	return SubModuleName
+	return types.SubModuleName
 }
 
 // GetTxCmd returns the root tx command for the IBC connections.

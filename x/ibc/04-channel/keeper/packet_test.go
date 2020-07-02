@@ -312,6 +312,23 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			// write packet acknowledgement
 			suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
 		}, false},
+		{"next receive sequence does not found", func() {
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			channelA := connA.NextTestChannel()
+			channelB := connB.NextTestChannel()
+
+			// manually creating channel prevents next recv sequence from being set
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(
+				suite.chainB.GetContext(),
+				channelB.PortID, channelB.ID,
+				types.NewChannel(types.OPEN, types.ORDERED, types.NewCounterparty(channelA.PortID, channelA.ID), []string{connB.ID}, ibctesting.ChannelVersion),
+			)
+
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+
+			// manually set packet commitment
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, packet.GetSequence(), ibctesting.TestHash)
+		}, false},
 		{"validation failed", func() {
 			// packet commitment not set resulting in invalid proof
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)

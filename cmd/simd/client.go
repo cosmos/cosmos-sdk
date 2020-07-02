@@ -24,7 +24,8 @@ var (
 			WithTxGenerator(encodingConfig.TxGenerator).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler))
+			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
+			WithBroadcastMode(flags.BroadcastBlock)
 )
 
 func init() {
@@ -37,6 +38,10 @@ func init() {
 func addClientCommands(rootClientCmd *cobra.Command) context.Context {
 	// Add --chain-id to persistent flags and mark it required
 	rootClientCmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
+
+	rootClientCmd.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
+		return client.SetCmdClientContextHandler(initClientCtx, cmd)
+	}
 
 	// Construct Root Command
 	rootClientCmd.AddCommand(
@@ -60,10 +65,7 @@ func queryCmd() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			return client.SetCmdClientContextHandler(initClientCtx, cmd)
-		},
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	queryCmd.AddCommand(
@@ -85,10 +87,7 @@ func txCmd() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			return client.SetCmdClientContextHandler(initClientCtx, cmd)
-		},
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(

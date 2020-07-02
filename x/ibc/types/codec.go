@@ -5,7 +5,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -16,7 +16,7 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	clienttypes.RegisterCodec(cdc)
 	connectiontypes.RegisterCodec(cdc)
-	channel.RegisterCodec(cdc)
+	channeltypes.RegisterCodec(cdc)
 	ibctmtypes.RegisterCodec(cdc)
 	localhosttypes.RegisterCodec(cdc)
 	commitmenttypes.RegisterCodec(cdc)
@@ -25,5 +25,5 @@ func RegisterCodec(cdc *codec.Codec) {
 // RegisterInterfaces registers x/ibc interfaces into protobuf Any.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	connectiontypes.RegisterInterfaces(registry)
-	channel.RegisterInterfaces(registry)
+	channeltypes.RegisterInterfaces(registry)
 }

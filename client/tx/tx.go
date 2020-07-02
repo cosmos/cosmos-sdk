@@ -188,7 +188,7 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	output, err := ctx.JSONMarshaler.MarshalJSON(tx)
+	output, err := ctx.JSONMarshaler.MarshalJSON(tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}

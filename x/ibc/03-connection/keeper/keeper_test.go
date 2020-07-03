@@ -11,7 +11,6 @@ import (
 	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,8 +57,6 @@ type KeeperTestSuite struct {
 	chainA *ibctesting.TestChain
 	chainB *ibctesting.TestChain
 
-	grpcQueryClient types.QueryClient
-
 	// TODO: delete
 	cdc *codec.Codec
 
@@ -74,10 +71,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.chainA.GetContext())
-	types.RegisterQueryServer(queryHelper, suite.chainA.App.IBCKeeper.ConnectionKeeper)
-	suite.grpcQueryClient = types.NewQueryClient(queryHelper)
 
 	// TODO: delete
 	suite.oldchainA = NewTestChain(testClientIDA)

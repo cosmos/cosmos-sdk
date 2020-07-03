@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	"context"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -19,6 +19,13 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 		malleate func()
 		expPass  bool
 	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
 		{"invalid connectionID",
 			func() {
 				req = &types.QueryConnectionRequest{}
@@ -53,8 +60,9 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			res, err := suite.grpcQueryClient.Connection(context.Background(), req)
+			res, err := suite.chainA.QueryServer.Connection(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -78,6 +86,13 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 		malleate func()
 		expPass  bool
 	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
 		{"invalid connectionID",
 			func() {
 				req = &types.QueryClientConnectionsRequest{}
@@ -111,8 +126,9 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			res, err := suite.grpcQueryClient.ClientConnections(context.Background(), req)
+			res, err := suite.chainA.QueryServer.ClientConnections(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

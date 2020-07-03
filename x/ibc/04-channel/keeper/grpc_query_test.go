@@ -266,6 +266,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 					Connection: "externalConnID",
 					Req: &query.PageRequest{
 						Key:        nil,
+						Limit:      2,
 						CountTotal: false,
 					},
 				}

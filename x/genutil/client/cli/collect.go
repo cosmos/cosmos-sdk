@@ -31,7 +31,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 			config := ctx.Config
 			config.SetRoot(v.GetString(cli.HomeFlag))
 			name := v.GetString(flags.FlagName)
-			fmt.Printf("THE NAME!!! %s", name)
+			fmt.Printf("THE NAME is %s!!!", name)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")

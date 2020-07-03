@@ -448,6 +448,94 @@ func (m *SayHelloResponse) GetGreeting() string {
 	return ""
 }
 
+type TestAnyRequest struct {
+	AnyAnimal *types.Any `protobuf:"bytes,1,opt,name=any_animal,json=anyAnimal,proto3" json:"any_animal,omitempty"`
+}
+
+func (m *TestAnyRequest) Reset()         { *m = TestAnyRequest{} }
+func (m *TestAnyRequest) String() string { return proto.CompactTextString(m) }
+func (*TestAnyRequest) ProtoMessage()    {}
+func (*TestAnyRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2fcc84b9998d60d8, []int{9}
+}
+func (m *TestAnyRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TestAnyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TestAnyRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TestAnyRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TestAnyRequest.Merge(m, src)
+}
+func (m *TestAnyRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TestAnyRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TestAnyRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TestAnyRequest proto.InternalMessageInfo
+
+func (m *TestAnyRequest) GetAnyAnimal() *types.Any {
+	if m != nil {
+		return m.AnyAnimal
+	}
+	return nil
+}
+
+type TestAnyResponse struct {
+	HasAnimal *HasAnimal `protobuf:"bytes,1,opt,name=has_animal,json=hasAnimal,proto3" json:"has_animal,omitempty"`
+}
+
+func (m *TestAnyResponse) Reset()         { *m = TestAnyResponse{} }
+func (m *TestAnyResponse) String() string { return proto.CompactTextString(m) }
+func (*TestAnyResponse) ProtoMessage()    {}
+func (*TestAnyResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2fcc84b9998d60d8, []int{10}
+}
+func (m *TestAnyResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TestAnyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TestAnyResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TestAnyResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TestAnyResponse.Merge(m, src)
+}
+func (m *TestAnyResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TestAnyResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TestAnyResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TestAnyResponse proto.InternalMessageInfo
+
+func (m *TestAnyResponse) GetHasAnimal() *HasAnimal {
+	if m != nil {
+		return m.HasAnimal
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Dog)(nil), "testdata.Dog")
 	proto.RegisterType((*Cat)(nil), "testdata.Cat")
@@ -458,38 +546,44 @@ func init() {
 	proto.RegisterType((*EchoResponse)(nil), "testdata.EchoResponse")
 	proto.RegisterType((*SayHelloRequest)(nil), "testdata.SayHelloRequest")
 	proto.RegisterType((*SayHelloResponse)(nil), "testdata.SayHelloResponse")
+	proto.RegisterType((*TestAnyRequest)(nil), "testdata.TestAnyRequest")
+	proto.RegisterType((*TestAnyResponse)(nil), "testdata.TestAnyResponse")
 }
 
 func init() { proto.RegisterFile("proto.proto", fileDescriptor_2fcc84b9998d60d8) }
 
 var fileDescriptor_2fcc84b9998d60d8 = []byte{
-	// 414 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xb1, 0x8e, 0xd3, 0x40,
-	0x10, 0x86, 0xb3, 0xe4, 0xee, 0x48, 0xc6, 0x16, 0x87, 0x56, 0x07, 0xca, 0xb9, 0xb0, 0x90, 0x25,
-	0xc4, 0x49, 0x70, 0x6b, 0xe9, 0x4e, 0xd7, 0xd0, 0x85, 0x10, 0x91, 0x86, 0xc6, 0xa1, 0xa2, 0x41,
-	0x1b, 0x67, 0xb0, 0xad, 0xd8, 0xde, 0xe0, 0xdd, 0x44, 0x09, 0x2f, 0x40, 0xcb, 0x63, 0x51, 0xa6,
-	0xa4, 0x44, 0xc9, 0x8b, 0x20, 0xef, 0xda, 0x71, 0x14, 0x21, 0x94, 0xc6, 0x9e, 0x19, 0xff, 0xff,
-	0xb7, 0xe3, 0x99, 0x05, 0x6b, 0x5e, 0x08, 0x25, 0x98, 0x7e, 0xd2, 0x8e, 0x42, 0xa9, 0xa6, 0x5c,
-	0x71, 0xe7, 0x3a, 0x12, 0x22, 0x4a, 0xd1, 0xd7, 0xf5, 0xc9, 0xe2, 0xab, 0xcf, 0xf3, 0xb5, 0x11,
-	0x79, 0xb7, 0xd0, 0x7e, 0x2f, 0x22, 0x4a, 0xe1, 0x4c, 0x26, 0xdf, 0xb1, 0x47, 0x5e, 0x90, 0x9b,
-	0x6e, 0xa0, 0xe3, 0xb2, 0x96, 0xf3, 0x0c, 0x7b, 0x8f, 0x4c, 0xad, 0x8c, 0xbd, 0x07, 0x68, 0x0f,
-	0xb8, 0xa2, 0x3d, 0x78, 0x9c, 0x89, 0x3c, 0x99, 0x61, 0x51, 0x39, 0xea, 0x94, 0x5e, 0xc1, 0x79,
-	0x9a, 0x2c, 0x51, 0x6a, 0xd7, 0x79, 0x60, 0x12, 0xef, 0x03, 0x74, 0x47, 0x5c, 0xf6, 0xf3, 0x24,
-	0xe3, 0x29, 0x7d, 0x03, 0x17, 0x5c, 0x47, 0xda, 0x6b, 0xdd, 0x5d, 0x31, 0xd3, 0x1e, 0xab, 0xdb,
-	0x63, 0xfd, 0x7c, 0x1d, 0x54, 0x1a, 0x6a, 0x03, 0x59, 0x69, 0x58, 0x3b, 0x20, 0x2b, 0x6f, 0x00,
-	0xf6, 0x88, 0xcb, 0x86, 0x75, 0x0f, 0x10, 0x73, 0xf9, 0xe5, 0x04, 0x5e, 0x37, 0xae, 0x4d, 0xde,
-	0x47, 0xb8, 0x34, 0x90, 0x86, 0xf3, 0x16, 0x9e, 0x94, 0x9c, 0x13, 0x59, 0x76, 0x7c, 0xe0, 0xf5,
-	0x5e, 0x81, 0x35, 0x0c, 0x63, 0x11, 0xe0, 0xb7, 0x05, 0x4a, 0x33, 0x1b, 0x94, 0x92, 0x47, 0xb8,
-	0x9f, 0x8d, 0x49, 0xbd, 0x1b, 0xb0, 0x8d, 0x50, 0xce, 0x45, 0x2e, 0xf1, 0x3f, 0xca, 0x97, 0x70,
-	0x39, 0xe6, 0xeb, 0x11, 0xa6, 0xe9, 0x1e, 0x5b, 0x6f, 0x83, 0x1c, 0x6c, 0x83, 0xc1, 0xd3, 0x46,
-	0x56, 0x41, 0x1d, 0xe8, 0x44, 0x05, 0xa2, 0x4a, 0xf2, 0xa8, 0xd2, 0xee, 0xf3, 0xbb, 0x1f, 0x04,
-	0xac, 0x4f, 0x28, 0xd5, 0x18, 0x8b, 0x65, 0x12, 0x22, 0x7d, 0x80, 0xb3, 0xb2, 0x21, 0xfa, 0x8c,
-	0xd5, 0x57, 0x85, 0x1d, 0xfc, 0x89, 0xf3, 0xfc, 0xb8, 0x5c, 0x1d, 0xd1, 0x87, 0x4e, 0x7d, 0x2c,
-	0xbd, 0x6e, 0x34, 0x47, 0x1d, 0x3b, 0xce, 0xbf, 0x3e, 0x19, 0xc4, 0xbb, 0xe1, 0xaf, 0xad, 0x4b,
-	0x36, 0x5b, 0x97, 0xfc, 0xd9, 0xba, 0xe4, 0xe7, 0xce, 0x6d, 0x6d, 0x76, 0x6e, 0xeb, 0xf7, 0xce,
-	0x6d, 0x7d, 0x7e, 0x1d, 0x25, 0x2a, 0x5e, 0x4c, 0x58, 0x28, 0x32, 0x3f, 0x14, 0x32, 0x13, 0xb2,
-	0x7a, 0xdd, 0xca, 0xe9, 0xcc, 0x0f, 0xc5, 0x14, 0x43, 0xbf, 0xe6, 0x4e, 0x2e, 0xf4, 0x5a, 0xee,
-	0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x38, 0x43, 0xe8, 0xad, 0xf8, 0x02, 0x00, 0x00,
+	// 467 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x4f, 0x6f, 0xd3, 0x30,
+	0x18, 0xc6, 0x6b, 0xba, 0x3f, 0xed, 0xdb, 0x6a, 0x45, 0x66, 0xa0, 0x36, 0x87, 0x08, 0x45, 0x42,
+	0x4c, 0x82, 0x25, 0x52, 0xab, 0x5d, 0x38, 0x20, 0x95, 0x51, 0xd1, 0x0b, 0x97, 0x8c, 0x13, 0x17,
+	0xe4, 0xa6, 0x2f, 0x49, 0xb4, 0xc4, 0x1e, 0x75, 0x3a, 0x2d, 0x7c, 0x0a, 0xbe, 0x15, 0x1c, 0x77,
+	0xe4, 0x88, 0xda, 0x2f, 0x82, 0x62, 0x3b, 0x7f, 0x98, 0x2a, 0xd4, 0x4b, 0xeb, 0xf7, 0xf5, 0xf3,
+	0xfc, 0x6c, 0x3f, 0x6f, 0xa0, 0x77, 0xb3, 0x12, 0x99, 0x70, 0xd5, 0x2f, 0xed, 0x64, 0x28, 0xb3,
+	0x25, 0xcb, 0x98, 0x35, 0x0a, 0x85, 0x08, 0x13, 0xf4, 0x54, 0x7f, 0xb1, 0xfe, 0xea, 0x31, 0x9e,
+	0x6b, 0x91, 0x73, 0x0e, 0xed, 0xf7, 0x22, 0xa4, 0x14, 0x0e, 0x64, 0xfc, 0x1d, 0x87, 0xe4, 0x39,
+	0x39, 0xeb, 0xfa, 0x6a, 0x5d, 0xf4, 0x38, 0x4b, 0x71, 0xf8, 0x48, 0xf7, 0x8a, 0xb5, 0x73, 0x01,
+	0xed, 0x4b, 0x96, 0xd1, 0x21, 0x1c, 0xa7, 0x82, 0xc7, 0xd7, 0xb8, 0x32, 0x8e, 0xb2, 0xa4, 0xa7,
+	0x70, 0x98, 0xc4, 0xb7, 0x28, 0x95, 0xeb, 0xd0, 0xd7, 0x85, 0xf3, 0x01, 0xba, 0x73, 0x26, 0xa7,
+	0x3c, 0x4e, 0x59, 0x42, 0x5f, 0xc3, 0x11, 0x53, 0x2b, 0xe5, 0xed, 0x8d, 0x4f, 0x5d, 0x7d, 0x3d,
+	0xb7, 0xbc, 0x9e, 0x3b, 0xe5, 0xb9, 0x6f, 0x34, 0xb4, 0x0f, 0xe4, 0x4e, 0xc1, 0xda, 0x3e, 0xb9,
+	0x73, 0x2e, 0xa1, 0x3f, 0x67, 0xb2, 0x66, 0x4d, 0x00, 0x22, 0x26, 0xbf, 0xec, 0xc1, 0xeb, 0x46,
+	0xa5, 0xc9, 0xf9, 0x08, 0x03, 0x0d, 0xa9, 0x39, 0x6f, 0xe0, 0xa4, 0xe0, 0xec, 0xc9, 0xea, 0x47,
+	0x0d, 0xaf, 0xf3, 0x12, 0x7a, 0xb3, 0x20, 0x12, 0x3e, 0x7e, 0x5b, 0xa3, 0xd4, 0xd9, 0xa0, 0x94,
+	0x2c, 0xc4, 0x2a, 0x1b, 0x5d, 0x3a, 0x67, 0xd0, 0xd7, 0x42, 0x79, 0x23, 0xb8, 0xc4, 0xff, 0x28,
+	0x5f, 0xc0, 0xe0, 0x8a, 0xe5, 0x73, 0x4c, 0x92, 0x0a, 0x5b, 0x4e, 0x83, 0x34, 0xa6, 0xe1, 0xc2,
+	0xe3, 0x5a, 0x66, 0xa0, 0x16, 0x74, 0xc2, 0x15, 0x62, 0x16, 0xf3, 0xd0, 0x68, 0xab, 0xda, 0x99,
+	0xc1, 0xc9, 0x27, 0x94, 0x59, 0xf1, 0x04, 0x43, 0x9d, 0x00, 0x30, 0x9e, 0xef, 0x95, 0x1f, 0xe3,
+	0xb9, 0x79, 0xf0, 0x0c, 0x06, 0x15, 0xc6, 0x9c, 0x3a, 0xde, 0x31, 0x87, 0x27, 0x6e, 0xf9, 0x01,
+	0xba, 0x55, 0x58, 0x8d, 0x31, 0x8c, 0x7f, 0x12, 0xe8, 0x15, 0x9c, 0x2b, 0x5c, 0xdd, 0xc6, 0x01,
+	0xd2, 0x0b, 0x38, 0x28, 0xe2, 0xa1, 0x4f, 0x6b, 0x5f, 0x23, 0x57, 0xeb, 0xd9, 0xc3, 0xb6, 0x39,
+	0x7a, 0x0a, 0x9d, 0x32, 0x04, 0x3a, 0xaa, 0x35, 0x0f, 0xf2, 0xb3, 0xac, 0x5d, 0x5b, 0x06, 0xf1,
+	0x16, 0x8e, 0xcd, 0x83, 0xe8, 0xb0, 0x96, 0xfd, 0x1b, 0x95, 0x35, 0xda, 0xb1, 0xa3, 0xfd, 0xef,
+	0x66, 0xbf, 0x36, 0x36, 0xb9, 0xdf, 0xd8, 0xe4, 0xcf, 0xc6, 0x26, 0x3f, 0xb6, 0x76, 0xeb, 0x7e,
+	0x6b, 0xb7, 0x7e, 0x6f, 0xed, 0xd6, 0xe7, 0x57, 0x61, 0x9c, 0x45, 0xeb, 0x85, 0x1b, 0x88, 0xd4,
+	0x0b, 0x84, 0x4c, 0x85, 0x34, 0x7f, 0xe7, 0x72, 0x79, 0xed, 0x05, 0x62, 0x89, 0x81, 0x57, 0x62,
+	0x17, 0x47, 0x2a, 0xf0, 0xc9, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x82, 0x85, 0xb8, 0x56, 0xc6,
+	0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -506,6 +600,7 @@ const _ = grpc.SupportPackageIsVersion4
 type TestServiceClient interface {
 	Echo(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoResponse, error)
 	SayHello(ctx context.Context, in *SayHelloRequest, opts ...grpc.CallOption) (*SayHelloResponse, error)
+	TestAny(ctx context.Context, in *TestAnyRequest, opts ...grpc.CallOption) (*TestAnyResponse, error)
 }
 
 type testServiceClient struct {
@@ -534,10 +629,20 @@ func (c *testServiceClient) SayHello(ctx context.Context, in *SayHelloRequest, o
 	return out, nil
 }
 
+func (c *testServiceClient) TestAny(ctx context.Context, in *TestAnyRequest, opts ...grpc.CallOption) (*TestAnyResponse, error) {
+	out := new(TestAnyResponse)
+	err := c.cc.Invoke(ctx, "/testdata.TestService/TestAny", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TestServiceServer is the server API for TestService service.
 type TestServiceServer interface {
 	Echo(context.Context, *EchoRequest) (*EchoResponse, error)
 	SayHello(context.Context, *SayHelloRequest) (*SayHelloResponse, error)
+	TestAny(context.Context, *TestAnyRequest) (*TestAnyResponse, error)
 }
 
 // UnimplementedTestServiceServer can be embedded to have forward compatible implementations.
@@ -549,6 +654,9 @@ func (*UnimplementedTestServiceServer) Echo(ctx context.Context, req *EchoReques
 }
 func (*UnimplementedTestServiceServer) SayHello(ctx context.Context, req *SayHelloRequest) (*SayHelloResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+}
+func (*UnimplementedTestServiceServer) TestAny(ctx context.Context, req *TestAnyRequest) (*TestAnyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TestAny not implemented")
 }
 
 func RegisterTestServiceServer(s grpc1.Server, srv TestServiceServer) {
@@ -591,6 +699,24 @@ func _TestService_SayHello_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TestService_TestAny_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TestAnyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestServiceServer).TestAny(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testdata.TestService/TestAny",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestServiceServer).TestAny(ctx, req.(*TestAnyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _TestService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "testdata.TestService",
 	HandlerType: (*TestServiceServer)(nil),
@@ -602,6 +728,10 @@ var _TestService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SayHello",
 			Handler:    _TestService_SayHello_Handler,
+		},
+		{
+			MethodName: "TestAny",
+			Handler:    _TestService_TestAny_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -910,6 +1040,76 @@ func (m *SayHelloResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *TestAnyRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TestAnyRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TestAnyRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AnyAnimal != nil {
+		{
+			size, err := m.AnyAnimal.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProto(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TestAnyResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TestAnyResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TestAnyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.HasAnimal != nil {
+		{
+			size, err := m.HasAnimal.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProto(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintProto(dAtA []byte, offset int, v uint64) int {
 	offset -= sovProto(v)
 	base := offset
@@ -1043,6 +1243,32 @@ func (m *SayHelloResponse) Size() (n int) {
 	_ = l
 	l = len(m.Greeting)
 	if l > 0 {
+		n += 1 + l + sovProto(uint64(l))
+	}
+	return n
+}
+
+func (m *TestAnyRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.AnyAnimal != nil {
+		l = m.AnyAnimal.Size()
+		n += 1 + l + sovProto(uint64(l))
+	}
+	return n
+}
+
+func (m *TestAnyResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.HasAnimal != nil {
+		l = m.HasAnimal.Size()
 		n += 1 + l + sovProto(uint64(l))
 	}
 	return n
@@ -1876,6 +2102,184 @@ func (m *SayHelloResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Greeting = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProto(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthProto
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthProto
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TestAnyRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProto
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TestAnyRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TestAnyRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AnyAnimal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProto
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProto
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProto
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AnyAnimal == nil {
+				m.AnyAnimal = &types.Any{}
+			}
+			if err := m.AnyAnimal.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProto(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthProto
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthProto
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TestAnyResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProto
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TestAnyResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TestAnyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HasAnimal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProto
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProto
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProto
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.HasAnimal == nil {
+				m.HasAnimal = &HasAnimal{}
+			}
+			if err := m.HasAnimal.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

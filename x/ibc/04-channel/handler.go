@@ -3,10 +3,8 @@ package channel
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )

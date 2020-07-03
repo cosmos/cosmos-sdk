@@ -2,83 +2,92 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-const (
-	testPort1 = "firstport"
-	testPort2 = "secondport"
-
-	testChannel1 = "firstchannel"
-	testChannel2 = "secondchannel"
-)
-
+// TestVerifyClientConsensusState verifies that the consensus state of
+// chainA stored on clientB (which is on chainB) matches the consensus
+// state for chainA at that height.
 func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
-	// create connection on chainA to chainB
-	counterparty := types.NewCounterparty(
-		testClientIDA, testConnectionIDA,
-		commitmenttypes.NewMerklePrefix(suite.oldchainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
+	var (
+		connA          *ibctesting.TestConnection
+		connB          *ibctesting.TestConnection
+		changeClientID bool
+		heightDiff     uint64
 	)
-	connection1 := types.NewConnectionEnd(
-		types.UNINITIALIZED, testConnectionIDB, testClientIDB, counterparty,
-		types.GetCompatibleVersions(),
-	)
-
 	cases := []struct {
-		msg        string
-		connection types.ConnectionEnd
-		malleate   func() clientexported.ConsensusState
-		expPass    bool
+		msg      string
+		malleate func()
+		expPass  bool
 	}{
-		{"verification success", connection1, func() clientexported.ConsensusState {
-			suite.oldchainA.CreateClient(suite.oldchainB)
-			suite.oldchainB.CreateClient(suite.oldchainA)
-			consState := suite.oldchainA.Header.ConsensusState()
-			return consState
+		{"verification success", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 		}, true},
-		{"client state not found", connection1, func() clientexported.ConsensusState {
-			return suite.oldchainB.Header.ConsensusState()
+		{"client state not found", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			changeClientID = true
 		}, false},
-		{"verification failed", connection1, func() clientexported.ConsensusState {
-			suite.oldchainA.CreateClient(suite.oldchainA)
-			return suite.oldchainA.Header.ConsensusState()
+		{"consensus state not found", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			heightDiff = 5
+		}, false},
+		{"verification failed", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			clientB := connB.ClientID
+
+			// give chainB wrong consensus state for chainA
+			consState, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainB.GetContext(), clientB)
+			suite.Require().True(found)
+
+			tmConsState, ok := consState.(ibctmtypes.ConsensusState)
+			suite.Require().True(ok)
+
+			tmConsState.Timestamp = time.Now()
+			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainB.GetContext(), clientB, tmConsState.Height, tmConsState)
+
+			suite.coordinator.CommitBlock(suite.chainB)
 		}, false},
 	}
 
-	// Create Client of chain B on Chain App
-	// Check that we can verify B's consensus state on chain A
-	for i, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
-		i := i
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
 
-			consState := tc.malleate()
+		suite.Run(tc.msg, func() {
+			suite.SetupTest()      // reset
+			heightDiff = 0         // must be explicitly changed in malleate
+			changeClientID = false // must be explicitly changed in malleate
 
-			// perform a couple updates of chain B on chain A
-			suite.oldchainA.updateClient(suite.oldchainB)
-			suite.oldchainA.updateClient(suite.oldchainB)
+			tc.malleate()
 
-			// TODO: is this the right consensus height
-			consensusHeight := suite.oldchainA.Header.GetHeight()
-			consensusKey := prefixedClientKey(testClientIDA, host.KeyConsensusState(consensusHeight))
+			connection := suite.chainA.GetConnection(connA)
+			if changeClientID {
+				connection.ClientID = "does not exist"
+			}
 
-			// get proof that chainB stored chainA' consensus state
-			proof, proofHeight := queryProof(suite.oldchainB, consensusKey)
+			proof, consensusHeight := suite.chainB.QueryConsensusStateProof(connB.ClientID)
+			proofHeight := uint64(suite.chainA.GetContext().BlockHeight() - 1)
+			consensusState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetSelfConsensusState(suite.chainA.GetContext(), consensusHeight)
+			suite.Require().True(found)
 
-			err := suite.oldchainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-				suite.oldchainA.GetContext(), tc.connection, proofHeight+1, consensusHeight, proof, consState,
+			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
+				suite.chainA.GetContext(), connection,
+				proofHeight+heightDiff, consensusHeight, proof, consensusState,
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}

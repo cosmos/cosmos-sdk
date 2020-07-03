@@ -28,24 +28,18 @@ import (
 
 // server context
 type Context struct {
+	Viper  *viper.Viper
 	Config *tmcfg.Config
 	Logger log.Logger
 }
 
 func NewDefaultContext() *Context {
-	return NewContext(
-		tmcfg.DefaultConfig(),
-		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
-	)
+	return NewContext(viper.New(), tmcfg.DefaultConfig(), log.NewTMLogger(log.NewSyncWriter(os.Stdout)))
 }
 
-func NewContext(config *tmcfg.Config, logger log.Logger) *Context {
-	return &Context{config, logger}
+func NewContext(v *viper.Viper, config *tmcfg.Config, logger log.Logger) *Context {
+	return &Context{v, config, logger}
 }
-
-// PersistentPreRunEFn returns a PersistentPreRunE function for cobra
-// that initailizes the passed in context with a properly configured
-// logger and config object.
 
 // PersistentPreRunEFn returns a PersistentPreRunE function for the root daemon
 // application command. The provided context is typically the default context,
@@ -53,7 +47,7 @@ func NewContext(config *tmcfg.Config, logger log.Logger) *Context {
 // creating a new Tendermint configuration file (config.toml). The provided
 // viper object must be created at the root level and have all necessary flags,
 // defined by Tendermint, bound to it.
-func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error {
+func PersistentPreRunEFn(ctx *Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		rootViper := viper.New()
 		rootViper.BindPFlags(cmd.Flags())
@@ -63,7 +57,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 			return nil
 		}
 
-		config, err := interceptConfigs(rootViper)
+		config, err := interceptConfigs(ctx, rootViper)
 		if err != nil {
 			return err
 		}
@@ -79,8 +73,8 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		}
 
 		logger = logger.With("module", "main")
-		context.Config = config
-		context.Logger = logger
+		ctx.Config = config
+		ctx.Logger = logger
 
 		return nil
 	}
@@ -91,7 +85,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 // configuration file. The Tendermint configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
+func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
 	configPath := filepath.Join(rootDir, "config")
 	configFile := filepath.Join(configPath, "config.toml")
@@ -126,7 +120,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 
 	appConfigFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
-		appConf, err := config.ParseConfig(viperCfg)
+		appConf, err := config.ParseConfig(ctx.Viper)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse app.toml: %w", err)
 		}
@@ -134,10 +128,10 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 		config.WriteConfigFile(appConfigFilePath, appConf)
 	}
 
-	viperCfg.SetConfigType("toml")
-	viperCfg.SetConfigName("app")
-	viperCfg.AddConfigPath(configPath)
-	if err := viperCfg.ReadInConfig(); err != nil {
+	ctx.Viper.SetConfigType("toml")
+	ctx.Viper.SetConfigName("app")
+	ctx.Viper.AddConfigPath(configPath)
+	if err := ctx.Viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read in app.toml: %w", err)
 	}
 

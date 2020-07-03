@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
+var rootViper = viper.New()
+
 // Commands registers a sub-tree of commands to interact with
 // local private key storage.
 func Commands() *cobra.Command {
@@ -48,7 +50,9 @@ The pass backend requires GnuPG: https://gnupg.org/
 		ParseKeyStringCommand(),
 		MigrateCommand(),
 	)
+
 	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
+	rootViper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
+
 	return cmd
 }

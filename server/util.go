@@ -16,7 +16,6 @@ import (
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -43,8 +42,6 @@ func NewContext(config *cfg.Config, logger log.Logger) *Context {
 	return &Context{config, logger}
 }
 
-//___________________________________________________________________________________
-
 // PersistentPreRunEFn returns a PersistentPreRunE function for cobra
 // that initailizes the passed in context with a properly configured
 // logger and config object.
@@ -65,9 +62,10 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 			return err
 		}
 
-		if viper.GetBool(cli.TraceFlag) {
-			logger = log.NewTracingLogger(logger)
-		}
+		// TODO: Merge master to get trace flag.
+		// if viper.GetBool(cli.TraceFlag) {
+		// 	logger = log.NewTracingLogger(logger)
+		// }
 
 		logger = logger.With("module", "main")
 		context.Config = config

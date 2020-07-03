@@ -189,8 +189,6 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 
-	v.BindPFlag(flags.FlagName, cmd.Flags().Lookup(flags.FlagName))
-
 	cmd.MarkFlagRequired(flags.FlagName)
 
 	return cmd

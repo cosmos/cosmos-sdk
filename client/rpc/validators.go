@@ -56,15 +56,18 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+
 	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
+
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "indent JSON response")
-	viper.BindPFlag(flags.FlagIndentResponse, cmd.Flags().Lookup(flags.FlagIndentResponse))
+
 	cmd.Flags().Int(flags.FlagPage, 0, "Query a specific page of paginated results")
 	viper.BindPFlag(flags.FlagPage, cmd.Flags().Lookup(flags.FlagPage))
+
 	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
+	viper.BindPFlag(flags.FlagLimit, cmd.Flags().Lookup(flags.FlagLimit))
 
 	return cmd
 }

@@ -15,7 +15,7 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 	app, ctx := suite.app, suite.ctx
 	_, _, addr := authtypes.KeyTestPubAddr()
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -47,7 +47,7 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	app, ctx := suite.app, suite.ctx
 	_, _, addr := authtypes.KeyTestPubAddr()
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -97,7 +97,7 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -116,7 +116,7 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -127,5 +127,5 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	suite.Require().Equal(test1Supply.Amount, res.Amount)
+	suite.Require().Equal(test1Supply, res.Amount)
 }

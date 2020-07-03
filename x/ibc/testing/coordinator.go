@@ -286,8 +286,8 @@ func (coord *Coordinator) ConnOpenInit(
 	source, counterparty *TestChain,
 	clientID, counterpartyClientID string,
 ) (*TestConnection, *TestConnection, error) {
-	sourceConnection := source.NewTestConnection(clientID, counterpartyClientID)
-	counterpartyConnection := counterparty.NewTestConnection(counterpartyClientID, clientID)
+	sourceConnection := source.AddTestConnection(clientID, counterpartyClientID)
+	counterpartyConnection := counterparty.AddTestConnection(counterpartyClientID, clientID)
 
 	// initialize connection on source
 	if err := source.ConnectionOpenInit(counterparty, sourceConnection, counterpartyConnection); err != nil {

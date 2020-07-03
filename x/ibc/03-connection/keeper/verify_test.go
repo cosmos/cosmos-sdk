@@ -193,9 +193,9 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	}
 }
 
-// TestVerifyChannelState has chainB verify the packet commitment on channelA
-// on chainA. The channels on chainA and chainB are fully opened and a packet
-// is sent from chainA to chainB, but has not been received.
+// TestVerifyPacketCommitmentState has chainB verify the packet commitment
+// on channelA. The channels on chainA and chainB are fully opened and a
+// packet is sent from chainA to chainB, but has not been received.
 func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 	cases := []struct {
 		msg                         string
@@ -247,52 +247,60 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 	}
 }
 
+// TestVerifyPacketAcknowledgement has chainA verify the acknowledgement on
+// channelB. The channels on chainA and chainB are fully opened and a packet
+// is sent from chainA to chainB and received.
 func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
-	packetAckKey := host.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
-	ack := []byte("acknowledgement")
-
 	cases := []struct {
-		msg         string
-		proofHeight uint64
-		malleate    func()
-		expPass     bool
+		msg                   string
+		changeClientID        bool
+		changeAcknowledgement bool
+		heightDiff            uint64
+		expPass               bool
 	}{
-		{"verification success", 0, func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-		}, true},
-		{"client state not found", 0, func() {}, false},
-		{"consensus state not found", 100, func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-		}, false},
+		{"verification success", false, false, 0, true},
+		{"client state not found- changed client ID", true, false, 0, false},
+		{"consensus state not found - increased proof height", false, false, 5, false},
+		{"verification failed - changed acknowledgement", false, true, 0, false},
 	}
 
-	for i, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
-		i := i
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+
+		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			tc.malleate()
-			connection := suite.oldchainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
-			suite.oldchainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.oldchainA.GetContext(), testPort1, testChannel1, 1, channeltypes.CommitAcknowledgement(ack))
-			suite.oldchainB.updateClient(suite.oldchainA)
-
-			// TODO check this proof height
-			proof, proofHeight := queryProof(suite.oldchainA, packetAckKey)
-			// if testcase proofHeight is not 0, replace proofHeight with this value
-			if tc.proofHeight != 0 {
-				proofHeight = tc.proofHeight
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			connection := suite.chainA.GetConnection(connA)
+			if tc.changeClientID {
+				connection.ClientID = ibctesting.InvalidID
 			}
 
-			err := suite.oldchainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
-				suite.oldchainB.GetContext(), connection, proofHeight+1, proof, testPort1,
-				testChannel1, 1, ack,
+			// send and receive packet
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
+
+			ack := ibctesting.TestHash
+			if tc.changeAcknowledgement {
+				ack = []byte(ibctesting.InvalidID)
+			}
+
+			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
+				suite.chainA.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack,
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}

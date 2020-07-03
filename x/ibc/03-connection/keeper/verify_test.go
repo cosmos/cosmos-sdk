@@ -370,49 +370,51 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 // channelB. The channels on chainA and chainB are fully opened and a packet
 // is sent from chainA to chainB and received.
 func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
-	nextSeqRcvKey := host.KeyNextSequenceRecv(testPort1, testChannel1)
-
 	cases := []struct {
-		msg         string
-		proofHeight uint64
-		malleate    func()
-		expPass     bool
+		msg            string
+		changeClientID bool
+		offsetSeq      uint64
+		heightDiff     uint64
+		expPass        bool
 	}{
-		{"verification success", uint64(0), func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-		}, true},
-		{"client state not found", uint64(0), func() {}, false},
-		{"consensus state not found", uint64(100), func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-		}, false},
+		{"verification success", false, 0, 0, true},
+		{"client state not found- changed client ID", true, 0, 0, false},
+		{"consensus state not found - increased proof height", false, 0, 5, false},
+		{"verification failed - wrong expected next seq recv", false, 1, 0, false},
 	}
 
-	for i, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
-		i := i
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+
+		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			tc.malleate()
-			connection := suite.oldchainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
-			suite.oldchainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.oldchainA.GetContext(), testPort1, testChannel1, 1)
-			suite.oldchainB.updateClient(suite.oldchainA)
-
-			proof, proofHeight := queryProof(suite.oldchainA, nextSeqRcvKey)
-			// if testcase proofHeight is not 0, replace proofHeight with this value
-			if tc.proofHeight != 0 {
-				proofHeight = tc.proofHeight
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			connection := suite.chainA.GetConnection(connA)
+			if tc.changeClientID {
+				connection.ClientID = ibctesting.InvalidID
 			}
 
-			err := suite.oldchainB.App.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
-				suite.oldchainB.GetContext(), connection, proofHeight+1, proof, testPort1,
-				testChannel1, 1,
+			// send and receive packet
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			proof, proofHeight := suite.chainB.QueryProof(nextSeqRecvKey)
+
+			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
+				suite.chainA.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()+tc.offsetSeq,
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}

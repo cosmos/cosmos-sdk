@@ -90,7 +90,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 // creates a new one and saves it. It also parses and saves the application
 // configuration file. The Tendermint configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
-// srvViper object.
+// viperCfg object.
 func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
 	configPath := filepath.Join(rootDir, "config")
@@ -126,7 +126,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 
 	appConfigFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
-		appConf, err := config.ParseConfig(srvViper)
+		appConf, err := config.ParseConfig(viperCfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse app.toml: %w", err)
 		}
@@ -134,10 +134,10 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 		config.WriteConfigFile(appConfigFilePath, appConf)
 	}
 
-	srvViper.SetConfigType("toml")
-	srvViper.SetConfigName("app")
-	srvViper.AddConfigPath(configPath)
-	if err := srvViper.ReadInConfig(); err != nil {
+	viperCfg.SetConfigType("toml")
+	viperCfg.SetConfigName("app")
+	viperCfg.AddConfigPath(configPath)
+	if err := viperCfg.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read in app.toml: %w", err)
 	}
 

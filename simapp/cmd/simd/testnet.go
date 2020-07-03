@@ -61,14 +61,14 @@ Example:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			config := ctx.Config
 
-			outputDir := simdViper.GetString(flagOutputDir)
-			chainID := simdViper.GetString(flags.FlagChainID)
-			minGasPrices := simdViper.GetString(server.FlagMinGasPrices)
-			nodeDirPrefix := simdViper.GetString(flagNodeDirPrefix)
-			nodeDaemonHome := simdViper.GetString(flagNodeDaemonHome)
-			nodeCLIHome := simdViper.GetString(flagNodeCLIHome)
-			startingIPAddress := simdViper.GetString(flagStartingIPAddress)
-			numValidators := simdViper.GetInt(flagNumValidators)
+			outputDir := viperCfg.GetString(flagOutputDir)
+			chainID := viperCfg.GetString(flags.FlagChainID)
+			minGasPrices := viperCfg.GetString(server.FlagMinGasPrices)
+			nodeDirPrefix := viperCfg.GetString(flagNodeDirPrefix)
+			nodeDaemonHome := viperCfg.GetString(flagNodeDaemonHome)
+			nodeCLIHome := viperCfg.GetString(flagNodeCLIHome)
+			startingIPAddress := viperCfg.GetString(flagStartingIPAddress)
+			numValidators := viperCfg.GetInt(flagNumValidators)
 
 			return InitTestnet(
 				cmd, config, cdc, mbm, genBalIterator, outputDir, chainID, minGasPrices,
@@ -87,7 +87,7 @@ Example:
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 
-	simdViper.BindPFlags(cmd.Flags())
+	viperCfg.BindPFlags(cmd.Flags())
 
 	return cmd
 }
@@ -165,7 +165,7 @@ func InitTestnet(
 
 		kb, err := keyring.New(
 			sdk.KeyringServiceName(),
-			simdViper.GetString(flags.FlagKeyringBackend),
+			viperCfg.GetString(flags.FlagKeyringBackend),
 			clientDir,
 			inBuf,
 		)

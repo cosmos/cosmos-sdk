@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var simdViper = viper.New()
+var viperCfg = viper.New()
 
 func main() {
 	appCodec, cdc := simapp.MakeCodecs()
@@ -44,7 +44,7 @@ func main() {
 	}
 
 	rootCmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	simdViper.BindPFlags(rootCmd.Flags())
+	viperCfg.BindPFlags(rootCmd.Flags())
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome),

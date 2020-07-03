@@ -27,7 +27,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var srvViper = viper.New()
+var viperCfg = viper.New()
 
 // Tendermint full-node start flags
 const (
@@ -78,11 +78,11 @@ For profiling and benchmarking purposes, CPU profiling can be enabled via the '-
 which accepts a path for the resulting pprof file.
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			_, err := GetPruningOptionsFromFlags(srvViper)
+			_, err := GetPruningOptionsFromFlags(viperCfg)
 			return err
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !srvViper.GetBool(flagWithTendermint) {
+			if !viperCfg.GetBool(flagWithTendermint) {
 				ctx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(ctx, appCreator)
 			}
@@ -111,8 +111,8 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 
-	srvViper.BindPFlags(cmd.Flags())
-	srvViper.BindPFlags(cmd.PersistentFlags())
+	viperCfg.BindPFlags(cmd.Flags())
+	viperCfg.BindPFlags(cmd.PersistentFlags())
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -120,9 +120,9 @@ which accepts a path for the resulting pprof file.
 }
 
 func startStandAlone(ctx *Context, appCreator AppCreator) error {
-	addr := srvViper.GetString(flagAddress)
-	home := srvViper.GetString(flags.FlagHome)
-	traceWriterFile := srvViper.GetString(flagTraceStore)
+	addr := viperCfg.GetString(flagAddress)
+	home := viperCfg.GetString(flags.FlagHome)
+	traceWriterFile := viperCfg.GetString(flagTraceStore)
 
 	db, err := openDB(home)
 	if err != nil {
@@ -133,7 +133,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter, srvViper)
+	app := appCreator(ctx.Logger, db, traceWriter, viperCfg)
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
@@ -163,7 +163,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 	cfg := ctx.Config
 	home := cfg.RootDir
 
-	traceWriterFile := srvViper.GetString(flagTraceStore)
+	traceWriterFile := viperCfg.GetString(flagTraceStore)
 	db, err := openDB(home)
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter, srvViper)
+	app := appCreator(ctx.Logger, db, traceWriter, viperCfg)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
@@ -204,7 +204,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 	var apiSrv *api.Server
 
-	config := config.GetConfig(srvViper)
+	config := config.GetConfig(viperCfg)
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -241,7 +241,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 	var cpuProfileCleanup func()
 
-	if cpuProfile := srvViper.GetString(flagCPUProfile); cpuProfile != "" {
+	if cpuProfile := viperCfg.GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
 		if err != nil {
 			return err

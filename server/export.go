@@ -28,9 +28,9 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			config.SetRoot(srvViper.GetString(flags.FlagHome))
+			config.SetRoot(viperCfg.GetString(flags.FlagHome))
 
-			traceWriterFile := srvViper.GetString(flagTraceStore)
+			traceWriterFile := viperCfg.GetString(flagTraceStore)
 
 			db, err := openDB(config.RootDir)
 			if err != nil {
@@ -56,9 +56,9 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 				return err
 			}
 
-			height := srvViper.GetInt64(flagHeight)
-			forZeroHeight := srvViper.GetBool(flagForZeroHeight)
-			jailWhiteList := srvViper.GetStringSlice(flagJailWhitelist)
+			height := viperCfg.GetInt64(flagHeight)
+			forZeroHeight := viperCfg.GetBool(flagForZeroHeight)
+			jailWhiteList := viperCfg.GetStringSlice(flagJailWhitelist)
 
 			appState, validators, cp, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
@@ -103,7 +103,7 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 	cmd.SetOut(cmd.OutOrStdout())
 	cmd.SetErr(cmd.OutOrStderr())
 
-	srvViper.BindPFlags(cmd.Flags())
+	viperCfg.BindPFlags(cmd.Flags())
 
 	return cmd
 }

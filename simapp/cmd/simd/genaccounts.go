@@ -40,7 +40,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			config.SetRoot(simdViper.GetString(cli.HomeFlag))
+			config.SetRoot(viperCfg.GetString(cli.HomeFlag))
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -48,8 +48,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				// attempt to lookup address from Keybase if no address was provided
 				kb, err := keyring.New(
 					sdk.KeyringServiceName(),
-					simdViper.GetString(flags.FlagKeyringBackend),
-					simdViper.GetString(flagClientHome),
+					viperCfg.GetString(flags.FlagKeyringBackend),
+					viperCfg.GetString(flagClientHome),
 					inBuf,
 				)
 				if err != nil {
@@ -69,9 +69,9 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				return fmt.Errorf("failed to parse coins: %w", err)
 			}
 
-			vestingStart := simdViper.GetInt64(flagVestingStart)
-			vestingEnd := simdViper.GetInt64(flagVestingEnd)
-			vestingAmt, err := sdk.ParseCoins(simdViper.GetString(flagVestingAmt))
+			vestingStart := viperCfg.GetInt64(flagVestingStart)
+			vestingEnd := viperCfg.GetInt64(flagVestingEnd)
+			vestingAmt, err := sdk.ParseCoins(viperCfg.GetString(flagVestingAmt))
 			if err != nil {
 				return fmt.Errorf("failed to parse vesting amount: %w", err)
 			}

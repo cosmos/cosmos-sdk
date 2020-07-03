@@ -82,7 +82,8 @@ which accepts a path for the resulting pprof file.
 			return err
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !viperCfg.GetBool(flagWithTendermint) {
+			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
+			if !withTM {
 				ctx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(ctx, appCreator)
 			}

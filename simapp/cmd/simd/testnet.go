@@ -61,18 +61,19 @@ Example:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			config := ctx.Config
 
-			outputDir := viperCfg.GetString(flagOutputDir)
-			chainID := viperCfg.GetString(flags.FlagChainID)
-			minGasPrices := viperCfg.GetString(server.FlagMinGasPrices)
-			nodeDirPrefix := viperCfg.GetString(flagNodeDirPrefix)
-			nodeDaemonHome := viperCfg.GetString(flagNodeDaemonHome)
-			nodeCLIHome := viperCfg.GetString(flagNodeCLIHome)
-			startingIPAddress := viperCfg.GetString(flagStartingIPAddress)
-			numValidators := viperCfg.GetInt(flagNumValidators)
+			outputDir, _ := cmd.Flags().GetString(flagOutputDir)
+			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
+			minGasPrices, _ := cmd.Flags().GetString(server.FlagMinGasPrices)
+			nodeDirPrefix, _ := cmd.Flags().GetString(flagNodeDirPrefix)
+			nodeDaemonHome, _ := cmd.Flags().GetString(flagNodeDaemonHome)
+			nodeCLIHome, _ := cmd.Flags().GetString(flagNodeCLIHome)
+			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
+			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 
 			return InitTestnet(
 				cmd, config, cdc, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, numValidators,
+				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, keyringBackend, numValidators,
 			)
 		},
 	}
@@ -87,8 +88,6 @@ Example:
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 
-	viperCfg.BindPFlags(cmd.Flags())
-
 	return cmd
 }
 
@@ -99,7 +98,7 @@ func InitTestnet(
 	cmd *cobra.Command, config *tmconfig.Config, cdc codec.JSONMarshaler,
 	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
-	nodeCLIHome, startingIPAddress string, numValidators int,
+	nodeCLIHome, startingIPAddress, keyringBackend string, numValidators int,
 ) error {
 
 	if chainID == "" {
@@ -163,12 +162,7 @@ func InitTestnet(
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 		genFiles = append(genFiles, config.GenesisFile())
 
-		kb, err := keyring.New(
-			sdk.KeyringServiceName(),
-			viperCfg.GetString(flags.FlagKeyringBackend),
-			clientDir,
-			inBuf,
-		)
+		kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientDir, inBuf)
 		if err != nil {
 			return err
 		}

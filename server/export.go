@@ -32,8 +32,6 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 			config.SetRoot(homeDir)
 
-			traceWriterFile := viperCfg.GetString(flagTraceStore)
-
 			db, err := openDB(config.RootDir)
 			if err != nil {
 				return err
@@ -53,14 +51,15 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 				return nil
 			}
 
+			traceWriterFile, _ := cmd.Flags().GetString(flagTraceStore)
 			traceWriter, err := openTraceWriter(traceWriterFile)
 			if err != nil {
 				return err
 			}
 
-			height := viperCfg.GetInt64(flagHeight)
-			forZeroHeight := viperCfg.GetBool(flagForZeroHeight)
-			jailWhiteList := viperCfg.GetStringSlice(flagJailWhitelist)
+			height, _ := cmd.Flags().GetInt64(flagHeight)
+			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
+			jailWhiteList, _ := cmd.Flags().GetStringSlice(flagJailWhitelist)
 
 			appState, validators, cp, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {

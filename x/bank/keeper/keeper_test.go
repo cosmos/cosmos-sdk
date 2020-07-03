@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -496,6 +496,10 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	event1.Attributes = append(
 		event1.Attributes,
 		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+	)
+	event1.Attributes = append(
+		event1.Attributes,
+		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,

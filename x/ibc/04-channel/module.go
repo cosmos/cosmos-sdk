@@ -13,7 +13,7 @@ import (
 
 // Name returns the IBC channel ICS name.
 func Name() string {
-	return SubModuleName
+	return types.SubModuleName
 }
 
 // GetTxCmd returns the root tx command for IBC channels.

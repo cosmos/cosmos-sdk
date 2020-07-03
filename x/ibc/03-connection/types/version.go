@@ -49,6 +49,9 @@ func UnpackVersion(version string) (string, []string, error) {
 
 	// split into identifier and feature set
 	splitVersion := strings.SplitN(version, ",", 2)
+	if splitVersion[0] == version {
+		return "", nil, sdkerrors.Wrap(ErrInvalidVersion, "failed to split version '%s' into identifier and features", version)
+	}
 	identifier := splitVersion[0]
 
 	// peel off prefix and suffix of features

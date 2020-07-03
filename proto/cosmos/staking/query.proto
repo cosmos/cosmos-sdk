@@ -12,7 +12,7 @@ service Query {
   // Validators queries all validators that match given status and
   rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
 
-  // ValidatorQ queries validator info for given validator addr
+  // Validator queries validator info for given validator addr
   rpc Validator (QueryValidatorRequest) returns (QueryValidatorResponse) {}
 
   // ValidatorDelegations queries delegate info for given validator
@@ -21,7 +21,7 @@ service Query {
   // ValidatorUnbondingDelegations queries unbonding delegations of a validator
   rpc ValidatorUnbondingDelegations (QueryValidatorUnbondingDelegationsRequest) returns (QueryValidatorUnbondingDelegationsResponse) {}
 
-  // DelegationQ queries delegate info for given validator delegator pair
+  // Delegation queries delegate info for given validator delegator pair
   rpc Delegation (QueryDelegationRequest) returns (QueryDelegationResponse) {}
 
   // UnbondingDelegation queries unbonding info for give validator delegator pair

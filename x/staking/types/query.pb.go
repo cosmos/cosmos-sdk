@@ -1611,13 +1611,13 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Validators queries all validators that match given status and
 	Validators(ctx context.Context, in *QueryValidatorsRequest, opts ...grpc.CallOption) (*QueryValidatorsResponse, error)
-	// ValidatorQ queries validator info for given validator addr
+	// Validator queries validator info for given validator addr
 	Validator(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorResponse, error)
 	// ValidatorDelegations queries delegate info for given validator
 	ValidatorDelegations(ctx context.Context, in *QueryValidatorDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorDelegationsResponse, error)
 	// ValidatorUnbondingDelegations queries unbonding delegations of a validator
 	ValidatorUnbondingDelegations(ctx context.Context, in *QueryValidatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorUnbondingDelegationsResponse, error)
-	// DelegationQ queries delegate info for given validator delegator pair
+	// Delegation queries delegate info for given validator delegator pair
 	Delegation(ctx context.Context, in *QueryDelegationRequest, opts ...grpc.CallOption) (*QueryDelegationResponse, error)
 	// UnbondingDelegation queries unbonding info for give validator delegator pair
 	UnbondingDelegation(ctx context.Context, in *QueryUnbondingDelegationRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
@@ -1777,13 +1777,13 @@ func (c *queryClient) Parameters(ctx context.Context, in *QueryParametersRequest
 type QueryServer interface {
 	// Validators queries all validators that match given status and
 	Validators(context.Context, *QueryValidatorsRequest) (*QueryValidatorsResponse, error)
-	// ValidatorQ queries validator info for given validator addr
+	// Validator queries validator info for given validator addr
 	Validator(context.Context, *QueryValidatorRequest) (*QueryValidatorResponse, error)
 	// ValidatorDelegations queries delegate info for given validator
 	ValidatorDelegations(context.Context, *QueryValidatorDelegationsRequest) (*QueryValidatorDelegationsResponse, error)
 	// ValidatorUnbondingDelegations queries unbonding delegations of a validator
 	ValidatorUnbondingDelegations(context.Context, *QueryValidatorUnbondingDelegationsRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
-	// DelegationQ queries delegate info for given validator delegator pair
+	// Delegation queries delegate info for given validator delegator pair
 	Delegation(context.Context, *QueryDelegationRequest) (*QueryDelegationResponse, error)
 	// UnbondingDelegation queries unbonding info for give validator delegator pair
 	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)

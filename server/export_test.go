@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -60,12 +61,8 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
-	cmd.SetArgs([]string{"--%s=%s", flags.FlagHome, tempDir})
-
-	err = cmd.RunE(cmd, []string{})
-	if err != nil {
-		t.Errorf("error: %s", err)
-	}
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
+	require.NoError(t, cmd.Execute())
 
 	var exportedGenDoc tmtypes.GenesisDoc
 	err = app.Codec().UnmarshalJSON(output.Bytes(), &exportedGenDoc)

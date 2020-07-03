@@ -19,6 +19,8 @@ import (
 
 const flagGenTxDir = "gentx-dir"
 
+var v = viper.New()
+
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
 func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
@@ -26,8 +28,8 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 		Short: "Collect genesis txs and output a genesis.json file",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
-			config.SetRoot(viper.GetString(cli.HomeFlag))
-			name := viper.GetString(flags.FlagName)
+			config.SetRoot(v.GetString(cli.HomeFlag))
+			name := v.GetString(flags.FlagName)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
@@ -38,7 +40,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 				return errors.Wrap(err, "failed to read genesis doc from file")
 			}
 
-			genTxsDir := viper.GetString(flagGenTxDir)
+			genTxsDir := v.GetString(flagGenTxDir)
 			if genTxsDir == "" {
 				genTxsDir = filepath.Join(config.RootDir, "config", "gentx")
 			}
@@ -62,6 +64,9 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 	cmd.Flags().String(flagGenTxDir, "",
 		"override default \"gentx\" directory from which collect and execute "+
 			"genesis transactions; default [--home]/config/gentx/")
+
+	v.BindPFlag(cli.HomeFlag, cmd.Flags().Lookup(cli.HomeFlag))
+	v.BindPFlag(flagGenTxDir, cmd.Flags().Lookup(flagGenTxDir))
 
 	return cmd
 }

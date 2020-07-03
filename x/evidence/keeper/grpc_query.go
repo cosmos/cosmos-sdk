@@ -58,7 +58,6 @@ func (k Keeper) AllEvidences(c context.Context, req *types.QueryAllEvidencesRequ
 	evidencesStore := prefix.NewStore(store, types.KeyPrefixEvidence)
 
 	res, err := query.Paginate(evidencesStore, req.Req, func(key []byte, value []byte) error {
-		// var result exported.Evidence
 		result, err := k.UnmarshalEvidence(value)
 		if err != nil {
 			return err

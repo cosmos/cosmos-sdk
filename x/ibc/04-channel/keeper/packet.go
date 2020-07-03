@@ -212,6 +212,24 @@ func (k Keeper) RecvPacket(
 		}
 	}
 
+	// check if the packet is being received in order
+	if channel.Ordering == types.ORDERED {
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return sdkerrors.Wrapf(
+				types.ErrSequenceReceiveNotFound,
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+			)
+		}
+
+		if packet.GetSequence() != nextSequenceRecv {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
+			)
+		}
+	}
+
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
@@ -271,13 +289,6 @@ func (k Keeper) PacketExecuted(
 			return sdkerrors.Wrapf(
 				types.ErrSequenceReceiveNotFound,
 				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
-			)
-		}
-
-		if packet.GetSequence() != nextSequenceRecv {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidPacket,
-				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
 			)
 		}
 

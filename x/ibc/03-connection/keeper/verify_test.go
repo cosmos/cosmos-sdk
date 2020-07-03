@@ -306,54 +306,69 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 	}
 }
 
+// TestVerifyPacketAcknowledgementAbsence has chainA verify the acknowledgement
+// absence on channelB. The channels on chainA and chainB are fully opened and
+// a packet is sent from chainA to chainB and not received.
 func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-	packetAckKey := host.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
-
 	cases := []struct {
-		msg         string
-		proofHeight uint64
-		malleate    func()
-		expPass     bool
+		msg            string
+		changeClientID bool
+		recvAck        bool
+		heightDiff     uint64
+		expPass        bool
 	}{
-		{"verification success", 0, func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-		}, true},
-		{"client state not found", 0, func() {}, false},
-		{"consensus state not found", 100, func() {
-			suite.oldchainB.CreateClient(suite.oldchainA)
-		}, false},
+		{"verification success", false, false, 0, true},
+		{"client state not found - changed client ID", true, false, 0, false},
+		{"consensus state not found - increased proof height", false, false, 5, false},
+		{"verification failed - acknowledgement was received", false, true, 0, false},
 	}
 
-	for i, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
-		i := i
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+
+		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			tc.malleate()
-			connection := suite.oldchainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, types.OPEN)
-			suite.oldchainB.updateClient(suite.oldchainA)
-
-			proof, proofHeight := queryProof(suite.oldchainA, packetAckKey)
-			// if testcase proofHeight is not 0, replace proofHeight with this value
-			if tc.proofHeight != 0 {
-				proofHeight = tc.proofHeight
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			connection := suite.chainA.GetConnection(connA)
+			if tc.changeClientID {
+				connection.ClientID = ibctesting.InvalidID
 			}
 
-			err := suite.oldchainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
-				suite.oldchainB.GetContext(), connection, proofHeight+1, proof, testPort1,
-				testChannel1, 1,
+			// send, only receive if specified
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			if tc.recvAck {
+				err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+				suite.Require().NoError(err)
+			} else {
+				// need to update height to prove absence
+				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+				suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			}
+
+			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
+
+			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
+				suite.chainA.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
 }
 
+// TestVerifyNextSequenceRecv has chainA verify the next sequence receive on
+// channelB. The channels on chainA and chainB are fully opened and a packet
+// is sent from chainA to chainB and received.
 func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 	nextSeqRcvKey := host.KeyNextSequenceRecv(testPort1, testChannel1)
 

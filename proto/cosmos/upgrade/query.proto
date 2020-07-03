@@ -1,0 +1,33 @@
+syntax = "proto3";
+package cosmos.upgrade;
+
+import "cosmos/query/pagination.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
+
+// Query provides defines the gRPC querier service
+service Query {
+  // CurrentPlan queries the current plan
+  rpc CurrentPlan(QueryCurrentPlanRequest) returns (QueryCurrentPlanResponse) {}
+
+  // AppliedPlan queries a previously applied plan by its name
+  rpc AppliedPlan(QueryAppliedPlanRequest) returns (QueryAppliedPlanResponse) {}
+}
+
+// QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC method
+message QueryCurrentPlanRequest {}
+
+// QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC method
+message QueryCurrentPlanResponse {
+}
+
+// QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC method
+message QueryAppliedPlanRequest {
+  string name = 1;
+}
+
+// QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC method
+message QueryAppliedPlanResponse {
+}

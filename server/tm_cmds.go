@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -52,7 +51,8 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 				return err
 			}
 
-			if viper.GetString(cli.OutputFlag) == "json" {
+			output, _ := cmd.Flags().GetString(cli.OutputFlag)
+			if strings.ToLower(output) == "json" {
 				return printlnJSON(valPubKey)
 			}
 

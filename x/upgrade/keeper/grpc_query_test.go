@@ -38,7 +38,6 @@ func TestGRPCQueryUpgrade(t *testing.T) {
 	require.Nil(t, res.Plan)
 
 	appliedRes, appliedErr := queryClient.AppliedPlan(gocontext.Background(), &types.QueryAppliedPlanRequest{Name: "test-plan"})
-
 	require.NoError(t, appliedErr)
 	require.Equal(t, int64(5), appliedRes.Height)
 }

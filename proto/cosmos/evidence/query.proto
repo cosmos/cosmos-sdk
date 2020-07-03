@@ -12,8 +12,8 @@ service Query {
   // Evidence queries evidence based on evidence hash
   rpc Evidence(QueryEvidenceRequest) returns (QueryEvidenceResponse) {}
 
-  // AllEvidences queries all evidences
-  rpc AllEvidences(QueryAllEvidencesRequest) returns (QueryAllEvidencesResponse) {}
+  // AllEvidence queries all evidence
+  rpc AllEvidence(QueryAllEvidenceRequest) returns (QueryAllEvidenceResponse) {}
 }
 
 // QueryEvidenceRequest is the request type for the Query/Evidence RPC method
@@ -26,13 +26,13 @@ message QueryEvidenceResponse {
   google.protobuf.Any evidence = 1;
 }
 
-// QueryEvidenceRequest is the request type for the Query/AllEvidences RPC method
-message QueryAllEvidencesRequest {
+// QueryEvidenceRequest is the request type for the Query/AllEvidence RPC method
+message QueryAllEvidenceRequest {
   cosmos.query.PageRequest req = 1;
 }
 
-// QueryAllEvidencesResponse is the response type for the Query/AllEvidences RPC method
-message QueryAllEvidencesResponse {
+// QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method
+message QueryAllEvidenceResponse {
   repeated google.protobuf.Any evidences = 1;
 
   cosmos.query.PageResponse res = 2;

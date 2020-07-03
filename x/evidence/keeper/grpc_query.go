@@ -10,11 +10,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -44,8 +45,8 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 	return &types.QueryEvidenceResponse{Evidence: evidenceAny}, nil
 }
 
-// AllEvidences implements the Query/AllEvidences gRPC method
-func (k Keeper) AllEvidences(c context.Context, req *types.QueryAllEvidencesRequest) (*types.QueryAllEvidencesResponse, error) {
+// AllEvidence implements the Query/AllEvidence gRPC method
+func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -71,10 +72,10 @@ func (k Keeper) AllEvidences(c context.Context, req *types.QueryAllEvidencesRequ
 	})
 
 	if err != nil {
-		return &types.QueryAllEvidencesResponse{}, err
+		return &types.QueryAllEvidenceResponse{}, err
 	}
 
-	return &types.QueryAllEvidencesResponse{Evidences: evidences, Res: res}, nil
+	return &types.QueryAllEvidenceResponse{Evidences: evidences, Res: res}, nil
 }
 
 // ConvertEvidence converts Evidence to Any type

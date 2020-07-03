@@ -121,23 +121,23 @@ func (m *QueryEvidenceResponse) GetEvidence() *types.Any {
 	return nil
 }
 
-// QueryEvidenceRequest is the request type for the Query/AllEvidences RPC method
-type QueryAllEvidencesRequest struct {
+// QueryEvidenceRequest is the request type for the Query/AllEvidence RPC method
+type QueryAllEvidenceRequest struct {
 	Req *query.PageRequest `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
 }
 
-func (m *QueryAllEvidencesRequest) Reset()         { *m = QueryAllEvidencesRequest{} }
-func (m *QueryAllEvidencesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryAllEvidencesRequest) ProtoMessage()    {}
-func (*QueryAllEvidencesRequest) Descriptor() ([]byte, []int) {
+func (m *QueryAllEvidenceRequest) Reset()         { *m = QueryAllEvidenceRequest{} }
+func (m *QueryAllEvidenceRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllEvidenceRequest) ProtoMessage()    {}
+func (*QueryAllEvidenceRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6afffc78347cbc5e, []int{2}
 }
-func (m *QueryAllEvidencesRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllEvidenceRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryAllEvidencesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllEvidenceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryAllEvidencesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllEvidenceRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -147,43 +147,43 @@ func (m *QueryAllEvidencesRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryAllEvidencesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllEvidencesRequest.Merge(m, src)
+func (m *QueryAllEvidenceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllEvidenceRequest.Merge(m, src)
 }
-func (m *QueryAllEvidencesRequest) XXX_Size() int {
+func (m *QueryAllEvidenceRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryAllEvidencesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllEvidencesRequest.DiscardUnknown(m)
+func (m *QueryAllEvidenceRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllEvidenceRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryAllEvidencesRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllEvidenceRequest proto.InternalMessageInfo
 
-func (m *QueryAllEvidencesRequest) GetReq() *query.PageRequest {
+func (m *QueryAllEvidenceRequest) GetReq() *query.PageRequest {
 	if m != nil {
 		return m.Req
 	}
 	return nil
 }
 
-// QueryAllEvidencesResponse is the response type for the Query/AllEvidences RPC method
-type QueryAllEvidencesResponse struct {
+// QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method
+type QueryAllEvidenceResponse struct {
 	Evidences []*types.Any        `protobuf:"bytes,1,rep,name=evidences,proto3" json:"evidences,omitempty"`
 	Res       *query.PageResponse `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
 }
 
-func (m *QueryAllEvidencesResponse) Reset()         { *m = QueryAllEvidencesResponse{} }
-func (m *QueryAllEvidencesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryAllEvidencesResponse) ProtoMessage()    {}
-func (*QueryAllEvidencesResponse) Descriptor() ([]byte, []int) {
+func (m *QueryAllEvidenceResponse) Reset()         { *m = QueryAllEvidenceResponse{} }
+func (m *QueryAllEvidenceResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllEvidenceResponse) ProtoMessage()    {}
+func (*QueryAllEvidenceResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6afffc78347cbc5e, []int{3}
 }
-func (m *QueryAllEvidencesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllEvidenceResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryAllEvidencesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllEvidenceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryAllEvidencesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllEvidenceResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -193,26 +193,26 @@ func (m *QueryAllEvidencesResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryAllEvidencesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllEvidencesResponse.Merge(m, src)
+func (m *QueryAllEvidenceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllEvidenceResponse.Merge(m, src)
 }
-func (m *QueryAllEvidencesResponse) XXX_Size() int {
+func (m *QueryAllEvidenceResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryAllEvidencesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllEvidencesResponse.DiscardUnknown(m)
+func (m *QueryAllEvidenceResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllEvidenceResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryAllEvidencesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllEvidenceResponse proto.InternalMessageInfo
 
-func (m *QueryAllEvidencesResponse) GetEvidences() []*types.Any {
+func (m *QueryAllEvidenceResponse) GetEvidences() []*types.Any {
 	if m != nil {
 		return m.Evidences
 	}
 	return nil
 }
 
-func (m *QueryAllEvidencesResponse) GetRes() *query.PageResponse {
+func (m *QueryAllEvidenceResponse) GetRes() *query.PageResponse {
 	if m != nil {
 		return m.Res
 	}
@@ -222,8 +222,8 @@ func (m *QueryAllEvidencesResponse) GetRes() *query.PageResponse {
 func init() {
 	proto.RegisterType((*QueryEvidenceRequest)(nil), "cosmos.evidence.QueryEvidenceRequest")
 	proto.RegisterType((*QueryEvidenceResponse)(nil), "cosmos.evidence.QueryEvidenceResponse")
-	proto.RegisterType((*QueryAllEvidencesRequest)(nil), "cosmos.evidence.QueryAllEvidencesRequest")
-	proto.RegisterType((*QueryAllEvidencesResponse)(nil), "cosmos.evidence.QueryAllEvidencesResponse")
+	proto.RegisterType((*QueryAllEvidenceRequest)(nil), "cosmos.evidence.QueryAllEvidenceRequest")
+	proto.RegisterType((*QueryAllEvidenceResponse)(nil), "cosmos.evidence.QueryAllEvidenceResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/evidence/query.proto", fileDescriptor_6afffc78347cbc5e) }
@@ -272,8 +272,8 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Evidence queries evidence based on evidence hash
 	Evidence(ctx context.Context, in *QueryEvidenceRequest, opts ...grpc.CallOption) (*QueryEvidenceResponse, error)
-	// AllEvidences queries all evidences
-	AllEvidences(ctx context.Context, in *QueryAllEvidencesRequest, opts ...grpc.CallOption) (*QueryAllEvidencesResponse, error)
+	// AllEvidence queries all evidences
+	AllEvidence(ctx context.Context, in *QueryAllEvidenceRequest, opts ...grpc.CallOption) (*QueryAllEvidenceResponse, error)
 }
 
 type queryClient struct {
@@ -293,9 +293,9 @@ func (c *queryClient) Evidence(ctx context.Context, in *QueryEvidenceRequest, op
 	return out, nil
 }
 
-func (c *queryClient) AllEvidences(ctx context.Context, in *QueryAllEvidencesRequest, opts ...grpc.CallOption) (*QueryAllEvidencesResponse, error) {
-	out := new(QueryAllEvidencesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.evidence.Query/AllEvidences", in, out, opts...)
+func (c *queryClient) AllEvidence(ctx context.Context, in *QueryAllEvidenceRequest, opts ...grpc.CallOption) (*QueryAllEvidenceResponse, error) {
+	out := new(QueryAllEvidenceResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.evidence.Query/AllEvidence", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -306,8 +306,8 @@ func (c *queryClient) AllEvidences(ctx context.Context, in *QueryAllEvidencesReq
 type QueryServer interface {
 	// Evidence queries evidence based on evidence hash
 	Evidence(context.Context, *QueryEvidenceRequest) (*QueryEvidenceResponse, error)
-	// AllEvidences queries all evidences
-	AllEvidences(context.Context, *QueryAllEvidencesRequest) (*QueryAllEvidencesResponse, error)
+	// AllEvidence queries all evidences
+	AllEvidence(context.Context, *QueryAllEvidenceRequest) (*QueryAllEvidenceResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -317,8 +317,8 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) Evidence(ctx context.Context, req *QueryEvidenceRequest) (*QueryEvidenceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Evidence not implemented")
 }
-func (*UnimplementedQueryServer) AllEvidences(ctx context.Context, req *QueryAllEvidencesRequest) (*QueryAllEvidencesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AllEvidences not implemented")
+func (*UnimplementedQueryServer) AllEvidence(ctx context.Context, req *QueryAllEvidenceRequest) (*QueryAllEvidenceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllEvidence not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -343,20 +343,20 @@ func _Query_Evidence_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AllEvidences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAllEvidencesRequest)
+func _Query_AllEvidence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllEvidenceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).AllEvidences(ctx, in)
+		return srv.(QueryServer).AllEvidence(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.evidence.Query/AllEvidences",
+		FullMethod: "/cosmos.evidence.Query/AllEvidence",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).AllEvidences(ctx, req.(*QueryAllEvidencesRequest))
+		return srv.(QueryServer).AllEvidence(ctx, req.(*QueryAllEvidenceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -370,8 +370,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Evidence_Handler,
 		},
 		{
-			MethodName: "AllEvidences",
-			Handler:    _Query_AllEvidences_Handler,
+			MethodName: "AllEvidence",
+			Handler:    _Query_AllEvidence_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -443,7 +443,7 @@ func (m *QueryEvidenceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryAllEvidencesRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllEvidenceRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -453,12 +453,12 @@ func (m *QueryAllEvidencesRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryAllEvidencesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllEvidenceRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryAllEvidencesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllEvidenceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -478,7 +478,7 @@ func (m *QueryAllEvidencesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryAllEvidencesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllEvidenceResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -488,12 +488,12 @@ func (m *QueryAllEvidencesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryAllEvidencesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllEvidenceResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryAllEvidencesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllEvidenceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -564,7 +564,7 @@ func (m *QueryEvidenceResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryAllEvidencesRequest) Size() (n int) {
+func (m *QueryAllEvidenceRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -577,7 +577,7 @@ func (m *QueryAllEvidencesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryAllEvidencesResponse) Size() (n int) {
+func (m *QueryAllEvidenceResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -778,7 +778,7 @@ func (m *QueryEvidenceResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryAllEvidencesRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryAllEvidenceRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -801,10 +801,10 @@ func (m *QueryAllEvidencesRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllEvidencesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllEvidenceRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllEvidencesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllEvidenceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -867,7 +867,7 @@ func (m *QueryAllEvidencesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryAllEvidencesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAllEvidenceResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -890,10 +890,10 @@ func (m *QueryAllEvidencesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllEvidencesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllEvidenceResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllEvidencesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllEvidenceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

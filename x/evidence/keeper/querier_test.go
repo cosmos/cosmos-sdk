@@ -15,7 +15,7 @@ const (
 	custom = "custom"
 )
 
-func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
+func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_Existing() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
 	cdc, _ := simapp.MakeCodecs()
@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	suite.Equal(evidence[0], e)
 }
 
-func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
+func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_NonExisting() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	cdc, _ := simapp.MakeCodecs()
 	numEvidence := 100
@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 	suite.Nil(bz)
 }
 
-func (suite *KeeperTestSuite) TestQueryAllEvidence() {
+func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	cdc, _ := simapp.MakeCodecs()
 	numEvidence := 100
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	suite.Len(e, numEvidence)
 }
 
-func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
+func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence_InvalidPagination() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	cdc, _ := simapp.MakeCodecs()
 	numEvidence := 100

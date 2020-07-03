@@ -33,14 +33,14 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 	suite.Require().NotNil(res.Evidence)
 }
 
-func (suite *KeeperTestSuite) TestQueryAllEvidences() {
+func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	app, ctx := suite.app, suite.ctx
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
 	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	res, err := queryClient.AllEvidences(gocontext.Background(), &types.QueryAllEvidencesRequest{})
+	res, err := queryClient.AllEvidence(gocontext.Background(), &types.QueryAllEvidenceRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Require().Empty(res.Evidences)
@@ -52,8 +52,8 @@ func (suite *KeeperTestSuite) TestQueryAllEvidences() {
 		Limit:      50,
 		CountTotal: false,
 	}
-	req := types.NewQueryAllEvidencesRequest(pageReq)
-	res, err = queryClient.AllEvidences(gocontext.Background(), req)
+	req := types.NewQueryAllEvidenceRequest(pageReq)
+	res, err = queryClient.AllEvidence(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Equal(len(res.Evidences), 50)
@@ -64,8 +64,8 @@ func (suite *KeeperTestSuite) TestQueryAllEvidences() {
 		Limit:      50,
 		CountTotal: true,
 	}
-	req = types.NewQueryAllEvidencesRequest(pageReq)
-	res, err = queryClient.AllEvidences(gocontext.Background(), req)
+	req = types.NewQueryAllEvidenceRequest(pageReq)
+	res, err = queryClient.AllEvidence(gocontext.Background(), req)
 	suite.Equal(len(res.Evidences), 50)
 	suite.Nil(res.Res.NextKey)
 }

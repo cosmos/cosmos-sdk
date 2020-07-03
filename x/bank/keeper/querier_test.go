@@ -61,7 +61,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesRequest(addr))
+	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesRequest(addr, nil))
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -133,9 +133,9 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	var resp sdk.Int
+	var resp sdk.Coin
 	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &resp))
-	suite.Require().Equal(test1Supply.Amount, resp)
+	suite.Require().Equal(test1Supply, resp)
 }
 
 func (suite *IntegrationTestSuite) TestQuerierRouteNotFound() {

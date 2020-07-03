@@ -22,7 +22,7 @@ import (
 )
 
 // GetSignCommand returns the sign command
-func GetMultiSignCommand(cdc *codec.Codec) *cobra.Command {
+func GetMultiSignCommand(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
@@ -45,7 +45,7 @@ recommended to set such parameters manually.
 				version.ClientName,
 			),
 		),
-		RunE: makeMultiSignCmd(cdc),
+		RunE: makeMultiSignCmd(clientCtx),
 		Args: cobra.MinimumNArgs(3),
 	}
 
@@ -56,9 +56,12 @@ recommended to set such parameters manually.
 	return flags.PostCommands(cmd)[0]
 }
 
-func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
+func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := authclient.ReadStdTxFromFile(cdc, args[0])
+		clientCtx = clientCtx.Init()
+		cdc := clientCtx.Codec
+		tx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+		stdTx := tx.(types.StdTx)
 		if err != nil {
 			return
 		}
@@ -80,7 +83,6 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if !clientCtx.Offline {
@@ -126,18 +128,15 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                        //nolint:staticcheck
 		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo()) //nolint:staticcheck
 
-		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
-		switch {
-		case sigOnly && clientCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-		case sigOnly && !clientCtx.Indent:
+
+		sigOnly := viper.GetBool(flagSigOnly)
+		if sigOnly {
 			json, err = cdc.MarshalJSON(newTx.Signatures[0])
-		case !sigOnly && clientCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
-		default:
+		} else {
 			json, err = cdc.MarshalJSON(newTx)
 		}
+
 		if err != nil {
 			return err
 		}

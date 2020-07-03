@@ -66,7 +66,7 @@ func TestCLIWithdrawRewards(t *testing.T) {
 
 	rewards = testutil.QueryRewards(f, fooAddr)
 	require.Len(t, rewards.Rewards, 1)
-	require.Nil(t, rewards.Total)
+	require.Len(t, rewards.Total, 1)
 
 	// Setting up a new withdraw address
 	success, stdout, stderr := testutil.TxSetWithdrawAddress(f, fooAddr.String(), barAddr.String(), "--generate-only")

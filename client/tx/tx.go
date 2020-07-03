@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,10 +21,19 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+// GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
+// or sign it and broadcast it returning an error upon failure.
+func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
+	txf := NewFactoryCLI(clientCtx, flagSet)
+	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
+}
+
 // GenerateOrBroadcastTx will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
+//
+// TODO: Remove in favor of GenerateOrBroadcastTxCLI
 func GenerateOrBroadcastTx(clientCtx client.Context, msgs ...sdk.Msg) error {
-	txf := NewFactoryFromCLI(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+	txf := NewFactoryFromDeprecated(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
@@ -114,7 +124,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	txBytes, err := clientCtx.TxGenerator.MarshalTx(tx.GetTx())
+	txBytes, err := clientCtx.TxGenerator.TxEncoder()(tx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -178,7 +188,7 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	output, err := ctx.JSONMarshaler.MarshalJSON(tx)
+	output, err := ctx.JSONMarshaler.MarshalJSON(tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -244,7 +254,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return txf.txGenerator.MarshalTx(tx.GetTx())
+	return txf.txGenerator.TxEncoder()(tx.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the

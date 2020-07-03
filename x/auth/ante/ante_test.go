@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
@@ -38,7 +39,7 @@ func TestSimulateGasCost(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -92,7 +93,7 @@ func TestSimulateGasCost(t *testing.T) {
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -142,7 +143,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -201,7 +202,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(0)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -259,7 +260,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -335,7 +336,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -377,7 +378,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -417,7 +418,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -467,7 +468,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -544,7 +545,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -597,11 +598,17 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []crypto.P
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
 		var privkey crypto.PrivKey
-		if rand.Int63()%2 == 0 {
-			privkey = ed25519.GenPrivKey()
-		} else {
-			privkey = secp256k1.GenPrivKey()
-		}
+		privkey = secp256k1.GenPrivKey()
+
+		// TODO: also generate ed25519 keys as below when ed25519 keys are
+		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
+		// for now this fails:
+		//if rand.Int63()%2 == 0 {
+		//	privkey = ed25519.GenPrivKey()
+		//} else {
+		//	privkey = secp256k1.GenPrivKey()
+		//}
+
 		pubkeys[i] = privkey.PubKey()
 		signatures[i], _ = privkey.Sign(msg)
 	}
@@ -662,7 +669,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -703,15 +710,15 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
-		switch pubkey := pubkey.(type) {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
+		switch pubkey := sig.PubKey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
-	})
+	}, types.LegacyAminoJSONHandler{})
 
 	// verify that an secp256k1 account gets rejected
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -761,7 +768,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 
-	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
+	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
 	// test that operations skipped on recheck do not run
 

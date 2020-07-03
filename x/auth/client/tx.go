@@ -11,10 +11,8 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,12 +83,9 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, clientCtx client.Cont
 			return err
 		}
 
-		json := clientCtx.JSONMarshaler.MustMarshalJSON(stdSignMsg)
-		if viper.GetBool(flags.FlagIndentResponse) {
-			json, err = codec.MarshalIndentFromJSON(json)
-			if err != nil {
-				panic(err)
-			}
+		json, err := clientCtx.JSONMarshaler.MarshalJSON(stdSignMsg)
+		if err != nil {
+			return err
 		}
 
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
@@ -164,13 +159,6 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, ms
 		return err
 	}
 
-	if viper.GetBool(flags.FlagIndentResponse) {
-		json, err = codec.MarshalIndentFromJSON(json)
-		if err != nil {
-			return err
-		}
-	}
-
 	_, _ = fmt.Fprintf(clientCtx.Output, "%s\n", json)
 	return nil
 }
@@ -231,7 +219,7 @@ func SignStdTxWithSignerAddress(
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx, err error) {
+func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
 	if filename == "-" {
@@ -244,11 +232,7 @@ func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx
 		return
 	}
 
-	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
-		return
-	}
-
-	return
+	return ctx.TxGenerator.TxJSONDecoder()(bytes)
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
@@ -289,7 +273,7 @@ func populateAccountFromState(
 	txBldr authtypes.TxBuilder, clientCtx client.Context, addr sdk.AccAddress,
 ) (authtypes.TxBuilder, error) {
 
-	num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(clientCtx, addr)
+	num, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 	if err != nil {
 		return txBldr, err
 	}
@@ -335,8 +319,7 @@ func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 // PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (authtypes.TxBuilder, error) {
 	from := clientCtx.GetFromAddress()
-
-	accGetter := authtypes.NewAccountRetriever(Codec)
+	accGetter := clientCtx.AccountRetriever
 	if err := accGetter.EnsureExists(clientCtx, from); err != nil {
 		return txBldr, err
 	}
@@ -345,7 +328,7 @@ func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (aut
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
 	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
-		num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(clientCtx, from)
+		num, seq, err := accGetter.GetAccountNumberSequence(clientCtx, from)
 		if err != nil {
 			return txBldr, err
 		}

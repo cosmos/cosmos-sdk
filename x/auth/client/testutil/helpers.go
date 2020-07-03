@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-
-	"github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 )
 
-func TxSignExec(clientCtx client.Context, from types.Address, filename string) ([]byte, error) {
+func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	clientCtx = clientCtx.WithOutput(buf)
 
@@ -33,12 +33,13 @@ func TxSignExec(clientCtx client.Context, from types.Address, filename string) (
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--from=%s", from.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, strings.Replace(clientCtx.HomeDir, "simd", "simcli", 0)),
 		filename,
 	}
 
 	cmd.SetArgs(args)
 
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.ExecuteContext(ctx); err != nil {
 		return nil, err
 	}
 

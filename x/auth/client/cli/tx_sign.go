@@ -201,11 +201,18 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
+
 		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
 		stdTx := tx.(types.StdTx)
+
+		fmt.Printf("FROOOOOOM %s\n", viper.GetString(flags.FlagFrom))
 
 		// if --signature-only is on, then override --append
 		var newTx types.StdTx

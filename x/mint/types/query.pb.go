@@ -29,6 +29,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryParamsRequest is the request type for the Query/Params RPC method
 type QueryParamsRequest struct {
 }
 
@@ -65,6 +66,7 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
+// QueryParamsResponse is the response type for the Query/Params RPC method
 type QueryParamsResponse struct {
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3,casttype=Params" json:"params"`
 }
@@ -109,6 +111,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryInflationRequest is the request type for the Query/Params RPC method
 type QueryInflationRequest struct {
 }
 
@@ -145,6 +148,7 @@ func (m *QueryInflationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryInflationRequest proto.InternalMessageInfo
 
+// QueryInflationResponse is the response type for the Query/Params RPC method
 type QueryInflationResponse struct {
 	Inflation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation"`
 }
@@ -182,6 +186,7 @@ func (m *QueryInflationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryInflationResponse proto.InternalMessageInfo
 
+// QueryAnnualProvisionsRequest is the request type for the Query/Params RPC method
 type QueryAnnualProvisionsRequest struct {
 }
 
@@ -218,6 +223,7 @@ func (m *QueryAnnualProvisionsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAnnualProvisionsRequest proto.InternalMessageInfo
 
+// QueryAnnualProvisionsResponse is the response type for the Query/Params RPC method
 type QueryAnnualProvisionsResponse struct {
 	AnnualProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"annual_provisions"`
 }
@@ -306,8 +312,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Inflation returns the current minting inflation value.
 	Inflation(ctx context.Context, in *QueryInflationRequest, opts ...grpc.CallOption) (*QueryInflationResponse, error)
+	// AnnualProvisions current minting annual provisions value.
 	AnnualProvisions(ctx context.Context, in *QueryAnnualProvisionsRequest, opts ...grpc.CallOption) (*QueryAnnualProvisionsResponse, error)
 }
 
@@ -348,8 +357,11 @@ func (c *queryClient) AnnualProvisions(ctx context.Context, in *QueryAnnualProvi
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Inflation returns the current minting inflation value.
 	Inflation(context.Context, *QueryInflationRequest) (*QueryInflationResponse, error)
+	// AnnualProvisions current minting annual provisions value.
 	AnnualProvisions(context.Context, *QueryAnnualProvisionsRequest) (*QueryAnnualProvisionsResponse, error)
 }
 

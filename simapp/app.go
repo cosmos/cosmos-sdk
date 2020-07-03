@@ -184,6 +184,7 @@ func NewSimApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, authtypes.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
+	bApp.GRPCQueryRouter().SetAnyUnpacker(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,

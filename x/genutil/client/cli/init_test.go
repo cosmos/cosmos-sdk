@@ -36,7 +36,7 @@ func TestInitCmd(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 
-	ctx := server.NewContext(cfg, logger)
+	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 	cmd := InitCmd(ctx, cdc, testMbm, home)
 
@@ -60,7 +60,7 @@ func TestEmptyState(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 
-	ctx := server.NewContext(cfg, logger)
+	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 
 	cmd := InitCmd(ctx, cdc, testMbm, home)
@@ -101,7 +101,7 @@ func TestStartStandAlone(t *testing.T) {
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
-	ctx := server.NewContext(cfg, logger)
+	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 	initCmd := InitCmd(ctx, cdc, testMbm, home)
 	require.NoError(t, initCmd.RunE(nil, []string{"appnode-test"}))

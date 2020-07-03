@@ -37,9 +37,8 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ConnectionVersion = "1.0.0"
-	ChannelVersion    = "ics20-1"
-	InvalidID         = "IDisInvalid"
+	ChannelVersion = "ics20-1"
+	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
 
@@ -49,6 +48,8 @@ const (
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
+
+	ConnectionVersion = connectiontypes.DefaultIBCVersion
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -255,19 +256,36 @@ func (chain *TestChain) NewClientID(counterpartyChainID string) string {
 	return clientID
 }
 
-// NewConnection appends a new TestConnection which contains references to the connection id,
-// client id and counterparty client id. The connection id format:
+// AddTestConnection appends a new TestConnection which contains references
+// to the connection id, client id and counterparty client id.
+func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	conn := chain.ConstructNextTestConnection(clientID, counterpartyClientID)
+
+	chain.Connections = append(chain.Connections, conn)
+	return conn
+}
+
+// ConstructNextTestConnection constructs the next test connection to be
+// created given a clientID and counterparty clientID. The connection id
+// format:
 // connectionid<index>
-func (chain *TestChain) NewTestConnection(clientID, counterpartyClientID string) *TestConnection {
+func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
 	connectionID := ConnectionIDPrefix + strconv.Itoa(len(chain.Connections))
-	conn := &TestConnection{
+	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
 		CounterpartyClientID: counterpartyClientID,
 	}
+}
 
-	chain.Connections = append(chain.Connections, conn)
-	return conn
+// FirstTestConnection returns the first test connection for a given clientID.
+// The connection may or may not exist in the chain state.
+func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	if len(chain.Connections) > 0 {
+		return chain.Connections[0]
+	}
+
+	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
@@ -371,7 +389,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	require.True(chain.t, found)
 
 	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
@@ -398,7 +416,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	require.True(chain.t, found)
 
 	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(

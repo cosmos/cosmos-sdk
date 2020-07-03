@@ -19,7 +19,7 @@ func TestPrepareFlagsForTxCreateValidator(t *testing.T) {
 	config, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	logger := log.NewNopLogger()
-	ctx := server.NewContext(config, logger)
+	ctx := server.NewContext(viper.New(), config, logger)
 
 	valPubKey, _ := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, "cosmosvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5gd80a")
 

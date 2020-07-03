@@ -37,9 +37,8 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ConnectionVersion = "1.0.0"
-	ChannelVersion    = "ics20-1"
-	InvalidID         = "IDisInvalid"
+	ChannelVersion = "ics20-1"
+	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
 
@@ -49,6 +48,8 @@ const (
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
+
+	ConnectionVersion = connectiontypes.DefaultIBCVersion
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -388,7 +389,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	require.True(chain.t, found)
 
 	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
@@ -415,7 +416,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	require.True(chain.t, found)
 
 	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := counterparty.QueryProof(consensusKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(

@@ -118,19 +118,19 @@ func TestABCIInfoStacktrace(t *testing.T) {
 			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
-			wantErrMsg:     "unauthorized: wrapped",
+			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped SDK error in non-debug mode does not have stacktrace": {
 			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
-			wantErrMsg:     "unauthorized: wrapped",
+			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped stdlib error in debug mode provides stacktrace": {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
-			wantErrMsg:     "stdlib: wrapped",
+			wantErrMsg:     "wrapped: stdlib",
 		},
 		"wrapped stdlib error in non-debug mode does not have stacktrace": {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),

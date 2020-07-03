@@ -15,7 +15,7 @@ func (k Keeper) CurrentPlan(c context.Context, req *types.QueryCurrentPlanReques
 
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
-		return nil, nil
+		return &types.QueryCurrentPlanResponse{}, nil
 	}
 
 	return &types.QueryCurrentPlanResponse{Plan: &plan}, nil
@@ -27,7 +27,7 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 
 	applied := k.GetDoneHeight(ctx, req.Name)
 	if applied == 0 {
-		return nil, nil
+		return &types.QueryAppliedPlanResponse{}, nil
 	}
 
 	return &types.QueryAppliedPlanResponse{Height: applied}, nil

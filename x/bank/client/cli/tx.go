@@ -1,10 +1,7 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -12,8 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
-
-var v = viper.New()
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func NewTxCmd() *cobra.Command {
@@ -37,7 +32,6 @@ func NewSendTxCmd() *cobra.Command {
 		Short: "Create and/or sign and broadcast a MsgSend transaction",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("NAME:", v.GetString("foo"))
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 
 			clientCtx := client.GetClientContextFromCmd(cmd)

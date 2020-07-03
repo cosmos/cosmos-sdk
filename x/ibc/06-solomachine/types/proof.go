@@ -47,10 +47,10 @@ func HeaderSignBytes(header Header) []byte {
 // ConsensusStateSignBytes returns the sign bytes for verification of the
 // consensus state.
 //
-// Format: {sequence}{path}{consensus-state}
+// Format: {sequence}{timestamp}{path}{consensus-state}
 func ConsensusStateSignBytes(
 	cdc *codec.Codec,
-	sequence uint64,
+	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	consensusState ConsensusState,
 ) ([]byte, error) {
@@ -59,9 +59,9 @@ func ConsensusStateSignBytes(
 		return nil, err
 	}
 
-	// sequence + path + consensus state
+	// sequence + timestamp + path + consensus state
 	return append(
-		combineSequenceAndPath(sequence, path),
+		combineSequenceTimestampPath(sequence, timestamp, path),
 		bz...,
 	), nil
 }
@@ -69,10 +69,10 @@ func ConsensusStateSignBytes(
 // ConnectionStateSignBytes returns the sign bytes for verification of the
 // connection state.
 //
-// Format: {sequence}{path}{connection-end}
+// Format: {sequence}{timestamp}{path}{connection-end}
 func ConnectionStateSignBytes(
 	cdc codec.Marshaler,
-	sequence uint64,
+	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	connectionEnd connectionexported.ConnectionI,
 ) ([]byte, error) {
@@ -86,9 +86,9 @@ func ConnectionStateSignBytes(
 		return nil, err
 	}
 
-	// sequence + path + connection end
+	// sequence + timestamp + path + connection end
 	return append(
-		combineSequenceAndPath(sequence, path),
+		combineSequenceTimestampPath(sequence, timestamp, path),
 		bz...,
 	), nil
 }
@@ -96,10 +96,10 @@ func ConnectionStateSignBytes(
 // ChannelStateSignBytes returns the sign bytes for verification of the
 // channel state.
 //
-// Format: {sequence}{path}{channel-end}
+// Format: {sequence}{timestamp}{path}{channel-end}
 func ChannelStateSignBytes(
 	cdc codec.Marshaler,
-	sequence uint64,
+	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	channelEnd channelexported.ChannelI,
 ) ([]byte, error) {
@@ -113,9 +113,9 @@ func ChannelStateSignBytes(
 		return nil, err
 	}
 
-	// sequence + path + channel
+	// sequence + timestamp + path + channel
 	return append(
-		combineSequenceAndPath(sequence, path),
+		combineSequenceTimestampPath(sequence, timestamp, path),
 		bz...,
 	), nil
 }
@@ -123,16 +123,16 @@ func ChannelStateSignBytes(
 // PacketCommitmentSignBytes returns the sign bytes for verification of the
 // packet commitment.
 //
-// Format: {sequence}{path}{commitment-bytes}
+// Format: {sequence}{timestamp}{path}{commitment-bytes}
 func PacketCommitmentSignBytes(
-	sequence uint64,
+	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	commitmentBytes []byte,
 ) []byte {
 
-	// sequence + path + commitment bytes
+	// sequence + timestamp + path + commitment bytes
 	return append(
-		combineSequenceAndPath(sequence, path),
+		combineSequenceTimestampPath(sequence, timestamp, path),
 		commitmentBytes...,
 	)
 }
@@ -140,16 +140,16 @@ func PacketCommitmentSignBytes(
 // PacketAcknowledgementSignBytes returns the sign bytes for verification of
 // the acknowledgement.
 //
-// Format: {sequence}{path}{acknowledgement}
+// Format: {sequence}{timestamp}{path}{acknowledgement}
 func PacketAcknowledgementSignBytes(
-	sequence uint64,
+	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	acknowledgement []byte,
 ) []byte {
 
-	// sequence + path + acknowledgement
+	// sequence + timestamp + path + acknowledgement
 	return append(
-		combineSequenceAndPath(sequence, path),
+		combineSequenceTimestampPath(sequence, timestamp, path),
 		acknowledgement...,
 	)
 }
@@ -157,36 +157,38 @@ func PacketAcknowledgementSignBytes(
 // PacketAcknowledgementAbsenceSignBytes returns the sign bytes for verificaiton
 // of the absense of an acknowledgement.
 //
-// Format: {sequence}{path}
+// Format: {sequence}{timestamp}{path}
 func PacketAcknowledgementAbsenceSignBytes(
-	sequence uint64,
+	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 ) []byte {
-	// value = sequence + path
-	return combineSequenceAndPath(sequence, path)
+	// value = sequence + timestamp + path
+	return combineSequenceTimestampPath(sequence, timestamp, path)
 }
 
 // NextSequenceRecv returns the sign bytes for verification of the next
 // sequence to be received.
 //
-// Format: {sequence}{path}{next-sequence-recv}
+// Format: {sequence}{timestamp}{path}{next-sequence-recv}
 func NextSequenceRecvSignBytes(
-	sequence uint64,
+	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	nextSequenceRecv uint64,
 ) []byte {
 
-	// sequence + path + nextSequenceRecv
+	// sequence + timestamp + path + nextSequenceRecv
 	return append(
-		combineSequenceAndPath(sequence, path),
+		combineSequenceTimestampPath(sequence, timestamp, path),
 		sdk.Uint64ToBigEndian(nextSequenceRecv)...,
 	)
 }
 
-// combineSequenceAndPath appends the sequence and path represented as bytes.
-func combineSequenceAndPath(sequence uint64, path commitmenttypes.MerklePath) []byte {
+// combineSequenceTimestampPath combines the sequence, the timestamp and
+// the path into one byte slice.
+func combineSequenceTimestampPath(sequence, timestamp uint64, path commitmenttypes.MerklePath) []byte {
+	bz := append(sdk.Uint64ToBigEndian(sequence), sdk.Uint64ToBigEndian(timestamp)...)
 	return append(
-		sdk.Uint64ToBigEndian(sequence),
+		bz,
 		[]byte(path.String())...,
 	)
 }

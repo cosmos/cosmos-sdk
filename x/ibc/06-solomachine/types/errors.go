@@ -13,4 +13,5 @@ var (
 	ErrInvalidSequence             = sdkerrors.Register(SubModuleName, 3, "invalid sequence")
 	ErrInvalidSignatureAndData     = sdkerrors.Register(SubModuleName, 4, "invalid signature and data")
 	ErrSignatureVerificationFailed = sdkerrors.Register(SubModuleName, 5, "signature verification failed")
+	ErrInvalidProof                = sdkerrors.Register(SubModuleName, 6, "invalid solo machine proof")
 )

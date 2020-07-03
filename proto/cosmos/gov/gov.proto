@@ -165,7 +165,7 @@ message Vote {
 // DepositParams defines the params around deposits for governance
 message DepositParams {
   repeated cosmos.Coin min_deposit = 1 [
-    (gogoproto.nullable) = false, 
+    (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)    = "yaml:\"min_deposit\""
   ];

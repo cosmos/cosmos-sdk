@@ -68,7 +68,9 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 		}
 
 		if matchVoter && matchDepositor && matchStatus {
-			filteredProposals = append(filteredProposals, p)
+			if accumulate {
+				filteredProposals = append(filteredProposals, p)
+			}
 			return true, nil
 		}
 

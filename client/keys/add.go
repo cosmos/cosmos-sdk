@@ -99,7 +99,6 @@ the flag --nosort is set.
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 
 	var (
 		kr  keyring.Keyring
@@ -107,9 +106,9 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	)
 
 	if v.GetBool(flags.FlagDryRun) {
-		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, homeDir, inBuf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, rootViper.GetString(flags.FlagHome), inBuf)
 	} else {
-		kr, err = keyring.New(sdk.KeyringServiceName(), rootViper.GetString(flags.FlagKeyringBackend), homeDir, inBuf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), rootViper.GetString(flags.FlagKeyringBackend), rootViper.GetString(flags.FlagHome), inBuf)
 	}
 	if err != nil {
 		return err

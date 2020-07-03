@@ -55,7 +55,7 @@ func main() {
 			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultCLIHome,
 		),
 		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
-		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome),
+		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultCLIHome),
 		flags.NewCompletionCmd(rootCmd, true),
 		testnetCmd(ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(cdc),

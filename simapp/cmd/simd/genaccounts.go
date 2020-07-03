@@ -28,10 +28,7 @@ const (
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
-func AddGenesisAccountCmd(
-	ctx *server.Context, depCdc codec.JSONMarshaler, cdc codec.Marshaler, defaultNodeHome, defaultClientHome string,
-) *cobra.Command {
-
+func AddGenesisAccountCmd(ctx *server.Context, depCdc codec.JSONMarshaler, cdc codec.Marshaler, defaultClientHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
 		Short: "Add a genesis account to genesis.json",

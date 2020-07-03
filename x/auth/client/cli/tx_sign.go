@@ -227,7 +227,6 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
 			newTx, err = authclient.SignStdTx(txBldr, clientCtx, clientCtx.GetFromName(), stdTx, appendSig, clientCtx.Offline)
 		}
-
 		if err != nil {
 			return err
 		}

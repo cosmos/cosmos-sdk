@@ -31,7 +31,7 @@ func TxSignExec(clientCtx client.Context, from types.Address, filename string) (
 	cmd.SetOut(buf)
 
 	args := []string{
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendFile),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--from=%s", from.String()),
 		filename,
 	}

@@ -27,7 +27,7 @@ func TestABCInfo(t *testing.T) {
 		"wrapped SDK error": {
 			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:     false,
-			wantLog:   "unauthorized: foo: bar",
+			wantLog:   "bar: foo: unauthorized",
 			wantCode:  ErrUnauthorized.code,
 			wantSpace: RootCodespace,
 		},

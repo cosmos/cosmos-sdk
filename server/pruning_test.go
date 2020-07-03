@@ -43,8 +43,12 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 			},
 		},
 		{
-			name:            types.PruningOptionDefault,
-			initParams:      func() *viper.Viper { return viper.New() },
+			name: types.PruningOptionDefault,
+			initParams: func() *viper.Viper {
+				v := viper.New()
+				v.Set(FlagPruning, types.PruningOptionDefault)
+				return v
+			},
 			expectedOptions: types.PruneDefault,
 		},
 	}

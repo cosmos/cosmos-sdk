@@ -9,6 +9,8 @@ Stable releases continue to receieve bugfixes until they reach End Of Life.
 The `0.37.x` release series will continue receiving bugfixes until the Cosmos Hub
 migrates to a newer release of the Cosmos-SDK.
 
+The `0.38.x` release series will reach End of Life once the `0.39.0` release is published.
+
 ## Point Releases
 
 Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
@@ -35,7 +37,7 @@ the `master` branch. When preparing future major releases, our aim is to design 
 maintainable SDK possible which often entails fundamental changes to the SDK's architecture design, rearranging and/or
 renaming packages as well as reducing code duplication so that we maintain common functions and data structures in one
 place rather than leaving them scattered all over the code base. However, once a release is published, the
-priority is to minimise the risk caused by changes not strictly required to fix qualifying bugs; this tends to
+priority is to minimise the risk caused by changes that are not strictly required to fix qualifying bugs; this tends to
 be correlated with minimising the size of such changes. As such, the same bug may need to be fixed in different
 ways in stable releases and `master` branch.
 

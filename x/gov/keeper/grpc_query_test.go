@@ -90,8 +90,8 @@ func TestGRPCQueryProposals(t *testing.T) {
 	req = &types.QueryProposalsRequest{
 		Req: &query.PageRequest{
 			Key:   proposals.Res.NextKey,
-			Limit: 1
-		}
+			Limit: 1,
+		},
 	}
 
 	// query for the next page which is 2nd proposal at present context.

@@ -26,14 +26,14 @@ all: tools build lint test
 build: go.sum
 	@go build -mod=readonly ./...
 
-build-sim: go.sum
+build-simapp: go.sum
 	mkdir -p $(BUILDDIR)
-	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
-build-sim-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-sim
+build-simapp-linux: go.sum
+	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simapp
 
-.PHONY: build build-sim build-sim-linux
+.PHONY: build build-simapp build-simapp-linux
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -128,7 +128,7 @@ test-unit:
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
-test-integration: build-sim
+test-integration: build-simapp
 	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
 
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
@@ -320,7 +320,7 @@ build-docker-local-simapp:
 	@$(MAKE) -C networks/local
 
 # Run a 4-node testnet locally
-localnet-start: build-sim-linux localnet-stop
+localnet-start: build-simapp-linux localnet-stop
 	@if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/simd:Z cosmos-sdk/simappnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 

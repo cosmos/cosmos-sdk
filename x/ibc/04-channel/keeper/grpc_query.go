@@ -52,12 +52,18 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
 
 	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
-		var result types.IdentifiedChannel
+		var result types.Channel
 		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
 			return err
 		}
 
-		channels = append(channels, &result)
+		portID, channelID, err := host.ParseChannelPath(string(key))
+		if err != nil {
+			return err
+		}
+
+		identifiedChannel := types.NewIdentifiedChannel(portID, channelID, result)
+		channels = append(channels, &identifiedChannel)
 		return nil
 	})
 
@@ -88,18 +94,24 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
 
 	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
-		var channel types.IdentifiedChannel
-		if err := q.cdc.UnmarshalBinaryBare(value, &channel); err != nil {
+		var result types.Channel
+		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
 			return err
 		}
 
 		// ignore channel and continue to the next item if the connection is
 		// different than the requested one
-		if channel.ConnectionHops[0] != req.Connection {
+		if result.ConnectionHops[0] != req.Connection {
 			return nil
 		}
 
-		channels = append(channels, &channel)
+		portID, channelID, err := host.ParseChannelPath(string(key))
+		if err != nil {
+			return err
+		}
+
+		identifiedChannel := types.NewIdentifiedChannel(portID, channelID, result)
+		channels = append(channels, &identifiedChannel)
 		return nil
 	})
 

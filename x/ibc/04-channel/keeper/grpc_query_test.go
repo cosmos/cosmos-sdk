@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func (suite *KeeperTestSuite) TestQueryChannel() {
@@ -20,6 +22,13 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 		malleate func()
 		expPass  bool
 	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
 		{
 			"invalid port ID",
 			func() {
@@ -90,6 +99,201 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestQueryChannels() {
+	var (
+		req         *types.QueryChannelsRequest
+		expChannels = []*types.IdentifiedChannel{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"empty pagination",
+			func() {
+				req = &types.QueryChannelsRequest{}
+			},
+			true,
+		},
+		{
+			"success",
+			func() {
+				_, _, connA0, connB0, testchannel0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				// channel0 on first connection on chainA
+				counterparty0 := types.Counterparty{
+					PortID:    connB0.Channels[0].PortID,
+					ChannelID: connB0.Channels[0].ID,
+				}
+
+				// channel1 is second channel on first connection on chainA
+				testchannel1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
+				counterparty1 := types.Counterparty{
+					PortID:    connB0.Channels[1].PortID,
+					ChannelID: connB0.Channels[1].ID,
+				}
+
+				channel0 := types.NewChannel(
+					types.OPEN, types.UNORDERED,
+					counterparty0, []string{connB0.ID}, ibctesting.ChannelVersion,
+				)
+				channel1 := types.NewChannel(
+					types.OPEN, types.ORDERED,
+					counterparty1, []string{connB0.ID}, ibctesting.ChannelVersion,
+				)
+
+				idCh0 := types.NewIdentifiedChannel(testchannel0.PortID, testchannel0.ID, channel0)
+				idCh1 := types.NewIdentifiedChannel(testchannel1.PortID, testchannel1.ID, channel1)
+
+				expChannels = []*types.IdentifiedChannel{&idCh0, &idCh1}
+
+				req = &types.QueryChannelsRequest{
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      2,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.Channels(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expChannels, res.Channels)
+				suite.Require().Equal(len(expChannels), int(res.Res.Total))
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
+	var (
+		req         *types.QueryConnectionChannelsRequest
+		expChannels = []*types.IdentifiedChannel{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid connection ID",
+			func() {
+				req = &types.QueryConnectionChannelsRequest{
+					Connection: "",
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				_, _, connA0, connB0, testchannel0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				// channel0 on first connection on chainA
+				counterparty0 := types.Counterparty{
+					PortID:    connB0.Channels[0].PortID,
+					ChannelID: connB0.Channels[0].ID,
+				}
+
+				// channel1 is second channel on first connection on chainA
+				testchannel1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
+				counterparty1 := types.Counterparty{
+					PortID:    connB0.Channels[1].PortID,
+					ChannelID: connB0.Channels[1].ID,
+				}
+
+				channel0 := types.NewChannel(
+					types.OPEN, types.UNORDERED,
+					counterparty0, []string{connB0.ID}, ibctesting.ChannelVersion,
+				)
+				channel1 := types.NewChannel(
+					types.OPEN, types.ORDERED,
+					counterparty1, []string{connB0.ID}, ibctesting.ChannelVersion,
+				)
+
+				idCh0 := types.NewIdentifiedChannel(testchannel0.PortID, testchannel0.ID, channel0)
+				idCh1 := types.NewIdentifiedChannel(testchannel1.PortID, testchannel1.ID, channel1)
+
+				expChannels = []*types.IdentifiedChannel{&idCh0, &idCh1}
+
+				req = &types.QueryConnectionChannelsRequest{
+					Connection: connB0.ID,
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      2,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+		{
+			"success, empty response",
+			func() {
+				_, _, _, _, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				expChannels = []*types.IdentifiedChannel{}
+				req = &types.QueryConnectionChannelsRequest{
+					Connection: "externalConnID",
+					Req: &query.PageRequest{
+						Key:        nil,
+						CountTotal: false,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ConnectionChannels(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expChannels, res.Channels)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 	var (
 		req           *types.QueryPacketCommitmentRequest
@@ -101,6 +305,13 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 		malleate func()
 		expPass  bool
 	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
 		{
 			"invalid port ID",
 			func() {
@@ -191,6 +402,13 @@ func (suite *KeeperTestSuite) TestQueryNextSequenceReceive() {
 		malleate func()
 		expPass  bool
 	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
 		{
 			"invalid port ID",
 			func() {

@@ -103,7 +103,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
-	cmd.PersistentFlags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
+	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 
 	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")

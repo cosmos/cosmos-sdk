@@ -206,7 +206,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 }
 
 // TallyResult queries the tally of a proposal vote
-func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyRequest) (*types.QueryTallyResponse, error) {
+func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultRequest) (*types.QueryTallyResultResponse, error) {
 	if req == nil || req.ProposalId == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
@@ -232,5 +232,5 @@ func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyRequest) (*t
 		_, _, tallyResult = q.Tally(ctx, proposal)
 	}
 
-	return &types.QueryTallyResponse{Tally: tallyResult}, nil
+	return &types.QueryTallyResultResponse{Tally: tallyResult}, nil
 }

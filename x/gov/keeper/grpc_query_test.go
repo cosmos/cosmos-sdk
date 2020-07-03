@@ -505,15 +505,15 @@ func TestGRPCQueryTally(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	req := &types.QueryTallyRequest{ProposalId: 0}
+	req := &types.QueryTallyResultRequest{ProposalId: 0}
 	_, err = queryClient.TallyResult(gocontext.Background(), req)
 	require.Error(t, err)
 
-	req = &types.QueryTallyRequest{ProposalId: 2}
+	req = &types.QueryTallyResultRequest{ProposalId: 2}
 	_, err = queryClient.TallyResult(gocontext.Background(), req)
 	require.Error(t, err)
 
-	req = &types.QueryTallyRequest{ProposalId: proposalID}
+	req = &types.QueryTallyResultRequest{ProposalId: proposalID}
 	tally, err := queryClient.TallyResult(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Equal(t, tally.Tally, types.EmptyTallyResult())
@@ -528,7 +528,7 @@ func TestGRPCQueryTally(t *testing.T) {
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
 
-	req = &types.QueryTallyRequest{ProposalId: proposalID}
+	req = &types.QueryTallyResultRequest{ProposalId: proposalID}
 	tally, err = queryClient.TallyResult(gocontext.Background(), req)
 
 	require.NoError(t, err)
@@ -538,7 +538,7 @@ func TestGRPCQueryTally(t *testing.T) {
 	proposal.Status = types.StatusPassed
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	req = &types.QueryTallyRequest{ProposalId: proposalID}
+	req = &types.QueryTallyResultRequest{ProposalId: proposalID}
 	tally, err = queryClient.TallyResult(gocontext.Background(), req)
 
 	require.NoError(t, err)

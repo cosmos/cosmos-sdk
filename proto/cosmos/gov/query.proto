@@ -7,6 +7,7 @@ import "cosmos/gov/gov.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
+// Query provides defines the gRPC querier service
 service Query {
   // Proposal returns proposal details based on ProposalID
   rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {}
@@ -30,12 +31,12 @@ service Query {
   rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {}
 
   // TallyResult queries the tally of a proposal vote
-  rpc TallyResult(QueryTallyRequest) returns (QueryTallyResponse) {}
+  rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {}
 }
 
 // QueryProposalRequest is the request type for the Query/Proposal RPC method
 message QueryProposalRequest {
-  // unique id of the proposal
+  // unique id of the proposal  
   uint64 proposal_id = 1;
 }
 
@@ -101,9 +102,9 @@ message QueryParamsRequest {
 
 // QueryParamsResponse is the response type for the Query/Params RPC method
 message QueryParamsResponse {
-  VotingParams VotingParams = 1 [(gogoproto.customtype) = "VotingParams", (gogoproto.nullable) = false];
-  DepositParams DepositParams = 2 [(gogoproto.customtype) = "DepositParams", (gogoproto.nullable) = false];
-  TallyParams TallyParams = 3 [(gogoproto.customtype) = "TallyParams", (gogoproto.nullable) = false];
+  VotingParams voting_params = 1 [(gogoproto.customtype) = "VotingParams", (gogoproto.nullable) = false];
+  DepositParams deposit_params = 2 [(gogoproto.customtype) = "DepositParams", (gogoproto.nullable) = false];
+  TallyParams tally_params = 3 [(gogoproto.customtype) = "TallyParams", (gogoproto.nullable) = false];
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method
@@ -135,15 +136,15 @@ message QueryDepositsResponse {
   cosmos.query.PageResponse res = 2;
 }
 
-// QueryTallyRequest is the request type for the Query/Tally RPC method
-message QueryTallyRequest {
+// QueryTallyResultRequest is the request type for the Query/Tally RPC method
+message QueryTallyResultRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
 
   cosmos.query.PageRequest req = 2;
 }
 
-// QueryTallyResponse is the response type for the Query/Tally RPC method
-message QueryTallyResponse { 
+// QueryTallyResultResponse is the response type for the Query/Tally RPC method
+message QueryTallyResultResponse { 
   TallyResult tally = 1 [(gogoproto.nullable) = false];
 } 

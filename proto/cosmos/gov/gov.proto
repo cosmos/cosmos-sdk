@@ -162,6 +162,7 @@ message Vote {
   VoteOption option      = 3;
 }
 
+// DepositParams defines the params around deposits for governance
 message DepositParams {
   repeated cosmos.Coin min_deposit = 1 [
     (gogoproto.nullable) = false, 
@@ -175,6 +176,7 @@ message DepositParams {
   ];
 }
 
+// VotingParams defines the params around Voting in governance
 message VotingParams {
   google.protobuf.Duration voting_period = 1 [
     (gogoproto.nullable)    = false,
@@ -183,6 +185,7 @@ message VotingParams {
   ];
 }
 
+// TallyParams defines the params around Tallying votes in governance
 message TallyParams {
   bytes quorum = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 

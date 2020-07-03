@@ -430,6 +430,7 @@ func (m *Vote) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Vote proto.InternalMessageInfo
 
+// DepositParams defines the params around deposits for governance
 type DepositParams struct {
 	MinDeposit       github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_deposit" yaml:"min_deposit"`
 	MaxDepositPeriod time.Duration                            `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period" yaml:"max_deposit_period"`
@@ -467,6 +468,7 @@ func (m *DepositParams) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DepositParams proto.InternalMessageInfo
 
+// VotingParams defines the params around Voting in governance
 type VotingParams struct {
 	VotingPeriod time.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period" yaml:"voting_period"`
 }
@@ -503,6 +505,7 @@ func (m *VotingParams) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VotingParams proto.InternalMessageInfo
 
+// TallyParams defines the params around Tallying votes in governance
 type TallyParams struct {
 	Quorum    github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=quorum,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quorum" yaml:"quorum"`
 	Threshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=threshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"threshold" yaml:"threshold"`

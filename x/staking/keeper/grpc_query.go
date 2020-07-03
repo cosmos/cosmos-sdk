@@ -81,13 +81,27 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	delegations := k.GetValidatorDelegations(ctx, req.ValidatorAddr)
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.DelegationKey)
+	res, err := query.FilteredPaginate(valStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		delegation, err := types.UnmarshalDelegation(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+		if delegation.GetValidatorAddr().Equals(req.ValidatorAddr) {
+			if accumulate {
+				delegations = append(delegations, delegation)
+			}
+		}
+		return false, nil
+	})
 
 	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Unable to convert delegations")
 	}
 
-	return &types.QueryValidatorDelegationsResponse{DelegationResponses: delResponses}, nil
+	return &types.QueryValidatorDelegationsResponse{DelegationResponses: delResponses, Res: res}, nil
 }
 
 func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.QueryValidatorUnbondingDelegationsRequest) (*types.QueryValidatorUnbondingDelegationsResponse, error) {
@@ -368,12 +382,9 @@ func queryRedelegation(store sdk.KVStore, k Querier, req *types.QueryRedelegatio
 func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	srcValPrefix := types.GetREDsFromValSrcIndexKey(req.SrcValidatorAddr)
 	redStore := prefix.NewStore(store, srcValPrefix)
-	// redSrcStore := prefix.NewStore(redStore, types.GetREDKeyFromValSrcIndexKey(iterator.Key()))
 	res, err = query.Paginate(redStore, req.Req, func(key []byte, value []byte) error {
-		key = append(srcValPrefix, key...)
-		key = types.GetREDKeyFromValSrcIndexKey(key)
-		storeKey := types.GetREDKeyFromValSrcIndexKey(key)
-		storeValue := redStore.Get(storeKey)
+		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
+		storeValue := store.Get(storeKey)
 		red, err := types.UnmarshalRED(k.cdc, storeValue)
 		if err != nil {
 			return err

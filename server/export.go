@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -29,9 +28,9 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			config.SetRoot(viper.GetString(flags.FlagHome))
+			config.SetRoot(srvViper.GetString(flags.FlagHome))
 
-			traceWriterFile := viper.GetString(flagTraceStore)
+			traceWriterFile := srvViper.GetString(flagTraceStore)
 
 			db, err := openDB(config.RootDir)
 			if err != nil {
@@ -57,9 +56,9 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 				return err
 			}
 
-			height := viper.GetInt64(flagHeight)
-			forZeroHeight := viper.GetBool(flagForZeroHeight)
-			jailWhiteList := viper.GetStringSlice(flagJailWhitelist)
+			height := srvViper.GetInt64(flagHeight)
+			forZeroHeight := srvViper.GetBool(flagForZeroHeight)
+			jailWhiteList := srvViper.GetStringSlice(flagJailWhitelist)
 
 			appState, validators, cp, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
@@ -103,6 +102,8 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
 	cmd.SetOut(cmd.OutOrStdout())
 	cmd.SetErr(cmd.OutOrStderr())
+
+	srvViper.BindPFlags(cmd.Flags())
 
 	return cmd
 }

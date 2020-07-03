@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -62,14 +61,14 @@ Example:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			config := ctx.Config
 
-			outputDir := viper.GetString(flagOutputDir)
-			chainID := viper.GetString(flags.FlagChainID)
-			minGasPrices := viper.GetString(server.FlagMinGasPrices)
-			nodeDirPrefix := viper.GetString(flagNodeDirPrefix)
-			nodeDaemonHome := viper.GetString(flagNodeDaemonHome)
-			nodeCLIHome := viper.GetString(flagNodeCLIHome)
-			startingIPAddress := viper.GetString(flagStartingIPAddress)
-			numValidators := viper.GetInt(flagNumValidators)
+			outputDir := simdViper.GetString(flagOutputDir)
+			chainID := simdViper.GetString(flags.FlagChainID)
+			minGasPrices := simdViper.GetString(server.FlagMinGasPrices)
+			nodeDirPrefix := simdViper.GetString(flagNodeDirPrefix)
+			nodeDaemonHome := simdViper.GetString(flagNodeDaemonHome)
+			nodeCLIHome := simdViper.GetString(flagNodeCLIHome)
+			startingIPAddress := simdViper.GetString(flagStartingIPAddress)
+			numValidators := simdViper.GetInt(flagNumValidators)
 
 			return InitTestnet(
 				cmd, config, cdc, mbm, genBalIterator, outputDir, chainID, minGasPrices,
@@ -78,24 +77,17 @@ Example:
 		},
 	}
 
-	cmd.Flags().Int(flagNumValidators, 4,
-		"Number of validators to initialize the testnet with")
-	cmd.Flags().StringP(flagOutputDir, "o", "./mytestnet",
-		"Directory to store initialization data for the testnet")
-	cmd.Flags().String(flagNodeDirPrefix, "node",
-		"Prefix the directory name for each node with (node results in node0, node1, ...)")
-	cmd.Flags().String(flagNodeDaemonHome, "simd",
-		"Home directory of the node's daemon configuration")
-	cmd.Flags().String(flagNodeCLIHome, "simcli",
-		"Home directory of the node's cli configuration")
-	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1",
-		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
-	cmd.Flags().String(
-		flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(
-		server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().StringP(flagOutputDir, "o", "./mytestnet", "Directory to store initialization data for the testnet")
+	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
+	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
+	cmd.Flags().String(flagNodeCLIHome, "simcli", "Home directory of the node's cli configuration")
+	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
+	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+
+	simdViper.BindPFlags(cmd.Flags())
 
 	return cmd
 }
@@ -173,7 +165,7 @@ func InitTestnet(
 
 		kb, err := keyring.New(
 			sdk.KeyringServiceName(),
-			viper.GetString(flags.FlagKeyringBackend),
+			simdViper.GetString(flags.FlagKeyringBackend),
 			clientDir,
 			inBuf,
 		)

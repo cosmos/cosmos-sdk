@@ -10,8 +10,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/spf13/viper"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -62,8 +60,8 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
+	cmd.SetArgs([]string{"--%s=%s", flags.FlagHome, tempDir})
 
-	viper.Set(flags.FlagHome, tempDir)
 	err = cmd.RunE(cmd, []string{})
 	if err != nil {
 		t.Errorf("error: %s", err)

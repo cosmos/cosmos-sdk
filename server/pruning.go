@@ -13,8 +13,8 @@ import (
 // GetPruningOptionsFromFlags parses command flags and returns the correct
 // PruningOptions. If a pruning strategy is provided, that will be parsed and
 // returned, otherwise, it is assumed custom pruning options are provided.
-func GetPruningOptionsFromFlags() (types.PruningOptions, error) {
-	strategy := strings.ToLower(viper.GetString(FlagPruning))
+func GetPruningOptionsFromFlags(v *viper.Viper) (types.PruningOptions, error) {
+	strategy := strings.ToLower(v.GetString(FlagPruning))
 
 	switch strategy {
 	case types.PruningOptionDefault, types.PruningOptionNothing, types.PruningOptionEverything:
@@ -22,8 +22,8 @@ func GetPruningOptionsFromFlags() (types.PruningOptions, error) {
 
 	case types.PruningOptionCustom:
 		opts := types.NewPruningOptions(
-			viper.GetUint64(FlagPruningKeepRecent),
-			viper.GetUint64(FlagPruningKeepEvery), viper.GetUint64(FlagPruningInterval),
+			v.GetUint64(FlagPruningKeepRecent),
+			v.GetUint64(FlagPruningKeepEvery), v.GetUint64(FlagPruningInterval),
 		)
 
 		if err := opts.Validate(); err != nil {

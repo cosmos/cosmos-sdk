@@ -24,9 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-const flagInvCheckPeriod = "inv-check-period"
-
-var invCheckPeriod uint
+var simdViper = viper.New()
 
 func main() {
 	appCodec, cdc := simapp.MakeCodecs()
@@ -45,6 +43,9 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
+	rootCmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	simdViper.BindPFlags(rootCmd.Flags())
+
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(ctx, cdc, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
@@ -57,46 +58,43 @@ func main() {
 		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome),
 		flags.NewCompletionCmd(rootCmd, true),
 		testnetCmd(ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
-		debug.Cmd(cdc))
+		debug.Cmd(cdc),
+	)
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
-	// prepare and add flags
-	executor := cli.PrepareBaseCmd(rootCmd, "GA", simapp.DefaultNodeHome)
-	rootCmd.PersistentFlags().UintVar(&invCheckPeriod, flagInvCheckPeriod,
-		0, "Assert registered invariants every N blocks")
-	err := executor.Execute()
-	if err != nil {
+	executor := cli.PrepareBaseCmd(rootCmd, "", simapp.DefaultNodeHome)
+	if err := executor.Execute(); err != nil {
 		panic(err)
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Application {
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, v *viper.Viper) server.Application {
 	var cache sdk.MultiStorePersistentCache
 
-	if viper.GetBool(server.FlagInterBlockCache) {
+	if v.GetBool(server.FlagInterBlockCache) {
 		cache = store.NewCommitKVStoreCacheManager()
 	}
 
 	skipUpgradeHeights := make(map[int64]bool)
-	for _, h := range viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+	for _, h := range v.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	pruningOpts, err := server.GetPruningOptionsFromFlags()
+	pruningOpts, err := server.GetPruningOptionsFromFlags(v)
 	if err != nil {
 		panic(err)
 	}
 
-	// TODO: Make sure custom pruning works.
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
-		viper.GetString(flags.FlagHome), invCheckPeriod,
+		v.GetString(flags.FlagHome), v.GetUint(server.FlagInvCheckPeriod),
 		baseapp.SetPruning(pruningOpts),
-		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
-		baseapp.SetHaltHeight(viper.GetUint64(server.FlagHaltHeight)),
-		baseapp.SetHaltTime(viper.GetUint64(server.FlagHaltTime)),
+		baseapp.SetMinGasPrices(v.GetString(server.FlagMinGasPrices)),
+		baseapp.SetHaltHeight(v.GetUint64(server.FlagHaltHeight)),
+		baseapp.SetHaltTime(v.GetUint64(server.FlagHaltTime)),
 		baseapp.SetInterBlockCache(cache),
+		baseapp.SetTrace(v.GetBool(server.FlagTrace)),
 	)
 }
 
@@ -107,12 +105,13 @@ func exportAppStateAndTMValidators(
 	var simApp *simapp.SimApp
 	if height != -1 {
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1))
-		err := simApp.LoadHeight(height)
-		if err != nil {
+
+		if err := simApp.LoadHeight(height); err != nil {
 			return nil, nil, nil, err
 		}
 	} else {
 		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1))
 	}
+
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

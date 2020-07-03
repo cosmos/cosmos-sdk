@@ -165,7 +165,7 @@ func TestABCIInfoHidesStacktrace(t *testing.T) {
 	err := Wrap(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
 
-	if log != "unauthorized: wrapped" {
+	if log != "wrapped: unauthorized" {
 		t.Fatalf("unexpected message in non debug mode: %s", log)
 	}
 }
@@ -226,12 +226,12 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		"single error": {
 			src:   myErrDecode,
 			debug: false,
-			exp:   "tx parse error: test",
+			exp:   "test: tx parse error",
 		},
 		"second error": {
 			src:   myErrAddr,
 			debug: false,
-			exp:   "invalid address: tester",
+			exp:   "tester: invalid address",
 		},
 		"single error with debug": {
 			src:   myErrDecode,

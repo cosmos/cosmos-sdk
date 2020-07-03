@@ -79,12 +79,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 		return nil, err
 	}
 
-	clientCtx := client.NewContext()
-	channelRes, err := utils.QueryChannel(clientCtx, msg.PortID, msg.ChannelID, false)
-	if err != nil {
-		return nil, err
-	}
-	channel := channelRes.Channel
+	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

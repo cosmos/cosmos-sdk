@@ -26,14 +26,14 @@ all: tools build lint test
 build: go.sum
 	@go build -mod=readonly ./...
 
-build-simapp: go.sum
+build-simd: go.sum
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
-build-simapp-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simapp
+build-simd-linux: go.sum
+	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
 
-.PHONY: build build-simapp build-simapp-linux
+.PHONY: build build-simd build-simd-linux
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -128,7 +128,7 @@ test-unit:
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
-test-integration: build-simapp
+test-integration: build-simd
 	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
 
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race

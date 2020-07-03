@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -30,6 +31,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 			config := ctx.Config
 			config.SetRoot(v.GetString(cli.HomeFlag))
 			name := v.GetString(flags.FlagName)
+			fmt.Printf("THE NAME!!! %s", name)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
@@ -64,9 +66,11 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 	cmd.Flags().String(flagGenTxDir, "",
 		"override default \"gentx\" directory from which collect and execute "+
 			"genesis transactions; default [--home]/config/gentx/")
+	cmd.Flags().String(flags.FlagName, "", "name of private key with which to sign the gentx")
 
 	v.BindPFlag(cli.HomeFlag, cmd.Flags().Lookup(cli.HomeFlag))
 	v.BindPFlag(flagGenTxDir, cmd.Flags().Lookup(flagGenTxDir))
+	v.BindPFlag(flags.FlagName, cmd.Flags().Lookup(flags.FlagName))
 
 	return cmd
 }

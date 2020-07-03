@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 
 			connection := suite.chainA.GetConnection(connA)
 			if changeClientID {
-				connection.ClientID = "does not exist"
+				connection.ClientID = ibctesting.InvalidID
 			}
 
 			proof, consensusHeight := suite.chainB.QueryConsensusStateProof(connB.ClientID)
@@ -93,66 +93,74 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	}
 }
 
+// TestVerifyConnectionState verifies the connection state of the connection
+// on chainB.
 func (suite *KeeperTestSuite) TestVerifyConnectionState() {
-	connectionKey := host.KeyConnection(testConnectionIDA)
-	var invalidProofHeight uint64
+	var (
+		connA                 *ibctesting.TestConnection
+		connB                 *ibctesting.TestConnection
+		changeClientID        bool
+		changeConnectionState bool
+		heightDiff            uint64
+	)
 	cases := []struct {
 		msg      string
 		malleate func()
 		expPass  bool
 	}{
 		{"verification success", func() {
-			suite.oldchainA.CreateClient(suite.oldchainB)
-			suite.oldchainB.CreateClient(suite.oldchainA)
-			invalidProofHeight = 0 // don't use this
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 		}, true},
-		{"client state not found", func() {}, false},
+		{"client state not found", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			changeClientID = true
+		}, false},
+		{"consensus state not found", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			heightDiff = 5
+		}, false},
 		{"verification failed", func() {
-			suite.oldchainA.CreateClient(suite.oldchainB)
-			suite.oldchainB.CreateClient(suite.oldchainA)
-			invalidProofHeight = 10 // make proofHeight incorrect
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			changeConnectionState = true
 		}, false},
 	}
 
-	// Chains A and B create clients for each other
-	// A creates connectionEnd for chain B and stores it in state
-	// Check that B can verify connection is stored after some updates
-	for i, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
-		i := i
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
+
+		suite.Run(tc.msg, func() {
+			suite.SetupTest()             // reset
+			changeClientID = false        // must be explicitly changed in malleate
+			changeConnectionState = false // must be explicitly changed in malleate
+			heightDiff = 0                // must be explicitly changed in malleate
 
 			tc.malleate()
 
-			// create and store connection on chain A
-			expectedConnection := suite.oldchainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
+			connection := suite.chainA.GetConnection(connA)
+			if changeClientID {
+				connection.ClientID = ibctesting.InvalidID
+			}
+			expectedConnection := suite.chainB.GetConnection(connB)
 
-			// // create expected connection
-			// TODO: why is this commented
-			// expectedConnection := types.NewConnectionEnd(types.INIT, testClientIDB, counterparty, []string{"1.0.0"})
+			connectionKey := host.KeyConnection(connB.ID)
+			proof, proofHeight := suite.chainB.QueryProof(connectionKey)
 
-			// perform a couple updates of chain A on chain B
-			suite.oldchainB.updateClient(suite.oldchainA)
-			suite.oldchainB.updateClient(suite.oldchainA)
-			proof, proofHeight := queryProof(suite.oldchainA, connectionKey)
-			// if invalidProofHeight has been set, use that value instead
-			if invalidProofHeight != 0 {
-				proofHeight = invalidProofHeight
+			if changeConnectionState {
+				expectedConnection.State = types.TRYOPEN
 			}
 
-			// Create B's connection to A
-			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-			connection := types.NewConnectionEnd(types.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
-			// Ensure chain B can verify connection exists in chain A
-			err := suite.oldchainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-				suite.oldchainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
+			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
+				suite.chainA.GetContext(), connection,
+				proofHeight+heightDiff, proof, connB.ID, expectedConnection,
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}

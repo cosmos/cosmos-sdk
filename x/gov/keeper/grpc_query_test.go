@@ -87,9 +87,12 @@ func TestGRPCQueryProposals(t *testing.T) {
 	require.NotEmpty(t, proposalFromKeeper1)
 	require.Equal(t, proposals.Proposals[0].Content.GetValue(), proposalFromKeeper1.Content.GetValue())
 
-	req = &types.QueryProposalsRequest{Req: &query.PageRequest{
-		Key:   proposals.Res.NextKey,
-		Limit: 1}}
+	req = &types.QueryProposalsRequest{
+		Req: &query.PageRequest{
+			Key:   proposals.Res.NextKey,
+			Limit: 1
+		}
+	}
 
 	// query for the next page which is 2nd proposal at present context.
 	// and expect NextKey should be empty

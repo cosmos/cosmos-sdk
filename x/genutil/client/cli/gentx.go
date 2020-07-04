@@ -70,12 +70,12 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			// Read --nodeID, if empty take it from priv_validator.json
-			nodeIdString, err := cmd.Flags().GetString(flagNodeID)
+			nodeIDString, err := cmd.Flags().GetString(flagNodeID)
 			if err != nil {
 				return err
 			}
 
-			if nodeIDString := nodeIdString; nodeIDString != "" {
+			if nodeIDString != "" {
 				nodeID = nodeIDString
 			}
 			// Read --pubkey, if empty take it from priv_validator.json

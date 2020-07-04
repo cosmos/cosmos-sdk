@@ -4,7 +4,6 @@ package cosmos.distribution;
 import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/distribution/distribution.proto";
-import "cosmos/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 
@@ -21,7 +20,7 @@ service Query {
 message QueryParamsRequest { }
 
 message QueryParamsResponse { 
-  cosmos.distribution.Params params = 1 [(gogoproto.nullable) = false, (gogoproto.casttype) = "Params"];
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryValidatorOutstandingRewardsRequest {

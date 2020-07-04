@@ -17,7 +17,7 @@ func TestGRPCParams(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -30,7 +30,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -42,7 +42,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
-	pageReq := &query.PageRequest{Limit: 2}
+	pageReq := &query.PageRequest{Limit: 1}
 
 	req := types.NewQueryValidatorOutstandingRewardsRequest(nil, pageReq)
 
@@ -58,6 +58,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	validatorOutstandingRewards, err = queryClient.ValidatorOutstandingRewards(gocontext.Background(), req)
 	require.NoError(t, err)
 	require.Equal(t, rewards, validatorOutstandingRewards.Rewards)
+	require.Equal(t, valCommission, validatorOutstandingRewards.Rewards.Rewards)
 }
 
 func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
@@ -69,7 +70,7 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	err := app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
 	require.Nil(t, err)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 

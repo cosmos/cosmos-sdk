@@ -19,7 +19,7 @@ message QueryCurrentPlanRequest {}
 
 // QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC method
 message QueryCurrentPlanResponse {
-  // plan is the current plan
+  // plan is the current upgrade plan
   Plan plan = 1;
 }
 

@@ -329,7 +329,7 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory) (tx.Fa
 
 // Return the flagset, particular flags, and a description of defaults
 // this is anticipated to be used with the gen-tx
-func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string) {
+func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
 	fsCreateValidator.String(FlagIP, ipDefault, "The node's public IP")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")
@@ -352,7 +352,7 @@ func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, 
 		defaultCommissionMaxRate, defaultCommissionMaxChangeRate,
 		defaultMinSelfDelegation)
 
-	return fsCreateValidator, FlagNodeID, FlagPubKey, FlagAmount, defaultsDesc
+	return fsCreateValidator, defaultsDesc
 }
 
 type TxCreateValidatorConfig struct {

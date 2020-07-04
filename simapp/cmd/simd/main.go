@@ -21,7 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var viperCfg = viper.New()
@@ -51,8 +50,8 @@ func main() {
 		genutilcli.CollectGenTxsCmd(ctx, cdc, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(ctx, cdc),
 		genutilcli.GenTxCmd(
-			ctx, cdc, simapp.ModuleBasics, staking.AppModuleBasic{},
-			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultCLIHome,
+			ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{},
+			simapp.DefaultNodeHome, simapp.DefaultCLIHome,
 		),
 		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
 		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultCLIHome),

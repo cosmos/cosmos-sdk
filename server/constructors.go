@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -27,7 +28,7 @@ type (
 
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DB, io.Writer) Application
+	AppCreator func(log.Logger, dbm.DB, io.Writer, *viper.Viper) Application
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.

@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -18,8 +17,6 @@ const (
 	// detailed error string.
 	internalABCICodespace        = UndefinedCodespace
 	internalABCICode      uint32 = 1
-	internalABCILog       string = "internal error"
-	// multiErrorABCICode uint32 = 1000
 )
 
 // ABCIInfo returns the ABCI error information as consumed by the tendermint
@@ -44,8 +41,8 @@ func ABCIInfo(err error, debug bool) (codespace string, code uint32, log string)
 
 // ResponseCheckTx returns an ABCI ResponseCheckTx object with fields filled in
 // from the given error and gas values.
-func ResponseCheckTx(err error, gw, gu uint64) abci.ResponseCheckTx {
-	space, code, log := ABCIInfo(err, false)
+func ResponseCheckTx(err error, gw, gu uint64, debug bool) abci.ResponseCheckTx {
+	space, code, log := ABCIInfo(err, debug)
 	return abci.ResponseCheckTx{
 		Codespace: space,
 		Code:      code,
@@ -57,8 +54,8 @@ func ResponseCheckTx(err error, gw, gu uint64) abci.ResponseCheckTx {
 
 // ResponseDeliverTx returns an ABCI ResponseDeliverTx object with fields filled in
 // from the given error and gas values.
-func ResponseDeliverTx(err error, gw, gu uint64) abci.ResponseDeliverTx {
-	space, code, log := ABCIInfo(err, false)
+func ResponseDeliverTx(err error, gw, gu uint64, debug bool) abci.ResponseDeliverTx {
+	space, code, log := ABCIInfo(err, debug)
 	return abci.ResponseDeliverTx{
 		Codespace: space,
 		Code:      code,
@@ -154,15 +151,17 @@ func errIsNil(err error) bool {
 	return false
 }
 
-// Redact replaces an error that is not initialized as an ABCI Error with a
-// generic internal error instance. If the error is an ABCI Error, that error is
-// simply returned.
+// Redact replace all errors that do not initialize with a weave error with a
+// generic internal error instance. This function is supposed to hide
+// implementation details errors and leave only those that weave framework
+// originates.
 func Redact(err error) error {
 	if ErrPanic.Is(err) {
-		return errors.New(internalABCILog)
+		return ErrPanic
 	}
 	if abciCode(err) == internalABCICode {
-		return errors.New(internalABCILog)
+		return errInternal
 	}
+
 	return err
 }

@@ -44,7 +44,7 @@ func TestMigrateGenesis(t *testing.T) {
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
-	ctx := server.NewContext(cfg, logger)
+	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 
 	genesisPath := path.Join(home, "genesis.json")

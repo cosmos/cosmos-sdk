@@ -355,6 +355,29 @@ func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, 
 	return fsCreateValidator, FlagNodeID, FlagPubKey, FlagAmount, defaultsDesc
 }
 
+type TxCreateValidatorCondig struct {
+	ChainId string
+	From    string
+	NodeID  string
+	Moniker string
+
+	Amount string
+
+	CommissionRate          string
+	CommisionMaxRate        string
+	CommissionMaxChangeRate string
+	MinSelfDelegation       string
+
+	TrustNode string
+	PubKey    string
+
+	IP              string
+	Website         string
+	SecurityContact string
+	Details         string
+	Identity        string
+}
+
 // prepare flags in config
 func PrepareFlagsForTxCreateValidator(
 	config *cfg.Config, nodeID, chainID string, valPubKey crypto.PubKey,

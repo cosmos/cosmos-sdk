@@ -18,7 +18,7 @@ func TestGRPCQueryProposal(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -47,7 +47,7 @@ func TestGRPCQueryProposals(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -168,7 +168,7 @@ func TestGRPCQueryVote(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -218,7 +218,7 @@ func TestGRPCQueryVotes(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -314,7 +314,7 @@ func TestGRPCQueryParams(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -354,7 +354,7 @@ func TestGRPCQueryDeposit(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -402,7 +402,7 @@ func TestGRPCQueryDeposits(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -494,7 +494,7 @@ func TestGRPCQueryTally(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 

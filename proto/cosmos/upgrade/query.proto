@@ -5,7 +5,7 @@ import "cosmos/upgrade/upgrade.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 
-// Query provides defines the gRPC querier service
+// Query defines the gRPC upgrade querier service
 service Query {
   // CurrentPlan queries the current upgrade plan
   rpc CurrentPlan(QueryCurrentPlanRequest) returns (QueryCurrentPlanResponse) {}

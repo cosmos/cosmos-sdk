@@ -195,7 +195,10 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			// Fetch output file name
-			outputDocument := viper.GetString(flags.FlagOutputDocument)
+			outputDocument, err := cmd.Flags().GetString(flags.FlagOutputDocument)
+			if err != nil {
+				return err
+			}
 			if outputDocument == "" {
 				outputDocument, err = makeOutputFilepath(config.RootDir, nodeID)
 				if err != nil {

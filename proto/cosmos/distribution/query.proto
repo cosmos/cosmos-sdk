@@ -29,10 +29,7 @@ message QueryValidatorOutstandingRewardsRequest {
 }
 
 message QueryValidatorOutstandingRewardsResponse {
-  repeated cosmos.DecCoin rewards = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
-  ];
+  ValidatorOutstandingRewards rewards = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }

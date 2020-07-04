@@ -35,35 +35,29 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	queryClient := types.NewQueryClient(queryHelper)
 
 	valCommission := sdk.DecCoins{
-		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5)),
-		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3)),
+		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5000)),
+		sdk.NewDecCoinFromDec("stake", sdk.NewDec(300)),
 	}
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 
-	pageReq := &query.PageRequest{
-		Key:        nil,
-		Limit:      1,
-		CountTotal: false,
-	}
+	pageReq := &query.PageRequest{Limit: 2}
 
 	req := types.NewQueryValidatorOutstandingRewardsRequest(nil, pageReq)
 
 	validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(gocontext.Background(), req)
-
 	require.Error(t, err)
 	require.Nil(t, validatorOutstandingRewards)
 
 	// set outstanding rewards
 	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
-
+	rewards := app.DistrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0])
 	req = types.NewQueryValidatorOutstandingRewardsRequest(valAddrs[0], pageReq)
 
 	validatorOutstandingRewards, err = queryClient.ValidatorOutstandingRewards(gocontext.Background(), req)
 	require.NoError(t, err)
-	require.NotEmpty(t, validatorOutstandingRewards.Rewards)
-	require.NotNil(t, validatorOutstandingRewards.Res.NextKey)
+	require.Equal(t, rewards, validatorOutstandingRewards.Rewards)
 }
 
 func TestGRPCDelegatorWithdrawAddress(t *testing.T) {

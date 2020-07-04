@@ -15,6 +15,9 @@ var _ types.QueryServer = Keeper{}
 
 // Params queries params of distribution module
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)
@@ -30,18 +33,16 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var rewards sdk.DecCoins
+	var rewards types.ValidatorOutstandingRewards
 
 	store := ctx.KVStore(k.storeKey)
 	rewardsStore := prefix.NewStore(store, types.GetValidatorOutstandingRewardsKey(req.ValidatorAddress))
 
 	res, err := query.Paginate(rewardsStore, req.Req, func(key []byte, value []byte) error {
-		var result sdk.DecCoin
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
+		err := k.cdc.UnmarshalBinaryBare(value, &rewards)
 		if err != nil {
 			return err
 		}
-		rewards = append(rewards, result)
 		return nil
 	})
 

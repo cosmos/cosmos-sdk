@@ -6,7 +6,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -18,16 +17,15 @@ import (
 
 const flagGenTxDir = "gentx-dir"
 
-var v = viper.New()
-
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
 func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			config := ctx.Config
-			config.SetRoot(v.GetString(cli.HomeFlag))
+			home, _ := cmd.Flags().GetString(cli.HomeFlag)
+			config.SetRoot(home)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
@@ -38,7 +36,8 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 				return errors.Wrap(err, "failed to read genesis doc from file")
 			}
 
-			genTxsDir := v.GetString(flagGenTxDir)
+			genTxDir, _ := cmd.Flags().GetString(flagGenTxDir)
+			genTxsDir := genTxDir
 			if genTxsDir == "" {
 				genTxsDir = filepath.Join(config.RootDir, "config", "gentx")
 			}
@@ -62,8 +61,6 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 	cmd.Flags().String(flagGenTxDir, "",
 		"override default \"gentx\" directory from which collect and execute "+
 			"genesis transactions; default [--home]/config/gentx/")
-
-	v.BindPFlags(cmd.Flags())
 
 	return cmd
 }

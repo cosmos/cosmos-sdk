@@ -356,7 +356,7 @@ func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, 
 }
 
 type TxCreateValidatorConfig struct {
-	ChainId string
+	ChainID string
 	From    string
 	NodeID  string
 	Moniker string

@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -292,7 +291,7 @@ func (app *BaseApp) Router() sdk.Router {
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
-func (app *BaseApp) GRPCQueryRouter() grpc.Server { return app.grpcQueryRouter }
+func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }

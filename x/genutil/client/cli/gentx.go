@@ -57,20 +57,33 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 		    %s`, defaultsDesc),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			home, err := cmd.Flags().GetString(flags.FlagHome)
+			if err != nil {
+				return err
+			}
 
 			config := ctx.Config
-			config.SetRoot(viper.GetString(flags.FlagHome))
+			config.SetRoot(home)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(ctx.Config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
 
 			// Read --nodeID, if empty take it from priv_validator.json
-			if nodeIDString := viper.GetString(flagNodeID); nodeIDString != "" {
+			nodeIdString, err := cmd.Flags().GetString(flagNodeID)
+			if err != nil {
+				return err
+			}
+
+			if nodeIDString := nodeIdString; nodeIDString != "" {
 				nodeID = nodeIDString
 			}
 			// Read --pubkey, if empty take it from priv_validator.json
-			if valPubKeyString := viper.GetString(flagPubKey); valPubKeyString != "" {
+			valPubKeyString, err := cmd.Flags().GetString(flagPubKey)
+			if err != nil {
+				return err
+			}
+			if valPubKeyString != "" {
 				valPubKey, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, valPubKeyString)
 				if err != nil {
 					return errors.Wrap(err, "failed to get consensus node public key")
@@ -91,25 +104,45 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
+			keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			if err != nil {
+				return err
+			}
+
+			clientHome, err := cmd.Flags().GetString(flagClientHome)
+			if err != nil {
+				return err
+			}
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			kb, err := keyring.New(sdk.KeyringServiceName(),
-				viper.GetString(flags.FlagKeyringBackend), viper.GetString(flagClientHome), inBuf)
+			kb, err := keyring.New(
+				sdk.KeyringServiceName(),
+				keyringBackend,
+				clientHome,
+				inBuf,
+			)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}
 
-			name := viper.GetString(flags.FlagName)
+			name, err := cmd.Flags().GetString(flags.FlagName)
+			if err != nil {
+				return err
+			}
 			key, err := kb.Key(name)
 			if err != nil {
 				return errors.Wrap(err, "failed to read from keybase")
 			}
 
 			// Set flags for creating gentx
+			// TODO study this case.
 			viper.Set(flags.FlagHome, viper.GetString(flagClientHome))
 			smbh.PrepareFlagsForTxCreateValidator(config, nodeID, genDoc.ChainID, valPubKey)
 
 			// Fetch the amount of coins staked
-			amount := viper.GetString(flagAmount)
+			amount, err := cmd.Flags().GetString(flagAmount)
+			if err != nil {
+				return err
+			}
 			coins, err := sdk.ParseCoins(amount)
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
@@ -187,7 +220,6 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 
 	cmd.MarkFlagRequired(flags.FlagName)
 

@@ -10,7 +10,7 @@ service Query {
   // CurrentPlan queries the current upgrade plan
   rpc CurrentPlan(QueryCurrentPlanRequest) returns (QueryCurrentPlanResponse) {}
 
-  // AppliedPlan queries a previously applied plan by its name
+  // AppliedPlan queries a previously applied upgrade plan by its name
   rpc AppliedPlan(QueryAppliedPlanRequest) returns (QueryAppliedPlanResponse) {}
 }
 

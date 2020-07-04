@@ -355,7 +355,7 @@ func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, 
 	return fsCreateValidator, FlagNodeID, FlagPubKey, FlagAmount, defaultsDesc
 }
 
-type TxCreateValidatorCondig struct {
+type TxCreateValidatorConfig struct {
 	ChainId string
 	From    string
 	NodeID  string
@@ -364,7 +364,7 @@ type TxCreateValidatorCondig struct {
 	Amount string
 
 	CommissionRate          string
-	CommisionMaxRate        string
+	CommissionMaxRate       string
 	CommissionMaxChangeRate string
 	MinSelfDelegation       string
 
@@ -376,6 +376,23 @@ type TxCreateValidatorCondig struct {
 	SecurityContact string
 	Details         string
 	Identity        string
+}
+
+func PrepareConfigForTxCreateValidator(
+	config *cfg.Config, flagSet *flag.FlagSet, nodeID, chainID string, valPubKey crypto.PubKey,
+) (TxCreateValidatorConfig, error) {
+	c := TxCreateValidatorConfig{}
+
+	ip, err := flagSet.GetString(FlagIP)
+	if err != nil {
+		return c, err
+	}
+	if ip == "" {
+		_, _ = fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
+			"the tx's memo field will be unset")
+	}
+
+	return c, nil
 }
 
 // prepare flags in config

@@ -3,6 +3,8 @@ package cli
 import (
 	"testing"
 
+	"github.com/spf13/pflag"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -13,6 +15,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func TestPrepareConfigForTxCreateValidator(t *testing.T) {
+	t.SkipNow()
+	fs := pflag.NewFlagSet("fs", pflag.PanicOnError)
+
+	fs.Set(FlagIP, "")
+
+	config := &cfg.Config{BaseConfig: cfg.TestBaseConfig()}
+
+	valPubKey, _ := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, "cosmosvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5gd80a")
+	_, err := PrepareConfigForTxCreateValidator(config, fs, "nodeId", "chainId", valPubKey)
+	require.NoError(t, err)
+}
 
 func TestPrepareFlagsForTxCreateValidator(t *testing.T) {
 	t.SkipNow()

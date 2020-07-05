@@ -38,6 +38,11 @@ func SetHaltTime(haltTime uint64) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.setHaltTime(haltTime) }
 }
 
+// SetTrace will turn on or off trace flag
+func SetTrace(trace bool) func(*BaseApp) {
+	return func(app *BaseApp) { app.setTrace(trace) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {

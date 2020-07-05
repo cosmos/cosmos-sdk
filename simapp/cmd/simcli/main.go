@@ -24,6 +24,7 @@ var (
 	encodingConfig = simapp.MakeEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
+			WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 			WithTxGenerator(encodingConfig.TxGenerator).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).

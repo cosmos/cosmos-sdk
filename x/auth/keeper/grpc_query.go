@@ -7,10 +7,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 var _ types.QueryServer = AccountKeeper{}
@@ -41,6 +42,9 @@ func (k AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest
 
 // Parameters returns parameters of auth module
 func (k AccountKeeper) Parameters(c context.Context, req *types.QueryParametersRequest) (*types.QueryParametersResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
@@ -60,13 +64,4 @@ func ConvertAccount(account types.AccountI) (*codectypes.Any, error) {
 	}
 
 	return any, nil
-}
-
-// GetAccount unpacks Any to AccountI
-func GetAccount(any *codectypes.Any) types.AccountI {
-	account, ok := any.GetCachedValue().(types.AccountI)
-	if !ok {
-		return nil
-	}
-	return account
 }

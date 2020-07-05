@@ -18,7 +18,7 @@ func TestGRPCQueryParams(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.SlashingKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 

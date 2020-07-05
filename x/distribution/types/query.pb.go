@@ -8,6 +8,7 @@ import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	grpc1 "github.com/gogo/protobuf/grpc"
+	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -30,6 +31,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryParamsRequest is the request type for the Query/Params RPC method
 type QueryParamsRequest struct {
 }
 
@@ -66,6 +68,7 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
+// QueryParamsResponse is the response type for the Query/Params RPC method
 type QueryParamsResponse struct {
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
@@ -110,6 +113,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryValidatorOutstandingRewardsRequest is the request type for the Query/ValidatorOutstandingRewards RPC method
 type QueryValidatorOutstandingRewardsRequest struct {
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
 	Req              *query.PageRequest                            `protobuf:"bytes,2,opt,name=req,proto3" json:"req,omitempty"`
@@ -164,6 +168,7 @@ func (m *QueryValidatorOutstandingRewardsRequest) GetReq() *query.PageRequest {
 	return nil
 }
 
+// QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method
 type QueryValidatorOutstandingRewardsResponse struct {
 	Rewards ValidatorOutstandingRewards `protobuf:"bytes,1,opt,name=rewards,proto3" json:"rewards"`
 	Res     *query.PageResponse         `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
@@ -218,6 +223,317 @@ func (m *QueryValidatorOutstandingRewardsResponse) GetRes() *query.PageResponse 
 	return nil
 }
 
+// QueryValidatorCommissionRequest is the request type for the Query/ValidatorCommission RPC method
+type QueryValidatorCommissionRequest struct {
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
+}
+
+func (m *QueryValidatorCommissionRequest) Reset()         { *m = QueryValidatorCommissionRequest{} }
+func (m *QueryValidatorCommissionRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryValidatorCommissionRequest) ProtoMessage()    {}
+func (*QueryValidatorCommissionRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{4}
+}
+func (m *QueryValidatorCommissionRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidatorCommissionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidatorCommissionRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidatorCommissionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidatorCommissionRequest.Merge(m, src)
+}
+func (m *QueryValidatorCommissionRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidatorCommissionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidatorCommissionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidatorCommissionRequest proto.InternalMessageInfo
+
+func (m *QueryValidatorCommissionRequest) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
+	if m != nil {
+		return m.ValidatorAddress
+	}
+	return nil
+}
+
+// QueryValidatorCommissionResponse is the response type for the Query/ValidatorCommission RPC method
+type QueryValidatorCommissionResponse struct {
+	Commission ValidatorAccumulatedCommission `protobuf:"bytes,1,opt,name=commission,proto3" json:"commission"`
+}
+
+func (m *QueryValidatorCommissionResponse) Reset()         { *m = QueryValidatorCommissionResponse{} }
+func (m *QueryValidatorCommissionResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryValidatorCommissionResponse) ProtoMessage()    {}
+func (*QueryValidatorCommissionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{5}
+}
+func (m *QueryValidatorCommissionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidatorCommissionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidatorCommissionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidatorCommissionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidatorCommissionResponse.Merge(m, src)
+}
+func (m *QueryValidatorCommissionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidatorCommissionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidatorCommissionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidatorCommissionResponse proto.InternalMessageInfo
+
+func (m *QueryValidatorCommissionResponse) GetCommission() ValidatorAccumulatedCommission {
+	if m != nil {
+		return m.Commission
+	}
+	return ValidatorAccumulatedCommission{}
+}
+
+// QueryValidatorSlashesRequest is the request type for the Query/ValidatorSlashes RPC method
+type QueryValidatorSlashesRequest struct {
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
+	StartingHeight   uint64                                        `protobuf:"varint,2,opt,name=starting_height,json=startingHeight,proto3" json:"starting_height,omitempty"`
+	EndingHeight     uint64                                        `protobuf:"varint,3,opt,name=ending_height,json=endingHeight,proto3" json:"ending_height,omitempty"`
+	Req              *query.PageRequest                            `protobuf:"bytes,4,opt,name=req,proto3" json:"req,omitempty"`
+}
+
+func (m *QueryValidatorSlashesRequest) Reset()         { *m = QueryValidatorSlashesRequest{} }
+func (m *QueryValidatorSlashesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryValidatorSlashesRequest) ProtoMessage()    {}
+func (*QueryValidatorSlashesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{6}
+}
+func (m *QueryValidatorSlashesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidatorSlashesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidatorSlashesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidatorSlashesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidatorSlashesRequest.Merge(m, src)
+}
+func (m *QueryValidatorSlashesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidatorSlashesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidatorSlashesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidatorSlashesRequest proto.InternalMessageInfo
+
+func (m *QueryValidatorSlashesRequest) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
+	if m != nil {
+		return m.ValidatorAddress
+	}
+	return nil
+}
+
+func (m *QueryValidatorSlashesRequest) GetStartingHeight() uint64 {
+	if m != nil {
+		return m.StartingHeight
+	}
+	return 0
+}
+
+func (m *QueryValidatorSlashesRequest) GetEndingHeight() uint64 {
+	if m != nil {
+		return m.EndingHeight
+	}
+	return 0
+}
+
+func (m *QueryValidatorSlashesRequest) GetReq() *query.PageRequest {
+	if m != nil {
+		return m.Req
+	}
+	return nil
+}
+
+// QueryValidatorSlashesResponse is the response type for the Query/ValidatorSlashes RPC method
+type QueryValidatorSlashesResponse struct {
+	Slashes []ValidatorSlashEvent `protobuf:"bytes,1,rep,name=slashes,proto3" json:"slashes"`
+	Res     *query.PageResponse   `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
+}
+
+func (m *QueryValidatorSlashesResponse) Reset()         { *m = QueryValidatorSlashesResponse{} }
+func (m *QueryValidatorSlashesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryValidatorSlashesResponse) ProtoMessage()    {}
+func (*QueryValidatorSlashesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{7}
+}
+func (m *QueryValidatorSlashesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidatorSlashesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidatorSlashesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidatorSlashesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidatorSlashesResponse.Merge(m, src)
+}
+func (m *QueryValidatorSlashesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidatorSlashesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidatorSlashesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidatorSlashesResponse proto.InternalMessageInfo
+
+func (m *QueryValidatorSlashesResponse) GetSlashes() []ValidatorSlashEvent {
+	if m != nil {
+		return m.Slashes
+	}
+	return nil
+}
+
+func (m *QueryValidatorSlashesResponse) GetRes() *query.PageResponse {
+	if m != nil {
+		return m.Res
+	}
+	return nil
+}
+
+// QueryDelegationRewardsRequest is the request type for the Query/DelegationRewards RPC method
+type QueryDelegationRewardsRequest struct {
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
+}
+
+func (m *QueryDelegationRewardsRequest) Reset()         { *m = QueryDelegationRewardsRequest{} }
+func (m *QueryDelegationRewardsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDelegationRewardsRequest) ProtoMessage()    {}
+func (*QueryDelegationRewardsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{8}
+}
+func (m *QueryDelegationRewardsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDelegationRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDelegationRewardsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDelegationRewardsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDelegationRewardsRequest.Merge(m, src)
+}
+func (m *QueryDelegationRewardsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDelegationRewardsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDelegationRewardsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDelegationRewardsRequest proto.InternalMessageInfo
+
+func (m *QueryDelegationRewardsRequest) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.DelegatorAddress
+	}
+	return nil
+}
+
+func (m *QueryDelegationRewardsRequest) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
+	if m != nil {
+		return m.ValidatorAddress
+	}
+	return nil
+}
+
+// QueryDelegationRewardsResponse is the response type for the Query/DelegationRewards RPC method
+type QueryDelegationRewardsResponse struct {
+	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
+}
+
+func (m *QueryDelegationRewardsResponse) Reset()         { *m = QueryDelegationRewardsResponse{} }
+func (m *QueryDelegationRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDelegationRewardsResponse) ProtoMessage()    {}
+func (*QueryDelegationRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{9}
+}
+func (m *QueryDelegationRewardsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDelegationRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDelegationRewardsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDelegationRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDelegationRewardsResponse.Merge(m, src)
+}
+func (m *QueryDelegationRewardsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDelegationRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDelegationRewardsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDelegationRewardsResponse proto.InternalMessageInfo
+
+func (m *QueryDelegationRewardsResponse) GetRewards() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.Rewards
+	}
+	return nil
+}
+
+// QueryDelegatorWithdrawAddressRequest is the request type for the Query/DelegatorWithdrawAddress RPC method
 type QueryDelegatorWithdrawAddressRequest struct {
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
 }
@@ -226,7 +542,7 @@ func (m *QueryDelegatorWithdrawAddressRequest) Reset()         { *m = QueryDeleg
 func (m *QueryDelegatorWithdrawAddressRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorWithdrawAddressRequest) ProtoMessage()    {}
 func (*QueryDelegatorWithdrawAddressRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2111c1b119d22af6, []int{4}
+	return fileDescriptor_2111c1b119d22af6, []int{10}
 }
 func (m *QueryDelegatorWithdrawAddressRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -262,6 +578,7 @@ func (m *QueryDelegatorWithdrawAddressRequest) GetDelegatorAddress() github_com_
 	return nil
 }
 
+// QueryDelegatorWithdrawAddressResponse is the response type for the Query/DelegatorWithdrawAddress RPC method
 type QueryDelegatorWithdrawAddressResponse struct {
 	WithdrawAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty"`
 }
@@ -270,7 +587,7 @@ func (m *QueryDelegatorWithdrawAddressResponse) Reset()         { *m = QueryDele
 func (m *QueryDelegatorWithdrawAddressResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorWithdrawAddressResponse) ProtoMessage()    {}
 func (*QueryDelegatorWithdrawAddressResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2111c1b119d22af6, []int{5}
+	return fileDescriptor_2111c1b119d22af6, []int{11}
 }
 func (m *QueryDelegatorWithdrawAddressResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -306,51 +623,161 @@ func (m *QueryDelegatorWithdrawAddressResponse) GetWithdrawAddress() github_com_
 	return nil
 }
 
+// QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC method
+type QueryCommunityPoolRequest struct {
+}
+
+func (m *QueryCommunityPoolRequest) Reset()         { *m = QueryCommunityPoolRequest{} }
+func (m *QueryCommunityPoolRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryCommunityPoolRequest) ProtoMessage()    {}
+func (*QueryCommunityPoolRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{12}
+}
+func (m *QueryCommunityPoolRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCommunityPoolRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCommunityPoolRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCommunityPoolRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCommunityPoolRequest.Merge(m, src)
+}
+func (m *QueryCommunityPoolRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCommunityPoolRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCommunityPoolRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCommunityPoolRequest proto.InternalMessageInfo
+
+// QueryCommunityPoolResponse is the response type for the Query/CommunityPool RPC method
+type QueryCommunityPoolResponse struct {
+	Pool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=pool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"pool"`
+}
+
+func (m *QueryCommunityPoolResponse) Reset()         { *m = QueryCommunityPoolResponse{} }
+func (m *QueryCommunityPoolResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryCommunityPoolResponse) ProtoMessage()    {}
+func (*QueryCommunityPoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2111c1b119d22af6, []int{13}
+}
+func (m *QueryCommunityPoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCommunityPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCommunityPoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCommunityPoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCommunityPoolResponse.Merge(m, src)
+}
+func (m *QueryCommunityPoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCommunityPoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCommunityPoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCommunityPoolResponse proto.InternalMessageInfo
+
+func (m *QueryCommunityPoolResponse) GetPool() github_com_cosmos_cosmos_sdk_types.DecCoins {
+	if m != nil {
+		return m.Pool
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.distribution.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.distribution.QueryParamsResponse")
 	proto.RegisterType((*QueryValidatorOutstandingRewardsRequest)(nil), "cosmos.distribution.QueryValidatorOutstandingRewardsRequest")
 	proto.RegisterType((*QueryValidatorOutstandingRewardsResponse)(nil), "cosmos.distribution.QueryValidatorOutstandingRewardsResponse")
+	proto.RegisterType((*QueryValidatorCommissionRequest)(nil), "cosmos.distribution.QueryValidatorCommissionRequest")
+	proto.RegisterType((*QueryValidatorCommissionResponse)(nil), "cosmos.distribution.QueryValidatorCommissionResponse")
+	proto.RegisterType((*QueryValidatorSlashesRequest)(nil), "cosmos.distribution.QueryValidatorSlashesRequest")
+	proto.RegisterType((*QueryValidatorSlashesResponse)(nil), "cosmos.distribution.QueryValidatorSlashesResponse")
+	proto.RegisterType((*QueryDelegationRewardsRequest)(nil), "cosmos.distribution.QueryDelegationRewardsRequest")
+	proto.RegisterType((*QueryDelegationRewardsResponse)(nil), "cosmos.distribution.QueryDelegationRewardsResponse")
 	proto.RegisterType((*QueryDelegatorWithdrawAddressRequest)(nil), "cosmos.distribution.QueryDelegatorWithdrawAddressRequest")
 	proto.RegisterType((*QueryDelegatorWithdrawAddressResponse)(nil), "cosmos.distribution.QueryDelegatorWithdrawAddressResponse")
+	proto.RegisterType((*QueryCommunityPoolRequest)(nil), "cosmos.distribution.QueryCommunityPoolRequest")
+	proto.RegisterType((*QueryCommunityPoolResponse)(nil), "cosmos.distribution.QueryCommunityPoolResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/distribution/query.proto", fileDescriptor_2111c1b119d22af6) }
 
 var fileDescriptor_2111c1b119d22af6 = []byte{
-	// 507 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xcf, 0x6e, 0xd3, 0x30,
-	0x18, 0x8f, 0x19, 0x14, 0xc9, 0x20, 0x31, 0xbc, 0x1d, 0x4a, 0x26, 0x52, 0x14, 0x01, 0xab, 0x04,
-	0x4b, 0xd8, 0x38, 0x0d, 0xc1, 0x61, 0x15, 0x37, 0x0e, 0x94, 0x1c, 0x86, 0x84, 0xf8, 0x23, 0xb7,
-	0xb6, 0x32, 0x8b, 0x36, 0x4e, 0x6d, 0x87, 0xb2, 0x07, 0x80, 0x33, 0x12, 0x47, 0x78, 0x02, 0x1e,
-	0x80, 0x67, 0xd8, 0x71, 0x47, 0x4e, 0x13, 0x6a, 0xdf, 0x82, 0x13, 0x8a, 0xed, 0x84, 0x56, 0xa4,
-	0x8d, 0xd4, 0x9d, 0xe2, 0x7c, 0xfe, 0x7d, 0xbf, 0xef, 0xf7, 0xfd, 0x3e, 0xdb, 0xb0, 0xd5, 0xe7,
-	0x72, 0xc8, 0x65, 0x48, 0x98, 0x54, 0x82, 0xf5, 0x32, 0xc5, 0x78, 0x12, 0x8e, 0x32, 0x2a, 0x8e,
-	0x83, 0x54, 0x70, 0xc5, 0xd1, 0x86, 0x01, 0x04, 0xb3, 0x00, 0xf7, 0xa6, 0xcd, 0xd2, 0xc0, 0x30,
-	0xc5, 0x31, 0x4b, 0x70, 0xbe, 0x61, 0x72, 0xdc, 0xcd, 0x98, 0xc7, 0x5c, 0x2f, 0xc3, 0x7c, 0x65,
-	0xa3, 0x77, 0xab, 0x4a, 0xcd, 0xfe, 0x18, 0x9c, 0xbf, 0x09, 0xd1, 0x8b, 0x9c, 0xb7, 0x8b, 0x05,
-	0x1e, 0xca, 0x88, 0x8e, 0x32, 0x2a, 0x95, 0xdf, 0x85, 0x1b, 0x73, 0x51, 0x99, 0xf2, 0x44, 0x52,
-	0xb4, 0x0f, 0x1b, 0xa9, 0x8e, 0x34, 0xc1, 0x2d, 0xd0, 0xbe, 0xb2, 0xb7, 0x15, 0x54, 0xe8, 0x0d,
-	0x4c, 0x52, 0xe7, 0xe2, 0xc9, 0x59, 0xcb, 0x89, 0x6c, 0x82, 0xff, 0x13, 0xc0, 0x6d, 0x4d, 0x79,
-	0x88, 0x07, 0x8c, 0x60, 0xc5, 0xc5, 0xf3, 0x4c, 0x49, 0x85, 0x13, 0xc2, 0x92, 0x38, 0xa2, 0x63,
-	0x2c, 0x48, 0x51, 0x1d, 0xbd, 0x85, 0xd7, 0x3f, 0x14, 0xa8, 0x77, 0x98, 0x10, 0x41, 0xa5, 0xa9,
-	0x78, 0xb5, 0xb3, 0xfb, 0xe7, 0xac, 0xb5, 0x13, 0x33, 0x75, 0x94, 0xf5, 0x82, 0x3e, 0x1f, 0x86,
-	0xb6, 0x4b, 0xf3, 0xd9, 0x91, 0xe4, 0x7d, 0xa8, 0x8e, 0x53, 0x2a, 0x83, 0x43, 0x3c, 0x38, 0x30,
-	0x89, 0xd1, 0x7a, 0xc9, 0x65, 0x23, 0xe8, 0x1e, 0x5c, 0x13, 0x74, 0xd4, 0xbc, 0xa0, 0x7b, 0xb8,
-	0x51, 0xf4, 0x60, 0xe6, 0xd0, 0xc5, 0x31, 0xb5, 0x3a, 0xa2, 0x1c, 0xe5, 0xff, 0x00, 0xb0, 0x5d,
-	0x2f, 0xdc, 0x1a, 0xd4, 0x85, 0x97, 0x85, 0x09, 0x59, 0x87, 0x1e, 0x54, 0x3a, 0xb4, 0x84, 0xca,
-	0xda, 0x56, 0xd0, 0xa0, 0xfb, 0xb9, 0x56, 0x69, 0xb5, 0xba, 0x55, 0x5a, 0x4d, 0xe9, 0x5c, 0xac,
-	0xf4, 0x3f, 0x03, 0x78, 0x5b, 0x8b, 0x7d, 0x4a, 0x07, 0x34, 0xce, 0x2b, 0xbc, 0x64, 0xea, 0x88,
-	0x08, 0x3c, 0x2e, 0xdc, 0xf8, 0x67, 0x31, 0x29, 0x20, 0x2b, 0x5a, 0x7c, 0xd0, 0xef, 0x97, 0x16,
-	0x97, 0x5c, 0x36, 0xe2, 0x7f, 0x02, 0xf0, 0x4e, 0x8d, 0x10, 0x6b, 0xd9, 0x6b, 0xb8, 0x3e, 0xb6,
-	0x5b, 0xe7, 0x17, 0x72, 0x6d, 0x3c, 0x5f, 0x65, 0xef, 0xdb, 0x1a, 0xbc, 0xa4, 0x75, 0xa0, 0x37,
-	0xb0, 0x61, 0x0e, 0x26, 0xda, 0xae, 0x9c, 0xc9, 0xff, 0xb7, 0xc0, 0x6d, 0xd7, 0x03, 0x4d, 0x13,
-	0xbe, 0x83, 0xbe, 0x03, 0xb8, 0xb5, 0x64, 0xac, 0xe8, 0xf1, 0x62, 0xae, 0xfa, 0x1b, 0xe1, 0x3e,
-	0x59, 0x31, 0xbb, 0x94, 0xf7, 0x15, 0xc0, 0xe6, 0xa2, 0x51, 0xa0, 0xfd, 0xc5, 0xec, 0x35, 0xe7,
-	0xc8, 0x7d, 0xb4, 0x4a, 0x6a, 0xa1, 0xaa, 0xf3, 0xec, 0x64, 0xe2, 0x81, 0xd3, 0x89, 0x07, 0x7e,
-	0x4f, 0x3c, 0xf0, 0x65, 0xea, 0x39, 0xa7, 0x53, 0xcf, 0xf9, 0x35, 0xf5, 0x9c, 0x57, 0xbb, 0x4b,
-	0xe7, 0xfe, 0x71, 0xfe, 0x59, 0xd3, 0xc7, 0xa0, 0xd7, 0xd0, 0x0f, 0xda, 0xc3, 0xbf, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0x14, 0x30, 0x96, 0xeb, 0x65, 0x05, 0x00, 0x00,
+	// 828 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x4f, 0x4f, 0xe3, 0x46,
+	0x14, 0xcf, 0x40, 0x0a, 0xd2, 0x03, 0x0a, 0x0c, 0x1c, 0x82, 0x29, 0x09, 0x72, 0xff, 0x10, 0x89,
+	0x12, 0x97, 0xa4, 0x3d, 0x50, 0xb5, 0x07, 0x02, 0x95, 0x90, 0x7a, 0x68, 0x9a, 0x4a, 0xf4, 0x8f,
+	0x5a, 0x90, 0xb1, 0x47, 0x8e, 0xd5, 0xc4, 0x13, 0x3c, 0x63, 0x52, 0x54, 0xb5, 0x6a, 0xa5, 0x76,
+	0xcf, 0x2b, 0x71, 0xd8, 0xcb, 0x7e, 0x02, 0x3e, 0xc0, 0x7e, 0x06, 0x8e, 0x1c, 0xf7, 0x04, 0x2b,
+	0xf8, 0x14, 0xbb, 0xa7, 0x95, 0xc7, 0x63, 0x6f, 0xbc, 0xb1, 0xf3, 0x87, 0x45, 0xdc, 0x92, 0x37,
+	0xef, 0xfd, 0xde, 0x6f, 0x7e, 0x6f, 0xde, 0x7b, 0x86, 0x82, 0x41, 0x59, 0x8b, 0x32, 0xcd, 0xb4,
+	0x19, 0x77, 0xed, 0x23, 0x8f, 0xdb, 0xd4, 0xd1, 0x8e, 0x3d, 0xe2, 0x9e, 0x96, 0xda, 0x2e, 0xe5,
+	0x14, 0x2f, 0x04, 0x0e, 0xa5, 0x6e, 0x07, 0x65, 0x45, 0x46, 0x09, 0x47, 0xad, 0xad, 0x5b, 0xb6,
+	0xa3, 0xfb, 0x07, 0x41, 0x8c, 0xb2, 0x68, 0x51, 0x8b, 0x8a, 0x9f, 0x9a, 0xff, 0x4b, 0x5a, 0x25,
+	0x92, 0x26, 0x01, 0x03, 0xe3, 0x27, 0x49, 0xf9, 0xbb, 0xff, 0x04, 0x7e, 0xea, 0x22, 0xe0, 0xef,
+	0xfd, 0x64, 0x35, 0xdd, 0xd5, 0x5b, 0xac, 0x4e, 0x8e, 0x3d, 0xc2, 0xb8, 0x5a, 0x83, 0x85, 0x98,
+	0x95, 0xb5, 0xa9, 0xc3, 0x08, 0xde, 0x82, 0x89, 0xb6, 0xb0, 0xe4, 0xd0, 0x2a, 0x2a, 0x4e, 0x95,
+	0x97, 0x4b, 0x09, 0x97, 0x28, 0x05, 0x41, 0xd5, 0xec, 0xc5, 0x55, 0x21, 0x53, 0x97, 0x01, 0xea,
+	0x33, 0x04, 0x6b, 0x02, 0x72, 0x5f, 0x6f, 0xda, 0xa6, 0xce, 0xa9, 0xfb, 0x9d, 0xc7, 0x19, 0xd7,
+	0x1d, 0xd3, 0x76, 0xac, 0x3a, 0xe9, 0xe8, 0xae, 0x19, 0x66, 0xc7, 0x07, 0x30, 0x7f, 0x12, 0x7a,
+	0x1d, 0xea, 0xa6, 0xe9, 0x12, 0x16, 0x64, 0x9c, 0xae, 0x6e, 0xbe, 0xba, 0x2a, 0x6c, 0x58, 0x36,
+	0x6f, 0x78, 0x47, 0x25, 0x83, 0xb6, 0xb4, 0xd8, 0xd5, 0x37, 0x98, 0xf9, 0xbb, 0xc6, 0x4f, 0xdb,
+	0x84, 0x95, 0xf6, 0xf5, 0xe6, 0x76, 0x10, 0x58, 0x9f, 0x8b, 0xb0, 0xa4, 0x05, 0xaf, 0xc3, 0xb8,
+	0x4b, 0x8e, 0x73, 0x63, 0xe2, 0x0e, 0x4b, 0xe1, 0x1d, 0x82, 0xe2, 0xd4, 0x74, 0x8b, 0x48, 0x1e,
+	0x75, 0xdf, 0x4b, 0x3d, 0x47, 0x50, 0x1c, 0x4c, 0x5c, 0x0a, 0x54, 0x83, 0x49, 0x37, 0x30, 0x49,
+	0x85, 0x3e, 0x4b, 0x54, 0xa8, 0x0f, 0x94, 0x94, 0x2d, 0x84, 0xc1, 0x9f, 0xfa, 0x5c, 0x99, 0xe4,
+	0xaa, 0x24, 0x71, 0x0d, 0x52, 0xfb, 0x64, 0x99, 0xfa, 0x2f, 0x82, 0x42, 0x9c, 0xec, 0x0e, 0x6d,
+	0xb5, 0x6c, 0xc6, 0x6c, 0xea, 0x3c, 0x90, 0xba, 0xea, 0x5f, 0xb0, 0x9a, 0x4e, 0x41, 0xea, 0xf4,
+	0x33, 0x80, 0x11, 0x59, 0xa5, 0x54, 0x95, 0xfe, 0x52, 0x6d, 0x1b, 0x86, 0xd7, 0xf2, 0x9a, 0x3a,
+	0x27, 0xe6, 0x1b, 0x40, 0xa9, 0x56, 0x17, 0x98, 0xfa, 0x12, 0xc1, 0x07, 0xf1, 0xfc, 0x3f, 0x34,
+	0x75, 0xd6, 0x20, 0x0f, 0xf6, 0xba, 0xd6, 0x60, 0x96, 0x71, 0xdd, 0xe5, 0xb6, 0x63, 0x1d, 0x36,
+	0x88, 0x6d, 0x35, 0xb8, 0xa8, 0x5e, 0xb6, 0xfe, 0x7e, 0x68, 0xde, 0x13, 0x56, 0xfc, 0x21, 0xcc,
+	0x10, 0x51, 0xfa, 0xd0, 0x6d, 0x5c, 0xb8, 0x4d, 0x07, 0x46, 0xe9, 0x24, 0xdf, 0x6a, 0x76, 0xa8,
+	0xb7, 0xfa, 0x04, 0xc1, 0x4a, 0xca, 0xdd, 0xa5, 0xf0, 0x7b, 0x30, 0xc9, 0x02, 0x53, 0x0e, 0xad,
+	0x8e, 0x17, 0xa7, 0xca, 0xc5, 0xfe, 0xaa, 0x8b, 0xf8, 0x6f, 0x4e, 0x88, 0xc3, 0xc3, 0x87, 0x29,
+	0xc3, 0x47, 0x7c, 0x98, 0xd7, 0x21, 0xb3, 0x5d, 0xd2, 0x24, 0x96, 0x98, 0x69, 0xbd, 0x4d, 0x6f,
+	0x06, 0x67, 0x77, 0x2e, 0xcb, 0xb6, 0x61, 0x44, 0x65, 0x89, 0xb0, 0xc2, 0xb2, 0x24, 0x96, 0x7d,
+	0xec, 0xfe, 0x9e, 0xfd, 0x3f, 0x08, 0xf2, 0x69, 0x37, 0x94, 0xe2, 0x1f, 0x74, 0x4f, 0x07, 0x5f,
+	0xfc, 0xd9, 0x50, 0xb6, 0x5d, 0x62, 0xec, 0x50, 0xdb, 0xa9, 0x56, 0x7c, 0x8d, 0xcf, 0xaf, 0x0b,
+	0xeb, 0x43, 0xb0, 0x91, 0x31, 0x2c, 0x9a, 0x15, 0xea, 0x23, 0x04, 0x1f, 0x75, 0x53, 0xa0, 0xee,
+	0x8f, 0x36, 0x6f, 0x98, 0xae, 0xde, 0x09, 0x69, 0x3f, 0x8c, 0xd6, 0xea, 0xff, 0x08, 0x3e, 0x1e,
+	0x40, 0x44, 0x4a, 0xf2, 0x2b, 0xcc, 0x75, 0xe4, 0xd1, 0xbb, 0x13, 0x99, 0xed, 0xc4, 0xb3, 0xa8,
+	0xcb, 0xb0, 0x24, 0x68, 0xf8, 0x03, 0xc3, 0x73, 0x6c, 0x7e, 0x5a, 0xa3, 0xb4, 0x19, 0xee, 0xb8,
+	0x13, 0x50, 0x92, 0x0e, 0x25, 0xb1, 0x9f, 0x20, 0xdb, 0xa6, 0xb4, 0x79, 0xaf, 0x85, 0x12, 0x88,
+	0xe5, 0xb3, 0x49, 0x78, 0x4f, 0x24, 0xc6, 0xbf, 0xc1, 0x44, 0xb0, 0x2b, 0xf1, 0x5a, 0x62, 0x17,
+	0xf6, 0x2e, 0x66, 0xa5, 0x38, 0xd8, 0x31, 0xb8, 0x80, 0x9a, 0xc1, 0x4f, 0x11, 0x2c, 0xf7, 0xd9,
+	0x34, 0xf8, 0xab, 0x74, 0xac, 0xc1, 0x4b, 0x5a, 0xf9, 0xfa, 0x8e, 0xd1, 0x11, 0xbd, 0xff, 0x10,
+	0x2c, 0x24, 0xec, 0x08, 0xfc, 0xf9, 0x10, 0xc0, 0x3d, 0x5b, 0x4d, 0xf9, 0x62, 0xc4, 0xa8, 0x88,
+	0xc6, 0x9f, 0x30, 0xf7, 0xf6, 0xb4, 0xc4, 0x9b, 0x43, 0x80, 0xc5, 0xb7, 0x8a, 0x52, 0x1e, 0x25,
+	0x24, 0x4a, 0xfe, 0x37, 0xcc, 0xf7, 0x8c, 0x0b, 0xdc, 0x07, 0x2a, 0x6d, 0x7a, 0x2a, 0x95, 0x91,
+	0x62, 0xa2, 0xfc, 0x67, 0x08, 0x72, 0x69, 0x3d, 0x8a, 0xb7, 0x06, 0x62, 0xa6, 0x0d, 0x18, 0xe5,
+	0xcb, 0xbb, 0x84, 0x46, 0xac, 0x5c, 0x98, 0x89, 0x35, 0x25, 0x2e, 0xa5, 0xc3, 0x25, 0xb5, 0xb6,
+	0xa2, 0x0d, 0xed, 0x1f, 0xe6, 0xac, 0x7e, 0x7b, 0x71, 0x93, 0x47, 0x97, 0x37, 0x79, 0xf4, 0xe2,
+	0x26, 0x8f, 0x1e, 0xdf, 0xe6, 0x33, 0x97, 0xb7, 0xf9, 0xcc, 0xf3, 0xdb, 0x7c, 0xe6, 0x97, 0xcd,
+	0xbe, 0x2d, 0xfe, 0x47, 0xfc, 0x0b, 0x5b, 0x74, 0xfc, 0xd1, 0x84, 0xf8, 0xb6, 0xae, 0xbc, 0x0e,
+	0x00, 0x00, 0xff, 0xff, 0x30, 0x50, 0xa1, 0x86, 0x05, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -369,7 +796,16 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address
 	ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
+	// ValidatorCommission queries accumulated commission for a validator
+	ValidatorCommission(ctx context.Context, in *QueryValidatorCommissionRequest, opts ...grpc.CallOption) (*QueryValidatorCommissionResponse, error)
+	// ValidatorSlashes queries slash events of a validator
+	ValidatorSlashes(ctx context.Context, in *QueryValidatorSlashesRequest, opts ...grpc.CallOption) (*QueryValidatorSlashesResponse, error)
+	// DelegationRewards the total rewards accrued by a delegation
+	DelegationRewards(ctx context.Context, in *QueryDelegationRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationRewardsResponse, error)
+	// DelegatorWithdrawAddress queries withdraw address of a delegator
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
+	// CommunityPool queries the community pool coins
+	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 }
 
 type queryClient struct {
@@ -398,9 +834,45 @@ func (c *queryClient) ValidatorOutstandingRewards(ctx context.Context, in *Query
 	return out, nil
 }
 
+func (c *queryClient) ValidatorCommission(ctx context.Context, in *QueryValidatorCommissionRequest, opts ...grpc.CallOption) (*QueryValidatorCommissionResponse, error) {
+	out := new(QueryValidatorCommissionResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.Query/ValidatorCommission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ValidatorSlashes(ctx context.Context, in *QueryValidatorSlashesRequest, opts ...grpc.CallOption) (*QueryValidatorSlashesResponse, error) {
+	out := new(QueryValidatorSlashesResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.Query/ValidatorSlashes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DelegationRewards(ctx context.Context, in *QueryDelegationRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationRewardsResponse, error) {
+	out := new(QueryDelegationRewardsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.Query/DelegationRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error) {
 	out := new(QueryDelegatorWithdrawAddressResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.distribution.Query/DelegatorWithdrawAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error) {
+	out := new(QueryCommunityPoolResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.Query/CommunityPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +885,16 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address
 	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
+	// ValidatorCommission queries accumulated commission for a validator
+	ValidatorCommission(context.Context, *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error)
+	// ValidatorSlashes queries slash events of a validator
+	ValidatorSlashes(context.Context, *QueryValidatorSlashesRequest) (*QueryValidatorSlashesResponse, error)
+	// DelegationRewards the total rewards accrued by a delegation
+	DelegationRewards(context.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error)
+	// DelegatorWithdrawAddress queries withdraw address of a delegator
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
+	// CommunityPool queries the community pool coins
+	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -426,8 +907,20 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 func (*UnimplementedQueryServer) ValidatorOutstandingRewards(ctx context.Context, req *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorOutstandingRewards not implemented")
 }
+func (*UnimplementedQueryServer) ValidatorCommission(ctx context.Context, req *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorCommission not implemented")
+}
+func (*UnimplementedQueryServer) ValidatorSlashes(ctx context.Context, req *QueryValidatorSlashesRequest) (*QueryValidatorSlashesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorSlashes not implemented")
+}
+func (*UnimplementedQueryServer) DelegationRewards(ctx context.Context, req *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegationRewards not implemented")
+}
 func (*UnimplementedQueryServer) DelegatorWithdrawAddress(ctx context.Context, req *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorWithdrawAddress not implemented")
+}
+func (*UnimplementedQueryServer) CommunityPool(ctx context.Context, req *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommunityPool not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -470,6 +963,60 @@ func _Query_ValidatorOutstandingRewards_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ValidatorCommission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidatorCommissionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ValidatorCommission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.Query/ValidatorCommission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ValidatorCommission(ctx, req.(*QueryValidatorCommissionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ValidatorSlashes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidatorSlashesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ValidatorSlashes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.Query/ValidatorSlashes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ValidatorSlashes(ctx, req.(*QueryValidatorSlashesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DelegationRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDelegationRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DelegationRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.Query/DelegationRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DelegationRewards(ctx, req.(*QueryDelegationRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_DelegatorWithdrawAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryDelegatorWithdrawAddressRequest)
 	if err := dec(in); err != nil {
@@ -488,6 +1035,24 @@ func _Query_DelegatorWithdrawAddress_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_CommunityPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryCommunityPoolRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CommunityPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.Query/CommunityPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CommunityPool(ctx, req.(*QueryCommunityPoolRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.distribution.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -501,8 +1066,24 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ValidatorOutstandingRewards_Handler,
 		},
 		{
+			MethodName: "ValidatorCommission",
+			Handler:    _Query_ValidatorCommission_Handler,
+		},
+		{
+			MethodName: "ValidatorSlashes",
+			Handler:    _Query_ValidatorSlashes_Handler,
+		},
+		{
+			MethodName: "DelegationRewards",
+			Handler:    _Query_DelegationRewards_Handler,
+		},
+		{
 			MethodName: "DelegatorWithdrawAddress",
 			Handler:    _Query_DelegatorWithdrawAddress_Handler,
+		},
+		{
+			MethodName: "CommunityPool",
+			Handler:    _Query_CommunityPool_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -652,6 +1233,244 @@ func (m *QueryValidatorOutstandingRewardsResponse) MarshalToSizedBuffer(dAtA []b
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryValidatorCommissionRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidatorCommissionRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidatorCommissionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryValidatorCommissionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidatorCommissionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidatorCommissionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Commission.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryValidatorSlashesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidatorSlashesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidatorSlashesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Req != nil {
+		{
+			size, err := m.Req.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.EndingHeight != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.EndingHeight))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.StartingHeight != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.StartingHeight))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryValidatorSlashesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidatorSlashesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidatorSlashesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Res != nil {
+		{
+			size, err := m.Res.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Slashes) > 0 {
+		for iNdEx := len(m.Slashes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Slashes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryDelegationRewardsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDelegationRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDelegationRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.DelegatorAddress) > 0 {
+		i -= len(m.DelegatorAddress)
+		copy(dAtA[i:], m.DelegatorAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DelegatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryDelegationRewardsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDelegationRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDelegationRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Rewards) > 0 {
+		for iNdEx := len(m.Rewards) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Rewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *QueryDelegatorWithdrawAddressRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -708,6 +1527,66 @@ func (m *QueryDelegatorWithdrawAddressResponse) MarshalToSizedBuffer(dAtA []byte
 		i = encodeVarintQuery(dAtA, i, uint64(len(m.WithdrawAddress)))
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCommunityPoolRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCommunityPoolRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCommunityPoolRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCommunityPoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCommunityPoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCommunityPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Pool) > 0 {
+		for iNdEx := len(m.Pool) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Pool[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -775,6 +1654,104 @@ func (m *QueryValidatorOutstandingRewardsResponse) Size() (n int) {
 	return n
 }
 
+func (m *QueryValidatorCommissionRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryValidatorCommissionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Commission.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryValidatorSlashesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.StartingHeight != 0 {
+		n += 1 + sovQuery(uint64(m.StartingHeight))
+	}
+	if m.EndingHeight != 0 {
+		n += 1 + sovQuery(uint64(m.EndingHeight))
+	}
+	if m.Req != nil {
+		l = m.Req.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryValidatorSlashesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Slashes) > 0 {
+		for _, e := range m.Slashes {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Res != nil {
+		l = m.Res.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryDelegationRewardsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DelegatorAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryDelegationRewardsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Rewards) > 0 {
+		for _, e := range m.Rewards {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *QueryDelegatorWithdrawAddressRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -797,6 +1774,30 @@ func (m *QueryDelegatorWithdrawAddressResponse) Size() (n int) {
 	l = len(m.WithdrawAddress)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryCommunityPoolRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryCommunityPoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Pool) > 0 {
+		for _, e := range m.Pool {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
 	}
 	return n
 }
@@ -1191,6 +2192,671 @@ func (m *QueryValidatorOutstandingRewardsResponse) Unmarshal(dAtA []byte) error 
 	}
 	return nil
 }
+func (m *QueryValidatorCommissionRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidatorCommissionRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidatorCommissionRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorAddress == nil {
+				m.ValidatorAddress = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryValidatorCommissionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidatorCommissionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidatorCommissionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Commission", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Commission.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryValidatorSlashesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidatorSlashesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidatorSlashesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorAddress == nil {
+				m.ValidatorAddress = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartingHeight", wireType)
+			}
+			m.StartingHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartingHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndingHeight", wireType)
+			}
+			m.EndingHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EndingHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Req", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Req == nil {
+				m.Req = &query.PageRequest{}
+			}
+			if err := m.Req.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryValidatorSlashesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidatorSlashesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidatorSlashesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Slashes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Slashes = append(m.Slashes, ValidatorSlashEvent{})
+			if err := m.Slashes[len(m.Slashes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Res", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Res == nil {
+				m.Res = &query.PageResponse{}
+			}
+			if err := m.Res.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDelegationRewardsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDelegationRewardsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDelegationRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.DelegatorAddress == nil {
+				m.DelegatorAddress = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorAddress == nil {
+				m.ValidatorAddress = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDelegationRewardsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDelegationRewardsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDelegationRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Rewards = append(m.Rewards, types.DecCoin{})
+			if err := m.Rewards[len(m.Rewards)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QueryDelegatorWithdrawAddressRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1339,6 +3005,146 @@ func (m *QueryDelegatorWithdrawAddressResponse) Unmarshal(dAtA []byte) error {
 			m.WithdrawAddress = append(m.WithdrawAddress[:0], dAtA[iNdEx:postIndex]...)
 			if m.WithdrawAddress == nil {
 				m.WithdrawAddress = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCommunityPoolRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCommunityPoolRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCommunityPoolRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCommunityPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCommunityPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCommunityPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pool", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pool = append(m.Pool, types.DecCoin{})
+			if err := m.Pool[len(m.Pool)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:

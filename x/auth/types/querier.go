@@ -21,11 +21,11 @@ func NewQueryAccountParams(addr sdk.AccAddress) QueryAccountParams {
 }
 
 // NewQueryAccountRequest creates a new instance of QueryAccountRequest.
-func NewQueryAccountRequest(addr sdk.AccAddress) QueryAccountRequest {
+func NewQueryAccountRequest(addr sdk.AccAddress) *QueryAccountRequest {
 	return &QueryAccountRequest{Address: addr}
 }
 
 // NewQueryParametersRequest creates a new instance of QueryParametersRequest.
-func NewQueryParametersRequest(addr sdk.AccAddress) QueryParametersRequest {
+func NewQueryParametersRequest(addr sdk.AccAddress) *QueryParametersRequest {
 	return &QueryParametersRequest{}
 }

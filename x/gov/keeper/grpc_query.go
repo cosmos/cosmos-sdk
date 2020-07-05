@@ -119,6 +119,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 		if err != nil {
 			return err
 		}
+
 		votes = append(votes, result)
 		return nil
 	})
@@ -141,17 +142,14 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	switch req.ParamsType {
 	case types.ParamDeposit:
 		depositParmas := q.GetDepositParams(ctx)
-
 		return &types.QueryParamsResponse{DepositParams: depositParmas}, nil
 
 	case types.ParamVoting:
 		votingParmas := q.GetVotingParams(ctx)
-
 		return &types.QueryParamsResponse{VotingParams: votingParmas}, nil
 
 	case types.ParamTallying:
 		tallyParams := q.GetTallyParams(ctx)
-
 		return &types.QueryParamsResponse{TallyParams: tallyParams}, nil
 
 	default:

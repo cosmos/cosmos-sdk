@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	gocontext "context"
 	"strconv"
 	"testing"
@@ -53,13 +54,12 @@ func TestGRPCQueryProposals(t *testing.T) {
 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 
-	// req := &types.QueryProposalsRequest{Req: &query.PageRequest{}}
 	req := &types.QueryProposalsRequest{}
 	proposals, err := queryClient.Proposals(gocontext.Background(), req)
 	require.Error(t, err)
 	require.Empty(t, proposals)
 
-	// check for the proposals with no proposal added should return null.
+	t.Log("should return nil if no proposals are created")
 	req = &types.QueryProposalsRequest{Req: &query.PageRequest{Limit: 1}}
 
 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
@@ -81,6 +81,7 @@ func TestGRPCQueryProposals(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, proposals.Proposals, 1)
 	require.NotEmpty(t, proposals.Res.NextKey)
+	require.Equal(t, bytes.Trim(proposals.Res.NextKey, "\x00"), []byte{2})
 
 	proposalFromKeeper1, found := app.GovKeeper.GetProposal(ctx, 1)
 	require.True(t, found)
@@ -460,9 +461,8 @@ func TestGRPCQueryDeposits(t *testing.T) {
 
 	// query vote with limit 1, next key and expect NextKey to be nil.
 	pageReq = &query.PageRequest{
-		Key:        deposits.Res.NextKey,
-		Limit:      1,
-		CountTotal: false,
+		Key:   deposits.Res.NextKey,
+		Limit: 1,
 	}
 
 	req = &types.QueryDepositsRequest{

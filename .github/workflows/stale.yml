@@ -19,3 +19,4 @@ jobs:
           days-before-stale: 10
           days-before-close: 4
           exempt-pr-labels: "pinned, security, proposal"
+          exempt-issues-labels: "pinned, security, proposal"

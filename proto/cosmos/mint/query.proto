@@ -23,7 +23,7 @@ message QueryParamsRequest { }
 
 // QueryParamsResponse is the response type for the Query/Params RPC method
 message QueryParamsResponse {
-  Params params = 1 [(gogoproto.casttype) = "Params", (gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryInflationRequest is the request type for the Query/Params RPC method

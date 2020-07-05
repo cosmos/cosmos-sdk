@@ -15,7 +15,7 @@ func TestGRPCParams(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.MintKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 

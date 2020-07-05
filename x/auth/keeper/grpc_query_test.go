@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +13,7 @@ import (
 func TestGRPCQueryAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.AccountKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -31,13 +32,17 @@ func TestGRPCQueryAccount(t *testing.T) {
 
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addr))
 	res, err = queryClient.Account(gocontext.Background(), &types.QueryAccountRequest{Address: addr})
+	t.Log("Response....", res)
 	require.NoError(t, err)
 	require.NotNil(t, res)
+	account := keeper.GetAccount(res.Account)
+	require.NotNil(t, account)
+	require.True(t, addr.Equals(account.GetAddress()))
 }
 
 func TestGRPCQueryParameters(t *testing.T) {
 	app, ctx := createTestApp(true)
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.AccountKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 

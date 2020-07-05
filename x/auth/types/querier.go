@@ -19,3 +19,13 @@ type QueryAccountParams struct {
 func NewQueryAccountParams(addr sdk.AccAddress) QueryAccountParams {
 	return QueryAccountParams{Address: addr}
 }
+
+// NewQueryAccountRequest creates a new instance of QueryAccountRequest.
+func NewQueryAccountRequest(addr sdk.AccAddress) QueryAccountRequest {
+	return &QueryAccountRequest{Address: addr}
+}
+
+// NewQueryParametersRequest creates a new instance of QueryParametersRequest.
+func NewQueryParametersRequest(addr sdk.AccAddress) QueryParametersRequest {
+	return &QueryParametersRequest{}
+}

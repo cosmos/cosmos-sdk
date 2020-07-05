@@ -21,6 +21,10 @@ func (k AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
+	if req.Address == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	account := k.GetAccount(ctx, req.Address)
 	if account == nil {
@@ -56,4 +60,13 @@ func ConvertAccount(account types.AccountI) (*codectypes.Any, error) {
 	}
 
 	return any, nil
+}
+
+// GetAccount unpacks Any to AccountI
+func GetAccount(any *codectypes.Any) types.AccountI {
+	account, ok := any.GetCachedValue().(types.AccountI)
+	if !ok {
+		return nil
+	}
+	return account
 }

@@ -5,14 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,10 +28,7 @@ const (
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
-func AddGenesisAccountCmd(
-	ctx *server.Context, depCdc codec.JSONMarshaler, cdc codec.Marshaler, defaultNodeHome, defaultClientHome string,
-) *cobra.Command {
-
+func AddGenesisAccountCmd(ctx *server.Context, depCdc codec.JSONMarshaler, cdc codec.Marshaler, defaultClientHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
 		Short: "Add a genesis account to genesis.json",
@@ -46,18 +40,17 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			config.SetRoot(viper.GetString(cli.HomeFlag))
+			homeDir, _ := cmd.Flags().GetString(cli.HomeFlag)
+			config.SetRoot(homeDir)
+
+			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			clientHome, _ := cmd.Flags().GetString(flagClientHome)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			if err != nil {
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keyring.New(
-					sdk.KeyringServiceName(),
-					viper.GetString(flags.FlagKeyringBackend),
-					viper.GetString(flagClientHome),
-					inBuf,
-				)
+				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientHome, inBuf)
 				if err != nil {
 					return err
 				}
@@ -75,9 +68,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				return fmt.Errorf("failed to parse coins: %w", err)
 			}
 
-			vestingStart := viper.GetInt64(flagVestingStart)
-			vestingEnd := viper.GetInt64(flagVestingEnd)
-			vestingAmt, err := sdk.ParseCoins(viper.GetString(flagVestingAmt))
+			vestingStart, _ := cmd.Flags().GetInt64(flagVestingStart)
+			vestingEnd, _ := cmd.Flags().GetInt64(flagVestingEnd)
+			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
+
+			vestingAmt, err := sdk.ParseCoins(vestingAmtStr)
 			if err != nil {
 				return fmt.Errorf("failed to parse vesting amount: %w", err)
 			}
@@ -159,12 +154,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		},
 	}
 
-	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
-	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
 	cmd.Flags().String(flagClientHome, defaultClientHome, "client's home directory")
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
-	cmd.Flags().Uint64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
-	cmd.Flags().Uint64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
+	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
 
 	return cmd
 }

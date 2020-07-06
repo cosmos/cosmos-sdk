@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -129,8 +131,9 @@ var _ App = (*SimApp)(nil)
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*baseapp.BaseApp
-	cdc      *codec.Codec
-	appCodec codec.Marshaler
+	cdc               *codec.Codec
+	appCodec          codec.Marshaler
+	interfaceRegistry types.InterfaceRegistry
 
 	invCheckPeriod uint
 
@@ -173,11 +176,15 @@ func NewSimApp(
 ) *SimApp {
 
 	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
-	appCodec, cdc := MakeCodecs()
+	encodingConfig := MakeEncodingConfig()
+	appCodec := encodingConfig.Marshaler
+	cdc := encodingConfig.Amino
+	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, authtypes.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
+	bApp.GRPCQueryRouter().SetAnyUnpacker(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
@@ -189,13 +196,14 @@ func NewSimApp(
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &SimApp{
-		BaseApp:        bApp,
-		cdc:            cdc,
-		appCodec:       appCodec,
-		invCheckPeriod: invCheckPeriod,
-		keys:           keys,
-		tkeys:          tkeys,
-		memKeys:        memKeys,
+		BaseApp:           bApp,
+		cdc:               cdc,
+		appCodec:          appCodec,
+		interfaceRegistry: interfaceRegistry,
+		invCheckPeriod:    invCheckPeriod,
+		keys:              keys,
+		tkeys:             tkeys,
+		memKeys:           memKeys,
 	}
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -454,6 +462,11 @@ func (app *SimApp) Codec() *codec.Codec {
 // for modules to register their own custom testing types.
 func (app *SimApp) AppCodec() codec.Marshaler {
 	return app.appCodec
+}
+
+// InterfaceRegistry returns SimApp's InterfaceRegistry
+func (app *SimApp) InterfaceRegistry() types.InterfaceRegistry {
+	return app.interfaceRegistry
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

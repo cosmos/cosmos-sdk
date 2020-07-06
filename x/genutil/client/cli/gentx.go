@@ -125,7 +125,6 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 
 			// Set flags for creating gentx
-			//viper.Set(flags.FlagHome, clientHome)
 			createValCfg, err := cli.PrepareConfigForTxCreateValidator(config, cmd.Flags(), nodeID, genDoc.ChainID, valPubKey)
 			if err != nil {
 				return errors.Wrap(err, "error creating configuration to create validator msg")

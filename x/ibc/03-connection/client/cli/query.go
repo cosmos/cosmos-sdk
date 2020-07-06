@@ -18,18 +18,31 @@ import (
 // GetCmdQueryConnections defines the command to query all the connection ends
 // that this chain mantains.
 func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "connections",
 		Short:   "Query all connections",
 		Long:    "Query all connections ends from a chain",
 		Example: fmt.Sprintf("%s query %s %s connections", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
+			page, err := cmd.Flags().GetInt(flags.FlagPage)
+			if err != nil {
+				return err
+			}
+
+			limit, err := cmd.Flags().GetInt(flags.FlagLimit)
+			if err != nil {
+				return err
+			}
+
 			req := &types.QueryConnectionsRequest{
-				Req: &query.PageRequest{},
+				Req: &query.PageRequest{
+					Offset: uint64(page),
+					Limit:  uint64(limit),
+				},
 			}
 
 			res, err := queryClient.Connections(context.Background(), req)
@@ -40,6 +53,10 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
+	return cmd
 }
 
 // GetCmdQueryConnection defines the command to query a connection end
@@ -68,6 +85,7 @@ func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(connRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 
 	return cmd
@@ -81,12 +99,25 @@ func GetCmdQueryAllClientConnections(clientCtx client.Context) *cobra.Command {
 		Long:    "Query all stored client connection paths",
 		Example: fmt.Sprintf("%s query %s %s paths", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
+			page, err := cmd.Flags().GetInt(flags.FlagPage)
+			if err != nil {
+				return err
+			}
+
+			limit, err := cmd.Flags().GetInt(flags.FlagLimit)
+			if err != nil {
+				return err
+			}
+
 			req := &types.QueryClientsConnectionsRequest{
-				Req: &query.PageRequest{},
+				Req: &query.PageRequest{
+					Offset: uint64(page),
+					Limit:  uint64(limit),
+				},
 			}
 
 			res, err := queryClient.ClientsConnections(context.Background(), req)
@@ -98,6 +129,8 @@ func GetCmdQueryAllClientConnections(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
 
 	return cmd
 }

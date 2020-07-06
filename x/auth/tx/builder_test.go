@@ -29,7 +29,7 @@ func TestTxBuilder(t *testing.T) {
 	cdc := std.DefaultPublicKeyCodec{}
 
 	memo := "sometestmemo"
-	msgs := []sdk.Msg{*testdata.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)
@@ -119,10 +119,10 @@ func TestBuilderValidateBasic(t *testing.T) {
 	_, pubKey2, addr2 := authtypes.KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := authtypes.NewTestMsg(addr1, addr2)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
 	fee := authtypes.NewTestStdFee()
 
-	msgs := []sdk.Msg{*msg1}
+	msgs := []sdk.Msg{msg1}
 
 	// require to fail validation upon invalid fee
 	badFee := authtypes.NewTestStdFee()

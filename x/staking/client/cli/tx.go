@@ -438,6 +438,16 @@ func PrepareConfigForTxCreateValidator(
 		return c, err
 	}
 
+	c.CommissionMaxChangeRate, err = flagSet.GetString(FlagCommissionMaxChangeRate)
+	if err != nil {
+		return c, err
+	}
+
+	c.MinSelfDelegation, err = flagSet.GetString(FlagMinSelfDelegation)
+	if err != nil {
+		return c, err
+	}
+
 	c.NodeID = nodeID
 	c.TrustNode = true
 	c.PubKey = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
@@ -463,12 +473,12 @@ func PrepareConfigForTxCreateValidator(
 		c.CommissionMaxRate = defaultCommissionMaxRate
 	}
 
-	if viper.GetString(FlagCommissionMaxChangeRate) == "" {
-		viper.Set(FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
+	if c.CommissionMaxChangeRate == "" {
+		c.CommissionMaxChangeRate = defaultCommissionMaxChangeRate
 	}
 
-	if viper.GetString(FlagMinSelfDelegation) == "" {
-		viper.Set(FlagMinSelfDelegation, defaultMinSelfDelegation)
+	if c.MinSelfDelegation == "" {
+		c.MinSelfDelegation = defaultMinSelfDelegation
 	}
 
 	return c, nil

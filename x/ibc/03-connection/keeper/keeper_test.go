@@ -42,6 +42,12 @@ const (
 	maxClockDrift  time.Duration = time.Second * 10
 
 	nextTimestamp = 10 // increment used for the next header's timestamp
+
+	testPort1 = "firstport"
+	testPort2 = "secondport"
+
+	testChannel1 = "firstchannel"
+	testChannel2 = "secondchannel"
 )
 
 var (

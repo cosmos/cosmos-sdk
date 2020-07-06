@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -31,8 +30,8 @@ $ %s query ibc connection connections
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			connections, height, err := utils.QueryAllConnections(clientCtx, page, limit)
 			if err != nil {
@@ -43,6 +42,7 @@ $ %s query ibc connection connections
 			return clientCtx.PrintOutput(connections)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
 
@@ -66,7 +66,7 @@ $ %s query ibc connection end [connection-id]
 			clientCtx = clientCtx.Init()
 
 			connectionID := args[0]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			connRes, err := utils.QueryConnection(clientCtx, connectionID, prove)
 			if err != nil {
@@ -77,6 +77,7 @@ $ %s query ibc connection end [connection-id]
 			return clientCtx.PrintOutput(connRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 
 	return cmd
@@ -98,8 +99,8 @@ $ %s query ibc connection paths
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			connectionPaths, height, err := utils.QueryAllClientConnectionPaths(clientCtx, page, limit)
 			if err != nil {
@@ -110,6 +111,7 @@ $ %s query ibc connection paths
 			return clientCtx.PrintOutput(connectionPaths)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
 
@@ -133,7 +135,7 @@ $ %s query ibc connection path [client-id]
 			clientCtx = clientCtx.Init()
 
 			clientID := args[0]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			connPathsRes, err := utils.QueryClientConnections(clientCtx, clientID, prove)
 			if err != nil {

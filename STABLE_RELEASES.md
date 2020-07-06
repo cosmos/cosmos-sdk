@@ -2,8 +2,8 @@
 
 The following release series are currently supported and receieve bugfixes:
 
-* `0.37.x`
-* `0.38.x`
+* **0.37**
+* **0.39 "Launchpad"**
 
 Stable releases continue to receieve bugfixes until they reach End Of Life.
 The `0.37.x` release series will continue receiving bugfixes until the Cosmos Hub
@@ -49,7 +49,7 @@ ways in stable releases and `master` branch.
     that may cause the core packages or the `x/` modules unusable.
   * Bugs that may cause **loss of user's data**.
 * Other safe cases:
-  * Bugs which don't fit in the aforementoned categories for which an obvious safe patch is known.
+  * Bugs which don't fit in the aforementioned categories for which an obvious safe patch is known.
   * Relatively small yet strictly non-breaking changes that introduce forward-compatible client
     features to smoothen the migration to successive releases.
 
@@ -87,3 +87,41 @@ stripped with no prior warning or consent from the member in question.
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.
+
+# 0.37
+
+The `0.37.x` release series will continue receiving bugfixes until the Cosmos Hub
+migrates to a newer release of the Cosmos-SDK.
+
+# 0.38
+
+Discontinued since **0.39.0** is published.
+
+# 0.39 - The Launchpad Release Series
+
+The **0.39 Launchpad** release series will be supported until 6 months after **0.40.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+
+## What pull requests will be included in stable point-releases
+
+Pull requests that fix bugs that fall in the following categories do not require a **Stable Release Exception** to be granted to be included in a stable point-release:
+
+ * **Severe regressions**.
+ * Bugs that may cause **client applications** to be **largely unusable**.
+ * Bugs that may cause **state corruption or data loss**.
+ * Bugs that may directly or indirectly cause a **security vulnerability**.
+
+## What pull requests will NOT be automatically included in stable point-releases
+
+As generic rule, the following changes will **NOT** be automatically accepted into stable point-releases
+
+ * **State machine changes**.
+ * **Client application's code-breaking changes**, i.e. changes that prevent client applications to build without modifications to the client's source code.
+ 
+ In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
+ 
+ ## Stable Release Exception
+ 
+ How to ask for a **Stable Release Exception**.
+ 
+ TODO
+ 

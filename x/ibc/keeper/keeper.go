@@ -10,10 +10,16 @@ import (
 	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	portkeeper "github.com/cosmos/cosmos-sdk/x/ibc/05-port/keeper"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
+
+var _ types.QueryServer = (*Keeper)(nil)
 
 // Keeper defines each ICS keeper for IBC
 type Keeper struct {
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
 	aminoCdc *codec.Codec
 	cdc      codec.Marshaler
 

@@ -40,7 +40,7 @@ func (k Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoReques
 		return nil, status.Errorf(codes.NotFound, "SigningInfo not found for validator %s", req.ConsAddress)
 	}
 
-	return &types.QuerySigningInfoResponse{ValSigningInfo: &signingInfo}, nil
+	return &types.QuerySigningInfoResponse{ValSigningInfo: signingInfo}, nil
 }
 
 func (k Keeper) SigningInfos(c context.Context, req *types.QuerySigningInfosRequest) (*types.QuerySigningInfosResponse, error) {

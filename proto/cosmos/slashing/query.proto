@@ -36,7 +36,7 @@ message QuerySigningInfoRequest{
 // QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method
 message QuerySigningInfoResponse{
 	// val_signing_info is the signing info of requested val cons address
-	cosmos.slashing.ValidatorSigningInfo val_signing_info = 1;
+	cosmos.slashing.ValidatorSigningInfo val_signing_info = 1[(gogoproto.nullable)= false];
 }
 
 // QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC method

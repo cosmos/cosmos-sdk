@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -39,6 +40,7 @@ func (suite *SlashingTestSuite) SetupTest() {
 		time.Unix(2, 0), false, int64(10))
 	info2 := types.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4),
 		time.Unix(2, 0), false, int64(10))
+
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
 
@@ -49,17 +51,12 @@ func (suite *SlashingTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.SlashingKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
-
 	suite.queryClient = queryClient
 }
 
 func (suite *SlashingTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
-	var paramsResp, err = queryClient.Params(gocontext.Background(), nil)
-	suite.Error(err)
-	suite.Nil(paramsResp)
-
-	paramsResp, err = queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	paramsResp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 
 	suite.NoError(err)
 	suite.Equal(keeper.TestParams(), paramsResp.Params)
@@ -79,7 +76,32 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfo() {
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
 		&types.QuerySigningInfoRequest{ConsAddress: consAddr})
 	suite.NoError(err)
-	suite.Equal(&info, infoResp.ValSigningInfo)
+	suite.Equal(info, infoResp.ValSigningInfo)
+}
+
+func (suite *SlashingTestSuite) TestGRPCSigningInfos() {
+	queryClient := suite.queryClient
+
+	var signingInfos []types.ValidatorSigningInfo
+
+	suite.app.SlashingKeeper.IterateValidatorSigningInfos(suite.ctx, func(consAddr sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+		signingInfos = append(signingInfos, info)
+		return false
+	})
+
+	// verify all values are returned without pagination
+	var infoResp, err = queryClient.SigningInfos(gocontext.Background(),
+		&types.QuerySigningInfosRequest{Req: nil})
+	suite.NoError(err)
+	suite.Equal(signingInfos, infoResp.Info)
+
+	infoResp, err = queryClient.SigningInfos(gocontext.Background(),
+		&types.QuerySigningInfosRequest{Req: &query.PageRequest{Limit: 1, CountTotal: true}})
+	suite.NoError(err)
+	suite.Len(infoResp.Info, 1)
+	suite.Equal(signingInfos[0], infoResp.Info[0])
+	suite.NotNil(infoResp.Res.NextKey)
+	suite.Equal(uint64(2), infoResp.Res.Total)
 }
 
 func TestSlashingTestSuite(t *testing.T) {

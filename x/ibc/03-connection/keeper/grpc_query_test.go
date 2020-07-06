@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryChannels() {
+func (suite *KeeperTestSuite) TestQueryClientConnections() {
 	var (
 		req      *types.QueryClientsConnectionsRequest
 		expPaths = []*types.ConnectionPaths{}

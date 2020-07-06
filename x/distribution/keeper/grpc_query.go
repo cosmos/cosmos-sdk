@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -121,6 +122,55 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 	}
 
 	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
+}
+
+// DelegationTotalRewards the total rewards accrued by a each validator
+func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
+	if req.String() == "" || req.DelegatorAddress.Empty() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	total := sdk.DecCoins{}
+	var delRewards []types.DelegationDelegatorReward
+
+	k.stakingKeeper.IterateDelegations(
+		ctx, req.DelegatorAddress,
+		func(_ int64, del exported.DelegationI) (stop bool) {
+			valAddr := del.GetValidatorAddr()
+			val := k.stakingKeeper.Validator(ctx, valAddr)
+			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+			delReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
+			total = total.Add(delReward...)
+			return false
+		},
+	)
+
+	return &types.QueryDelegationTotalRewardsResponse{Rewards: delRewards, Total: total}, nil
+}
+
+// DelegatorValidators queries the validators list of a delegator
+func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
+	if req.String() == "" || req.DelegatorAddress.Empty() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var validators []sdk.ValAddress
+
+	k.stakingKeeper.IterateDelegations(
+		ctx, req.DelegatorAddress,
+		func(_ int64, del exported.DelegationI) (stop bool) {
+			validators = append(validators, del.GetValidatorAddr())
+			return false
+		},
+	)
+
+	return &types.QueryDelegatorValidatorsResponse{Validators: validators}, nil
 }
 
 // DelegatorWithdrawAddress queries Query/delegatorWithdrawAddress

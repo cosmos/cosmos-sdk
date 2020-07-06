@@ -10,6 +10,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -33,8 +34,8 @@ const (
 )
 
 func TestPagination(t *testing.T) {
-	app, ctx := setupTest()
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	app, ctx, _ := setupTest()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -56,7 +57,7 @@ func TestPagination(t *testing.T) {
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Res.Total, uint64(numBalances))
-	require.Nil(t, res.Res.NextKey)
+	require.NotNil(t, res.Res.NextKey)
 	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 
 	t.Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
@@ -74,7 +75,7 @@ func TestPagination(t *testing.T) {
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Balances.Len(), underLimit)
-	require.Nil(t, res.Res.NextKey)
+	require.NotNil(t, res.Res.NextKey)
 	require.Equal(t, res.Res.Total, uint64(numBalances))
 
 	t.Log("verify paginate with custom limit and countTotal false")
@@ -141,7 +142,7 @@ func TestPagination(t *testing.T) {
 }
 
 func ExamplePaginate() {
-	app, ctx := setupTest()
+	app, ctx, _ := setupTest()
 
 	var balances sdk.Coins
 
@@ -178,10 +179,10 @@ func ExamplePaginate() {
 	}
 	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
 	// Output:
-	// balances:<denom:"foo0denom" amount:"100" > res:<total:2 >
+	// balances:<denom:"foo0denom" amount:"100" > res:<next_key:"foo1denom" total:2 >
 }
 
-func setupTest() (*simapp.SimApp, sdk.Context) {
+func setupTest() (*simapp.SimApp, sdk.Context, codec.Marshaler) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	appCodec := app.AppCodec()
@@ -206,5 +207,5 @@ func setupTest() (*simapp.SimApp, sdk.Context) {
 		app.GetSubspace(types.ModuleName), make(map[string]bool),
 	)
 
-	return app, ctx
+	return app, ctx, appCodec
 }

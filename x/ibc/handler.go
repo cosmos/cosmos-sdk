@@ -8,7 +8,8 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
 
@@ -39,7 +40,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return connection.HandleMsgConnectionOpenConfirm(ctx, k.ConnectionKeeper, msg)
 
 		// IBC channel msgs
-		case *channel.MsgChannelOpenInit:
+		case *channeltypes.MsgChannelOpenInit:
 			// Lookup module by port capability
 			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
 			if err != nil {
@@ -53,7 +54,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 			err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version)
 			if err != nil {
@@ -62,7 +63,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgChannelOpenTry:
+		case *channeltypes.MsgChannelOpenTry:
 			// Lookup module by port capability
 			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
 			if err != nil {
@@ -75,7 +76,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 			err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion)
 			if err != nil {
@@ -84,7 +85,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgChannelOpenAck:
+		case *channeltypes.MsgChannelOpenAck:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -93,7 +94,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanOpenAck(ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion)
@@ -102,7 +103,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 
-		case *channel.MsgChannelOpenConfirm:
+		case *channeltypes.MsgChannelOpenConfirm:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -111,7 +112,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanOpenConfirm(ctx, msg.PortID, msg.ChannelID)
@@ -120,7 +121,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 
-		case *channel.MsgChannelCloseInit:
+		case *channeltypes.MsgChannelCloseInit:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -129,7 +130,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanCloseInit(ctx, msg.PortID, msg.ChannelID)
@@ -138,7 +139,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, cap, msg)
 
-		case *channel.MsgChannelCloseConfirm:
+		case *channeltypes.MsgChannelCloseConfirm:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
@@ -147,7 +148,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			err = cbs.OnChanCloseConfirm(ctx, msg.PortID, msg.ChannelID)
@@ -157,7 +158,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, cap, msg)
 
 		// IBC packet msgs get routed to the appropriate module callback
-		case *channel.MsgPacket:
+		case *channeltypes.MsgPacket:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
 			if err != nil {
@@ -167,7 +168,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			// Perform application logic callback
@@ -183,7 +184,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgAcknowledgement:
+		case *channeltypes.MsgAcknowledgement:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if err != nil {
@@ -193,7 +194,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			// Perform application logic callback
@@ -209,7 +210,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		case *channel.MsgTimeout:
+		case *channeltypes.MsgTimeout:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if err != nil {
@@ -219,7 +220,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
-				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
 			// Perform application logic callback

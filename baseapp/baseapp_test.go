@@ -1556,7 +1556,7 @@ func TestGRPCQuery(t *testing.T) {
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
-		Path: "/cosmos_sdk.codec.v1.TestService/SayHello",
+		Path: "/testdata.TestService/SayHello",
 	}
 
 	resQuery := app.Query(reqQuery)

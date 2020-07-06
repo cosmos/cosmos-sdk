@@ -47,25 +47,6 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	// if !clientCtx.TrustNode {
-	// check, err := clientCtx.Verify(res.Block.Height)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// TODO: fix when introduce light client
-	// if err := tmliteProxy.ValidateHeader(&res.Block.Header, check); err != nil {
-	// 	return nil, err
-	// }
-
-	// if err = tmliteProxy.ValidateBlock(res.Block, check); err != nil {
-	// 	return nil, err
-	// }
-	// }
-	//
-	if clientCtx.Indent {
-		return legacy.Cdc.MarshalJSONIndent(res, "", "  ")
-	}
-
 	return legacy.Cdc.MarshalJSON(res)
 }
 

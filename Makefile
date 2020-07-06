@@ -14,17 +14,17 @@ DOCKER_BUF := docker run -v $(shell pwd):/workspace --workdir /workspace bufbuil
 
 export GO111MODULE = on
 
+all: tools build lint test
+
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
-
-all: tools build lint test
 
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
 
 build: go.sum
-	@go build -mod=readonly ./...
+	go build -mod=readonly ./...
 
 build-sim: go.sum
 	mkdir -p $(BUILDDIR)

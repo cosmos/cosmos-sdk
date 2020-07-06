@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -16,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
+
+const flagSequences = "sequences"
 
 // GetCmdQueryChannels defines the command to query all the channels ends
 // that this chain mantains.
@@ -203,27 +204,28 @@ func GetCmdQueryPacketCommitment(clientCtx client.Context) *cobra.Command {
 
 // GetCmdQueryUnrelayedPackets defines the command to query all the unrelayed packets.
 func GetCmdQueryUnrelayedPackets(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
-		Use:   "unrelayed-packets [port-id] [channel-id] [sequences]",
+	cmd := &cobra.Command{
+		Use:   "unrelayed-packets [port-id] [channel-id]",
 		Short: "Query all the unrelayed packets associated with a channel",
-		Long: `Query all the unrelayed packets associated with a channel.
-The sequences argument is a comma separated list of numbers.`,
-		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName),
-		Args:    cobra.ExactArgs(3),
-		RunE: func(_ *cobra.Command, args []string) error {
+		Long: `It indicates if a packet, given a list of packet commitment sequences, is unrelayed.
+An unrelayed packet corresponds to:
+
+- Unrelayed packet commitments: when no acknowledgement exists for the given sequence.
+- Unrelayed packet acknowledgements: when an acknowledgement exists and a packet commitment also exists.`,
+		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id] --sequences=1,2,3", version.ClientName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
-			seqStrs := strings.Split(args[2], ",")
+			seqSlice, err := cmd.Flags().GetInt64Slice(flagSequences)
+			if err != nil {
+				return err
+			}
 
-			seqs := make([]uint64, len(seqStrs))
-
-			var err error
-			for i := range seqStrs {
-				seqs[i], err = strconv.ParseUint(seqStrs[i], 10, 64)
-				if err != nil {
-					return err
-				}
+			seqs := make([]uint64, len(seqSlice))
+			for i := range seqSlice {
+				seqs[i] = uint64(seqSlice[i])
 			}
 
 			req := &types.QueryUnrelayedPacketsRequest{
@@ -242,6 +244,8 @@ The sequences argument is a comma separated list of numbers.`,
 			return clientCtx.PrintOutput(res)
 		},
 	}
+	cmd.Flags().Int64Slice(flagSequences, []int64{}, "comma separated list of packet sequence numbers")
+	return cmd
 }
 
 // GetCmdQueryNextSequenceReceive defines the command to query a next receive sequence for a given channel

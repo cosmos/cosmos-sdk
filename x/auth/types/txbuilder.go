@@ -79,50 +79,15 @@ func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters extracted from
 // FlagSet (It should deprecate NewTxBuilderFromCLI).
 func NewTxBuilderFromFlagSet(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
-	backend, err := fs.GetString(flags.FlagKeyringBackend)
-	if err != nil {
-		return TxBuilder{}, err
-	}
-
-	kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
-	if err != nil {
-		return TxBuilder{}, err
-	}
-
-	accNum, err := fs.GetUint64(flags.FlagAccountNumber)
-	if err != nil {
-		return TxBuilder{}, err
-	}
-
-	seq, err := fs.GetUint64(flags.FlagSequence)
-	if err != nil {
-		return TxBuilder{}, nil
-	}
-
-	gasAdjustment, err := fs.GetFloat64(flags.FlagGasAdjustment)
-	if err != nil {
-		return TxBuilder{}, nil
-	}
-
-	chainID, err := fs.GetString(flags.FlagChainID)
-	if err != nil {
-		return TxBuilder{}, nil
-	}
-
-	memo, err := fs.GetString(flags.FlagMemo)
-	if err != nil {
-		return TxBuilder{}, nil
-	}
-
-	fees, err := fs.GetString(flags.FlagFees)
-	if err != nil {
-		return TxBuilder{}, nil
-	}
-
-	gasPrices, err := fs.GetString(flags.FlagGasPrices)
-	if err != nil {
-		return TxBuilder{}, nil
-	}
+	backend, _ := fs.GetString(flags.FlagKeyringBackend)
+	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
+	accNum, _ := fs.GetUint64(flags.FlagAccountNumber)
+	seq, _ := fs.GetUint64(flags.FlagSequence)
+	gasAdjustment, _ := fs.GetFloat64(flags.FlagGasAdjustment)
+	chainID, _ := fs.GetString(flags.FlagChainID)
+	memo, _ := fs.GetString(flags.FlagMemo)
+	fees, _ := fs.GetString(flags.FlagFees)
+	gasPrices, _ := fs.GetString(flags.FlagGasPrices)
 
 	txbldr := TxBuilder{
 		keybase:            kb,

@@ -66,17 +66,11 @@ func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManag
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			home, err := cmd.Flags().GetString(cli.HomeFlag)
-			if err != nil {
-				return err
-			}
+			home, _ := cmd.Flags().GetString(cli.HomeFlag)
 
 			config.SetRoot(home)
 
-			chainID, err := cmd.Flags().GetString(flags.FlagChainID)
-			if err != nil {
-				return err
-			}
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
@@ -90,10 +84,7 @@ func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManag
 			config.Moniker = args[0]
 
 			genFile := config.GenesisFile()
-			overwrite, err := cmd.Flags().GetBool(flagOverwrite)
-			if err != nil {
-				return err
-			}
+			overwrite, _ := cmd.Flags().GetBool(flagOverwrite)
 
 			if !overwrite && tmos.FileExists(genFile) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)

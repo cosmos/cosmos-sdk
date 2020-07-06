@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,7 +24,7 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 		Long:    "Query all connections ends from a chain",
 		Example: fmt.Sprintf("%s query %s %s connections", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
@@ -38,8 +37,7 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			// TODO: return res?
-			return clientCtx.PrintOutput(res.Connections)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 }
@@ -56,7 +54,10 @@ func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 			clientCtx = clientCtx.Init()
 
 			connectionID := args[0]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			if err != nil {
+				return err
+			}
 
 			connRes, err := utils.QueryConnection(clientCtx, connectionID, prove)
 			if err != nil {
@@ -80,7 +81,7 @@ func GetCmdQueryAllClientConnections(clientCtx client.Context) *cobra.Command {
 		Long:    "Query all stored client connection paths",
 		Example: fmt.Sprintf("%s query %s %s paths", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
@@ -94,7 +95,7 @@ func GetCmdQueryAllClientConnections(clientCtx client.Context) *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(res.Height)
-			return clientCtx.PrintOutput(res.ConnectionsPaths)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -113,7 +114,10 @@ func GetCmdQueryClientConnections(clientCtx client.Context) *cobra.Command {
 			clientCtx = clientCtx.Init()
 
 			clientID := args[0]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			if err != nil {
+				return err
+			}
 
 			connPathsRes, err := utils.QueryClientConnections(clientCtx, clientID, prove)
 			if err != nil {

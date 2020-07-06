@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,7 +26,7 @@ func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
 		Long:    "Query all channels from a chain",
 		Example: fmt.Sprintf("%s query %s %s channels", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
@@ -41,8 +40,7 @@ func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(res.Height)
-			// TODO: return res?
-			return clientCtx.PrintOutput(res.Channels)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 }
@@ -62,7 +60,10 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			if err != nil {
+				return err
+			}
 
 			channelRes, err := utils.QueryChannel(clientCtx, portID, channelID, prove)
 			if err != nil {
@@ -86,7 +87,7 @@ func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
 		Long:    "Query all channels associated with a connection",
 		Example: fmt.Sprintf("%s query %s %s connections [connection-id]", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
@@ -101,8 +102,7 @@ func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(res.Height)
-			// TODO: return res?
-			return clientCtx.PrintOutput(res.Channels)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 }
@@ -115,7 +115,7 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 		Long:    "Query the client state associated with a channel, by providing its port and channel identifiers.",
 		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.ClientName),
 		Args:    cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 
 			portID := args[0]
@@ -142,7 +142,7 @@ func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
 		Long:    "Query all packet commitments associated with a channel",
 		Example: fmt.Sprintf("%s query %s %s packet-commitments [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
@@ -158,8 +158,7 @@ func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(res.Height)
-			// TODO: return res?
-			return clientCtx.PrintOutput(res.Commitments)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 }
@@ -179,7 +178,10 @@ func GetCmdQueryPacketCommitment(clientCtx client.Context) *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			if err != nil {
+				return err
+			}
 
 			seq, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
@@ -208,7 +210,7 @@ func GetCmdQueryUnrelayedPackets(clientCtx client.Context) *cobra.Command {
 The sequences argument is a comma separated list of numbers.`,
 		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
@@ -237,8 +239,7 @@ The sequences argument is a comma separated list of numbers.`,
 			}
 
 			clientCtx = clientCtx.WithHeight(res.Height)
-			// TODO: return res?
-			return clientCtx.PrintOutput(res.Packets)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 }
@@ -258,7 +259,10 @@ func GetCmdQueryNextSequenceReceive(clientCtx client.Context) *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			if err != nil {
+				return err
+			}
 
 			sequenceRes, err := utils.QueryNextSequenceReceive(clientCtx, portID, channelID, prove)
 			if err != nil {

@@ -80,6 +80,9 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().String(flagKeyAlgo, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
+	cmd.SetOut(cmd.OutOrStdout())
+	cmd.SetErr(cmd.ErrOrStderr())
+
 	return cmd
 }
 
@@ -115,7 +118,6 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	var err error
 
 	name := args[0]
-
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
@@ -295,10 +297,11 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			cmd.PrintErrln("\n**Important** write this mnemonic phrase in a safe place.")
-			cmd.PrintErrln("It is the only way to recover your account if you ever forget your password.")
-			cmd.PrintErrln("")
-			cmd.PrintErrln(mnemonic)
+			fmt.Fprintln(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.")
+			fmt.Fprintln(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.")
+			fmt.Fprintln(cmd.ErrOrStderr(), "It is the only way to recover your account if you ever forget your password.")
+			fmt.Fprintln(cmd.ErrOrStderr(), "")
+			fmt.Fprintln(cmd.ErrOrStderr(), mnemonic)
 		}
 	case OutputFormatJSON:
 		out, err := keyring.Bech32KeyOutput(info)
@@ -315,7 +318,7 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 			return err
 		}
 
-		cmd.PrintErrln(string(jsonString))
+		cmd.Println(string(jsonString))
 
 	default:
 		return fmt.Errorf("invalid output format %s", output)

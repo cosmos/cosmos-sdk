@@ -4,6 +4,7 @@ import (
 	gocontext "context"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
@@ -24,7 +25,17 @@ func (ctx Context) Invoke(_ gocontext.Context, method string, args, reply interf
 	if err != nil {
 		return err
 	}
-	return protoCodec.Unmarshal(resBz, reply)
+
+	err = protoCodec.Unmarshal(resBz, reply)
+	if err != nil {
+		return err
+	}
+
+	if ctx.InterfaceRegistry != nil {
+		return types.UnpackInterfaces(reply, ctx.InterfaceRegistry)
+	}
+
+	return nil
 }
 
 // NewStream implements the grpc ClientConn.NewStream method

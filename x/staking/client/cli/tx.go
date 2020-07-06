@@ -329,7 +329,7 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory) (tx.Fa
 
 // Return the flagset, particular flags, and a description of defaults
 // this is anticipated to be used with the gen-tx
-func CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
+func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
 	fsCreateValidator.String(FlagIP, ipDefault, "The node's public IP")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")
@@ -391,6 +391,47 @@ func PrepareConfigForTxCreateValidator(
 		_, _ = fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
 			"the tx's memo field will be unset")
 	}
+	c.IP = ip
+
+	website, err := flagSet.GetString(FlagWebsite)
+	if err != nil {
+		return c, err
+	}
+	c.Website = website
+
+	securityContact, err := flagSet.GetString(FlagSecurityContact)
+	if err != nil {
+		return c, err
+	}
+	c.SecurityContact = securityContact
+
+	details, err := flagSet.GetString(FlagDetails)
+	if err != nil {
+		return c, err
+	}
+	c.SecurityContact = details
+
+	identity, err := flagSet.GetString(FlagIdentity)
+	if err != nil {
+		return c, err
+	}
+	c.Identity = identity
+
+	c.ChainID = chainID
+	c.From, err = flagSet.GetString(flags.FlagName)
+	if err != nil {
+		return c, err
+	}
+
+	c.NodeID = nodeID
+	viper.Set(FlagIP, ip)
+	viper.Set(flags.FlagTrustNode, true)
+	viper.Set(FlagPubKey, sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey))
+	viper.Set(FlagMoniker, config.Moniker)
+	viper.Set(FlagWebsite, website)
+	viper.Set(FlagSecurityContact, securityContact)
+	viper.Set(FlagDetails, details)
+	viper.Set(FlagIdentity, identity)
 
 	return c, nil
 }

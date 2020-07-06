@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/spf13/pflag"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -17,16 +17,40 @@ import (
 )
 
 func TestPrepareConfigForTxCreateValidator(t *testing.T) {
-	t.SkipNow()
-	fs := pflag.NewFlagSet("fs", pflag.PanicOnError)
+	chainID := "chainID"
+	ip := "1.1.1.1"
+	nodeID := "nodeID"
 
-	fs.Set(FlagIP, "")
+	tests := []struct {
+		name        string
+		expectedCfg TxCreateValidatorConfig
+	}{
+		{
+			name: "all defaults",
+			expectedCfg: TxCreateValidatorConfig{
+				IP:      ip,
+				ChainID: chainID,
+				NodeID:  nodeID,
+			},
+		},
+	}
 
-	config := &cfg.Config{BaseConfig: cfg.TestBaseConfig()}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			fs, _ := CreateValidatorMsgFlagSet(ip)
+			fs.String(flags.FlagName, "", "name of private key with which to sign the gentx")
 
-	valPubKey, _ := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, "cosmosvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5gd80a")
-	_, err := PrepareConfigForTxCreateValidator(config, fs, "nodeId", "chainId", valPubKey)
-	require.NoError(t, err)
+			config := &cfg.Config{BaseConfig: cfg.TestBaseConfig()}
+
+			valPubKey, _ := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, "cosmosvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5gd80a")
+			cvCfg, err := PrepareConfigForTxCreateValidator(config, fs, nodeID, chainID, valPubKey)
+			require.NoError(t, err)
+
+			require.Equal(t, cvCfg, tc.expectedCfg)
+		})
+	}
+
 }
 
 func TestPrepareFlagsForTxCreateValidator(t *testing.T) {

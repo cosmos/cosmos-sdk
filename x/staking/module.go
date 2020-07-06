@@ -87,7 +87,7 @@ func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
 
 // CreateValidatorMsgHelpers - used for gen-tx
 func (AppModuleBasic) CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
-	return cli.CreateValidatorMsgHelpers(ipDefault)
+	return cli.CreateValidatorMsgFlagSet(ipDefault)
 }
 
 // PrepareFlagsForTxCreateValidator - used for gen-tx

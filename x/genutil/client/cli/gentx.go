@@ -36,7 +36,7 @@ import (
 func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 	genBalIterator types.GenesisBalancesIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
-	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgHelpers(ipDefault)
+	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
 	cmd := &cobra.Command{
 		Use:   "gentx",
@@ -127,7 +127,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 
 			// Set flags for creating gentx
 			// TODO study this case.
-			viper.Set(flags.FlagHome, viper.GetString(flagClientHome))
+			viper.Set(flags.FlagHome, clientHome)
 			cli.PrepareFlagsForTxCreateValidator(config, nodeID, genDoc.ChainID, valPubKey)
 
 			// Fetch the amount of coins staked

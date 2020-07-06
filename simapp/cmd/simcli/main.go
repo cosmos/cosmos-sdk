@@ -24,10 +24,12 @@ var (
 	encodingConfig = simapp.MakeEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
+			WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 			WithTxGenerator(encodingConfig.TxGenerator).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler))
+			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
+			WithBroadcastMode(flags.BroadcastBlock)
 )
 
 func init() {
@@ -50,6 +52,9 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "simcli",
 		Short: "Command line interface for interacting with simapp",
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return client.SetCmdClientContextHandler(initClientCtx, cmd)
+		},
 	}
 
 	rootCmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
@@ -84,10 +89,7 @@ func queryCmd() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			return client.SetCmdClientContextHandler(initClientCtx, cmd)
-		},
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	queryCmd.AddCommand(
@@ -111,10 +113,7 @@ func txCmd() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			return client.SetCmdClientContextHandler(initClientCtx, cmd)
-		},
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(

@@ -32,6 +32,7 @@ message HasHasHasAnimal {
 service TestService {
   rpc Echo(EchoRequest) returns (EchoResponse);
   rpc SayHello(SayHelloRequest) returns (SayHelloResponse);
+  rpc TestAny(TestAnyRequest) returns (TestAnyResponse);
 }
 
 message EchoRequest {
@@ -48,6 +49,14 @@ message SayHelloRequest {
 
 message SayHelloResponse {
   string greeting = 1;
+}
+
+message TestAnyRequest {
+  google.protobuf.Any any_animal = 1;
+}
+
+message TestAnyResponse {
+    HasAnimal has_animal = 1;
 }
 
 // msg type for testing

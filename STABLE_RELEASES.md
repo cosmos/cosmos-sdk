@@ -112,7 +112,7 @@ Pull requests that fix bugs that fall in the following categories do not require
 
 ## What pull requests will NOT be automatically included in stable point-releases
 
-As generic rule, the following changes will **NOT** be automatically accepted into stable point-releases
+As rule of thumb, the following changes will **NOT** be automatically accepted into stable point-releases:
 
  * **State machine changes**.
  * **Client application's code-breaking changes**, i.e. changes that prevent client applications to build without modifications to the client's source code.

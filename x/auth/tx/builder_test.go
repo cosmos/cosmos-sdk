@@ -29,6 +29,7 @@ func TestTxBuilder(t *testing.T) {
 	cdc := std.DefaultPublicKeyCodec{}
 
 	memo := "sometestmemo"
+
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 
 	pk, err := cdc.Encode(pubkey)
@@ -128,7 +129,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	badFee := authtypes.NewTestStdFee()
 	badFee.Amount[0].Amount = sdk.NewInt(-5)
 	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
-	builder := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
+	bldr := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{
@@ -147,43 +148,87 @@ func TestBuilderValidateBasic(t *testing.T) {
 		},
 	}
 
-	err := builder.SetMsgs(msgs...)
+	err := bldr.SetMsgs(msgs...)
 	require.NoError(t, err)
-	builder.SetGasLimit(200000)
-	err = builder.SetSignatures(sig1, sig2)
+	bldr.SetGasLimit(200000)
+	err = bldr.SetSignatures(sig1, sig2)
 	require.NoError(t, err)
-	builder.SetFeeAmount(badFee.Amount)
-	err = builder.ValidateBasic()
+	bldr.SetFeeAmount(badFee.Amount)
+	err = bldr.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ := sdkerrors.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrInsufficientFee.ABCICode(), code)
 
 	// require to fail validation when no signatures exist
-	err = builder.SetSignatures()
+	err = bldr.SetSignatures()
 	require.NoError(t, err)
-	builder.SetFeeAmount(fee.Amount)
-	err = builder.ValidateBasic()
+	bldr.SetFeeAmount(fee.Amount)
+	err = bldr.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
 
 	// require to fail with nil values for tx, authinfo
-	err = builder.SetMsgs(nil)
+	err = bldr.SetMsgs(msgs...)
 	require.NoError(t, err)
-	err = builder.ValidateBasic()
+	err = bldr.ValidateBasic()
 	require.Error(t, err)
 
 	// require to fail validation when signatures do not match expected signers
-	err = builder.SetSignatures(sig1)
+	err = bldr.SetSignatures(sig1)
 	require.NoError(t, err)
 
-	err = builder.ValidateBasic()
+	err = bldr.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
 
-	builder.SetFeeAmount(fee.Amount)
-	builder.SetSignatures(sig1, sig2)
-	err = builder.ValidateBasic()
+	require.Error(t, err)
+	bldr.SetFeeAmount(fee.Amount)
+	err = bldr.SetSignatures(sig1, sig2)
 	require.NoError(t, err)
+	err = bldr.ValidateBasic()
+	require.NoError(t, err)
+
+	// gas limit too high
+	bldr.SetGasLimit(MaxGasWanted + 1)
+	err = bldr.ValidateBasic()
+	require.Error(t, err)
+	bldr.SetGasLimit(MaxGasWanted - 1)
+	err = bldr.ValidateBasic()
+	require.NoError(t, err)
+
+	// bad builder structs
+
+	// missing body
+	body := bldr.tx.Body
+	bldr.tx.Body = nil
+	err = bldr.ValidateBasic()
+	require.Error(t, err)
+	bldr.tx.Body = body
+	err = bldr.ValidateBasic()
+	require.NoError(t, err)
+
+	// missing fee
+	f := bldr.tx.AuthInfo.Fee
+	bldr.tx.AuthInfo.Fee = nil
+	err = bldr.ValidateBasic()
+	require.Error(t, err)
+	bldr.tx.AuthInfo.Fee = f
+	err = bldr.ValidateBasic()
+	require.NoError(t, err)
+
+	// missing AuthInfo
+	authInfo := bldr.tx.AuthInfo
+	bldr.tx.AuthInfo = nil
+	err = bldr.ValidateBasic()
+	require.Error(t, err)
+	bldr.tx.AuthInfo = authInfo
+	err = bldr.ValidateBasic()
+	require.NoError(t, err)
+
+	// missing tx
+	bldr.tx = nil
+	err = bldr.ValidateBasic()
+	require.Error(t, err)
 }

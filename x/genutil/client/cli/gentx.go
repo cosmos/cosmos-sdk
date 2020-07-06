@@ -47,10 +47,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 		    %s`, defaultsDesc),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			home, err := cmd.Flags().GetString(flags.FlagHome)
-			if err != nil {
-				return err
-			}
+			home, _ := cmd.Flags().GetString(flags.FlagHome)
 
 			config := ctx.Config
 			config.SetRoot(home)
@@ -60,19 +57,14 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 
 			// Read --nodeID, if empty take it from priv_validator.json
-			nodeIDString, err := cmd.Flags().GetString(cli.FlagNodeID)
-			if err != nil {
-				return err
-			}
+			nodeIDString, _ := cmd.Flags().GetString(cli.FlagNodeID)
 
 			if nodeIDString != "" {
 				nodeID = nodeIDString
 			}
 			// Read --pubkey, if empty take it from priv_validator.json
-			valPubKeyString, err := cmd.Flags().GetString(cli.FlagPubKey)
-			if err != nil {
-				return err
-			}
+			valPubKeyString, _ := cmd.Flags().GetString(cli.FlagPubKey)
+
 			if valPubKeyString != "" {
 				valPubKey, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, valPubKeyString)
 				if err != nil {
@@ -94,15 +86,10 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
-			keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			if err != nil {
-				return err
-			}
+			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
 
-			clientHome, err := cmd.Flags().GetString(flagClientHome)
-			if err != nil {
-				return err
-			}
+			clientHome, _ := cmd.Flags().GetString(flagClientHome)
+
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			kb, err := keyring.New(
 				sdk.KeyringServiceName(),
@@ -114,10 +101,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 				return errors.Wrap(err, "failed to initialize keybase")
 			}
 
-			name, err := cmd.Flags().GetString(flags.FlagName)
-			if err != nil {
-				return err
-			}
+			name, _ := cmd.Flags().GetString(flags.FlagName)
+
 			key, err := kb.Key(name)
 			if err != nil {
 				return errors.Wrap(err, "failed to read from keybase")
@@ -130,10 +115,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 
 			// Fetch the amount of coins staked
-			amount, err := cmd.Flags().GetString(cli.FlagAmount)
-			if err != nil {
-				return err
-			}
+			amount, _ := cmd.Flags().GetString(cli.FlagAmount)
+
 			coins, err := sdk.ParseCoins(amount)
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
@@ -185,10 +168,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 
 			// Fetch output file name
-			outputDocument, err := cmd.Flags().GetString(flags.FlagOutputDocument)
-			if err != nil {
-				return err
-			}
+			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+
 			if outputDocument == "" {
 				outputDocument, err = makeOutputFilepath(config.RootDir, nodeID)
 				if err != nil {

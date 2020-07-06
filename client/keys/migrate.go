@@ -6,13 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 // migratePassphrase is used as a no-op migration key passphrase as a passphrase

@@ -35,7 +35,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.38.5] - TBD
+## [v0.39.0] - TBD
+
+### Improvements
 
 The pruning changes introduced in 0.38.0 has bugs that may cause data loss, even after upgrading
 to 0.38.5. When upgrading from 0.38.x it is important to follow the instructions below, to prevent
@@ -60,8 +62,7 @@ pruning setting `syncable` used `KeepEvery:100`.
 
 ### API Breaking Changes
 
-* (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and
-`Result` from the execution.
+* (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and `Result` from the execution.
 
 ### Improvements
 

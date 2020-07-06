@@ -15,14 +15,3 @@ func NewQueryCurrentPlanRequest() *QueryCurrentPlanRequest {
 func NewQueryAppliedPlanRequest(name string) *QueryAppliedPlanRequest {
 	return &QueryAppliedPlanRequest{Name: name}
 }
-
-// QueryAppliedParams is passed as data with QueryApplied
-type QueryAppliedParams struct {
-	Name string
-}
-
-// NewQueryAppliedParams creates a new instance to query
-// if a named plan was applied
-func NewQueryAppliedParams(name string) QueryAppliedParams {
-	return QueryAppliedParams{Name: name}
-}

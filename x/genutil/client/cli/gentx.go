@@ -14,7 +14,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -147,6 +146,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
+			// TODO change this solution.
+			cmd.Flags().Set(flags.FlagHome, clientHome)
 			txBldr, err := authtypes.NewTxBuilderFromFlagSet(inBuf, cmd.Flags())
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
@@ -155,15 +156,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 
 			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc).WithJSONMarshaler(cdc)
 
-			// Set the generate-only flag here after the CLI context has
-			// been created. This allows the from name/key to be correctly populated.
-			//
-			// TODO: Consider removing the manual setting of generate-only in
-			// favor of a 'gentx' flag in the create-validator command.
-			viper.Set(flags.FlagGenerateOnly, true)
-
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, txBldr)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txBldr, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}

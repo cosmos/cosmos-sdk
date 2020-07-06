@@ -485,8 +485,8 @@ func PrepareConfigForTxCreateValidator(
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
-	amounstStr := viper.GetString(FlagAmount)
+func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr authtypes.TxBuilder, generateOnly bool) (authtypes.TxBuilder, sdk.Msg, error) {
+	amounstStr := config.Amount
 	amount, err := sdk.ParseCoin(amounstStr)
 
 	if err != nil {
@@ -494,7 +494,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilde
 	}
 
 	valAddr := clientCtx.GetFromAddress()
-	pkStr := viper.GetString(FlagPubKey)
+	pkStr := config.PubKey
 
 	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pkStr)
 	if err != nil {
@@ -502,17 +502,17 @@ func BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilde
 	}
 
 	description := types.NewDescription(
-		viper.GetString(FlagMoniker),
-		viper.GetString(FlagIdentity),
-		viper.GetString(FlagWebsite),
-		viper.GetString(FlagSecurityContact),
-		viper.GetString(FlagDetails),
+		config.Moniker,
+		config.Identity,
+		config.Website,
+		config.SecurityContact,
+		config.Details,
 	)
 
 	// get the initial validator commission parameters
-	rateStr := viper.GetString(FlagCommissionRate)
-	maxRateStr := viper.GetString(FlagCommissionMaxRate)
-	maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
+	rateStr := config.CommissionRate
+	maxRateStr := config.CommissionMaxRate
+	maxChangeRateStr := config.CommissionMaxChangeRate
 	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
 
 	if err != nil {
@@ -520,7 +520,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilde
 	}
 
 	// get the initial validator min self delegation
-	msbStr := viper.GetString(FlagMinSelfDelegation)
+	msbStr := config.MinSelfDelegation
 	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
 
 	if !ok {
@@ -531,9 +531,9 @@ func BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilde
 		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
 	)
 
-	if viper.GetBool(flags.FlagGenerateOnly) {
-		ip := viper.GetString(FlagIP)
-		nodeID := viper.GetString(FlagNodeID)
+	if generateOnly {
+		ip := config.IP
+		nodeID := config.NodeID
 
 		if nodeID != "" && ip != "" {
 			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))

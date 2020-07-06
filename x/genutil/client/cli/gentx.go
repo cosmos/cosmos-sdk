@@ -212,7 +212,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 	cmd.Flags().String(flags.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
-	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+
+	flags.PostCommands(cmd)
 
 	cmd.MarkFlagRequired(flags.FlagName)
 

@@ -190,6 +190,24 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	require.NoError(t, err)
 	// TODO debug delegation rewards
 	// require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards.Rewards)
+
+	// totalRewardsReq := &types.QueryDelegationTotalRewardsRequest{
+	// 	DelegatorAddress: sdk.AccAddress(valOpAddr1),
+	// }
+
+	// totalRewards, err := queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
+	// require.NoError(t, err)
+	// expectedDelReward := types.NewDelegationDelegatorReward(valOpAddr1,
+	// 	sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5)})
+	// wantDelRewards := types.NewQueryDelegatorTotalRewardsResponse(
+	// 	[]types.DelegationDelegatorReward{expectedDelReward}, expectedDelReward.Reward)
+	// require.Equal(t, wantDelRewards, totalRewards)
+
+	validators, err := queryClient.DelegatorValidators(gocontext.Background(),
+		&types.QueryDelegatorValidatorsRequest{DelegatorAddress: sdk.AccAddress(valOpAddr1)})
+	require.NoError(t, err)
+	require.Len(t, validators.Validators, 1)
+	require.Equal(t, validators.Validators[0], valOpAddr1)
 }
 
 func TestGRPCDelegatorWithdrawAddress(t *testing.T) {

@@ -29,6 +29,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -64,7 +65,8 @@ type TestChain struct {
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
 	CurrentHeader abci.Header       // header for current block height
-	Querier       sdk.Querier
+	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
+	QueryServer   types.QueryServer
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -119,6 +121,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		App:           app,
 		CurrentHeader: header,
 		Querier:       keeper.NewQuerier(*app.IBCKeeper),
+		QueryServer:   app.IBCKeeper,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -158,6 +161,20 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
 	return proof, uint64(res.Height) + 1
+}
+
+// QueryConsensusStateProof performs an abci query for a consensus state
+// stored on the given clientID. The proof and consensusHeight are returned.
+func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, uint64) {
+	// retrieve consensus state to provide proof for
+	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
+	require.True(chain.t, found)
+
+	consensusHeight := consState.GetHeight()
+	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
+	proofConsensus, _ := chain.QueryProof(consensusKey)
+
+	return proofConsensus, consensusHeight
 }
 
 // NextBlock sets the last header to the current header and increments the current header to be
@@ -384,13 +401,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retrieve consensus state to provide proof for
-	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
-	require.True(chain.t, found)
-
-	consensusHeight := consState.GetHeight()
-	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
-	proofConsensus, _ := counterparty.QueryProof(consensusKey)
+	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
@@ -411,13 +422,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retrieve consensus state to provide proof for
-	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
-	require.True(chain.t, found)
-
-	consensusHeight := consState.GetHeight()
-	consensusKey := host.FullKeyClientPath(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
-	proofConsensus, _ := counterparty.QueryProof(consensusKey)
+	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
 		connection.ID,

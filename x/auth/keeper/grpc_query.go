@@ -22,7 +22,7 @@ func (k AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address == nil {
+	if req.Address.Empty() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 

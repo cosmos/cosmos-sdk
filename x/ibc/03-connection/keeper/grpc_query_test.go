@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -68,6 +70,80 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(&expConnection, res.Connection)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryConnections() {
+	var (
+		req            *types.QueryConnectionsRequest
+		expConnections = []*types.ConnectionEnd{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"empty pagination",
+			func() {
+				req = &types.QueryConnectionsRequest{}
+			},
+			true,
+		},
+		{
+			"success",
+			func() {
+				counterparty1 := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.oldchainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+				counterparty2 := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.oldchainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+				counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, commitmenttypes.NewMerklePrefix(suite.oldchainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+
+				conn1 := types.NewConnectionEnd(types.INIT, testConnectionIDA, testClientIDA, counterparty3, types.GetCompatibleVersions())
+				conn2 := types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty1, types.GetCompatibleVersions())
+				conn3 := types.NewConnectionEnd(types.UNINITIALIZED, testConnectionID3, testClientID3, counterparty2, types.GetCompatibleVersions())
+
+				expConnections = []*types.ConnectionEnd{&conn1, &conn2, &conn3}
+
+				for i := range expConnections {
+					suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), expConnections[i].ID, *expConnections[i])
+				}
+
+				req = &types.QueryConnectionsRequest{
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      3,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.Connections(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expConnections, res.Connections)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -141,64 +217,89 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 	}
 }
 
-// func TestAllProposal() {
+func (suite *KeeperTestSuite) TestQueryChannels() {
+	var (
+		req      *types.QueryClientsConnectionsRequest
+		expPaths = []*types.ConnectionPaths{}
+	)
 
-// 	// check for the proposals with no proposal added should return null.
-// 	pageReq := &query.PageRequest{
-// 		Key:        nil,
-// 		Limit:      1,
-// 		CountTotal: false,
-// 	}
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"empty pagination",
+			func() {
+				req = &types.QueryClientsConnectionsRequest{}
+			},
+			true,
+		},
+		{
+			"success, empty res",
+			func() {
+				expPaths = []*types.ConnectionPaths{}
+				req = &types.QueryClientsConnectionsRequest{
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      3,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+		{
+			"success",
+			func() {
+				clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+				connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
+				connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
+				counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
 
-// 	req := types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+				err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), connA.ID, clientA, counterparty)
+				suite.Require().NoError(err)
 
-// 	proposals, err := queryClient.Proposals(gocontext.Background(), req)
-// 	require.NoError(t, err)
-// 	require.Empty(t, proposals.Proposals)
+				expPaths = []*types.ConnectionPaths{
+					{ClientID: connA.ClientID, Paths: []string{connA.ID}},
+				}
 
-// 	// create 2 test proposals
-// 	for i := 0; i < 2; i++ {
-// 		num := strconv.Itoa(i + 1)
-// 		testProposal := types.NewTextProposal("Proposal"+num, "testing proposal "+num)
-// 		_, err := app.GovKeeper.SubmitProposal(ctx, testProposal)
-// 		require.NoError(t, err)
-// 	}
+				req = &types.QueryClientsConnectionsRequest{
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      3,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+	}
 
-// 	// Query for proposals after adding 2 proposals to the store.
-// 	// give page limit as 1 and expect NextKey should not to be empty
-// 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
-// 	require.NoError(t, err)
-// 	require.NotEmpty(t, proposals.Proposals)
-// 	require.NotEmpty(t, proposals.Res.NextKey)
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// 	pageReq = &query.PageRequest{
-// 		Key:        proposals.Res.NextKey,
-// 		Limit:      1,
-// 		CountTotal: false,
-// 	}
+			tc.malleate()
 
-// 	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
-// 	// query for the next page which is 2nd proposal at present context.
-// 	// and expect NextKey should be empty
-// 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
+			res, err := suite.chainA.QueryServer.ClientsConnections(ctx, req)
 
-// 	require.NoError(t, err)
-// 	require.NotEmpty(t, proposals.Proposals)
-// 	require.Empty(t, proposals.Res)
-
-// 	pageReq = &query.PageRequest{
-// 		Key:        nil,
-// 		Limit:      2,
-// 		CountTotal: false,
-// 	}
-
-// 	req = types.NewQueryProposalsRequest(0, nil, nil, pageReq)
-
-// 	// Query the page with limit 2 and expect NextKey should ne nil
-// 	proposals, err = queryClient.Proposals(gocontext.Background(), req)
-
-// 	require.NoError(t, err)
-// 	require.NotEmpty(t, proposals.Proposals)
-// 	require.Empty(t, proposals.Res)
-// }
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expPaths, res.ConnectionsPaths)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}

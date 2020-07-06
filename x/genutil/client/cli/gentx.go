@@ -91,12 +91,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			clientHome, _ := cmd.Flags().GetString(flagClientHome)
 
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			kb, err := keyring.New(
-				sdk.KeyringServiceName(),
-				keyringBackend,
-				clientHome,
-				inBuf,
-			)
+			kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientHome, inBuf)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}

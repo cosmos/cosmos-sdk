@@ -61,8 +61,8 @@ func init() {
 	fsRedelegation.String(FlagAddressValidatorDst, "", "The Bech32 address of the destination validator")
 }
 
-// FsCommissionCreate Returns the FlagSet used for commission create.
-func FsCommissionCreate() *flag.FlagSet {
+// FlagSetCommissionCreate Returns the FlagSet used for commission create.
+func FlagSetCommissionCreate() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
 	fs.String(FlagCommissionRate, "", "The initial commission rate percentage")
@@ -72,22 +72,22 @@ func FsCommissionCreate() *flag.FlagSet {
 	return fs
 }
 
-// FsMinSelfDelegation Returns the FlagSet used for minimum set delegation.
-func FsMinSelfDelegation() *flag.FlagSet {
+// FlagSetMinSelfDelegation Returns the FlagSet used for minimum set delegation.
+func FlagSetMinSelfDelegation() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagMinSelfDelegation, "", "The minimum self delegation required on the validator")
 	return fs
 }
 
-// FsAmount Returns the FlagSet for amount related operations.
-func FsAmount() *flag.FlagSet {
+// FlagSetAmount Returns the FlagSet for amount related operations.
+func FlagSetAmount() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagAmount, "", "Amount of coins to bond")
 	return fs
 }
 
-// FsPk Returns the flagset for Public Key related operations.
-func FsPk() *flag.FlagSet {
+// FlagSetPublicKey Returns the flagset for Public Key related operations.
+func FlagSetPublicKey() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagPubKey, "", "The Bech32 encoded PubKey of the validator")
 	return fs

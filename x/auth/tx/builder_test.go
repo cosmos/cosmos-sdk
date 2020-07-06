@@ -29,7 +29,7 @@ func TestTxBuilder(t *testing.T) {
 	cdc := std.DefaultPublicKeyCodec{}
 
 	memo := "sometestmemo"
-	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	msgs := []sdk.Msg{*testdata.NewTestMsg(addr)}
 
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)
@@ -122,7 +122,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	msg1 := authtypes.NewTestMsg(addr1, addr2)
 	fee := authtypes.NewTestStdFee()
 
-	msgs := []sdk.Msg{msg1}
+	msgs := []sdk.Msg{*msg1}
 
 	// require to fail validation upon invalid fee
 	badFee := authtypes.NewTestStdFee()
@@ -181,17 +181,6 @@ func TestBuilderValidateBasic(t *testing.T) {
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
-
-	// TODO: uncomment after SetFee is added
-	// // require to fail with invalid gas supplied
-	// badFee = authtypes.NewTestStdFee()
-	// badFee.Gas = 9223372036854775808
-	// builder.SetFeeAmount(badFee)
-	//
-	// err = tx.ValidateBasic()
-	// require.Error(t, err)
-	// _, code, _ = sdkerrors.ABCIInfo(err, false)
-	// require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), code)
 
 	builder.SetFeeAmount(fee.Amount)
 	builder.SetSignatures(sig1, sig2)

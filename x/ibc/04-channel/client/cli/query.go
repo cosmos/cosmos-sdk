@@ -21,18 +21,24 @@ const flagSequences = "sequences"
 // GetCmdQueryChannels defines the command to query all the channels ends
 // that this chain mantains.
 func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "channels",
 		Short:   "Query all channels",
 		Long:    "Query all channels from a chain",
 		Example: fmt.Sprintf("%s query %s %s channels", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
+			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+
 			req := &types.QueryChannelsRequest{
-				Req: &query.PageRequest{},
+				Req: &query.PageRequest{
+					Offset: uint64(offset),
+					Limit:  uint64(limit),
+				},
 			}
 
 			res, err := queryClient.Channels(context.Background(), req)
@@ -44,6 +50,10 @@ func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
+	return cmd
 }
 
 // GetCmdQueryChannel defines the command to query a channel end
@@ -82,19 +92,25 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 // GetCmdQueryConnectionChannels defines the command to query all the channels associated with a
 // connection
 func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "connections [connection-id]",
 		Short:   "Query all channels associated with a connection",
 		Long:    "Query all channels associated with a connection",
 		Example: fmt.Sprintf("%s query %s %s connections [connection-id]", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
 
+			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+
 			req := &types.QueryConnectionChannelsRequest{
 				Connection: args[0],
-				Req:        &query.PageRequest{},
+				Req: &query.PageRequest{
+					Offset: uint64(offset),
+					Limit:  uint64(limit),
+				},
 			}
 
 			res, err := queryClient.ConnectionChannels(context.Background(), req)
@@ -106,6 +122,10 @@ func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
+	return cmd
 }
 
 // GetCmdQueryChannelClientState defines the command to query a client state from a channel
@@ -137,20 +157,26 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 // GetCmdQueryPacketCommitments defines the command to query all packet commitments associated with
 // a channel
 func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "packet-commitments [port-id] [channel-id]",
 		Short:   "Query all packet commitments associated with a channel",
 		Long:    "Query all packet commitments associated with a channel",
 		Example: fmt.Sprintf("%s query %s %s packet-commitments [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 			queryClient := types.NewQueryClient(clientCtx)
+
+			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			req := &types.QueryPacketCommitmentsRequest{
 				PortID:    args[0],
 				ChannelID: args[1],
-				Req:       &query.PageRequest{},
+				Req: &query.PageRequest{
+					Offset: uint64(offset),
+					Limit:  uint64(limit),
+				},
 			}
 
 			res, err := queryClient.PacketCommitments(context.Background(), req)
@@ -162,6 +188,10 @@ func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
+	return cmd
 }
 
 // GetCmdQueryPacketCommitment defines the command to query a channel end
@@ -228,11 +258,17 @@ An unrelayed packet corresponds to:
 				seqs[i] = uint64(seqSlice[i])
 			}
 
+			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+
 			req := &types.QueryUnrelayedPacketsRequest{
 				PortID:    args[0],
 				ChannelID: args[1],
 				Sequences: seqs,
-				Req:       &query.PageRequest{},
+				Req: &query.PageRequest{
+					Offset: uint64(offset),
+					Limit:  uint64(limit),
+				},
 			}
 
 			res, err := queryClient.UnrelayedPackets(context.Background(), req)
@@ -245,6 +281,9 @@ An unrelayed packet corresponds to:
 		},
 	}
 	cmd.Flags().Int64Slice(flagSequences, []int64{}, "comma separated list of packet sequence numbers")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
 	return cmd
 }
 

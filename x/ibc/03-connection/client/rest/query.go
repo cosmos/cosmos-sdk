@@ -18,11 +18,10 @@ import (
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/connections", queryConnectionsHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}", RestConnectionID), queryConnectionHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc("/ibc/clients/connections", queryClientsConnectionsHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/connections", RestClientID), queryClientConnectionsHandlerFn(clientCtx)).Methods("GET")
 }
 
-func queryClientsConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
+func queryConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
@@ -65,30 +64,6 @@ func queryConnectionHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		clientCtx = clientCtx.WithHeight(int64(connRes.ProofHeight))
 		rest.PostProcessResponse(w, clientCtx, connRes)
-	}
-}
-
-func queryConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
-		if !ok {
-			return
-		}
-
-		queryClient := types.NewQueryClient(clientCtx)
-
-		req := &types.QueryClientsConnectionsRequest{
-			Req: &query.PageRequest{},
-		}
-
-		res, err := queryClient.ClientsConnections(context.Background(), req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		clientCtx = clientCtx.WithHeight(res.Height)
-		rest.PostProcessResponse(w, clientCtx, res)
 	}
 }
 

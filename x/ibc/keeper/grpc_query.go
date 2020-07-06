@@ -22,11 +22,6 @@ func (q Keeper) ClientConnections(c context.Context, req *connectiontypes.QueryC
 	return q.ConnectionKeeper.ClientConnections(c, req)
 }
 
-// ClientsConnections implements the IBC QueryServer interface
-func (q Keeper) ClientsConnections(c context.Context, req *connectiontypes.QueryClientsConnectionsRequest) (*connectiontypes.QueryClientsConnectionsResponse, error) {
-	return q.ConnectionKeeper.ClientsConnections(c, req)
-}
-
 // Channel implements the IBC QueryServer interface
 func (q Keeper) Channel(c context.Context, req *channeltypes.QueryChannelRequest) (*channeltypes.QueryChannelResponse, error) {
 	return q.ChannelKeeper.Channel(c, req)

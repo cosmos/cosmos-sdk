@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -121,7 +120,6 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 
 				req = &types.QueryConnectionsRequest{
 					Req: &query.PageRequest{
-						Key:        nil,
 						Limit:      3,
 						CountTotal: true,
 					},
@@ -210,93 +208,6 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(expPaths, res.ConnectionPaths)
-			} else {
-				suite.Require().Error(err)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestQueryClientsConnections() {
-	var (
-		req      *types.QueryClientsConnectionsRequest
-		expPaths = []*types.ConnectionPaths{}
-	)
-
-	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"empty request",
-			func() {
-				req = nil
-			},
-			false,
-		},
-		{
-			"empty pagination",
-			func() {
-				req = &types.QueryClientsConnectionsRequest{}
-			},
-			true,
-		},
-		{
-			"success, empty res",
-			func() {
-				expPaths = []*types.ConnectionPaths{}
-				req = &types.QueryClientsConnectionsRequest{
-					Req: &query.PageRequest{
-						Key:        nil,
-						Limit:      3,
-						CountTotal: true,
-					},
-				}
-			},
-			true,
-		},
-		{
-			"success",
-			func() {
-				clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
-				connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
-				connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
-				counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
-
-				err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), connA.ID, clientA, counterparty)
-				suite.Require().NoError(err)
-
-				expPaths = []*types.ConnectionPaths{
-					{ClientID: connA.ClientID, Paths: []string{connA.ID}},
-				}
-
-				req = &types.QueryClientsConnectionsRequest{
-					Req: &query.PageRequest{
-						Key:        nil,
-						Limit:      3,
-						CountTotal: true,
-					},
-				}
-			},
-			true,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
-
-			tc.malleate()
-
-			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
-
-			res, err := suite.chainA.QueryServer.ClientsConnections(ctx, req)
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(res)
-				suite.Require().Equal(expPaths, res.ConnectionsPaths)
 			} else {
 				suite.Require().Error(err)
 			}

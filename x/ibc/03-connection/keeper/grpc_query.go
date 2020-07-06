@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -96,46 +95,5 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 	return &types.QueryClientConnectionsResponse{
 		ConnectionPaths: clientConnectionPaths,
 		ProofHeight:     uint64(ctx.BlockHeight()),
-	}, nil
-}
-
-// ClientsConnections implements the Query/ClientsConnections gRPC method
-func (q Keeper) ClientsConnections(c context.Context, req *types.QueryClientsConnectionsRequest) (*types.QueryClientsConnectionsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	connectionsPaths := []*types.ConnectionPaths{}
-	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyClientStorePrefix)
-
-	res, err := query.Paginate(store, req.Req, func(key []byte, _ []byte) error {
-		keySplit := strings.Split(string(key), "/")
-		if keySplit[len(keySplit)-1] != "clientState" {
-			// continue if key is not from client state
-			return nil
-		}
-
-		clientStateID := keySplit[1]
-		paths, found := q.GetClientConnectionPaths(ctx, clientStateID)
-		if !found {
-			// continue when connection handshake is not initialized
-			return nil
-		}
-
-		connPaths := types.NewConnectionPaths(clientStateID, paths)
-		connectionsPaths = append(connectionsPaths, &connPaths)
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryClientsConnectionsResponse{
-		ConnectionsPaths: connectionsPaths,
-		Res:              res,
-		Height:           ctx.BlockHeight(),
 	}, nil
 }

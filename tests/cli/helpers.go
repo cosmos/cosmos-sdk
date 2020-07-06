@@ -74,7 +74,7 @@ func (f *Fixtures) AddGenesisAccount(address sdk.AccAddress, coins sdk.Coins, fl
 
 // GenTx is simd gentx
 func (f *Fixtures) GenTx(name string, flags ...string) {
-	cmd := fmt.Sprintf("%s gentx --name=%s --home=%s --home-client=%s --keyring-backend=test", f.SimdBinary, name, f.SimdHome, f.SimcliHome)
+	cmd := fmt.Sprintf("%s gentx --name=%s --home=%s --home-client=%s --keyring-backend=test --chain-id=%s", f.SimdBinary, name, f.SimdHome, f.SimcliHome, f.ChainID)
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
 

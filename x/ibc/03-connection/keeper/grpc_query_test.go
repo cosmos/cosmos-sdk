@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 			false,
 		},
 		{
-			"sucess",
+			"success",
 			func() {
 				counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 				expConnection = types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty, types.GetCompatibleVersions())
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 			false,
 		},
 		{
-			"sucess",
+			"success",
 			func() {
 				expPaths = []string{testConnectionIDA, testConnectionIDB}
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), testClientIDA, expPaths)

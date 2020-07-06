@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 			false,
 		},
 		{
-			"sucess",
+			"success",
 			func() {
 				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 				channelA := connA.NextTestChannel()
@@ -356,7 +356,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 			false,
 		},
 		{
-			"sucess",
+			"success",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 				expCommitment = []byte("hash")
@@ -619,7 +619,7 @@ func (suite *KeeperTestSuite) TestQueryNextSequenceReceive() {
 			false,
 		},
 		{
-			"sucess",
+			"success",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 				expSeq = 1

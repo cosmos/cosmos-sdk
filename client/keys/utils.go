@@ -5,8 +5,6 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
 	"gopkg.in/yaml.v2"
 
 	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -33,13 +31,13 @@ func getLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption
 	return cryptokeyring.NewLegacy(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }
 
-func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
+func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn, output string) {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
 		panic(err)
 	}
 
-	switch viper.Get(cli.OutputFlag) {
+	switch output {
 	case OutputFormatText:
 		printTextInfos(w, []cryptokeyring.KeyOutput{ko})
 
@@ -53,13 +51,13 @@ func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOut
 	}
 }
 
-func printInfos(w io.Writer, infos []cryptokeyring.Info) {
+func printInfos(w io.Writer, infos []cryptokeyring.Info, output string) {
 	kos, err := cryptokeyring.Bech32KeysOutput(infos)
 	if err != nil {
 		panic(err)
 	}
 
-	switch viper.Get(cli.OutputFlag) {
+	switch output {
 	case OutputFormatText:
 		printTextInfos(w, kos)
 

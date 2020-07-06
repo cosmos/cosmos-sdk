@@ -35,7 +35,12 @@ func Test_runExportCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now enter password
-	cmd.SetArgs([]string{"keyname1", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
 	mockIn.Reset("123456789\n123456789\n")
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
 	require.NoError(t, cmd.Execute())
 }

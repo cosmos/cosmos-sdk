@@ -15,6 +15,7 @@ import (
 
 func Test_runDeleteCmd(t *testing.T) {
 	cmd := DeleteKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
@@ -46,7 +47,11 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
-	cmd.SetArgs([]string{fakeKeyName1, fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
 	err = cmd.Execute()
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
@@ -55,7 +60,12 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now there is a confirmation
-	cmd.SetArgs([]string{fakeKeyName1, fmt.Sprintf("--%s=%s --%s=true", flags.FlagHome, kbHome, flagYes)})
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
 	require.NoError(t, cmd.Execute())
 
 	_, err = kb.Key(fakeKeyName1)
@@ -64,7 +74,12 @@ func Test_runDeleteCmd(t *testing.T) {
 	_, err = kb.Key(fakeKeyName2)
 	require.NoError(t, err)
 
-	cmd.SetArgs([]string{fakeKeyName2, fmt.Sprintf("--%s=%s --%s=true", flags.FlagHome, kbHome, flagYes)})
+	cmd.SetArgs([]string{
+		fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
 	require.NoError(t, cmd.Execute())
 
 	_, err = kb.Key(fakeKeyName2)

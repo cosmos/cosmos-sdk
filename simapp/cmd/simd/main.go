@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -24,9 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-const flagInvCheckPeriod = "inv-check-period"
-
-var invCheckPeriod uint
+var viperCfg = viper.New()
 
 func main() {
 	appCodec, cdc := simapp.MakeCodecs()
@@ -45,6 +44,9 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
+	rootCmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	viperCfg.BindPFlags(rootCmd.Flags())
+
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(ctx, cdc, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
@@ -54,49 +56,47 @@ func main() {
 			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultCLIHome,
 		),
 		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
-		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome),
+		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultCLIHome),
 		flags.NewCompletionCmd(rootCmd, true),
 		testnetCmd(ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
-		debug.Cmd(cdc))
+		debug.Cmd(cdc),
+	)
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
-	// prepare and add flags
-	executor := cli.PrepareBaseCmd(rootCmd, "GA", simapp.DefaultNodeHome)
-	rootCmd.PersistentFlags().UintVar(&invCheckPeriod, flagInvCheckPeriod,
-		0, "Assert registered invariants every N blocks")
-	err := executor.Execute()
-	if err != nil {
+	executor := cli.PrepareBaseCmd(rootCmd, "", simapp.DefaultNodeHome)
+	if err := executor.Execute(); err != nil {
 		panic(err)
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Application {
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts server.AppOptions) server.Application {
 	var cache sdk.MultiStorePersistentCache
 
-	if viper.GetBool(server.FlagInterBlockCache) {
+	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
 	}
 
 	skipUpgradeHeights := make(map[int64]bool)
-	for _, h := range viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	pruningOpts, err := server.GetPruningOptionsFromFlags()
+	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
 	if err != nil {
 		panic(err)
 	}
 
-	// TODO: Make sure custom pruning works.
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
-		viper.GetString(flags.FlagHome), invCheckPeriod,
+		cast.ToString(appOpts.Get(flags.FlagHome)),
+		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		baseapp.SetPruning(pruningOpts),
-		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
-		baseapp.SetHaltHeight(viper.GetUint64(server.FlagHaltHeight)),
-		baseapp.SetHaltTime(viper.GetUint64(server.FlagHaltTime)),
+		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
+		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
+		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
 		baseapp.SetInterBlockCache(cache),
+		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 	)
 }
 
@@ -107,12 +107,13 @@ func exportAppStateAndTMValidators(
 	var simApp *simapp.SimApp
 	if height != -1 {
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1))
-		err := simApp.LoadHeight(height)
-		if err != nil {
+
+		if err := simApp.LoadHeight(height); err != nil {
 			return nil, nil, nil, err
 		}
 	} else {
 		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1))
 	}
+
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

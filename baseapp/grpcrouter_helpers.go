@@ -4,6 +4,8 @@ import (
 	gocontext "context"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
@@ -22,8 +24,10 @@ type QueryServiceTestHelper struct {
 
 // NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
 // the provided sdk.Context
-func NewQueryServerTestHelper(ctx sdk.Context) *QueryServiceTestHelper {
-	return &QueryServiceTestHelper{GRPCQueryRouter: NewGRPCQueryRouter(), ctx: ctx}
+func NewQueryServerTestHelper(ctx sdk.Context, anyUnpacker types.AnyUnpacker) *QueryServiceTestHelper {
+	qrt := NewGRPCQueryRouter()
+	qrt.SetAnyUnpacker(anyUnpacker)
+	return &QueryServiceTestHelper{GRPCQueryRouter: qrt, ctx: ctx}
 }
 
 // Invoke implements the grpc ClientConn.Invoke method
@@ -36,12 +40,22 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 	if err != nil {
 		return err
 	}
-	res, err := querier(q.ctx, abci.RequestQuery{Data: reqBz})
 
+	res, err := querier(q.ctx, abci.RequestQuery{Data: reqBz})
 	if err != nil {
 		return err
 	}
-	return protoCodec.Unmarshal(res.Value, reply)
+
+	err = protoCodec.Unmarshal(res.Value, reply)
+	if err != nil {
+		return err
+	}
+
+	if q.anyUnpacker != nil {
+		return types.UnpackInterfaces(reply, q.anyUnpacker)
+	}
+
+	return nil
 }
 
 // NewStream implements the grpc ClientConn.NewStream method

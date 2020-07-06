@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -33,8 +33,8 @@ func NewChannelOpenInitCmd(clientCtx client.Context) *cobra.Command {
 			counterpartyPortID := args[2]
 			counterpartyChannelID := args[3]
 			hops := strings.Split(args[4], "/")
-			order := channelOrder()
-			version := viper.GetString(FlagIBCVersion)
+			order := channelOrder(cmd.Flags())
+			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
 			msg := types.NewMsgChannelOpenInit(
 				portID, channelID, version, order, hops,
@@ -68,8 +68,10 @@ func NewChannelOpenTryCmd(clientCtx client.Context) *cobra.Command {
 			counterpartyPortID := args[2]
 			counterpartyChannelID := args[3]
 			hops := strings.Split(args[4], "/")
-			order := channelOrder()
-			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
+			order := channelOrder(cmd.Flags())
+
+			// TODO: Differentiate between channel and counterparty versions.
+			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
 			proofInit, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
@@ -93,6 +95,7 @@ func NewChannelOpenTryCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
 	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
 
@@ -110,7 +113,9 @@ func NewChannelOpenAckCmd(clientCtx client.Context) *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
-			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
+
+			// TODO: Differentiate between channel and counterparty versions.
+			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
 			proofTry, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
@@ -132,7 +137,9 @@ func NewChannelOpenAckCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
 	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
+
 	return cmd
 }
 
@@ -226,9 +233,10 @@ func NewChannelCloseConfirmCmd(clientCtx client.Context) *cobra.Command {
 	}
 }
 
-func channelOrder() types.Order {
-	if viper.GetBool(FlagOrdered) {
+func channelOrder(fs *pflag.FlagSet) types.Order {
+	if ordered, _ := fs.GetBool(FlagOrdered); ordered {
 		return types.ORDERED
 	}
+
 	return types.UNORDERED
 }

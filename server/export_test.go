@@ -3,14 +3,13 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -62,12 +61,8 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
-
-	viper.Set(flags.FlagHome, tempDir)
-	err = cmd.RunE(cmd, []string{})
-	if err != nil {
-		t.Errorf("error: %s", err)
-	}
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
+	require.NoError(t, cmd.Execute())
 
 	var exportedGenDoc tmtypes.GenesisDoc
 	err = app.Codec().UnmarshalJSON(output.Bytes(), &exportedGenDoc)

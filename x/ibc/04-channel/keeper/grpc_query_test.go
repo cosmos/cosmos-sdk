@@ -14,7 +14,6 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 	var (
 		req        *types.QueryChannelRequest
 		expChannel types.Channel
-		found      bool
 	)
 
 	testCases := []struct {
@@ -62,13 +61,11 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 			"success",
 			func() {
 				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-				channelA := connA.NextTestChannel()
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
 				suite.Require().NoError(err)
 
-				expChannel, found = suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
-				suite.Require().True(found)
+				expChannel = suite.chainA.GetChannel(channelA)
 
 				req = &types.QueryChannelRequest{
 					PortID:    channelA.PortID,
@@ -143,11 +140,11 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 
 				channel0 := types.NewChannel(
 					types.OPEN, types.UNORDERED,
-					counterparty0, []string{connB0.ID}, ibctesting.ChannelVersion,
+					counterparty0, []string{connA0.ID}, ibctesting.ChannelVersion,
 				)
 				channel1 := types.NewChannel(
 					types.OPEN, types.ORDERED,
-					counterparty1, []string{connB0.ID}, ibctesting.ChannelVersion,
+					counterparty1, []string{connA0.ID}, ibctesting.ChannelVersion,
 				)
 
 				idCh0 := types.NewIdentifiedChannel(testchannel0.PortID, testchannel0.ID, channel0)
@@ -234,11 +231,11 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 				channel0 := types.NewChannel(
 					types.OPEN, types.UNORDERED,
-					counterparty0, []string{connB0.ID}, ibctesting.ChannelVersion,
+					counterparty0, []string{connA0.ID}, ibctesting.ChannelVersion,
 				)
 				channel1 := types.NewChannel(
 					types.OPEN, types.ORDERED,
-					counterparty1, []string{connB0.ID}, ibctesting.ChannelVersion,
+					counterparty1, []string{connA0.ID}, ibctesting.ChannelVersion,
 				)
 
 				idCh0 := types.NewIdentifiedChannel(testchannel0.PortID, testchannel0.ID, channel0)
@@ -260,7 +257,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 		{
 			"success, empty response",
 			func() {
-				_, _, _, _, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				suite.coordinator.Setup(suite.chainA, suite.chainB)
 				expChannels = []*types.IdentifiedChannel{}
 				req = &types.QueryConnectionChannelsRequest{
 					Connection: "externalConnID",
@@ -441,17 +438,22 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 			"success",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
-				commitment := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
-				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, commitment.Hash)
 
-				expCommitments = []*types.PacketAckCommitment{&commitment}
+				expCommitments = make([]*types.PacketAckCommitment, 9)
+
+				for i := uint64(0); i < 9; i++ {
+					commitment := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, i, []byte(fmt.Sprintf("hash_%d", i)))
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), commitment.PortID, commitment.ChannelID, commitment.Sequence, commitment.Hash)
+					expCommitments[i] = &commitment
+				}
+
 				req = &types.QueryPacketCommitmentsRequest{
 					PortID:    channelA.PortID,
 					ChannelID: channelA.ID,
 					Req: &query.PageRequest{
 						Key:        nil,
-						Limit:      1,
-						CountTotal: false,
+						Limit:      11,
+						CountTotal: true,
 					},
 				}
 			},

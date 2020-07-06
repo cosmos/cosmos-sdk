@@ -392,6 +392,185 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
+	var (
+		req            *types.QueryPacketCommitmentsRequest
+		expCommitments = []*types.PacketAckCommitment{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid ID",
+			func() {
+				req = &types.QueryPacketCommitmentsRequest{
+					PortID:    "",
+					ChannelID: "test-channel-id",
+				}
+			},
+			false,
+		},
+		{
+			"success, empty res",
+			func() {
+				expCommitments = []*types.PacketAckCommitment{}
+
+				req = &types.QueryPacketCommitmentsRequest{
+					PortID:    "test-port-id",
+					ChannelID: "test-channel-id",
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      2,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+		{
+			"success",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				commitment := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, commitment.Hash)
+
+				expCommitments = []*types.PacketAckCommitment{&commitment}
+				req = &types.QueryPacketCommitmentsRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      1,
+						CountTotal: false,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.PacketCommitments(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expCommitments, res.Commitments)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
+	var (
+		req    *types.QueryUnrelayedPacketsRequest
+		expSeq = []uint64{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid port ID",
+			func() {
+				req = &types.QueryUnrelayedPacketsRequest{
+					PortID:    "",
+					ChannelID: "test-channel-id",
+				}
+			},
+			false,
+		},
+		{
+			"invalid channel ID",
+			func() {
+				req = &types.QueryUnrelayedPacketsRequest{
+					PortID:    "test-port-id",
+					ChannelID: "",
+				}
+			},
+			false,
+		},
+		{
+			"invalid seq",
+			func() {
+				req = &types.QueryUnrelayedPacketsRequest{
+					PortID:    "test-port-id",
+					ChannelID: "test-channel-id",
+					Sequences: []uint64{0},
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, ack.Hash)
+
+				expSeq = []uint64{1}
+				req = &types.QueryUnrelayedPacketsRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+					Sequences: []uint64{1},
+					Req: &query.PageRequest{
+						Key:        nil,
+						Limit:      1,
+						CountTotal: false,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.UnrelayedPackets(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expSeq, res.Packets)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestQueryNextSequenceReceive() {
 	var (
 		req    *types.QueryNextSequenceReceiveRequest

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -38,8 +37,8 @@ func NewTransferTxCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			timeoutHeight := viper.GetUint64(flagTimeoutHeight)
-			timeoutTimestamp := viper.GetUint64(flagTimeoutHeight)
+			timeoutHeight, _ := cmd.Flags().GetUint64(flagTimeoutHeight)
+			timeoutTimestamp, _ := cmd.Flags().GetUint64(flagTimeoutHeight)
 
 			msg := types.NewMsgTransfer(
 				srcPort, srcChannel, coins, sender, receiver, timeoutHeight, timeoutTimestamp,
@@ -51,7 +50,9 @@ func NewTransferTxCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
 	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultAbsolutePacketTimeoutHeight, "Absolute timeout block height. The timeout is disabled when set to 0.")
 	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultAbsolutePacketTimeoutTimestamp, "Absolute timeout timestamp in nanoseconds. The timeout is disabled when set to 0.")
+
 	return cmd
 }

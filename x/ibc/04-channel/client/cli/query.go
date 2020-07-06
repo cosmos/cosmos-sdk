@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -29,7 +28,7 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			channelRes, err := utils.QueryChannel(clientCtx, portID, channelID, prove)
 			if err != nil {

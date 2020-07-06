@@ -4,11 +4,11 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/stretchr/testify/require"
 
@@ -111,7 +111,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 	tx, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
-	require.Empty(t, tx.GetTx().(ante.SigVerifiableTx).GetSignatures())
+	require.Empty(t, tx.GetTx().(signing.SigVerifiableTx).GetSignatures())
 }
 
 func TestSign(t *testing.T) {

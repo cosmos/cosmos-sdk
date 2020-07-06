@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/pflag"
+
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -72,6 +74,76 @@ func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 	txbldr = txbldr.WithGasPrices(viper.GetString(flags.FlagGasPrices))
 
 	return txbldr
+}
+
+// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters extracted from
+// FlagSet (It should deprecate NewTxBuilderFromCLI).
+func NewTxBuilderFromFlagSet(input io.Reader, fs *pflag.FlagSet) (TxBuilder, error) {
+	backend, err := fs.GetString(flags.FlagKeyringBackend)
+	if err != nil {
+		return TxBuilder{}, err
+	}
+
+	home, err := fs.GetString(flags.FlagHome)
+	if err != nil {
+		return TxBuilder{}, err
+	}
+
+	kb, err := keyring.New(sdk.KeyringServiceName(), backend, home, input)
+	if err != nil {
+		return TxBuilder{}, err
+	}
+
+	accNum, err := fs.GetUint64(flags.FlagAccountNumber)
+	if err != nil {
+		return TxBuilder{}, err
+	}
+
+	seq, err := fs.GetUint64(flags.FlagSequence)
+	if err != nil {
+		return TxBuilder{}, nil
+	}
+
+	gasAdjustment, err := fs.GetFloat64(flags.FlagGasAdjustment)
+	if err != nil {
+		return TxBuilder{}, nil
+	}
+
+	chainID, err := fs.GetString(flags.FlagChainID)
+	if err != nil {
+		return TxBuilder{}, nil
+	}
+
+	memo, err := fs.GetString(flags.FlagMemo)
+	if err != nil {
+		return TxBuilder{}, nil
+	}
+
+	fees, err := fs.GetString(flags.FlagFees)
+	if err != nil {
+		return TxBuilder{}, nil
+	}
+
+	gasPrices, err := fs.GetString(flags.FlagGasPrices)
+	if err != nil {
+		return TxBuilder{}, nil
+	}
+
+	txbldr := TxBuilder{
+		keybase:            kb,
+		accountNumber:      accNum,
+		sequence:           seq,
+		gas:                flags.GasFlagVar.Gas,
+		gasAdjustment:      gasAdjustment,
+		simulateAndExecute: flags.GasFlagVar.Simulate,
+		chainID:            chainID,
+		memo:               memo,
+	}
+
+	txbldr = txbldr.WithFees(fees)
+	txbldr = txbldr.WithGasPrices(gasPrices)
+
+	return txbldr, nil
 }
 
 // TxEncoder returns the transaction encoder

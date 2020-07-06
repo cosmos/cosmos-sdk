@@ -126,9 +126,11 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 
 			// Set flags for creating gentx
-			// TODO study this case.
-			viper.Set(flags.FlagHome, clientHome)
-			cli.PrepareFlagsForTxCreateValidator(config, nodeID, genDoc.ChainID, valPubKey)
+			//viper.Set(flags.FlagHome, clientHome)
+			createValCfg, err := cli.PrepareConfigForTxCreateValidator(config, cmd.Flags(), nodeID, genDoc.ChainID, valPubKey)
+			if err != nil {
+				return errors.Wrap(err, "error creating configuration to create validator msg")
+			}
 
 			// Fetch the amount of coins staked
 			amount, err := cmd.Flags().GetString(cli.FlagAmount)
@@ -145,7 +147,12 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			txBldr, err := authtypes.NewTxBuilderFromFlagSet(inBuf, cmd.Flags())
+			if err != nil {
+				return errors.Wrap(err, "error creating tx builder")
+			}
+			txBldr = txBldr.WithTxEncoder(authclient.GetTxEncoder(cdc))
+
 			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			// Set the generate-only flag here after the CLI context has

@@ -484,58 +484,6 @@ func PrepareConfigForTxCreateValidator(
 	return c, nil
 }
 
-// prepare flags in config
-func PrepareFlagsForTxCreateValidator(
-	config *cfg.Config, nodeID, chainID string, valPubKey crypto.PubKey,
-) {
-	ip := viper.GetString(FlagIP)
-	if ip == "" {
-		_, _ = fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
-			"the tx's memo field will be unset")
-	}
-
-	website := viper.GetString(FlagWebsite)
-	securityContact := viper.GetString(FlagSecurityContact)
-	details := viper.GetString(FlagDetails)
-	identity := viper.GetString(FlagIdentity)
-
-	viper.Set(flags.FlagChainID, chainID)
-	viper.Set(flags.FlagFrom, viper.GetString(flags.FlagName))
-	viper.Set(FlagNodeID, nodeID)
-	viper.Set(FlagIP, ip)
-	viper.Set(flags.FlagTrustNode, true)
-	viper.Set(FlagPubKey, sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey))
-	viper.Set(FlagMoniker, config.Moniker)
-	viper.Set(FlagWebsite, website)
-	viper.Set(FlagSecurityContact, securityContact)
-	viper.Set(FlagDetails, details)
-	viper.Set(FlagIdentity, identity)
-
-	if config.Moniker == "" {
-		viper.Set(FlagMoniker, viper.GetString(flags.FlagName))
-	}
-
-	if viper.GetString(FlagAmount) == "" {
-		viper.Set(FlagAmount, defaultAmount)
-	}
-
-	if viper.GetString(FlagCommissionRate) == "" {
-		viper.Set(FlagCommissionRate, defaultCommissionRate)
-	}
-
-	if viper.GetString(FlagCommissionMaxRate) == "" {
-		viper.Set(FlagCommissionMaxRate, defaultCommissionMaxRate)
-	}
-
-	if viper.GetString(FlagCommissionMaxChangeRate) == "" {
-		viper.Set(FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
-	}
-
-	if viper.GetString(FlagMinSelfDelegation) == "" {
-		viper.Set(FlagMinSelfDelegation, defaultMinSelfDelegation)
-	}
-}
-
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
 func BuildCreateValidatorMsg(clientCtx client.Context, txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)

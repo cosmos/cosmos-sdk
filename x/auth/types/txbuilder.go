@@ -54,6 +54,7 @@ func NewTxBuilder(
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
+// Deprecated in favor of NewTxBuilderFromFlagSet
 func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {

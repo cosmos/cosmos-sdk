@@ -111,7 +111,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// QueryInflationRequest is the request type for the Query/Params RPC method
+// QueryInflationRequest is the request type for the Query/Inflation RPC method
 type QueryInflationRequest struct {
 }
 
@@ -148,7 +148,7 @@ func (m *QueryInflationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryInflationRequest proto.InternalMessageInfo
 
-// QueryInflationResponse is the response type for the Query/Params RPC method
+// QueryInflationResponse is the response type for the Query/Inflation RPC method
 type QueryInflationResponse struct {
 	Inflation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation"`
 }
@@ -186,7 +186,7 @@ func (m *QueryInflationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryInflationResponse proto.InternalMessageInfo
 
-// QueryAnnualProvisionsRequest is the request type for the Query/Params RPC method
+// QueryAnnualProvisionsRequest is the request type for the Query/AnnualProvisions RPC method
 type QueryAnnualProvisionsRequest struct {
 }
 
@@ -223,7 +223,7 @@ func (m *QueryAnnualProvisionsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAnnualProvisionsRequest proto.InternalMessageInfo
 
-// QueryAnnualProvisionsResponse is the response type for the Query/Params RPC method
+// QueryAnnualProvisionsResponse is the response type for the Query/AnnualProvisions RPC method
 type QueryAnnualProvisionsResponse struct {
 	AnnualProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"annual_provisions"`
 }

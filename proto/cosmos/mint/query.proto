@@ -26,18 +26,18 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryInflationRequest is the request type for the Query/Params RPC method
+// QueryInflationRequest is the request type for the Query/Inflation RPC method
 message QueryInflationRequest { }
 
-// QueryInflationResponse is the response type for the Query/Params RPC method
+// QueryInflationResponse is the response type for the Query/Inflation RPC method
 message QueryInflationResponse {
   bytes inflation = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
-// QueryAnnualProvisionsRequest is the request type for the Query/Params RPC method
+// QueryAnnualProvisionsRequest is the request type for the Query/AnnualProvisions RPC method
 message QueryAnnualProvisionsRequest { }
 
-// QueryAnnualProvisionsResponse is the response type for the Query/Params RPC method
+// QueryAnnualProvisionsResponse is the response type for the Query/AnnualProvisions RPC method
 message QueryAnnualProvisionsResponse {
   bytes annual_provisions = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

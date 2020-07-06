@@ -43,7 +43,7 @@ func TestVerifySignature(t *testing.T) {
 	acc, err := ante.GetSignerAcc(ctx, app.AccountKeeper, addr)
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr, balances))
 
-	msgs := []sdk.Msg{types.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	signerData := signing.SignerData{
 		ChainID:         chainId,
@@ -67,7 +67,7 @@ func TestVerifySignature(t *testing.T) {
 	pkSet := []crypto.PubKey{pubKey, pubKey1}
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
 	multisignature := multisig.NewMultisig(2)
-	msgs = []sdk.Msg{types.NewTestMsg(addr, addr1)}
+	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}
 	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence,
 		fee, msgs, memo)
 

@@ -4,14 +4,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-func NewTestMsg(addrs ...sdk.AccAddress) *testdata.TestMsg {
-	return testdata.NewTestMsg(addrs...)
-}
 
 func NewTestStdFee() StdFee {
 	return NewStdFee(100000,

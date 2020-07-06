@@ -34,7 +34,7 @@ func TestDirectModeHandler(t *testing.T) {
 	txBuilder := txGen.NewTxBuilder()
 
 	memo := "sometestmemo"
-	msgs := []sdk.Msg{authtypes.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 
 	pk, err := pubKeyCdc.Encode(pubkey)
 	require.NoError(t, err)

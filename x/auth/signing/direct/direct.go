@@ -26,7 +26,7 @@ type ModeHandler struct{}
 var _ signing.SignModeHandler = ModeHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
-func (h ModeHandler) DefaultMode() signingtypes.SignMode {
+func (ModeHandler) DefaultMode() signingtypes.SignMode {
 	return signingtypes.SignMode_SIGN_MODE_DIRECT
 }
 

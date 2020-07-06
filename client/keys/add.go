@@ -288,12 +288,12 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 }
 
 func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string) error {
-	output := viper.Get(cli.OutputFlag)
+	output, _ := cmd.Flags().GetString(cli.OutputFlag)
 
 	switch output {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput)
+		printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput, output)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {

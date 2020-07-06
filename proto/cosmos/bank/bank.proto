@@ -10,7 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 // Params defines the set of bank parameters.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  repeated bank.SendEnabled send_enabled = 1[
+  repeated SendEnabled send_enabled = 1[
     (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\""
   ];
   bool default_send_enabled = 2[

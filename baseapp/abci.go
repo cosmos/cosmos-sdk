@@ -326,12 +326,20 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to decode tx"))
 			}
 
-			gInfo, _, _ := app.Simulate(txBytes, tx)
+			gInfo, res, err := app.Simulate(txBytes, tx)
+			if err != nil {
+				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to simulate tx"))
+			}
+
+			simRes := sdk.SimulationResponse{
+				GasInfo: gInfo,
+				Result:  res,
+			}
 
 			return abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     codec.Cdc.MustMarshalBinaryLengthPrefixed(gInfo.GasUsed),
+				Value:     codec.Cdc.MustMarshalBinaryBare(simRes),
 			}
 
 		case "version":

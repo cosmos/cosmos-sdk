@@ -60,6 +60,10 @@ pruning setting `syncable` used `KeepEvery:100`.
   0.38.5, as doing so may cause data loss and data corruption.
 * Otherwise, consider syncing the node from scratch with 0.38.5.
 
+### API Breaking Changes
+
+* (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and `Result` from the execution.
+
 ### Improvements
 
 * (deps) Bump Tendermint version to [v0.33.5](https://github.com/tendermint/tendermint/releases/tag/v0.33.5)

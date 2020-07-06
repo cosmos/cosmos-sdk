@@ -17,7 +17,7 @@ type GasInfo struct {
 	// GasWanted is the maximum units of work we allow this tx to perform.
 	GasWanted uint64
 
-	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
+	// GasUsed is the amount of gas actually consumed.
 	GasUsed uint64
 }
 
@@ -33,6 +33,13 @@ type Result struct {
 	// Events contains a slice of Event objects that were emitted during message or
 	// handler execution.
 	Events Events
+}
+
+// SimulationResponse defines the response generated when a transaction is successfully
+// simulated by the Baseapp.
+type SimulationResponse struct {
+	GasInfo
+	Result *Result
 }
 
 // ABCIMessageLogs represents a slice of ABCIMessageLog.

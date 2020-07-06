@@ -107,7 +107,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
 
-			proposal, err := parseSubmitProposalFlags()
+			proposal, err := parseSubmitProposalFlags(cmd.Flags())
 			if err != nil {
 				return err
 			}

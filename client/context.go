@@ -7,8 +7,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/spf13/pflag"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/pkg/errors"
@@ -89,100 +87,6 @@ func NewContext() Context { return NewContextWithFrom(viper.GetString(flags.Flag
 // from the command line using Viper.
 func NewContextWithInput(input io.Reader) Context {
 	return NewContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
-}
-
-// Context function With FlagSet functions will deprecate old new context that depend on
-// viper.
-// TODO after viper dependency is removed this functions should be the only one that are called.
-
-// NewContextWithFsAndInput return an initialized context from flagset and input.
-func NewContextWithFsAndInput(fs *pflag.FlagSet, input io.Reader) (Context, error) {
-	from, err := fs.GetString(flags.FlagFrom)
-	if err != nil {
-		return Context{}, err
-	}
-
-	return NewContextWithFsInputAndFrom(fs, input, from)
-}
-
-func NewContextWithFsInputAndFrom(fs *pflag.FlagSet, input io.Reader, from string) (Context, error) {
-	ctx := Context{}
-	return ctx.InitWithFsInputAndFrom(fs, input, from)
-}
-
-func (ctx Context) InitWithFsInputAndFrom(fs *pflag.FlagSet, input io.Reader, from string) (Context, error) {
-	input = bufio.NewReader(input)
-
-	var (
-		nodeURI string
-		rpc     rpcclient.Client
-		err     error
-	)
-
-	offline, _ := fs.GetBool(flags.FlagOffline)
-	if !offline {
-		nodeURI, _ = fs.GetString(flags.FlagNode)
-		if nodeURI != "" {
-			rpc, err = rpchttp.New(nodeURI, "/websocket")
-			if err != nil {
-				fmt.Printf("failted to get client: %v\n", err)
-				os.Exit(1)
-			}
-		}
-	}
-
-	trustNode, _ := fs.GetBool(flags.FlagTrustNode)
-
-	ctx.Client = rpc
-	ctx.ChainID, _ = fs.GetString(flags.FlagChainID)
-	ctx.Input = input
-	ctx.Output = os.Stdout
-	ctx.NodeURI = nodeURI
-	ctx.From, _ = fs.GetString(flags.FlagFrom)
-	ctx.OutputFormat, _ = fs.GetString(cli.OutputFlag)
-	ctx.Height, _ = fs.GetInt64(flags.FlagHeight)
-	ctx.TrustNode = trustNode
-	ctx.UseLedger, _ = fs.GetBool(flags.FlagUseLedger)
-	ctx.BroadcastMode, _ = fs.GetString(flags.FlagBroadcastMode)
-	ctx.Simulate, _ = fs.GetBool(flags.FlagDryRun)
-	ctx.Offline = offline
-	ctx.SkipConfirm, _ = fs.GetBool(flags.FlagSkipConfirmation)
-	ctx.HomeDir, _ = fs.GetString(flags.FlagHome)
-	ctx.GenerateOnly, _ = fs.GetBool(flags.FlagGenerateOnly)
-
-	backend, _ := fs.GetString(flags.FlagKeyringBackend)
-	if len(backend) == 0 {
-		backend = keyring.BackendMemory
-	}
-
-	kr, err := newKeyringFromFlags(ctx, backend)
-	if err != nil {
-		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
-	}
-
-	fromAddress, fromName, err := GetFromFields(kr, from, ctx.GenerateOnly)
-	if err != nil {
-		fmt.Printf("failed to get from fields: %v\n", err)
-		os.Exit(1)
-	}
-
-	ctx.Keyring = kr
-	ctx.FromAddress = fromAddress
-	ctx.FromName = fromName
-
-	if offline {
-		return ctx, nil
-	}
-
-	// create a verifier for the specific chain ID and RPC client
-	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && !trustNode {
-		fmt.Printf("failed to create verifier: %s\n", err)
-		os.Exit(1)
-	}
-
-	ctx.Verifier = verifier
-	return ctx, nil
 }
 
 // InitWithInputAndFrom returns a new Context re-initialized from an existing

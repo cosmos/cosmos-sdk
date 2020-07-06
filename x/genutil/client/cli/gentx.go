@@ -128,11 +128,15 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 			txBldr = txBldr.WithTxEncoder(authclient.GetTxEncoder(cdc))
 
-			clientCtx, err := client.NewContextWithFsAndInput(cmd.Flags(), inBuf)
+			from, _ := cmd.Flags().GetString(flags.FlagFrom)
+			fromAddress, _, err := client.GetFromFields(txBldr.Keybase(), from, false)
 			if err != nil {
-				return errors.Wrap(err, "error creating context")
+				return errors.Wrap(err, "error getting from address")
 			}
-			clientCtx = clientCtx.WithCodec(cdc).WithJSONMarshaler(cdc)
+
+			clientCtx := client.Context{}.
+				WithInput(inBuf).WithCodec(cdc).WithJSONMarshaler(cdc).
+				WithFromAddress(fromAddress)
 
 			// create a 'create-validator' message
 			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txBldr, true)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -21,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var viperCfg = viper.New()
@@ -50,8 +52,8 @@ func main() {
 		genutilcli.CollectGenTxsCmd(ctx, cdc, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(ctx, cdc),
 		genutilcli.GenTxCmd(
-			ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{},
-			simapp.DefaultNodeHome, simapp.DefaultCLIHome,
+			ctx, cdc, simapp.ModuleBasics, staking.AppModuleBasic{},
+			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultCLIHome,
 		),
 		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
 		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultCLIHome),
@@ -68,32 +70,33 @@ func main() {
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, v *viper.Viper) server.Application {
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts server.AppOptions) server.Application {
 	var cache sdk.MultiStorePersistentCache
 
-	if v.GetBool(server.FlagInterBlockCache) {
+	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
 	}
 
 	skipUpgradeHeights := make(map[int64]bool)
-	for _, h := range v.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	pruningOpts, err := server.GetPruningOptionsFromFlags(v)
+	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
 	if err != nil {
 		panic(err)
 	}
 
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
-		v.GetString(flags.FlagHome), v.GetUint(server.FlagInvCheckPeriod),
+		cast.ToString(appOpts.Get(flags.FlagHome)),
+		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		baseapp.SetPruning(pruningOpts),
-		baseapp.SetMinGasPrices(v.GetString(server.FlagMinGasPrices)),
-		baseapp.SetHaltHeight(v.GetUint64(server.FlagHaltHeight)),
-		baseapp.SetHaltTime(v.GetUint64(server.FlagHaltTime)),
+		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
+		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
+		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
 		baseapp.SetInterBlockCache(cache),
-		baseapp.SetTrace(v.GetBool(server.FlagTrace)),
+		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 	)
 }
 

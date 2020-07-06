@@ -26,8 +26,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// var viperCfg = viper.New()
-
 // Tendermint full-node start flags
 const (
 	flagWithTendermint     = "with-tendermint"
@@ -94,7 +92,7 @@ which accepts a path for the resulting pprof file.
 		},
 	}
 
-	// core flags for the ABCI application
+	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
@@ -111,8 +109,9 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 
+	// Bind flags to the Context's Viper so the app construction can set options
+	// accordingly.
 	ctx.Viper.BindPFlags(cmd.Flags())
-	ctx.Viper.BindPFlags(cmd.PersistentFlags())
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -122,12 +121,13 @@ which accepts a path for the resulting pprof file.
 func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	addr := ctx.Viper.GetString(flagAddress)
 	home := ctx.Viper.GetString(flags.FlagHome)
-	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 
 	db, err := openDB(home)
 	if err != nil {
 		return err
 	}
+
+	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
@@ -148,7 +148,6 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	}
 
 	tmos.TrapSignal(ctx.Logger, func() {
-		// cleanup
 		err = svr.Stop()
 		if err != nil {
 			tmos.Exit(err.Error())
@@ -182,8 +181,6 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 	}
 
 	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
-
-	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
@@ -211,9 +208,6 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			return err
 		}
 
-		// TODO: Since this is running in process, do we need to provide a verifier
-		// and set TrustNode=false? If so, we need to add additional logic that
-		// waits for a block to be committed first before starting the API server.
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).

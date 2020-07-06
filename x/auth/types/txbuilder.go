@@ -79,7 +79,7 @@ func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters extracted from
 // FlagSet (It should deprecate NewTxBuilderFromCLI).
-func NewTxBuilderFromFlagSet(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
+func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
 	backend, _ := fs.GetString(flags.FlagKeyringBackend)
 	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
 	accNum, _ := fs.GetUint64(flags.FlagAccountNumber)

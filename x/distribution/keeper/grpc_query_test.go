@@ -224,7 +224,7 @@ func TestGRPCCommunityPool(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	pool, := queryClient.CommunityPool(gocontext.Background(), &types.QueryCommunityPoolRequest{})
+	pool, err := queryClient.CommunityPool(gocontext.Background(), &types.QueryCommunityPoolRequest{})
 	require.NoError(t, err)
 	require.Empty(t, pool)
 }

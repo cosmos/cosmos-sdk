@@ -67,7 +67,7 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
-	if connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
 		return nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",
@@ -145,7 +145,7 @@ func (k Keeper) ChanOpenTry(
 		)
 	}
 
-	if connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
 		return nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",

@@ -161,6 +161,22 @@ func VerifyProposedFeatureSet(proposedVersion, supportedVersion string) bool {
 	return true
 }
 
+// VerifySupportedFeature takes in a version string and feature string and returns
+// true if the feature is supported by the version and false otherwise.
+func VerifySupportedFeature(version, feature string) bool {
+	_, featureSet, err := UnpackVersion(version)
+	if err != nil {
+		return false
+	}
+
+	for _, f := range featureSet {
+		if f == feature {
+			return true
+		}
+	}
+	return false
+}
+
 // contains returns true if the provided string element exists within the
 // string set.
 func contains(elem string, set []string) bool {

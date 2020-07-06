@@ -16,6 +16,7 @@ import (
 
 func Test_runImportCmd(t *testing.T) {
 	cmd := ImportKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	// Now add a temporary keybase
@@ -40,8 +41,11 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 `
 	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
 
-	// Now enter password
 	mockIn.Reset("123456789\n")
-	cmd.SetArgs([]string{"keyname1", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
+	cmd.SetArgs([]string{
+		"keyname1", keyfile,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
 	require.NoError(t, cmd.Execute())
 }

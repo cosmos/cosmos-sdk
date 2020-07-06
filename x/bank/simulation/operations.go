@@ -137,15 +137,6 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		inputs := make([]types.Input, r.Intn(3)+1)
 		outputs := make([]types.Output, r.Intn(3)+1)
 
-		// Check send_enabled status of each input's coin denoms
-		for _, i := range inputs {
-			for _, c := range i.Coins {
-				if !bk.GetSendEnabled(ctx, c.Denom) {
-					return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, fmt.Sprintf("%s transfers are currently disabled", c.Denom)), nil, nil
-				}
-			}
-		}
-
 		// collect signer privKeys
 		privs := make([]crypto.PrivKey, len(inputs))
 
@@ -175,6 +166,13 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			// set next input and accumulate total sent coins
 			inputs[i] = types.NewInput(simAccount.Address, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
+		}
+
+		// Check send_enabled status of each input's coin denoms
+		for _, coin := range totalSentCoins {
+			if !bk.GetSendEnabled(ctx, coin.Denom) {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, fmt.Sprintf("%s transfers are currently disabled", coin.Denom)), nil, nil
+			}
 		}
 
 		for o := range outputs {

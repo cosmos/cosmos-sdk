@@ -15,12 +15,14 @@ import (
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper defines the IBC fungible transfer keeper
 type Keeper struct {
-	storeKey sdk.StoreKey
-	cdc      codec.Marshaler
+	cdc        codec.Marshaler
+	storeKey   sdk.StoreKey
+	paramSpace paramtypes.Subspace
 
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
@@ -31,7 +33,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey,
+	cdc codec.Marshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
@@ -41,9 +43,15 @@ func NewKeeper(
 		panic("the IBC transfer module account has not been set")
 	}
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
-		storeKey:      key,
 		cdc:           cdc,
+		storeKey:      key,
+		paramSpace:    paramSpace,
 		channelKeeper: channelKeeper,
 		portKeeper:    portKeeper,
 		authKeeper:    authKeeper,

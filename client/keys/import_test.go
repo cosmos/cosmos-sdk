@@ -1,11 +1,11 @@
 package keys
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -15,15 +15,14 @@ import (
 )
 
 func Test_runImportCmd(t *testing.T) {
-	importKeyCommand := ImportKeyCommand()
-	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
+	cmd := ImportKeyCommand()
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanUp)
-	viper.Set(flags.FlagHome, kbHome)
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("keyname1") // nolint:errcheck
@@ -43,5 +42,6 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 
 	// Now enter password
 	mockIn.Reset("123456789\n")
-	require.NoError(t, runImportCmd(importKeyCommand, []string{"keyname1", keyfile}))
+	cmd.SetArgs([]string{"keyname1", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
+	require.NoError(t, cmd.Execute())
 }

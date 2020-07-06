@@ -190,10 +190,6 @@ func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDele
 
 // CommunityPool queries the community pool coins
 func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	if req.String() == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
-	}
-
 	ctx := sdk.UnwrapSDKContext(c)
 	pool := k.GetFeePoolCommunityCoins(ctx)
 	if pool == nil {

@@ -215,3 +215,16 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, withdrawAddress.WithdrawAddress, addr[1])
 }
+
+func TestGRPCCommunityPool(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	pool, := queryClient.CommunityPool(gocontext.Background(), &types.QueryCommunityPoolRequest{})
+	require.NoError(t, err)
+	require.Empty(t, pool)
+}

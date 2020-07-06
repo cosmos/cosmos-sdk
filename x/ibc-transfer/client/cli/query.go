@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,7 +31,7 @@ $ %s query ibc-transfer next-recv [port-id] [channel-id]
 
 			portID := args[0]
 			channelID := args[1]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			sequenceRes, err := utils.QueryNextSequenceRecv(clientCtx, portID, channelID, prove)
 			if err != nil {
@@ -43,6 +42,7 @@ $ %s query ibc-transfer next-recv [port-id] [channel-id]
 			return clientCtx.PrintOutput(sequenceRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 
 	return cmd

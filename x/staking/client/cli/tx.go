@@ -69,11 +69,11 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
-	cmd.Flags().AddFlagSet(FsPk)
-	cmd.Flags().AddFlagSet(FsAmount)
+	cmd.Flags().AddFlagSet(FsPk())
+	cmd.Flags().AddFlagSet(FsAmount())
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
-	cmd.Flags().AddFlagSet(FsCommissionCreate)
-	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
+	cmd.Flags().AddFlagSet(FsCommissionCreate())
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -138,7 +138,7 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
 	cmd.Flags().AddFlagSet(fsCommissionUpdate)
-	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation())
 
 	return cmd
 }
@@ -337,10 +337,10 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
 	fsCreateValidator.String(FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
-	fsCreateValidator.AddFlagSet(FsCommissionCreate)
-	fsCreateValidator.AddFlagSet(FsMinSelfDelegation)
-	fsCreateValidator.AddFlagSet(FsAmount)
-	fsCreateValidator.AddFlagSet(FsPk)
+	fsCreateValidator.AddFlagSet(FsCommissionCreate())
+	fsCreateValidator.AddFlagSet(FsMinSelfDelegation())
+	fsCreateValidator.AddFlagSet(FsAmount())
+	fsCreateValidator.AddFlagSet(FsPk())
 
 	defaultsDesc = fmt.Sprintf(`
 	delegation amount:           %s
@@ -368,7 +368,7 @@ type TxCreateValidatorConfig struct {
 	CommissionMaxChangeRate string
 	MinSelfDelegation       string
 
-	TrustNode string
+	TrustNode bool
 	PubKey    string
 
 	IP              string
@@ -423,15 +423,53 @@ func PrepareConfigForTxCreateValidator(
 		return c, err
 	}
 
+	c.Amount, err = flagSet.GetString(FlagAmount)
+	if err != nil {
+		return c, err
+	}
+
+	c.CommissionRate, err = flagSet.GetString(FlagCommissionRate)
+	if err != nil {
+		return c, err
+	}
+
+	c.CommissionMaxRate, err = flagSet.GetString(FlagCommissionMaxRate)
+	if err != nil {
+		return c, err
+	}
+
 	c.NodeID = nodeID
-	viper.Set(FlagIP, ip)
-	viper.Set(flags.FlagTrustNode, true)
-	viper.Set(FlagPubKey, sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey))
-	viper.Set(FlagMoniker, config.Moniker)
-	viper.Set(FlagWebsite, website)
-	viper.Set(FlagSecurityContact, securityContact)
-	viper.Set(FlagDetails, details)
-	viper.Set(FlagIdentity, identity)
+	c.TrustNode = true
+	c.PubKey = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
+	c.Moniker = config.Moniker
+	c.Website = website
+	c.SecurityContact = securityContact
+	c.Details = details
+	c.Identity = identity
+
+	if config.Moniker == "" {
+		c.Moniker = c.From
+	}
+
+	if c.Amount == "" {
+		c.Amount = defaultAmount
+	}
+
+	if c.CommissionRate == "" {
+		c.CommissionRate = defaultCommissionRate
+	}
+
+	if c.CommissionMaxRate == "" {
+		c.CommissionMaxRate = defaultCommissionMaxRate
+	}
+
+	if viper.GetString(FlagCommissionMaxChangeRate) == "" {
+		viper.Set(FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
+	}
+
+	if viper.GetString(FlagMinSelfDelegation) == "" {
+		viper.Set(FlagMinSelfDelegation, defaultMinSelfDelegation)
+	}
 
 	return c, nil
 }

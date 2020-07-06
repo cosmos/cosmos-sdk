@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestABCInfo(t *testing.T) {
@@ -46,7 +48,7 @@ func TestABCInfo(t *testing.T) {
 		"stdlib is generic message": {
 			err:       io.EOF,
 			debug:     false,
-			wantLog:   "internal error",
+			wantLog:   "internal",
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
@@ -60,7 +62,7 @@ func TestABCInfo(t *testing.T) {
 		"wrapped stdlib is only a generic message": {
 			err:       Wrap(io.EOF, "cannot read file"),
 			debug:     false,
-			wantLog:   "internal error",
+			wantLog:   "internal",
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
@@ -134,7 +136,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
-			wantErrMsg:     "internal error",
+			wantErrMsg:     "internal",
 		},
 	}
 
@@ -169,21 +171,42 @@ func TestABCIInfoHidesStacktrace(t *testing.T) {
 }
 
 func TestRedact(t *testing.T) {
-	if err := Redact(ErrPanic); ErrPanic.Is(err) {
-		t.Error("reduct must not pass through panic error")
-	}
-	if err := Redact(ErrUnauthorized); !ErrUnauthorized.Is(err) {
-		t.Error("reduct should pass through SDK error")
+	cases := map[string]struct {
+		err       error
+		untouched bool  // if true we expect the same error after redact
+		changed   error // if untouched == false, expect this error
+	}{
+		"panic looses message": {
+			err:     Wrap(ErrPanic, "some secret stack trace"),
+			changed: ErrPanic,
+		},
+		"sdk errors untouched": {
+			err:       Wrap(ErrUnauthorized, "cannot drop db"),
+			untouched: true,
+		},
+		"pass though custom errors with ABCI code": {
+			err:       customErr{},
+			untouched: true,
+		},
+		"redact stdlib error": {
+			err:     fmt.Errorf("stdlib error"),
+			changed: errInternal,
+		},
 	}
 
-	var cerr customErr
-	if err := Redact(cerr); err != cerr {
-		t.Error("reduct should pass through ABCI code error")
-	}
-
-	serr := fmt.Errorf("stdlib error")
-	if err := Redact(serr); err == serr {
-		t.Error("reduct must not pass through a stdlib error")
+	for name, tc := range cases {
+		spec := tc
+		t.Run(name, func(t *testing.T) {
+			redacted := Redact(spec.err)
+			if spec.untouched {
+				require.Equal(t, spec.err, redacted)
+			} else {
+				// see if we got the expected redact
+				require.Equal(t, spec.changed, redacted)
+				// make sure the ABCI code did not change
+				require.Equal(t, abciCode(spec.err), abciCode(redacted))
+			}
+		})
 	}
 }
 
@@ -215,41 +238,15 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 			debug: true,
 			exp:   fmt.Sprintf("%+v", myErrDecode),
 		},
-		// "multi error default encoder": {
-		// 	src: Append(myErrMsg, myErrAddr),
-		// 	exp: Append(myErrMsg, myErrAddr).Error(),
-		// },
-		// "multi error default with internal": {
-		// 	src: Append(myErrMsg, myPanic),
-		// 	exp: "internal error",
-		// },
 		"redact in default encoder": {
 			src: myPanic,
-			exp: "internal error",
+			exp: "panic",
 		},
 		"do not redact in debug encoder": {
 			src:   myPanic,
 			debug: true,
 			exp:   fmt.Sprintf("%+v", myPanic),
 		},
-		// 		"redact in multi error": {
-		// 			src:   Append(myPanic, myErrMsg),
-		// 			debug: false,
-		// 			exp:   "internal error",
-		// 		},
-		// 		"no redact in multi error": {
-		// 			src:   Append(myPanic, myErrMsg),
-		// 			debug: true,
-		// 			exp: `2 errors occurred:
-		// 	* panic
-		// 	* test: invalid message
-		// `,
-		// 		},
-		// 		"wrapped multi error with redact": {
-		// 			src:   Wrap(Append(myPanic, myErrMsg), "wrap"),
-		// 			debug: false,
-		// 			exp:   "internal error",
-		// 		},
 	}
 	for msg, spec := range specs {
 		spec := spec

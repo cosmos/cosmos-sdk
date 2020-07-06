@@ -170,9 +170,8 @@ func TestMsgSendEvents(t *testing.T) {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())})
-	event1.Attributes = append(
-		event1.Attributes,
+		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,

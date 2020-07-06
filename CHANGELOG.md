@@ -38,28 +38,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [v0.38.5] - TBD
 
 The pruning changes introduced in 0.38.0 has bugs that may cause data loss, even after upgrading
-to 0.38.5. When upgrading from 0.38.x it is important to follow the instructions below, to prevent 
+to 0.38.5. When upgrading from 0.38.x it is important to follow the instructions below, to prevent
 data loss and database corruption.
 
-Do not modify pruning settings with <=0.38.4 as that may cause data corruption - the following 
-assumes pruning settings have not been modified since the node started using 0.38.x. The default 
+Do not modify pruning settings with <=0.38.4 as that may cause data corruption - the following
+assumes pruning settings have not been modified since the node started using 0.38.x. The default
 pruning setting `syncable` used `KeepEvery:100`.
 
 * If using `KeepEvery:1` (pruning settings `nothing` or `everything`), upgrading to 0.38.5 is safe.
-
 * Otherwise, halt block processing with `--halt-height` after committing a height divisible by
   `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The node must _never_ have processed a
   height beyond that at any time in its past. Upgrading to 0.38.5 is then safe.
-
 * Otherwise, set the 0.38.5 `KeepEvery` setting to the same as the previous `KeepEvery` setting
   (<=0.38.4 and 0.38.5 both default to `KeepEvery:100`). Upgrading to 0.38.5 is then safe as long
   as you wait one `KeepEvery` interval plus one `KeepRecent` interval plus one pruning `Interval`
   before changing pruning settings or deleting the last <=0.38.4 height (so wait 210 heights with
   the default configuration).
-
-* Otherwise, make sure the last version persisted with <=0.38.4 is never deleted after upgrading to 
+* Otherwise, make sure the last version persisted with <=0.38.4 is never deleted after upgrading to
   0.38.5, as doing so may cause data loss and data corruption.
-
 * Otherwise, consider syncing the node from scratch with 0.38.5.
 
 ### API Breaking Changes

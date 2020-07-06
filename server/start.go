@@ -31,6 +31,7 @@ const (
 	FlagHaltTime           = "halt-time"
 	FlagInterBlockCache    = "inter-block-cache"
 	FlagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
+	FlagTrace              = "trace"
 
 	FlagPruning           = "pruning"
 	FlagPruningKeepRecent = "pruning-keep-recent"
@@ -87,6 +88,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
+	cmd.Flags().Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	cmd.Flags().String(
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
@@ -101,6 +103,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
+	viper.BindPFlag(FlagTrace, cmd.Flags().Lookup(FlagTrace))
 	viper.BindPFlag(FlagPruning, cmd.Flags().Lookup(FlagPruning))
 	viper.BindPFlag(FlagPruningKeepRecent, cmd.Flags().Lookup(FlagPruningKeepRecent))
 	viper.BindPFlag(FlagPruningKeepEvery, cmd.Flags().Lookup(FlagPruningKeepEvery))

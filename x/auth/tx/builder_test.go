@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
 
@@ -110,4 +111,90 @@ func TestTxBuilder(t *testing.T) {
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 1, len(tx.GetPubKeys()))
 	require.Equal(t, pubkey.Bytes(), tx.GetPubKeys()[0].Bytes())
+}
+
+func TestBuilderValidateBasic(t *testing.T) {
+	// keys and addresses
+	_, pubKey1, addr1 := authtypes.KeyTestPubAddr()
+	_, pubKey2, addr2 := authtypes.KeyTestPubAddr()
+
+	// msg and signatures
+	msg1 := authtypes.NewTestMsg(addr1, addr2)
+	fee := authtypes.NewTestStdFee()
+
+	msgs := []sdk.Msg{msg1}
+
+	// require to fail validation upon invalid fee
+	badFee := authtypes.NewTestStdFee()
+	badFee.Amount[0].Amount = sdk.NewInt(-5)
+	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
+	builder := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
+
+	var sig1, sig2 signing.SignatureV2
+	sig1 = signing.SignatureV2{
+		PubKey: pubKey1,
+		Data: &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+			Signature: pubKey1.Bytes(),
+		},
+	}
+
+	sig2 = signing.SignatureV2{
+		PubKey: pubKey2,
+		Data: &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+			Signature: pubKey2.Bytes(),
+		},
+	}
+
+	err := builder.SetMsgs(msgs...)
+	require.NoError(t, err)
+	builder.SetGasLimit(200000)
+	err = builder.SetSignatures(sig1, sig2)
+	require.NoError(t, err)
+	builder.SetFeeAmount(badFee.Amount)
+	err = builder.ValidateBasic()
+	require.Error(t, err)
+	_, code, _ := sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrInsufficientFee.ABCICode(), code)
+
+	// require to fail validation when no signatures exist
+	err = builder.SetSignatures()
+	require.NoError(t, err)
+	builder.SetFeeAmount(fee.Amount)
+	err = builder.ValidateBasic()
+	require.Error(t, err)
+	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
+
+	// require to fail with nil values for tx, authinfo
+	err = builder.SetMsgs(nil)
+	require.NoError(t, err)
+	err = builder.ValidateBasic()
+	require.Error(t, err)
+
+	// require to fail validation when signatures do not match expected signers
+	err = builder.SetSignatures(sig1)
+	require.NoError(t, err)
+
+	err = builder.ValidateBasic()
+	require.Error(t, err)
+	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
+
+	// TODO: uncomment after SetFee is added
+	// // require to fail with invalid gas supplied
+	// badFee = authtypes.NewTestStdFee()
+	// badFee.Gas = 9223372036854775808
+	// builder.SetFeeAmount(badFee)
+	//
+	// err = tx.ValidateBasic()
+	// require.Error(t, err)
+	// _, code, _ = sdkerrors.ABCIInfo(err, false)
+	// require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), code)
+
+	builder.SetFeeAmount(fee.Amount)
+	builder.SetSignatures(sig1, sig2)
+	err = builder.ValidateBasic()
+	require.NoError(t, err)
 }

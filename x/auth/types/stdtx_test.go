@@ -74,7 +74,7 @@ func TestTxValidateBasic(t *testing.T) {
 	priv2, _, addr2 := KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := NewTestMsg(addr1, addr2)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
 	fee := NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}
@@ -240,7 +240,7 @@ func TestGetSignaturesV2(t *testing.T) {
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
-	stdTx := NewStdTx([]sdk.Msg{NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
+	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
 
 	sigs, err := stdTx.GetSignaturesV2()
 	require.Nil(t, err)

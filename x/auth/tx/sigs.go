@@ -83,7 +83,7 @@ func ModeInfoAndSigToSignatureData(modeInfo *tx.ModeInfo, sig []byte) (signing.S
 		}, nil
 
 	default:
-		panic("unexpected case")
+		panic(fmt.Errorf("unexpected ModeInfo data type %T", modeInfo))
 	}
 }
 

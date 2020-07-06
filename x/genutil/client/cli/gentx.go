@@ -146,9 +146,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			// TODO change this solution.
-			cmd.Flags().Set(flags.FlagHome, clientHome)
-			txBldr, err := authtypes.NewTxBuilderFromFlagSet(inBuf, cmd.Flags())
+			txBldr, err := authtypes.NewTxBuilderFromFlagSet(inBuf, cmd.Flags(), clientHome)
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}

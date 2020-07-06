@@ -30,7 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParametersRequest is the request type for the Query/Parameters RPC method
+// QueryParamsRequest is the request type for the Query/Parameters RPC method
 type QueryParamsRequest struct {
 }
 
@@ -67,7 +67,7 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParametersResponse is the response type for the Query/Parameters RPC method
+// QueryParamsResponse is the response type for the Query/Parameters RPC method
 type QueryParamsResponse struct {
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
@@ -359,7 +359,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Parameters queries the parameters of slashing module
+	// Params queries the parameters of slashing module
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// SigningInfo queries the signing info of given cons address
 	SigningInfo(ctx context.Context, in *QuerySigningInfoRequest, opts ...grpc.CallOption) (*QuerySigningInfoResponse, error)
@@ -404,7 +404,7 @@ func (c *queryClient) SigningInfos(ctx context.Context, in *QuerySigningInfosReq
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Parameters queries the parameters of slashing module
+	// Params queries the parameters of slashing module
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// SigningInfo queries the signing info of given cons address
 	SigningInfo(context.Context, *QuerySigningInfoRequest) (*QuerySigningInfoResponse, error)

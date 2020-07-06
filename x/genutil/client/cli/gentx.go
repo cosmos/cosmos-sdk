@@ -133,8 +133,11 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 			txBldr = txBldr.WithTxEncoder(authclient.GetTxEncoder(cdc))
 
-			// TODO Refactor NewContext not to use VIPER! :O
-			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx, err := client.NewContextWithFsAndInput(cmd.Flags(), inBuf)
+			if err != nil {
+				return errors.Wrap(err, "error creating context")
+			}
+			clientCtx = clientCtx.WithCodec(cdc).WithJSONMarshaler(cdc)
 
 			// create a 'create-validator' message
 			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txBldr, true)

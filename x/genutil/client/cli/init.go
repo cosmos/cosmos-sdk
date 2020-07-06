@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -65,11 +64,14 @@ func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManag
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
 		Long:  `Initialize validators's and node's configuration files.`,
 		Args:  cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			config.SetRoot(viper.GetString(cli.HomeFlag))
+			home, _ := cmd.Flags().GetString(cli.HomeFlag)
 
-			chainID := viper.GetString(flags.FlagChainID)
+			config.SetRoot(home)
+
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
+
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
@@ -82,7 +84,9 @@ func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManag
 			config.Moniker = args[0]
 
 			genFile := config.GenesisFile()
-			if !viper.GetBool(flagOverwrite) && tmos.FileExists(genFile) {
+			overwrite, _ := cmd.Flags().GetBool(flagOverwrite)
+
+			if !overwrite && tmos.FileExists(genFile) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 			appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis(cdc))

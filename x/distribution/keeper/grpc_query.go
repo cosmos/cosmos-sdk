@@ -67,27 +67,30 @@ func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidator
 
 // ValidatorSlashes queries slash events of a validator
 func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSlashesRequest) (*types.QueryValidatorSlashesResponse, error) {
-	if req.String() == "" || req.ValidatorAddress.Empty() || req.StartingHeight == 0 ||
-		req.EndingHeight == 0 || req.StartingHeight > req.EndingHeight {
+	if req.String() == "" || req.ValidatorAddress.Empty() || req.EndingHeight < req.StartingHeight {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	events := make([]types.ValidatorSlashEvent, 0)
 	store := ctx.KVStore(k.storeKey)
-	slashStoreWithStartingHeight := prefix.NewStore(store, types.GetValidatorSlashEventKeyPrefix(req.ValidatorAddress, req.StartingHeight))
-	slashStoreWithEndingHeight := prefix.NewStore(slashStoreWithStartingHeight, types.GetValidatorSlashEventKeyPrefix(req.ValidatorAddress, req.EndingHeight))
 
-	res, err := query.Paginate(slashStoreWithEndingHeight, req.Req, func(key []byte, value []byte) error {
+	res, err := query.FilteredPaginate(store, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.ValidatorSlashEvent
 		err := k.cdc.UnmarshalBinaryBare(value, &result)
 
 		if err != nil {
-			return err
+			return false, err
 		}
 
-		events = append(events, result)
-		return nil
+		if result.ValidatorPeriod >= req.StartingHeight && result.ValidatorPeriod <= req.EndingHeight {
+			if accumulate {
+				events = append(events, result)
+			}
+			return true, nil
+		}
+
+		return false, nil
 	})
 
 	if err != nil {

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -33,8 +32,8 @@ $ %s query ibc client states
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
 
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			clientStates, height, err := utils.QueryAllClientStates(clientCtx, page, limit)
 			if err != nil {
@@ -45,8 +44,10 @@ $ %s query ibc client states
 			return clientCtx.PrintOutput(clientStates)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
 	return cmd
 }
 
@@ -72,7 +73,7 @@ $ %s query ibc client state [client-id]
 				return errors.New("client ID can't be blank")
 			}
 
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			clientStateRes, err := utils.QueryClientState(clientCtx, clientID, prove)
 			if err != nil {
@@ -83,6 +84,7 @@ $ %s query ibc client state [client-id]
 			return clientCtx.PrintOutput(clientStateRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 	return cmd
 }
@@ -109,7 +111,7 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 				return fmt.Errorf("expected integer height, got: %s", args[1])
 			}
 
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
 			if err != nil {
@@ -120,6 +122,7 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(csRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 	return cmd
 }

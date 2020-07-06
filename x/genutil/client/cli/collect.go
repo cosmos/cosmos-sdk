@@ -27,6 +27,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
+
 			name := viper.GetString(flags.FlagName)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
@@ -59,9 +60,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc codec.JSONMarshaler, genBalIterat
 	}
 
 	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
-	cmd.Flags().String(flagGenTxDir, "",
-		"override default \"gentx\" directory from which collect and execute "+
-			"genesis transactions; default [--home]/config/gentx/")
+	cmd.Flags().String(flagGenTxDir, "", "override default \"gentx\" directory from which collect and execute genesis transactions; default [--home]/config/gentx/")
 
 	return cmd
 }

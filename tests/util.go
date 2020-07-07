@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -224,6 +225,12 @@ func NewTestCaseDir(t NamedTestingT) (string, func()) {
 	dir, err := ioutil.TempDir("", t.Name()+"_")
 	require.NoError(t, err)
 	return dir, func() { os.RemoveAll(dir) }
+}
+
+// CreateConfigFolder creates the empty config folder in path.
+func CreateConfigFolder(t NamedTestingT, path string) {
+	err := os.Mkdir(filepath.Join(path, "config"), 0700)
+	require.NoError(t, err)
 }
 
 var cdc = codec.New()

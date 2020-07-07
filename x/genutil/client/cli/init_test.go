@@ -2,19 +2,19 @@ package cli
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/tendermint/tendermint/config"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abciServer "github.com/tendermint/tendermint/abci/server"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -28,51 +28,50 @@ import (
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
 func TestInitCmd(t *testing.T) {
-	t.SkipNow()
 	home, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
+	tests.CreateConfigFolder(t, home)
 
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	cfg := config.TestConfig()
+	cfg.RootDir = home
 
 	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 	cmd := InitCmd(ctx, cdc, testMbm, home)
+	cmd.SetArgs([]string{
+		"appnode-test",
+	})
 
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
-}
-
-func setupClientHome(t *testing.T) func() {
-	clientDir, cleanup := tests.NewTestCaseDir(t)
-	viper.Set(flagClientHome, clientDir)
-	return cleanup
+	require.NoError(t, cmd.Execute())
 }
 
 func TestEmptyState(t *testing.T) {
-	t.SkipNow()
-	t.Cleanup(setupClientHome(t))
-
 	home, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
+	tests.CreateConfigFolder(t, home)
 
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	cfg := config.TestConfig()
 
 	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 
 	cmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
+	cmd.SetArgs([]string{
+		"appnode-test",
+	})
+	require.NoError(t, cmd.Execute())
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	cmd = server.ExportCmd(ctx, cdc, nil)
 
-	err = cmd.RunE(nil, nil)
-	require.NoError(t, err)
+	cmd = server.ExportCmd(ctx, cdc, nil)
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--home=%s", home),
+	})
+	require.NoError(t, cmd.Execute())
 
 	outC := make(chan string)
 	go func() {
@@ -95,12 +94,10 @@ func TestEmptyState(t *testing.T) {
 func TestStartStandAlone(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
-	viper.Set(cli.HomeFlag, home)
-	t.Cleanup(setupClientHome(t))
+	tests.CreateConfigFolder(t, home)
 
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	cfg := config.TestConfig()
 	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 	initCmd := InitCmd(ctx, cdc, testMbm, home)
@@ -127,10 +124,10 @@ func TestStartStandAlone(t *testing.T) {
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
-	viper.Set(cli.HomeFlag, home)
-	viper.Set(flags.FlagName, "moniker")
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	tests.CreateConfigFolder(t, home)
+
+	cfg := config.TestConfig()
+	cfg.RootDir = home
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)

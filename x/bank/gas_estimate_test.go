@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -101,10 +102,23 @@ func TestSendGasEstimates(t *testing.T) {
 	simGas2 := simulatedGas(t, app, tx2)
 	fmt.Printf("Sim 1 used: %d\n", simGas2)
 
-	// deliver the tx with the gas returned from simulate (plus 10%)
+	// let's run some CheckTx and see if they modify the values
+	_, _, err := app.Check(tx)
+	require.NoError(t, err)
+	_, _, err = app.Check(tx2)
+	require.NoError(t, err)
+
+	// now, try the simulations again
+	resimGas := simulatedGas(t, app, tx)
+	fmt.Printf("Re-Sim 0 used: %d\n", resimGas)
+	assert.Equal(t, simGas, resimGas)
+
+	// deliver the tx with the gas returned from simulate
 	txs := []sdk.Tx{
-		buildTx(simGas+simGas/10, 0),
-		buildTx(simGas2+simGas2/10, 1),
+		buildTx(simGas, 0),
+		// Note: this will cause out of gas if we use resimGas rather than simGas
+		//buildTx(resimGas, 0),
+		buildTx(simGas2, 1),
 	}
 	gas := deliverTxs(t, app, txs...)
 

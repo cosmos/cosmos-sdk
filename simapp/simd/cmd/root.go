@@ -39,11 +39,7 @@ var (
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
-			if err := server.InterceptConfigsPreRunHandler(cmd); err != nil {
-				return err
-			}
-
-			return nil
+			return server.InterceptConfigsPreRunHandler(cmd)
 		},
 	}
 

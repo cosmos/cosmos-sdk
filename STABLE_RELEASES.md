@@ -119,9 +119,29 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
  
  In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
  
- ## Stable Release Exception
+ ## Stable Release Exception - Procedure
  
- How to ask for a **Stable Release Exception**.
- 
- TODO
- 
+1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bugfixes for stable releases without first testing them in `master`. Please apply the label [0.39 (Launchpad)](https://github.com/cosmos/cosmos-sdk/labels/0.39%20LTS%20%28Launchpad%29) to the issue.
+2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
+ * **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
+ * A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
+ * A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
+3. **Stable Release Managers** will review and discuss the PR. Once consensus surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective `release/launchpad/0.39.X` branch, being `X` the Launchpad's next point-release and the PR included in the `0.39.X` respective milestone.
+
+### Stable Release Exception - Bug template
+
+```
+#### Impact
+
+Brief xplanation of the effects of the bug on users and a justification for backporting the fix to the stable release.
+
+#### Test Case
+
+Detailed instructions on how to reproduce the bug on Launchpad's most recently published point-release.
+
+#### Regression Potential
+
+Explanation on how regressions might manifest - even if it's unlikely.
+It is assumed that stable release fixes are well-tested and they come with a low risk of regressions.
+It's crucial to make the effort of thinking about what could happen in case a regression emerges.
+```

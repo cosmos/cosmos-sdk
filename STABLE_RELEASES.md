@@ -87,7 +87,7 @@ Only if unanimous consensus is reached among all the existing code-owners will
 an invitation be extended to a new potential-member. Likewise, when an existing
 member is suggested to be removed/or have their privileges reduced, the member
 in question must agree on the decision for their removal or else no action
-should be taken. If however, a code-owner is verifiably shown to intentionally
+should be taken. If however, a code-owner is demonstrably shown to intentionally
 have had acted maliciously or grossly negligent, code-owner privileges may be
 stripped with no prior warning or consent from the member in question.
 

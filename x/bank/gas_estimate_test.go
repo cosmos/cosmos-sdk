@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -37,19 +36,24 @@ func simulatedGas(t *testing.T, app *simapp.SimApp, tx sdk.Tx) uint64 {
 	err = app.Codec().UnmarshalBinaryBare(res.Value, &simRes)
 	require.NoError(t, err)
 	simGas := simRes.GasInfo
-	fmt.Printf("(SIM) wanted: %d / used: %d\n", simGas.GasWanted, simGas.GasUsed)
 	return simGas.GasUsed
 }
 
-func deliverTx(t *testing.T, app *simapp.SimApp, tx sdk.Tx) (sdk.GasInfo, *sdk.Result) {
+func deliverTxs(t *testing.T, app *simapp.SimApp, txs ...sdk.Tx) []sdk.GasInfo {
 	header := abci.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gas, res, err := app.Deliver(tx)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+
+	var allGas []sdk.GasInfo
+	for _, tx := range txs {
+		gas, res, err := app.Deliver(tx)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		allGas = append(allGas, gas)
+	}
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
-	return gas, res
+
+	return allGas
 }
 
 func TestSendGasEstimates(t *testing.T) {
@@ -76,30 +80,35 @@ func TestSendGasEstimates(t *testing.T) {
 	send := sdk.Coins{sdk.NewInt64Coin("uatom", 5678)}
 	sendMsg := types.NewMsgSend(addr1, addr2, send)
 
-	// this will build proper tx
-	buildTx := func(expectedGas uint64) sdk.Tx {
+	// this will build proper tx (set incSequence if submitting multiple in one block)
+	buildTx := func(expectedGas uint64, incSeq uint64) sdk.Tx {
 		return helpers.GenTx(
 			[]sdk.Msg{sendMsg},
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 			expectedGas,
 			"",
 			[]uint64{acct.GetAccountNumber()},
-			[]uint64{acct.GetSequence()},
+			[]uint64{acct.GetSequence() + incSeq},
 			priv1,
 		)
 	}
 
 	// run simulation
-	tx := buildTx(200_000)
+	tx := buildTx(200_000, 0)
 	simGas := simulatedGas(t, app, tx)
+	fmt.Printf("Sim 0 used: %d\n", simGas)
+	tx2 := buildTx(200_000, 1)
+	simGas2 := simulatedGas(t, app, tx2)
+	fmt.Printf("Sim 1 used: %d\n", simGas2)
 
 	// deliver the tx with the gas returned from simulate (plus 10%)
-	tx = buildTx(simGas + simGas/10)
-	gas, _ := deliverTx(t, app, tx)
+	txs := []sdk.Tx{
+		buildTx(simGas+simGas/10, 0),
+		buildTx(simGas2+simGas2/10, 1),
+	}
+	gas := deliverTxs(t, app, txs...)
 
-	// We have wanted 1 million, used ~53k
-	fmt.Printf("wanted: %d / used: %d\n", gas.GasWanted, gas.GasUsed)
-	// sanity checks for reasonable gas values
-	assert.Less(t, uint64(40000), gas.GasUsed)
-	assert.Less(t, gas.GasUsed, uint64(80000))
+	for i, gInfo := range gas {
+		fmt.Printf("Tx %d used: %d\n", i, gInfo.GasUsed)
+	}
 }

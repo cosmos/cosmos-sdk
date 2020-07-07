@@ -50,6 +50,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 	queryClient, vals := suite.queryClient, suite.vals
+	suite.T().Log(vals[0].Status, vals[1].Status)
 	var (
 		req *types.QueryValidatorsRequest
 	)
@@ -78,6 +79,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			tc.malleate()
 			valsResp, err := queryClient.Validators(gocontext.Background(), req)
 			if tc.expPass {
+				suite.T().Log(valsResp.Validators)
 				suite.NoError(err)
 				suite.NotNil(valsResp)
 				suite.Equal(1, len(valsResp.Validators))
@@ -92,6 +94,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 
 func (suite *KeeperTestSuite) TestGRPCValidator() {
 	queryClient, vals := suite.queryClient, suite.vals
+	suite.T().Log(vals[0].Status, vals[1].Status)
 
 	var (
 		req *types.QueryValidatorRequest
@@ -110,7 +113,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 		},
 		{"valid request",
 			func() {
-				req = &types.QueryValidatorRequest{ValidatorAddr: vals[0].GetOperator()}
+				req = &types.QueryValidatorRequest{ValidatorAddr: vals[0].OperatorAddress}
 			},
 			true,
 		},
@@ -122,7 +125,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 			res, err := queryClient.Validator(gocontext.Background(), req)
 			if tc.expPass {
 				suite.NoError(err)
-				suite.Equal(vals[0], res.Validator)
+				suite.Equal(vals[0].GetStatus(), res.Validator.Status)
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

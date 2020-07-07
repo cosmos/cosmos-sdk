@@ -105,7 +105,6 @@ func InitTestnet(
 		chainID = "chain-" + tmrand.NewRand().Str(6)
 	}
 
-	monikers := make([]string, numValidators)
 	nodeIDs := make([]string, numValidators)
 	valPubKeys := make([]crypto.PubKey, numValidators)
 
@@ -144,7 +143,6 @@ func InitTestnet(
 			return err
 		}
 
-		monikers = append(monikers, nodeDirName)
 		config.Moniker = nodeDirName
 
 		ip, err := getIP(i, startingIPAddress)
@@ -235,7 +233,7 @@ func InitTestnet(
 	}
 
 	err := collectGenFiles(
-		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
+		cdc, config, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -290,7 +288,7 @@ func initGenFiles(
 
 func collectGenFiles(
 	cdc codec.JSONMarshaler, config *tmconfig.Config, chainID string,
-	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
+	nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
 	genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
@@ -302,13 +300,12 @@ func collectGenFiles(
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
 		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
-		moniker := monikers[i]
 		config.Moniker = nodeDirName
 
 		config.SetRoot(nodeDir)
 
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
-		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
+		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
 		genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
 		if err != nil {

@@ -430,7 +430,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest()         // reset
-			ack = ibctesting.TestHash // must explicity be changed in malleate
+			ack = ibctesting.TestHash // must explicitly be changed in malleate
 
 			tc.malleate()
 

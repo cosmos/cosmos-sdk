@@ -12,13 +12,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abci_server "github.com/tendermint/tendermint/abci/server"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -52,7 +50,7 @@ func TestInitCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -81,7 +79,7 @@ func TestEmptyState(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -128,14 +126,14 @@ func TestStartStandAlone(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 	cmd := InitCmd(testMbm, home)
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	cmd.SetArgs([]string{"appnode-test"})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
@@ -162,11 +160,8 @@ func TestStartStandAlone(t *testing.T) {
 
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
+	cfg, err := createDefaultTendermintConfig(home)
 	t.Cleanup(cleanup)
-	viper.Set(cli.HomeFlag, home)
-	viper.Set(flags.FlagName, "moniker")
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)

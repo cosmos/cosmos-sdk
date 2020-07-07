@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -47,8 +46,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			homeDir, _ := cmd.Flags().GetString(cli.HomeFlag)
-			config.SetRoot(homeDir)
+			config.SetRoot(clientCtx.HomeDir)
 
 			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
 			clientHome, _ := cmd.Flags().GetString(flagClientHome)

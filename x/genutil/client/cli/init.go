@@ -14,6 +14,7 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -58,20 +59,23 @@ func displayInfo(cdc codec.JSONMarshaler, info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
+func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
 		Long:  `Initialize validators's and node's configuration files.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := ctx.Config
-			home, _ := cmd.Flags().GetString(cli.HomeFlag)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.JSONMarshaler
 
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+
+			home, _ := cmd.Flags().GetString(cli.HomeFlag)
 			config.SetRoot(home)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}

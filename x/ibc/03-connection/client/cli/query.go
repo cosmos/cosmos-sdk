@@ -22,7 +22,7 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 		Use:     "connections",
 		Short:   "Query all connections",
 		Long:    "Query all connections ends from a chain",
-		Example: fmt.Sprintf("%s query %s %s connections", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s connections", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.Init()
@@ -58,7 +58,7 @@ func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 		Use:     "end [connection-id]",
 		Short:   "Query stored connection end",
 		Long:    "Query stored connection end",
-		Example: fmt.Sprintf("%s query %s %s end [connection-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s end [connection-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()
@@ -90,7 +90,7 @@ func GetCmdQueryClientConnections(clientCtx client.Context) *cobra.Command {
 		Use:     "path [client-id]",
 		Short:   "Query stored client connection paths",
 		Long:    "Query stored client connection paths",
-		Example: fmt.Sprintf("%s query  %s %s path [client-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query  %s %s path [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.Init()

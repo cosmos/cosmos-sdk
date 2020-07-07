@@ -205,9 +205,9 @@ jobs:
             .go
             .mod
             .sum
-      - name: build-sim
+      - name: build-simd
         run: |
-          make build-sim
+          make build-simd
         if: "env.GIT_DIFF != ''"
       - name: cli-test
         run: |

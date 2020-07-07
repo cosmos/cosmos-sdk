@@ -8,24 +8,22 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func Cmd(cdc *codec.Codec) *cobra.Command {
+func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "debug",
 		Short: "Tool for helping with debugging your application",
 		RunE:  client.ValidateCmd,
 	}
 
-	cmd.AddCommand(PubkeyCmd(cdc))
+	cmd.AddCommand(PubkeyCmd())
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
 
@@ -68,7 +66,7 @@ func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
 	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32", pubKey)
 }
 
-func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
+func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
 		Short: "Decode a ED25519 pubkey from hex, base64, or bech32",
@@ -80,6 +78,8 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.AppName, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
 			pk, err := getPubKeyFromString(args[0])
 			if err != nil {
 				return err
@@ -90,7 +90,7 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 				return fmt.Errorf("invalid pubkey type; expected ED25519")
 			}
 
-			pubKeyJSONBytes, err := cdc.MarshalJSON(edPK)
+			pubKeyJSONBytes, err := clientCtx.JSONMarshaler.MarshalJSON(edPK)
 			if err != nil {
 				return err
 			}

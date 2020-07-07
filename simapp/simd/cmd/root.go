@@ -35,6 +35,16 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "simd",
 		Short: "simulation app",
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+				return err
+			}
+			if err := server.InterceptConfigsPreRunHandler(cmd); err != nil {
+				return err
+			}
+
+			return nil
+		},
 	}
 
 	encodingConfig = simapp.MakeEncodingConfig()
@@ -57,6 +67,7 @@ func Execute() error {
 	// https://github.com/spf13/cobra/pull/1118.
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
+	ctx = context.WithValue(ctx, server.ServerContextKey, server.NewDefaultContext())
 
 	executor := cli.PrepareBaseCmd(rootCmd, "", simapp.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
@@ -65,28 +76,19 @@ func Execute() error {
 func init() {
 	authclient.Codec = encodingConfig.Marshaler
 
-	// add application daemon commands
-	cdc := encodingConfig.Amino
-	ctx := server.NewDefaultContext()
-	rootCmd.PersistentPreRunE = server.PersistentPreRunEFn(ctx)
-	rootCmd.PersistentFlags().String(flags.FlagHome, simapp.DefaultNodeHome, "The application home directory")
-
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(ctx, cdc, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
-		genutilcli.MigrateGenesisCmd(ctx, cdc),
-		genutilcli.GenTxCmd(
-			ctx, cdc, simapp.ModuleBasics,
-			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultNodeHome,
-		),
-		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
-		AddGenesisAccountCmd(ctx, cdc, encodingConfig.Marshaler, simapp.DefaultNodeHome),
+		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.MigrateGenesisCmd(),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
+		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		flags.NewCompletionCmd(rootCmd, true),
-		testnetCmd(ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
-		debug.Cmd(cdc),
+		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		debug.Cmd(),
 	)
 
-	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
+	server.AddCommands(rootCmd, newApp, exportAppStateAndTMValidators)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
@@ -104,10 +106,7 @@ func queryCommand() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return client.SetCmdClientContextHandler(initClientCtx, cmd)
-		},
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	cmd.AddCommand(
@@ -130,10 +129,7 @@ func txCommand() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return client.SetCmdClientContextHandler(initClientCtx, cmd)
-		},
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	cmd.AddCommand(

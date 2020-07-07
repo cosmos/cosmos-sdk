@@ -21,10 +21,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // DONTCOVER
+
+// ServerContextKey defines the context key used to retrieve a server.Context from
+// a command's Context.
+const ServerContextKey = sdk.ContextKey("server.context")
 
 // server context
 type Context struct {
@@ -39,6 +44,57 @@ func NewDefaultContext() *Context {
 
 func NewContext(v *viper.Viper, config *tmcfg.Config, logger log.Logger) *Context {
 	return &Context{v, config, logger}
+}
+
+func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
+	rootViper := viper.New()
+	rootViper.BindPFlags(cmd.Flags())
+	rootViper.BindPFlags(cmd.PersistentFlags())
+
+	serverCtx := NewDefaultContext()
+	config, err := interceptConfigs(serverCtx, rootViper)
+	if err != nil {
+		return err
+	}
+
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
+	if err != nil {
+		return err
+	}
+
+	if rootViper.GetBool(tmcli.TraceFlag) {
+		logger = log.NewTracingLogger(logger)
+	}
+
+	serverCtx.Config = config
+	serverCtx.Logger = logger.With("module", "main")
+
+	return SetCmdServerContext(cmd, serverCtx)
+}
+
+// GetServerContextFromCmd returns a Context from a command or an empty Context
+// if it has not been set.
+func GetServerContextFromCmd(cmd *cobra.Command) *Context {
+	if v := cmd.Context().Value(ServerContextKey); v != nil {
+		serverCtxPtr := v.(*Context)
+		return serverCtxPtr
+	}
+
+	return NewDefaultContext()
+}
+
+// SetCmdServerContext sets a command's Context value to the provided argument.
+func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
+	v := cmd.Context().Value(ServerContextKey)
+	if v == nil {
+		return errors.New("server context not set")
+	}
+
+	serverCtxPtr := v.(*Context)
+	*serverCtxPtr = *serverCtx
+
+	return nil
 }
 
 // PersistentPreRunEFn returns a PersistentPreRunE function for the root daemon
@@ -139,8 +195,8 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 }
 
 // add server commands
-func AddCommands(ctx *Context, cdc codec.JSONMarshaler, rootCmd *cobra.Command, appCreator AppCreator, appExport AppExporter) {
-	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
+func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExporter) {
+	// rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
@@ -148,18 +204,18 @@ func AddCommands(ctx *Context, cdc codec.JSONMarshaler, rootCmd *cobra.Command, 
 	}
 
 	tendermintCmd.AddCommand(
-		ShowNodeIDCmd(ctx),
-		ShowValidatorCmd(ctx),
-		ShowAddressCmd(ctx),
-		VersionCmd(ctx),
+		ShowNodeIDCmd(),
+		ShowValidatorCmd(),
+		ShowAddressCmd(),
+		VersionCmd(),
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(ctx, cdc, appCreator),
-		UnsafeResetAllCmd(ctx),
+		StartCmd(appCreator),
+		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(ctx, cdc, appExport),
+		ExportCmd(appExport),
 		flags.LineBreak,
 		version.Cmd,
 	)

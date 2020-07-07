@@ -2,24 +2,28 @@ package cli
 
 import (
 	"encoding/base64"
+	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetCommandEncode(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
+	clientCtx := client.Context{}.
 		WithTxGenerator(encodingConfig.TxGenerator).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetEncodeCommand(clientCtx)
+	cmd.SetErr(ioutil.Discard)
+	cmd.SetOut(ioutil.Discard)
+
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
 
@@ -42,12 +46,13 @@ func TestGetCommandEncode(t *testing.T) {
 func TestGetCommandDecode(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
+	clientCtx := client.Context{}.
 		WithTxGenerator(encodingConfig.TxGenerator).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetDecodeCommand(clientCtx)
+	cmd.SetErr(ioutil.Discard)
+	cmd.SetOut(ioutil.Discard)
 
 	sdk.RegisterCodec(encodingConfig.Amino)
 
@@ -66,6 +71,6 @@ func TestGetCommandDecode(t *testing.T) {
 	base64Encoded := base64.StdEncoding.EncodeToString(txBytes)
 
 	// Execute the command
-	err = runDecodeTxString(clientCtx)(cmd, []string{base64Encoded})
-	require.NoError(t, err)
+	cmd.SetArgs([]string{base64Encoded})
+	require.NoError(t, cmd.Execute())
 }

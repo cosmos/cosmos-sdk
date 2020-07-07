@@ -146,7 +146,7 @@ func printAndValidateSigs(
 					b.WriteString("\n  MultiSig Signatures:\n")
 
 					pks := multiPK.GetPubKeys()
-					for i := 0; i < data.BitArray.Size(); i++ {
+					for i := 0; i < data.BitArray.Count(); i++ {
 						if data.BitArray.GetIndex(i) {
 							addr := sdk.AccAddress(pks[i].Address().Bytes())
 							b.WriteString(fmt.Sprintf("    %d: %s (weight: %d)\n", i, addr, 1))

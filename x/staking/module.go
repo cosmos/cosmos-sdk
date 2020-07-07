@@ -9,18 +9,13 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
 	abci "github.com/tendermint/tendermint/abci/types"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -81,29 +76,6 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	return cli.GetQueryCmd(types.StoreKey, clientCtx.Codec)
 }
-
-//_____________________________________
-// extra helpers
-
-// CreateValidatorMsgHelpers - used for gen-tx
-func (AppModuleBasic) CreateValidatorMsgHelpers(ipDefault string) (
-	fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string) {
-	return cli.CreateValidatorMsgHelpers(ipDefault)
-}
-
-// PrepareFlagsForTxCreateValidator - used for gen-tx
-func (AppModuleBasic) PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeID,
-	chainID string, valPubKey crypto.PubKey) {
-	cli.PrepareFlagsForTxCreateValidator(config, nodeID, chainID, valPubKey)
-}
-
-// BuildCreateValidatorMsg - used for gen-tx
-func (AppModuleBasic) BuildCreateValidatorMsg(clientCtx client.Context,
-	txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
-	return cli.BuildCreateValidatorMsg(clientCtx, txBldr)
-}
-
-//____________________________________________________________________________
 
 // AppModule implements an application module for the staking module.
 type AppModule struct {

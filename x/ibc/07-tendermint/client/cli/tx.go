@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
@@ -42,8 +41,8 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		Short: "create new tendermint client",
 		Long: `Create a new tendermint IBC client. 
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
-  - 'proof-specs' flag can be a comma-separated list of strings (eg: 'ics23:simple,ics23:iavl') or 'default'`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, ibctmtypes.SubModuleName),
+  - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'`,
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, ibctmtypes.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -57,7 +56,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
-					return errors.New("neither JSON input nor path to .json file were provided")
+					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
 				}
 				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus header file")
@@ -70,7 +69,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				err        error
 			)
 
-			lvl := viper.GetString(flagTrustLevel)
+			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
 				trustLevel = lite.DefaultTrustLevel
@@ -96,16 +95,18 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			spc := viper.GetString(flagProofSpecs)
-
-			// Currently supports SDK chain or simple kvstore tendermint chain
-			switch spc {
-			case "default":
+			spc, _ := cmd.Flags().GetString(flagProofSpecs)
+			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
-			case "simple":
-				specs = []*ics23.ProofSpec{ics23.TendermintSpec}
-			default:
-				return fmt.Errorf("proof spec: %s isn't supported", spc)
+			} else if err := cdc.UnmarshalJSON([]byte(spc), &specs); err != nil {
+				// check for file path if JSON input not provided
+				contents, err := ioutil.ReadFile(spc)
+				if err != nil {
+					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
+				}
+				if err := cdc.UnmarshalJSON(contents, &specs); err != nil {
+					return errors.Wrap(err, "error unmarshalling proof specs file")
+				}
 			}
 
 			msg := ibctmtypes.NewMsgCreateClient(
@@ -119,8 +120,10 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
+
 	return cmd
 }
 

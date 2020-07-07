@@ -6,7 +6,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -38,14 +40,33 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if len(req.Address) == 0 {
+	addr := req.Address
+	if len(addr) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	balances := q.GetAllBalances(ctx, req.Address)
 
-	return &types.QueryAllBalancesResponse{Balances: balances}, nil
+	balances := sdk.NewCoins()
+	store := ctx.KVStore(q.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+
+	res, err := query.Paginate(accountStore, req.Req, func(key []byte, value []byte) error {
+		var result sdk.Coin
+		err := q.cdc.UnmarshalBinaryBare(value, &result)
+		if err != nil {
+			return err
+		}
+		balances = append(balances, result)
+		return nil
+	})
+
+	if err != nil {
+		return &types.QueryAllBalancesResponse{}, err
+	}
+
+	return &types.QueryAllBalancesResponse{Balances: balances, Res: res}, nil
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
@@ -69,5 +90,5 @@ func (q BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 	ctx := sdk.UnwrapSDKContext(c)
 	supply := q.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
 
-	return &types.QuerySupplyOfResponse{Amount: supply}, nil
+	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply)}, nil
 }

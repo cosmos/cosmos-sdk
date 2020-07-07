@@ -17,6 +17,7 @@ This repository contains reference documentation on the core concepts of the Cos
 7. [Events](./events.md)
 8. [Telemetry](./telemetry.md)
 9. [Object-Capabilities](./ocap.md)
-10. [RunTx recovery middleware](./runtx_panics.md)
+10. [RunTx recovery middleware](./runtx_middleware.md)
 
-After reading about the core concepts, head on to the [Building Modules documentation](../building-modules/README.md) to learn more about the process of building modules. 
+After reading about the core concepts, check the [IBC documentation](../ibc/README.md) to learn more
+about the IBC core concepts and how to integrate it to you application.

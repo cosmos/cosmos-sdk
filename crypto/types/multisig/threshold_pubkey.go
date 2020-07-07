@@ -48,7 +48,7 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 	if err != nil {
 		return false
 	}
-	size := sig.BitArray.Size()
+	size := sig.BitArray.Count()
 	// ensure bit array is the correct size
 	if len(pk.PubKeys) != size {
 		return false
@@ -78,7 +78,7 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) error {
 	bitarray := sig.BitArray
 	sigs := sig.Signatures
-	size := bitarray.Size()
+	size := bitarray.Count()
 	// ensure bit array is the correct size
 	if len(pk.PubKeys) != size {
 		return fmt.Errorf("bit array size is incorrect %d", len(pk.PubKeys))

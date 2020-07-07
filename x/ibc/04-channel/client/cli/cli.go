@@ -19,13 +19,15 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
-		// TODO: Query all channels
+		GetCmdQueryChannels(clientCtx),
 		GetCmdQueryChannel(clientCtx),
-		// TODO: Query channels from a connection
+		GetCmdQueryConnectionChannels(clientCtx),
 		GetCmdQueryChannelClientState(clientCtx),
-		// TODO: Query all packet commitments
-		// TODO: Query unrelayed packet ACKS
-		// TODO: Query unrelayed packet sends
+		GetCmdQueryPacketCommitment(clientCtx),
+		GetCmdQueryPacketCommitments(clientCtx),
+		GetCmdQueryUnrelayedPackets(clientCtx),
+		GetCmdQueryNextSequenceReceive(clientCtx),
+		// TODO: next sequence Send ?
 	)...)
 
 	return ics04ChannelQueryCmd

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -35,29 +36,111 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	suite.queryClient = queryClient
 }
 
-func (suite *UpgradeTestSuite) TestGRPCQuery() {
-	queryClient := suite.queryClient
+func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
+	var (
+		req         *types.QueryCurrentPlanRequest
+		expResponse types.QueryCurrentPlanResponse
+	)
 
-	suite.T().Log("Verify that the scheduled upgrade plan can be queried")
-	plan := types.Plan{Name: "test-plan", Height: 5}
-	suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"without current upgrade plan",
+			func() {
+				req = types.NewQueryCurrentPlanRequest()
+				expResponse = types.QueryCurrentPlanResponse{}
+			},
+			true,
+		},
+		{
+			"with current upgrade plan",
+			func() {
+				plan := types.Plan{Name: "test-plan", Height: 5}
+				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
-	res, err := queryClient.CurrentPlan(gocontext.Background(), &types.QueryCurrentPlanRequest{})
-	suite.NoError(err)
-	suite.Equal(res.Plan, &plan)
+				req = types.NewQueryCurrentPlanRequest()
+				expResponse = types.QueryCurrentPlanResponse{Plan: &plan}
+			},
+			true,
+		},
+	}
 
-	suite.T().Log("Verify that the upgrade plan can be successfully applied and queried")
-	suite.ctx = suite.ctx.WithBlockHeight(5)
-	suite.app.UpgradeKeeper.SetUpgradeHandler("test-plan", func(ctx sdk.Context, plan types.Plan) {})
-	suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx, plan)
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-	res, err = queryClient.CurrentPlan(gocontext.Background(), &types.QueryCurrentPlanRequest{})
-	suite.NoError(err)
-	suite.Nil(res.Plan)
+			tc.malleate()
 
-	appliedRes, appliedErr := queryClient.AppliedPlan(gocontext.Background(), &types.QueryAppliedPlanRequest{Name: "test-plan"})
-	suite.NoError(appliedErr)
-	suite.Equal(int64(5), appliedRes.Height)
+			res, err := suite.queryClient.CurrentPlan(gocontext.Background(), req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(&expResponse, res)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
+	var (
+		req       *types.QueryAppliedPlanRequest
+		expHeight int64
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"with non-existent upgrade plan",
+			func() {
+				req = types.NewQueryAppliedPlanRequest("foo")
+			},
+			true,
+		},
+		{
+			"with applied upgrade plan",
+			func() {
+				expHeight = 5
+
+				planName := "test-plan"
+				plan := types.Plan{Name: planName, Height: expHeight}
+				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+
+				suite.ctx = suite.ctx.WithBlockHeight(expHeight)
+				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan) {})
+				suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx, plan)
+
+				req = types.NewQueryAppliedPlanRequest(planName)
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+
+			res, err := suite.queryClient.AppliedPlan(gocontext.Background(), req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expHeight, res.Height)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
 }
 
 func TestUpgradeTestSuite(t *testing.T) {

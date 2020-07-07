@@ -6,7 +6,7 @@ order: 1
 
 Learn what IBC is, its components and use cases. {synopsis}
 
-## What is the Interblockchain Communication Protocol (IBC)? 
+## What is the Interblockchain Communication Protocol (IBC)?
 
 This document serves as a guide for developers who want to write their own Inter-blockchain
 Communication Protocol (IBC) applications for custom [use-cases](https://github.com/cosmos/ics/blob/master/ibc/4_IBC_USECASES.md).
@@ -24,11 +24,6 @@ optionally acknowledgement) structs as well as how to encode/decode them, and im
 `IBCModule` interface. Below is a more detailed explanation of how to write an IBC application
 module correctly.
 
-## Pre-requisites Readings
-
-- [IBC specification overview](https://github.com/cosmos/ics/blob/master/ibc/README.md) {prereq}
-- [IBC SDK specification](../../modules/ibc) {prereq}
-
 ## Components Overview
 
 ### [Clients](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/02-client)
@@ -38,8 +33,8 @@ other blockchains, along with the proof spec necessary to properly verify proofs
 client's consensus state. A client may be associated with any number of connections to multiple
 chains. The supported IBC clients are:
 
-- [Tendermint light client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/07-tendermint): The default for SDK-based chains,
-- [Localhost (loopback) client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/09-localhost): Useful for
+* [Tendermint light client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/07-tendermint): The default for SDK-based chains,
+* [Localhost (loopback) client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/09-localhost): Useful for
 testing, simulation and relaying packets to modules on the same application.
 
 ### [Connections](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/03-connection)
@@ -144,6 +139,13 @@ Modules send custom application data to each other inside the `Data []byte` fiel
 Thus, packet data is completely opaque to IBC handlers. It is incumbent on a sender module to encode
 their application-specific packet information into the `Data` field of packets, and the receiver
 module to decode that `Data` back to the original application data.
+
+## Further Readings and Specs
+
+If you want to learn more about IBC, check the following specifications:
+
+* [IBC specification overview](https://github.com/cosmos/ics/blob/master/ibc/README.md)
+* [IBC SDK specification](../../modules/ibc)
 
 ## Next {hide}
 

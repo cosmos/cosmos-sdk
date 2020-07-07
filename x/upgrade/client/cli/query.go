@@ -7,17 +7,19 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // GetCurrentPlanCmd returns the query upgrade plan command
-func GetCurrentPlanCmd(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+func GetCurrentPlanCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "plan",
 		Short: "get upgrade plan (if one exists)",
 		Long:  "Gets the currently scheduled upgrade plan, if one exists",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx.Init())
 
 			params := types.NewQueryCurrentPlanRequest()
@@ -36,17 +38,20 @@ func GetCurrentPlanCmd(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(res.Plan)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetAppliedPlanCmd returns the height at which a completed upgrade was applied
-func GetAppliedPlanCmd(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+func GetAppliedPlanCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "applied [upgrade-name]",
 		Short: "block header for height at which a completed upgrade was applied",
 		Long: "If upgrade-name was previously executed on the chain, this returns the header for the block at which it was applied.\n" +
 			"This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx.Init())
 
 			name := args[0]
@@ -81,4 +86,6 @@ func GetAppliedPlanCmd(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(string(bz))
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }

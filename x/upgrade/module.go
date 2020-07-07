@@ -16,7 +16,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -59,10 +58,7 @@ func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		Use:   "upgrade",
 		Short: "Querying commands for the upgrade module",
 	}
-	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetCurrentPlanCmd(clientCtx),
-		cli.GetAppliedPlanCmd(clientCtx),
-	)...)
+	queryCmd.AddCommand(flags.GetCommands()...)
 
 	return queryCmd
 }

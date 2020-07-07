@@ -95,7 +95,10 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		}
 		return false, nil
 	})
-
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Unable to find delegations for"+
+			" validator %d", req.ValidatorAddr)
+	}
 	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Unable to convert delegations")

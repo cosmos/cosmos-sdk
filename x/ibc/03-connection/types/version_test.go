@@ -99,10 +99,10 @@ func TestVerifyProposedFeatureSet(t *testing.T) {
 		supportedVersion string
 		expPass          bool
 	}{
-		{"entire feature set supported", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDERED", "UNORDERED", "DAG"}), true},
+		{"entire feature set supported", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDER_ORDERED", "ORDER_UNORDERED", "ORDER_DAG"}), true},
 		{"empty feature sets", types.CreateVersionString("1", []string{}), types.DefaultIBCVersion, true},
-		{"one feature missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"UNORDERED", "DAG"}), false},
-		{"both features missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"DAG"}), false},
+		{"one feature missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDER_UNORDERED", "ORDER_DAG"}), false},
+		{"both features missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDER_DAG"}), false},
 	}
 
 	for i, tc := range testCases {
@@ -111,4 +111,24 @@ func TestVerifyProposedFeatureSet(t *testing.T) {
 		require.Equal(t, tc.expPass, supported, "test case %d: %s", i, tc.name)
 	}
 
+}
+
+func TestVerifySupportedFeature(t *testing.T) {
+	testCases := []struct {
+		name    string
+		version string
+		feature string
+		expPass bool
+	}{
+		{"check ORDERED supported", types.DefaultIBCVersion, "ORDER_ORDERED", true},
+		{"check UNORDERED supported", types.DefaultIBCVersion, "ORDER_UNORDERED", true},
+		{"check DAG unsupported", types.DefaultIBCVersion, "ORDER_DAG", false},
+		{"check empty feature set returns false", types.CreateVersionString("1", []string{}), "ORDER_ORDERED", false},
+	}
+
+	for i, tc := range testCases {
+		supported := types.VerifySupportedFeature(tc.version, tc.feature)
+
+		require.Equal(t, tc.expPass, supported, "test case %d: %s", i, tc.name)
+	}
 }

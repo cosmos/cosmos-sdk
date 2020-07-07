@@ -43,7 +43,7 @@ func signingInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQuerySigningInfoParams(sdk.ConsAddress(pk.Address()))
+		params := types.QuerySigningInfoRequest{ConsAddress: sdk.ConsAddress(pk.Address())}
 
 		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {

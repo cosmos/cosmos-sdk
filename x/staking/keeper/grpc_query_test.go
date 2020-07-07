@@ -50,51 +50,50 @@ func (suite *QueryTestSuite) SetupTest() {
 }
 
 func (suite *QueryTestSuite) TestGRPCQueryValidators() {
-	_, _, queryClient := suite.app, suite.ctx, suite.queryClient
+	queryClient, vals := suite.queryClient, suite.vals
 
-	vals, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
+	valsResp, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
 	suite.Error(err)
 	suite.Nil(vals)
 
-	// validators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	req := &types.QueryValidatorsRequest{Status: sdk.Bonded.String(),
 		Req: &query.PageRequest{Limit: 1, CountTotal: true}}
-	valsResp, err := queryClient.Validators(gocontext.Background(), req)
+	valsResp, err = queryClient.Validators(gocontext.Background(), req)
 
 	suite.NoError(err)
 	suite.Equal(1, len(valsResp.Validators))
 	suite.NotNil(valsResp.Res.NextKey)
+	suite.Equal(uint64(len(vals)), valsResp.Res.Total)
 
-	valRes, err := queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{ValidatorAddr: valsResp.Validators[0].OperatorAddress})
+	valRes, err := queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{})
+	suite.Error(err)
+	suite.Nil(valRes)
+
+	valRes, err = queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{ValidatorAddr: valsResp.Validators[0].OperatorAddress})
 	suite.NoError(err)
 	suite.Equal(valsResp.Validators[0], valRes.Validator)
 }
 
 func (suite *QueryTestSuite) TestDelegatorValidators() {
-	app, ctx, queryClient, addrs, _ := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	params := app.StakingKeeper.GetParams(ctx)
 
 	res, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorValidatorsRequest{})
 	suite.Error(err)
 	suite.Nil(res)
 
-	delegatorParamsReq := &types.QueryDelegatorValidatorsRequest{DelegatorAddr: addrs[0]}
 	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
 
-	res, err = queryClient.DelegatorValidators(gocontext.Background(), delegatorParamsReq)
-	suite.NoError(err)
-	suite.Equal(len(delValidators), len(res.Validators))
-	suite.ElementsMatch(delValidators, res.Validators)
-
-	delegatorParamsReq = &types.QueryDelegatorValidatorsRequest{
+	delegatorParamsReq := &types.QueryDelegatorValidatorsRequest{
 		DelegatorAddr: addrs[0],
-		Req:           &query.PageRequest{Limit: 1},
+		Req:           &query.PageRequest{Limit: 1, CountTotal: true},
 	}
 
 	res, err = queryClient.DelegatorValidators(gocontext.Background(), delegatorParamsReq)
 	suite.NoError(err)
 	suite.Equal(1, len(res.Validators))
 	suite.NotNil(res.Res.NextKey)
+	suite.Equal(uint64(len(delValidators)), res.Res.Total)
 }
 
 func (suite *QueryTestSuite) TestGRPCQueryDelegatorValidator() {
@@ -120,7 +119,7 @@ func (suite *QueryTestSuite) TestGRPCQueryDelegation() {
 	suite.Error(err)
 	suite.Nil(delegationResp)
 
-	delReq := &types.QueryDelegationRequest{DelegatorAddr: addrAcc, ValidatorAddr: addrVal, Req: &query.PageRequest{}}
+	delReq := &types.QueryDelegationRequest{DelegatorAddr: addrAcc, ValidatorAddr: addrVal}
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal)
 	suite.True(found)
 
@@ -144,19 +143,10 @@ func (suite *QueryTestSuite) TestGRPCDelegatorDelegations() {
 	suite.Error(err)
 	suite.Nil(delegatorDel)
 
-	delDelReq := &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc, Req: &query.PageRequest{}}
-	delegatorDelegationsResp, err := queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
-	suite.NoError(err)
-	suite.NotNil(delegatorDelegationsResp)
-
-	suite.Len(delegatorDelegationsResp.DelegationResponses, 2)
-	suite.Equal(addrAcc, delegatorDelegationsResp.DelegationResponses[0].Delegation.DelegatorAddress)
-	suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegationsResp.DelegationResponses[0].Balance)
-
 	// Query delegator delegations with pagination
-	delDelReq = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc,
+	delDelReq := &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc,
 		Req: &query.PageRequest{Limit: 1, CountTotal: true}}
-	delegatorDelegationsResp, err = queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
+	delegatorDelegationsResp, err := queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
 	suite.NoError(err)
 
 	suite.Equal(uint64(2), delegatorDelegationsResp.Res.Total)
@@ -176,11 +166,14 @@ func (suite *QueryTestSuite) TestGRPCValidatorDelegations() {
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
 	suite.True(found)
-	valReq := &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
+	valReq := &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1,
+		Req: &query.PageRequest{Limit: 1, CountTotal: true}}
 	delegationsRes, err := queryClient.ValidatorDelegations(gocontext.Background(), valReq)
 
 	suite.NoError(err)
-	suite.Len(delegationsRes.DelegationResponses, 2)
+	suite.Len(delegationsRes.DelegationResponses, 1)
+	suite.NotNil(delegationsRes.Res.NextKey)
+	// suite.Equal(uint64(2), delegationsRes.Res.Total)
 	suite.Equal(addrVal1, delegationsRes.DelegationResponses[0].Delegation.ValidatorAddress)
 	suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes.DelegationResponses[0].Balance)
 }
@@ -198,7 +191,7 @@ func (suite *QueryTestSuite) TestGRPCQueryUnbondingDelegation() {
 	suite.Error(err)
 	suite.Nil(unbondRes)
 
-	unbondReq := &types.QueryUnbondingDelegationRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal2, Req: &query.PageRequest{}}
+	unbondReq := &types.QueryUnbondingDelegationRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal2}
 	unbondRes, err = queryClient.UnbondingDelegation(gocontext.Background(), unbondReq)
 
 	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal2)
@@ -209,51 +202,33 @@ func (suite *QueryTestSuite) TestGRPCQueryUnbondingDelegation() {
 
 func (suite *QueryTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
-	addrAcc2 := addrs[1]
-	addrVal2 := vals[1].OperatorAddress
+	addrAcc := addrs[0]
+	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
 
 	unbondingTokens := sdk.TokensFromConsensusPower(2)
-	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc2, addrVal2, unbondingTokens.ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc, addrVal, unbondingTokens.ToDec())
 	suite.NoError(err)
-	delegatorUbds, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), &types.QueryDelegatorUnbondingDelegationsRequest{})
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc, addrVal2, unbondingTokens.ToDec())
+	suite.NoError(err)
+
+	delegatorUbdsRes, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(),
+		&types.QueryDelegatorUnbondingDelegationsRequest{})
 	suite.Error(err)
-	suite.Nil(delegatorUbds)
+	suite.Nil(delegatorUbdsRes)
 
-	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal2)
+	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc, addrVal)
 	suite.True(found)
-	unbReq := &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
-	delegatorUbds, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
-	suite.NoError(err)
-	suite.Equal(unbond, delegatorUbds.UnbondingResponses[0])
-
 	// Query Delegator unbonding delegate with pagination
-	unbReq = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc2,
-		Req: &query.PageRequest{Limit: 1}}
-	delegatorUbds, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
+	unbReq := &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc,
+		Req: &query.PageRequest{Limit: 1, CountTotal: true}}
+	delegatorUbdsRes, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
+
 	suite.NoError(err)
-
-	suite.Len(delegatorUbds.UnbondingResponses, 1)
-	suite.Equal(unbond, delegatorUbds.UnbondingResponses[0])
+	suite.NotNil(delegatorUbdsRes.Res.NextKey)
+	suite.Equal(uint64(2), delegatorUbdsRes.Res.Total)
+	suite.Len(delegatorUbdsRes.UnbondingResponses, 1)
+	suite.Equal(unbond, delegatorUbdsRes.UnbondingResponses[0])
 }
-
-// func (suite *) TestGRPCQueryDelegationss() {
-// 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
-//
-// 	_, addrAcc2 := addrs[0], addrs[1]
-// 	val1, val2 := vals[0], vals[1]
-//
-// 	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
-// 	suite.NoError(err)
-//
-// 	redelegationTokens := sdk.TokensFromConsensusPower(10)
-// 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
-// 		val2.OperatorAddress, redelegationTokens.ToDec())
-// 	suite.NoError(err)
-// 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
-// 	suite.True(found)
-//
-//
-// }
 
 func (suite *QueryTestSuite) TestGRPCQueryPoolParameters() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
@@ -310,13 +285,10 @@ func (suite *QueryTestSuite) TestGRPCQueryRedelegation() {
 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc, val1.OperatorAddress, val2.OperatorAddress)
 	suite.True(found)
 
-	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
-	suite.NoError(err)
-
 	redelReq := &types.QueryRedelegationsRequest{
 		DelegatorAddr: addrAcc, SrcValidatorAddr: val1.OperatorAddress, DstValidatorAddr: val2.OperatorAddress,
 		Req: &query.PageRequest{}}
-	redelResp, err = queryClient.Redelegations(gocontext.Background(), redelReq)
+	redelResp, err := queryClient.Redelegations(gocontext.Background(), redelReq)
 
 	suite.NoError(err)
 	suite.Len(redelResp.RedelegationResponses, 1)
@@ -337,8 +309,10 @@ func (suite *QueryTestSuite) TestGRPCQueryRedelegation() {
 	suite.Len(redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
 
 	redelResp, err = queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
-		SrcValidatorAddr: val1.GetOperator(), Req: &query.PageRequest{}})
+		SrcValidatorAddr: val1.GetOperator(), Req: &query.PageRequest{Limit: 1, CountTotal: true}})
+
 	suite.NoError(err)
+	suite.Equal(uint64(1), redelResp.Res.Total)
 	suite.Len(redelResp.RedelegationResponses, 1)
 	suite.Equal(redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
 	suite.Equal(redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
@@ -346,42 +320,50 @@ func (suite *QueryTestSuite) TestGRPCQueryRedelegation() {
 	suite.Len(redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
 }
 
-func (suite *QueryTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
+func (suite *QueryTestSuite) TestUnbondingDelegation() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
 	val1 := vals[0]
 
-	// delegate
-	delAmount := sdk.TokensFromConsensusPower(100)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, sdk.Unbonded, val1, true)
-	suite.NoError(err)
-	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-
 	// undelegate
 	undelAmount := sdk.TokensFromConsensusPower(2)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
 	suite.NoError(err)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	unbDelsResp, err := queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{
+		DelegatorAddr: addrAcc2, ValidatorAddr: val1.GetOperator()})
+	suite.Error(err)
+
+	unbDelsResp, err = queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{
 		DelegatorAddr: addrAcc1, ValidatorAddr: val1.GetOperator()})
 
 	suite.Equal(addrAcc1, unbDelsResp.Unbond.DelegatorAddress)
 	suite.Equal(val1.OperatorAddress, unbDelsResp.Unbond.ValidatorAddress)
 	suite.Equal(1, len(unbDelsResp.Unbond.Entries))
+}
 
-	unbDelsResp, err = queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{
-		DelegatorAddr: addrAcc2, ValidatorAddr: val1.GetOperator()})
-	suite.Error(err)
+func (suite *QueryTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	addrAcc1, _ := addrs[0], addrs[1]
+	val1 := vals[0]
+
+	// undelegate
+	undelAmount := sdk.TokensFromConsensusPower(2)
+	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
+	suite.NoError(err)
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	valUnbonds, err := queryClient.ValidatorUnbondingDelegations(gocontext.Background(), &types.QueryValidatorUnbondingDelegationsRequest{})
 	suite.Error(err)
 	suite.Nil(valUnbonds)
 
 	valUnbonds, err = queryClient.ValidatorUnbondingDelegations(gocontext.Background(),
-		&types.QueryValidatorUnbondingDelegationsRequest{ValidatorAddr: val1.GetOperator()})
+		&types.QueryValidatorUnbondingDelegationsRequest{ValidatorAddr: val1.GetOperator(),
+			Req: &query.PageRequest{Limit: 1, CountTotal: true}})
 	suite.NoError(err)
+	suite.Equal(uint64(1), valUnbonds.Res.Total)
 	suite.Equal(1, len(valUnbonds.UnbondingResponses))
 }
 

@@ -121,8 +121,6 @@ message QueryUnbondingDelegationRequest{
   bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  cosmos.query.PageRequest req = 3;
 }
 
 // QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method

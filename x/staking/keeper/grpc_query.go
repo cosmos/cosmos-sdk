@@ -92,7 +92,9 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 			if accumulate {
 				delegations = append(delegations, delegation)
 			}
+			return true, nil
 		}
+
 		return false, nil
 	})
 	if err != nil {

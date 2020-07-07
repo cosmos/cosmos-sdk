@@ -41,7 +41,7 @@ func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
 }
 
 func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QuerySigningInfoParams
+	var params types.QuerySigningInfoRequest
 
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {

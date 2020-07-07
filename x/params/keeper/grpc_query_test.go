@@ -1,49 +1,86 @@
 package keeper_test
 
 import (
-	gocontext "context"
-	"testing"
+	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	"github.com/stretchr/testify/require"
 )
 
-func TestGRPCQueryParams(t *testing.T) {
-	_, ctx, _, _, keeper := testComponents()
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-	proposal.RegisterQueryServer(queryHelper, keeper)
-	queryClient := proposal.NewQueryClient(queryHelper)
-
-	res, err := queryClient.Parameters(gocontext.Background(), &proposal.QueryParametersRequest{})
-	require.Error(t, err)
-	require.Nil(t, res)
-
-	res, err = queryClient.Parameters(gocontext.Background(), &proposal.QueryParametersRequest{Subspace: "test"})
-	require.Error(t, err)
-	require.Nil(t, res)
-
-	res, err = queryClient.Parameters(gocontext.Background(), &proposal.QueryParametersRequest{Subspace: "test", Key: "key"})
-	require.Error(t, err)
-	require.Nil(t, res)
-
+func (suite *KeeperTestSuite) TestGRPCQueryParams() {
+	var (
+		req      *proposal.QueryParametersRequest
+		expValue string
+		space    types.Subspace
+	)
 	key := []byte("key")
-	space := keeper.Subspace("test").WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, paramJSON{}, validateNoOp)))
 
-	res, err = queryClient.Parameters(gocontext.Background(), &proposal.QueryParametersRequest{Subspace: "test", Key: "key"})
-	require.NoError(t, err)
-	require.Equal(t, res.Params.Value, "")
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &proposal.QueryParametersRequest{}
+			},
+			false,
+		},
+		{
+			"invalid request with subspace not found",
+			func() {
+				req = &proposal.QueryParametersRequest{Subspace: "test"}
+			},
+			false,
+		},
+		{
+			"invalid request with subspace and key not found",
+			func() {
+				req = &proposal.QueryParametersRequest{Subspace: "test", Key: "key"}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				space = suite.app.ParamsKeeper.Subspace("test").
+					WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, paramJSON{}, validateNoOp)))
+				req = &proposal.QueryParametersRequest{Subspace: "test", Key: "key"}
+				expValue = ""
+			},
+			true,
+		},
+		{
+			"update value success",
+			func() {
+				err := space.Update(suite.ctx, key, []byte(`{"param1":"10241024"}`))
+				suite.Require().NoError(err)
+				req = &proposal.QueryParametersRequest{Subspace: "test", Key: "key"}
+				expValue = `{"param1":"10241024"}`
+			},
+			true,
+		},
+	}
 
-	err = space.Update(ctx, key, []byte(`{"param1":"10241024"}`))
-	require.NoError(t, err)
+	suite.SetupTest()
+	ctx := sdk.WrapSDKContext(suite.ctx)
 
-	res, err = queryClient.Parameters(gocontext.Background(), &proposal.QueryParametersRequest{Subspace: "test", Key: "key"})
-	require.NoError(t, err)
-	require.Equal(t, string(res.Params.Value), `{"param1":"10241024"}`)
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			tc.malleate()
 
-	res, err = queryClient.Parameters(gocontext.Background(), &proposal.QueryParametersRequest{Subspace: "test1", Key: "key"})
-	require.Error(t, err)
-	require.Nil(t, res)
+			res, err := suite.queryClient.Parameters(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expValue, res.Params.Value)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+		})
+	}
 }

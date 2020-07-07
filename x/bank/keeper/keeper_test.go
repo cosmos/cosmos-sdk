@@ -465,11 +465,11 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
 
 	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
-	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, barCoin.Denom))
-	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, bondCoin.Denom))
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
 
 	// Both coins should be send enabled.
-	err := app.BankKeeper.CoinsSendEnabled(ctx, fooCoin, bondCoin)
+	err := app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
 	suite.Require().NoError(err)
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
@@ -478,20 +478,20 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app.BankKeeper.SetParams(ctx, params)
 
 	// Expect our specific override to be enabled, others to be !enabled.
-	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx, fooCoin.Denom))
-	suite.Require().Equal(!enabled, app.BankKeeper.GetSendEnabled(ctx, barCoin.Denom))
-	suite.Require().Equal(!enabled, app.BankKeeper.GetSendEnabled(ctx, sdk.DefaultBondDenom))
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, fooCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
 
 	// Foo coin should be send enabled.
-	err = app.BankKeeper.CoinsSendEnabled(ctx, fooCoin)
+	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin)
 	suite.Require().NoError(err)
 
 	// Expect an error when one coin is not send enabled.
-	err = app.BankKeeper.CoinsSendEnabled(ctx, fooCoin, bondCoin)
+	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
 	suite.Require().Error(err)
 
 	// Expect an error when all coins are not send enabled.
-	err = app.BankKeeper.CoinsSendEnabled(ctx, bondCoin, barCoin)
+	err = app.BankKeeper.SendEnabledCoins(ctx, bondCoin, barCoin)
 	suite.Require().Error(err)
 }
 

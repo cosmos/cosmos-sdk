@@ -30,7 +30,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.Result, error) {
-	if err := k.CoinsSendEnabled(ctx, msg.Amount...); err != nil {
+	if err := k.SendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgMultiSend) (*sdk.Result, error) {
 	// NOTE: totalIn == totalOut should already have been checked
 	for _, in := range msg.Inputs {
-		if err := k.CoinsSendEnabled(ctx, in.Coins...); err != nil {
+		if err := k.SendEnabledCoins(ctx, in.Coins...); err != nil {
 			return nil, err
 		}
 	}

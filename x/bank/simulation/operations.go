@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -63,10 +62,8 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 		// Check send_enabled status of each coin denom
-		for _, c := range coins {
-			if !bk.GetSendEnabled(ctx, c.Denom) {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, fmt.Sprintf("%s transfers are currently disabled", c.Denom)), nil, nil
-			}
+		if err := bk.SendEnabledCoins(ctx, coins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
 		}
 
 		if skip {
@@ -168,11 +165,9 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 
-		// Check send_enabled status of each input's coin denoms
-		for _, coin := range totalSentCoins {
-			if !bk.GetSendEnabled(ctx, coin.Denom) {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, fmt.Sprintf("%s transfers are currently disabled", coin.Denom)), nil, nil
-			}
+		// Check send_enabled status of each sent coin denom
+		if err := bk.SendEnabledCoins(ctx, totalSentCoins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
 		}
 
 		for o := range outputs {

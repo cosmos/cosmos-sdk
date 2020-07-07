@@ -27,8 +27,8 @@ type SendKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
-	GetSendEnabled(ctx sdk.Context, denom string) bool
-	CoinsSendEnabled(ctx sdk.Context, coins ...sdk.Coin) error
+	SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
+	SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -63,8 +63,6 @@ func NewBaseSendKeeper(
 	}
 }
 
-//______________________________________________________________________
-
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
@@ -75,8 +73,6 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
-
-//______________________________________________________________________
 
 // InputOutputCoins performs multi-send functionality. It accepts a series of
 // inputs that correspond to a series of outputs. It returns an error if the
@@ -274,21 +270,21 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	return nil
 }
 
-// CoinsSendEnabled checks the coins provide and returns an ErrSendDisabled if
+// SendEnabledCoins checks the coins provide and returns an ErrSendDisabled if
 // any of the coins are not configured for sending.  Returns nil if sending is enabled
 // for all provided coin
-func (k BaseSendKeeper) CoinsSendEnabled(ctx sdk.Context, coins ...sdk.Coin) error {
+func (k BaseSendKeeper) SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
 	for _, coin := range coins {
-		if !k.GetSendEnabled(ctx, coin.Denom) {
+		if !k.SendEnabledCoin(ctx, coin) {
 			return sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", coin.Denom)
 		}
 	}
 	return nil
 }
 
-// GetSendEnabled returns the current SendEnabled status of the provided denom
-func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context, denom string) bool {
-	return k.GetParams(ctx).SendEnabledDenom(denom)
+// SendEnabledCoin returns the current SendEnabled status of the provided coin's denom
+func (k BaseSendKeeper) SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
+	return k.GetParams(ctx).SendEnabledDenom(coin.Denom)
 }
 
 // BlockedAddr checks if a given address is restricted from

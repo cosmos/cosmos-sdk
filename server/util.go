@@ -46,6 +46,13 @@ func NewContext(v *viper.Viper, config *tmcfg.Config, logger log.Logger) *Contex
 	return &Context{v, config, logger}
 }
 
+// InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
+// application command. It will create a Viper literal and a default server
+// Context. The server Tendermint configuration will either be read and parsed
+// or created and saved to disk, where the server Context is updated to reflect
+// the Tendermint configuration. The Viper literal is used to read and parse
+// the application configuration. Command handlers can fetch the server Context
+// to get the Tendermint configuration or to get access to Viper.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	rootViper := viper.New()
 	rootViper.BindPFlags(cmd.Flags())
@@ -95,45 +102,6 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 	*serverCtxPtr = *serverCtx
 
 	return nil
-}
-
-// PersistentPreRunEFn returns a PersistentPreRunE function for the root daemon
-// application command. The provided context is typically the default context,
-// where the logger and config are set based on the execution of parsing or
-// creating a new Tendermint configuration file (config.toml). The provided
-// viper object must be created at the root level and have all necessary flags,
-// defined by Tendermint, bound to it.
-func PersistentPreRunEFn(ctx *Context) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		rootViper := viper.New()
-		rootViper.BindPFlags(cmd.Flags())
-		rootViper.BindPFlags(cmd.PersistentFlags())
-
-		if cmd.Name() == version.Cmd.Name() {
-			return nil
-		}
-
-		config, err := interceptConfigs(ctx, rootViper)
-		if err != nil {
-			return err
-		}
-
-		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
-		if err != nil {
-			return err
-		}
-
-		if rootViper.GetBool(tmcli.TraceFlag) {
-			logger = log.NewTracingLogger(logger)
-		}
-
-		logger = logger.With("module", "main")
-		ctx.Config = config
-		ctx.Logger = logger
-
-		return nil
-	}
 }
 
 // interceptConfigs parses and updates a Tendermint configuration file or

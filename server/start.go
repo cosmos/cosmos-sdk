@@ -57,6 +57,12 @@ const (
 	flagGRPCAddress = "grpc.address"
 )
 
+// State sync-related flags.
+const (
+	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
+	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
+)
+
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
 func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
@@ -133,6 +139,9 @@ which accepts a path for the resulting pprof file.
 
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
+
+	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
+	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

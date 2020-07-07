@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
 type Querier struct {
 	Keeper
 }
@@ -25,7 +26,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Status == "" {
+	if !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 

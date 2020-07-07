@@ -18,6 +18,9 @@ import (
 
 // Keeper defines the IBC connection keeper
 type Keeper struct {
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
 	storeKey     sdk.StoreKey
 	aminoCdc     *codec.Codec    // amino codec. TODO: remove after clients have been migrated to proto
 	cdc          codec.Marshaler // hybrid codec

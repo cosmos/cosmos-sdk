@@ -16,7 +16,7 @@ jobs:
           stale-issue-message: "This issue has been automatically marked as stale because it has not had
   recent activity. It will be closed if no further activity occurs. Thank you
   for your contributions."
-          days-before-stale: 10
-          days-before-close: 4
+          days-before-stale: 45
+          days-before-close: 6
           exempt-pr-labels: "pinned, security, proposal"
           exempt-issues-labels: "pinned, security, proposal"

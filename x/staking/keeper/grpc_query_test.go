@@ -54,7 +54,7 @@ func (suite *QueryTestSuite) TestGRPCQueryValidators() {
 
 	valsResp, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
 	suite.Error(err)
-	suite.Nil(vals)
+	suite.Nil(valsResp)
 
 	req := &types.QueryValidatorsRequest{Status: sdk.Bonded.String(),
 		Req: &query.PageRequest{Limit: 1, CountTotal: true}}

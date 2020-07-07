@@ -77,8 +77,8 @@ which accepts a path for the resulting pprof file.
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 
-			// Bind flags to the Context's Viper so the app construction can set options
-			// accordingly.
+			// Bind flags to the Context's Viper so the app construction can set
+			// options accordingly.
 			serverCtx.Viper.BindPFlags(cmd.Flags())
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
@@ -117,10 +117,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
-
-	// // Bind flags to the Context's Viper so the app construction can set options
-	// // accordingly.
-	// ctx.Viper.BindPFlags(cmd.Flags())
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

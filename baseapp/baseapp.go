@@ -78,8 +78,9 @@ type BaseApp struct { // nolint: maligned
 	//
 	// checkState is set on InitChain and reset on Commit
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
-	checkState   *state // for CheckTx
-	deliverState *state // for DeliverTx
+	checkState    *state // for CheckTx
+	deliverState  *state // for DeliverTx
+	simulateState *state // for gas simulation (via query)
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache sdk.MultiStorePersistentCache
@@ -391,6 +392,14 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
 	}
+
+	// also set the simulate state while we are at it
+	sms := app.cms.CacheMultiStore()
+	app.simulateState = &state{
+		ms:  sms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+
 }
 
 // setDeliverState sets the BaseApp's deliverState with a cache-wrapped multi-store
@@ -473,11 +482,16 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 // Returns the applications's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeDeliver {
+	switch mode {
+	case runTxModeDeliver:
 		return app.deliverState
+	case runTxModeSimulate:
+		return app.simulateState
+	case runTxModeCheck, runTxModeReCheck:
+		return app.checkState
+	default:
+		panic("Unknown mode - not check, deliver, or simulate")
 	}
-
-	return app.checkState
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.

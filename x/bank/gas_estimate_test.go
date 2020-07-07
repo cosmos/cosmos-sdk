@@ -102,6 +102,10 @@ func TestSendGasEstimates(t *testing.T) {
 	simGas2 := simulatedGas(t, app, tx2)
 	fmt.Printf("Sim 1 used: %d\n", simGas2)
 
+	// let's simulate a second time, to see diff
+	simGas3 := simulatedGas(t, app, tx)
+	fmt.Printf("Re-Sim 0 (no check) used: %d\n", simGas3)
+
 	// let's run some CheckTx and see if they modify the values
 	_, _, err := app.Check(tx)
 	require.NoError(t, err)
@@ -110,7 +114,7 @@ func TestSendGasEstimates(t *testing.T) {
 
 	// now, try the simulations again
 	resimGas := simulatedGas(t, app, tx)
-	fmt.Printf("Re-Sim 0 used: %d\n", resimGas)
+	fmt.Printf("Re-Sim 0 (after check) used: %d\n", resimGas)
 	assert.Equal(t, simGas, resimGas)
 
 	// deliver the tx with the gas returned from simulate

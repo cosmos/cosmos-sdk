@@ -186,27 +186,31 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	req := &types.QueryDelegationRewardsRequest{
-		DelegatorAddress: sdk.AccAddress(valOpAddr1),
+		DelegatorAddress: addr[0],
 		ValidatorAddress: valOpAddr1,
 	}
 
-	rewards, err := queryClient.DelegationRewards(gocontext.Background(), &types.QueryDelegationRewardsRequest{})
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	c := sdk.WrapSDKContext(ctx)
+
+	rewards, err := queryClient.DelegationRewards(c, &types.QueryDelegationRewardsRequest{})
 	suite.Require().Error(err)
 	suite.Require().Nil(rewards)
 
-	_, err = queryClient.DelegationRewards(gocontext.Background(), req)
+	rewards, err = queryClient.DelegationRewards(c, req)
 	suite.Require().NoError(err)
 	// TODO debug delegation rewards
-	// suite.Require().Equal(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards.Rewards)
+	suite.Require().Equal(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards.Rewards)
 
-	_, err = queryClient.DelegationTotalRewards(gocontext.Background(), &types.QueryDelegationTotalRewardsRequest{})
+	_, err = queryClient.DelegationTotalRewards(c, &types.QueryDelegationTotalRewardsRequest{})
 	suite.Require().Error(err)
 
 	totalRewardsReq := &types.QueryDelegationTotalRewardsRequest{
 		DelegatorAddress: sdk.AccAddress(valOpAddr1),
 	}
 
-	_, err = queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
+	_, err = queryClient.DelegationTotalRewards(c, totalRewardsReq)
 	suite.Require().NoError(err)
 
 	// TODO debug delegation rewards

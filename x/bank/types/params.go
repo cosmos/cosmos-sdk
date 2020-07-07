@@ -56,8 +56,8 @@ func (p Params) String() string {
 	return string(out)
 }
 
-// IsSendEnabled returns true if the given denom is enabled for sending
-func (p Params) IsSendEnabled(denom string) bool {
+// SendEnabledDenom returns true if the given denom is enabled for sending
+func (p Params) SendEnabledDenom(denom string) bool {
 	for _, pse := range p.SendEnabled {
 		if pse.Denom == denom {
 			return pse.Enabled

@@ -61,34 +61,34 @@ func Test_validateParams(t *testing.T) {
 	require.NoError(t, params.Validate())
 
 	// default case is all denoms are enabled for sending
-	require.True(t, params.IsSendEnabled(sdk.DefaultBondDenom))
-	require.True(t, params.IsSendEnabled("foodenom"))
+	require.True(t, params.SendEnabledDenom(sdk.DefaultBondDenom))
+	require.True(t, params.SendEnabledDenom("foodenom"))
 
 	params.DefaultSendEnabled = false
 	params = params.SetSendEnabledParam("foodenom", true)
 
 	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
-	require.True(t, params.IsSendEnabled("foodenom"))
-	require.False(t, params.IsSendEnabled(sdk.DefaultBondDenom))
+	require.True(t, params.SendEnabledDenom("foodenom"))
+	require.False(t, params.SendEnabledDenom(sdk.DefaultBondDenom))
 
 	params.DefaultSendEnabled = true
 	params = params.SetSendEnabledParam("foodenom", false)
 
 	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
-	require.False(t, params.IsSendEnabled("foodenom"))
-	require.True(t, params.IsSendEnabled(sdk.DefaultBondDenom))
+	require.False(t, params.SendEnabledDenom("foodenom"))
+	require.True(t, params.SendEnabledDenom(sdk.DefaultBondDenom))
 
 	params = params.SetSendEnabledParam("foodenom", true)
-	require.True(t, params.IsSendEnabled("foodenom"))
+	require.True(t, params.SendEnabledDenom("foodenom"))
 
 	params = params.SetSendEnabledParam("foodenom", false)
-	require.False(t, params.IsSendEnabled("foodenom"))
+	require.False(t, params.SendEnabledDenom("foodenom"))
 
-	require.True(t, params.IsSendEnabled("foodenom2"))
+	require.True(t, params.SendEnabledDenom("foodenom2"))
 	params = params.SetSendEnabledParam("foodenom2", false)
-	require.True(t, params.IsSendEnabled(""))
-	require.True(t, params.IsSendEnabled(sdk.DefaultBondDenom))
-	require.False(t, params.IsSendEnabled("foodenom2"))
+	require.True(t, params.SendEnabledDenom(""))
+	require.True(t, params.SendEnabledDenom(sdk.DefaultBondDenom))
+	require.False(t, params.SendEnabledDenom("foodenom2"))
 
 	paramYaml := `send_enabled:
 - denom: foodenom

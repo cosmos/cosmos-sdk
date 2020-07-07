@@ -288,7 +288,7 @@ func (k BaseSendKeeper) CoinsSendEnabled(ctx sdk.Context, coins ...sdk.Coin) err
 
 // GetSendEnabled returns the current SendEnabled status of the provided denom
 func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context, denom string) bool {
-	return k.GetParams(ctx).IsSendEnabled(denom)
+	return k.GetParams(ctx).SendEnabledDenom(denom)
 }
 
 // BlockedAddr checks if a given address is restricted from

@@ -14,7 +14,7 @@ import (
 )
 
 func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/transfer", RestPortID, RestChannelID), transferHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/transfer", restPortID, restChannelID), transferHandlerFn(clientCtx)).Methods("POST")
 }
 
 // transferHandlerFn implements a transfer handler
@@ -33,8 +33,8 @@ func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
 func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		portID := vars[RestPortID]
-		channelID := vars[RestChannelID]
+		portID := vars[restPortID]
+		channelID := vars[restChannelID]
 
 		var req TransferTxReq
 		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {

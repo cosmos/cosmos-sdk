@@ -10,7 +10,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/crisis transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Crisis transactions subcommands",
@@ -19,20 +19,25 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(NewMsgVerifyInvariantTxCmd(clientCtx))
+	txCmd.AddCommand(NewMsgVerifyInvariantTxCmd())
 
 	return txCmd
 }
 
 // NewMsgVerifyInvariantTxCmd returns a CLI command handler for creating a
 // MsgVerifyInvariant transaction.
-func NewMsgVerifyInvariantTxCmd(clientCtx client.Context) *cobra.Command {
+func NewMsgVerifyInvariantTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "invariant-broken [module-name] [invariant-route]",
 		Short: "Submit proof that an invariant broken to halt the chain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			senderAddr := clientCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]
@@ -42,7 +47,7 @@ func NewMsgVerifyInvariantTxCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

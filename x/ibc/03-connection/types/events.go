@@ -8,10 +8,10 @@ import (
 
 // IBC connection events
 const (
-	AttributeKeyConnectionID            = "connection_id"
-	AttributeKeyClientID                = "client_id"
-	AttributeKeyCounterpartyClientID    = "counterparty_client_id"
-	AttributeKeyCounterpartyConnetionID = "counterparty_connection_id"
+	AttributeKeyConnectionID             = "connection_id"
+	AttributeKeyClientID                 = "client_id"
+	AttributeKeyCounterpartyClientID     = "counterparty_client_id"
+	AttributeKeyCounterpartyConnectionID = "counterparty_connection_id"
 )
 
 // IBC connection events vars

@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -90,5 +90,5 @@ func (q BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 	ctx := sdk.UnwrapSDKContext(c)
 	supply := q.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
 
-	return &types.QuerySupplyOfResponse{Amount: supply}, nil
+	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply)}, nil
 }

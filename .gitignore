@@ -21,6 +21,7 @@ docs/modules
 dist
 tools-stamp
 proto-tools-stamp
+buf-stamp
 
 # Data - ideally these don't exist
 baseapp/data/*

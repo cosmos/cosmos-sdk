@@ -9,6 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -593,5 +594,5 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 			},
 		}.GetHash()
 	}
-	return SimpleHashFromMap(m)
+	return sdkmaps.SimpleHashFromMap(m)
 }

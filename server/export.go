@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -29,9 +28,9 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := ctx.Config
-			config.SetRoot(viper.GetString(flags.FlagHome))
 
-			traceWriterFile := viper.GetString(flagTraceStore)
+			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
+			config.SetRoot(homeDir)
 
 			db, err := openDB(config.RootDir)
 			if err != nil {
@@ -52,14 +51,15 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 				return nil
 			}
 
+			traceWriterFile, _ := cmd.Flags().GetString(flagTraceStore)
 			traceWriter, err := openTraceWriter(traceWriterFile)
 			if err != nil {
 				return err
 			}
 
-			height := viper.GetInt64(flagHeight)
-			forZeroHeight := viper.GetBool(flagForZeroHeight)
-			jailWhiteList := viper.GetStringSlice(flagJailWhitelist)
+			height, _ := cmd.Flags().GetInt64(flagHeight)
+			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
+			jailWhiteList, _ := cmd.Flags().GetStringSlice(flagJailWhitelist)
 
 			appState, validators, cp, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
@@ -75,8 +75,9 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 			doc.Validators = validators
 			doc.ConsensusParams = &tmtypes.ConsensusParams{
 				Block: tmtypes.BlockParams{
-					MaxBytes: cp.Block.MaxBytes,
-					MaxGas:   cp.Block.MaxGas,
+					MaxBytes:   cp.Block.MaxBytes,
+					MaxGas:     cp.Block.MaxGas,
+					TimeIotaMs: doc.ConsensusParams.Block.TimeIotaMs,
 				},
 				Evidence: tmtypes.EvidenceParams{
 					MaxAgeNumBlocks: cp.Evidence.MaxAgeNumBlocks,
@@ -92,11 +93,12 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 				return err
 			}
 
-			fmt.Println(string(sdk.MustSortJSON(encoded)))
+			cmd.Println(string(sdk.MustSortJSON(encoded)))
 			return nil
 		},
 	}
 
+	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")

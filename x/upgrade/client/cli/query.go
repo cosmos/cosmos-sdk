@@ -11,6 +11,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
+// GetQueryCmd returns the parent command for all x/upgrade CLi query commands.
+// The provided clientCtx should have, at a minimum, a verifier, Tendermint RP
+// client, and marshaler set.
+func GetQueryCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "Querying commands for the upgrade module",
+	}
+	queryCmd.AddCommand(
+		GetCurrentPlanCmd(),
+		GetAppliedPlanCmd(),
+	)
+
+	return cmd
+}
+
 // GetCurrentPlanCmd returns the query upgrade plan command
 func GetCurrentPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{

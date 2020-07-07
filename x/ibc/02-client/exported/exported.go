@@ -138,6 +138,17 @@ type Header interface {
 	GetHeight() uint64
 }
 
+// Height is an interface for a monotonically increasing data type
+// that can be compared against for the purposes of updating and freezing clients
+// Compare implements a method to compare two heights. When comparing two heights a, b
+// we can call a.Compare(b) which will return
+// negative if a < b
+// zero     if a = b
+// positive if a > b
+type Height interface {
+	Compare(h Height) (int64, error)
+}
+
 // MsgCreateClient defines the msg interface that the
 // CreateClient Handler expects
 type MsgCreateClient interface {

@@ -32,13 +32,16 @@ func GetTxCmd() *cobra.Command {
 		Use:   types.ModuleName,
 		Short: "Upgrade transaction subcommands",
 	}
-	txCmd.AddCommand(flags.PostCommands()...)
+	txCmd.AddCommand(
+		NewCmdSubmitUpgradeProposal(),
+		NewCmdSubmitCancelUpgradeProposal()
+	)
 
 	return txCmd
 }
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func NewCmdSubmitUpgradeProposal(clientCtx client.Context) *cobra.Command {
+func NewCmdSubmitUpgradeProposal() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
@@ -90,7 +93,7 @@ func NewCmdSubmitUpgradeProposal(clientCtx client.Context) *cobra.Command {
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal(clientCtx client.Context) *cobra.Command {
+func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),

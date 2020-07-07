@@ -53,7 +53,7 @@ Where proposal.json contains:
   "deposit": "1000stake"
 }
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

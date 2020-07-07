@@ -2,6 +2,8 @@ package cli
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -9,11 +11,13 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	abciServer "github.com/tendermint/tendermint/abci/server"
+	abci_server "github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -27,20 +31,37 @@ import (
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
+func createDefaultTendermintConfig(rootDir string) (*tmcfg.Config, error) {
+	conf := tmcfg.DefaultConfig()
+	conf.SetRoot(rootDir)
+	tmcfg.EnsureRoot(rootDir)
+
+	if err := conf.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf("error in config file: %v", err)
+	}
+
+	return conf, nil
+}
+
 func TestInitCmd(t *testing.T) {
-	t.SkipNow()
 	home, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	cfg, err := createDefaultTendermintConfig(home)
+	require.NoError(t, err)
 
-	ctx := server.NewContext(viper.New(), cfg, logger)
-	cdc := makeCodec()
-	cmd := InitCmd(ctx, cdc, testMbm, home)
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
 
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"appnode-test"})
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
 func setupClientHome(t *testing.T) func() {
@@ -50,29 +71,34 @@ func setupClientHome(t *testing.T) func() {
 }
 
 func TestEmptyState(t *testing.T) {
-	t.SkipNow()
 	t.Cleanup(setupClientHome(t))
 
 	home, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	cfg, err := createDefaultTendermintConfig(home)
+	require.NoError(t, err)
 
-	ctx := server.NewContext(viper.New(), cfg, logger)
-	cdc := makeCodec()
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
 
-	cmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	cmd = server.ExportCmd(ctx, cdc, nil)
 
-	err = cmd.RunE(nil, nil)
-	require.NoError(t, err)
+	cmd = server.ExportCmd(nil)
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
 	go func() {
@@ -95,23 +121,33 @@ func TestEmptyState(t *testing.T) {
 func TestStartStandAlone(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
-	viper.Set(cli.HomeFlag, home)
 	t.Cleanup(setupClientHome(t))
 
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
-	ctx := server.NewContext(viper.New(), cfg, logger)
-	cdc := makeCodec()
-	initCmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, initCmd.RunE(initCmd, []string{"appnode-test"}))
+	cfg, err := createDefaultTendermintConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	app, err := mock.NewApp(home, logger)
-	require.Nil(t, err)
+	require.NoError(t, err)
+
 	svrAddr, _, err := server.FreeTCPAddr()
-	require.Nil(t, err)
-	svr, err := abciServer.NewServer(svrAddr, "socket", app)
-	require.Nil(t, err, "error creating listener")
+	require.NoError(t, err)
+
+	svr, err := abci_server.NewServer(svrAddr, "socket", app)
+	require.NoError(t, err, "error creating listener")
+
 	svr.SetLogger(logger.With("module", "abci-server"))
 	err = svr.Start()
 	require.NoError(t, err)

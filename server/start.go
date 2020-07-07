@@ -166,7 +166,6 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 	cfg := ctx.Config
 	home := cfg.RootDir
 
-	fmt.Println("HOME:", home)
 	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	db, err := openDB(home)
 	if err != nil {

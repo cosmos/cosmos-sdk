@@ -19,7 +19,7 @@ func GetQueryCmd() *cobra.Command {
 		Use:   types.ModuleName,
 		Short: "Querying commands for the upgrade module",
 	}
-	queryCmd.AddCommand(
+	cmd.AddCommand(
 		GetCurrentPlanCmd(),
 		GetAppliedPlanCmd(),
 	)

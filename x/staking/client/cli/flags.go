@@ -34,21 +34,15 @@ const (
 
 // common flagsets to add to various functions
 var (
-	FsPk                = flag.NewFlagSet("", flag.ContinueOnError)
-	FsAmount            = flag.NewFlagSet("", flag.ContinueOnError)
 	fsShares            = flag.NewFlagSet("", flag.ContinueOnError)
 	fsDescriptionCreate = flag.NewFlagSet("", flag.ContinueOnError)
-	FsCommissionCreate  = flag.NewFlagSet("", flag.ContinueOnError)
 	fsCommissionUpdate  = flag.NewFlagSet("", flag.ContinueOnError)
-	FsMinSelfDelegation = flag.NewFlagSet("", flag.ContinueOnError)
 	fsDescriptionEdit   = flag.NewFlagSet("", flag.ContinueOnError)
 	fsValidator         = flag.NewFlagSet("", flag.ContinueOnError)
 	fsRedelegation      = flag.NewFlagSet("", flag.ContinueOnError)
 )
 
 func init() {
-	FsPk.String(FlagPubKey, "", "The Bech32 encoded PubKey of the validator")
-	FsAmount.String(FlagAmount, "", "Amount of coins to bond")
 	fsShares.String(FlagSharesAmount, "", "Amount of source-shares to either unbond or redelegate as a positive integer or decimal")
 	fsShares.String(FlagSharesFraction, "", "Fraction of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")
 	fsDescriptionCreate.String(FlagMoniker, "", "The validator's name")
@@ -57,10 +51,6 @@ func init() {
 	fsDescriptionCreate.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsDescriptionCreate.String(FlagDetails, "", "The validator's (optional) details")
 	fsCommissionUpdate.String(FlagCommissionRate, "", "The new commission rate percentage")
-	FsCommissionCreate.String(FlagCommissionRate, "", "The initial commission rate percentage")
-	FsCommissionCreate.String(FlagCommissionMaxRate, "", "The maximum commission rate percentage")
-	FsCommissionCreate.String(FlagCommissionMaxChangeRate, "", "The maximum commission change rate percentage (per day)")
-	FsMinSelfDelegation.String(FlagMinSelfDelegation, "", "The minimum self delegation required on the validator")
 	fsDescriptionEdit.String(FlagMoniker, types.DoNotModifyDesc, "The validator's name")
 	fsDescriptionEdit.String(FlagIdentity, types.DoNotModifyDesc, "The (optional) identity signature (ex. UPort or Keybase)")
 	fsDescriptionEdit.String(FlagWebsite, types.DoNotModifyDesc, "The validator's (optional) website")
@@ -69,4 +59,36 @@ func init() {
 	fsValidator.String(FlagAddressValidator, "", "The Bech32 address of the validator")
 	fsRedelegation.String(FlagAddressValidatorSrc, "", "The Bech32 address of the source validator")
 	fsRedelegation.String(FlagAddressValidatorDst, "", "The Bech32 address of the destination validator")
+}
+
+// FlagSetCommissionCreate Returns the FlagSet used for commission create.
+func FlagSetCommissionCreate() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.String(FlagCommissionRate, "", "The initial commission rate percentage")
+	fs.String(FlagCommissionMaxRate, "", "The maximum commission rate percentage")
+	fs.String(FlagCommissionMaxChangeRate, "", "The maximum commission change rate percentage (per day)")
+
+	return fs
+}
+
+// FlagSetMinSelfDelegation Returns the FlagSet used for minimum set delegation.
+func FlagSetMinSelfDelegation() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagMinSelfDelegation, "", "The minimum self delegation required on the validator")
+	return fs
+}
+
+// FlagSetAmount Returns the FlagSet for amount related operations.
+func FlagSetAmount() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagAmount, "", "Amount of coins to bond")
+	return fs
+}
+
+// FlagSetPublicKey Returns the flagset for Public Key related operations.
+func FlagSetPublicKey() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagPubKey, "", "The Bech32 encoded PubKey of the validator")
+	return fs
 }

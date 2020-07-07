@@ -56,22 +56,17 @@ func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command
 	}
 }
 
-type hasSigners interface {
-	GetSigners() []sdk.AccAddress
-}
-
 // printAndValidateSigs will validate the signatures of a given transaction over its
 // expected signers. In addition, if offline has not been supplied, the signature is
 // verified over the transaction sign bytes. Returns false if the validation fails.
 func printAndValidateSigs(
 	cmd *cobra.Command, clientCtx client.Context, chainID string, tx sdk.Tx, offline bool,
 ) bool {
-	sigTx := tx.(signing.HasSignaturesV2)
-	hasSigners := tx.(hasSigners)
+	sigTx := tx.(authsigning.SigVerifiableTx)
 	signModeHandler := clientCtx.TxGenerator.SignModeHandler()
 
 	cmd.Println("Signers:")
-	signers := hasSigners.GetSigners()
+	signers := sigTx.GetSigners()
 
 	for i, signer := range signers {
 		cmd.Printf("  %v: %v\n", i, signer.String())
@@ -183,7 +178,7 @@ func readTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filenam
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	clientCtx = clientCtx.InitWithInput(inBuf)
-	txFactory := tx.NewFactoryFromCLI(inBuf)
+	txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 	return clientCtx, txFactory, stdTx, nil
 }

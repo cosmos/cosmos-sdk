@@ -1,8 +1,8 @@
 # Stable Releases
 
-*Stable Release Series* continue to receieve bugfixes until they reach **End Of Life**.
+*Stable Release Series* continue to receive bugfixes until they reach **End Of Life**.
 
-Only the following release series are currently supported and receieve bugfixes:
+Only the following release series are currently supported and receive bugfixes:
 
 The `0.37.x` release series will continue receiving bugfixes until the Cosmos Hub
 migrates to a newer release of the Cosmos-SDK.

@@ -29,8 +29,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.JSONMarshaler
 
-			home, _ := cmd.Flags().GetString(cli.HomeFlag)
-			config.SetRoot(home)
+			config.SetRoot(clientCtx.HomeDir)
 
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {

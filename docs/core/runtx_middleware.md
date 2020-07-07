@@ -1,5 +1,5 @@
 <!--
-order: 11
+order: 10
 -->
 
 # RunTx recovery middleware
@@ -10,7 +10,7 @@ Recovery middleware is used to add custom panic recovery for SDK application dev
 
 More context could be found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md).
 
-Implementation could be found in the [recovery.go](../../baseapp/recovery.go) file. 
+Implementation could be found in the [recovery.go](../../baseapp/recovery.go) file.
 
 ## Interface
 
@@ -21,6 +21,7 @@ type RecoveryHandler func(recoveryObj interface{}) error
 `recoveryObj` is a return value for `recover()` function from the `buildin` Golang package.
 
 **Contract:**
+
 * RecoveryHandler returns `nil` if `recoveryObj` wasn't handled and should be passed to the next recovery middleware;
 * RecoveryHandler returns a non-nil `error` if `recoveryObj` was handled;
 
@@ -28,13 +29,14 @@ type RecoveryHandler func(recoveryObj interface{}) error
 
 ``BaseApp.AddRunTxRecoveryHandler(handlers ...RecoveryHandler)``
 
-BaseApp method adds recovery middleware to the default recovery chain. 
+BaseApp method adds recovery middleware to the default recovery chain.
 
 ## Example
 
 Lets assume we want to emit the "Consensus failure" chain state if some particular error occurred.
 
 We have a module keeper that panics:
+
 ```go
 func (k FooKeeper) Do(obj interface{}) {
     if obj == nil {
@@ -42,10 +44,11 @@ func (k FooKeeper) Do(obj interface{}) {
         err := sdkErrors.Wrap(fooTypes.InternalError, "obj is nil")
         panic(err)
     }
-} 
+}
 ```
 
 By default that panic would be recovered and an error message will be printed to log. To override that behaviour we should register a custom RecoveryHandler:
+
 ```go
 // SDK application constructor
 customHandler := func(recoveryObj interface{}) error {
@@ -53,14 +56,18 @@ customHandler := func(recoveryObj interface{}) error {
     if !ok {
         return nil
     }
-    
+
     if fooTypes.InternalError.Is(err) {
-    	panic(fmt.Errorf("FooKeeper did panic with error: %w", err))
+        panic(fmt.Errorf("FooKeeper did panic with error: %w", err))
     }
-    
+
     return nil
 }
 
 baseApp := baseapp.NewBaseApp(...)
 baseApp.AddRunTxRecoveryHandler(customHandler)
 ```
+
+## Next {hide}
+
+Learn about the [IBC](./../ibc/README.md) protocol {hide}

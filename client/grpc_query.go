@@ -4,11 +4,12 @@ import (
 	gocontext "context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var _ gogogrpc.ClientConn = Context{}

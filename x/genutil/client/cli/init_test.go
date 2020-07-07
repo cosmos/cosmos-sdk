@@ -52,7 +52,7 @@ func TestInitCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -81,7 +81,7 @@ func TestEmptyState(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -128,14 +128,14 @@ func TestStartStandAlone(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec())
+	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 	cmd := InitCmd(testMbm, home)
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	cmd.SetArgs([]string{"appnode-test"})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 

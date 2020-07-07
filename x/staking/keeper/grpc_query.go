@@ -80,7 +80,8 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	delegations := k.GetValidatorDelegations(ctx, req.ValidatorAddr)
+
+	var delegations []types.Delegation
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.DelegationKey)
 	res, err := query.FilteredPaginate(valStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {

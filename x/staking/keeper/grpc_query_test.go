@@ -35,9 +35,7 @@ func (suite *QueryTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	addrs, _ := createValidators(ctx, app, []int64{9, 8, 7})
-	validators := app.StakingKeeper.GetValidators(ctx, 5)
-
+	addrs, _, validators := createValidators(ctx, app, []int64{9, 8, 7})
 	header := abci.Header{
 		ChainID: "HelloChain",
 		Height:  5,
@@ -158,7 +156,7 @@ func (suite *QueryTestSuite) TestGRPCDelegatorDelegations() {
 func (suite *QueryTestSuite) TestGRPCValidatorDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc := addrs[0]
-	addrVal1 := vals[0].OperatorAddress
+	addrVal1 := vals[1].OperatorAddress
 
 	validatorDelegations, err := queryClient.ValidatorDelegations(gocontext.Background(), &types.QueryValidatorDelegationsRequest{})
 	suite.Error(err)
@@ -173,7 +171,7 @@ func (suite *QueryTestSuite) TestGRPCValidatorDelegations() {
 	suite.NoError(err)
 	suite.Len(delegationsRes.DelegationResponses, 1)
 	suite.NotNil(delegationsRes.Res.NextKey)
-	// suite.Equal(uint64(2), delegationsRes.Res.Total)
+	suite.Equal(uint64(2), delegationsRes.Res.Total)
 	suite.Equal(addrVal1, delegationsRes.DelegationResponses[0].Delegation.ValidatorAddress)
 	suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes.DelegationResponses[0].Balance)
 }
@@ -367,7 +365,7 @@ func (suite *QueryTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	suite.Equal(1, len(valUnbonds.UnbondingResponses))
 }
 
-func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(300000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
@@ -383,6 +381,7 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 
 	val1 := types.NewValidator(valAddrs[0], pks[0], types.Description{})
 	val2 := types.NewValidator(valAddrs[1], pks[1], types.Description{})
+	vals := []types.Validator{val1, val2}
 
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidator(ctx, val2)
@@ -394,10 +393,9 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[0]), sdk.Unbonded, val1, true)
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], sdk.TokensFromConsensusPower(powers[1]), sdk.Unbonded, val2, true)
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[2]), sdk.Unbonded, val2, true)
-
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	return addrs, valAddrs
+	return addrs, valAddrs, vals
 }
 
 func TestKeeperTestSuite(t *testing.T) {

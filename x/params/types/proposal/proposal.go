@@ -101,9 +101,9 @@ func ValidateChanges(changes []ParamChange) error {
 	return nil
 }
 
-// NewQuerySubspaceParamsRequest returns the new instance of QuerySubspaceParamsRequest
-func NewQuerySubspaceParamsRequest(ss, key string) *QuerySubspaceParamsRequest {
-	return &QuerySubspaceParamsRequest{
+// NewQueryParametersRequest returns the new instance of QueryParametersRequest
+func NewQueryParametersRequest(ss, key string) *QueryParametersRequest {
+	return &QueryParametersRequest{
 		Subspace: ss,
 		Key:      key,
 	}

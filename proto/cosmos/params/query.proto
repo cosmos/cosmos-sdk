@@ -9,17 +9,17 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
 // Query creates service with Parameters as rpc
 service Query{
     // Parameters queries all params
-    rpc Parameters (QuerySubspaceParamsRequest) returns (QuerySubspaceParamsResponse) {}
+    rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) {}
 }
 
-// QuerySubspaceParamsRequest is request type for the Query/Parameters RPC method
-message QuerySubspaceParamsRequest{
+// QueryParametersRequest is request type for the Query/Parameters RPC method
+message QueryParametersRequest{
     string subspace = 1;
 
     string key = 2;
 }
 
-// QuerySubspaceParamsResponse is response type for the Query/Parameters RPC method
-message QuerySubspaceParamsResponse{
+// QueryParametersResponse is response type for the Query/Parameters RPC method
+message QueryParametersResponse{
     cosmos.params.ParamChange params = 1 [(gogoproto.nullable) = false];
 } 

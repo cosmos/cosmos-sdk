@@ -162,8 +162,6 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
 	cfg, err := createDefaultTendermintConfig(home)
 	t.Cleanup(cleanup)
-
-	cfg.RootDir = home
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)

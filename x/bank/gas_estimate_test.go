@@ -41,6 +41,17 @@ func simulatedGas(t *testing.T, app *simapp.SimApp, tx sdk.Tx) uint64 {
 	return simGas.GasUsed
 }
 
+func deliverTx(t *testing.T, app *simapp.SimApp, tx sdk.Tx) (sdk.GasInfo, *sdk.Result) {
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	gas, res, err := app.Deliver(tx)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+	return gas, res
+}
+
 func TestSendGasEstimates(t *testing.T) {
 	// some test accounts - addr1 has tokens
 	priv1 := secp256k1.GenPrivKey()
@@ -64,7 +75,6 @@ func TestSendGasEstimates(t *testing.T) {
 
 	send := sdk.Coins{sdk.NewInt64Coin("uatom", 5678)}
 	sendMsg := types.NewMsgSend(addr1, addr2, send)
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
 
 	// this will build proper tx
 	buildTx := func(expectedGas uint64) sdk.Tx {
@@ -85,12 +95,7 @@ func TestSendGasEstimates(t *testing.T) {
 
 	// deliver the tx with the gas returned from simulate (plus 10%)
 	tx = buildTx(simGas + simGas/10)
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gas, res, err := app.Deliver(tx)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
+	gas, _ := deliverTx(t, app, tx)
 
 	// We have wanted 1 million, used ~53k
 	fmt.Printf("wanted: %d / used: %d\n", gas.GasWanted, gas.GasUsed)

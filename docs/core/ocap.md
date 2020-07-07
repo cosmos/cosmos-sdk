@@ -70,6 +70,6 @@ gaia app.
 
 +++ https://github.com/cosmos/gaia/blob/master/app/app.go#L197-L209
 
-## Next
+## Next {hide}
 
-Learn about [building modules](../building-modules/intro.md) {hide}
+Learn about SDK [telemetry](./telemetry.md) {hide}

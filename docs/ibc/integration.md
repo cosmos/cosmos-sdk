@@ -270,4 +270,6 @@ That's it! You have now wired up the IBC module and are now able to send fungibl
 different chains. If you want to have a broader view of the changes take a look into the SDK's
 [`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/master/simapp/app.go).
 
+## Next {hide}
+
 Learn about how to create [custom IBC modules](./custom.md) for your application {hide}

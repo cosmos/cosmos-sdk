@@ -118,3 +118,7 @@ The following examples expose too much cardinality and may not even prove to be 
 | `store_cachekv_set`             | Duration of a CacheKV `Store#Set` call                                                 | ms           | summary |
 | `store_cachekv_write`           | Duration of a CacheKV `Store#Write` call                                               | ms           | summary |
 | `store_cachekv_delete`          | Duration of a CacheKV `Store#Delete` call                                              | ms           | summary |
+
+## Next {hide}
+
+Learn about the [`runTx` middleware](./runtx_middleware.md) {hide}

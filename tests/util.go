@@ -228,7 +228,7 @@ func NewTestCaseDir(t NamedTestingT) (string, func()) {
 }
 
 // CreateConfigFolder creates the empty config folder in path.
-func CreateConfigFolder(t NamedTestingT, path string) {
+func CreateConfigFolder(t require.TestingT, path string) {
 	err := os.Mkdir(filepath.Join(path, "config"), 0700)
 	require.NoError(t, err)
 }

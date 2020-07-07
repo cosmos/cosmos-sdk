@@ -21,7 +21,6 @@ type DistributionTestSuite struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	addrDels    []sdk.AccAddress
 }
 
 func (suite *DistributionTestSuite) SetupTest() {
@@ -94,9 +93,13 @@ func (suite *DistributionTestSuite) TestGRPCValidatorCommission() {
 	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
 	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, types.ValidatorAccumulatedCommission{Commission: commission})
 
-	req := &types.QueryValidatorCommissionRequest{ValidatorAddress: valOpAddr1}
-
+	req := &types.QueryValidatorCommissionRequest{}
 	commissionRes, err := queryClient.ValidatorCommission(gocontext.Background(), req)
+	suite.Error(err)
+	suite.Nil(commissionRes)
+
+	req = &types.QueryValidatorCommissionRequest{ValidatorAddress: valOpAddr1}
+	commissionRes, err = queryClient.ValidatorCommission(gocontext.Background(), req)
 	suite.NoError(err)
 	suite.Equal(commissionRes.Commission.Commission, commission)
 }
@@ -118,6 +121,10 @@ func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
 		Limit: 1,
 	}
 
+	slashes, err := queryClient.ValidatorSlashes(gocontext.Background(), &types.QueryValidatorSlashesRequest{})
+	suite.Error(err)
+	suite.Nil(slashes)
+
 	req := &types.QueryValidatorSlashesRequest{
 		ValidatorAddress: valOpAddr1,
 		StartingHeight:   1,
@@ -125,7 +132,7 @@ func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
 		Req:              pageReq,
 	}
 
-	slashes, err := queryClient.ValidatorSlashes(gocontext.Background(), req)
+	slashes, err = queryClient.ValidatorSlashes(gocontext.Background(), req)
 
 	suite.NoError(err)
 	suite.Len(slashes.Slashes, 1)
@@ -183,6 +190,10 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 		ValidatorAddress: valOpAddr1,
 	}
 
+	rewards, err := queryClient.DelegationRewards(gocontext.Background(), &types.QueryDelegationRewardsRequest{})
+	suite.Error(err)
+	suite.Nil(rewards)
+
 	_, err = queryClient.DelegationRewards(gocontext.Background(), req)
 	suite.NoError(err)
 	// TODO debug delegation rewards
@@ -200,7 +211,11 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 	// 	[]types.DelegationDelegatorReward{expectedDelReward}, expectedDelReward.Reward)
 	// suite.Equal(wantDelRewards, totalRewards)
 
-	validators, err := queryClient.DelegatorValidators(gocontext.Background(),
+	validators, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorValidatorsRequest{})
+	suite.Error(err)
+	suite.Nil(validators, 1)
+
+	validators, err = queryClient.DelegatorValidators(gocontext.Background(),
 		&types.QueryDelegatorValidatorsRequest{DelegatorAddress: sdk.AccAddress(valOpAddr1)})
 	suite.NoError(err)
 	suite.Len(validators.Validators, 1)
@@ -215,10 +230,11 @@ func (suite *DistributionTestSuite) TestGRPCDelegatorWithdrawAddress() {
 	err := app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
 	suite.Nil(err)
 
-	_, err = queryClient.DelegatorWithdrawAddress(gocontext.Background(), &types.QueryDelegatorWithdrawAddressRequest{})
+	withdrawAddress, err := queryClient.DelegatorWithdrawAddress(gocontext.Background(), &types.QueryDelegatorWithdrawAddressRequest{})
 	suite.Error(err)
+	suite.Nil(withdrawAddress)
 
-	withdrawAddress, err := queryClient.DelegatorWithdrawAddress(gocontext.Background(),
+	withdrawAddress, err = queryClient.DelegatorWithdrawAddress(gocontext.Background(),
 		&types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addr[0]})
 	suite.NoError(err)
 	suite.Equal(withdrawAddress.WithdrawAddress, addr[1])

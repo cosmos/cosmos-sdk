@@ -9,7 +9,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // Query provides defines the gRPC querier service
 service Query {
-  // Validators queries all validators that match given status and
+  // Validators queries all validators that match given status
   rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
 
   // Validator queries validator info for given validator addr
@@ -49,7 +49,7 @@ service Query {
   rpc Pool (QueryPoolRequest) returns (QueryPoolResponse) {}
 
   // Parameters queries the staking parameters
-  rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) {}
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {}
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method
@@ -218,10 +218,10 @@ message QueryPoolResponse{
 }
 
 // QueryParametersRequest is request type for the Query/Parameters RPC method
-message QueryParametersRequest{ }
+message QueryParamsRequest{ }
 
 // QueryParametersResponse is response type for the Query/Parameters RPC method
-message QueryParametersResponse{
+message QueryParamsResponse{
   Params params = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;

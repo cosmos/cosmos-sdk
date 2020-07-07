@@ -241,7 +241,7 @@ func (suite *QueryTestSuite) TestGRPCQueryPoolParameters() {
 	suite.Equal(app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
 
 	// Query Params
-	resp, err := queryClient.Parameters(gocontext.Background(), &types.QueryParametersRequest{})
+	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	suite.NoError(err)
 	suite.Equal(app.StakingKeeper.GetParams(ctx), resp.Params)
 }

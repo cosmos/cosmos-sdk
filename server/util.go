@@ -183,7 +183,7 @@ func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExp
 		tendermintCmd,
 		ExportCmd(appExport),
 		flags.LineBreak,
-		version.Cmd,
+		version.NewVersionCommand(),
 	)
 }
 

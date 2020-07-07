@@ -1,24 +1,16 @@
 package cli
 
 import (
+	"context"
+	"io/ioutil"
+	"path"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
-
-func setupCmd(genesisTime string, chainID string) *cobra.Command {
-	c := &cobra.Command{
-		Use:  "c",
-		Args: cobra.ArbitraryArgs,
-		Run:  func(_ *cobra.Command, args []string) {},
-	}
-
-	c.Flags().String(flagGenesisTime, genesisTime, "")
-	c.Flags().String(flagChainID, chainID, "")
-
-	return c
-}
 
 func TestGetMigrationCallback(t *testing.T) {
 	for _, version := range GetMigrationVersions() {
@@ -26,28 +18,31 @@ func TestGetMigrationCallback(t *testing.T) {
 	}
 }
 
-// func TestMigrateGenesis(t *testing.T) {
-// 	home, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	viper.Set(cli.HomeFlag, home)
-// 	viper.Set(flags.FlagName, "moniker")
-// 	logger := log.NewNopLogger()
-// 	cfg, err := tcmd.ParseConfig()
-// 	require.Nil(t, err)
-// 	ctx := server.NewContext(viper.New(), cfg, logger)
-// 	cdc := makeCodec()
+func TestMigrateGenesis(t *testing.T) {
+	home, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
 
-// 	genesisPath := path.Join(home, "genesis.json")
-// 	target := "v0.36"
+	cdc := makeCodec()
 
-// 	// Reject if we dont' have the right parameters or genesis does not exists
-// 	require.Error(t, MigrateGenesisCmd().RunE(nil, []string{target, genesisPath}))
+	genesisPath := path.Join(home, "genesis.json")
+	target := "v0.36"
 
-// 	// Noop migration with minimal genesis
-// 	emptyGenesis := []byte(`{"chain_id":"test","app_state":{}}`)
-// 	err = ioutil.WriteFile(genesisPath, emptyGenesis, 0644)
-// 	require.Nil(t, err)
-// 	cmd := setupCmd("", "test2")
-// 	require.NoError(t, MigrateGenesisCmd().RunE(cmd, []string{target, genesisPath}))
-// 	// Every migration function shuold tests its own module separately
-// }
+	cmd := MigrateGenesisCmd()
+	cmd.SetErr(ioutil.Discard)
+	cmd.SetOut(ioutil.Discard)
+
+	clientCtx := client.Context{}.WithJSONMarshaler(cdc)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	// Reject if we dont' have the right parameters or genesis does not exists
+	cmd.SetArgs([]string{target, genesisPath})
+	require.Error(t, cmd.ExecuteContext(ctx))
+
+	// Noop migration with minimal genesis
+	emptyGenesis := []byte(`{"chain_id":"test","app_state":{}}`)
+	require.NoError(t, ioutil.WriteFile(genesisPath, emptyGenesis, 0644))
+
+	cmd.SetArgs([]string{target, genesisPath})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+}

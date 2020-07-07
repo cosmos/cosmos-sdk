@@ -3,8 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/tendermint/tendermint/config"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -13,13 +12,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abci_server "github.com/tendermint/tendermint/abci/server"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -163,10 +160,9 @@ func TestStartStandAlone(t *testing.T) {
 
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
+	cfg, err := createDefaultTendermintConfig(home)
 	t.Cleanup(cleanup)
-	tests.CreateConfigFolder(t, home)
 
-	cfg := config.TestConfig()
 	cfg.RootDir = home
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
 	require.Nil(t, err)

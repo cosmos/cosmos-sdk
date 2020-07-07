@@ -22,12 +22,8 @@ message Params {
 message SendEnabled {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;
-  string denom = 1[
-    (gogoproto.moretags) = "yaml:\"denom\""
-  ];
-  bool enabled = 2[
-    (gogoproto.moretags) = "yaml:\"enabled\""
-  ];
+  string denom = 1;
+  bool enabled = 2;
 }
 
 // MsgSend - high level transaction of the coin module

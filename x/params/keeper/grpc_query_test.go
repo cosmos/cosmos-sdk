@@ -10,7 +10,7 @@ import (
 
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	var (
-		req      *proposal.QueryParametersRequest
+		req      *proposal.QuerySubspaceParamsRequest
 		expValue string
 		space    types.Subspace
 	)
@@ -24,21 +24,21 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 		{
 			"empty request",
 			func() {
-				req = &proposal.QueryParametersRequest{}
+				req = &proposal.QuerySubspaceParamsRequest{}
 			},
 			false,
 		},
 		{
 			"invalid request with subspace not found",
 			func() {
-				req = &proposal.QueryParametersRequest{Subspace: "test"}
+				req = &proposal.QuerySubspaceParamsRequest{Subspace: "test"}
 			},
 			false,
 		},
 		{
 			"invalid request with subspace and key not found",
 			func() {
-				req = &proposal.QueryParametersRequest{Subspace: "test", Key: "key"}
+				req = &proposal.QuerySubspaceParamsRequest{Subspace: "test", Key: "key"}
 			},
 			false,
 		},
@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			func() {
 				space = suite.app.ParamsKeeper.Subspace("test").
 					WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, paramJSON{}, validateNoOp)))
-				req = &proposal.QueryParametersRequest{Subspace: "test", Key: "key"}
+				req = &proposal.QuerySubspaceParamsRequest{Subspace: "test", Key: "key"}
 				expValue = ""
 			},
 			true,
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			func() {
 				err := space.Update(suite.ctx, key, []byte(`{"param1":"10241024"}`))
 				suite.Require().NoError(err)
-				req = &proposal.QueryParametersRequest{Subspace: "test", Key: "key"}
+				req = &proposal.QuerySubspaceParamsRequest{Subspace: "test", Key: "key"}
 				expValue = `{"param1":"10241024"}`
 			},
 			true,

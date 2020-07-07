@@ -14,7 +14,7 @@ import (
 var _ proposal.QueryServer = Keeper{}
 
 // Parameters returns subspace params
-func (k Keeper) Parameters(c context.Context, req *proposal.QueryParametersRequest) (*proposal.QueryParametersResponse, error) {
+func (k Keeper) Parameters(c context.Context, req *proposal.QuerySubspaceParamsRequest) (*proposal.QuerySubspaceParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -32,5 +32,5 @@ func (k Keeper) Parameters(c context.Context, req *proposal.QueryParametersReque
 	rawValue := ss.GetRaw(ctx, []byte(req.Key))
 	params := proposal.NewParamChange(req.Subspace, req.Key, string(rawValue))
 
-	return &proposal.QueryParametersResponse{Params: params}, nil
+	return &proposal.QuerySubspaceParamsResponse{Params: params}, nil
 }

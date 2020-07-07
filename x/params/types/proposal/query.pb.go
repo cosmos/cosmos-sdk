@@ -28,24 +28,24 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParametersRequest is request type for the Query/Parameters RPC method
-type QueryParametersRequest struct {
+// QuerySubspaceParamsRequest is request type for the Query/Parameters RPC method
+type QuerySubspaceParamsRequest struct {
 	Subspace string `protobuf:"bytes,1,opt,name=subspace,proto3" json:"subspace,omitempty"`
 	Key      string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 }
 
-func (m *QueryParametersRequest) Reset()         { *m = QueryParametersRequest{} }
-func (m *QueryParametersRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryParametersRequest) ProtoMessage()    {}
-func (*QueryParametersRequest) Descriptor() ([]byte, []int) {
+func (m *QuerySubspaceParamsRequest) Reset()         { *m = QuerySubspaceParamsRequest{} }
+func (m *QuerySubspaceParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySubspaceParamsRequest) ProtoMessage()    {}
+func (*QuerySubspaceParamsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3bc356506c43c13a, []int{0}
 }
-func (m *QueryParametersRequest) XXX_Unmarshal(b []byte) error {
+func (m *QuerySubspaceParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryParametersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySubspaceParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryParametersRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySubspaceParamsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -55,49 +55,49 @@ func (m *QueryParametersRequest) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *QueryParametersRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryParametersRequest.Merge(m, src)
+func (m *QuerySubspaceParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySubspaceParamsRequest.Merge(m, src)
 }
-func (m *QueryParametersRequest) XXX_Size() int {
+func (m *QuerySubspaceParamsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryParametersRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryParametersRequest.DiscardUnknown(m)
+func (m *QuerySubspaceParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySubspaceParamsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryParametersRequest proto.InternalMessageInfo
+var xxx_messageInfo_QuerySubspaceParamsRequest proto.InternalMessageInfo
 
-func (m *QueryParametersRequest) GetSubspace() string {
+func (m *QuerySubspaceParamsRequest) GetSubspace() string {
 	if m != nil {
 		return m.Subspace
 	}
 	return ""
 }
 
-func (m *QueryParametersRequest) GetKey() string {
+func (m *QuerySubspaceParamsRequest) GetKey() string {
 	if m != nil {
 		return m.Key
 	}
 	return ""
 }
 
-// QueryParametersResponse is response type for the Query/Parameters RPC method
-type QueryParametersResponse struct {
+// QuerySubspaceParamsResponse is response type for the Query/Parameters RPC method
+type QuerySubspaceParamsResponse struct {
 	Params ParamChange `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
-func (m *QueryParametersResponse) Reset()         { *m = QueryParametersResponse{} }
-func (m *QueryParametersResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryParametersResponse) ProtoMessage()    {}
-func (*QueryParametersResponse) Descriptor() ([]byte, []int) {
+func (m *QuerySubspaceParamsResponse) Reset()         { *m = QuerySubspaceParamsResponse{} }
+func (m *QuerySubspaceParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySubspaceParamsResponse) ProtoMessage()    {}
+func (*QuerySubspaceParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3bc356506c43c13a, []int{1}
 }
-func (m *QueryParametersResponse) XXX_Unmarshal(b []byte) error {
+func (m *QuerySubspaceParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryParametersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySubspaceParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryParametersResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySubspaceParamsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -107,19 +107,19 @@ func (m *QueryParametersResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *QueryParametersResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryParametersResponse.Merge(m, src)
+func (m *QuerySubspaceParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySubspaceParamsResponse.Merge(m, src)
 }
-func (m *QueryParametersResponse) XXX_Size() int {
+func (m *QuerySubspaceParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryParametersResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryParametersResponse.DiscardUnknown(m)
+func (m *QuerySubspaceParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySubspaceParamsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryParametersResponse proto.InternalMessageInfo
+var xxx_messageInfo_QuerySubspaceParamsResponse proto.InternalMessageInfo
 
-func (m *QueryParametersResponse) GetParams() ParamChange {
+func (m *QuerySubspaceParamsResponse) GetParams() ParamChange {
 	if m != nil {
 		return m.Params
 	}
@@ -127,32 +127,32 @@ func (m *QueryParametersResponse) GetParams() ParamChange {
 }
 
 func init() {
-	proto.RegisterType((*QueryParametersRequest)(nil), "cosmos.params.QueryParametersRequest")
-	proto.RegisterType((*QueryParametersResponse)(nil), "cosmos.params.QueryParametersResponse")
+	proto.RegisterType((*QuerySubspaceParamsRequest)(nil), "cosmos.params.QuerySubspaceParamsRequest")
+	proto.RegisterType((*QuerySubspaceParamsResponse)(nil), "cosmos.params.QuerySubspaceParamsResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/params/query.proto", fileDescriptor_3bc356506c43c13a) }
 
 var fileDescriptor_3bc356506c43c13a = []byte{
-	// 278 bytes of a gzipped FileDescriptorProto
+	// 281 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4c, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0xd6, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4,
 	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x85, 0x48, 0xe9, 0x41, 0xa4, 0xa4, 0x44, 0xd2, 0xf3,
 	0xd3, 0xf3, 0xc1, 0x32, 0xfa, 0x20, 0x16, 0x44, 0x91, 0x94, 0x14, 0xaa, 0x7e, 0x08, 0x05, 0x91,
-	0x53, 0x72, 0xe3, 0x12, 0x0b, 0x04, 0x99, 0x17, 0x00, 0x12, 0x4c, 0x2d, 0x49, 0x2d, 0x2a, 0x0e,
-	0x4a, 0x2d, 0x2c, 0x4d, 0x2d, 0x2e, 0x11, 0x92, 0xe2, 0xe2, 0x28, 0x2e, 0x4d, 0x2a, 0x2e, 0x48,
-	0x4c, 0x4e, 0x95, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x82, 0xf3, 0x85, 0x04, 0xb8, 0x98, 0xb3,
-	0x53, 0x2b, 0x25, 0x98, 0xc0, 0xc2, 0x20, 0xa6, 0x52, 0x30, 0x97, 0x38, 0x86, 0x39, 0xc5, 0x05,
-	0xf9, 0x79, 0xc5, 0xa9, 0x42, 0x16, 0x5c, 0x6c, 0x10, 0x2b, 0xc1, 0xc6, 0x70, 0x1b, 0x49, 0xe9,
-	0xa1, 0x38, 0x5a, 0x0f, 0xac, 0xc5, 0x39, 0x23, 0x31, 0x2f, 0x3d, 0xd5, 0x89, 0xe5, 0xc4, 0x3d,
-	0x79, 0x86, 0x20, 0xa8, 0x7a, 0xa3, 0x34, 0x2e, 0x56, 0xb0, 0xa1, 0x42, 0xb1, 0x5c, 0x5c, 0x08,
-	0x83, 0x85, 0x54, 0xd1, 0x0c, 0xc0, 0xee, 0x01, 0x29, 0x35, 0x42, 0xca, 0x20, 0xee, 0x53, 0x62,
-	0x70, 0xf2, 0x3b, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27,
-	0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x93, 0xf4, 0xcc,
-	0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x7d, 0x68, 0x28, 0x42, 0x28, 0xdd, 0xe2, 0x94,
-	0x6c, 0xfd, 0x0a, 0x58, 0x90, 0x96, 0x54, 0x16, 0xa4, 0x16, 0xeb, 0x17, 0x14, 0xe5, 0x17, 0xe4,
-	0x17, 0x27, 0xe6, 0x24, 0xb1, 0x81, 0xc3, 0xd6, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x4c, 0xc1,
-	0xb2, 0x34, 0xb9, 0x01, 0x00, 0x00,
+	0x53, 0xf2, 0xe2, 0x92, 0x0a, 0x04, 0x99, 0x17, 0x5c, 0x9a, 0x54, 0x5c, 0x90, 0x98, 0x9c, 0x1a,
+	0x00, 0x96, 0x0c, 0x4a, 0x2d, 0x2c, 0x4d, 0x2d, 0x2e, 0x11, 0x92, 0xe2, 0xe2, 0x28, 0x86, 0x4a,
+	0x48, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0xc1, 0xf9, 0x42, 0x02, 0x5c, 0xcc, 0xd9, 0xa9, 0x95,
+	0x12, 0x4c, 0x60, 0x61, 0x10, 0x53, 0x29, 0x9c, 0x4b, 0x1a, 0xab, 0x59, 0xc5, 0x05, 0xf9, 0x79,
+	0xc5, 0xa9, 0x42, 0x16, 0x5c, 0x6c, 0x10, 0xab, 0xc1, 0x46, 0x71, 0x1b, 0x49, 0xe9, 0xa1, 0x38,
+	0x5e, 0x0f, 0xac, 0xdc, 0x39, 0x23, 0x31, 0x2f, 0x3d, 0xd5, 0x89, 0xe5, 0xc4, 0x3d, 0x79, 0x86,
+	0x20, 0xa8, 0x7a, 0xa3, 0x3c, 0x2e, 0x56, 0xb0, 0xc1, 0x42, 0xa9, 0x5c, 0x5c, 0x60, 0x55, 0xa9,
+	0x25, 0xa9, 0x45, 0xc5, 0x42, 0x9a, 0x68, 0x06, 0xe0, 0xf6, 0x88, 0x94, 0x16, 0x31, 0x4a, 0x21,
+	0xee, 0x54, 0x62, 0x70, 0xf2, 0x3b, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f,
+	0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28,
+	0x93, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x7d, 0x68, 0xa8, 0x42, 0x28,
+	0xdd, 0xe2, 0x94, 0x6c, 0xfd, 0x0a, 0x58, 0x10, 0x97, 0x54, 0x16, 0xa4, 0x16, 0xeb, 0x17, 0x14,
+	0xe5, 0x17, 0xe4, 0x17, 0x27, 0xe6, 0x24, 0xb1, 0x81, 0xc3, 0xda, 0x18, 0x10, 0x00, 0x00, 0xff,
+	0xff, 0x34, 0x0e, 0x88, 0xfe, 0xc9, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -168,7 +168,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	// Parameters queries all params
-	Parameters(ctx context.Context, in *QueryParametersRequest, opts ...grpc.CallOption) (*QueryParametersResponse, error)
+	Parameters(ctx context.Context, in *QuerySubspaceParamsRequest, opts ...grpc.CallOption) (*QuerySubspaceParamsResponse, error)
 }
 
 type queryClient struct {
@@ -179,8 +179,8 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) Parameters(ctx context.Context, in *QueryParametersRequest, opts ...grpc.CallOption) (*QueryParametersResponse, error) {
-	out := new(QueryParametersResponse)
+func (c *queryClient) Parameters(ctx context.Context, in *QuerySubspaceParamsRequest, opts ...grpc.CallOption) (*QuerySubspaceParamsResponse, error) {
+	out := new(QuerySubspaceParamsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.params.Query/Parameters", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -191,14 +191,14 @@ func (c *queryClient) Parameters(ctx context.Context, in *QueryParametersRequest
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries all params
-	Parameters(context.Context, *QueryParametersRequest) (*QueryParametersResponse, error)
+	Parameters(context.Context, *QuerySubspaceParamsRequest) (*QuerySubspaceParamsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) Parameters(ctx context.Context, req *QueryParametersRequest) (*QueryParametersResponse, error) {
+func (*UnimplementedQueryServer) Parameters(ctx context.Context, req *QuerySubspaceParamsRequest) (*QuerySubspaceParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Parameters not implemented")
 }
 
@@ -207,7 +207,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 }
 
 func _Query_Parameters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryParametersRequest)
+	in := new(QuerySubspaceParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func _Query_Parameters_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/cosmos.params.Query/Parameters",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Parameters(ctx, req.(*QueryParametersRequest))
+		return srv.(QueryServer).Parameters(ctx, req.(*QuerySubspaceParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -237,7 +237,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cosmos/params/query.proto",
 }
 
-func (m *QueryParametersRequest) Marshal() (dAtA []byte, err error) {
+func (m *QuerySubspaceParamsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -247,12 +247,12 @@ func (m *QueryParametersRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryParametersRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySubspaceParamsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryParametersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySubspaceParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -274,7 +274,7 @@ func (m *QueryParametersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryParametersResponse) Marshal() (dAtA []byte, err error) {
+func (m *QuerySubspaceParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -284,12 +284,12 @@ func (m *QueryParametersResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryParametersResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySubspaceParamsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryParametersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySubspaceParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -318,7 +318,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryParametersRequest) Size() (n int) {
+func (m *QuerySubspaceParamsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -335,7 +335,7 @@ func (m *QueryParametersRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryParametersResponse) Size() (n int) {
+func (m *QuerySubspaceParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -352,7 +352,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryParametersRequest) Unmarshal(dAtA []byte) error {
+func (m *QuerySubspaceParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -375,10 +375,10 @@ func (m *QueryParametersRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryParametersRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySubspaceParamsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryParametersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySubspaceParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -469,7 +469,7 @@ func (m *QueryParametersRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryParametersResponse) Unmarshal(dAtA []byte) error {
+func (m *QuerySubspaceParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -492,10 +492,10 @@ func (m *QueryParametersResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryParametersResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySubspaceParamsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryParametersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySubspaceParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

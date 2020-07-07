@@ -25,7 +25,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 }
 
 func queryParams(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params proposal.QueryParametersRequest
+	var params types.QuerySubspaceParams
 
 	if err := legacy.Cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
@@ -37,7 +37,7 @@ func queryParams(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, erro
 	}
 
 	rawValue := ss.GetRaw(ctx, []byte(params.Key))
-	resp := proposal.NewParamChange(params.Subspace, params.Key, string(rawValue))
+	resp := types.NewSubspaceParamsResponse(params.Subspace, params.Key, string(rawValue))
 
 	bz, err := codec.MarshalJSONIndent(legacy.Cdc, resp)
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // NewQueryCmd returns a root CLI command handler for all x/params query commands.
@@ -37,7 +36,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.NewContext().WithJSONMarshaler(m)
 
-			params := proposal.NewQueryParametersRequest(args[0], args[1])
+			params := types.NewQuerySubspaceParams(args[0], args[1])
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
 
 			bz, err := m.MarshalJSON(params)
@@ -50,7 +49,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 				return err
 			}
 
-			var resp proposal.ParamChange
+			var resp types.SubspaceParamsResponse
 			if err := m.UnmarshalJSON(bz, &resp); err != nil {
 				return err
 			}

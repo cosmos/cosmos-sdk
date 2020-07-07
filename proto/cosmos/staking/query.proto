@@ -73,7 +73,7 @@ message QueryValidatorRequest{
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 message QueryValidatorResponse{
-  cosmos.staking.Validator validator = 1[(gogoproto.nullable) = false];
+  Validator validator = 1[(gogoproto.nullable) = false];
 }
 
 // QueryValidatorDelegationsRequest is request type for the Query/ValidatorDelegations RPC method
@@ -85,7 +85,7 @@ message QueryValidatorDelegationsRequest{
 
 // QueryValidatorDelegationsRequest is response type for the Query/ValidatorDelegations RPC method
 message QueryValidatorDelegationsResponse{
-  repeated cosmos.staking.DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "DelegationResponses"];
+  repeated DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "DelegationResponses"];
 
   cosmos.query.PageResponse res = 2;
 }
@@ -99,7 +99,7 @@ message QueryValidatorUnbondingDelegationsRequest{
 
 // QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method
 message QueryValidatorUnbondingDelegationsResponse{
-  repeated cosmos.staking.UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
+  repeated UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
@@ -113,7 +113,7 @@ message QueryDelegationRequest{
 
 // QueryDelegationResponse is response type for the Query/DelegationQ RPC method
 message QueryDelegationResponse{
-  cosmos.staking.DelegationResponse delegation_response = 1  [(gogoproto.casttype) = "DelegationResponse"];
+  DelegationResponse delegation_response = 1  [(gogoproto.casttype) = "DelegationResponse"];
 }
 
 // QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method
@@ -125,7 +125,7 @@ message QueryUnbondingDelegationRequest{
 
 // QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method
 message QueryUnbondingDelegationResponse{
-  cosmos.staking.UnbondingDelegation unbond =1[(gogoproto.nullable) = false];
+  UnbondingDelegation unbond =1[(gogoproto.nullable) = false];
 }
 
 // QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method
@@ -137,7 +137,7 @@ message QueryDelegatorDelegationsRequest{
 
 // QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method
 message QueryDelegatorDelegationsResponse{
-  repeated cosmos.staking.DelegationResponse delegation_responses = 1[(gogoproto.nullable) = false];
+  repeated DelegationResponse delegation_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
@@ -150,7 +150,7 @@ message QueryDelegatorUnbondingDelegationsRequest{
 }
 // QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method
 message QueryDelegatorUnbondingDelegationsResponse {
-  repeated cosmos.staking.UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
+  repeated UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
@@ -168,7 +168,7 @@ message QueryRedelegationsRequest{
 
 // QueryRedelegationsResponse is response type for the Query/Redelegations RPC method
 message QueryRedelegationsResponse{
-  repeated cosmos.staking.RedelegationResponse redelegation_responses = 1[(gogoproto.nullable) = false];
+  repeated RedelegationResponse redelegation_responses = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
@@ -182,7 +182,7 @@ message QueryDelegatorValidatorsRequest{
 
 // QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method
 message QueryDelegatorValidatorsResponse{
-  repeated cosmos.staking.Validator validators = 1[(gogoproto.nullable) = false];
+  repeated Validator validators = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
@@ -196,7 +196,7 @@ message QueryDelegatorValidatorRequest{
 
 // QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method
 message QueryDelegatorValidatorResponse{
-  cosmos.staking.Validator validator = 1[(gogoproto.nullable) = false];
+  Validator validator = 1[(gogoproto.nullable) = false];
 }
 
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method
@@ -206,7 +206,7 @@ message QueryHistoricalInfoRequest{
 
 // QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method
 message QueryHistoricalInfoResponse{
-  cosmos.staking.HistoricalInfo hist = 1;
+  HistoricalInfo hist = 1;
 }
 
 // QueryPoolRequest is request type for the Query/Pool RPC method
@@ -214,7 +214,7 @@ message QueryPoolRequest{ }
 
 // QueryPoolResponse is response type for the Query/Pool RPC method
 message QueryPoolResponse{
-  cosmos.staking.Pool pool = 1[(gogoproto.nullable) = false];
+  Pool pool = 1[(gogoproto.nullable) = false];
 }
 
 // QueryParametersRequest is request type for the Query/Parameters RPC method
@@ -222,7 +222,7 @@ message QueryParametersRequest{ }
 
 // QueryParametersResponse is response type for the Query/Parameters RPC method
 message QueryParametersResponse{
-  cosmos.staking.Params params = 1[(gogoproto.nullable) = false];
+  Params params = 1[(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }

@@ -72,4 +72,4 @@ gaia app.
 
 ## Next {hide}
 
-Learn about SDK [telemetry](./telemetry.md) {hide}
+Learn about the [`runTx` middleware](./runtx_middleware.md) {hide}

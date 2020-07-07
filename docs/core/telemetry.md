@@ -121,4 +121,4 @@ The following examples expose too much cardinality and may not even prove to be 
 
 ## Next {hide}
 
-Learn about the [`runTx` middleware](./runtx_middleware.md) {hide}
+Learn about the [object-capability](./ocap.md) model {hide}

@@ -60,8 +60,8 @@ func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		Short: "Querying commands for the upgrade module",
 	}
 	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetPlanCmd(types.StoreKey, clientCtx.Codec),
-		cli.GetAppliedHeightCmd(types.StoreKey, clientCtx.Codec),
+		cli.GetCurrentPlanCmd(clientCtx),
+		cli.GetAppliedPlanCmd(clientCtx),
 	)...)
 
 	return queryCmd

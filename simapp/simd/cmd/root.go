@@ -79,7 +79,7 @@ func init() {
 		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
 		AddGenesisAccountCmd(simapp.DefaultNodeHome),
-		flags.NewCompletionCmd(rootCmd, true),
+		cli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 	)

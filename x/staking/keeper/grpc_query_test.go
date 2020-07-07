@@ -50,7 +50,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 	queryClient, vals := suite.queryClient, suite.vals
-	suite.T().Log(vals[0].Status, vals[1].Status)
 	var (
 		req *types.QueryValidatorsRequest
 	)
@@ -93,9 +92,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCValidator() {
-	queryClient, vals := suite.queryClient, suite.vals
-	suite.T().Log(vals[0].Status, vals[1].Status)
-
+	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
+	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].OperatorAddress)
+	suite.True(found)
 	var (
 		req *types.QueryValidatorRequest
 	)
@@ -125,7 +124,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 			res, err := queryClient.Validator(gocontext.Background(), req)
 			if tc.expPass {
 				suite.NoError(err)
-				suite.Equal(vals[0].GetStatus(), res.Validator.Status)
+				suite.Equal(validator, res.Validator)
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

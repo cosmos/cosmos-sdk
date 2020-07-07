@@ -1,13 +1,13 @@
 # Stable Releases
 
-*Stable Release Series* continue to receive bugfixes until they reach **End Of Life**.
+*Stable Release Series* continue to receive bug fixes until they reach **End Of Life**.
 
-Only the following release series are currently supported and receive bugfixes:
+Only the following release series are currently supported and receive bug fixes:
 
-The `0.37.x` release series will continue receiving bugfixes until the Cosmos Hub
+The `0.37.x` release series will continue receiving bug fixes until the Cosmos Hub
 migrates to a newer release of the Cosmos-SDK.
 
-* **0.37** will continue receiving bugfixes until the Cosmos Hub migrates to a newer release series of the Cosmos-SDK.
+* **0.37** will continue receiving bug fixes until the Cosmos Hub migrates to a newer release series of the Cosmos-SDK.
 * **0.39 «Launchpad»** will be supported until 6 months after **0.40.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
 
 The **0.39 «Launchpad»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
@@ -115,7 +115,7 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
  
 ## Stable Release Exception - Procedure
 
-1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bugfixes for stable releases without first testing them in `master`. Please apply the label [0.39 «Launchpad»](https://github.com/cosmos/cosmos-sdk/labels/0.39%20LTS%20%28Launchpad%29) to the issue.
+1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [0.39 «Launchpad»](https://github.com/cosmos/cosmos-sdk/labels/0.39%20LTS%20%28Launchpad%29) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
  * **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
  * A **[Test Case]** section containing detailed instructions on how to reproduce the bug.

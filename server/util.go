@@ -164,8 +164,6 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 
 // add server commands
 func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExporter) {
-	// rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
-
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
 		Short: "Tendermint subcommands",

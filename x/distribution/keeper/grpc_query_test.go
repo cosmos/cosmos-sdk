@@ -11,17 +11,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func TestGRPCParams(t *testing.T) {
+type DistributionTestSuite struct {
+	suite.Suite
+
+	app         *simapp.SimApp
+	ctx         sdk.Context
+	queryClient types.QueryClient
+	addrDels    []sdk.AccAddress
+}
+
+func (suite *DistributionTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
+
+	suite.app = app
+	suite.ctx = ctx
+	suite.queryClient = queryClient
+}
+
+func (suite *DistributionTestSuite) TestGRPCParams() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	params := types.Params{
 		CommunityTax:        sdk.NewDecWithPrec(3, 1),
@@ -33,17 +50,12 @@ func TestGRPCParams(t *testing.T) {
 	app.DistrKeeper.SetParams(ctx, params)
 
 	paramsRes, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-	require.NoError(t, err)
-	require.Equal(t, paramsRes.Params, params)
+	suite.NoError(err)
+	suite.Equal(paramsRes.Params, params)
 }
 
-func TestGRPCValidatorOutstandingRewards(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+func (suite *DistributionTestSuite) TestGRPCValidatorOutstandingRewards() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5000)),
@@ -58,8 +70,8 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	req := types.NewQueryValidatorOutstandingRewardsRequest(nil, pageReq)
 
 	validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(gocontext.Background(), req)
-	require.Error(t, err)
-	require.Nil(t, validatorOutstandingRewards)
+	suite.Error(err)
+	suite.Nil(validatorOutstandingRewards)
 
 	// set outstanding rewards
 	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
@@ -67,18 +79,13 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	req = types.NewQueryValidatorOutstandingRewardsRequest(valAddrs[0], pageReq)
 
 	validatorOutstandingRewards, err = queryClient.ValidatorOutstandingRewards(gocontext.Background(), req)
-	require.NoError(t, err)
-	require.Equal(t, rewards, validatorOutstandingRewards.Rewards)
-	require.Equal(t, valCommission, validatorOutstandingRewards.Rewards.Rewards)
+	suite.NoError(err)
+	suite.Equal(rewards, validatorOutstandingRewards.Rewards)
+	suite.Equal(valCommission, validatorOutstandingRewards.Rewards.Rewards)
 }
 
-func TestGRPCValidatorCommission(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+func (suite *DistributionTestSuite) TestGRPCValidatorCommission() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
@@ -90,17 +97,12 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	req := &types.QueryValidatorCommissionRequest{ValidatorAddress: valOpAddr1}
 
 	commissionRes, err := queryClient.ValidatorCommission(gocontext.Background(), req)
-	require.NoError(t, err)
-	require.Equal(t, commissionRes.Commission.Commission, commission)
+	suite.NoError(err)
+	suite.Equal(commissionRes.Commission.Commission, commission)
 }
 
-func TestGRPCValidatorSlashes(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
@@ -125,38 +127,33 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 
 	slashes, err := queryClient.ValidatorSlashes(gocontext.Background(), req)
 
-	require.NoError(t, err)
-	require.Len(t, slashes.Slashes, 1)
-	require.Equal(t, slashOne, slashes.Slashes[0])
-	require.NotNil(t, slashes.Res.NextKey)
+	suite.NoError(err)
+	suite.Len(slashes.Slashes, 1)
+	suite.Equal(slashOne, slashes.Slashes[0])
+	suite.NotNil(slashes.Res.NextKey)
 
 	pageReq.Key = slashes.Res.NextKey
 	req.Req = pageReq
 
 	slashes, err = queryClient.ValidatorSlashes(gocontext.Background(), req)
-	require.NoError(t, err)
-	require.Len(t, slashes.Slashes, 1)
-	require.Equal(t, slashTwo, slashes.Slashes[0])
-	require.Empty(t, slashes.Res)
+	suite.NoError(err)
+	suite.Len(slashes.Slashes, 1)
+	suite.Equal(slashTwo, slashes.Slashes[0])
+	suite.Empty(slashes.Res)
 
 	pageReq = &query.PageRequest{Limit: 2}
 	req.Req = pageReq
 
 	slashes, err = queryClient.ValidatorSlashes(gocontext.Background(), req)
-	require.NoError(t, err)
-	require.Len(t, slashes.Slashes, 2)
-	require.Equal(t, slashOne, slashes.Slashes[0])
-	require.Equal(t, slashTwo, slashes.Slashes[1])
-	require.Empty(t, slashes.Res)
+	suite.NoError(err)
+	suite.Len(slashes.Slashes, 2)
+	suite.Equal(slashOne, slashes.Slashes[0])
+	suite.Equal(slashTwo, slashes.Slashes[1])
+	suite.Empty(slashes.Res)
 }
 
-func TestGRPCDelegationRewards(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
@@ -169,8 +166,8 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	)
 
 	res, err := sh(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	suite.NoError(err)
+	suite.NotNil(res)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -187,62 +184,54 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	}
 
 	_, err = queryClient.DelegationRewards(gocontext.Background(), req)
-	require.NoError(t, err)
+	suite.NoError(err)
 	// TODO debug delegation rewards
-	// require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards.Rewards)
+	// suite.Equal(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards.Rewards)
 
 	// totalRewardsReq := &types.QueryDelegationTotalRewardsRequest{
 	// 	DelegatorAddress: sdk.AccAddress(valOpAddr1),
 	// }
 
 	// totalRewards, err := queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
-	// require.NoError(t, err)
+	// suite.NoError(err)
 	// expectedDelReward := types.NewDelegationDelegatorReward(valOpAddr1,
 	// 	sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5)})
 	// wantDelRewards := types.NewQueryDelegatorTotalRewardsResponse(
 	// 	[]types.DelegationDelegatorReward{expectedDelReward}, expectedDelReward.Reward)
-	// require.Equal(t, wantDelRewards, totalRewards)
+	// suite.Equal(wantDelRewards, totalRewards)
 
 	validators, err := queryClient.DelegatorValidators(gocontext.Background(),
 		&types.QueryDelegatorValidatorsRequest{DelegatorAddress: sdk.AccAddress(valOpAddr1)})
-	require.NoError(t, err)
-	require.Len(t, validators.Validators, 1)
-	require.Equal(t, validators.Validators[0], valOpAddr1)
+	suite.NoError(err)
+	suite.Len(validators.Validators, 1)
+	suite.Equal(validators.Validators[0], valOpAddr1)
 }
 
-func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+func (suite *DistributionTestSuite) TestGRPCDelegatorWithdrawAddress() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
 
 	err := app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
-	require.Nil(t, err)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-
-	// queryClient.ValidatorCommission()
+	suite.Nil(err)
 
 	_, err = queryClient.DelegatorWithdrawAddress(gocontext.Background(), &types.QueryDelegatorWithdrawAddressRequest{})
-	require.Error(t, err)
+	suite.Error(err)
 
 	withdrawAddress, err := queryClient.DelegatorWithdrawAddress(gocontext.Background(),
 		&types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addr[0]})
-	require.NoError(t, err)
-	require.Equal(t, withdrawAddress.WithdrawAddress, addr[1])
+	suite.NoError(err)
+	suite.Equal(withdrawAddress.WithdrawAddress, addr[1])
 }
 
-func TestGRPCCommunityPool(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+func (suite *DistributionTestSuite) TestGRPCCommunityPool() {
+	queryClient := suite.queryClient
 
 	pool, err := queryClient.CommunityPool(gocontext.Background(), &types.QueryCommunityPoolRequest{})
-	require.NoError(t, err)
-	require.Empty(t, pool)
+	suite.NoError(err)
+	suite.Empty(pool)
+}
+
+func TestDistributionTestSuite(t *testing.T) {
+	suite.Run(t, new(DistributionTestSuite))
 }

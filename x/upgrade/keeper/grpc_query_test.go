@@ -24,16 +24,12 @@ type UpgradeTestSuite struct {
 }
 
 func (suite *UpgradeTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	suite.app = simapp.Setup(false)
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.UpgradeKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-
-	suite.app = app
-	suite.ctx = ctx
-	suite.queryClient = queryClient
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.app.UpgradeKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {

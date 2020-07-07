@@ -226,9 +226,10 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, cms.Write
 }
 
-type sdkContextKeyType string
+// ContextKey defines a type alias for a stdlib Context key.
+type ContextKey string
 
-const sdkContextKey sdkContextKeyType = "sdk-context"
+const sdkContextKey ContextKey = "sdk-context"
 
 // WrapSDKContext returns a stdlib context.Context with the provided sdk.Context's internal
 // context as a value. It is useful for passing an sdk.Context  through methods that take a

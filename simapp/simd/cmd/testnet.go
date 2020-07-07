@@ -1,4 +1,4 @@
-package main
+package cmd
 
 // DONTCOVER
 
@@ -18,6 +18,7 @@ import (
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,10 +44,7 @@ var (
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func testnetCmd(ctx *server.Context, cdc codec.JSONMarshaler,
-	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
-) *cobra.Command {
-
+func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a simapp testnet",
@@ -59,7 +57,11 @@ Example:
 	simd testnet --v 4 --output-dir ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			config := ctx.Config
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.JSONMarshaler
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
 
 			outputDir, _ := cmd.Flags().GetString(flagOutputDir)
 			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)

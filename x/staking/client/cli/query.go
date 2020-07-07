@@ -55,7 +55,7 @@ func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -98,7 +98,7 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query staking validators
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -135,7 +135,7 @@ func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Code
 Example:
 $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -182,7 +182,7 @@ func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cob
 Example:
 $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -226,7 +226,7 @@ func GetCmdQueryDelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(2),
@@ -276,7 +276,7 @@ func GetCmdQueryDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command 
 Example:
 $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -321,7 +321,7 @@ func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra
 Example:
 $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -371,7 +371,7 @@ func GetCmdQueryUnbondingDelegation(queryRoute string, cdc *codec.Codec) *cobra.
 Example:
 $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(2),
@@ -421,7 +421,7 @@ func GetCmdQueryUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra
 Example:
 $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -466,7 +466,7 @@ func GetCmdQueryRedelegation(queryRoute string, cdc *codec.Codec) *cobra.Command
 Example:
 $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(3),
@@ -522,7 +522,7 @@ func GetCmdQueryRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Comman
 Example:
 $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -566,7 +566,7 @@ func GetCmdQueryHistoricalInfo(queryRoute string, cdc *codec.Codec) *cobra.Comma
 Example:
 $ %s query staking historical-info 5
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -610,7 +610,7 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query staking pool
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -643,7 +643,7 @@ func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query staking params
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

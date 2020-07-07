@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -28,7 +29,7 @@ const (
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
-func AddGenesisAccountCmd(ctx *server.Context, depCdc codec.JSONMarshaler, cdc codec.Marshaler, defaultClientHome string) *cobra.Command {
+func AddGenesisAccountCmd(defaultClientHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
 		Short: "Add a genesis account to genesis.json",
@@ -39,7 +40,13 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := ctx.Config
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			depCdc := clientCtx.Codec
+			cdc := clientCtx.JSONMarshaler.(codec.Marshaler)
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+
 			homeDir, _ := cmd.Flags().GetString(cli.HomeFlag)
 			config.SetRoot(homeDir)
 
@@ -160,5 +167,5 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
 
-	return cmd
+	return flags.GetCommands(cmd)[0]
 }

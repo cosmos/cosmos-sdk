@@ -22,7 +22,7 @@ func NewTransferTxCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "transfer [src-port] [src-channel] [receiver] [amount]",
 		Short:   "Transfer a fungible token through IBC",
-		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.ClientName),
+		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),
 		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())

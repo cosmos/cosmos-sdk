@@ -252,7 +252,7 @@ func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 }
 
 func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryBondsParams
+	var params types.QueryDelegatorValidatorRequest
 
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -273,7 +273,7 @@ func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper) (
 }
 
 func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryBondsParams
+	var params types.QueryDelegatorValidatorRequest
 
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -299,7 +299,7 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 }
 
 func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryBondsParams
+	var params types.QueryDelegatorValidatorRequest
 
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -361,7 +361,7 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 }
 
 func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryHistoricalInfoParams
+	var params types.QueryHistoricalInfoRequest
 
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {

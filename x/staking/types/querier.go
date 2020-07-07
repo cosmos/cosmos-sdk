@@ -55,22 +55,6 @@ func NewQueryValidatorParams(validatorAddr sdk.ValAddress, page, limit int) Quer
 }
 
 // defines the params for the following queries:
-// - 'custom/staking/delegation'
-// - 'custom/staking/unbondingDelegation'
-// - 'custom/staking/delegatorValidator'
-type QueryBondsParams struct {
-	DelegatorAddr sdk.AccAddress
-	ValidatorAddr sdk.ValAddress
-}
-
-func NewQueryBondsParams(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) QueryBondsParams {
-	return QueryBondsParams{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-	}
-}
-
-// defines the params for the following queries:
 // - 'custom/staking/redelegation'
 type QueryRedelegationParams struct {
 	DelegatorAddr    sdk.AccAddress
@@ -95,15 +79,4 @@ type QueryValidatorsParams struct {
 
 func NewQueryValidatorsParams(page, limit int, status string) QueryValidatorsParams {
 	return QueryValidatorsParams{page, limit, status}
-}
-
-// QueryHistoricalInfoParams defines the params for the following queries:
-// - 'custom/staking/historicalInfo'
-type QueryHistoricalInfoParams struct {
-	Height int64
-}
-
-// NewQueryHistoricalInfoParams creates a new QueryHistoricalInfoParams instance
-func NewQueryHistoricalInfoParams(height int64) QueryHistoricalInfoParams {
-	return QueryHistoricalInfoParams{height}
 }

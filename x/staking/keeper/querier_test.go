@@ -94,7 +94,7 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"redelegations"}, query)
 	require.NoError(t, err)
 
-	queryHisParams := types.NewQueryHistoricalInfoParams(5)
+	queryHisParams := types.QueryHistoricalInfoRequest{Height: 5}
 	bz, errRes = cdc.MarshalJSON(queryHisParams)
 	require.NoError(t, errRes)
 
@@ -254,7 +254,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Error(t, err)
 
 	// Query bonded validator
-	queryBondParams := types.NewQueryBondsParams(addrAcc2, addrVal1)
+	queryBondParams := types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1}
 	bz, errRes = cdc.MarshalJSON(queryBondParams)
 	require.NoError(t, errRes)
 
@@ -347,7 +347,7 @@ func TestQueryDelegation(t *testing.T) {
 	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
 	require.NoError(t, err)
 
-	queryBondParams = types.NewQueryBondsParams(addrAcc2, addrVal1)
+	queryBondParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1}
 	bz, errRes = cdc.MarshalJSON(queryBondParams)
 	require.NoError(t, errRes)
 
@@ -631,7 +631,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	//
 	// found: query unbonding delegation by delegator and validator
 	//
-	queryValidatorParams := types.NewQueryBondsParams(addrAcc1, val1.GetOperator())
+	queryValidatorParams := types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc1, ValidatorAddr: val1.GetOperator()}
 	bz, errRes := cdc.MarshalJSON(queryValidatorParams)
 	require.NoError(t, errRes)
 	query := abci.RequestQuery{
@@ -650,7 +650,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	//
 	// not found: query unbonding delegation by delegator and validator
 	//
-	queryValidatorParams = types.NewQueryBondsParams(addrAcc2, val1.GetOperator())
+	queryValidatorParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: val1.GetOperator()}
 	bz, errRes = cdc.MarshalJSON(queryValidatorParams)
 	require.NoError(t, errRes)
 	query = abci.RequestQuery{
@@ -718,7 +718,7 @@ func TestQueryHistoricalInfo(t *testing.T) {
 	hi := types.NewHistoricalInfo(header, vals)
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi)
 
-	queryHistoricalParams := types.NewQueryHistoricalInfoParams(4)
+	queryHistoricalParams := types.QueryHistoricalInfoRequest{Height: 4}
 	bz, errRes := cdc.MarshalJSON(queryHistoricalParams)
 	require.NoError(t, errRes)
 	query := abci.RequestQuery{
@@ -729,7 +729,7 @@ func TestQueryHistoricalInfo(t *testing.T) {
 	require.Error(t, err, "Invalid query passed")
 	require.Nil(t, res, "Invalid query returned non-nil result")
 
-	queryHistoricalParams = types.NewQueryHistoricalInfoParams(5)
+	queryHistoricalParams = types.QueryHistoricalInfoRequest{Height: 5}
 	bz, errRes = cdc.MarshalJSON(queryHistoricalParams)
 	require.NoError(t, errRes)
 	query.Data = bz

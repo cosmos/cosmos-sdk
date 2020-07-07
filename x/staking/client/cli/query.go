@@ -243,7 +243,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryBondsParams(delAddr, valAddr))
+			bz, err := cdc.MarshalJSON(types.QueryDelegatorValidatorRequest{DelegatorAddr: delAddr, ValidatorAddr: valAddr})
 			if err != nil {
 				return err
 			}
@@ -388,7 +388,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryBondsParams(delAddr, valAddr))
+			bz, err := cdc.MarshalJSON(types.QueryDelegatorValidatorRequest{DelegatorAddr: delAddr, ValidatorAddr: valAddr})
 			if err != nil {
 				return err
 			}
@@ -577,7 +577,7 @@ $ %s query staking historical-info 5
 				return fmt.Errorf("height argument provided must be a non-negative-integer: %v", err)
 			}
 
-			bz, err := cdc.MarshalJSON(types.QueryHistoricalInfoParams{Height: height})
+			bz, err := cdc.MarshalJSON(types.QueryHistoricalInfoRequest{Height: height})
 			if err != nil {
 				return err
 			}

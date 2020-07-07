@@ -69,8 +69,6 @@ message QueryValidatorsResponse {
 // QueryValidatorRequest is response type for the Query/Validator RPC method
 message QueryValidatorRequest{
   bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  cosmos.query.PageRequest req = 2;
 }
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
@@ -111,8 +109,6 @@ message QueryDelegationRequest{
   bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  cosmos.query.PageRequest req = 3;
 }
 
 // QueryDelegationResponse is response type for the Query/DelegationQ RPC method
@@ -198,14 +194,11 @@ message QueryDelegatorValidatorRequest{
   bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  cosmos.query.PageRequest req = 3;
 }
+
 // QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method
 message QueryDelegatorValidatorResponse{
   cosmos.staking.Validator validator = 1[(gogoproto.nullable) = false];
-
-  cosmos.query.PageResponse res = 2[(gogoproto.nullable) = false];
 }
 
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method

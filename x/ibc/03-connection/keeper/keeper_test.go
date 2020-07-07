@@ -1,35 +1,14 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
-)
-
-const (
-	storeKey = host.StoreKey
-
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
-
-	nextTimestamp = 10 // increment used for the next header's timestamp
-
-	testPort1 = "firstport"
-	testPort2 = "secondport"
-
-	testChannel1 = "firstchannel"
-	testChannel2 = "secondchannel"
-)
-
-var (
-	timestamp = time.Now() // starting timestamp for the client test chain
 )
 
 type KeeperTestSuite struct {
@@ -74,89 +53,76 @@ func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
 	suite.EqualValues(types.GetCompatibleVersions(), paths)
 }
 
-// create 2 connections: A0 - B, A1 - B
+// create 2 connections: A0 - B0, A1 - B1
 func (suite KeeperTestSuite) TestGetAllConnections() {
-	clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
-	connA0 := suite.chainA.GetFirstTestConnection(clientA, clientB)
-	connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
+	clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+	connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
 
-	connA1ID := "testconnection"
+	counterpartyB0 := types.NewCounterparty(clientB, connB0.ID, suite.chainB.GetPrefix()) // connection B0
+	counterpartyB1 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix()) // connection B1
 
-	counterpartyB := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix()) // connection B
-
-	conn1 := types.NewConnectionEnd(types.INIT, connA0.ID, clientA, counterpartyB, types.GetCompatibleVersions()) // A0 - B
-	conn2 := types.NewConnectionEnd(types.INIT, connA1ID, clientA, counterpartyB, types.GetCompatibleVersions())  // A1 - B
-
+	conn1 := types.NewConnectionEnd(types.OPEN, connA0.ID, clientA, counterpartyB0, types.GetCompatibleVersions()) // A0 - B0
+	conn2 := types.NewConnectionEnd(types.OPEN, connA1.ID, clientA, counterpartyB1, types.GetCompatibleVersions()) // A1 - B1
 	expConnections := []types.ConnectionEnd{conn1, conn2}
-
-	for i := range expConnections {
-		suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), expConnections[i].ID, expConnections[i])
-	}
 
 	connections := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.chainA.GetContext())
 	suite.Require().Len(connections, len(expConnections))
 	suite.Require().Equal(expConnections, connections)
 }
 
-/*
+// the test creates 2 clients clientA0 and clientA1. clientA0 has a single
+// connection and clientA1 has 2 connections.
 func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
-	clients := []clientexported.ClientState{
-		ibctmtypes.NewClientState(testClientIDA, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testClientIDB, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testClientID3, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
-	}
-
-	for i := range clients {
-		suite.oldchainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.oldchainA.GetContext(), clients[i])
-	}
+	clientA0, _, connA0, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientA1, clientB1, connA1, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+	connA2, _ := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA1, clientB1)
 
 	expPaths := []types.ConnectionPaths{
-		types.NewConnectionPaths(testClientIDA, []string{host.ConnectionPath(testConnectionIDA)}),
-		types.NewConnectionPaths(testClientIDB, []string{host.ConnectionPath(testConnectionIDB), host.ConnectionPath(testConnectionID3)}),
+		types.NewConnectionPaths(clientA0, []string{connA0.ID}),
+		types.NewConnectionPaths(clientA1, []string{connA1.ID, connA2.ID}),
 	}
 
-	for i := range expPaths {
-		suite.oldchainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.oldchainA.GetContext(), expPaths[i].ClientID, expPaths[i].Paths)
-	}
-
-	connPaths := suite.oldchainA.App.IBCKeeper.ConnectionKeeper.GetAllClientConnectionPaths(suite.oldchainA.GetContext())
+	connPaths := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetAllClientConnectionPaths(suite.chainA.GetContext())
 	suite.Require().Len(connPaths, 2)
-	suite.Require().Equal(connPaths, expPaths)
+	suite.Require().Equal(expPaths, connPaths)
 }
 
-// TestGetTimestampAtHeight verifies if the clients on each chain return the correct timestamp
-// for the other chain.
+// TestGetTimestampAtHeight verifies if the clients on each chain return the
+// correct timestamp for the other chain.
 func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
+	var connection types.ConnectionEnd
+
 	cases := []struct {
 		msg      string
 		malleate func()
 		expPass  bool
 	}{
 		{"verification success", func() {
-			suite.oldchainA.CreateClient(suite.oldchainB)
+			_, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			connection = suite.chainA.GetConnection(connA)
 		}, true},
-		{"client state not found", func() {}, false},
+		{"consensus state not found", func() {
+			// any non-nil value of connection is valid
+			suite.Require().NotNil(connection)
+		}, false},
 	}
 
-	for i, tc := range cases {
+	for _, tc := range cases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			// create and store a connection to chainB on chainA
-			connection := suite.oldchainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
 
-			actualTimestamp, err := suite.oldchainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
-				suite.oldchainA.GetContext(), connection, uint64(suite.oldchainB.Header.Height),
+			actualTimestamp, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
+				suite.chainA.GetContext(), connection, uint64(suite.chainB.LastHeader.Height),
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().EqualValues(uint64(suite.oldchainB.Header.Time.UnixNano()), actualTimestamp)
+				suite.Require().EqualValues(uint64(suite.chainB.LastHeader.Time.UnixNano()), actualTimestamp)
 			} else {
 				suite.Require().Error(err)
 			}
 		})
 	}
 }
-*/

@@ -17,8 +17,7 @@ protocol. Then the document goes into detail on the abstraction layer most relev
 developers (channels and ports), and describes how to define your own custom packets, and
 `IBCModule` callbacks.
 
-To have your module interact over IBC you must: bind to a port(s), define your own packet data (and
-optionally acknowledgement) structs as well as how to encode/decode them, and implement the
+To have your module interact over IBC you must: bind to a port(s), define your own packet data and acknolwedgement structs as well as how to encode/decode them, and implement the
 `IBCModule` interface. Below is a more detailed explanation of how to write an IBC application
 module correctly.
 
@@ -264,7 +263,7 @@ invoked by the IBC module after the packet has been proved valid and correctly p
 keepers. Thus, the `OnRecvPacket` callback only needs to worry about making the appropriate state
 changes given the packet data without worrying about whether the packet is valid or not.
 
-Modules may optionally return an acknowledgement as a byte string and return it to the IBC handler.
+Modules must return an acknowledgement as a byte string and return it to the IBC handler.
 The IBC handler will then commit this acknowledgment of the packet so that a relayer may relay the
 acknowledgement back to the sender module.
 
@@ -310,7 +309,7 @@ acknowledgement. An example of this technique is in the `ibc-transfer` module's
 
 ### Acknowledgements
 
-Modules may optionally commit an acknowledgement upon receiving and processing a packet. This
+Modules must commit an acknowledgement upon receiving and processing a packet. This
 acknowledgement can then be relayed back to the original sender chain, which can take action
 depending on the contents of the acknowledgement.
 
@@ -323,8 +322,7 @@ example above.
 
 #### Acknowledging Packets
 
-If the receiving module writes an ackowledgement while processing the
-packet, a relayer can relay back the acknowledgement to the sender module. The sender module can
+After a module writes an acknowledgement while receiving a packet. a relayer can relay back the acknowledgement to the sender module. The sender module can
 then process the acknowledgement using the `OnAcknowledgementPacket` callback. The contents of the
 acknowledgement is entirely upto the modules on the channel (just like the packet data); however, it
 may often contain information on whether the packet was successfully received and processed along

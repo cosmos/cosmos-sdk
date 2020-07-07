@@ -199,9 +199,9 @@ func NewApp(...args) *App {
 ### Application ABCI Ordering
 
 One addition from IBC is the concept of `HistoricalEntries` which are stored on the staking module.
-Each entry  contains the historical information for the `Header` and `ValidatorSet` that gets stored
-at each height during the `BeginBlock` call. The historical info is required to introspect the the
-past historical info at any given height in order to verify the light client `ConsensusState`  a
+Each entry contains the historical information for the `Header` and `ValidatorSet` of this chain which is stored
+at each height during the `BeginBlock` call. The historical info is required to introspect the
+past historical info at any given height in order to verify the light client `ConsensusState` during the
 connection handhake.
 
 The IBC module also has
@@ -248,7 +248,7 @@ func NewApp(...args) *App {
 
 The IBC module defines `ProofVerificationDecorator` that handles messages that contains application
 specific packet types. This is mostly to perform stateful packet execution. For more context, please
-refer to [ADR 15- IBC Packet Receiver](./../architecture/adr-015-ibc-packet-receiver.md).
+refer to [ADR 15 - IBC Packet Receiver](./../architecture/adr-015-ibc-packet-receiver.md).
 
 ```go
 // app.go

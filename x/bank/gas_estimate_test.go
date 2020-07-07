@@ -22,6 +22,25 @@ func getAccount(t *testing.T, app *simapp.SimApp, addr sdk.AccAddress) *auth.Bas
 	return res.(*auth.BaseAccount)
 }
 
+func simulatedGas(t *testing.T, app *simapp.SimApp, tx sdk.Tx) uint64 {
+	txBytes, err := app.Codec().MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+
+	// use the public query interface
+	req := abci.RequestQuery{
+		Path: "/app/simulate",
+		Data: txBytes,
+	}
+	res := app.Query(req)
+	require.Equal(t, uint32(0), res.Code)
+	var simRes sdk.SimulationResponse
+	err = app.Codec().UnmarshalBinaryBare(res.Value, &simRes)
+	require.NoError(t, err)
+	simGas := simRes.GasInfo
+	fmt.Printf("(SIM) wanted: %d / used: %d\n", simGas.GasWanted, simGas.GasUsed)
+	return simGas.GasUsed
+}
+
 func TestSendGasEstimates(t *testing.T) {
 	// some test accounts - addr1 has tokens
 	priv1 := secp256k1.GenPrivKey()
@@ -62,15 +81,10 @@ func TestSendGasEstimates(t *testing.T) {
 
 	// run simulation
 	tx := buildTx(200_000)
-	txBytes, err := app.Codec().MarshalBinaryLengthPrefixed(tx)
-	require.NoError(t, err)
-	simGas, res, err := app.Simulate(txBytes, tx)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	fmt.Printf("(SIM) wanted: %d / used: %d\n", simGas.GasWanted, simGas.GasUsed)
+	simGas := simulatedGas(t, app, tx)
 
 	// deliver the tx with the gas returned from simulate (plus 10%)
-	tx = buildTx(simGas.GasUsed + simGas.GasUsed / 10)
+	tx = buildTx(simGas + simGas/10)
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	gas, res, err := app.Deliver(tx)
 	require.NoError(t, err)
@@ -84,8 +98,3 @@ func TestSendGasEstimates(t *testing.T) {
 	assert.Less(t, uint64(40000), gas.GasUsed)
 	assert.Less(t, gas.GasUsed, uint64(80000))
 }
-
-
-/// these pieces are taken from simapp to give us a bit more control
-
-

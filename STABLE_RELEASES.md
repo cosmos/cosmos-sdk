@@ -1,15 +1,22 @@
 # Stable Releases
 
-The following release series are currently supported and receieve bugfixes:
+*Stable Release Series* continue to receieve bugfixes until they reach **End Of Life**.
 
-* **0.37**
-* **0.39 "Launchpad"**
+Only the following release series are currently supported and receieve bugfixes:
 
-Stable releases continue to receieve bugfixes until they reach End Of Life.
 The `0.37.x` release series will continue receiving bugfixes until the Cosmos Hub
 migrates to a newer release of the Cosmos-SDK.
 
-The `0.38.x` release series will reach End of Life once the `0.39.0` release is published.
+* **0.37** will continue receiving bugfixes until the Cosmos Hub migrates to a newer release series of the Cosmos-SDK.
+* **0.39 «Launchpad»** will be supported until 6 months after **0.40.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+
+The **0.39 «Launchpad»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
+
+# Stable Release Policy
+
+This policy presently applies *only* to the following release series:
+
+* **0.39 «Launchpad»**
 
 ## Point Releases
 
@@ -88,19 +95,6 @@ Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.
 
-# 0.37
-
-The `0.37.x` release series will continue receiving bugfixes until the Cosmos Hub
-migrates to a newer release of the Cosmos-SDK.
-
-# 0.38
-
-Discontinued since **0.39.0** is published.
-
-# 0.39 - The Launchpad Release Series
-
-The **0.39 Launchpad** release series will be supported until 6 months after **0.40.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-
 ## What pull requests will be included in stable point-releases
 
 Pull requests that fix bugs that fall in the following categories do not require a **Stable Release Exception** to be granted to be included in a stable point-release:
@@ -115,18 +109,18 @@ Pull requests that fix bugs that fall in the following categories do not require
 As rule of thumb, the following changes will **NOT** be automatically accepted into stable point-releases:
 
  * **State machine changes**.
- * **Client application's code-breaking changes**, i.e. changes that prevent client applications to build without modifications to the client's source code.
+ * **Client application's code-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
  
  In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
  
- ## Stable Release Exception - Procedure
- 
-1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bugfixes for stable releases without first testing them in `master`. Please apply the label [0.39 (Launchpad)](https://github.com/cosmos/cosmos-sdk/labels/0.39%20LTS%20%28Launchpad%29) to the issue.
+## Stable Release Exception - Procedure
+
+1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bugfixes for stable releases without first testing them in `master`. Please apply the label [0.39 «Launchpad»](https://github.com/cosmos/cosmos-sdk/labels/0.39%20LTS%20%28Launchpad%29) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
  * **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
  * A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
  * A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
-3. **Stable Release Managers** will review and discuss the PR. Once consensus surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective `release/launchpad/0.39.X` branch, being `X` the Launchpad's next point-release and the PR included in the `0.39.X` respective milestone.
+3. **Stable Release Managers** will review and discuss the PR. Once *consensus* surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective point-release target branch (e.g. `release/launchpad/0.39.X` being `X` the Launchpad's upcoming point-release) and the PR included in the point-release's respective milestone (e.g. `0.39.5`).
 
 ### Stable Release Exception - Bug template
 

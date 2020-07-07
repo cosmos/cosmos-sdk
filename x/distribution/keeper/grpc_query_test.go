@@ -199,12 +199,17 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 	// TODO debug delegation rewards
 	// suite.Equal(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards.Rewards)
 
-	// totalRewardsReq := &types.QueryDelegationTotalRewardsRequest{
-	// 	DelegatorAddress: sdk.AccAddress(valOpAddr1),
-	// }
+	_, err = queryClient.DelegationTotalRewards(gocontext.Background(), &types.QueryDelegationTotalRewardsRequest{})
+	suite.Error(err)
 
-	// totalRewards, err := queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
-	// suite.NoError(err)
+	totalRewardsReq := &types.QueryDelegationTotalRewardsRequest{
+		DelegatorAddress: sdk.AccAddress(valOpAddr1),
+	}
+
+	_, err = queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
+	suite.NoError(err)
+
+	// TODO debug delegation rewards
 	// expectedDelReward := types.NewDelegationDelegatorReward(valOpAddr1,
 	// 	sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5)})
 	// wantDelRewards := types.NewQueryDelegatorTotalRewardsResponse(

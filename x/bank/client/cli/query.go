@@ -80,7 +80,6 @@ Example:
 				if err != nil {
 					return err
 				}
-
 				return clientCtx.PrintOutput(res.Balances)
 			}
 

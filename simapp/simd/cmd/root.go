@@ -6,9 +6,10 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -28,13 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
-
-// TODO: Go through all functions and methods called here and ensure global Viper
-// usage is removed.
-//
-// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 
 var (
 	rootCmd = &cobra.Command{
@@ -63,7 +58,8 @@ func Execute() error {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
 
-	return rootCmd.ExecuteContext(ctx)
+	executor := cli.PrepareBaseCmd(rootCmd, "", simapp.DefaultNodeHome)
+	return executor.ExecuteContext(ctx)
 }
 
 func init() {
@@ -72,19 +68,19 @@ func init() {
 	// add application daemon commands
 	cdc := encodingConfig.Amino
 	ctx := server.NewDefaultContext()
-	// rootCmd.PersistentPreRunE = server.PersistentPreRunEFn(ctx)
-	rootCmd.PersistentFlags().String(flags.FlagHome, simapp.DefaultNodeHome, "The application's root directory")
+	rootCmd.PersistentPreRunE = server.PersistentPreRunEFn(ctx)
+	rootCmd.PersistentFlags().String(flags.FlagHome, simapp.DefaultNodeHome, "The application home directory")
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(ctx, cdc, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(ctx, cdc),
 		genutilcli.GenTxCmd(
-			ctx, cdc, simapp.ModuleBasics, staking.AppModuleBasic{},
+			ctx, cdc, simapp.ModuleBasics,
 			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultNodeHome,
 		),
 		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
-		AddGenesisAccountCmd(ctx, cdc, encodingConfig.Marshaler, simapp.DefaultNodeHome, simapp.DefaultCLIHome),
+		AddGenesisAccountCmd(ctx, cdc, encodingConfig.Marshaler, simapp.DefaultNodeHome),
 		flags.NewCompletionCmd(rootCmd, true),
 		testnetCmd(ctx, cdc, simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(cdc),
@@ -158,31 +154,33 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) server.Application {
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts server.AppOptions) server.Application {
 	var cache sdk.MultiStorePersistentCache
 
-	if viper.GetBool(server.FlagInterBlockCache) {
+	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
 	}
 
 	skipUpgradeHeights := make(map[int64]bool)
-	for _, h := range viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	pruningOpts, err := server.GetPruningOptionsFromFlags()
+	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
 	if err != nil {
 		panic(err)
 	}
 
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
-		viper.GetString(flags.FlagHome), viper.GetUint(server.FlagInvCheckPeriod),
+		cast.ToString(appOpts.Get(flags.FlagHome)),
+		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		baseapp.SetPruning(pruningOpts),
-		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
-		baseapp.SetHaltHeight(viper.GetUint64(server.FlagHaltHeight)),
-		baseapp.SetHaltTime(viper.GetUint64(server.FlagHaltTime)),
+		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
+		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
+		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
 		baseapp.SetInterBlockCache(cache),
+		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 	)
 }
 
@@ -194,8 +192,7 @@ func exportAppStateAndTMValidators(
 	if height != -1 {
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1))
 
-		err := simApp.LoadHeight(height)
-		if err != nil {
+		if err := simApp.LoadHeight(height); err != nil {
 			return nil, nil, nil, err
 		}
 	} else {

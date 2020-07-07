@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
@@ -70,7 +69,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				err        error
 			)
 
-			lvl := viper.GetString(flagTrustLevel)
+			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
 				trustLevel = lite.DefaultTrustLevel
@@ -96,7 +95,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			spc := viper.GetString(flagProofSpecs)
+			spc, _ := cmd.Flags().GetString(flagProofSpecs)
 			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
 			} else if err := cdc.UnmarshalJSON([]byte(spc), &specs); err != nil {
@@ -121,8 +120,10 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
+
 	return cmd
 }
 

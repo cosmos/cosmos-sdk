@@ -82,12 +82,6 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
-		// TODO: REMOVE VIPER CALLS!
-		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
-		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
-		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
-		viper.BindPFlag(FlagKeyringBackend, c.Flags().Lookup(FlagKeyringBackend))
-
 		c.MarkFlagRequired(FlagChainID)
 
 		c.SetErr(c.ErrOrStderr())
@@ -125,12 +119,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
 			GasFlagAuto, DefaultGasLimit,
 		))
-
-		// TODO: REMOVE VIPER CALLS!
-		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
-		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
-		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
-		viper.BindPFlag(FlagKeyringBackend, c.Flags().Lookup(FlagKeyringBackend))
 
 		c.MarkFlagRequired(FlagChainID)
 

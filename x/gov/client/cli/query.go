@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -99,11 +98,11 @@ $ %s query gov proposals --page=2 --limit=100
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bechDepositorAddr := viper.GetString(flagDepositor)
-			bechVoterAddr := viper.GetString(flagVoter)
-			strProposalStatus := viper.GetString(flagStatus)
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			bechDepositorAddr, _ := cmd.Flags().GetString(flagDepositor)
+			bechVoterAddr, _ := cmd.Flags().GetString(flagVoter)
+			strProposalStatus, _ := cmd.Flags().GetString(flagStatus)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			var depositorAddr sdk.AccAddress
 			var voterAddr sdk.AccAddress
@@ -265,8 +264,8 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
 
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			params := types.NewQueryProposalVotesParams(proposalID, page, limit)
 			bz, err := cdc.MarshalJSON(params)

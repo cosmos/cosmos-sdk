@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
@@ -25,29 +27,30 @@ import (
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-	FromAddress      sdk.AccAddress
-	Client           rpcclient.Client
-	ChainID          string
-	JSONMarshaler    codec.JSONMarshaler
-	Input            io.Reader
-	Keyring          keyring.Keyring
-	Output           io.Writer
-	OutputFormat     string
-	Height           int64
-	HomeDir          string
-	From             string
-	BroadcastMode    string
-	FromName         string
-	TrustNode        bool
-	UseLedger        bool
-	Simulate         bool
-	GenerateOnly     bool
-	Offline          bool
-	SkipConfirm      bool
-	TxGenerator      TxGenerator
-	AccountRetriever AccountRetriever
-	NodeURI          string
-	Verifier         tmlite.Verifier
+	FromAddress       sdk.AccAddress
+	Client            rpcclient.Client
+	ChainID           string
+	JSONMarshaler     codec.JSONMarshaler
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Input             io.Reader
+	Keyring           keyring.Keyring
+	Output            io.Writer
+	OutputFormat      string
+	Height            int64
+	HomeDir           string
+	From              string
+	BroadcastMode     string
+	FromName          string
+	TrustNode         bool
+	UseLedger         bool
+	Simulate          bool
+	GenerateOnly      bool
+	Offline           bool
+	SkipConfirm       bool
+	TxGenerator       TxGenerator
+	AccountRetriever  AccountRetriever
+	NodeURI           string
+	Verifier          tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
@@ -325,6 +328,12 @@ func (ctx Context) WithTxGenerator(generator TxGenerator) Context {
 // WithAccountRetriever returns the context with an updated AccountRetriever
 func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 	ctx.AccountRetriever = retriever
+	return ctx
+}
+
+// WithInterfaceRegistry returns the context with an updated InterfaceRegistry
+func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) Context {
+	ctx.InterfaceRegistry = interfaceRegistry
 	return ctx
 }
 

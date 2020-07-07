@@ -94,7 +94,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
 
-			genesisTime := cmd.Flag(flagGenesisTime).Value.String()
+			genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
 			if genesisTime != "" {
 				var t time.Time
 
@@ -106,7 +106,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.GenesisTime = t
 			}
 
-			chainID := cmd.Flag(flagChainID).Value.String()
+			chainID, _ := cmd.Flags().GetString(flagChainID)
 			if chainID != "" {
 				genDoc.ChainID = chainID
 			}

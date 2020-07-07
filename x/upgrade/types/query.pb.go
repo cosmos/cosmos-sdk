@@ -66,7 +66,7 @@ var xxx_messageInfo_QueryCurrentPlanRequest proto.InternalMessageInfo
 
 // QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC method
 type QueryCurrentPlanResponse struct {
-	// plan is the current plan
+	// plan is the current upgrade plan
 	Plan *Plan `protobuf:"bytes,1,opt,name=plan,proto3" json:"plan,omitempty"`
 }
 
@@ -245,9 +245,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// CurrentPlan queries the current plan
+	// CurrentPlan queries the current upgrade plan
 	CurrentPlan(ctx context.Context, in *QueryCurrentPlanRequest, opts ...grpc.CallOption) (*QueryCurrentPlanResponse, error)
-	// AppliedPlan queries a previously applied plan by its name
+	// AppliedPlan queries a previously applied upgrade plan by its name
 	AppliedPlan(ctx context.Context, in *QueryAppliedPlanRequest, opts ...grpc.CallOption) (*QueryAppliedPlanResponse, error)
 }
 
@@ -279,9 +279,9 @@ func (c *queryClient) AppliedPlan(ctx context.Context, in *QueryAppliedPlanReque
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// CurrentPlan queries the current plan
+	// CurrentPlan queries the current upgrade plan
 	CurrentPlan(context.Context, *QueryCurrentPlanRequest) (*QueryCurrentPlanResponse, error)
-	// AppliedPlan queries a previously applied plan by its name
+	// AppliedPlan queries a previously applied upgrade plan by its name
 	AppliedPlan(context.Context, *QueryAppliedPlanRequest) (*QueryAppliedPlanResponse, error)
 }
 

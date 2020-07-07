@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	client2 "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
@@ -124,7 +124,10 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(*am.keeper)
 }
 
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+// RegisterQueryService registers the gRPC query service for the ibc module.
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryService(server, am.keeper)
+}
 
 // InitGenesis performs genesis initialization for the ibc module. It returns
 // no validator updates.
@@ -146,7 +149,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 
 // BeginBlock returns the begin blocker for the ibc module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	client2.BeginBlocker(ctx, am.keeper.ClientKeeper)
+	ibcclient.BeginBlocker(ctx, am.keeper.ClientKeeper)
 }
 
 // EndBlock returns the end blocker for the ibc module. It returns no validator

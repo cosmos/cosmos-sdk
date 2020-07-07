@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -60,7 +62,7 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 		{"bad invariant route", types.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist"), "fail"},
 		{"invariant broken", types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route), "panic"},
 		{"invariant passing", types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route), "pass"},
-		{"invalid msg", sdk.NewTestMsg(), "fail"},
+		{"invalid msg", testdata.NewTestMsg(), "fail"},
 	}
 
 	for _, tc := range cases {

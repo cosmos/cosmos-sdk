@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
@@ -65,9 +67,9 @@ func TestSimulateGasCost(t *testing.T) {
 
 	// set up msgs and fee
 	var tx sdk.Tx
-	msg1 := types.NewTestMsg(addr1, addr2)
-	msg2 := types.NewTestMsg(addr3, addr1)
-	msg3 := types.NewTestMsg(addr2, addr3)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	msg2 := testdata.NewTestMsg(addr3, addr1)
+	msg3 := testdata.NewTestMsg(addr2, addr3)
 	msgs := []sdk.Msg{msg1, msg2, msg3}
 	fee := types.NewTestStdFee()
 
@@ -102,8 +104,8 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 	// msg and signatures
 	var tx sdk.Tx
-	msg1 := types.NewTestMsg(addr1, addr2)
-	msg2 := types.NewTestMsg(addr1, addr3)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	msg2 := testdata.NewTestMsg(addr1, addr3)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1, msg2}
@@ -163,7 +165,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 
 	// msg and signatures
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg}
@@ -184,8 +186,8 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// new tx with another signer and incorrect account numbers
-	msg1 := types.NewTestMsg(addr1, addr2)
-	msg2 := types.NewTestMsg(addr2, addr1)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	msg2 := testdata.NewTestMsg(addr2, addr1)
 	msgs = []sdk.Msg{msg1, msg2}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{1, 0}, []uint64{2, 0}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
@@ -221,7 +223,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 
 	// msg and signatures
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg}
@@ -242,8 +244,8 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// new tx with another signer and incorrect account numbers
-	msg1 := types.NewTestMsg(addr1, addr2)
-	msg2 := types.NewTestMsg(addr2, addr1)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	msg2 := testdata.NewTestMsg(addr2, addr1)
 	msgs = []sdk.Msg{msg1, msg2}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{1, 0}, []uint64{2, 0}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
@@ -283,7 +285,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 	// msg and signatures
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg}
@@ -302,8 +304,8 @@ func TestAnteHandlerSequences(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// new tx with another signer and correct sequences
-	msg1 := types.NewTestMsg(addr1, addr2)
-	msg2 := types.NewTestMsg(addr3, addr1)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	msg2 := testdata.NewTestMsg(addr3, addr1)
 	msgs = []sdk.Msg{msg1, msg2}
 
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{2, 0, 0}
@@ -314,7 +316,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnauthorized)
 
 	// tx from just second signer with incorrect sequence fails
-	msg = types.NewTestMsg(addr2)
+	msg = testdata.NewTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
@@ -325,7 +327,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// another tx from both of them that passes
-	msg = types.NewTestMsg(addr1, addr2)
+	msg = testdata.NewTestMsg(addr1, addr2)
 	msgs = []sdk.Msg{msg}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{3, 2}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
@@ -347,7 +349,7 @@ func TestAnteHandlerFees(t *testing.T) {
 
 	// msg and signatures
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	fee := types.NewTestStdFee()
 	msgs := []sdk.Msg{msg}
@@ -390,7 +392,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 
 	// msg and signatures
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	fee := types.NewStdFee(0, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 
@@ -441,9 +443,9 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 	// set up msgs and fee
 	var tx sdk.Tx
-	msg1 := types.NewTestMsg(addr1, addr2)
-	msg2 := types.NewTestMsg(addr3, addr1)
-	msg3 := types.NewTestMsg(addr2, addr3)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	msg2 := testdata.NewTestMsg(addr3, addr1)
+	msg3 := testdata.NewTestMsg(addr2, addr3)
 	msgs := []sdk.Msg{msg1, msg2, msg3}
 	fee := types.NewTestStdFee()
 
@@ -485,7 +487,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	msgs := []sdk.Msg{msg}
 	fee := types.NewTestStdFee()
 	fee2 := types.NewTestStdFee()
@@ -510,12 +512,12 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 		msgs    []sdk.Msg
 		err     error
 	}{
-		{chainID2, 0, 1, fee, msgs, errUnauth},                              // test wrong chain_id
-		{chainID, 0, 2, fee, msgs, errUnauth},                               // test wrong seqs
-		{chainID, 1, 1, fee, msgs, errUnauth},                               // test wrong accnum
-		{chainID, 0, 1, fee, []sdk.Msg{types.NewTestMsg(addr2)}, errUnauth}, // test wrong msg
-		{chainID, 0, 1, fee2, msgs, errUnauth},                              // test wrong fee
-		{chainID, 0, 1, fee3, msgs, errUnauth},                              // test wrong fee
+		{chainID2, 0, 1, fee, msgs, errUnauth},                                 // test wrong chain_id
+		{chainID, 0, 2, fee, msgs, errUnauth},                                  // test wrong seqs
+		{chainID, 1, 1, fee, msgs, errUnauth},                                  // test wrong accnum
+		{chainID, 0, 1, fee, []sdk.Msg{testdata.NewTestMsg(addr2)}, errUnauth}, // test wrong msg
+		{chainID, 0, 1, fee2, msgs, errUnauth},                                 // test wrong fee
+		{chainID, 0, 1, fee3, msgs, errUnauth},                                 // test wrong fee
 	}
 
 	privs, seqs = []crypto.PrivKey{priv1}, []uint64{1}
@@ -534,7 +536,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInvalidPubKey)
 
 	// test wrong signer if public doesn't exist
-	msg = types.NewTestMsg(addr2)
+	msg = testdata.NewTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	privs, accnums, seqs = []crypto.PrivKey{priv1}, []uint64{1}, []uint64{0}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
@@ -564,7 +566,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	var tx sdk.Tx
 
 	// test good tx and set public key
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	msgs := []sdk.Msg{msg}
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	fee := types.NewTestStdFee()
@@ -575,7 +577,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	require.Equal(t, acc1.GetPubKey(), priv1.PubKey())
 
 	// test public key not found
-	msg = types.NewTestMsg(addr2)
+	msg = testdata.NewTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	tx = types.NewTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
 	sigs := tx.(types.StdTx).Signatures
@@ -693,7 +695,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	}
 
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
+	msg := testdata.NewTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
 	msgs := []sdk.Msg{msg}
 	fee := types.NewTestStdFee()
 
@@ -727,7 +729,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 
 	var tx sdk.Tx
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	fee := types.NewTestStdFee()
 	msgs := []sdk.Msg{msg}
@@ -743,7 +745,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
-	msg = types.NewTestMsg(addr2)
+	msg = testdata.NewTestMsg(addr2)
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}
 	fee = types.NewTestStdFee()
 	msgs = []sdk.Msg{msg}
@@ -772,7 +774,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 
 	// test that operations skipped on recheck do not run
 
-	msg := types.NewTestMsg(addr1)
+	msg := testdata.NewTestMsg(addr1)
 	msgs := []sdk.Msg{msg}
 	fee := types.NewTestStdFee()
 

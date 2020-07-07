@@ -45,13 +45,13 @@ When users interact with the application's interfaces, they invoke the underlyin
 
 ### Messages
 
-**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them. 
+**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L8-L29
 
 `Message`s in a module are typically defined in a `msgs.go` file (though not always), and one handler with multiple functions to handle each of the module's `message`s is defined in a `handler.go` file.
 
-Note: module `messages` are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers. 
+Note: module `messages` are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
 
 To learn more about `message`s, click [here](../building-modules/messages-and-queries.md#messages).
 
@@ -67,17 +67,17 @@ The `TxBuilder` contains data closely related with the processing of transaction
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/txbuilder.go#L18-L31
 
-- `TxEncoder` defined by the developer for this type of transaction. Used to encode messages before being processed by nodes running Tendermint.
-- `Keybase` that manages the user's keys and is used to perform signing operations.
-- `AccountNumber` from which this transaction originated.
-- `Sequence`, the number of transactions that the user has sent out, used to prevent replay attacks.
-- `Gas` option chosen by the users for how to calculate how much gas they will need to pay. A common option is "auto" which generates an automatic estimate.
-- `GasAdjustment` to adjust the estimate of gas by a scalar value, used to avoid underestimating the amount of gas required.
-- `SimulateAndExecute` option to simply simulate the transaction execution without broadcasting.
-- `ChainID` representing which blockchain this transaction pertains to.
-- `Memo` to send with the transaction.
-- `Fees`, the maximum amount the user is willing to pay in fees. Alternative to specifying gas prices.
-- `GasPrices`, the amount per unit of gas the user is willing to pay in fees. Alternative to specifying fees.
+* `TxEncoder` defined by the developer for this type of transaction. Used to encode messages before being processed by nodes running Tendermint.
+* `Keybase` that manages the user's keys and is used to perform signing operations.
+* `AccountNumber` from which this transaction originated.
+* `Sequence`, the number of transactions that the user has sent out, used to prevent replay attacks.
+* `Gas` option chosen by the users for how to calculate how much gas they will need to pay. A common option is "auto" which generates an automatic estimate.
+* `GasAdjustment` to adjust the estimate of gas by a scalar value, used to avoid underestimating the amount of gas required.
+* `SimulateAndExecute` option to simply simulate the transaction execution without broadcasting.
+* `ChainID` representing which blockchain this transaction pertains to.
+* `Memo` to send with the transaction.
+* `Fees`, the maximum amount the user is willing to pay in fees. Alternative to specifying gas prices.
+* `GasPrices`, the amount per unit of gas the user is willing to pay in fees. Alternative to specifying fees.
 
 The `Context` is initialized using the application's `codec` and data more closely related to the user interaction with the interface, holding data such as the output to the user and the broadcast mode. Read more about `Context` [here](../interfaces/query-lifecycle.md#context).
 

@@ -20,6 +20,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -48,6 +49,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -69,10 +71,15 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 		return nil, err
 	}
 
+	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenAck,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -93,10 +100,15 @@ func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg *types
 		return nil, err
 	}
 
+	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenConfirm,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientID),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

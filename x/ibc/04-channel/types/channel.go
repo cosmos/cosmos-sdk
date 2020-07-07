@@ -116,34 +116,22 @@ func (c Counterparty) ValidateBasic() error {
 	return nil
 }
 
-// IdentifiedChannel defines a channel with additional port and channel identifier
-// fields.
-type IdentifiedChannel struct {
-	ID             string       `json:"id" yaml:"id"`
-	PortID         string       `json:"port_id" yaml:"port_id"`
-	State          State        `json:"state" yaml:"state"`
-	Ordering       Order        `json:"ordering" yaml:"ordering"`
-	Counterparty   Counterparty `json:"counterparty" yaml:"counterparty"`
-	ConnectionHops []string     `json:"connection_hops" yaml:"connection_hops"`
-	Version        string       `json:"version" yaml:"version "`
-}
-
 // NewIdentifiedChannel creates a new IdentifiedChannel instance
 func NewIdentifiedChannel(portID, channelID string, ch Channel) IdentifiedChannel {
 	return IdentifiedChannel{
-		ID:             channelID,
-		PortID:         portID,
 		State:          ch.State,
 		Ordering:       ch.Ordering,
 		Counterparty:   ch.Counterparty,
 		ConnectionHops: ch.ConnectionHops,
 		Version:        ch.Version,
+		PortID:         portID,
+		ChannelID:      channelID,
 	}
 }
 
 // ValidateBasic performs a basic validation of the identifiers and channel fields.
 func (ic IdentifiedChannel) ValidateBasic() error {
-	if err := host.ChannelIdentifierValidator(ic.ID); err != nil {
+	if err := host.ChannelIdentifierValidator(ic.ChannelID); err != nil {
 		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())
 	}
 	if err := host.PortIdentifierValidator(ic.PortID); err != nil {

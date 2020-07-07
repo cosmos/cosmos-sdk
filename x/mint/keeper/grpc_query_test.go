@@ -6,12 +6,21 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func TestGRPCParams(t *testing.T) {
+type MintTestSuite struct {
+	suite.Suite
+
+	app         *simapp.SimApp
+	ctx         sdk.Context
+	queryClient types.QueryClient
+}
+
+func (suite *MintTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -19,15 +28,28 @@ func TestGRPCParams(t *testing.T) {
 	types.RegisterQueryServer(queryHelper, app.MintKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
+	suite.app = app
+	suite.ctx = ctx
+
+	suite.queryClient = queryClient
+}
+
+func (suite *MintTestSuite) TestGRPCParams() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+
 	params, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-	require.NoError(t, err)
-	require.Equal(t, params.Params, app.MintKeeper.GetParams(ctx))
+	suite.NoError(err)
+	suite.Equal(params.Params, app.MintKeeper.GetParams(ctx))
 
 	inflation, err := queryClient.Inflation(gocontext.Background(), &types.QueryInflationRequest{})
-	require.NoError(t, err)
-	require.Equal(t, inflation.Inflation, app.MintKeeper.GetMinter(ctx).Inflation)
+	suite.NoError(err)
+	suite.Equal(inflation.Inflation, app.MintKeeper.GetMinter(ctx).Inflation)
 
 	annualProvisions, err := queryClient.AnnualProvisions(gocontext.Background(), &types.QueryAnnualProvisionsRequest{})
-	require.NoError(t, err)
-	require.Equal(t, annualProvisions.AnnualProvisions, app.MintKeeper.GetMinter(ctx).AnnualProvisions)
+	suite.NoError(err)
+	suite.Equal(annualProvisions.AnnualProvisions, app.MintKeeper.GetMinter(ctx).AnnualProvisions)
+}
+
+func TestMintTestSuite(t *testing.T) {
+	suite.Run(t, new(MintTestSuite))
 }

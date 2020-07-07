@@ -104,7 +104,7 @@ func TestStartStandAlone(t *testing.T) {
 	ctx := server.NewContext(viper.New(), cfg, logger)
 	cdc := makeCodec()
 	initCmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, initCmd.RunE(nil, []string{"appnode-test"}))
+	require.NoError(t, initCmd.RunE(initCmd, []string{"appnode-test"}))
 
 	app, err := mock.NewApp(home, logger)
 	require.Nil(t, err)

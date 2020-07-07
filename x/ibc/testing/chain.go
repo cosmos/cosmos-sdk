@@ -29,6 +29,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -64,7 +65,8 @@ type TestChain struct {
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
 	CurrentHeader abci.Header       // header for current block height
-	Querier       sdk.Querier
+	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
+	QueryServer   types.QueryServer
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -119,6 +121,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		App:           app,
 		CurrentHeader: header,
 		Querier:       keeper.NewQuerier(*app.IBCKeeper),
+		QueryServer:   app.IBCKeeper,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,

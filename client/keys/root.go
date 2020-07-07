@@ -2,12 +2,10 @@ package keys
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
-
-var rootViper = viper.New()
 
 // Commands registers a sub-tree of commands to interact with
 // local private key storage.
@@ -38,6 +36,7 @@ information:
 The pass backend requires GnuPG: https://gnupg.org/
 `,
 	}
+
 	cmd.AddCommand(
 		MnemonicKeyCommand(),
 		AddKeyCommand(),
@@ -51,8 +50,9 @@ The pass backend requires GnuPG: https://gnupg.org/
 		MigrateCommand(),
 	)
 
+	cmd.PersistentFlags().String(flags.FlagHome, "", "The application home directory")
 	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	rootViper.BindPFlag(flags.FlagKeyringBackend, cmd.PersistentFlags().Lookup(flags.FlagKeyringBackend))
+	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
 
 	return cmd
 }

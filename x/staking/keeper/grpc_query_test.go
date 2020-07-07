@@ -4,7 +4,7 @@ import (
 	gocontext "context"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,406 +15,409 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestGRPCQueryValidators(t *testing.T) {
-	_, app, ctx := createTestInput()
+type QueryTestSuite struct {
+	suite.Suite
 
-	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
-
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	status := []sdk.BondStatus{sdk.Bonded, sdk.Unbonded, sdk.Unbonding}
-	var validators [3]types.Validator
-	for i, amt := range amts {
-		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{})
-		validators[i], _ = validators[i].AddTokensFromDel(amt)
-		validators[i] = validators[i].UpdateStatus(status[i])
-	}
-
-	app.StakingKeeper.SetValidator(ctx, validators[0])
-	app.StakingKeeper.SetValidator(ctx, validators[1])
-	app.StakingKeeper.SetValidator(ctx, validators[2])
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
-
-	vals, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
-	require.Error(t, err)
-	require.Nil(t, vals)
-
-	for i, s := range status {
-		req := &types.QueryValidatorsRequest{Status: s.String(), Req: &query.PageRequest{Limit: 5}}
-		res, err := queryClient.Validators(gocontext.Background(), req)
-		require.NoError(t, err)
-
-		require.Equal(t, 1, len(res.Validators))
-		require.Equal(t, validators[i].OperatorAddress, res.Validators[0].OperatorAddress)
-	}
-
-	// check pagination
-	pageReq := &query.PageRequest{Limit: 1}
-
-	res, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{Status: status[0].String(), Req: pageReq})
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 1, len(res.Validators))
-	require.Nil(t, res.Res.NextKey)
-
-	valRes, err := queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{})
-	require.Error(t, err)
-	require.Nil(t, valRes)
-
-	for _, validator := range validators {
-		valRes, err = queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{ValidatorAddr: validator.OperatorAddress})
-		require.NoError(t, err)
-		require.Equal(t, validator, valRes.Validator)
-	}
+	app         *simapp.SimApp
+	ctx         sdk.Context
+	addrs       []sdk.AccAddress
+	vals        []types.Validator
+	queryClient types.QueryClient
 }
 
-func TestGRPCQueryDelegation(t *testing.T) {
-	_, app, ctx := createTestInput()
-	params := app.StakingKeeper.GetParams(ctx)
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
+func (suite *QueryTestSuite) SetupTest() {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
-	addrAcc1, addrAcc2 := addrs[0], addrs[1]
-	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
-
-	pubKeys := simapp.CreateTestPubKeys(2)
-	pk1, pk2 := pubKeys[0], pubKeys[1]
-
-	// Create Validators and Delegation
-	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
-	app.StakingKeeper.SetValidator(ctx, val1)
-	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-
-	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
-	app.StakingKeeper.SetValidator(ctx, val2)
-	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
-
-	delTokens := sdk.TokensFromConsensusPower(20)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
-	_, err = app.StakingKeeper.Delegate(ctx, addrAcc1, delTokens, sdk.Unbonded, val1, true)
-	_, err = app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val2, true)
-	require.NoError(t, err)
-
-	// apply TM updates
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
-
-	res, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorValidatorsRequest{})
-	require.Error(t, err)
-	require.Nil(t, res)
-
-	delegatorParamsReq := &types.QueryDelegatorValidatorsRequest{DelegatorAddr: addrAcc2}
-	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrAcc2, params.MaxValidators)
-
-	res, err = queryClient.DelegatorValidators(gocontext.Background(), delegatorParamsReq)
-	require.NoError(t, err)
-	require.Equal(t, len(delValidators), len(res.Validators))
-	require.ElementsMatch(t, delValidators, res.Validators)
-
-	delegatorParamsReq = &types.QueryDelegatorValidatorsRequest{
-		DelegatorAddr: addrAcc2,
-		Req:           &query.PageRequest{Limit: 2},
-	}
-
-	res, err = queryClient.DelegatorValidators(gocontext.Background(), delegatorParamsReq)
-	require.NoError(t, err)
-
-	require.Equal(t, 2, len(res.Validators))
-	require.ElementsMatch(t, delValidators, res.Validators)
-
-	// Query bonded validator
-	valResp, err := queryClient.DelegatorValidator(gocontext.Background(), &types.QueryDelegatorValidatorRequest{})
-	require.Error(t, err)
-	require.Nil(t, valResp)
-
-	req := &types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1}
-	valResp, err = queryClient.DelegatorValidator(gocontext.Background(), req)
-	require.NoError(t, err)
-
-	require.Equal(t, addrVal1, valResp.Validator.OperatorAddress)
-
-	// Query delegation
-	delegationResp, err := queryClient.Delegation(gocontext.Background(), &types.QueryDelegationRequest{})
-	require.Error(t, err)
-	require.Nil(t, delegationResp)
-
-	delReq := &types.QueryDelegationRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
-	require.True(t, found)
-
-	delegationResp, err = queryClient.Delegation(gocontext.Background(), delReq)
-	require.NoError(t, err)
-
-	require.Equal(t, delegation.ValidatorAddress, delegationResp.DelegationResponse.Delegation.ValidatorAddress)
-	require.Equal(t, delegation.DelegatorAddress, delegationResp.DelegationResponse.Delegation.DelegatorAddress)
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationResp.DelegationResponse.Balance)
-
-	// Query Delegator Delegations
-	delegatorDel, err := queryClient.DelegatorDelegations(gocontext.Background(), &types.QueryDelegatorDelegationsRequest{})
-	require.Error(t, err)
-	require.Nil(t, delegatorDel)
-
-	delDelReq := &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
-	delegatorDelegationsResp, err := queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
-	require.NoError(t, err)
-	require.NotNil(t, delegatorDelegationsResp)
-
-	require.Len(t, delegatorDelegationsResp.DelegationResponses, 2)
-	require.Equal(t, addrAcc2, delegatorDelegationsResp.DelegationResponses[0].Delegation.DelegatorAddress)
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegationsResp.DelegationResponses[0].Balance)
-
-	// Query delegator delegations with pagination
-	delDelReq = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc2,
-		Req: &query.PageRequest{Limit: 1, CountTotal: true}}
-	delegatorDelegationsResp, err = queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
-	require.NoError(t, err)
-
-	require.Equal(t, uint64(2), delegatorDelegationsResp.Res.Total)
-	require.Len(t, delegatorDelegationsResp.DelegationResponses, 1)
-	require.Equal(t, 1, len(delegatorDelegationsResp.DelegationResponses))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegationsResp.DelegationResponses[0].Balance)
-
-	// Query validator delegations
-	validatorDelegations, err := queryClient.ValidatorDelegations(gocontext.Background(), &types.QueryValidatorDelegationsRequest{})
-	require.Error(t, err)
-	require.Nil(t, validatorDelegations)
-
-	valReq := &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
-	delegationsRes, err := queryClient.ValidatorDelegations(gocontext.Background(), valReq)
-
-	require.NoError(t, err)
-	require.Len(t, delegatorDelegationsResp.DelegationResponses, 1)
-	require.Equal(t, addrVal1, delegationsRes.DelegationResponses[0].Delegation.ValidatorAddress)
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes.DelegationResponses[0].Balance)
-
-	// Query Validator Delegations with pagination
-
-	// Query unbonding delegation
-	unbondingTokens := sdk.TokensFromConsensusPower(10)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
-	require.NoError(t, err)
-
-	unbondRes, err := queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{})
-	require.Error(t, err)
-	require.Nil(t, unbondRes)
-
-	unbondReq := &types.QueryUnbondingDelegationRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
-	unbondRes, err = queryClient.UnbondingDelegation(gocontext.Background(), unbondReq)
-
-	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
-	require.True(t, found)
-	require.NotNil(t, unbondRes)
-	require.Equal(t, unbond, unbondRes.Unbond)
-
-	// Query Delegator Unbonding Delegations
-	delegatorUbds, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), &types.QueryDelegatorUnbondingDelegationsRequest{})
-	require.Error(t, err)
-	require.Nil(t, delegatorUbds)
-
-	unbReq := &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
-	delegatorUbds, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
-	require.NoError(t, err)
-	require.Equal(t, unbond, delegatorUbds.UnbondingResponses[0])
-
-	// Query Delegator unbonding delegate with pagination
-	unbReq = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc2,
-		Req: &query.PageRequest{Limit: 1}}
-	delegatorUbds, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
-	require.NoError(t, err)
-
-	require.Len(t, delegatorUbds.UnbondingResponses, 1)
-	require.Equal(t, unbond, delegatorUbds.UnbondingResponses[0])
-
-	// Query Redelegations
-	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
-	require.NoError(t, err)
-
-	redelegationTokens := sdk.TokensFromConsensusPower(10)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
-		val2.OperatorAddress, redelegationTokens.ToDec())
-	require.NoError(t, err)
-	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
-	require.True(t, found)
-
-	redelReq := &types.QueryRedelegationsRequest{
-		DelegatorAddr: addrAcc2, SrcValidatorAddr: val1.OperatorAddress, DstValidatorAddr: val2.OperatorAddress,
-		Req: &query.PageRequest{}}
-	redelResp, err = queryClient.Redelegations(gocontext.Background(), redelReq)
-
-	require.NoError(t, err)
-	require.Len(t, redelResp.RedelegationResponses, 1)
-	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
-	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
-	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
-	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
-}
-
-func TestGRPCQueryPoolParameters(t *testing.T) {
-	_, app, ctx := createTestInput()
-	bondDenom := sdk.DefaultBondDenom
 	querier := keeper.Querier{Keeper: app.StakingKeeper}
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	// Query pool
-	res, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{})
-	require.NoError(t, err)
-	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
-	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	require.Equal(t, app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, res.Pool.NotBondedTokens)
-	require.Equal(t, app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
-
-	// Query Params
-	resp, err := queryClient.Parameters(gocontext.Background(), &types.QueryParametersRequest{})
-	require.NoError(t, err)
-	require.Equal(t, app.StakingKeeper.GetParams(ctx), resp.Params)
-}
-
-func TestGRPCHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput()
-	querier := keeper.Querier{app.StakingKeeper}
-
-	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
-	addrAcc1, addrAcc2 := addrs[0], addrs[1]
-	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
-
-	// Create Validators and Delegation
-	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
-	val2 := types.NewValidator(addrVal2, PKs[1], types.Description{})
-	vals := []types.Validator{val1, val2}
-	app.StakingKeeper.SetValidator(ctx, val1)
-	app.StakingKeeper.SetValidator(ctx, val2)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
+	addrs, _ := createValidators(ctx, app, []int64{9, 8, 7})
+	validators := app.StakingKeeper.GetValidators(ctx, 5)
 
 	header := abci.Header{
 		ChainID: "HelloChain",
 		Height:  5,
 	}
-	hi := types.NewHistoricalInfo(header, vals)
+
+	hi := types.NewHistoricalInfo(header, validators)
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi)
 
-	hist, err := queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{})
-	require.Error(t, err)
-	require.Nil(t, hist)
-
-	hist, err = queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{Height: 4})
-	require.Error(t, err)
-	require.Nil(t, hist)
-
-	hist, err = queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{Height: 5})
-	require.NoError(t, err)
-	require.NotNil(t, hist)
-	require.Equal(t, &hi, hist.Hist)
+	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
 }
 
-func TestGRPCQueryRedelegation(t *testing.T) {
-	_, app, ctx := createTestInput()
-	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
-	addrAcc1, addrAcc2 := addrs[0], addrs[1]
-	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
+func (suite *QueryTestSuite) TestGRPCQueryValidators() {
+	_, _, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	// Create Validators and Delegation
-	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
-	val2 := types.NewValidator(addrVal2, PKs[1], types.Description{})
-	app.StakingKeeper.SetValidator(ctx, val1)
-	app.StakingKeeper.SetValidator(ctx, val2)
+	vals, err := queryClient.Validators(gocontext.Background(), &types.QueryValidatorsRequest{})
+	suite.Error(err)
+	suite.Nil(vals)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
+	// validators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	req := &types.QueryValidatorsRequest{Status: sdk.Bonded.String(),
+		Req: &query.PageRequest{Limit: 1, CountTotal: true}}
+	valsResp, err := queryClient.Validators(gocontext.Background(), req)
 
-	delAmount := sdk.TokensFromConsensusPower(100)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, sdk.Unbonded, val1, true)
-	require.NoError(t, err)
+	suite.NoError(err)
+	suite.Equal(1, len(valsResp.Validators))
+	suite.NotNil(valsResp.Res.NextKey)
+
+	valRes, err := queryClient.Validator(gocontext.Background(), &types.QueryValidatorRequest{ValidatorAddr: valsResp.Validators[0].OperatorAddress})
+	suite.NoError(err)
+	suite.Equal(valsResp.Validators[0], valRes.Validator)
+}
+
+func (suite *QueryTestSuite) TestDelegatorValidators() {
+	app, ctx, queryClient, addrs, _ := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	params := app.StakingKeeper.GetParams(ctx)
+
+	res, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorValidatorsRequest{})
+	suite.Error(err)
+	suite.Nil(res)
+
+	delegatorParamsReq := &types.QueryDelegatorValidatorsRequest{DelegatorAddr: addrs[0]}
+	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
+
+	res, err = queryClient.DelegatorValidators(gocontext.Background(), delegatorParamsReq)
+	suite.NoError(err)
+	suite.Equal(len(delValidators), len(res.Validators))
+	suite.ElementsMatch(delValidators, res.Validators)
+
+	delegatorParamsReq = &types.QueryDelegatorValidatorsRequest{
+		DelegatorAddr: addrs[0],
+		Req:           &query.PageRequest{Limit: 1},
+	}
+
+	res, err = queryClient.DelegatorValidators(gocontext.Background(), delegatorParamsReq)
+	suite.NoError(err)
+	suite.Equal(1, len(res.Validators))
+	suite.NotNil(res.Res.NextKey)
+}
+
+func (suite *QueryTestSuite) TestGRPCQueryDelegatorValidator() {
+	queryClient, addrs, vals := suite.queryClient, suite.addrs, suite.vals
+
+	addrVal1 := vals[1].OperatorAddress
+	valResp, err := queryClient.DelegatorValidator(gocontext.Background(), &types.QueryDelegatorValidatorRequest{})
+	suite.Error(err)
+	suite.Nil(valResp)
+
+	req := &types.QueryDelegatorValidatorRequest{DelegatorAddr: addrs[1], ValidatorAddr: addrVal1}
+	valResp, err = queryClient.DelegatorValidator(gocontext.Background(), req)
+	suite.NoError(err)
+	suite.Equal(addrVal1, valResp.Validator.OperatorAddress)
+}
+
+func (suite *QueryTestSuite) TestGRPCQueryDelegation() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	addrAcc := addrs[0]
+	addrVal := vals[0].OperatorAddress
+
+	delegationResp, err := queryClient.Delegation(gocontext.Background(), &types.QueryDelegationRequest{})
+	suite.Error(err)
+	suite.Nil(delegationResp)
+
+	delReq := &types.QueryDelegationRequest{DelegatorAddr: addrAcc, ValidatorAddr: addrVal, Req: &query.PageRequest{}}
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal)
+	suite.True(found)
+
+	delegationResp, err = queryClient.Delegation(gocontext.Background(), delReq)
+	suite.NoError(err)
+
+	suite.Equal(delegation.ValidatorAddress, delegationResp.DelegationResponse.Delegation.ValidatorAddress)
+	suite.Equal(delegation.DelegatorAddress, delegationResp.DelegationResponse.Delegation.DelegatorAddress)
+	suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationResp.DelegationResponse.Balance)
+}
+
+func (suite *QueryTestSuite) TestGRPCDelegatorDelegations() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	addrAcc := addrs[0]
+	addrVal1 := vals[0].OperatorAddress
+
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
+	suite.True(found)
+
+	delegatorDel, err := queryClient.DelegatorDelegations(gocontext.Background(), &types.QueryDelegatorDelegationsRequest{})
+	suite.Error(err)
+	suite.Nil(delegatorDel)
+
+	delDelReq := &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc, Req: &query.PageRequest{}}
+	delegatorDelegationsResp, err := queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
+	suite.NoError(err)
+	suite.NotNil(delegatorDelegationsResp)
+
+	suite.Len(delegatorDelegationsResp.DelegationResponses, 2)
+	suite.Equal(addrAcc, delegatorDelegationsResp.DelegationResponses[0].Delegation.DelegatorAddress)
+	suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegationsResp.DelegationResponses[0].Balance)
+
+	// Query delegator delegations with pagination
+	delDelReq = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc,
+		Req: &query.PageRequest{Limit: 1, CountTotal: true}}
+	delegatorDelegationsResp, err = queryClient.DelegatorDelegations(gocontext.Background(), delDelReq)
+	suite.NoError(err)
+
+	suite.Equal(uint64(2), delegatorDelegationsResp.Res.Total)
+	suite.Len(delegatorDelegationsResp.DelegationResponses, 1)
+	suite.Equal(1, len(delegatorDelegationsResp.DelegationResponses))
+	suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegationsResp.DelegationResponses[0].Balance)
+}
+
+func (suite *QueryTestSuite) TestGRPCValidatorDelegations() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	addrAcc := addrs[0]
+	addrVal1 := vals[0].OperatorAddress
+
+	validatorDelegations, err := queryClient.ValidatorDelegations(gocontext.Background(), &types.QueryValidatorDelegationsRequest{})
+	suite.Error(err)
+	suite.Nil(validatorDelegations)
+
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
+	suite.True(found)
+	valReq := &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1, Req: &query.PageRequest{}}
+	delegationsRes, err := queryClient.ValidatorDelegations(gocontext.Background(), valReq)
+
+	suite.NoError(err)
+	suite.Len(delegationsRes.DelegationResponses, 2)
+	suite.Equal(addrVal1, delegationsRes.DelegationResponses[0].Delegation.ValidatorAddress)
+	suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes.DelegationResponses[0].Balance)
+}
+
+func (suite *QueryTestSuite) TestGRPCQueryUnbondingDelegation() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	addrAcc2 := addrs[1]
+	addrVal2 := vals[1].OperatorAddress
+
+	unbondingTokens := sdk.TokensFromConsensusPower(2)
+	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc2, addrVal2, unbondingTokens.ToDec())
+	suite.NoError(err)
+
+	unbondRes, err := queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{})
+	suite.Error(err)
+	suite.Nil(unbondRes)
+
+	unbondReq := &types.QueryUnbondingDelegationRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal2, Req: &query.PageRequest{}}
+	unbondRes, err = queryClient.UnbondingDelegation(gocontext.Background(), unbondReq)
+
+	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal2)
+	suite.True(found)
+	suite.NotNil(unbondRes)
+	suite.Equal(unbond, unbondRes.Unbond)
+}
+
+func (suite *QueryTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+	addrAcc2 := addrs[1]
+	addrVal2 := vals[1].OperatorAddress
+
+	unbondingTokens := sdk.TokensFromConsensusPower(2)
+	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc2, addrVal2, unbondingTokens.ToDec())
+	suite.NoError(err)
+	delegatorUbds, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), &types.QueryDelegatorUnbondingDelegationsRequest{})
+	suite.Error(err)
+	suite.Nil(delegatorUbds)
+
+	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal2)
+	suite.True(found)
+	unbReq := &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc2, Req: &query.PageRequest{}}
+	delegatorUbds, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
+	suite.NoError(err)
+	suite.Equal(unbond, delegatorUbds.UnbondingResponses[0])
+
+	// Query Delegator unbonding delegate with pagination
+	unbReq = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc2,
+		Req: &query.PageRequest{Limit: 1}}
+	delegatorUbds, err = queryClient.DelegatorUnbondingDelegations(gocontext.Background(), unbReq)
+	suite.NoError(err)
+
+	suite.Len(delegatorUbds.UnbondingResponses, 1)
+	suite.Equal(unbond, delegatorUbds.UnbondingResponses[0])
+}
+
+// func (suite *) TestGRPCQueryDelegationss() {
+// 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+//
+// 	_, addrAcc2 := addrs[0], addrs[1]
+// 	val1, val2 := vals[0], vals[1]
+//
+// 	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
+// 	suite.NoError(err)
+//
+// 	redelegationTokens := sdk.TokensFromConsensusPower(10)
+// 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
+// 		val2.OperatorAddress, redelegationTokens.ToDec())
+// 	suite.NoError(err)
+// 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+// 	suite.True(found)
+//
+//
+// }
+
+func (suite *QueryTestSuite) TestGRPCQueryPoolParameters() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	bondDenom := sdk.DefaultBondDenom
+
+	// Query pool
+	res, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{})
+	suite.NoError(err)
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	suite.Equal(app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, res.Pool.NotBondedTokens)
+	suite.Equal(app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
+
+	// Query Params
+	resp, err := queryClient.Parameters(gocontext.Background(), &types.QueryParametersRequest{})
+	suite.NoError(err)
+	suite.Equal(app.StakingKeeper.GetParams(ctx), resp.Params)
+}
+
+func (suite *QueryTestSuite) TestGRPCHistoricalInfo() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+
+	hi, found := app.StakingKeeper.GetHistoricalInfo(ctx, 5)
+	suite.True(found)
+	hist, err := queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{})
+	suite.Error(err)
+	suite.Nil(hist)
+
+	hist, err = queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{Height: 4})
+	suite.Error(err)
+	suite.Nil(hist)
+
+	hist, err = queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{Height: 5})
+	suite.NoError(err)
+	suite.NotNil(hist)
+	suite.Equal(&hi, hist.Hist)
+}
+
+func (suite *QueryTestSuite) TestGRPCQueryRedelegation() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
+
+	_, addrAcc := addrs[0], addrs[1]
+	val1, val2 := vals[0], vals[1]
+	delAmount := sdk.TokensFromConsensusPower(1)
+	_, err := app.StakingKeeper.Delegate(ctx, addrAcc, delAmount, sdk.Unbonded, val1, true)
+	suite.NoError(err)
 	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	rdAmount := sdk.TokensFromConsensusPower(20)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
-	require.NoError(t, err)
+	rdAmount := sdk.TokensFromConsensusPower(1)
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
+	suite.NoError(err)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
-	require.True(t, found)
+	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc, val1.OperatorAddress, val2.OperatorAddress)
+	suite.True(found)
+
+	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{})
+	suite.NoError(err)
+
+	redelReq := &types.QueryRedelegationsRequest{
+		DelegatorAddr: addrAcc, SrcValidatorAddr: val1.OperatorAddress, DstValidatorAddr: val2.OperatorAddress,
+		Req: &query.PageRequest{}}
+	redelResp, err = queryClient.Redelegations(gocontext.Background(), redelReq)
+
+	suite.NoError(err)
+	suite.Len(redelResp.RedelegationResponses, 1)
+	suite.Equal(redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
+	suite.Equal(redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
+	suite.Equal(redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
+	suite.Len(redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
 
 	// delegator redelegations
-	redelResp, err := queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
-		DelegatorAddr: addrAcc2, SrcValidatorAddr: val1.OperatorAddress, Req: &query.PageRequest{}})
-	require.NoError(t, err)
+	redelResp, err = queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
+		DelegatorAddr: addrAcc, SrcValidatorAddr: val1.OperatorAddress, Req: &query.PageRequest{}})
+	suite.NoError(err)
 
-	require.Len(t, redelResp.RedelegationResponses, len(redel.Entries))
-	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
-	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
-	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
-	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
+	suite.Len(redelResp.RedelegationResponses, len(redel.Entries))
+	suite.Equal(redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
+	suite.Equal(redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
+	suite.Equal(redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
+	suite.Len(redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
 
 	redelResp, err = queryClient.Redelegations(gocontext.Background(), &types.QueryRedelegationsRequest{
 		SrcValidatorAddr: val1.GetOperator(), Req: &query.PageRequest{}})
-	require.NoError(t, err)
-	require.Len(t, redelResp.RedelegationResponses, 1)
-	require.Equal(t, redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
-	require.Equal(t, redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
-	require.Equal(t, redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
-	require.Len(t, redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
+	suite.NoError(err)
+	suite.Len(redelResp.RedelegationResponses, 1)
+	suite.Equal(redel.DelegatorAddress, redelResp.RedelegationResponses[0].Redelegation.DelegatorAddress)
+	suite.Equal(redel.ValidatorSrcAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
+	suite.Equal(redel.ValidatorDstAddress, redelResp.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
+	suite.Len(redel.Entries, len(redelResp.RedelegationResponses[0].Entries))
 }
 
-func TestGRPCQueryUnbondingDelegation(t *testing.T) {
-	_, app, ctx := createTestInput()
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
+func (suite *QueryTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
+	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 
-	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
-	addrVal1 := sdk.ValAddress(addrAcc1)
-
-	// Create Validators and Delegation
-	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
-	app.StakingKeeper.SetValidator(ctx, val1)
+	val1 := vals[0]
 
 	// delegate
 	delAmount := sdk.TokensFromConsensusPower(100)
 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, sdk.Unbonded, val1, true)
-	require.NoError(t, err)
+	suite.NoError(err)
 	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// undelegate
-	undelAmount := sdk.TokensFromConsensusPower(20)
+	undelAmount := sdk.TokensFromConsensusPower(2)
 	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
-	require.NoError(t, err)
+	suite.NoError(err)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
 
 	unbDelsResp, err := queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{
 		DelegatorAddr: addrAcc1, ValidatorAddr: val1.GetOperator()})
 
-	require.Equal(t, addrAcc1, unbDelsResp.Unbond.DelegatorAddress)
-	require.Equal(t, val1.OperatorAddress, unbDelsResp.Unbond.ValidatorAddress)
-	require.Equal(t, 1, len(unbDelsResp.Unbond.Entries))
+	suite.Equal(addrAcc1, unbDelsResp.Unbond.DelegatorAddress)
+	suite.Equal(val1.OperatorAddress, unbDelsResp.Unbond.ValidatorAddress)
+	suite.Equal(1, len(unbDelsResp.Unbond.Entries))
 
 	unbDelsResp, err = queryClient.UnbondingDelegation(gocontext.Background(), &types.QueryUnbondingDelegationRequest{
 		DelegatorAddr: addrAcc2, ValidatorAddr: val1.GetOperator()})
-	require.Error(t, err)
+	suite.Error(err)
 
 	valUnbonds, err := queryClient.ValidatorUnbondingDelegations(gocontext.Background(), &types.QueryValidatorUnbondingDelegationsRequest{})
-	require.Error(t, err)
-	require.Nil(t, valUnbonds)
+	suite.Error(err)
+	suite.Nil(valUnbonds)
 
 	valUnbonds, err = queryClient.ValidatorUnbondingDelegations(gocontext.Background(),
 		&types.QueryValidatorUnbondingDelegationsRequest{ValidatorAddr: val1.GetOperator()})
-	require.NoError(t, err)
-	require.Equal(t, 1, len(valUnbonds.UnbondingResponses))
+	suite.NoError(err)
+	suite.Equal(1, len(valUnbonds.UnbondingResponses))
+}
 
+func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(300000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
+	pks := simapp.CreateTestPubKeys(5)
+
+	appCodec, _ := simapp.MakeCodecs()
+	app.StakingKeeper = keeper.NewKeeper(
+		appCodec,
+		app.GetKey(types.StoreKey),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.GetSubspace(types.ModuleName),
+	)
+
+	val1 := types.NewValidator(valAddrs[0], pks[0], types.Description{})
+	val2 := types.NewValidator(valAddrs[1], pks[1], types.Description{})
+
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidator(ctx, val2)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
+	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val2)
+
+	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[0]), sdk.Unbonded, val1, true)
+	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], sdk.TokensFromConsensusPower(powers[1]), sdk.Unbonded, val2, true)
+	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[2]), sdk.Unbonded, val2, true)
+
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	return addrs, valAddrs
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(QueryTestSuite))
 }

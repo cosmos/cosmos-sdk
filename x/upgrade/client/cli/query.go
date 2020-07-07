@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // GetCurrentPlanCmd returns the query upgrade plan command

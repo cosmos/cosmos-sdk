@@ -4,6 +4,8 @@ order: 8
 
 # Telemetry
 
+Gather relevant insights about your application and modules with custom metrics and telemetry. {synopsis}
+
 The Cosmos SDK enables operators and developers to gain insight into the performance and behavior of
 their application through the use of the `telemetry` package. The Cosmos SDK currently supports
 enabling in-memory and prometheus as telemetry sinks. This allows the ability to query for and scrape
@@ -75,7 +77,7 @@ The following examples expose too much cardinality and may not even prove to be 
 ## Supported Metrics
 
 | Metric                          | Description                                                                            | Unit         | Type    |
-| :------------------------------ | :------------------------------------------------------------------------------------- | :----------- | :------ |
+|:--------------------------------|:---------------------------------------------------------------------------------------|:-------------|:--------|
 | `tx_count`                      | Total number of txs processed via `DeliverTx`                                          | tx           | counter |
 | `tx_successful`                 | Total number of successful txs processed via `DeliverTx`                               | tx           | counter |
 | `tx_failed`                     | Total number of failed txs processed via `DeliverTx`                                   | tx           | counter |
@@ -116,3 +118,7 @@ The following examples expose too much cardinality and may not even prove to be 
 | `store_cachekv_set`             | Duration of a CacheKV `Store#Set` call                                                 | ms           | summary |
 | `store_cachekv_write`           | Duration of a CacheKV `Store#Write` call                                               | ms           | summary |
 | `store_cachekv_delete`          | Duration of a CacheKV `Store#Delete` call                                              | ms           | summary |
+
+## Next {hide}
+
+Learn about the [object-capability](./ocap.md) model {hide}

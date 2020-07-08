@@ -23,7 +23,7 @@ func GetCmdQueryClientStates(clientCtx client.Context) *cobra.Command {
 		Use:     "states",
 		Short:   "Query all available light clients",
 		Long:    "Query all available light clients",
-		Example: fmt.Sprintf("%s query %s %s states", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s states", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -57,7 +57,7 @@ func GetCmdQueryClientState(clientCtx client.Context) *cobra.Command {
 		Use:     "state [client-id]",
 		Short:   "Query a client state",
 		Long:    "Query stored client state",
-		Example: fmt.Sprintf("%s query %s %s state [client-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s state [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -93,7 +93,7 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 		Use:     "consensus-state [client-id] [height]",
 		Short:   "Query the consensus state of a client at a given height",
 		Long:    "Query the consensus state for a particular light client at a given height",
-		Example: fmt.Sprintf("%s query %s %s  consensus-state [client-id] [height]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s  consensus-state [client-id] [height]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -133,7 +133,7 @@ func GetCmdQueryHeader(clientCtx client.Context) *cobra.Command {
 		Use:     "header",
 		Short:   "Query the latest header of the running chain",
 		Long:    "Query the latest Tendermint header of the running chain",
-		Example: fmt.Sprintf("%s query %s %s  header", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s  header", version.AppName, host.ModuleName, types.SubModuleName),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
@@ -158,7 +158,7 @@ func GetCmdNodeConsensusState(clientCtx client.Context) *cobra.Command {
 		Use:     "node-state",
 		Short:   "Query a node consensus state",
 		Long:    "Query a node consensus state. This result is feed to the client creation transaction.",
-		Example: fmt.Sprintf("%s query %s %s node-state", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s node-state", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())

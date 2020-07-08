@@ -19,7 +19,7 @@ func NewCreateClientCmd() *cobra.Command {
 		Use:     "create",
 		Short:   "create new localhost client",
 		Long:    "create new localhost (loopback) client",
-		Example: fmt.Sprintf("%s tx %s %s create --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s tx %s %s create --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)

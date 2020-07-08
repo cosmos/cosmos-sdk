@@ -74,7 +74,7 @@ func TestPickVersion(t *testing.T) {
 	}{
 		{"valid default ibc version", types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
 		{"valid version in counterparty versions", []string{"(version1,[])", "(2.0.0,[DAG,ZK])", types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
-		{"valid identifier match but empty feature set", []string{"(1,[DAG,ORDERED-ZK,UNORDERED-zk])"}, "(1,[])", true},
+		{"valid identifier match but empty feature set not allowed", []string{"(1,[DAG,ORDERED-ZK,UNORDERED-zk])"}, "(1,[])", false},
 		{"empty counterparty versions", []string{}, "", false},
 		{"non-matching counterparty versions", []string{"(2.0.0,[])"}, "", false},
 	}

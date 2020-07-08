@@ -12,6 +12,13 @@ var (
 	// DefaultIBCVersion represents the latest supported version of IBC.
 	// The current version supports only ORDERED and UNORDERED channels.
 	DefaultIBCVersion = CreateVersionString("1", []string{"ORDERED", "UNORDERED"})
+
+	// allowNilFeatureSet is a helper map to indicate if a specified version
+	// is allowed to have a nil feature set. Any versions supported, but
+	// not included in the map default to not supporting nil feature sets.
+	allowNilFeatureSet = map[string]bool{
+		DefaultIBCVersion: false,
+	}
 )
 
 // GetCompatibleVersions returns a descending ordered set of compatible IBC
@@ -113,6 +120,9 @@ func PickVersion(counterpartyVersions []string) (string, error) {
 			}
 
 			featureSet := GetFeatureSetIntersection(sourceFeatures, counterpartyFeatures)
+			if len(featureSet) == 0 && !allowNilFeatureSet[ver] {
+				continue
+			}
 
 			version := CreateVersionString(sourceIdentifier, featureSet)
 			return version, nil

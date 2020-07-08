@@ -17,7 +17,7 @@ import (
 
 // GetCmdQueryConnections defines the command to query all the connection ends
 // that this chain mantains.
-func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryConnections() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "connections",
 		Short:   "Query all connections",
@@ -25,6 +25,7 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s connections", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -57,7 +58,7 @@ func GetCmdQueryConnections(clientCtx client.Context) *cobra.Command {
 }
 
 // GetCmdQueryConnection defines the command to query a connection end
-func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryConnection() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "end [connection-id]",
 		Short:   "Query stored connection end",
@@ -65,6 +66,7 @@ func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s end [connection-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -88,7 +90,7 @@ func GetCmdQueryConnection(clientCtx client.Context) *cobra.Command {
 }
 
 // GetCmdQueryClientConnections defines the command to query a client connections
-func GetCmdQueryClientConnections(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryClientConnections() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "path [client-id]",
 		Short:   "Query stored client connection paths",
@@ -96,6 +98,7 @@ func GetCmdQueryClientConnections(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query  %s %s path [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err

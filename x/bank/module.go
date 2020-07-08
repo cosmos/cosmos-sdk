@@ -69,8 +69,8 @@ func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns no root query command for the bank module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx)
+func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaceTypes registers interfaces and implementations of the bank module.

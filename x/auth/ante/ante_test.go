@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -17,6 +18,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -65,17 +67,26 @@ func TestSimulateGasCost(t *testing.T) {
 	err = app.BankKeeper.SetBalances(ctx, acc3.GetAddress(), types.NewTestCoins())
 	require.NoError(t, err)
 
+	// set up the TxBuilder
+	encodingConfig := simappparams.MakeEncodingConfig()
+	clientCtx := client.Context{}.
+		WithTxGenerator(encodingConfig.TxGenerator).
+		WithJSONMarshaler(encodingConfig.Marshaler)
+	txBuilder := clientCtx.TxGenerator.NewTxBuilder()
+
 	// set up msgs and fee
 	var tx sdk.Tx
 	msg1 := testdata.NewTestMsg(addr1, addr2)
 	msg2 := testdata.NewTestMsg(addr3, addr1)
 	msg3 := testdata.NewTestMsg(addr2, addr3)
 	msgs := []sdk.Msg{msg1, msg2, msg3}
+	txBuilder.SetMsgs(msg1, msg2, msg3)
 	fee := types.NewTestStdFee()
+	txBuilder.SetFeeAmount(fee.Amount)
 
 	// signers in order. accnums are all 0 because it is in genesis block
 	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
+	txBuilder.SetSignatures(privs.)
 
 	cc, _ := ctx.CacheContext()
 	newCtx, err := anteHandler(cc, tx, true)

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
-// NewTxCmd returns a root CLI command handler for all ibc loclahost transaction commands.
+// NewTxCmd returns a root CLI command handler for all ibc localhost transaction commands.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.SubModuleName,

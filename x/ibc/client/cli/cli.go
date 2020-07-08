@@ -33,7 +33,7 @@ func GetTxCmd() *cobra.Command {
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	// Group ibc queries under a subcommand
 	ibcQueryCmd := &cobra.Command{
 		Use:                        host.ModuleName,
@@ -44,9 +44,9 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	ibcQueryCmd.AddCommand(flags.GetCommands(
-		ibcclient.GetQueryCmd(clientCtx),
-		connection.GetQueryCmd(clientCtx),
-		channel.GetQueryCmd(clientCtx),
+		ibcclient.GetQueryCmd(),
+		connection.GetQueryCmd(),
+		channel.GetQueryCmd(),
 	)...)
 	return ibcQueryCmd
 }

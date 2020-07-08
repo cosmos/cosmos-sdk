@@ -12,7 +12,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -92,11 +91,8 @@ func GenTxCmd(mbm module.BasicManager, genBalIterator types.GenesisBalancesItera
 			}
 
 			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-
-			clientHome, _ := cmd.Flags().GetString(tmcli.HomeFlag)
-
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientHome, inBuf)
+			kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}
@@ -127,7 +123,7 @@ func GenTxCmd(mbm module.BasicManager, genBalIterator types.GenesisBalancesItera
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr, err := authtypes.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientHome)
+			txBldr, err := authtypes.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}

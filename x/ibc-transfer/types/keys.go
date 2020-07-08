@@ -45,8 +45,3 @@ func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
 func GetDenomPrefix(portID, channelID string) string {
 	return fmt.Sprintf("%s/%s/", portID, channelID)
 }
-
-// GetCompatibleVersions
-func GetCompatibleVersions() []string {
-	return []string{Version}
-}

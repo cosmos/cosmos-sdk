@@ -25,10 +25,13 @@ func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
 		Use:     "channels",
 		Short:   "Query all channels",
 		Long:    "Query all channels from a chain",
-		Example: fmt.Sprintf("%s query %s %s channels", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s channels", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx = clientCtx.Init()
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			queryClient := types.NewQueryClient(clientCtx)
 
 			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
@@ -63,18 +66,18 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 		Short: "Query a channel end",
 		Long:  "Query an IBC channel end from a port and channel identifiers",
 		Example: fmt.Sprintf(
-			"%s query %s %s end [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName,
+			"%s query %s %s end [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
-
-			portID := args[0]
-			channelID := args[1]
-			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
+
+			portID := args[0]
+			channelID := args[1]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			channelRes, err := utils.QueryChannel(clientCtx, portID, channelID, prove)
 			if err != nil {
@@ -96,10 +99,13 @@ func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
 		Use:     "connections [connection-id]",
 		Short:   "Query all channels associated with a connection",
 		Long:    "Query all channels associated with a connection",
-		Example: fmt.Sprintf("%s query %s %s connections [connection-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s connections [connection-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			queryClient := types.NewQueryClient(clientCtx)
 
 			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
@@ -134,10 +140,13 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 		Use:     "client-state [port-id] [channel-id]",
 		Short:   "Query the client state associated with a channel",
 		Long:    "Query the client state associated with a channel, by providing its port and channel identifiers.",
-		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.AppName),
 		Args:    cobra.ExactArgs(2),
-		RunE: func(_ *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			portID := args[0]
 			channelID := args[1]
@@ -161,10 +170,13 @@ func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
 		Use:     "packet-commitments [port-id] [channel-id]",
 		Short:   "Query all packet commitments associated with a channel",
 		Long:    "Query all packet commitments associated with a channel",
-		Example: fmt.Sprintf("%s query %s %s packet-commitments [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s packet-commitments [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			queryClient := types.NewQueryClient(clientCtx)
 
 			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
@@ -201,18 +213,18 @@ func GetCmdQueryPacketCommitment(clientCtx client.Context) *cobra.Command {
 		Short: "Query a packet commitment",
 		Long:  "Query a packet commitment",
 		Example: fmt.Sprintf(
-			"%s query %s %s end [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName,
+			"%s query %s %s end [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
-
-			portID := args[0]
-			channelID := args[1]
-			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
+
+			portID := args[0]
+			channelID := args[1]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			seq, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
@@ -242,10 +254,13 @@ An unrelayed packet corresponds to:
 
 - Unrelayed packet commitments: when no acknowledgement exists for the given sequence.
 - Unrelayed packet acknowledgements: when an acknowledgement exists and a packet commitment also exists.`,
-		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id] --sequences=1,2,3", version.ClientName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			queryClient := types.NewQueryClient(clientCtx)
 
 			seqSlice, err := cmd.Flags().GetInt64Slice(flagSequences)
@@ -294,18 +309,18 @@ func GetCmdQueryNextSequenceReceive(clientCtx client.Context) *cobra.Command {
 		Short: "Query a next receive sequence",
 		Long:  "Query the next receive sequence for a given channel",
 		Example: fmt.Sprintf(
-			"%s query %s %s next-sequence-receive [port-id] [channel-id]", version.ClientName, host.ModuleName, types.SubModuleName,
+			"%s query %s %s next-sequence-receive [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
-
-			portID := args[0]
-			channelID := args[1]
-			prove, err := cmd.Flags().GetBool(flags.FlagProve)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
+
+			portID := args[0]
+			channelID := args[1]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			sequenceRes, err := utils.QueryNextSequenceReceive(clientCtx, portID, channelID, prove)
 			if err != nil {
@@ -317,5 +332,6 @@ func GetCmdQueryNextSequenceReceive(clientCtx client.Context) *cobra.Command {
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+
 	return cmd
 }

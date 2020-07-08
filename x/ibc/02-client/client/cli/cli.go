@@ -24,7 +24,6 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		GetCmdQueryConsensusState(clientCtx),
 		GetCmdQueryHeader(clientCtx),
 		GetCmdNodeConsensusState(clientCtx),
-		GetCmdQueryPath(clientCtx),
 	)...)
 	return ics02ClientQueryCmd
 }

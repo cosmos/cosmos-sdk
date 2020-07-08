@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/stretchr/testify/suite"
 
@@ -37,8 +36,9 @@ func queryProof(chain *TestChain, key []byte) ([]byte, uint64) {
 	})
 
 	merkleProof := commitmenttypes.MerkleProof{
-	_, existed = suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
-	suite.Require().True(existed)
+		_, existed == suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID),
+		suite.Require().True(existed),
+	}
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {

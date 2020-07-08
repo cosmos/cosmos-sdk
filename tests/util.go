@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Wait for N tendermint blocks to pass using the Tendermint RPC
@@ -124,7 +122,7 @@ func NewTestCaseDir(t testing.TB) (string, func()) {
 	return dir, func() { os.RemoveAll(dir) }
 }
 
-var cdc = codec.New()
+// var cdc = codec.New()
 
 // func init() {
 // 	ctypes.RegisterAmino(cdc.Amino)

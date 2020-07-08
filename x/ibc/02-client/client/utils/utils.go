@@ -14,11 +14,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var (
-	page    *int
-	perPage *int
-)
-
 // QueryAllClientStates returns all the light client states. It _does not_ return
 // any merkle proof.
 func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported.ClientState, int64, error) {

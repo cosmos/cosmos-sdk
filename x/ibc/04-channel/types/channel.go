@@ -13,6 +13,7 @@ var (
 	_ exported.CounterpartyI = (*Counterparty)(nil)
 )
 
+// DefaultChannelVersion defines the default channel version used during handshake.
 const DefaultChannelVersion = "1.0.0"
 
 // NewChannel creates a new Channel instance

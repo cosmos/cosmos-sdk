@@ -503,6 +503,8 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 		ctx = ctx.WithIsReCheckTx(true)
 	}
 	if mode == runTxModeSimulate {
+		// Note: if I remove this, I get errors....
+		// Both simulation results changing, as well as Check rejecting the signatures later
 		ctx, _ = ctx.CacheContext()
 	}
 
@@ -648,7 +650,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
-	if err == nil && mode == runTxModeDeliver {
+	if err == nil && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
 		msCache.Write()
 	}
 

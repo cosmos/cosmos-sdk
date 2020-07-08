@@ -54,11 +54,11 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 
 	k.GetAllEvidence(ctx)
 
-	var evidences []*codectypes.Any
+	var evidence []*codectypes.Any
 	store := ctx.KVStore(k.storeKey)
-	evidencesStore := prefix.NewStore(store, types.KeyPrefixEvidence)
+	evidenceStore := prefix.NewStore(store, types.KeyPrefixEvidence)
 
-	res, err := query.Paginate(evidencesStore, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(evidenceStore, req.Req, func(key []byte, value []byte) error {
 		result, err := k.UnmarshalEvidence(value)
 		if err != nil {
 			return err
@@ -67,7 +67,7 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 		if err != nil {
 			return err
 		}
-		evidences = append(evidences, evidenceAny)
+		evidence = append(evidence, evidenceAny)
 		return nil
 	})
 
@@ -75,7 +75,7 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 		return &types.QueryAllEvidenceResponse{}, err
 	}
 
-	return &types.QueryAllEvidenceResponse{Evidences: evidences, Res: res}, nil
+	return &types.QueryAllEvidenceResponse{Evidence: evidence, Res: res}, nil
 }
 
 // ConvertEvidence converts Evidence to Any type

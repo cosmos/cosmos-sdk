@@ -13,7 +13,7 @@ import (
 func (suite *KeeperTestSuite) TestQueryEvidence() {
 	app, ctx := suite.app, suite.ctx
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -24,9 +24,9 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 	suite.Require().Error(err)
 
 	numEvidence := 100
-	evidences := suite.populateEvidence(ctx, numEvidence)
+	evidence := suite.populateEvidence(ctx, numEvidence)
 
-	req := types.NewQueryEvidenceRequest(evidences[0].Hash())
+	req := types.NewQueryEvidenceRequest(evidence[0].Hash())
 	res, err := queryClient.Evidence(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -36,14 +36,14 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	app, ctx := suite.app, suite.ctx
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	res, err := queryClient.AllEvidence(gocontext.Background(), &types.QueryAllEvidenceRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Require().Empty(res.Evidences)
+	suite.Require().Empty(res.Evidence)
 
 	numEvidence := 100
 	_ = suite.populateEvidence(ctx, numEvidence)
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	res, err = queryClient.AllEvidence(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Equal(len(res.Evidences), 50)
+	suite.Equal(len(res.Evidence), 50)
 	suite.NotNil(res.Res.NextKey)
 
 	pageReq = &query.PageRequest{
@@ -66,6 +66,6 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	}
 	req = types.NewQueryAllEvidenceRequest(pageReq)
 	res, err = queryClient.AllEvidence(gocontext.Background(), req)
-	suite.Equal(len(res.Evidences), 50)
+	suite.Equal(len(res.Evidence), 50)
 	suite.Nil(res.Res.NextKey)
 }

@@ -33,7 +33,7 @@ message QueryAllEvidenceRequest {
 
 // QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method
 message QueryAllEvidenceResponse {
-  repeated google.protobuf.Any evidences = 1;
+  repeated google.protobuf.Any evidence = 1;
 
   cosmos.query.PageResponse res = 2;
 }

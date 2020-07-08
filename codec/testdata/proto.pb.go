@@ -714,10 +714,10 @@ type TestServiceClient interface {
 }
 
 type testServiceClient struct {
-	cc *grpc.ClientConn
+	cc grpc1.ClientConn
 }
 
-func NewTestServiceClient(cc *grpc.ClientConn) TestServiceClient {
+func NewTestServiceClient(cc grpc1.ClientConn) TestServiceClient {
 	return &testServiceClient{cc}
 }
 
@@ -769,7 +769,7 @@ func (*UnimplementedTestServiceServer) TestAny(ctx context.Context, req *TestAny
 	return nil, status.Errorf(codes.Unimplemented, "method TestAny not implemented")
 }
 
-func RegisterTestServiceServer(s *grpc.Server, srv TestServiceServer) {
+func RegisterTestServiceServer(s grpc1.Server, srv TestServiceServer) {
 	s.RegisterService(&_TestService_serviceDesc, srv)
 }
 

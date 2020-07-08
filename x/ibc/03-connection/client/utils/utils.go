@@ -51,7 +51,7 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}

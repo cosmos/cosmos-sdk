@@ -50,9 +50,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 	queryClient, vals := suite.queryClient, suite.vals
-	var (
-		req *types.QueryValidatorsRequest
-	)
+	var req *types.QueryValidatorsRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -95,9 +93,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
 	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].OperatorAddress)
 	suite.True(found)
-	var (
-		req *types.QueryValidatorRequest
-	)
+	var req *types.QueryValidatorRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -137,9 +133,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	params := app.StakingKeeper.GetParams(ctx)
 	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
-	var (
-		req *types.QueryDelegatorValidatorsRequest
-	)
+	var req *types.QueryDelegatorValidatorsRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -161,6 +155,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 			true,
 		},
 	}
+
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
@@ -181,9 +176,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 	queryClient, addrs, vals := suite.queryClient, suite.addrs, suite.vals
 	addrVal1 := vals[1].OperatorAddress
-	var (
-		req *types.QueryDelegatorValidatorRequest
-	)
+	var req *types.QueryDelegatorValidatorRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -206,6 +199,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 			true,
 		},
 	}
+
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
@@ -228,10 +222,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal)
 	suite.True(found)
+	var req *types.QueryDelegationRequest
 
-	var (
-		req *types.QueryDelegationRequest
-	)
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -274,10 +266,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
 	suite.True(found)
+	var req *types.QueryDelegatorDelegationsRequest
 
-	var (
-		req *types.QueryDelegatorDelegationsRequest
-	)
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -322,9 +312,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
 	suite.True(found)
-	var (
-		req *types.QueryValidatorDelegationsRequest
-	)
+
+	var req *types.QueryValidatorDelegationsRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -375,9 +364,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 
 	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal2)
 	suite.True(found)
-	var (
-		req *types.QueryUnbondingDelegationRequest
-	)
+	var req *types.QueryUnbondingDelegationRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -397,6 +384,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 			true,
 		},
 	}
+
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
@@ -425,9 +413,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 
 	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc, addrVal)
 	suite.True(found)
-	var (
-		req *types.QueryDelegatorUnbondingDelegationsRequest
-	)
+	var req *types.QueryDelegatorUnbondingDelegationsRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -490,9 +476,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 	hi, found := app.StakingKeeper.GetHistoricalInfo(ctx, 5)
 	suite.True(found)
 
-	var (
-		req *types.QueryHistoricalInfoRequest
-	)
+	var req *types.QueryHistoricalInfoRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -552,9 +536,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc1, val1.OperatorAddress, val2.OperatorAddress)
 	suite.True(found)
 
-	var (
-		req *types.QueryRedelegationsRequest
-	)
+	var req *types.QueryRedelegationsRequest
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -621,9 +603,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	suite.NoError(err)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	var (
-		req *types.QueryValidatorUnbondingDelegationsRequest
-	)
+	var req *types.QueryValidatorUnbondingDelegationsRequest
 	testCases := []struct {
 		msg      string
 		malleate func()

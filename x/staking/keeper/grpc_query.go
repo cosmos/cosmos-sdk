@@ -29,12 +29,12 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	if !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
-
 	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
+
 	res, err := query.FilteredPaginate(valStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		val, err := types.UnmarshalValidator(k.cdc, value)
 		if err != nil {
@@ -109,6 +109,7 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 			codes.NotFound,
 			"unable to find delegations for validator %d", req.ValidatorAddr)
 	}
+
 	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Unable to convert delegations")
@@ -126,11 +127,11 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	if req.ValidatorAddr.Empty() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
-
+	var ubds types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
+
 	store := ctx.KVStore(k.storeKey)
 	ubdStore := prefix.NewStore(store, types.GetUBDsByValIndexKey(req.ValidatorAddr))
-	var ubds types.UnbondingDelegations
 	res, err := query.Paginate(ubdStore, req.Req, func(key []byte, value []byte) error {
 		ubd, err := types.UnmarshalUBD(k.cdc, value)
 		if err != nil {
@@ -204,13 +205,11 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	if req.DelegatorAddr == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
 	}
-
 	var delegations types.Delegations
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(req.DelegatorAddr))
-
 	res, err := query.Paginate(delStore, req.Req, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
@@ -222,6 +221,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	if err != nil {
 		return nil, err
 	}
+
 	if delegations == nil {
 		return &types.QueryDelegatorDelegationsResponse{DelegationResponses: types.DelegationResponses{}}, nil
 	}
@@ -340,12 +340,11 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	if req.DelegatorAddr.Empty() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
+	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(req.DelegatorAddr))
-
-	var validators types.Validators
 	res, err := query.Paginate(delStore, req.Req, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {

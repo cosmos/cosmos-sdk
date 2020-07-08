@@ -404,7 +404,7 @@ message RedelegationEntryResponse {
 // RedelegationResponse is equivalent to a Redelegation except that its entries
 // contain a balance in addition to shares which is more suitable for client
 // responses.
-message RedelegationResponse{
+message RedelegationResponse {
   option (gogoproto.equal) = true;
 
   Redelegation redelegation = 1 [(gogoproto.nullable) = false];
@@ -412,7 +412,7 @@ message RedelegationResponse{
 }
 
 // Pool - tracking bonded and not-bonded token supply of the bond denomination
-message Pool{
+message Pool {
   option (gogoproto.description) = true;
   option (gogoproto.equal) = true;
   string not_bonded_tokens = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

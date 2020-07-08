@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -29,7 +28,7 @@ Example:
 $ %s query %s DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
 $ %s query %s --page=2 --limit=50
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args:                       cobra.MaximumNArgs(1),
@@ -58,7 +57,10 @@ func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 			return queryEvidence(cdc, clientCtx, hash)
 		}
 
-		return queryAllEvidence(cdc, clientCtx)
+		page, _ := cmd.Flags().GetInt(flags.FlagPage)
+		limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+
+		return queryAllEvidence(clientCtx, page, limit)
 	}
 }
 
@@ -88,9 +90,9 @@ func queryEvidence(cdc *codec.Codec, clientCtx client.Context, hash string) erro
 	return clientCtx.PrintOutput(evidence)
 }
 
-func queryAllEvidence(cdc *codec.Codec, clientCtx client.Context) error {
-	params := types.NewQueryAllEvidenceParams(viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
-	bz, err := cdc.MarshalJSON(params)
+func queryAllEvidence(clientCtx client.Context, page, limit int) error {
+	params := types.NewQueryAllEvidenceParams(page, limit)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 	if err != nil {
 		return fmt.Errorf("failed to marshal query params: %w", err)
 	}
@@ -102,7 +104,7 @@ func queryAllEvidence(cdc *codec.Codec, clientCtx client.Context) error {
 	}
 
 	var evidence []exported.Evidence
-	err = cdc.UnmarshalJSON(res, &evidence)
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &evidence)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)
 	}

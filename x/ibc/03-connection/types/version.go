@@ -11,7 +11,7 @@ import (
 var (
 	// DefaultIBCVersion represents the latest supported version of IBC.
 	// The current version supports only ORDERED and UNORDERED channels.
-	DefaultIBCVersion = CreateVersionString("1", []string{"ORDERED", "UNORDERED"})
+	DefaultIBCVersion = CreateVersionString("1", []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
 )
 
 // GetCompatibleVersions returns a descending ordered set of compatible IBC
@@ -159,6 +159,22 @@ func VerifyProposedFeatureSet(proposedVersion, supportedVersion string) bool {
 	}
 
 	return true
+}
+
+// VerifySupportedFeature takes in a version string and feature string and returns
+// true if the feature is supported by the version and false otherwise.
+func VerifySupportedFeature(version, feature string) bool {
+	_, featureSet, err := UnpackVersion(version)
+	if err != nil {
+		return false
+	}
+
+	for _, f := range featureSet {
+		if f == feature {
+			return true
+		}
+	}
+	return false
 }
 
 // contains returns true if the provided string element exists within the

@@ -43,7 +43,7 @@ func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper) ([]byte, error
 }
 
 func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryAppliedParams
+	var params types.QueryAppliedPlanRequest
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {

@@ -2,6 +2,7 @@ syntax = "proto3";
 package testdata;
 
 import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/codec/testdata";
 
@@ -56,4 +57,16 @@ message TestAnyRequest {
 
 message TestAnyResponse {
     HasAnimal has_animal = 1;
+}
+
+// msg type for testing
+message TestMsg {
+  repeated bytes signers = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+// bad MultiSignature with extra fields
+message BadMultiSignature {
+  option (gogoproto.goproto_unrecognized) = true;
+  repeated bytes signatures = 1;
+  bytes malicious_field = 5;
 }

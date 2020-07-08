@@ -50,7 +50,7 @@ Example:
   $ %s query %s balances [address]
   $ %s query %s balances [address] --denom=[denom]
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -80,7 +80,6 @@ Example:
 				if err != nil {
 					return err
 				}
-
 				return clientCtx.PrintOutput(res.Balances)
 			}
 
@@ -111,7 +110,7 @@ Example:
 To query for the total supply of a specific coin denomination use:
   $ %s query %s total --denom=[denom]
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

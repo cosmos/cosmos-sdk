@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -21,7 +23,7 @@ func TestValidateBasic(t *testing.T) {
 	priv1, _, addr1 := types.KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := types.NewTestMsg(addr1)
+	msg1 := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}
@@ -58,7 +60,7 @@ func TestValidateMemo(t *testing.T) {
 	priv1, _, addr1 := types.KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := types.NewTestMsg(addr1)
+	msg1 := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}
@@ -88,7 +90,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	priv1, _, addr1 := types.KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := types.NewTestMsg(addr1)
+	msg1 := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}

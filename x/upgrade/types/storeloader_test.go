@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,7 +14,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -71,8 +69,6 @@ func TestSetLoader(t *testing.T) {
 	// set a temporary home dir
 	homeDir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
-	// TODO cleanup viper
-	viper.Set(flags.FlagHome, homeDir)
 
 	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
 	upgradeInfo := &store.UpgradeInfo{

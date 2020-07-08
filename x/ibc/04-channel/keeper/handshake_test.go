@@ -276,6 +276,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 		connB      *ibctesting.TestConnection
 		channelCap *capabilitytypes.Capability
 		heightDiff uint64
+		version    string
 	)
 
 	testCases := []testCase{
@@ -357,13 +358,41 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 			channelCap = capabilitytypes.NewCapability(6)
 		}, false},
+		{"counterparty proposed a different identifier", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			channelB, channelA, err := suite.coordinator.ChanOpenInit(suite.chainB, suite.chainA, connB, connA, types.ORDERED)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.ChanOpenTry(suite.chainA, suite.chainB, channelA, channelB, connA, types.ORDERED)
+			suite.Require().NoError(err)
+
+			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+
+			version = "(an experimental version,[])"
+		}, false},
+		{"counterparty proposed a feature not supported", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+			suite.Require().NoError(err)
+
+			// use custom version with a feature not supported
+			err = suite.coordinator.ChanOpenTry(suite.chainB, suite.chainA, channelB, channelA, connB, types.ORDERED)
+			suite.Require().NoError(err)
+
+			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+
+			version = "(ics20-1,[a cool feature])"
+		}, false},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
-			heightDiff = 0    // must be explicitly changed
+			suite.SetupTest()                   // reset
+			heightDiff = 0                      // must be explicitly changed
+			version = ibctesting.ChannelVersion // must be explicitly changed
+
 			tc.malleate()
 
 			channelA := connA.FirstOrNextTestChannel()
@@ -373,7 +402,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			proof, proofHeight := suite.chainB.QueryProof(channelKey)
 
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
-				suite.chainA.GetContext(), channelA.PortID, channelA.ID, channelCap, ibctesting.ChannelVersion,
+				suite.chainA.GetContext(), channelA.PortID, channelA.ID, channelCap, version,
 				proof, proofHeight+heightDiff,
 			)
 

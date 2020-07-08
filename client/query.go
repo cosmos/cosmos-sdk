@@ -126,30 +126,14 @@ func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, erro
 }
 
 // Verify verifies the consensus proof at given height.
+//todo see what to do here
 func (ctx Context) Verify(height int64) (tmtypes.SignedHeader, error) {
-	// if ctx.Verifier == nil {
-	// 	return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
-	// }
-
-	// TODO: fix when introduce light client
-	// check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
-
-	// switch {
-	// case tmliteErr.IsErrCommitNotFound(err):
-	// 	return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
-	// case err != nil:
-	// 	return tmtypes.SignedHeader{}, err
-	// }
 
 	return tmtypes.SignedHeader{}, nil
 }
 
 // verifyProof perform response proof verification.
 func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error {
-	// if ctx.Verifier == nil {
-	// 	return fmt.Errorf("missing valid certifier to verify data from distrusted node")
-	// }
-
 	// the AppHash for height H is in header H+1
 	commit, err := ctx.Verify(resp.Height + 1)
 	if err != nil {

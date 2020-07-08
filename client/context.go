@@ -153,15 +153,6 @@ func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
 		return ctx
 	}
 
-	// TODO: fix when introduce light client
-	// create a verifier for the specific chain ID and RPC client
-	// verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	// if err != nil && !trustNode {
-	// 	fmt.Printf("failed to create verifier: %s\n", err)
-	// 	os.Exit(1)
-	// }
-
-	// ctx.Verifier = verifier
 	return ctx
 }
 
@@ -254,13 +245,6 @@ func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
 	return ctx
 }
-
-// TODO: fix when introduce light client
-// WithVerifier returns a copy of the context with an updated Verifier.
-// func (ctx Context) WithVerifier(verifier tmlite.Verifier) Context {
-// 	ctx.Verifier = verifier
-// 	return ctx
-// }
 
 // WithChainID returns a copy of the context with an updated chain ID.
 func (ctx Context) WithChainID(chainID string) Context {

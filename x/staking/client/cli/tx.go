@@ -308,7 +308,7 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	// get the initial validator min self delegation
-	msbStr, err := fs.GetString(FlagMinSelfDelegation)
+	msbStr, _ := fs.GetString(FlagMinSelfDelegation)
 
 	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
 	if !ok {

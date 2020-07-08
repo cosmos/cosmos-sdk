@@ -150,7 +150,7 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	// Check that ChainB's proposed version number is supported by chainA
+	// Check that ChainB's proposed version identifier is supported by chainA
 	supportedVersion, found := types.FindSupportedVersion(version, types.GetCompatibleVersions())
 	if !found {
 		return sdkerrors.Wrapf(
@@ -160,11 +160,8 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Check that ChainB's proposed feature set is supported by chainA
-	if !types.VerifyProposedFeatureSet(version, supportedVersion, types.AllowNilFeatureSetMap) {
-		return sdkerrors.Wrapf(
-			types.ErrVersionNegotiationFailed,
-			"connection version feature set provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
-		)
+	if err := types.VerifyProposedVersion(version, supportedVersion, types.AllowNilFeatureSetMap); err != nil {
+		return err
 	}
 
 	// Retrieve chainA's consensus state at consensusheight

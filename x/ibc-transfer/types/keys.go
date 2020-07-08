@@ -14,7 +14,7 @@ const (
 
 	// Version defines the current version the IBC tranfer
 	// module supports
-	Version = "ics20-1"
+	Version = "(ics20-1,[])"
 
 	// PortID is the default port id that transfer module binds to
 	PortID = "transfer"
@@ -44,4 +44,9 @@ func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
 // GetDenomPrefix returns the receiving denomination prefix
 func GetDenomPrefix(portID, channelID string) string {
 	return fmt.Sprintf("%s/%s/", portID, channelID)
+}
+
+// GetCompatibleVersions
+func GetCompatibleVersions() []string {
+	return []string{Version}
 }

@@ -8,7 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
-// InitGenesis binds to portid from genesis state
+// InitGenesis binds to portid from genesis state and registers the ics20
+// supported versions.
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, state types.GenesisState) {
 	keeper.SetPort(ctx, state.PortID)
 

@@ -1,8 +1,9 @@
 syntax = "proto3";
-package cosmos_sdk.kv.v1;
+package cosmos.kv;
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/kv";
 
+// Key-Value Pair
 message Pair {
   bytes key   = 1;
   bytes value = 2;

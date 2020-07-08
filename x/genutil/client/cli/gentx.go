@@ -31,8 +31,7 @@ import (
 
 // GenTxCmd builds the application's gentx command.
 // nolint: errcheck
-func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
-	genBalIterator types.GenesisBalancesIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
+func GenTxCmd(mbm module.BasicManager, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -47,11 +46,16 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 		    %s`, defaultsDesc),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.JSONMarshaler
+
 			home, _ := cmd.Flags().GetString(flags.FlagHome)
 
-			config := ctx.Config
+			config := serverCtx.Config
 			config.SetRoot(home)
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(ctx.Config)
+
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
@@ -126,7 +130,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}
-			txBldr = txBldr.WithTxEncoder(authclient.GetTxEncoder(cdc))
+
+			txBldr = txBldr.WithTxEncoder(authclient.GetTxEncoder(clientCtx.Codec))
 
 			from, _ := cmd.Flags().GetString(flags.FlagFrom)
 			fromAddress, _, err := client.GetFromFields(txBldr.Keybase(), from, false)
@@ -134,9 +139,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 				return errors.Wrap(err, "error getting from address")
 			}
 
-			clientCtx := client.Context{}.
-				WithInput(inBuf).WithCodec(cdc).WithJSONMarshaler(cdc).
-				WithFromAddress(fromAddress)
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(fromAddress)
 
 			// create a 'create-validator' message
 			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txBldr, true)
@@ -189,17 +192,14 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "node's home directory")
-	cmd.Flags().String(flagClientHome, defaultCLIHome, "client's home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagName, "", "name of private key with which to sign the gentx")
-	cmd.Flags().String(flags.FlagOutputDocument, "",
-		"write the genesis transaction JSON document to the given file instead of the default location")
+	cmd.Flags().String(flags.FlagOutputDocument, "", "write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.MarkFlagRequired(flags.FlagName)
 
 	flags.PostCommands(cmd)
-
-	cmd.MarkFlagRequired(flags.FlagName)
 
 	return cmd
 }
@@ -213,7 +213,7 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
 }
 
-func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (authtypes.StdTx, error) {
+func readUnsignedGenTxFile(cdc codec.JSONMarshaler, r io.Reader) (authtypes.StdTx, error) {
 	var stdTx authtypes.StdTx
 
 	bytes, err := ioutil.ReadAll(r)
@@ -222,11 +222,10 @@ func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (authtypes.StdTx, erro
 	}
 
 	err = cdc.UnmarshalJSON(bytes, &stdTx)
-
 	return stdTx, err
 }
 
-func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx authtypes.StdTx) error {
+func writeSignedGenTx(cdc codec.JSONMarshaler, outputDocument string, tx authtypes.StdTx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

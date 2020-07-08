@@ -76,7 +76,7 @@ func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 }
 
 // GetQueryCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
 	return nil
 }
 

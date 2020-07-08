@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 
@@ -27,7 +29,7 @@ var (
 )
 
 func TestStdTx(t *testing.T) {
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
@@ -54,7 +56,7 @@ func TestStdSignBytes(t *testing.T) {
 		want string
 	}{
 		{
-			args{"1234", 3, 6, defaultFee, []sdk.Msg{sdk.NewTestMsg(addr)}, "memo"},
+			args{"1234", 3, 6, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"100000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
 		},
 	}
@@ -72,7 +74,7 @@ func TestTxValidateBasic(t *testing.T) {
 	priv2, _, addr2 := KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := NewTestMsg(addr1, addr2)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
 	fee := NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}
@@ -127,10 +129,10 @@ func TestDefaultTxEncoder(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	encoder := DefaultTxEncoder(cdc)
 
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
@@ -238,7 +240,7 @@ func TestGetSignaturesV2(t *testing.T) {
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
-	stdTx := NewStdTx([]sdk.Msg{NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
+	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
 
 	sigs, err := stdTx.GetSignaturesV2()
 	require.Nil(t, err)

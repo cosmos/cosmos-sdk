@@ -85,6 +85,7 @@ func FilteredPaginate(
 		if iterator.Error() != nil {
 			return nil, iterator.Error()
 		}
+
 		accumulate := numHits >= offset && numHits < end
 		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
 		if err != nil {
@@ -95,7 +96,7 @@ func FilteredPaginate(
 			numHits++
 		}
 
-		if numHits == end {
+		if numHits == end+1 {
 			nextKey = iterator.Key()
 
 			if !countTotal {

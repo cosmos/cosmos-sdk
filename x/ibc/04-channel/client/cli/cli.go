@@ -9,8 +9,8 @@ import (
 )
 
 // GetQueryCmd returns the query commands for IBC channels
-func GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	ics04ChannelQueryCmd := &cobra.Command{
+func GetQueryCmd() *cobra.Command {
+	queryCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC channel query subcommands",
 		DisableFlagParsing:         true,
@@ -18,22 +18,24 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
-		// TODO: Query all channels
-		GetCmdQueryChannel(clientCtx),
-		// TODO: Query channels from a connection
-		GetCmdQueryChannelClientState(clientCtx),
-		// TODO: Query all packet commitments
-		// TODO: Query unrelayed packet ACKS
-		// TODO: Query unrelayed packet sends
+	queryCmd.AddCommand(flags.GetCommands(
+		GetCmdQueryChannels(),
+		GetCmdQueryChannel(),
+		GetCmdQueryConnectionChannels(),
+		GetCmdQueryChannelClientState(),
+		GetCmdQueryPacketCommitment(),
+		GetCmdQueryPacketCommitments(),
+		GetCmdQueryUnrelayedPackets(),
+		GetCmdQueryNextSequenceReceive(),
+		// TODO: next sequence Send ?
 	)...)
 
-	return ics04ChannelQueryCmd
+	return queryCmd
 }
 
 // NewTxCmd returns a CLI command handler for all x/ibc channel transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
-	ics04ChannelTxCmd := &cobra.Command{
+func NewTxCmd() *cobra.Command {
+	txCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC channel transaction subcommands",
 		DisableFlagParsing:         true,
@@ -41,14 +43,14 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics04ChannelTxCmd.AddCommand(flags.PostCommands(
-		NewChannelOpenInitCmd(clientCtx),
-		NewChannelOpenTryCmd(clientCtx),
-		NewChannelOpenAckCmd(clientCtx),
-		NewChannelOpenConfirmCmd(clientCtx),
-		NewChannelCloseInitCmd(clientCtx),
-		NewChannelCloseConfirmCmd(clientCtx),
+	txCmd.AddCommand(flags.PostCommands(
+		NewChannelOpenInitCmd(),
+		NewChannelOpenTryCmd(),
+		NewChannelOpenAckCmd(),
+		NewChannelOpenConfirmCmd(),
+		NewChannelCloseInitCmd(),
+		NewChannelCloseConfirmCmd(),
 	)...)
 
-	return ics04ChannelTxCmd
+	return txCmd
 }

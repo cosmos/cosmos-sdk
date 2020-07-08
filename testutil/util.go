@@ -98,7 +98,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		tmCfg.Moniker = vals[i].Moniker
 		tmCfg.SetRoot(nodeDir)
 
-		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].Moniker, vals[i].NodeID, vals[i].PubKey)
+		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].NodeID, vals[i].PubKey)
 
 		genFile := tmCfg.GenesisFile()
 		genDoc, err := types.GenesisDocFromFile(genFile)

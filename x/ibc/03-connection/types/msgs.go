@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -105,8 +103,8 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing counterparty versions")
 	}
 	for _, version := range msg.CounterpartyVersions {
-		if strings.TrimSpace(version) == "" {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
+		if err := host.ConnectionVersionValidator(version); err != nil {
+			return err
 		}
 	}
 	if len(msg.ProofInit) == 0 {
@@ -171,8 +169,8 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if strings.TrimSpace(msg.Version) == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
+	if err := host.ConnectionVersionValidator(msg.Version); err != nil {
+		return err
 	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")

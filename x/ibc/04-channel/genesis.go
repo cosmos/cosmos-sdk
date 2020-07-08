@@ -11,7 +11,7 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, channel := range gs.Channels {
 		ch := types.NewChannel(channel.State, channel.Ordering, channel.Counterparty, channel.ConnectionHops, channel.Version)
-		k.SetChannel(ctx, channel.PortID, channel.ID, ch)
+		k.SetChannel(ctx, channel.PortID, channel.ChannelID, ch)
 	}
 	for _, ack := range gs.Acknowledgements {
 		k.SetPacketAcknowledgement(ctx, ack.PortID, ack.ChannelID, ack.Sequence, ack.Hash)

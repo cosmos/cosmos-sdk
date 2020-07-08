@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -62,8 +60,8 @@ func (c ConnectionEnd) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing connection versions")
 	}
 	for _, version := range c.Versions {
-		if strings.TrimSpace(version) == "" {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
+		if err := host.ConnectionVersionValidator(version); err != nil {
+			return err
 		}
 	}
 	return c.Counterparty.ValidateBasic()

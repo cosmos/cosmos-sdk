@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
@@ -28,11 +30,11 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	// Add five messages
 	msgs := []sdk.Msg{
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
 	}
 
 	// Keep track of number of calls

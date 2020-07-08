@@ -138,8 +138,8 @@ func DefaultConfig() *Config {
 }
 
 // GetConfig returns a fully parsed Config object.
-func GetConfig() Config {
-	globalLabelsRaw := viper.Get("telemetry.global-labels").([]interface{})
+func GetConfig(v *viper.Viper) Config {
+	globalLabelsRaw := v.Get("telemetry.global-labels").([]interface{})
 	globalLabels := make([][]string, 0, len(globalLabelsRaw))
 	for _, glr := range globalLabelsRaw {
 		labelsRaw := glr.([]interface{})
@@ -150,32 +150,32 @@ func GetConfig() Config {
 
 	return Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:      viper.GetString("minimum-gas-prices"),
-			InterBlockCache:   viper.GetBool("inter-block-cache"),
-			Pruning:           viper.GetString("pruning"),
-			PruningKeepRecent: viper.GetString("pruning-keep-recent"),
-			PruningKeepEvery:  viper.GetString("pruning-keep-every"),
-			PruningInterval:   viper.GetString("pruning-interval"),
-			HaltHeight:        viper.GetUint64("halt-height"),
-			HaltTime:          viper.GetUint64("halt-time"),
+			MinGasPrices:      v.GetString("minimum-gas-prices"),
+			InterBlockCache:   v.GetBool("inter-block-cache"),
+			Pruning:           v.GetString("pruning"),
+			PruningKeepRecent: v.GetString("pruning-keep-recent"),
+			PruningKeepEvery:  v.GetString("pruning-keep-every"),
+			PruningInterval:   v.GetString("pruning-interval"),
+			HaltHeight:        v.GetUint64("halt-height"),
+			HaltTime:          v.GetUint64("halt-time"),
 		},
 		Telemetry: telemetry.Config{
-			ServiceName:             viper.GetString("telemetry.service-name"),
-			Enabled:                 viper.GetBool("telemetry.enabled"),
-			EnableHostname:          viper.GetBool("telemetry.enable-hostname"),
-			EnableHostnameLabel:     viper.GetBool("telemetry.enable-hostname-label"),
-			EnableServiceLabel:      viper.GetBool("telemetry.enable-service-label"),
-			PrometheusRetentionTime: viper.GetInt64("telemetry.prometheus-retention-time"),
+			ServiceName:             v.GetString("telemetry.service-name"),
+			Enabled:                 v.GetBool("telemetry.enabled"),
+			EnableHostname:          v.GetBool("telemetry.enable-hostname"),
+			EnableHostnameLabel:     v.GetBool("telemetry.enable-hostname-label"),
+			EnableServiceLabel:      v.GetBool("telemetry.enable-service-label"),
+			PrometheusRetentionTime: v.GetInt64("telemetry.prometheus-retention-time"),
 			GlobalLabels:            globalLabels,
 		},
 		API: APIConfig{
-			Enable:             viper.GetBool("api.enable"),
-			Address:            viper.GetString("api.address"),
-			MaxOpenConnections: viper.GetUint("api.max-open-connections"),
-			RPCReadTimeout:     viper.GetUint("api.rpc-read-timeout"),
-			RPCWriteTimeout:    viper.GetUint("api.rpc-write-timeout"),
-			RPCMaxBodyBytes:    viper.GetUint("api.rpc-max-body-bytes"),
-			EnableUnsafeCORS:   viper.GetBool("api.enabled-unsafe-cors"),
+			Enable:             v.GetBool("api.enable"),
+			Address:            v.GetString("api.address"),
+			MaxOpenConnections: v.GetUint("api.max-open-connections"),
+			RPCReadTimeout:     v.GetUint("api.rpc-read-timeout"),
+			RPCWriteTimeout:    v.GetUint("api.rpc-write-timeout"),
+			RPCMaxBodyBytes:    v.GetUint("api.rpc-max-body-bytes"),
+			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
 	}
 }

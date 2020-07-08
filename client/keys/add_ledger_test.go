@@ -3,9 +3,9 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/libs/cli"
@@ -34,29 +34,31 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	cmd := AddKeyCommand()
-	require.NotNil(t, cmd)
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)
 	t.Cleanup(kbCleanUp)
-	viper.Set(flags.FlagHome, kbHome)
-	viper.Set(flags.FlagUseLedger, true)
-	viper.Set(flagAccount, "0")
-	viper.Set(flagIndex, "0")
-	viper.Set(flagCoinType, "330")
 
-	// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
-	// set algo flag value to the default
-	viper.Set(flagKeyAlgo, string(hd.Secp256k1Type))
-	// Now enter password
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
+		fmt.Sprintf("--%s=0", flagAccount),
+		fmt.Sprintf("--%s=0", flagIndex),
+		fmt.Sprintf("--%s=330", flagCoinType),
+		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
-	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
+	require.NoError(t, cmd.Execute())
 
 	// Now check that it has been stored properly
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
@@ -82,32 +84,35 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
-	require.NotNil(t, cmd)
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)
 	t.Cleanup(kbCleanUp)
-	viper.Set(flags.FlagHome, kbHome)
-	viper.Set(flags.FlagUseLedger, true)
 
-	// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
-	// set algo flag value to the default
-	viper.Set(flagKeyAlgo, string(hd.Secp256k1Type))
-	// Now enter password
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
+		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
 	mockIn.Reset("test1234\ntest1234\n")
-	viper.Set(flagCoinType, sdk.CoinType)
-	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
+
+	require.NoError(t, cmd.Execute())
 
 	// Now check that it has been stored properly
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
 		_ = kb.Delete("keyname1")
 	})
+
 	mockIn.Reset("test1234\n")
 	key1, err := kb.Key("keyname1")
 	require.NoError(t, err)

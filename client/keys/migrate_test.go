@@ -1,36 +1,48 @@
 package keys
 
 import (
+	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/otiai10/copy"
+	"github.com/stretchr/testify/assert"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
-
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-
-	"github.com/tendermint/tendermint/libs/cli"
 )
 
 func Test_runMigrateCmd(t *testing.T) {
 	cmd := AddKeyCommand()
-	assert.NotNil(t, cmd)
+	cmd.SetErr(ioutil.Discard)
+	cmd.SetOut(ioutil.Discard)
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	copy.Copy("testdata", kbHome)
 	assert.NotNil(t, kbHome)
 	t.Cleanup(kbCleanUp)
-	viper.Set(flags.FlagHome, kbHome)
 
-	viper.Set(cli.OutputFlag, OutputFormatText)
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	assert.NoError(t, cmd.Execute())
 
-	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
-
-	viper.Set(flags.FlagDryRun, true)
 	cmd = MigrateCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
+
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flags.FlagDryRun),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
 	mockIn.Reset("test1234\ntest1234\n")
-	assert.NoError(t, runMigrateCmd(cmd, []string{}))
+	assert.NoError(t, cmd.Execute())
 }

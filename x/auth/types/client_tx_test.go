@@ -3,6 +3,8 @@ package types_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/cosmos/cosmos-sdk/client/testutil"
 
 	"github.com/stretchr/testify/suite"
@@ -15,7 +17,7 @@ import (
 func testCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(&testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }
 

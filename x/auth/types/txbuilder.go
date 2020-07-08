@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/pflag"
+
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -52,6 +54,7 @@ func NewTxBuilder(
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
+// Deprecated in favor of NewTxBuilderFromFlagSet
 func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
@@ -72,6 +75,36 @@ func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 	txbldr = txbldr.WithGasPrices(viper.GetString(flags.FlagGasPrices))
 
 	return txbldr
+}
+
+// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters extracted from
+// FlagSet (It should deprecate NewTxBuilderFromCLI).
+func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
+	backend, _ := fs.GetString(flags.FlagKeyringBackend)
+	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
+	accNum, _ := fs.GetUint64(flags.FlagAccountNumber)
+	seq, _ := fs.GetUint64(flags.FlagSequence)
+	gasAdjustment, _ := fs.GetFloat64(flags.FlagGasAdjustment)
+	chainID, _ := fs.GetString(flags.FlagChainID)
+	memo, _ := fs.GetString(flags.FlagMemo)
+	fees, _ := fs.GetString(flags.FlagFees)
+	gasPrices, _ := fs.GetString(flags.FlagGasPrices)
+
+	txbldr := TxBuilder{
+		keybase:            kb,
+		accountNumber:      accNum,
+		sequence:           seq,
+		gas:                flags.GasFlagVar.Gas,
+		gasAdjustment:      gasAdjustment,
+		simulateAndExecute: flags.GasFlagVar.Simulate,
+		chainID:            chainID,
+		memo:               memo,
+	}
+
+	txbldr = txbldr.WithFees(fees)
+	txbldr = txbldr.WithGasPrices(gasPrices)
+
+	return txbldr, nil
 }
 
 // TxEncoder returns the transaction encoder

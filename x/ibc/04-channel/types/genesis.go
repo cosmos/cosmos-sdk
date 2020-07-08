@@ -7,15 +7,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// PacketAckCommitment defines the genesis type necessary to retrieve and store
-// acknowlegements.
-type PacketAckCommitment struct {
-	PortID    string `json:"port_id" yaml:"port_id"`
-	ChannelID string `json:"channel_id" yaml:"channel_id"`
-	Sequence  uint64 `json:"sequence" yaml:"sequence"`
-	Hash      []byte `json:"hash" yaml:"hash"`
-}
-
 // NewPacketAckCommitment creates a new PacketAckCommitment instance.
 func NewPacketAckCommitment(portID, channelID string, seq uint64, hash []byte) PacketAckCommitment {
 	return PacketAckCommitment{

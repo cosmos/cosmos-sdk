@@ -47,7 +47,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.ConnectionEnd{
-						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{connectiontypes.DefaultIBCVersion}),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),

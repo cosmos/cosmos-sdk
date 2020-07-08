@@ -6,12 +6,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// ConnectionPaths define all the connection paths for a given client state.
-type ConnectionPaths struct {
-	ClientID string   `json:"client_id" yaml:"client_id"`
-	Paths    []string `json:"paths" yaml:"paths"`
-}
-
 // NewConnectionPaths creates a ConnectionPaths instance.
 func NewConnectionPaths(id string, paths []string) ConnectionPaths {
 	return ConnectionPaths{

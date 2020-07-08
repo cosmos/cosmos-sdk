@@ -2,7 +2,9 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -10,13 +12,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/spf13/viper"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -37,11 +38,13 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, tempDir, 0)
 
-	ctx := NewDefaultContext()
-	ctx.Config.RootDir = tempDir
+	serverCtx := NewDefaultContext()
+	serverCtx.Config.RootDir = tempDir
+
+	clientCtx := client.Context{}.WithJSONMarshaler(app.Codec())
 
 	genDoc := newDefaultGenesisDoc(app.Codec())
-	err = saveGenesisFile(genDoc, ctx.Config.GenesisFile())
+	err = saveGenesisFile(genDoc, serverCtx.Config.GenesisFile())
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -54,20 +57,18 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	app.Commit()
 
 	cmd := ExportCmd(
-		ctx,
-		app.Codec(),
 		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, b bool, strings []string) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error) {
 			return app.ExportAppStateAndValidators(true, []string{})
 		})
 
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, ServerContextKey, serverCtx)
+
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
-
-	viper.Set(flags.FlagHome, tempDir)
-	err = cmd.RunE(cmd, []string{})
-	if err != nil {
-		t.Errorf("error: %s", err)
-	}
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	var exportedGenDoc tmtypes.GenesisDoc
 	err = app.Codec().UnmarshalJSON(output.Bytes(), &exportedGenDoc)

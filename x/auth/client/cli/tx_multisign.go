@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -42,7 +41,7 @@ The --offline flag makes sure that the client will not reach out to an external 
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: makeMultiSignCmd(clientCtx),
@@ -52,7 +51,6 @@ recommended to set such parameters manually.
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 
-	// Add the flags here and return the command
 	return flags.PostCommands(cmd)[0]
 }
 
@@ -66,9 +64,11 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			return
 		}
 
+		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+		homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
+
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		kb, err := keyring.New(sdk.KeyringServiceName(),
-			viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), inBuf)
+		kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, inBuf)
 		if err != nil {
 			return
 		}
@@ -130,7 +130,7 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		var json []byte
 
-		sigOnly := viper.GetBool(flagSigOnly)
+		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		if sigOnly {
 			json, err = cdc.MarshalJSON(newTx.Signatures[0])
 		} else {
@@ -141,21 +141,19 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			return err
 		}
 
-		if viper.GetString(flags.FlagOutputDocument) == "" {
+		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+		if outputDoc == "" {
 			fmt.Printf("%s\n", json)
 			return
 		}
 
-		fp, err := os.OpenFile(
-			viper.GetString(flags.FlagOutputDocument), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
-		)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err
 		}
 		defer fp.Close()
 
 		fmt.Fprintf(fp, "%s\n", json)
-
 		return
 	}
 }

@@ -3,6 +3,8 @@ package baseapp
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
@@ -16,7 +18,8 @@ var protoCodec = encoding.GetCodec(proto.Name)
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	routes map[string]GRPCQueryHandler
+	routes      map[string]GRPCQueryHandler
+	anyUnpacker types.AnyUnpacker
 }
 
 var _ gogogrpc.Server
@@ -54,7 +57,14 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-				return protoCodec.Unmarshal(req.Data, i)
+				err := protoCodec.Unmarshal(req.Data, i)
+				if err != nil {
+					return err
+				}
+				if qrt.anyUnpacker != nil {
+					return types.UnpackInterfaces(i, qrt.anyUnpacker)
+				}
+				return nil
 			}, nil)
 			if err != nil {
 				return abci.ResponseQuery{}, err
@@ -73,4 +83,14 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			}, nil
 		}
 	}
+}
+
+// AnyUnpacker returns the AnyUnpacker for the router
+func (qrt *GRPCQueryRouter) AnyUnpacker() types.AnyUnpacker {
+	return qrt.anyUnpacker
+}
+
+// SetAnyUnpacker sets the AnyUnpacker for the router
+func (qrt *GRPCQueryRouter) SetAnyUnpacker(anyUnpacker types.AnyUnpacker) {
+	qrt.anyUnpacker = anyUnpacker
 }

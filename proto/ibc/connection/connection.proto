@@ -23,7 +23,7 @@ message MsgConnectionOpenTry {
   Counterparty    counterparty          = 3 [(gogoproto.nullable) = false];
   repeated string counterparty_versions = 4 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`
-  bytes proof_init = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  bytes  proof_init   = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_height = 6;
   // proof of client consensus state
   bytes proof_consensus = 7
@@ -110,5 +110,14 @@ message Counterparty {
 
 // ClientPaths define all the connection paths for a client state.
 message ClientPaths {
+  // list of connection paths
   repeated string paths = 1;
+}
+
+// ConnectionPaths define all the connection paths for a given client state.
+message ConnectionPaths {
+  // client state unique identifier
+  string client_id = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
+  // list of connection paths
+  repeated string paths = 2;
 }

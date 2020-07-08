@@ -155,8 +155,7 @@ func GetFeatureSetIntersection(sourceFeatureSet, counterpartyFeatureSet []string
 // VerifyProposedVersion verifies that the entire feature set in the
 // proposed version is supported by this chain. If the feature set is
 // empty it verifies that this is allowed for the specified version
-// identifier. It also ensures that the supported version identifier
-// matches the proposed version identifier.
+// identifier.
 func VerifyProposedVersion(proposedVersion, supportedVersion string) error {
 	proposedIdentifier, proposedFeatureSet, err := UnpackVersion(proposedVersion)
 	if err != nil {

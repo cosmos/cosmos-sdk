@@ -56,7 +56,8 @@ func GetCurrentPlanCmd() *cobra.Command {
 	return flags.GetCommands(cmd)[0]
 }
 
-// GetAppliedPlanCmd returns the height at which a completed upgrade was applied
+// GetAppliedPlanCmd returns information about the block at which a completed
+// upgrade was applied
 func GetAppliedPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "applied [upgrade-name]",

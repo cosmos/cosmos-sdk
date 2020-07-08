@@ -24,8 +24,7 @@ import (
 )
 
 const (
-	flagOverwrite  = "overwrite"
-	flagClientHome = "home-client"
+	flagOverwrite = "overwrite"
 )
 
 type printInfo struct {

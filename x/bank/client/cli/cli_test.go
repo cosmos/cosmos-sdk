@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		s.Run(tc.name, func() {
 			buf.Reset()
 
-			cmd := cli.GetBalancesCmd(clientCtx)
+			cmd := cli.GetBalancesCmd()
 			cmd.SetErr(buf)
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
@@ -167,7 +167,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 		s.Run(tc.name, func() {
 			buf.Reset()
 
-			cmd := cli.GetCmdQueryTotalSupply(clientCtx)
+			cmd := cli.GetCmdQueryTotalSupply()
 			cmd.SetErr(buf)
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
@@ -188,9 +188,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name         string

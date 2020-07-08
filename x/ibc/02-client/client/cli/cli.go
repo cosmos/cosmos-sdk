@@ -9,8 +9,8 @@ import (
 )
 
 // GetQueryCmd returns the query commands for IBC clients
-func GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	ics02ClientQueryCmd := &cobra.Command{
+func GetQueryCmd() *cobra.Command {
+	queryCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC client query subcommands",
 		DisableFlagParsing:         true,
@@ -18,13 +18,12 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics02ClientQueryCmd.AddCommand(flags.GetCommands(
-		GetCmdQueryClientStates(clientCtx),
-		GetCmdQueryClientState(clientCtx),
-		GetCmdQueryConsensusState(clientCtx),
-		GetCmdQueryHeader(clientCtx),
-		GetCmdNodeConsensusState(clientCtx),
-		GetCmdQueryPath(clientCtx),
+	queryCmd.AddCommand(flags.GetCommands(
+		GetCmdQueryClientStates(),
+		GetCmdQueryClientState(),
+		GetCmdQueryConsensusState(),
+		GetCmdQueryHeader(),
+		GetCmdNodeConsensusState(),
 	)...)
-	return ics02ClientQueryCmd
+	return queryCmd
 }

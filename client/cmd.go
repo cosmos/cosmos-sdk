@@ -9,13 +9,12 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type contextKey string
 
 // ClientContextKey defines the context key used to retrieve a client.Context from
 // a command's Context.
-const ClientContextKey = contextKey("client.context")
+const ClientContextKey = sdk.ContextKey("client.context")
 
 // SetCmdClientContextHandler is to be used in a command pre-hook execution to
 // read flags that populate a Context and sets that to the command's Context.

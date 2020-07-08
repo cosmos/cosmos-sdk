@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -17,12 +16,8 @@ import (
 	lite "github.com/tendermint/tendermint/lite2"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -33,32 +28,34 @@ const (
 	flagProofSpecs = "proof-specs"
 )
 
-// GetCmdCreateClient defines the command to create a new IBC Client as defined
+// NewCreateClientCmd defines the command to create a new IBC Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
-func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
+func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
 		Short: "create new tendermint client",
 		Long: `Create a new tendermint IBC client. 
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
   - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, ibctmtypes.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, ibctmtypes.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			clientID := args[0]
 
 			var header ibctmtypes.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
 				}
-				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+				if err := clientCtx.Codec.UnmarshalJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus header file")
 				}
 			}
@@ -66,7 +63,6 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			var (
 				trustLevel tmmath.Fraction
 				specs      []*ics23.ProofSpec
-				err        error
 			)
 
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
@@ -98,13 +94,13 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			spc, _ := cmd.Flags().GetString(flagProofSpecs)
 			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
-			} else if err := cdc.UnmarshalJSON([]byte(spc), &specs); err != nil {
+			} else if err := clientCtx.Codec.UnmarshalJSON([]byte(spc), &specs); err != nil {
 				// check for file path if JSON input not provided
 				contents, err := ioutil.ReadFile(spc)
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
 				}
-				if err := cdc.UnmarshalJSON(contents, &specs); err != nil {
+				if err := clientCtx.Codec.UnmarshalJSON(contents, &specs); err != nil {
 					return errors.Wrap(err, "error unmarshalling proof specs file")
 				}
 			}
@@ -117,7 +113,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -127,33 +123,35 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetCmdUpdateClient defines the command to update a client as defined in
+// NewUpdateClientCmd defines the command to update a client as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#update
-func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
+func NewUpdateClientCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "update [client-id] [path/to/header.json]",
 		Short: "update existing client with a header",
 		Long:  "update existing tendermint client with a tendermint header",
 		Example: fmt.Sprintf(
 			"$ %s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
-			version.ClientName, ibctmtypes.SubModuleName,
+			version.AppName, ibctmtypes.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			clientID := args[0]
 
 			var header ibctmtypes.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+				if err := clientCtx.Codec.UnmarshalJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
@@ -163,37 +161,39 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 }
 
-// GetCmdSubmitMisbehaviour defines the command to submit a misbehaviour to invalidate
+// NewSubmitMisbehaviourCmd defines the command to submit a misbehaviour to invalidate
 // previous state roots and prevent future updates as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
-func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
+func NewSubmitMisbehaviourCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "misbehaviour [path/to/evidence.json]",
 		Short: "submit a client misbehaviour",
 		Long:  "submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates",
 		Example: fmt.Sprintf(
 			"$ %s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
-			version.ClientName, ibctmtypes.SubModuleName,
+			version.AppName, ibctmtypes.SubModuleName,
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			var ev evidenceexported.Evidence
-			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
+			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &ev); err != nil {
+				if err := clientCtx.Codec.UnmarshalJSON(contents, &ev); err != nil {
 					return errors.Wrap(err, "error unmarshalling evidence file")
 				}
 			}
@@ -203,7 +203,7 @@ func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(clientCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 }

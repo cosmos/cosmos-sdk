@@ -5,13 +5,9 @@ import (
 	"os"
 	"strings"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
-
-	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,10 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
-
-//__________________________________________________________
 
 var (
 	defaultTokens                  = sdk.TokensFromConsensusPower(100)
@@ -154,7 +149,7 @@ func NewDelegateCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -194,7 +189,7 @@ func NewRedelegateCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -239,7 +234,7 @@ func NewUnbondCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -333,6 +328,7 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
 	fsCreateValidator.String(FlagIP, ipDefault, "The node's public IP")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")
+	fsCreateValidator.String(FlagMoniker, "", "The validator's (optional) moniker")
 	fsCreateValidator.String(FlagWebsite, "", "The validator's (optional) website")
 	fsCreateValidator.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
@@ -357,7 +353,6 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 
 type TxCreateValidatorConfig struct {
 	ChainID string
-	From    string
 	NodeID  string
 	Moniker string
 
@@ -378,9 +373,7 @@ type TxCreateValidatorConfig struct {
 	Identity        string
 }
 
-func PrepareConfigForTxCreateValidator(
-	config *cfg.Config, flagSet *flag.FlagSet, nodeID, chainID string, valPubKey crypto.PubKey,
-) (TxCreateValidatorConfig, error) {
+func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey crypto.PubKey) (TxCreateValidatorConfig, error) {
 	c := TxCreateValidatorConfig{}
 
 	ip, err := flagSet.GetString(FlagIP)
@@ -417,12 +410,6 @@ func PrepareConfigForTxCreateValidator(
 	}
 	c.Identity = identity
 
-	c.ChainID = chainID
-	c.From, err = flagSet.GetString(flags.FlagName)
-	if err != nil {
-		return c, err
-	}
-
 	c.Amount, err = flagSet.GetString(FlagAmount)
 	if err != nil {
 		return c, err
@@ -451,15 +438,12 @@ func PrepareConfigForTxCreateValidator(
 	c.NodeID = nodeID
 	c.TrustNode = true
 	c.PubKey = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
-	c.Moniker = config.Moniker
 	c.Website = website
 	c.SecurityContact = securityContact
 	c.Details = details
 	c.Identity = identity
-
-	if config.Moniker == "" {
-		c.Moniker = c.From
-	}
+	c.ChainID = chainID
+	c.Moniker = moniker
 
 	if c.Amount == "" {
 		c.Amount = defaultAmount

@@ -72,7 +72,7 @@ func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 
 // GetQueryCmd returns the root query command for the auth module.
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx.Codec)
+	return cli.GetQueryCmd(clientCtx)
 }
 
 // RegisterInterfaceTypes registers interfaces and implementations of the auth module.
@@ -118,7 +118,9 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(am.accountKeeper)
 }
 
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.accountKeeper)
+}
 
 // InitGenesis performs genesis initialization for the auth module. It returns
 // no validator updates.

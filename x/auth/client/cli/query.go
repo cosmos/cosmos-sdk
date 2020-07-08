@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -24,7 +25,7 @@ const (
 )
 
 // GetQueryCmd returns the transaction commands for this module
-func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the auth module",
@@ -34,15 +35,15 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetAccountCmd(cdc),
-		QueryParamsCmd(cdc),
+		GetAccountCmd(clientCtx),
+		QueryParamsCmd(clientCtx),
 	)
 
 	return cmd
 }
 
 // QueryParamsCmd returns the command handler for evidence parameter querying.
-func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
+func QueryParamsCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current auth parameters",
@@ -52,20 +53,16 @@ func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
 $ <appcli> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			queryClient := types.NewQueryClient(clientCtx.Init())
 
-			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
-			res, _, err := clientCtx.QueryWithData(route, nil)
+			params := types.NewQueryParametersRequest()
+
+			res, err := queryClient.Parameters(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			var params types.Params
-			if err := cdc.UnmarshalJSON(res, &params); err != nil {
-				return fmt.Errorf("failed to unmarshal params: %w", err)
-			}
-
-			return clientCtx.PrintOutput(params)
+			return clientCtx.PrintOutput(res.Params)
 		},
 	}
 
@@ -74,26 +71,32 @@ $ <appcli> query auth params
 
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
-func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
+func GetAccountCmd(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account [address]",
 		Short: "Query for account by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
-			accGetter := types.NewAccountRetriever(authclient.Codec)
+			queryClient := types.NewQueryClient(clientCtx.Init())
 
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			acc, err := accGetter.GetAccount(clientCtx, key)
+			params := types.NewQueryAccountRequest(key)
+
+			res, err := queryClient.Account(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(acc)
+			account, ok := res.Account.GetCachedValue().(types.AccountI)
+			if !ok {
+				return fmt.Errorf("error when unpacking account")
+			}
+
+			return clientCtx.PrintOutput(account)
 		},
 	}
 

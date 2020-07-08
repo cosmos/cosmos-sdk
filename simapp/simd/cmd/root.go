@@ -106,7 +106,7 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(encodingConfig.Amino),
+		authcmd.GetAccountCmd(initClientCtx),
 		rpc.ValidatorCommand(encodingConfig.Amino),
 		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(encodingConfig.Amino),

@@ -1,15 +1,12 @@
 package keeper_test
 
-// import (
-// 	"fmt"
+import (
+	"fmt"
 
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-// 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-// 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-// 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-// 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-// )
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+)
 
 // func (suite *KeeperTestSuite) TestSendTransfer() {
 // 	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
@@ -93,60 +90,93 @@ package keeper_test
 // 	}
 // }
 
-// func (suite *KeeperTestSuite) TestOnRecvPacket() {
-// 	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1.String(), testAddr2.String())
+func (suite *KeeperTestSuite) TestOnRecvPacket() {
+	_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
-// 	testCases := []struct {
-// 		msg      string
-// 		malleate func()
-// 		expPass  bool
-// 	}{
-// 		{"success receive from source chain",
-// 			func() {}, true},
-// 		// onRecvPacket
-// 		// - source chain
-// 		{"no dest prefix on coin denom",
-// 			func() {
-// 				data.Amount = testCoins
-// 			}, false},
-// 		{"mint failed",
-// 			func() {
-// 				data.Amount = prefixCoins2
-// 				data.Amount[0].Amount = sdk.ZeroInt()
-// 			}, false},
-// 		// - receiving chain
-// 		{"incorrect dest prefix on coin denom",
-// 			func() {
-// 				data.Amount = prefixCoins
-// 			}, false},
-// 		{"success receive from external chain",
-// 			func() {
-// 				data.Amount = prefixCoins
-// 				escrow := types.GetEscrowAddress(testPort2, testChannel2)
-// 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, testCoins)
-// 				suite.Require().NoError(err)
-// 			}, true},
-// 	}
+	prefixCoins = types.GetPrefixedCoins(channelA.PortID, channelA.ID, sdk.NewInt64Coin("atom", 100))
+	sourceCoins := types.GetPrefixedCoins(channelB.PortID, channelB.ID, sdk.NewInt64Coin("atom", 100))
+	data := types.NewFungibleTokenPacketData(prefixCoins, suite.sender.String(), suite.receiver.String())
 
-// 	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100, 0)
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		// {"success receive from source chain",
+		// 	func() {}, true},
+		{
+			"empty amount",
+			func() {
+				data.Amount = nil
+			},
+			false,
+		},
+		{
+			"invalid receiver address",
+			func() {
+				data.Amount = prefixCoins
+				data.Receiver = "gaia1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrudl"
+			},
+			false,
+		},
+		{
+			"no dest prefix on coin denom",
+			func() {
+				data.Amount = testCoins
+				data.Receiver = suite.receiver.String()
+			},
+			false,
+		},
+		// onRecvPacket
+		// - source chain
+		{
+			"mint failed",
+			func() {
+				data.Amount = sourceCoins
+				data.Amount[0].Amount = sdk.ZeroInt()
+			},
+			false,
+		},
+		// {
+		// 	"success receive",
+		// 	func() {
+		// 		data.Amount = sourceCoins
+		// 	},
+		// 	true,
+		// },
+		// // - receiving chain
+		// {"incorrect dest prefix on coin denom",
+		// 	func() {
+		// 		data.Amount = prefixCoins
+		// 	}, false},
+		// {"success receive from external chain",
+		// 	func() {
+		// 		data.Amount = prefixCoins
+		// 		escrow := types.GetEscrowAddress(testPort2, testChannel2)
+		// 		_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, testCoins)
+		// 		suite.Require().NoError(err)
+		// 	}, true},
+	}
 
-// 	for i, tc := range testCases {
-// 		tc := tc
-// 		i := i
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
-// 			tc.malleate()
+	packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
 
-// 			err := suite.chainA.App.TransferKeeper.OnRecvPacket(suite.chainA.GetContext(), packet, data)
+	for i, tc := range testCases {
+		tc := tc
+		i := i
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			tc.malleate()
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
+			err := suite.chainA.App.TransferKeeper.OnRecvPacket(suite.chainA.GetContext(), packet, data)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
 
 // // TestOnAcknowledgementPacket tests that successful acknowledgement is a no-op
 // // and failure acknowledment leads to refund

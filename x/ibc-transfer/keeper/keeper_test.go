@@ -2,37 +2,18 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-// define constants used for testing
-const (
-	testClientIDA = "testclientIDA"
-	testClientIDB = "testClientIDb"
-
-	testConnection = "testconnectionatob"
-	testPort1      = "bank"
-	testPort2      = "testportid"
-	testChannel1   = "firstchannel"
-	testChannel2   = "secondchannel"
-
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
-)
-
 // define variables used for testing
 var (
-	testAddr1, _ = sdk.AccAddressFromBech32("cosmos1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrudl")
-	testAddr2, _ = sdk.AccAddressFromBech32("cosmos1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrujl")
-
 	testCoins, _ = sdk.ParseCoins("100atom")
 	prefixCoins  = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
 	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
@@ -46,6 +27,9 @@ type KeeperTestSuite struct {
 	// testing chains used for convenience and readability
 	chainA *ibctesting.TestChain
 	chainB *ibctesting.TestChain
+
+	sender   sdk.AccAddress
+	receiver sdk.AccAddress
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -53,9 +37,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 
-	// reset prefixCoins at each setup
-	prefixCoins = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
-	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+	suite.sender = sdk.AccAddress(tmtypes.NewMockPV().PrivKey.PubKey().Address())
+	suite.receiver = sdk.AccAddress(tmtypes.NewMockPV().PrivKey.PubKey().Address())
 }
 
 func (suite *KeeperTestSuite) TestGetTransferAccount() {

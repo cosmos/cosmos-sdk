@@ -14,9 +14,9 @@ var _ exported.GenesisBalance = (*Balance)(nil)
 
 // GenesisState defines the bank module's genesis state.
 type GenesisState struct {
-	SendEnabled bool      `json:"send_enabled" yaml:"send_enabled"`
-	Balances    []Balance `json:"balances" yaml:"balances"`
-	Supply      sdk.Coins `json:"supply" yaml:"supply"`
+	Params   Params    `json:"params" yaml:"params"`
+	Balances []Balance `json:"balances" yaml:"balances"`
+	Supply   sdk.Coins `json:"supply" yaml:"supply"`
 }
 
 // Balance defines an account address and balance pair used in the bank module's
@@ -50,17 +50,17 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(sendEnabled bool, balances []Balance, supply sdk.Coins) GenesisState {
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins) GenesisState {
 	return GenesisState{
-		SendEnabled: sendEnabled,
-		Balances:    balances,
-		Supply:      supply,
+		Params:   params,
+		Balances: balances,
+		Supply:   supply,
 	}
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(true, []Balance{}, DefaultSupply().GetTotal())
+	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal())
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application

@@ -197,6 +197,7 @@ func GenTxCmd(mbm module.BasicManager, genBalIterator types.GenesisBalancesItera
 	cmd.Flags().String(flags.FlagOutputDocument, "", "write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(flagClientHome, "", "the folder where client files are located")
 	cmd.MarkFlagRequired(flags.FlagName)
 
 	flags.PostCommands(cmd)

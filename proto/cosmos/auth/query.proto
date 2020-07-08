@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cosmos.auth;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos/auth/auth.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+
+// Query creates service with Account and Parameters as rpc
+service Query{
+    // Account returns account details based on address
+    rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {}
+
+    // Parameters queries all params
+    rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) {}
+}
+
+// QueryAccountRequest is request type for the Query/Account RPC method
+message QueryAccountRequest{
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+// QueryAccountResponse is response type for the Query/Account RPC method
+message QueryAccountResponse{
+  google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
+}
+
+// QueryParametersRequest is request type for the Query/Parameters RPC method
+message QueryParametersRequest{ }
+
+// QueryParametersResponse is response type for the Query/Parameters RPC method
+message QueryParametersResponse{
+  cosmos.auth.Params params = 1 [(gogoproto.nullable) = false];
+} 

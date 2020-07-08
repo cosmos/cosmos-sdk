@@ -174,7 +174,7 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// query commission
-		bz, err := common.QueryValidatorCommission(clientCtx, types.QuerierRoute, valAddr)
+		bz, err := common.QueryValidatorCommission(clientCtx, valAddr)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -300,7 +300,7 @@ func checkResponseQueryDelegationRewards(
 	w http.ResponseWriter, clientCtx client.Context, queryRoute, delAddr, valAddr string,
 ) (res []byte, height int64, ok bool) {
 
-	res, height, err := common.QueryDelegationRewards(clientCtx, queryRoute, delAddr, valAddr)
+	res, height, err := common.QueryDelegationRewards(clientCtx, delAddr, valAddr)
 	if rest.CheckInternalServerError(w, err) {
 		return nil, 0, false
 	}

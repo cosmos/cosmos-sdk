@@ -74,8 +74,8 @@ func (AppModuleBasic) GetTxCmd(clientCtx sdkclient.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns the root query command for the distribution module.
-func (AppModuleBasic) GetQueryCmd(clientCtx sdkclient.Context) *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey, clientCtx.Codec)
+func (AppModuleBasic) GetQueryCmd(_ sdkclient.Context) *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaceTypes implements InterfaceModule

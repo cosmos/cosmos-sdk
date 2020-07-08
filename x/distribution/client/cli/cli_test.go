@@ -1,11 +1,18 @@
 package cli_test
 
 import (
+	"bytes"
+	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -31,6 +38,34 @@ func (s *IntegrationTestSuite) SetupSuite() {
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+	buf := new(bytes.Buffer)
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := cli.GetCmdQueryParams()
+	cmd.SetErr(buf)
+	cmd.SetOut(buf)
+	cmd.SetArgs([]string{})
+
+	expectedJSON := `{"community_tax":"0.020000000000000000","base_proposer_reward":"0.010000000000000000","bonus_proposer_reward":"0.040000000000000000","withdraw_addr_enabled":true}`
+	s.Require().NoError(cmd.ExecuteContext(ctx))
+	s.Require().Equal(expectedJSON, strings.TrimSpace(buf.String()))
+
+	buf.Reset()
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)})
+
+	expectedText := `base_proposer_reward: "0.010000000000000000"
+bonus_proposer_reward: "0.040000000000000000"
+community_tax: "0.020000000000000000"
+withdraw_addr_enabled: true`
+	s.Require().NoError(cmd.ExecuteContext(ctx))
+	s.Require().Equal(expectedText, strings.TrimSpace(buf.String()))
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

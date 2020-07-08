@@ -147,7 +147,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 				return fmt.Errorf("cannot generate tx in offline mode")
 			}
 
-			msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, types.QuerierRoute, delAddr)
+			msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, delAddr)
 			if err != nil {
 				return err
 			}

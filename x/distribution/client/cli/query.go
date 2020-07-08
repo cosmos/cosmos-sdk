@@ -39,7 +39,7 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQueryParams implements the query params command.
 func GetCmdQueryParams() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query distribution params",
@@ -64,6 +64,8 @@ func GetCmdQueryParams() *cobra.Command {
 			return clientCtx.PrintOutput(params)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetCmdQueryValidatorOutstandingRewards implements the query validator

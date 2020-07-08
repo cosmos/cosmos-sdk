@@ -225,6 +225,12 @@ func (ctx Context) WithTrustNode(trustNode bool) Context {
 	return ctx
 }
 
+// WithOutputFormat returns a copy of the context with an updated OutputFormat field.
+func (ctx Context) WithOutputFormat(format string) Context {
+	ctx.OutputFormat = format
+	return ctx
+}
+
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx Context) WithNodeURI(nodeURI string) Context {
 	ctx.NodeURI = nodeURI

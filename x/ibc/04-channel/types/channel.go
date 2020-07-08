@@ -13,6 +13,8 @@ var (
 	_ exported.CounterpartyI = (*Counterparty)(nil)
 )
 
+const DefaultChannelVersion = "1.0.0"
+
 // NewChannel creates a new Channel instance
 func NewChannel(
 	state State, ordering Order, counterparty Counterparty,

@@ -34,7 +34,7 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 }
 
 // NewTxCmd returns a CLI command handler for all x/ibc channel transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	ics04ChannelTxCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC channel transaction subcommands",
@@ -44,12 +44,12 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	ics04ChannelTxCmd.AddCommand(flags.PostCommands(
-		NewChannelOpenInitCmd(clientCtx),
-		NewChannelOpenTryCmd(clientCtx),
-		NewChannelOpenAckCmd(clientCtx),
-		NewChannelOpenConfirmCmd(clientCtx),
-		NewChannelCloseInitCmd(clientCtx),
-		NewChannelCloseConfirmCmd(clientCtx),
+		NewChannelOpenInitCmd(),
+		NewChannelOpenTryCmd(),
+		NewChannelOpenAckCmd(),
+		NewChannelOpenConfirmCmd(),
+		NewChannelCloseInitCmd(),
+		NewChannelCloseConfirmCmd(),
 	)...)
 
 	return ics04ChannelTxCmd

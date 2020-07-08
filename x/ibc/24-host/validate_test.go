@@ -130,7 +130,7 @@ func TestConnectionVersionValidator(t *testing.T) {
 
 	for _, tc := range testCases {
 
-		err := ConnectionVersionValidator(tc.id)
+		err := VersionValidator(tc.id)
 
 		if tc.expPass {
 			require.NoError(t, err, tc.msg)

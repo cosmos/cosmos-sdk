@@ -71,7 +71,7 @@ func (k Keeper) ConnOpenTry(
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
-	version, err := types.PickVersion(counterpartyVersions)
+	version, err := types.PickVersion(types.GetCompatibleVersions(), counterpartyVersions, types.AllowNilFeatureSetMap)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Check that ChainB's proposed feature set is supported by chainA
-	if !types.VerifyProposedFeatureSet(version, supportedVersion) {
+	if !types.VerifyProposedFeatureSet(version, supportedVersion, types.AllowNilFeatureSetMap) {
 		return sdkerrors.Wrapf(
 			types.ErrVersionNegotiationFailed,
 			"connection version feature set provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),

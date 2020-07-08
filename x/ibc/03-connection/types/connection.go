@@ -60,7 +60,7 @@ func (c ConnectionEnd) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing connection versions")
 	}
 	for _, version := range c.Versions {
-		if err := host.ConnectionVersionValidator(version); err != nil {
+		if err := host.VersionValidator(version); err != nil {
 			return err
 		}
 	}

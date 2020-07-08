@@ -49,11 +49,11 @@ func TestFindSupportedVersion(t *testing.T) {
 		expVersion        string
 		expFound          bool
 	}{
-		{"valid supported version", types.DefaultIBCVersion, types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
+		{"valid supported version", types.DefaultConnectionVersion, types.GetCompatibleVersions(), types.DefaultConnectionVersion, true},
 		{"empty (invalid) version", "", types.GetCompatibleVersions(), "", false},
-		{"empty supported versions", types.DefaultIBCVersion, []string{}, "", false},
-		{"desired version is last", types.DefaultIBCVersion, []string{"(validversion,[])", "(2,[feature])", "(3,[])", types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
-		{"desired version identifier with different feature set", "(1,[features])", types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
+		{"empty supported versions", types.DefaultConnectionVersion, []string{}, "", false},
+		{"desired version is last", types.DefaultConnectionVersion, []string{"(validversion,[])", "(2,[feature])", "(3,[])", types.DefaultConnectionVersion}, types.DefaultConnectionVersion, true},
+		{"desired version identifier with different feature set", "(1,[features])", types.GetCompatibleVersions(), types.DefaultConnectionVersion, true},
 		{"version not supported", "(2,[DAG])", types.GetCompatibleVersions(), "", false},
 	}
 
@@ -72,15 +72,15 @@ func TestPickVersion(t *testing.T) {
 		expVer               string
 		expPass              bool
 	}{
-		{"valid default ibc version", types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
-		{"valid version in counterparty versions", []string{"(version1,[])", "(2.0.0,[DAG,ZK])", types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
+		{"valid default ibc version", types.GetCompatibleVersions(), types.DefaultConnectionVersion, true},
+		{"valid version in counterparty versions", []string{"(version1,[])", "(2.0.0,[DAG,ZK])", types.DefaultConnectionVersion}, types.DefaultConnectionVersion, true},
 		{"valid identifier match but empty feature set not allowed", []string{"(1,[DAG,ORDERED-ZK,UNORDERED-zk])"}, "(1,[])", false},
 		{"empty counterparty versions", []string{}, "", false},
 		{"non-matching counterparty versions", []string{"(2.0.0,[])"}, "", false},
 	}
 
 	for i, tc := range testCases {
-		version, err := types.PickVersion(tc.counterpartyVersions)
+		version, err := types.PickVersion(types.GetCompatibleVersions(), tc.counterpartyVersions, types.AllowNilFeatureSetMap)
 
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
@@ -99,14 +99,14 @@ func TestVerifyProposedFeatureSet(t *testing.T) {
 		supportedVersion string
 		expPass          bool
 	}{
-		{"entire feature set supported", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDERED", "UNORDERED", "DAG"}), true},
-		{"empty feature sets", types.CreateVersionString("1", []string{}), types.DefaultIBCVersion, true},
-		{"one feature missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"UNORDERED", "DAG"}), false},
-		{"both features missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"DAG"}), false},
+		{"entire feature set supported", types.DefaultConnectionVersion, types.CreateVersionString("1", []string{"ORDERED", "UNORDERED", "DAG"}), true},
+		{"empty feature sets not supported", types.CreateVersionString("1", []string{}), types.DefaultConnectionVersion, false},
+		{"one feature missing", types.DefaultConnectionVersion, types.CreateVersionString("1", []string{"UNORDERED", "DAG"}), false},
+		{"both features missing", types.DefaultConnectionVersion, types.CreateVersionString("1", []string{"DAG"}), false},
 	}
 
 	for i, tc := range testCases {
-		supported := types.VerifyProposedFeatureSet(tc.proposedVersion, tc.supportedVersion)
+		supported := types.VerifyProposedFeatureSet(tc.proposedVersion, tc.supportedVersion, types.AllowNilFeatureSetMap)
 
 		require.Equal(t, tc.expPass, supported, "test case %d: %s", i, tc.name)
 	}

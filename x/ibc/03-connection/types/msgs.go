@@ -103,7 +103,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing counterparty versions")
 	}
 	for _, version := range msg.CounterpartyVersions {
-		if err := host.ConnectionVersionValidator(version); err != nil {
+		if err := host.VersionValidator(version); err != nil {
 			return err
 		}
 	}
@@ -169,7 +169,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if err := host.ConnectionVersionValidator(msg.Version); err != nil {
+	if err := host.VersionValidator(msg.Version); err != nil {
 		return err
 	}
 	if len(msg.ProofTry) == 0 {

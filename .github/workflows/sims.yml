@@ -3,6 +3,10 @@ name: Sims
 # This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
 on:
   pull_request:
+  push:
+    branches:
+      - master
+
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest

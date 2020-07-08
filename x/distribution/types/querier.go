@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // querier keys
@@ -92,11 +91,4 @@ type QueryDelegatorWithdrawAddrParams struct {
 // NewQueryDelegatorWithdrawAddrParams creates a new instance of QueryDelegatorWithdrawAddrParams.
 func NewQueryDelegatorWithdrawAddrParams(delegatorAddr sdk.AccAddress) QueryDelegatorWithdrawAddrParams {
 	return QueryDelegatorWithdrawAddrParams{DelegatorAddress: delegatorAddr}
-}
-
-func NewQueryValidatorOutstandingRewardsRequest(val sdk.ValAddress, req *query.PageRequest) *QueryValidatorOutstandingRewardsRequest {
-	return &QueryValidatorOutstandingRewardsRequest{
-		ValidatorAddress: val,
-		Req:              req,
-	}
 }

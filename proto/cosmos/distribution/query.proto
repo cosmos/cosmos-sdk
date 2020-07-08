@@ -49,15 +49,11 @@ message QueryParamsResponse {
 // QueryValidatorOutstandingRewardsRequest is the request type for the Query/ValidatorOutstandingRewards RPC method
 message QueryValidatorOutstandingRewardsRequest {
   bytes validator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
-
-  cosmos.query.PageRequest req = 2;
 }
 
 // QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method
 message QueryValidatorOutstandingRewardsResponse {
   ValidatorOutstandingRewards rewards = 1 [(gogoproto.nullable) = false];
-
-  cosmos.query.PageResponse res = 2;
 }
 
 // QueryValidatorCommissionRequest is the request type for the Query/ValidatorCommission RPC method

@@ -17,17 +17,17 @@ func GetQueryCmd() *cobra.Command {
 		Use:   types.ModuleName,
 		Short: "Querying commands for the upgrade module",
 	}
-	cmd.AddCommand(
+	cmd.AddCommand(flags.GetCommands(
 		GetCurrentPlanCmd(),
 		GetAppliedPlanCmd(),
-	)
+	)...)
 
 	return cmd
 }
 
 // GetCurrentPlanCmd returns the query upgrade plan command
 func GetCurrentPlanCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "plan",
 		Short: "get upgrade plan (if one exists)",
 		Long:  "Gets the currently scheduled upgrade plan, if one exists",
@@ -52,14 +52,12 @@ func GetCurrentPlanCmd() *cobra.Command {
 			return clientCtx.PrintOutput(res.Plan)
 		},
 	}
-
-	return flags.GetCommands(cmd)[0]
 }
 
 // GetAppliedPlanCmd returns information about the block at which a completed
 // upgrade was applied
 func GetAppliedPlanCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "applied [upgrade-name]",
 		Short: "block header for height at which a completed upgrade was applied",
 		Long: "If upgrade-name was previously executed on the chain, this returns the header for the block at which it was applied.\n" +
@@ -101,6 +99,4 @@ func GetAppliedPlanCmd() *cobra.Command {
 			return clientCtx.PrintOutput(string(bz))
 		},
 	}
-
-	return flags.GetCommands(cmd)[0]
 }

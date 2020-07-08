@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"

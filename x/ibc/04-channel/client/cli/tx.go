@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -52,7 +53,7 @@ func NewChannelOpenInitCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
-	cmd.Flags().String(FlagIBCVersion, types.DefaultChannelVersion, "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
 
 	return cmd
 }
@@ -103,7 +104,7 @@ func NewChannelOpenTryCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
-	cmd.Flags().String(FlagIBCVersion, types.DefaultChannelVersion, "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
 
 	return cmd
 }
@@ -147,7 +148,7 @@ func NewChannelOpenAckCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(FlagIBCVersion, types.DefaultChannelVersion, "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
 
 	return cmd
 }

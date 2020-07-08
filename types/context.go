@@ -83,19 +83,19 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	}
 }
 
-// WithContext creates a Context with an updated context.Context
+// WithContext returns a Context with an updated context.Context
 func (c Context) WithContext(ctx context.Context) Context {
 	c.ctx = ctx
 	return c
 }
 
-// WithMultiStore creates a Context with an updated ms
+// WithMultiStore returns a Context with an updated ms
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	c.ms = ms
 	return c
 }
 
-// WithBlockHeader creates a Context with an updated header in UTC time
+// WithBlockHeader returns a Context with an updated header in UTC time
 func (c Context) WithBlockHeader(header abci.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
@@ -103,7 +103,7 @@ func (c Context) WithBlockHeader(header abci.Header) Context {
 	return c
 }
 
-// WithBlockTime creates a Context with an updated header.Time in UTC time
+// WithBlockTime returns a Context with an updated header.Time in UTC time
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
@@ -111,57 +111,57 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 	return c.WithBlockHeader(newHeader)
 }
 
-// WithProposer creates a Context with an updated ProposerAddress
+// WithProposer returns a Context with an updated ProposerAddress
 func (c Context) WithProposer(addr ConsAddress) Context {
 	newHeader := c.BlockHeader()
 	newHeader.ProposerAddress = addr.Bytes()
 	return c.WithBlockHeader(newHeader)
 }
 
-// WithBlockHeight creates a Context with an updated Height
+// WithBlockHeight returns a Context with an updated Height
 func (c Context) WithBlockHeight(height int64) Context {
 	newHeader := c.BlockHeader()
 	newHeader.Height = height
 	return c.WithBlockHeader(newHeader)
 }
 
-// WithChainID creates a Context with an updated chainID
+// WithChainID returns a Context with an updated chainID
 func (c Context) WithChainID(chainID string) Context {
 	c.chainID = chainID
 	return c
 }
 
-// WithTxBytes creates a Context with an updated txBytes
+// WithTxBytes returns a Context with an updated txBytes
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	c.txBytes = txBytes
 	return c
 }
 
-// WithLogger creates a Context with an updated logger
+// WithLogger returns a Context with an updated logger
 func (c Context) WithLogger(logger log.Logger) Context {
 	c.logger = logger
 	return c
 }
 
-// WithVoteInfos creates a Context with an updated voteInfo
+// WithVoteInfos returns a Context with an updated voteInfo
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c
 }
 
-// WithGasMeter creates a Context with an updated gasMeter
+// WithGasMeter returns a Context with an updated gasMeter
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	c.gasMeter = meter
 	return c
 }
 
-// WithBlockGasMeter creates a Context with an updated blockGasMeter
+// WithBlockGasMeter returns a Context with an updated blockGasMeter
 func (c Context) WithBlockGasMeter(meter GasMeter) Context {
 	c.blockGasMeter = meter
 	return c
 }
 
-// WithIsCheckTx creates a Context with an updated checkTx
+// WithIsCheckTx returns a Context with an updated checkTx
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	c.checkTx = isCheckTx
 	return c
@@ -177,19 +177,19 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	return c
 }
 
-// WithMinGasPrices creates a Context with an updated minGasPrice
+// WithMinGasPrices returns a Context with an updated minGasPrice
 func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 	c.minGasPrice = gasPrices
 	return c
 }
 
-// WithConsensusParams creates a Context with an updated consParams
+// WithConsensusParams returns a Context with an updated consParams
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
 
-// WithEventManager creates a Context with an updated eventManager
+// WithEventManager returns a Context with an updated eventManager
 func (c Context) WithEventManager(em *EventManager) Context {
 	c.eventManager = em
 	return c

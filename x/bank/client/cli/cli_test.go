@@ -189,9 +189,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
 
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
 	testCases := []struct {
 		name         string
 		from, to     sdk.AccAddress

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -91,7 +90,7 @@ Example:
 $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
 $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --commission
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -105,7 +104,8 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			}
 
 			msgs := []sdk.Msg{types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)}
-			if viper.GetBool(flagCommission) {
+
+			if commission, _ := cmd.Flags().GetBool(flagCommission); commission {
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
@@ -118,6 +118,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			return tx.GenerateOrBroadcastTx(clientCtx, msgs...)
 		},
 	}
+
 	cmd.Flags().Bool(flagCommission, false, "also withdraw validator's commission")
 	return cmd
 }
@@ -132,7 +133,7 @@ func NewWithdrawAllRewardsCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx distribution withdraw-all-rewards --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.NoArgs,
@@ -152,7 +153,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 				return err
 			}
 
-			chunkSize := viper.GetInt(flagMaxMessagesPerTx)
+			chunkSize, _ := cmd.Flags().GetInt(flagMaxMessagesPerTx)
 			return newSplitAndApply(tx.GenerateOrBroadcastTx, clientCtx, msgs, chunkSize)
 		},
 	}
@@ -171,7 +172,7 @@ func NewSetWithdrawAddrCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -206,7 +207,7 @@ func NewFundCommunityPoolCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx distribution fund-community-pool 100uatom --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -253,7 +254,7 @@ Where proposal.json contains:
   "deposit": "1000stake"
 }
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

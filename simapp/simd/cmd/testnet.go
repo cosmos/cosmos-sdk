@@ -1,4 +1,4 @@
-package main
+package cmd
 
 // DONTCOVER
 
@@ -18,6 +18,7 @@ import (
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,10 +44,7 @@ var (
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func testnetCmd(ctx *server.Context, cdc codec.JSONMarshaler,
-	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
-) *cobra.Command {
-
+func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a simapp testnet",
@@ -59,7 +57,11 @@ Example:
 	simd testnet --v 4 --output-dir ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			config := ctx.Config
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.JSONMarshaler
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
 
 			outputDir, _ := cmd.Flags().GetString(flagOutputDir)
 			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
@@ -105,7 +107,6 @@ func InitTestnet(
 		chainID = "chain-" + tmrand.NewRand().Str(6)
 	}
 
-	monikers := make([]string, numValidators)
 	nodeIDs := make([]string, numValidators)
 	valPubKeys := make([]crypto.PubKey, numValidators)
 
@@ -144,7 +145,6 @@ func InitTestnet(
 			return err
 		}
 
-		monikers = append(monikers, nodeDirName)
 		config.Moniker = nodeDirName
 
 		ip, err := getIP(i, startingIPAddress)
@@ -235,7 +235,7 @@ func InitTestnet(
 	}
 
 	err := collectGenFiles(
-		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
+		cdc, config, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -290,7 +290,7 @@ func initGenFiles(
 
 func collectGenFiles(
 	cdc codec.JSONMarshaler, config *tmconfig.Config, chainID string,
-	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
+	nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
 	genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
@@ -302,13 +302,12 @@ func collectGenFiles(
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
 		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
-		moniker := monikers[i]
 		config.Moniker = nodeDirName
 
 		config.SetRoot(nodeDir)
 
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
-		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
+		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
 		genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
 		if err != nil {

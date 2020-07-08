@@ -1,0 +1,52 @@
+syntax = "proto3";
+package cosmos.slashing;
+
+import "cosmos/query/pagination.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/slashing/slashing.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+
+// Query provides defines the gRPC querier service
+service Query {
+	// Params queries the parameters of slashing module
+	rpc Params (QueryParamsRequest) returns (QueryParamsResponse){}
+
+	// SigningInfo queries the signing info of given cons address
+	rpc SigningInfo (QuerySigningInfoRequest) returns (QuerySigningInfoResponse) {}
+
+	// SigningInfos queries signing info of all validators
+	rpc SigningInfos (QuerySigningInfosRequest) returns (QuerySigningInfosResponse) {}
+}
+
+// QueryParamsRequest is the request type for the Query/Parameters RPC method
+message QueryParamsRequest{}
+
+// QueryParamsResponse is the response type for the Query/Parameters RPC method
+message QueryParamsResponse{
+	cosmos.slashing.Params params = 1[(gogoproto.nullable) = false];
+}
+
+// QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC method
+message QuerySigningInfoRequest{
+	// cons_address is the address to query signing info of
+	bytes cons_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress"];
+}
+
+// QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method
+message QuerySigningInfoResponse{
+	// val_signing_info is the signing info of requested val cons address
+	cosmos.slashing.ValidatorSigningInfo val_signing_info = 1[(gogoproto.nullable)= false];
+}
+
+// QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC method
+message QuerySigningInfosRequest{
+	cosmos.query.PageRequest req = 1;
+}
+
+// QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method
+message QuerySigningInfosResponse{
+	// info is the signing info of all validators
+	repeated cosmos.slashing.ValidatorSigningInfo info = 1[(gogoproto.nullable)= false];
+	cosmos.query.PageResponse res =2;
+}

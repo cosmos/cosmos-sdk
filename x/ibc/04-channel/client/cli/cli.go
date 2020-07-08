@@ -19,20 +19,22 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
-		// TODO: Query all channels
+		GetCmdQueryChannels(clientCtx),
 		GetCmdQueryChannel(clientCtx),
-		// TODO: Query channels from a connection
+		GetCmdQueryConnectionChannels(clientCtx),
 		GetCmdQueryChannelClientState(clientCtx),
-		// TODO: Query all packet commitments
-		// TODO: Query unrelayed packet ACKS
-		// TODO: Query unrelayed packet sends
+		GetCmdQueryPacketCommitment(clientCtx),
+		GetCmdQueryPacketCommitments(clientCtx),
+		GetCmdQueryUnrelayedPackets(clientCtx),
+		GetCmdQueryNextSequenceReceive(clientCtx),
+		// TODO: next sequence Send ?
 	)...)
 
 	return ics04ChannelQueryCmd
 }
 
 // NewTxCmd returns a CLI command handler for all x/ibc channel transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	ics04ChannelTxCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC channel transaction subcommands",
@@ -42,12 +44,12 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	ics04ChannelTxCmd.AddCommand(flags.PostCommands(
-		NewChannelOpenInitCmd(clientCtx),
-		NewChannelOpenTryCmd(clientCtx),
-		NewChannelOpenAckCmd(clientCtx),
-		NewChannelOpenConfirmCmd(clientCtx),
-		NewChannelCloseInitCmd(clientCtx),
-		NewChannelCloseConfirmCmd(clientCtx),
+		NewChannelOpenInitCmd(),
+		NewChannelOpenTryCmd(),
+		NewChannelOpenAckCmd(),
+		NewChannelOpenConfirmCmd(),
+		NewChannelCloseInitCmd(),
+		NewChannelCloseConfirmCmd(),
 	)...)
 
 	return ics04ChannelTxCmd

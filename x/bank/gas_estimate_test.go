@@ -2,17 +2,20 @@ package bank_test
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"testing"
 )
 
 func getAccount(t *testing.T, app *simapp.SimApp, addr sdk.AccAddress) *auth.BaseAccount {
@@ -44,7 +47,7 @@ func deliverTxs(t *testing.T, app *simapp.SimApp, txs ...sdk.Tx) []sdk.GasInfo {
 	header := abci.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	var allGas []sdk.GasInfo
+	allGas := make([]sdk.GasInfo, 0, len(txs))
 	for _, tx := range txs {
 		gas, res, err := app.Deliver(tx)
 		require.NoError(t, err)
@@ -95,16 +98,17 @@ func TestSendGasEstimates(t *testing.T) {
 	}
 
 	// run simulation
-	tx := buildTx(200_000, 0)
+	tx := buildTx(200000, 0)
 	simGas := simulatedGas(t, app, tx)
 	fmt.Printf("Sim 0 used: %d\n", simGas)
-	tx2 := buildTx(200_000, 1)
+	tx2 := buildTx(200000, 1)
 	simGas2 := simulatedGas(t, app, tx2)
 	fmt.Printf("Sim 1 used: %d\n", simGas2)
 
 	// let's simulate a second time, to see diff
 	simGas3 := simulatedGas(t, app, tx)
 	fmt.Printf("Re-Sim 0 (no check) used: %d\n", simGas3)
+	assert.Equal(t, simGas, simGas3)
 
 	// let's run some CheckTx and see if they modify the values
 	_, _, err := app.Check(tx)

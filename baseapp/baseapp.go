@@ -487,10 +487,8 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 		return app.deliverState
 	case runTxModeSimulate:
 		return app.simulateState
-	case runTxModeCheck, runTxModeReCheck:
-		return app.checkState
 	default:
-		panic("Unknown mode - not check, deliver, or simulate")
+		return app.checkState
 	}
 }
 

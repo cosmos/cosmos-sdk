@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -115,10 +114,11 @@ documents its respective events under 'xx_events.md'.
 
 Example:
 $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator_reward' --page 1 --limit 30
-`, eventFormat, version.ClientName, flagEvents),
+`, eventFormat, version.AppName, flagEvents),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			eventsStr := strings.Trim(viper.GetString(flagEvents), "'")
+			eventsRaw, _ := cmd.Flags().GetString(flagEvents)
+			eventsStr := strings.Trim(eventsRaw, "'")
 
 			var events []string
 			if strings.Contains(eventsStr, "&") {
@@ -146,8 +146,8 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				tmEvents = append(tmEvents, event)
 			}
 
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			clientCtx := client.NewContext().WithCodec(cdc)
 			txs, err := authclient.QueryTxsByEvents(clientCtx, tmEvents, page, limit, "")
@@ -166,17 +166,11 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
-
 	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
-
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
-
+	cmd.Flags().Int(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
-	cmd.Flags().Uint32(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Uint32(flags.FlagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.MarkFlagRequired(flagEvents)
 
 	return cmd
@@ -205,11 +199,8 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
 	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 
 	return cmd
 }

@@ -3,6 +3,8 @@ package signing_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -31,7 +33,7 @@ func TestVerifySignature(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	types.RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	_ = app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
@@ -41,7 +43,7 @@ func TestVerifySignature(t *testing.T) {
 	acc, err := ante.GetSignerAcc(ctx, app.AccountKeeper, addr)
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr, balances))
 
-	msgs := []sdk.Msg{types.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	signerData := signing.SignerData{
 		ChainID:         chainId,
@@ -65,7 +67,7 @@ func TestVerifySignature(t *testing.T) {
 	pkSet := []crypto.PubKey{pubKey, pubKey1}
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
 	multisignature := multisig.NewMultisig(2)
-	msgs = []sdk.Msg{types.NewTestMsg(addr, addr1)}
+	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}
 	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence,
 		fee, msgs, memo)
 

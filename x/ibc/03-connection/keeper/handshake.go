@@ -54,8 +54,11 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64, // height at which relayer constructs proof of A storing connectionEnd in state
 	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
+	if consensusHeight >= uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidHeight,
+			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+		)
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
@@ -71,7 +74,10 @@ func (k Keeper) ConnOpenTry(
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
-	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
+	version, err := types.PickVersion(counterpartyVersions)
+	if err != nil {
+		return err
+	}
 
 	// connection defines chain B's ConnectionEnd
 	connection := types.NewConnectionEnd(types.UNINITIALIZED, connectionID, clientID, counterparty, []string{version})
@@ -129,8 +135,11 @@ func (k Keeper) ConnOpenAck(
 	consensusHeight uint64, // latest height of chainA that chainB has stored on its chainA client
 ) error {
 	// Check that chainB client hasn't stored invalid height
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
+	if consensusHeight >= uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidHeight,
+			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+		)
 	}
 
 	// Retrieve connection
@@ -147,11 +156,20 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	// Check that ChainB's proposed version is one of chainA's accepted versions
-	if types.LatestVersion(connection.Versions) != version {
+	// Check that ChainB's proposed version number is supported by chainA
+	supportedVersion, found := types.FindSupportedVersion(version, types.GetCompatibleVersions())
+	if !found {
 		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidVersion,
-			"connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version,
+			types.ErrVersionNegotiationFailed,
+			"connection version provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
+		)
+	}
+
+	// Check that ChainB's proposed feature set is supported by chainA
+	if !types.VerifyProposedFeatureSet(version, supportedVersion) {
+		return sdkerrors.Wrapf(
+			types.ErrVersionNegotiationFailed,
+			"connection version feature set provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
 		)
 	}
 

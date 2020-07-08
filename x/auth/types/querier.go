@@ -16,6 +16,6 @@ func NewQueryAccountRequest(addr sdk.AccAddress) *QueryAccountRequest {
 }
 
 // NewQueryParametersRequest creates a new instance of QueryParametersRequest.
-func NewQueryParametersRequest(addr sdk.AccAddress) *QueryParametersRequest {
+func NewQueryParametersRequest() *QueryParametersRequest {
 	return &QueryParametersRequest{}
 }

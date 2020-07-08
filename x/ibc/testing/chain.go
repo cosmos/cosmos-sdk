@@ -44,8 +44,6 @@ const (
 	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
-
-	maxInt = int(^uint(0) >> 1)
 )
 
 var (

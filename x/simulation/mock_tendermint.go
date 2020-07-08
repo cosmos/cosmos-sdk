@@ -21,6 +21,7 @@ type mockValidator struct {
 
 func (mv mockValidator) String() string {
 	return fmt.Sprintf("mockValidator{%s:%X power:%v state:%v}",
+		"key:",
 		mv.val.PubKey,
 		mv.val.Power,
 		mv.livenessState)

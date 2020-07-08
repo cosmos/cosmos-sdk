@@ -10,8 +10,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-const maxInt = int(^uint(0) >> 1)
-
 // Copied unimported test functions from tmtypes to use them here
 func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{

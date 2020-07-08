@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	ed255192 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/sr25519"
@@ -26,24 +27,29 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 		if n != secp256k1.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for secp256k1 public key", n)
 		}
-		var res secp256k1.PubKey
-		copy(res[:], key.Secp256K1)
+
+		res := make(secp256k1.PubKey, secp256k1.PubKeySize)
+		copy(res, key.Secp256K1)
+
 		return res, nil
 	case *types.PublicKey_Ed25519:
 		n := len(key.Ed25519)
 		if n != ed255192.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for ed25519 public key", n)
 		}
-		var res ed255192.PubKey
-		copy(res[:], key.Ed25519)
+
+		res := make(ed25519.PubKey, ed25519.PubKeySize)
+		copy(res, key.Ed25519)
+
 		return res, nil
 	case *types.PublicKey_Sr25519:
 		n := len(key.Sr25519)
 		if n != sr25519.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for sr25519 public key", n)
 		}
-		var res sr25519.PubKey
-		copy(res[:], key.Sr25519)
+
+		res := make(sr25519.PubKey, sr25519.PubKeySize)
+		copy(res, key.Sr25519)
 
 		return res, nil
 	case *types.PublicKey_Multisig:

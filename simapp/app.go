@@ -178,7 +178,7 @@ func NewSimApp(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, authtypes.DefaultTxDecoder(cdc), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxGenerator.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
 	bApp.GRPCQueryRouter().SetAnyUnpacker(interfaceRegistry)

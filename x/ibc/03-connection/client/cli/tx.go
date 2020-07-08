@@ -23,7 +23,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 		Long:  "Initialize a connection on chain A with a given counterparty chain B",
 		Example: fmt.Sprintf(
 			"%s tx %s %s open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,7 +72,7 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			`%s tx %s %s open-try connection-id] [client-id] \
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] \
 [counterparty-versions] [path/to/proof_init.json] [path/tp/proof_consensus.json]`,
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -137,7 +137,7 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 		Long:  "Relay the acceptance of a connection open attempt from chain B to chain A",
 		Example: fmt.Sprintf(
 			"%s tx %s %s open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -192,7 +192,7 @@ func NewConnectionOpenConfirmCmd() *cobra.Command {
 		Long:  "Confirm to chain B that connection is open on chain A",
 		Example: fmt.Sprintf(
 			"%s tx %s %s open-confirm [connection-id] [path/to/proof_ack.json]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

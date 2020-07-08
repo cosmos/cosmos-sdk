@@ -149,6 +149,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   * `NewAnteHandler` and `NewSigVerificationDecorator` both now take a `SignModeHandler` parameter.
   * `SignatureVerificationGasConsumer` now has the signature: `func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error`.
   * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has the `GetSignBytes` method.
+* (client/flags) [\#6632](https://github.com/cosmos/cosmos-sdk/pull/6632) Remove NewCompletionCmd(), the function is now available in tendermint.
 
 ### Features
 

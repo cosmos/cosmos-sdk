@@ -37,7 +37,7 @@ func NewCreateClientCmd() *cobra.Command {
 		Long: `Create a new tendermint IBC client. 
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
   - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, ibctmtypes.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, ibctmtypes.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -132,7 +132,7 @@ func NewUpdateClientCmd() *cobra.Command {
 		Long:  "update existing tendermint client with a tendermint header",
 		Example: fmt.Sprintf(
 			"$ %s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
-			version.ClientName, ibctmtypes.SubModuleName,
+			version.AppName, ibctmtypes.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -176,7 +176,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 		Long:  "submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates",
 		Example: fmt.Sprintf(
 			"$ %s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
-			version.ClientName, ibctmtypes.SubModuleName,
+			version.AppName, ibctmtypes.SubModuleName,
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

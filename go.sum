@@ -88,6 +88,8 @@ github.com/confio/ics23-iavl v0.6.0/go.mod h1:mmXAxD1vWoO0VP8YHu6mM1QHGv71NQqa1i
 github.com/confio/ics23/go v0.0.0-20200323120010-7d9a00f0a2fa/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=
 github.com/confio/ics23/go v0.0.0-20200604202538-6e2c36a74465 h1:tyK54ttJ14HaHaKjB6sQqkZaUSe/LUXKHjfgJNtcj20=
 github.com/confio/ics23/go v0.0.0-20200604202538-6e2c36a74465/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=
+github.com/confio/ics23/go v0.0.0-20200610201322-18c7bd6b2dd3 h1:h/HM69qj1llEyq9N8+2sm6HfWsE7P9SFyl4CM2hyK98=
+github.com/confio/ics23/go v0.0.0-20200610201322-18c7bd6b2dd3/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
@@ -101,6 +103,8 @@ github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d h1:49RLWk1j44Xu4fj
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/iavl v0.13.4-0.20200630095139-5d5829f6ef43 h1:9F2i3WMd+H7a+uYUU+HBXPDXBpqmuZX7xNT76e+Y/FA=
 github.com/cosmos/iavl v0.13.4-0.20200630095139-5d5829f6ef43/go.mod h1:kLaYQsEW6/ViOcBlNjmZ9U/wss3XYDwsdpGxM4Un7Tw=
+github.com/cosmos/iavl v0.13.4-0.20200707181809-b7d621b47bdd h1:3EzgIngaIbDpF7xsnErdBGu4Nfxnl5NyjfipaY1LWBk=
+github.com/cosmos/iavl v0.13.4-0.20200707181809-b7d621b47bdd/go.mod h1:GvLzp3KW60g047+lBWrusM0xq24NigCcx5kjMpP6rvE=
 github.com/cosmos/ledger-cosmos-go v0.11.1 h1:9JIYsGnXP613pb2vPjFeMMjBI5lEDsEaF6oYorTy6J4=
 github.com/cosmos/ledger-cosmos-go v0.11.1/go.mod h1:J8//BsAGTo3OC/vDLjMRFLW6q0WAaXvHnVc7ZmE8iUY=
 github.com/cosmos/ledger-go v0.9.2 h1:Nnao/dLwaVTk1Q5U9THldpUMMXU94BOTWPddSmVB6pI=

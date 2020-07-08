@@ -8,8 +8,8 @@ import (
 )
 
 // NewTxCmd returns the transaction commands for IBC fungible token transfer
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
-	ics20TransferTxCmd := &cobra.Command{
+func NewTxCmd() *cobra.Command {
+	txCmd := &cobra.Command{
 		Use:                        "ibc-transfer",
 		Short:                      "IBC fungible token transfer transaction subcommands",
 		DisableFlagParsing:         true,
@@ -17,9 +17,9 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics20TransferTxCmd.AddCommand(flags.PostCommands(
-		NewTransferTxCmd(clientCtx),
+	txCmd.AddCommand(flags.PostCommands(
+		NewTransferTxCmd(),
 	)...)
 
-	return ics20TransferTxCmd
+	return txCmd
 }

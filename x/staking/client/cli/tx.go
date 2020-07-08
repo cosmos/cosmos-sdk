@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -55,8 +54,7 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.Context{}.
-				WithInput(cmd.InOrStdin())
+			clientCtx.WithInput(cmd.InOrStdin())
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
 
@@ -89,20 +87,26 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := clientCtx.WithInput(cmd.InOrStdin())
 
 			valAddr := clientCtx.GetFromAddress()
+
+			moniker, _ := cmd.Flags().GetString(FlagMoniker)
+			identity, _ := cmd.Flags().GetString(FlagIdentity)
+			website, _ := cmd.Flags().GetString(FlagWebsite)
+			security, _ := cmd.Flags().GetString(FlagSecurityContact)
+			details, _ := cmd.Flags().GetString(FlagDetails)
 			description := types.NewDescription(
-				viper.GetString(FlagMoniker),
-				viper.GetString(FlagIdentity),
-				viper.GetString(FlagWebsite),
-				viper.GetString(FlagSecurityContact),
-				viper.GetString(FlagDetails),
+				moniker,
+				identity,
+				website,
+				security,
+				details,
 			)
 
 			var newRate *sdk.Dec
 
-			commissionRate := viper.GetString(FlagCommissionRate)
+			commissionRate, _ := cmd.Flags().GetString(FlagCommissionRate)
 			if commissionRate != "" {
 				rate, err := sdk.NewDecFromStr(commissionRate)
 				if err != nil {
@@ -114,7 +118,7 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 
 			var newMinSelfDelegation *sdk.Int
 
-			minSelfDelegationString := viper.GetString(FlagMinSelfDelegation)
+			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
 				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
 				if !ok {

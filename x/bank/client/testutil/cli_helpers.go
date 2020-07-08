@@ -47,13 +47,13 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraA
 
 // TxSend is simcli tx send
 func TxSend(f *cli.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from, to, amount, f.Flags())
+	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimdBinary, from, to, amount, f.Flags())
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
 // QueryAccount is simcli query account
 func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) authtypes.BaseAccount {
-	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
+	cmd := fmt.Sprintf("%s query account %s %v", f.SimdBinary, address, f.Flags())
 
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 
@@ -72,7 +72,7 @@ func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) auth
 // QueryBalances executes the bank query balances command for a given address and
 // flag set.
 func QueryBalances(f *cli.Fixtures, address sdk.AccAddress, flags ...string) sdk.Coins {
-	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimcliBinary, address, f.Flags())
+	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimdBinary, address, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 
 	var balances sdk.Coins
@@ -84,7 +84,7 @@ func QueryBalances(f *cli.Fixtures, address sdk.AccAddress, flags ...string) sdk
 
 // QueryTotalSupply returns the total supply of coins
 func QueryTotalSupply(f *cli.Fixtures, flags ...string) (totalSupply sdk.Coins) {
-	cmd := fmt.Sprintf("%s query bank total %s", f.SimcliBinary, f.Flags())
+	cmd := fmt.Sprintf("%s query bank total %s", f.SimdBinary, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 
@@ -95,7 +95,7 @@ func QueryTotalSupply(f *cli.Fixtures, flags ...string) (totalSupply sdk.Coins) 
 
 // QueryTotalSupplyOf returns the total supply of a given coin denom
 func QueryTotalSupplyOf(f *cli.Fixtures, denom string, flags ...string) sdk.Int {
-	cmd := fmt.Sprintf("%s query bank total %s %s", f.SimcliBinary, denom, f.Flags())
+	cmd := fmt.Sprintf("%s query bank total %s %s", f.SimdBinary, denom, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 

@@ -54,8 +54,11 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64, // height at which relayer constructs proof of A storing connectionEnd in state
 	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
+	if consensusHeight >= uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidHeight,
+			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+		)
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
@@ -132,8 +135,11 @@ func (k Keeper) ConnOpenAck(
 	consensusHeight uint64, // latest height of chainA that chainB has stored on its chainA client
 ) error {
 	// Check that chainB client hasn't stored invalid height
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
+	if consensusHeight >= uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidHeight,
+			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+		)
 	}
 
 	// Retrieve connection

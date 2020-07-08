@@ -20,13 +20,14 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	ics03ConnectionQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryConnections(clientCtx),
 		GetCmdQueryConnection(clientCtx),
+		GetCmdQueryClientConnections(clientCtx),
 	)...)
 
 	return ics03ConnectionQueryCmd
 }
 
 // NewTxCmd returns a CLI command handler for all x/ibc connection transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	ics03ConnectionTxCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC connection transaction subcommands",
@@ -36,10 +37,10 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	ics03ConnectionTxCmd.AddCommand(flags.PostCommands(
-		NewConnectionOpenInitCmd(clientCtx),
-		NewConnectionOpenTryCmd(clientCtx),
-		NewConnectionOpenAckCmd(clientCtx),
-		NewConnectionOpenConfirmCmd(clientCtx),
+		NewConnectionOpenInitCmd(),
+		NewConnectionOpenTryCmd(),
+		NewConnectionOpenAckCmd(),
+		NewConnectionOpenConfirmCmd(),
 	)...)
 
 	return ics03ConnectionTxCmd

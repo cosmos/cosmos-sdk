@@ -21,10 +21,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // DONTCOVER
+
+// ServerContextKey defines the context key used to retrieve a server.Context from
+// a command's Context.
+const ServerContextKey = sdk.ContextKey("server.context")
 
 // server context
 type Context struct {
@@ -41,43 +46,62 @@ func NewContext(v *viper.Viper, config *tmcfg.Config, logger log.Logger) *Contex
 	return &Context{v, config, logger}
 }
 
-// PersistentPreRunEFn returns a PersistentPreRunE function for the root daemon
-// application command. The provided context is typically the default context,
-// where the logger and config are set based on the execution of parsing or
-// creating a new Tendermint configuration file (config.toml). The provided
-// viper object must be created at the root level and have all necessary flags,
-// defined by Tendermint, bound to it.
-func PersistentPreRunEFn(ctx *Context) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		rootViper := viper.New()
-		rootViper.BindPFlags(cmd.Flags())
-		rootViper.BindPFlags(cmd.PersistentFlags())
+// InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
+// application command. It will create a Viper literal and a default server
+// Context. The server Tendermint configuration will either be read and parsed
+// or created and saved to disk, where the server Context is updated to reflect
+// the Tendermint configuration. The Viper literal is used to read and parse
+// the application configuration. Command handlers can fetch the server Context
+// to get the Tendermint configuration or to get access to Viper.
+func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
+	rootViper := viper.New()
+	rootViper.BindPFlags(cmd.Flags())
+	rootViper.BindPFlags(cmd.PersistentFlags())
 
-		if cmd.Name() == version.Cmd.Name() {
-			return nil
-		}
-
-		config, err := interceptConfigs(ctx, rootViper)
-		if err != nil {
-			return err
-		}
-
-		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
-		if err != nil {
-			return err
-		}
-
-		if rootViper.GetBool(tmcli.TraceFlag) {
-			logger = log.NewTracingLogger(logger)
-		}
-
-		logger = logger.With("module", "main")
-		ctx.Config = config
-		ctx.Logger = logger
-
-		return nil
+	serverCtx := NewDefaultContext()
+	config, err := interceptConfigs(serverCtx, rootViper)
+	if err != nil {
+		return err
 	}
+
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
+	if err != nil {
+		return err
+	}
+
+	if rootViper.GetBool(tmcli.TraceFlag) {
+		logger = log.NewTracingLogger(logger)
+	}
+
+	serverCtx.Config = config
+	serverCtx.Logger = logger.With("module", "main")
+
+	return SetCmdServerContext(cmd, serverCtx)
+}
+
+// GetServerContextFromCmd returns a Context from a command or an empty Context
+// if it has not been set.
+func GetServerContextFromCmd(cmd *cobra.Command) *Context {
+	if v := cmd.Context().Value(ServerContextKey); v != nil {
+		serverCtxPtr := v.(*Context)
+		return serverCtxPtr
+	}
+
+	return NewDefaultContext()
+}
+
+// SetCmdServerContext sets a command's Context value to the provided argument.
+func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
+	v := cmd.Context().Value(ServerContextKey)
+	if v == nil {
+		return errors.New("server context not set")
+	}
+
+	serverCtxPtr := v.(*Context)
+	*serverCtxPtr = *serverCtx
+
+	return nil
 }
 
 // interceptConfigs parses and updates a Tendermint configuration file or
@@ -139,29 +163,27 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 }
 
 // add server commands
-func AddCommands(ctx *Context, cdc codec.JSONMarshaler, rootCmd *cobra.Command, appCreator AppCreator, appExport AppExporter) {
-	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
-
+func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExporter) {
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
 		Short: "Tendermint subcommands",
 	}
 
 	tendermintCmd.AddCommand(
-		ShowNodeIDCmd(ctx),
-		ShowValidatorCmd(ctx),
-		ShowAddressCmd(ctx),
-		VersionCmd(ctx),
+		ShowNodeIDCmd(),
+		ShowValidatorCmd(),
+		ShowAddressCmd(),
+		VersionCmd(),
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(ctx, cdc, appCreator),
-		UnsafeResetAllCmd(ctx),
+		StartCmd(appCreator),
+		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(ctx, cdc, appExport),
+		ExportCmd(appExport),
 		flags.LineBreak,
-		version.Cmd,
+		version.NewVersionCommand(),
 	)
 }
 

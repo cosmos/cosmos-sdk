@@ -391,6 +391,7 @@ func (k Keeper) AcknowledgePacket(
 		return sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}
 
+	// assert packets acknowledged in order
 	if channel.Ordering == types.ORDERED {
 		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
@@ -406,8 +407,6 @@ func (k Keeper) AcknowledgePacket(
 				"packet sequence ≠ next ack sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceAck,
 			)
 		}
-
-		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck+1)
 	}
 
 	// NOTE: the remaining code is located in the AcknowledgementExecuted function
@@ -423,8 +422,7 @@ func (k Keeper) AcknowledgementExecuted(
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
-	// sanity check
-	_, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
@@ -441,6 +439,21 @@ func (k Keeper) AcknowledgementExecuted(
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	// increment NextSequenceAck
+	if channel.Ordering == types.ORDERED {
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return sdkerrors.Wrapf(
+				types.ErrSequenceAckNotFound,
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+			)
+		}
+
+		nextSequenceAck++
+
+		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck)
+	}
 
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))

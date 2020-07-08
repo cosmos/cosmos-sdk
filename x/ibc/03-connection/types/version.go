@@ -13,7 +13,7 @@ var (
 	// in connection version negotiation. The current version supports only
 	// ORDERED and UNORDERED channels and requires at least one channel type
 	// to be agreed upon.
-	DefaultIBCVersion = CreateVersionString("1", []string{"ORDERED", "UNORDERED"})
+	DefaultIBCVersion = CreateVersionString("1", []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
 
 	// AllowNilFeatureSetMap is a helper map to indicate if a specified version
 	// is allowed to have a nil feature set. Any versions supported, but
@@ -189,6 +189,22 @@ func VerifyProposedVersion(proposedVersion, supportedVersion string, allowNilFea
 	}
 
 	return nil
+}
+
+// VerifySupportedFeature takes in a version string and feature string and returns
+// true if the feature is supported by the version and false otherwise.
+func VerifySupportedFeature(version, feature string) bool {
+	_, featureSet, err := UnpackVersion(version)
+	if err != nil {
+		return false
+	}
+
+	for _, f := range featureSet {
+		if f == feature {
+			return true
+		}
+	}
+	return false
 }
 
 // contains returns true if the provided string element exists within the

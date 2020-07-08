@@ -2,6 +2,7 @@ package ante_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -37,7 +38,7 @@ func TestSetPubKey(t *testing.T) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs[i] = types.NewTestMsg(addr)
+		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
 	fee := types.NewTestStdFee()
@@ -131,7 +132,7 @@ func TestSigVerification(t *testing.T) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs[i] = types.NewTestMsg(addr)
+		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
 	fee := types.NewTestStdFee()
@@ -203,7 +204,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs[i] = types.NewTestMsg(addr)
+		msgs[i] = testdata.NewTestMsg(addr)
 		accNums[i] = uint64(i)
 		seqs[i] = uint64(0)
 	}
@@ -233,7 +234,7 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 	require.NoError(t, acc.SetAccountNumber(uint64(50)))
 	app.AccountKeeper.SetAccount(ctx, acc)
 
-	msgs := []sdk.Msg{types.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	privKeys := []crypto.PrivKey{priv}
 	accNums := []uint64{app.AccountKeeper.GetAccount(ctx, addr).GetAccountNumber()}
 	accSeqs := []uint64{app.AccountKeeper.GetAccount(ctx, addr).GetSequence()}

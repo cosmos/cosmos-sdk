@@ -59,6 +59,22 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
+	if len(connectionEnd.GetVersions()) != 1 {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"single version must be negotiated on connection before opening channel, got: %v",
+			connectionEnd.GetVersions(),
+		)
+	}
+
+	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"connection version %s does not support channel ordering: %s",
+			connectionEnd.GetVersions()[0], order.String(),
+		)
+	}
+
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
@@ -118,6 +134,22 @@ func (k Keeper) ChanOpenTry(
 		return nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
+		)
+	}
+
+	if len(connectionEnd.GetVersions()) != 1 {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"single version must be negotiated on connection before opening channel, got: %v",
+			connectionEnd.GetVersions(),
+		)
+	}
+
+	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"connection version %s does not support channel ordering: %s",
+			connectionEnd.GetVersions()[0], order.String(),
 		)
 	}
 

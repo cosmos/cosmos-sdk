@@ -76,7 +76,6 @@ jobs:
       - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-2:
@@ -114,7 +113,6 @@ jobs:
       - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-3:
@@ -152,7 +150,6 @@ jobs:
       - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-4:
@@ -190,7 +187,6 @@ jobs:
       - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   integration-tests:

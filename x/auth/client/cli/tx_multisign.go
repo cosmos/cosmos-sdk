@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -83,7 +85,10 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), homeDir)
+		if err != nil {
+			return errors.Wrap(err, "error creating tx builder from flags")
+		}
 
 		if !clientCtx.Offline {
 			accnum, seq, err := types.NewAccountRetriever(authclient.Codec).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())

@@ -21,7 +21,7 @@ func TestAccountRetriever(t *testing.T) {
 	mockNodeQuerier := mocks.NewMockNodeQuerier(mockCtrl)
 	accRetr := types.NewAccountRetriever(appCodec)
 	addr := []byte("test")
-	bs, err := appCodec.MarshalJSON(types.NewQueryAccountParams(addr))
+	bs, err := appCodec.MarshalJSON(types.NewQueryAccountRequest(addr))
 	require.NoError(t, err)
 
 	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAccount)

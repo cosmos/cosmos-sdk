@@ -7,9 +7,9 @@ import "cosmos/staking/staking.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
-// Query provides defines the gRPC querier service
+// Query defines the gRPC querier service
 service Query {
-  // Validators queries all validators that match given status
+  // Validators queries all validators that match the given status
   rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {}
 
   // Validator queries validator info for given validator addr
@@ -68,17 +68,17 @@ message QueryValidatorsResponse {
 
 // QueryValidatorRequest is response type for the Query/Validator RPC method
 message QueryValidatorRequest{
-  bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes validator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 }
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 message QueryValidatorResponse{
-  Validator validator = 1[(gogoproto.nullable) = false];
+  Validator validator = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryValidatorDelegationsRequest is request type for the Query/ValidatorDelegations RPC method
 message QueryValidatorDelegationsRequest{
-  bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes validator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 
   cosmos.query.PageRequest req = 2;
 }
@@ -92,111 +92,111 @@ message QueryValidatorDelegationsResponse{
 
 // QueryValidatorUnbondingDelegationsRequest is required type for the Query/ValidatorUnbondingDelegations RPC method
 message QueryValidatorUnbondingDelegationsRequest{
-  bytes validator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes validator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 
   cosmos.query.PageRequest req = 2;
 }
 
 // QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method
 message QueryValidatorUnbondingDelegationsResponse{
-  repeated UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
+  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
-// QueryDelegationRequest is request type for the Query/DelegationQ RPC method
+// QueryDelegationRequest is request type for the Query/Delegation RPC method
 message QueryDelegationRequest{
-  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes delegator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
-  bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes validator_addr = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 }
 
-// QueryDelegationResponse is response type for the Query/DelegationQ RPC method
+// QueryDelegationResponse is response type for the Query/Delegation RPC method
 message QueryDelegationResponse{
-  DelegationResponse delegation_response = 1  [(gogoproto.casttype) = "DelegationResponse"];
+  DelegationResponse delegation_response = 1 [(gogoproto.casttype) = "DelegationResponse"];
 }
 
 // QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method
 message QueryUnbondingDelegationRequest{
-  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes delegator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
-  bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes validator_addr = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 }
 
 // QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method
 message QueryUnbondingDelegationResponse{
-  UnbondingDelegation unbond =1[(gogoproto.nullable) = false];
+  UnbondingDelegation unbond =1 [(gogoproto.nullable) = false];
 }
 
 // QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method
 message QueryDelegatorDelegationsRequest{
-  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes delegator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   cosmos.query.PageRequest req = 2;
 }
 
 // QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method
 message QueryDelegatorDelegationsResponse{
-  repeated DelegationResponse delegation_responses = 1[(gogoproto.nullable) = false];
+  repeated DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
 // QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method
 message QueryDelegatorUnbondingDelegationsRequest{
-  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes delegator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   cosmos.query.PageRequest req = 2;
 }
 // QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method
 message QueryDelegatorUnbondingDelegationsResponse {
-  repeated UnbondingDelegation unbonding_responses = 1[(gogoproto.nullable) = false];
+  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
 // QueryRedelegationsRequest is request type for the Query/Redelegations RPC method
 message QueryRedelegationsRequest{
-  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes delegator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
-  bytes src_validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes src_validator_addr = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 
-  bytes dst_validator_addr = 3[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes dst_validator_addr = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 
   cosmos.query.PageRequest req = 4;
 }
 
 // QueryRedelegationsResponse is response type for the Query/Redelegations RPC method
 message QueryRedelegationsResponse{
-  repeated RedelegationResponse redelegation_responses = 1[(gogoproto.nullable) = false];
+  repeated RedelegationResponse redelegation_responses = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
 // QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method
 message QueryDelegatorValidatorsRequest{
-  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes delegator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   cosmos.query.PageRequest req = 2;
 }
 
 // QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method
 message QueryDelegatorValidatorsResponse{
-  repeated Validator validators = 1[(gogoproto.nullable) = false];
+  repeated Validator validators = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }
 
 // QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method
 message QueryDelegatorValidatorRequest{
-  bytes delegator_addr = 1[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes delegator_addr = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
-  bytes validator_addr = 2[(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes validator_addr = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 }
 
 // QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method
 message QueryDelegatorValidatorResponse{
-  Validator validator = 1[(gogoproto.nullable) = false];
+  Validator validator = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method
@@ -214,7 +214,7 @@ message QueryPoolRequest{ }
 
 // QueryPoolResponse is response type for the Query/Pool RPC method
 message QueryPoolResponse{
-  Pool pool = 1[(gogoproto.nullable) = false];
+  Pool pool = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParametersRequest is request type for the Query/Parameters RPC method
@@ -222,7 +222,7 @@ message QueryParamsRequest{ }
 
 // QueryParametersResponse is response type for the Query/Parameters RPC method
 message QueryParamsResponse{
-  Params params = 1[(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false];
 
   cosmos.query.PageResponse res = 2;
 }

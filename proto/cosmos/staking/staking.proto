@@ -383,9 +383,9 @@ message DelegationResponse {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  Delegation delegation = 1[(gogoproto.nullable) = false];
+  Delegation delegation = 1 [(gogoproto.nullable) = false];
 
-  cosmos.Coin balance = 2[(gogoproto.nullable) = false];
+  cosmos.Coin balance = 2 [(gogoproto.nullable) = false];
 }
 
 // RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
@@ -407,8 +407,8 @@ message RedelegationEntryResponse {
 message RedelegationResponse{
   option (gogoproto.equal) = true;
 
-  Redelegation redelegation = 1[(gogoproto.nullable) = false];
-  repeated RedelegationEntryResponse entries = 2[(gogoproto.nullable) = false];
+  Redelegation redelegation = 1 [(gogoproto.nullable) = false];
+  repeated RedelegationEntryResponse entries = 2 [(gogoproto.nullable) = false];
 }
 
 // Pool - tracking bonded and not-bonded token supply of the bond denomination

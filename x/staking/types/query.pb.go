@@ -446,7 +446,7 @@ func (m *QueryValidatorUnbondingDelegationsResponse) GetRes() *query.PageRespons
 	return nil
 }
 
-// QueryDelegationRequest is request type for the Query/DelegationQ RPC method
+// QueryDelegationRequest is request type for the Query/Delegation RPC method
 type QueryDelegationRequest struct {
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
@@ -499,7 +499,7 @@ func (m *QueryDelegationRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk
 	return nil
 }
 
-// QueryDelegationResponse is response type for the Query/DelegationQ RPC method
+// QueryDelegationResponse is response type for the Query/Delegation RPC method
 type QueryDelegationResponse struct {
 	DelegationResponse *DelegationResponse `protobuf:"bytes,1,opt,name=delegation_response,json=delegationResponse,proto3,casttype=DelegationResponse" json:"delegation_response,omitempty"`
 }
@@ -1568,7 +1568,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Validators queries all validators that match given status
+	// Validators queries all validators that match the given status
 	Validators(ctx context.Context, in *QueryValidatorsRequest, opts ...grpc.CallOption) (*QueryValidatorsResponse, error)
 	// Validator queries validator info for given validator addr
 	Validator(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorResponse, error)
@@ -1734,7 +1734,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Validators queries all validators that match given status
+	// Validators queries all validators that match the given status
 	Validators(context.Context, *QueryValidatorsRequest) (*QueryValidatorsResponse, error)
 	// Validator queries validator info for given validator addr
 	Validator(context.Context, *QueryValidatorRequest) (*QueryValidatorResponse, error)

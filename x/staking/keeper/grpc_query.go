@@ -20,7 +20,7 @@ type Querier struct {
 
 var _ types.QueryServer = Querier{}
 
-// Validators queries all validators that match given status
+// Validators queries all validators that match the given status
 func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest) (*types.QueryValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -35,7 +35,6 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
-
 	res, err := query.FilteredPaginate(valStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		val, err := types.UnmarshalValidator(k.cdc, value)
 		if err != nil {
@@ -86,9 +85,9 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	if req.ValidatorAddr.Empty() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
+	var delegations []types.Delegation
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var delegations []types.Delegation
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.DelegationKey)
 	res, err := query.FilteredPaginate(valStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
@@ -267,7 +266,6 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 
 	store := ctx.KVStore(k.storeKey)
 	unbStore := prefix.NewStore(store, types.GetUBDsKey(req.DelegatorAddr))
-
 	res, err := query.Paginate(unbStore, req.Req, func(key []byte, value []byte) error {
 		unbond, err := types.UnmarshalUBD(k.cdc, value)
 		if err != nil {

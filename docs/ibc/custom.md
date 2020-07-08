@@ -142,6 +142,16 @@ OnChanCloseConfirm(
 }
 ```
 
+#### Channel Handshake Version Negotiation
+
+Application modules are exepcted to verify versioning used during the channel handshake procedure.
+
+* `ChanOpenInit` callback should verify that the `MsgChanOpenInit.Version` is valid
+* `ChanOpenTry` callback should verify that the `MsgChanOpenTry.Version` is valid and that `MsgChanOpenTry.CounterpartyVersion` is valid.
+* `ChanOpenAck` callback should verify that the `MsgChanOpenAck.CounterpartyVersion` is valid and supported.
+
+Versions must be strings but can implement any versioning structure.
+
 ### Bind Ports
 
 Currently, ports must be bound on app initialization. A module may bind to ports in `InitGenesis`

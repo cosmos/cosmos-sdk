@@ -76,7 +76,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			tc.malleate()
 			valsResp, err := queryClient.Validators(gocontext.Background(), req)
 			if tc.expPass {
-				suite.T().Log(valsResp.Validators)
 				suite.NoError(err)
 				suite.NotNil(valsResp)
 				suite.Equal(1, len(valsResp.Validators))
@@ -175,7 +174,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 	queryClient, addrs, vals := suite.queryClient, suite.addrs, suite.vals
-	addrVal1 := vals[1].OperatorAddress
+	addr := addrs[1]
+	addrVal, addrVal1 := vals[0].OperatorAddress, vals[1].OperatorAddress
 	var req *types.QueryDelegatorValidatorRequest
 	testCases := []struct {
 		msg      string
@@ -189,10 +189,19 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 			},
 			false,
 		},
+		{"invalid delegator, validator pair",
+			func() {
+				req = &types.QueryDelegatorValidatorRequest{
+					DelegatorAddr: addr,
+					ValidatorAddr: addrVal,
+				}
+			},
+			false,
+		},
 		{"valid request",
 			func() {
 				req = &types.QueryDelegatorValidatorRequest{
-					DelegatorAddr: addrs[1],
+					DelegatorAddr: addr,
 					ValidatorAddr: addrVal1,
 				}
 			},
@@ -217,7 +226,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
-	addrAcc := addrs[0]
+	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal := vals[0].OperatorAddress
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal)
@@ -232,6 +241,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 		{"empty request",
 			func() {
 				req = &types.QueryDelegationRequest{}
+			},
+			false,
+		},
+		{"invalid validator, delegator pair",
+			func() {
+				req = &types.QueryDelegationRequest{
+					DelegatorAddr: addrAcc1,
+					ValidatorAddr: addrVal,
+				}
 			},
 			false,
 		},
@@ -278,6 +296,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 				req = &types.QueryDelegatorDelegationsRequest{}
 			},
 			false,
+		}, {"invalid request",
+			func() {
+				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrs[4]}
+			},
+			false,
 		},
 		{"valid request",
 			func() {
@@ -309,6 +332,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc := addrs[0]
 	addrVal1 := vals[1].OperatorAddress
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
+	addrVal2 := valAddrs[4]
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
 	suite.True(found)
@@ -322,6 +347,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		{"empty request",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{}
+			},
+			false,
+		},
+		{"invalid validator delegator pair",
+			func() {
+				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal2}
 			},
 			false,
 		},
@@ -376,6 +407,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 			},
 			false,
 		},
+		{"invalid request",
+			func() {
+				req = &types.QueryUnbondingDelegationRequest{}
+			},
+			false,
+		},
 		{"valid request",
 			func() {
 				req = &types.QueryUnbondingDelegationRequest{
@@ -402,7 +439,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
-	addrAcc := addrs[0]
+	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
 
 	unbondingTokens := sdk.TokensFromConsensusPower(2)
@@ -422,6 +459,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 		{"empty request",
 			func() {
 				req = &types.QueryDelegatorUnbondingDelegationsRequest{}
+			},
+			false,
+		},
+		{"invalid request",
+			func() {
+				req = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc1}
 			},
 			false,
 		},

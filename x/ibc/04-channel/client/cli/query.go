@@ -20,7 +20,7 @@ const flagSequences = "sequences"
 
 // GetCmdQueryChannels defines the command to query all the channels ends
 // that this chain mantains.
-func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryChannels() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "channels",
 		Short:   "Query all channels",
@@ -28,6 +28,7 @@ func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s channels", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -60,7 +61,7 @@ func GetCmdQueryChannels(clientCtx client.Context) *cobra.Command {
 }
 
 // GetCmdQueryChannel defines the command to query a channel end
-func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryChannel() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "end [port-id] [channel-id]",
 		Short: "Query a channel end",
@@ -70,6 +71,7 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -94,7 +96,7 @@ func GetCmdQueryChannel(clientCtx client.Context) *cobra.Command {
 
 // GetCmdQueryConnectionChannels defines the command to query all the channels associated with a
 // connection
-func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryConnectionChannels() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "connections [connection-id]",
 		Short:   "Query all channels associated with a connection",
@@ -102,6 +104,7 @@ func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s connections [connection-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -135,7 +138,7 @@ func GetCmdQueryConnectionChannels(clientCtx client.Context) *cobra.Command {
 }
 
 // GetCmdQueryChannelClientState defines the command to query a client state from a channel
-func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryChannelClientState() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "client-state [port-id] [channel-id]",
 		Short:   "Query the client state associated with a channel",
@@ -143,6 +146,7 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query ibc channel client-state [port-id] [channel-id]", version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -165,7 +169,7 @@ func GetCmdQueryChannelClientState(clientCtx client.Context) *cobra.Command {
 
 // GetCmdQueryPacketCommitments defines the command to query all packet commitments associated with
 // a channel
-func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryPacketCommitments() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "packet-commitments [port-id] [channel-id]",
 		Short:   "Query all packet commitments associated with a channel",
@@ -173,6 +177,7 @@ func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s packet-commitments [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -207,7 +212,7 @@ func GetCmdQueryPacketCommitments(clientCtx client.Context) *cobra.Command {
 }
 
 // GetCmdQueryPacketCommitment defines the command to query a channel end
-func GetCmdQueryPacketCommitment(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryPacketCommitment() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "packet-commitment [port-id] [channel-id] [sequence]",
 		Short: "Query a packet commitment",
@@ -217,6 +222,7 @@ func GetCmdQueryPacketCommitment(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -245,7 +251,7 @@ func GetCmdQueryPacketCommitment(clientCtx client.Context) *cobra.Command {
 }
 
 // GetCmdQueryUnrelayedPackets defines the command to query all the unrelayed packets.
-func GetCmdQueryUnrelayedPackets(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryUnrelayedPackets() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unrelayed-packets [port-id] [channel-id]",
 		Short: "Query all the unrelayed packets associated with a channel",
@@ -257,6 +263,7 @@ An unrelayed packet corresponds to:
 		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -303,7 +310,7 @@ An unrelayed packet corresponds to:
 }
 
 // GetCmdQueryNextSequenceReceive defines the command to query a next receive sequence for a given channel
-func GetCmdQueryNextSequenceReceive(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryNextSequenceReceive() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "next-sequence-receive [port-id] [channel-id]",
 		Short: "Query a next receive sequence",
@@ -313,6 +320,7 @@ func GetCmdQueryNextSequenceReceive(clientCtx client.Context) *cobra.Command {
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err

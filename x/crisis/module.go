@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/grpc"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
@@ -64,6 +63,12 @@ func (b AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 
 // GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
+
+// RegisterInterfaceTypes registers interfaces and implementations of the crisis
+// module.
+func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+}
 
 //____________________________________________________________________________
 

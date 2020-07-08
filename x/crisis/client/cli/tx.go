@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -39,8 +41,15 @@ func NewMsgVerifyInvariantTxCmd() *cobra.Command {
 				return err
 			}
 
-			senderAddr := clientCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]
+			if moduleName == "" {
+				return errors.New("invalid module name")
+			}
+			if route == "" {
+				return errors.New("invalid invariant route")
+			}
+
+			senderAddr := clientCtx.GetFromAddress()
 
 			msg := types.NewMsgVerifyInvariant(senderAddr, moduleName, route)
 			if err := msg.ValidateBasic(); err != nil {

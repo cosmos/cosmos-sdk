@@ -8,13 +8,11 @@ import (
 var _ sdk.Msg = &MsgVerifyInvariant{}
 
 // NewMsgVerifyInvariant creates a new MsgVerifyInvariant object
-func NewMsgVerifyInvariant(sender sdk.AccAddress, invariantModuleName,
-	invariantRoute string) *MsgVerifyInvariant {
-
+func NewMsgVerifyInvariant(sender sdk.AccAddress, invModeName, invRoute string) *MsgVerifyInvariant {
 	return &MsgVerifyInvariant{
 		Sender:              sender,
-		InvariantModuleName: invariantModuleName,
-		InvariantRoute:      invariantRoute,
+		InvariantModuleName: invModeName,
+		InvariantRoute:      invRoute,
 	}
 }
 

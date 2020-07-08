@@ -3,6 +3,7 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
@@ -30,6 +31,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	simsim "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // Get flags every time the simulator is run
@@ -175,6 +178,35 @@ func TestAppImportExport(t *testing.T) {
 
 		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
 		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+	}
+}
+
+// Generate a random genesis file and dump it to `gen.json`
+func TestSetupGenesis(t *testing.T) {
+	config, db, _, logger, _, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		db.Close()
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, fauxMerkleModeOpt)
+	require.Equal(t, "SimApp", app.Name())
+	simManager := app.SimulationManager()
+	fn := AppStateFn(app.Codec(), simManager)
+	r := rand.New(rand.NewSource(config.Seed))
+	params := simulation.RandomParams(r)
+	accs := simsim.RandomAccounts(r, params.NumKeys())
+	appState, _, _, _ := fn(r, accs, config)
+	bz, err := app.Codec().MarshalJSON(appState)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile("gen.json", bz, 0666)
+	if err != nil {
+		panic(err)
 	}
 }
 

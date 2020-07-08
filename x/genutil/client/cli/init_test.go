@@ -64,7 +64,7 @@ func TestInitCmd(t *testing.T) {
 
 func setupClientHome(t *testing.T) func() {
 	clientDir, cleanup := tests.NewTestCaseDir(t)
-	viper.Set(flagClientHome, clientDir)
+	viper.Set(cli.HomeFlag, clientDir)
 	return cleanup
 }
 

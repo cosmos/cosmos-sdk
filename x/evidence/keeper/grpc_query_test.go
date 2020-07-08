@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -31,6 +32,12 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Require().NotNil(res.Evidence)
+
+	var evi exported.Evidence
+	err = app.InterfaceRegistry().UnpackAny(res.Evidence, &evi)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(evi)
+	suite.Require().Equal(evi, evidence[0])
 }
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence() {

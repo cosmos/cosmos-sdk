@@ -238,11 +238,6 @@ func (k Keeper) ChanOpenAck(
 		panic("cannot find connection")
 	}
 
-	// verify that chainB's proposed version identifier is supported by chainA
-	if err := connectiontypes.VerifyProposedVersion(channel.Version, counterpartyVersion, nil); err != nil {
-		return err
-	}
-
 	// counterparty of the counterparty channel end (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(

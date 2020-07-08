@@ -13,13 +13,14 @@ var (
 	// in connection version negotiation. The current version supports only
 	// ORDERED and UNORDERED channels and requires at least one channel type
 	// to be agreed upon.
-	DefaultIBCVersion = CreateVersionString("1", []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
+	DefaultIBCVersion           = CreateVersionString(DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
+	DefaultIBCVersionIdentifier = "1"
 
-	// AllowNilFeatureSetMap is a helper map to indicate if a specified version
-	// is allowed to have a nil feature set. Any versions supported, but
-	// not included in the map default to not supporting nil feature sets.
-	AllowNilFeatureSetMap = map[string]bool{
-		DefaultIBCVersion: false,
+	// AllowNilFeatureSet is a helper map to indicate if a specified version
+	// identifier is allowed to have a nil feature set. Any versions supported,
+	// but not included in the map default to not supporting nil feature sets.
+	allowNilFeatureSet = map[string]bool{
+		DefaultIBCVersionIdentifier: false,
 	}
 )
 
@@ -105,7 +106,9 @@ func FindSupportedVersion(version string, supportedVersions []string) (string, b
 // set with the intersection of the features supported by the source and
 // counterparty chains. This function is called in the ConnOpenTry handshake
 // procedure.
-func PickVersion(supportedVersions, counterpartyVersions []string, allowNilFeatureSet map[string]bool) (string, error) {
+func PickVersion(counterpartyVersions []string) (string, error) {
+	supportedVersions := GetCompatibleVersions()
+
 	for _, ver := range supportedVersions {
 		// check if the source version is supported by the counterparty
 		if counterpartyVer, found := FindSupportedVersion(ver, counterpartyVersions); found {
@@ -154,29 +157,22 @@ func GetFeatureSetIntersection(sourceFeatureSet, counterpartyFeatureSet []string
 // empty it verifies that this is allowed for the specified version
 // identifier. It also ensures that the supported version identifier
 // matches the proposed version identifier.
-func VerifyProposedVersion(proposedVersion, supportedVersion string, allowNilFeatureSet map[string]bool) error {
+func VerifyProposedVersion(proposedVersion, supportedVersion string) error {
 	proposedIdentifier, proposedFeatureSet, err := UnpackVersion(proposedVersion)
 	if err != nil {
 		return sdkerrors.Wrap(err, "could not unpack proposed version")
 	}
 
-	if len(proposedFeatureSet) == 0 && allowNilFeatureSet != nil && !allowNilFeatureSet[proposedIdentifier] {
+	if len(proposedFeatureSet) == 0 && !allowNilFeatureSet[proposedIdentifier] {
 		return sdkerrors.Wrapf(
 			ErrVersionNegotiationFailed,
 			"nil feature sets are not supported for version identifier (%s)", proposedIdentifier,
 		)
 	}
 
-	supportedIdentifier, supportedFeatureSet, err := UnpackVersion(supportedVersion)
+	_, supportedFeatureSet, err := UnpackVersion(supportedVersion)
 	if err != nil {
 		return sdkerrors.Wrap(err, "could not unpack supported version")
-	}
-
-	if supportedIdentifier != proposedIdentifier {
-		return sdkerrors.Wrapf(
-			ErrVersionNegotiationFailed,
-			"proposed version identifier by counterparty (%s) does not match supported version identifier (%s)", proposedIdentifier, supportedIdentifier,
-		)
 	}
 
 	for _, proposedFeature := range proposedFeatureSet {

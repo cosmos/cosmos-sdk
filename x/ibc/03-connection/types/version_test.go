@@ -80,7 +80,7 @@ func TestPickVersion(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		version, err := types.PickVersion(types.GetCompatibleVersions(), tc.counterpartyVersions, types.AllowNilFeatureSetMap)
+		version, err := types.PickVersion(tc.counterpartyVersions)
 
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
@@ -106,7 +106,7 @@ func TestVerifyProposedFeatureSet(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		err := types.VerifyProposedVersion(tc.proposedVersion, tc.supportedVersion, types.AllowNilFeatureSetMap)
+		err := types.VerifyProposedVersion(tc.proposedVersion, tc.supportedVersion)
 
 		if tc.expPass {
 			require.NoError(t, err, "test case %d: %s", i, tc.name)

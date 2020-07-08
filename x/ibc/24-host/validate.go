@@ -83,8 +83,9 @@ func PortIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 2, 20)
 }
 
-// VersionValidator is the default validator function for IBC connection and
-// channel versions. A valid version must follow the rules outlined in the
+// VersionValidator is the default validator function for IBC connections and
+// may be used to validate channel versions, but this is not enforced at the
+// TAO level. A valid version must follow the rules outlined in the
 // `IsValidVersion` regex expression.
 func VersionValidator(version string) error {
 	if strings.TrimSpace(version) == "" {

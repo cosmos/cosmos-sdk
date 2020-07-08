@@ -14,7 +14,7 @@ import (
 // - `[`, `]`, `<`, `>`
 var IsValidID = regexp.MustCompile(`^[a-zA-Z0-9\.\_\+\-\#\[\]\<\>]+$`).MatchString
 
-// IsValidnVersion defines the regular expression to check if the string is
+// IsValidVersion defines the regular expression to check if the string is
 // in the form of a tuple consisting of a string identifier and a set of
 // features. The entire version tuple must be enclosed in parentheses. The
 // version identifier must not contain any commas. The set of features must

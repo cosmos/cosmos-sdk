@@ -63,12 +63,17 @@ account key. It implies --signature-only.
 func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		clientCtx := client.Context{}.WithInput(inBuf).WithCodec(cdc)
+
+		home, _ := cmd.Flags().GetString(flags.FlagHome)
+		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), home)
+		if err != nil {
+			return err
+		}
+
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
 		var (
-			err          error
 			multisigAddr sdk.AccAddress
 			infile       = os.Stdin
 		)

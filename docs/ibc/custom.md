@@ -144,7 +144,7 @@ OnChanCloseConfirm(
 
 #### Channel Handshake Version Negotiation
 
-Application modules are exepcted to verify versioning used during the channel handshake procedure.
+Application modules are expected to verify versioning used during the channel handshake procedure.
 
 * `ChanOpenInit` callback should verify that the `MsgChanOpenInit.Version` is valid
 * `ChanOpenTry` callback should verify that the `MsgChanOpenTry.Version` is valid and that `MsgChanOpenTry.CounterpartyVersion` is valid.

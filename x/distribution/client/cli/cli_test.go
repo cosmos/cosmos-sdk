@@ -111,7 +111,7 @@ withdraw_addr_enabled: true`,
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 	val := s.network.Validators[0]
 
-	_, err := s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -181,7 +181,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 	val := s.network.Validators[0]
 
-	_, err := s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -251,7 +251,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 	val := s.network.Validators[0]
 
-	_, err := s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -339,7 +339,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 	addr := val.Address
 	valAddr := sdk.ValAddress(addr)
 
-	_, err := s.network.WaitForHeightWithTimeout(10, time.Minute)
+	_, err := s.network.WaitForHeightWithTimeout(11, time.Minute)
 	s.Require().NoError(err)
 
 	testCases := []struct {

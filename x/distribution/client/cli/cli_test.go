@@ -478,6 +478,26 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
+
+}
+
+func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
+
+}
+
+func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
+
+}
+
+func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
+
+}
+
+func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
+
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

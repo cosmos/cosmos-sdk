@@ -1,18 +1,16 @@
 package cli
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestParseSubmitProposalFlags(t *testing.T) {
-	okJSON, err := ioutil.TempFile("", "proposal")
-	require.Nil(t, err, "unexpected error")
-	_, err = okJSON.WriteString(`
+	okJSON, cleanup1 := testutil.WriteToNewTempFile(t, `
 {
   "title": "Test Proposal",
   "description": "My awesome proposal",
@@ -20,17 +18,16 @@ func TestParseSubmitProposalFlags(t *testing.T) {
   "deposit": "1000test"
 }
 `)
-	require.NoError(t, err)
+	t.Cleanup(cleanup1)
 
-	badJSON, err := ioutil.TempFile("", "proposal")
-	require.Nil(t, err, "unexpected error")
-	badJSON.WriteString("bad json")
+	badJSON, cleanup2 := testutil.WriteToNewTempFile(t, "bad json")
+	t.Cleanup(cleanup2)
 
 	fs := NewCmdSubmitProposal(client.Context{}).Flags()
 
 	// nonexistent json
 	fs.Set(FlagProposal, "fileDoesNotExist")
-	_, err = parseSubmitProposalFlags(fs)
+	_, err := parseSubmitProposalFlags(fs)
 	require.Error(t, err)
 
 	// invalid json

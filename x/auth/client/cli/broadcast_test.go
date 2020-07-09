@@ -19,8 +19,7 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
 
 	cmd := GetBroadcastCommand(clientCtx)
-	cmd.SetOut(ioutil.Discard)
-	cmd.SetErr(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
 
 	require.EqualError(t, cmd.Execute(), "cannot broadcast tx during offline mode")

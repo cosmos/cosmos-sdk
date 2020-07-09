@@ -24,7 +24,7 @@ func Test_runListCmd(t *testing.T) {
 	kbHome2, cleanUp2 := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp2)
 
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn)
 	require.NoError(t, err)
 

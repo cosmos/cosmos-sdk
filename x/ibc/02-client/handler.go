@@ -27,7 +27,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 	case exported.Tendermint:
 		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
 		if !ok {
-			return nil, sdkerrors.Wrap(types.ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
+			return nil, sdkerrors.Wrapf(types.ErrInvalidClientType, "got %T, expected %T", msg, ibctmtypes.MsgCreateClient{})
 		}
 		var err error
 
@@ -41,7 +41,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
-		return nil, sdkerrors.Wrap(types.ErrInvalidClientType, msg.GetClientType())
+		return nil, sdkerrors.Wrapf(types.ErrInvalidClientType, "unsupported client type (%s)", msg.GetClientType())
 	}
 
 	_, err := k.CreateClient(

@@ -26,8 +26,8 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req.Status != "" && !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
 	}
 	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
@@ -41,7 +41,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 			return false, err
 		}
 
-		if !strings.EqualFold(val.GetStatus().String(), req.Status) {
+		if req.Status != "" && !strings.EqualFold(val.GetStatus().String(), req.Status) {
 			return false, nil
 		}
 
@@ -52,7 +52,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	})
 
 	if err != nil {
-		return &types.QueryValidatorsResponse{}, err
+		return nil, err
 	}
 
 	return &types.QueryValidatorsResponse{Validators: validators, Res: res}, nil
@@ -61,11 +61,11 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 // Validator queries validator info for given validator addr
 func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.ValidatorAddr.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	validator, found := k.GetValidator(ctx, req.ValidatorAddr)
@@ -79,11 +79,11 @@ func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) 
 // ValidatorDelegations queries delegate info for given validator
 func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidatorDelegationsRequest) (*types.QueryValidatorDelegationsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.ValidatorAddr.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 	var delegations []types.Delegation
 	ctx := sdk.UnwrapSDKContext(c)
@@ -127,11 +127,11 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator
 func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.QueryValidatorUnbondingDelegationsRequest) (*types.QueryValidatorUnbondingDelegationsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.ValidatorAddr.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "validator address is empty")
 	}
 	var ubds types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
@@ -171,7 +171,7 @@ func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
-			"delegation with delegator %s not found for valiedator %s",
+			"delegation with delegator %s not found for validator %s",
 			req.DelegatorAddr, req.ValidatorAddr)
 	}
 
@@ -299,7 +299,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 // HistoricalInfo queries the historical info for given height
 func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

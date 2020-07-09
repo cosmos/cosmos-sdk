@@ -25,7 +25,7 @@ func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*t
 
 	proposal, found := q.GetProposal(ctx, req.ProposalId)
 	if !found {
-		return &types.QueryProposalResponse{}, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", req.ProposalId)
+		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", req.ProposalId)
 	}
 
 	return &types.QueryProposalResponse{Proposal: proposal}, nil
@@ -33,10 +33,6 @@ func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*t
 
 // Proposals implements the Query/Proposals gRPC method
 func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (*types.QueryProposalsResponse, error) {
-	if req == nil || req.String() == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
-	}
-
 	var filteredProposals types.Proposals
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -78,7 +74,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 	})
 
 	if err != nil {
-		return &types.QueryProposalsResponse{}, err
+		return nil, err
 	}
 
 	return &types.QueryProposalsResponse{Proposals: filteredProposals, Res: res}, nil
@@ -94,7 +90,7 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 
 	vote, found := q.GetVote(ctx, req.ProposalId, req.Voter)
 	if !found {
-		return &types.QueryVoteResponse{}, status.Errorf(codes.InvalidArgument,
+		return nil, status.Errorf(codes.InvalidArgument,
 			fmt.Sprintf("Voter: %v not found for proposal: %v", req.Voter, req.ProposalId))
 	}
 
@@ -125,7 +121,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 	})
 
 	if err != nil {
-		return &types.QueryVotesResponse{}, err
+		return nil, err
 	}
 
 	return &types.QueryVotesResponse{Votes: votes, Res: res}, nil
@@ -167,7 +163,7 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 
 	deposit, found := q.GetDeposit(ctx, req.ProposalId, req.Depositor)
 	if !found {
-		return &types.QueryDepositResponse{}, status.Errorf(codes.InvalidArgument,
+		return nil, status.Errorf(codes.InvalidArgument,
 			fmt.Sprintf("Depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId))
 	}
 
@@ -197,7 +193,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 	})
 
 	if err != nil {
-		return &types.QueryDepositsResponse{}, err
+		return nil, err
 	}
 
 	return &types.QueryDepositsResponse{Deposits: deposits, Res: res}, nil

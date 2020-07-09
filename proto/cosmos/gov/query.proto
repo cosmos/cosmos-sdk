@@ -140,8 +140,6 @@ message QueryDepositsResponse {
 message QueryTallyResultRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
-
-  cosmos.query.PageRequest req = 2;
 }
 
 // QueryTallyResultResponse is the response type for the Query/Tally RPC method

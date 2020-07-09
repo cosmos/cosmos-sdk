@@ -22,7 +22,7 @@ func (k Keeper) ConnOpenInit(
 ) error {
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot initialize connection")
+		return types.ErrConnectionExists
 	}
 
 	// connection defines chain A's ConnectionEnd
@@ -30,7 +30,7 @@ func (k Keeper) ConnOpenInit(
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return sdkerrors.Wrap(err, "cannot initialize connection")
+		return err
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> INIT", connectionID))
@@ -87,14 +87,14 @@ func (k Keeper) ConnOpenTry(
 		ctx, connection, proofHeight, proofInit, counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "connection state verification failed")
 	}
 
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(
 		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "client consensus state verification failed")
 	}
 
 	// If connection already exists for connectionID, ensure that the existing connection's counterparty
@@ -113,11 +113,11 @@ func (k Keeper) ConnOpenTry(
 	// Set connection state to TRYOPEN and store in chainB state
 	connection.State = types.TRYOPEN
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return sdkerrors.Wrap(err, "cannot relay connection attempt")
+		return sdkerrors.Wrap(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
 	}
 
 	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> TRYOPEN ", connectionID))
+	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> TRYOPEN ", connectionID, previousConnection.State))
 	return nil
 }
 
@@ -145,14 +145,14 @@ func (k Keeper) ConnOpenAck(
 	// Retrieve connection
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
+		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
 	}
 
 	// Check connection on ChainA is on correct state: INIT or TRYOPEN
 	if connection.State != types.INIT && connection.State != types.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
-			"connection state is not INIT (got %s)", connection.State.String(),
+			"connection state is not INIT or TRYOPEN (got %s)", connection.State.String(),
 		)
 	}
 
@@ -188,21 +188,21 @@ func (k Keeper) ConnOpenAck(
 		ctx, connection, proofHeight, proofTry, connection.Counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "connection state verification failed")
 	}
 
 	// Ensure that ChainB has stored the correct ConsensusState for chainA at the consensusHeight
 	if err := k.VerifyClientConsensusState(
 		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "client consensus state verification failed")
 	}
 
 	// Update connection state to Open
 	connection.State = types.OPEN
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT -> OPEN ", connectionID))
+	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT|TRYOPEN -> OPEN ", connectionID))
 	return nil
 }
 
@@ -219,7 +219,7 @@ func (k Keeper) ConnOpenConfirm(
 	// Retrieve connection
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
+		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
 	}
 
 	// Check that connection state on ChainB is on state: TRYOPEN
@@ -239,7 +239,7 @@ func (k Keeper) ConnOpenConfirm(
 		ctx, connection, proofHeight, proofAck, connection.Counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "connection state verification failed")
 	}
 
 	// Update ChainB's connection to Open

@@ -2,6 +2,7 @@ package connection
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )

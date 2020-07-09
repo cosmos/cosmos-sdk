@@ -381,7 +381,7 @@ func (k Keeper) AcknowledgePacket(
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, "commitment bytes are not equal: got (%v), expected (%v)", types.CommitPacket(packet), commitment)
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "commitment bytes are not equal: got (%v), expected (%v)", types.CommitPacket(packet), commitment)
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(

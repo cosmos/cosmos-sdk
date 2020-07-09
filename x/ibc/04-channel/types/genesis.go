@@ -130,10 +130,10 @@ func (gs GenesisState) Validate() error {
 
 func validateGenFields(portID, channelID string, sequence uint64) error {
 	if err := host.PortIdentifierValidator(portID); err != nil {
-		return sdkerrors.Wrap(err, "invalid port ID")
+		return fmt.Errorf("invalid port ID: %w", err)
 	}
 	if err := host.ChannelIdentifierValidator(channelID); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+		return fmt.Errorf("invalid channel ID: %w", err)
 	}
 	if sequence == 0 {
 		return errors.New("sequence cannot be 0")

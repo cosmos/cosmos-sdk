@@ -44,7 +44,7 @@ func (k Keeper) ChanOpenInit(
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return nil, sdkerrors.Wrap(types.ErrChannelExists, channelID)
+		return nil, sdkerrors.Wrapf(types.ErrChannelExists, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
@@ -203,7 +203,7 @@ func (k Keeper) ChanOpenAck(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if !(channel.State == types.INIT || channel.State == types.TRYOPEN) {
@@ -214,7 +214,7 @@ func (k Keeper) ChanOpenAck(
 	}
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
@@ -271,7 +271,7 @@ func (k Keeper) ChanOpenConfirm(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if channel.State != types.TRYOPEN {
@@ -343,7 +343,7 @@ func (k Keeper) ChanCloseInit(
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -381,12 +381,12 @@ func (k Keeper) ChanCloseConfirm(
 	proofHeight uint64,
 ) error {
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
-		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)")
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)")
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {

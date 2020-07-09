@@ -81,14 +81,14 @@ func (k Keeper) TimeoutPacket(
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, types.CommitPacket(packet))
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, types.CommitPacket(packet))
 	}
 
 	switch channel.Ordering {
 	case types.ORDERED:
 		// check that packet has not been received
 		if nextSequenceRecv > packet.GetSequence() {
-			return sdkerrors.Wrap(
+			return sdkerrors.Wrapf(
 				types.ErrInvalidPacket,
 				"packet already received, next sequence receive > packet sequence (%d > %d)", nextSequenceRecv, packet.GetSequence(),
 			)
@@ -240,7 +240,7 @@ func (k Keeper) TimeoutOnClose(
 	case types.ORDERED:
 		// check that packet has not been received
 		if nextSequenceRecv > packet.GetSequence() {
-			return sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received, next sequence receive > packet sequence (%d > %d", nextSequenceRecv, packet.GetSequence())
+			return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet already received, next sequence receive > packet sequence (%d > %d", nextSequenceRecv, packet.GetSequence())
 		}
 
 		// check that the recv sequence is as claimed

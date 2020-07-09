@@ -113,7 +113,7 @@ func (k Keeper) ConnOpenTry(
 	// Set connection state to TRYOPEN and store in chainB state
 	connection.State = types.TRYOPEN
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return sdkerrors.Wrap(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
+		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
 	}
 
 	k.SetConnection(ctx, connectionID, connection)

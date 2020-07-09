@@ -27,14 +27,14 @@ func CheckValidityAndUpdateState(
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
+		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState,
 		)
 	}
 
 	tmHeader, ok := header.(types.Header)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
+		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader, "expected type %T, got %T", types.Header{}, header,
 		)
 	}

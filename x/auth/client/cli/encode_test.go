@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -35,7 +35,7 @@ func TestGetCommandEncode(t *testing.T) {
 	JSONEncoded, err := txGen.TxJSONEncoder()(stdTx)
 	require.NoError(t, err)
 
-	txFile, cleanup := tests.WriteToNewTempFile(t, string(JSONEncoded))
+	txFile, cleanup := testutil.WriteToNewTempFile(t, string(JSONEncoded))
 	txFileName := txFile.Name()
 	t.Cleanup(cleanup)
 

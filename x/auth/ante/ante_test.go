@@ -10,8 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -21,7 +19,9 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -86,7 +86,50 @@ func TestSimulateGasCost(t *testing.T) {
 
 	// signers in order. accnums are all 0 because it is in genesis block
 	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	txBuilder.SetSignatures(privs.)
+	var sigsV2 []signing.SignatureV2
+	// TODO Figure out if this is better than using TxFactory or not
+	for i, priv := range privs {
+		sigData := &signing.SingleSignatureData{
+			SignMode:  clientCtx.TxGenerator.SignModeHandler().DefaultMode(),
+			Signature: nil,
+		}
+		sig := signing.SignatureV2{
+			PubKey: priv.PubKey(),
+			Data:   sigData,
+		}
+
+		err = txBuilder.SetSignatures(sig)
+		if err != nil {
+			panic(err)
+		}
+
+		signBytes, err := clientCtx.TxGenerator.SignModeHandler().GetSignBytes(
+			clientCtx.TxGenerator.SignModeHandler().DefaultMode(),
+			authsigning.SignerData{
+				ChainID:         ctx.ChainID(),
+				AccountNumber:   accnums[i],
+				AccountSequence: seqs[i],
+			},
+			txBuilder.GetTx(),
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		sigBytes, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+
+		sigData.Signature = sigBytes
+		sig = signing.SignatureV2{
+			PubKey: priv.PubKey(),
+			Data:   sigData,
+		}
+
+		sigsV2 = append(sigsV2, sig)
+	}
+	txBuilder.SetSignatures(sigsV2...)
 
 	cc, _ := ctx.CacheContext()
 	newCtx, err := anteHandler(cc, tx, true)

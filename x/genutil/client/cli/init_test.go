@@ -21,7 +21,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -42,7 +42,7 @@ func createDefaultTendermintConfig(rootDir string) (*tmcfg.Config, error) {
 }
 
 func TestInitCmd(t *testing.T) {
-	home, cleanup := tests.NewTestCaseDir(t)
+	home, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	logger := log.NewNopLogger()
@@ -63,15 +63,15 @@ func TestInitCmd(t *testing.T) {
 }
 
 func setupClientHome(t *testing.T) func() {
-	clientDir, cleanup := tests.NewTestCaseDir(t)
-	viper.Set(flagClientHome, clientDir)
+	clientDir, cleanup := testutil.NewTestCaseDir(t)
+	viper.Set(cli.HomeFlag, clientDir)
 	return cleanup
 }
 
 func TestEmptyState(t *testing.T) {
 	t.Cleanup(setupClientHome(t))
 
-	home, cleanup := tests.NewTestCaseDir(t)
+	home, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	logger := log.NewNopLogger()
@@ -117,7 +117,7 @@ func TestEmptyState(t *testing.T) {
 }
 
 func TestStartStandAlone(t *testing.T) {
-	home, cleanup := tests.NewTestCaseDir(t)
+	home, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	t.Cleanup(setupClientHome(t))
 
@@ -159,7 +159,7 @@ func TestStartStandAlone(t *testing.T) {
 }
 
 func TestInitNodeValidatorFiles(t *testing.T) {
-	home, cleanup := tests.NewTestCaseDir(t)
+	home, cleanup := testutil.NewTestCaseDir(t)
 	cfg, err := createDefaultTendermintConfig(home)
 	t.Cleanup(cleanup)
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)

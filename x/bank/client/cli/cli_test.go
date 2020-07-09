@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
@@ -20,18 +20,18 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testutil.Config
-	network *testutil.Network
+	cfg     network.Config
+	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testutil.DefaultConfig()
+	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = testutil.NewTestNetwork(s.T(), cfg)
+	s.network = network.New(s.T(), cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		s.Run(tc.name, func() {
 			buf.Reset()
 
-			cmd := cli.GetBalancesCmd(clientCtx)
+			cmd := cli.GetBalancesCmd()
 			cmd.SetErr(buf)
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
@@ -167,7 +167,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 		s.Run(tc.name, func() {
 			buf.Reset()
 
-			cmd := cli.GetCmdQueryTotalSupply(clientCtx)
+			cmd := cli.GetCmdQueryTotalSupply()
 			cmd.SetErr(buf)
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
@@ -188,9 +188,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name         string

@@ -11,8 +11,11 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type IntegrationTestSuite struct {
@@ -26,12 +29,26 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := testutil.DefaultConfig()
+	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+
+	var mintData minttypes.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
+
+	inflation := sdk.MustNewDecFromStr("1.0")
+	mintData.Minter.Inflation = inflation
+	mintData.Params.InflationMin = inflation
+	mintData.Params.InflationMax = inflation
+
+	mintDataBz, err := cfg.Codec.MarshalJSON(mintData)
+	s.Require().NoError(err)
+	genesisState[minttypes.ModuleName] = mintDataBz
+	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
 	s.network = testutil.NewTestNetwork(s.T(), cfg)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -48,149 +65,104 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	cmd := cli.GetCmdQueryParams()
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
-	cmd.SetArgs([]string{})
-
-	expectedJSON := `{"community_tax":"0.020000000000000000","base_proposer_reward":"0.010000000000000000","bonus_proposer_reward":"0.040000000000000000","withdraw_addr_enabled":true}`
-	s.Require().NoError(cmd.ExecuteContext(ctx))
-	s.Require().Equal(expectedJSON, strings.TrimSpace(buf.String()))
-
-	buf.Reset()
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)})
-
-	expectedText := `base_proposer_reward: "0.010000000000000000"
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"default output",
+			[]string{},
+			`{"community_tax":"0.020000000000000000","base_proposer_reward":"0.010000000000000000","bonus_proposer_reward":"0.040000000000000000","withdraw_addr_enabled":true}`,
+		},
+		{
+			"text output",
+			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`base_proposer_reward: "0.010000000000000000"
 bonus_proposer_reward: "0.040000000000000000"
 community_tax: "0.020000000000000000"
-withdraw_addr_enabled: true`
-	s.Require().NoError(cmd.ExecuteContext(ctx))
-	s.Require().Equal(expectedText, strings.TrimSpace(buf.String()))
+withdraw_addr_enabled: true`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			buf.Reset()
+
+			cmd := cli.GetCmdQueryParams()
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(cmd.ExecuteContext(ctx))
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
+	buf := new(bytes.Buffer)
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	s.network.WaitForHeight(3)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			"default output",
+			[]string{
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				sdk.ValAddress(val.Address).String(),
+			},
+			false,
+			`{"rewards":[{"denom":"stake","amount":"232.260000000000000000"}]}`,
+		},
+		{
+			"text output",
+			[]string{
+				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				sdk.ValAddress(val.Address).String(),
+			},
+			false,
+			`rewards:
+- amount: "232.260000000000000000"
+  denom: stake`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			buf.Reset()
+
+			cmd := cli.GetCmdQueryValidatorOutstandingRewards()
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
+			cmd.SetArgs(tc.args)
+
+			err := cmd.ExecuteContext(ctx)
+			if tc.expectErr {
+				s.Require().NoError(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
-
-// import (
-// 	"path/filepath"
-// 	"testing"
-
-// 	"github.com/stretchr/testify/require"
-// 	tmtypes "github.com/tendermint/tendermint/types"
-
-// 	"github.com/cosmos/cosmos-sdk/tests"
-// 	"github.com/cosmos/cosmos-sdk/tests/cli"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	"github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
-// 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-// )
-
-// func TestCLIWithdrawRewards(t *testing.T) {
-// 	t.SkipNow() // TODO: Bring back once viper is refactored.
-// 	t.Parallel()
-// 	f := cli.InitFixtures(t)
-
-// 	genesisState := f.GenesisState()
-// 	inflationMin := sdk.MustNewDecFromStr("1.0")
-// 	var mintData minttypes.GenesisState
-// 	f.Cdc.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData)
-// 	mintData.Minter.Inflation = inflationMin
-// 	mintData.Params.InflationMin = inflationMin
-// 	mintData.Params.InflationMax = sdk.MustNewDecFromStr("1.0")
-// 	mintDataBz, err := f.Cdc.MarshalJSON(mintData)
-// 	require.NoError(t, err)
-// 	genesisState[minttypes.ModuleName] = mintDataBz
-
-// 	genFile := filepath.Join(f.SimdHome, "config", "genesis.json")
-// 	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
-// 	require.NoError(t, err)
-// 	genDoc.AppState, err = f.Cdc.MarshalJSON(genesisState)
-// 	require.NoError(t, genDoc.SaveAs(genFile))
-
-// 	// start simd server
-// 	proc := f.SDStart()
-// 	t.Cleanup(func() { proc.Stop(false) })
-
-// 	params := testutil.QueryParameters(f)
-// 	require.NotEmpty(t, params)
-
-// 	fooAddr := f.KeyAddress(cli.KeyFoo)
-// 	barAddr := f.KeyAddress(cli.KeyBar)
-// 	fooVal := sdk.ValAddress(fooAddr)
-
-// 	outstandingRewards := testutil.QueryValidatorOutstandingRewards(f, fooVal.String())
-// 	require.NotEmpty(t, outstandingRewards)
-// 	require.False(t, outstandingRewards.Rewards.IsZero())
-
-// 	commission := testutil.QueryCommission(f, fooVal.String())
-// 	require.NotEmpty(t, commission)
-// 	require.False(t, commission.Commission.IsZero())
-
-// 	rewards := testutil.QueryRewards(f, fooAddr)
-// 	require.Len(t, rewards.Rewards, 1)
-// 	require.NotEmpty(t, rewards.Total)
-
-// 	// withdrawing rewards of a delegation for a single validator
-// 	success := testutil.TxWithdrawRewards(f, fooVal, fooAddr.String(), "-y")
-// 	require.True(t, success)
-
-// 	rewards = testutil.QueryRewards(f, fooAddr)
-// 	require.Len(t, rewards.Rewards, 1)
-// 	require.Len(t, rewards.Total, 1)
-
-// 	// Setting up a new withdraw address
-// 	success, stdout, stderr := testutil.TxSetWithdrawAddress(f, fooAddr.String(), barAddr.String(), "--generate-only")
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-
-// 	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-// 	require.NotZero(t, msg.Fee.Gas)
-// 	require.Len(t, msg.Msgs, 1)
-// 	require.Len(t, msg.GetSignatures(), 0)
-
-// 	success, _, stderr = testutil.TxSetWithdrawAddress(f, cli.KeyFoo, barAddr.String(), "-y")
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-// 	tests.WaitForNextNBlocksTM(1, f.Port)
-
-// 	// Withdraw all delegation rewards from all validators
-// 	success, stdout, stderr = testutil.TxWithdrawAllRewards(f, fooAddr.String(), "--generate-only")
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-
-// 	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-// 	require.NotZero(t, msg.Fee.Gas)
-// 	require.Len(t, msg.Msgs, 1)
-// 	require.Len(t, msg.GetSignatures(), 0)
-
-// 	success, _, stderr = testutil.TxWithdrawAllRewards(f, cli.KeyFoo, "-y")
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-// 	tests.WaitForNextNBlocksTM(1, f.Port)
-
-// 	newTokens := sdk.NewCoin(cli.Denom, sdk.TokensFromConsensusPower(1))
-
-// 	// Withdraw all delegation rewards from all validators
-// 	success, stdout, stderr = testutil.TxFundCommunityPool(f, fooAddr.String(), newTokens, "--generate-only")
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-
-// 	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-// 	require.NotZero(t, msg.Fee.Gas)
-// 	require.Len(t, msg.Msgs, 1)
-// 	require.Len(t, msg.GetSignatures(), 0)
-
-// 	success, _, stderr = testutil.TxFundCommunityPool(f, cli.KeyFoo, newTokens, "-y")
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-// 	tests.WaitForNextNBlocksTM(1, f.Port)
-
-// 	amount := testutil.QueryCommunityPool(f)
-// 	require.False(t, amount.IsZero())
-
-// 	slashes := testutil.QuerySlashes(f, fooVal.String())
-// 	require.Nil(t, slashes, nil)
-
-// 	f.Cleanup()
-// }

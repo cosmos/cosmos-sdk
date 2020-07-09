@@ -334,6 +334,8 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 		return err
 	}
 
+	// Here, we're first setting a SignatureV2 with nil as signature, this is
+	// to set the SignerInfos.
 	pubKey := key.GetPubKey()
 	sigData := &signing.SingleSignatureData{
 		SignMode:  signMode,
@@ -360,6 +362,7 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 		return err
 	}
 
+	// Actually sign the signBytes now.
 	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
 	if err != nil {
 		return err
@@ -371,6 +374,8 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 		Data:   sigData,
 	}
 
+	// And here the tx is populated with the correct signature in
+	// SingleSignatureData
 	return tx.SetSignatures(sig)
 }
 

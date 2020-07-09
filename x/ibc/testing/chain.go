@@ -17,6 +17,7 @@ import (
 	"github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -200,11 +201,11 @@ func (chain *TestChain) NextBlock() {
 
 // SendMsg delivers a transaction through the application. It updates the senders sequence
 // number and updates the TestChain's headers.
-// TODO: Update SignCheckDeliver to use tx generator
 func (chain *TestChain) SendMsg(msg sdk.Msg) error {
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,
-		chain.App.Codec(),
+		txGen,
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		[]sdk.Msg{msg},

@@ -21,7 +21,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -75,73 +74,50 @@ func TestSimulateGasCost(t *testing.T) {
 	txBuilder := clientCtx.TxGenerator.NewTxBuilder()
 
 	// set up msgs and fee
-	var tx sdk.Tx
 	msg1 := testdata.NewTestMsg(addr1, addr2)
 	msg2 := testdata.NewTestMsg(addr3, addr1)
 	msg3 := testdata.NewTestMsg(addr2, addr3)
-	msgs := []sdk.Msg{msg1, msg2, msg3}
 	txBuilder.SetMsgs(msg1, msg2, msg3)
+
+	// signers in order. seqs are all 0 because it is in genesis block
+	privs, accNums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+
+	// Round 1: tx with 150atom
 	fee := types.NewTestStdFee()
-	txBuilder.SetFeeAmount(fee.Amount)
-
-	// signers in order. accnums are all 0 because it is in genesis block
-	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	var sigsV2 []signing.SignatureV2
-	// TODO Figure out if this is better than using TxFactory or not
-	for i, priv := range privs {
-		sigData := &signing.SingleSignatureData{
-			SignMode:  clientCtx.TxGenerator.SignModeHandler().DefaultMode(),
-			Signature: nil,
-		}
-		sig := signing.SignatureV2{
-			PubKey: priv.PubKey(),
-			Data:   sigData,
-		}
-
-		err = txBuilder.SetSignatures(sig)
-		if err != nil {
-			panic(err)
-		}
-
-		signBytes, err := clientCtx.TxGenerator.SignModeHandler().GetSignBytes(
-			clientCtx.TxGenerator.SignModeHandler().DefaultMode(),
-			authsigning.SignerData{
-				ChainID:         ctx.ChainID(),
-				AccountNumber:   accnums[i],
-				AccountSequence: seqs[i],
-			},
-			txBuilder.GetTx(),
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		sigBytes, err := priv.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-
-		sigData.Signature = sigBytes
-		sig = signing.SignatureV2{
-			PubKey: priv.PubKey(),
-			Data:   sigData,
-		}
-
-		sigsV2 = append(sigsV2, sig)
-	}
+	txBuilder.SetFeeAmount(fee.GetAmount())
+	// Sign
+	sigsV2, err := types.NewTestTx2(ctx, privs, clientCtx.TxGenerator, txBuilder, accNums, seqs)
+	require.NoError(t, err)
 	txBuilder.SetSignatures(sigsV2...)
-
+	// Run ante handler
 	cc, _ := ctx.CacheContext()
-	newCtx, err := anteHandler(cc, tx, true)
+	newCtx, err := anteHandler(cc, txBuilder.GetTx(), true)
 	require.Nil(t, err, "transaction failed on simulate mode")
 
+	// Increment seqs, as we just sent a tx
+	seqs = []uint64{1, 1, 1}
+	// Get the simulated gas
 	simulatedGas := newCtx.GasMeter().GasConsumed()
 	fee.Gas = simulatedGas
 
-	// update tx with simulated gas estimate
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	_, err = anteHandler(ctx, tx, false)
+	// Round 2: update tx with simulated gas estimate, minus 1
+	txBuilder.SetGasLimit(fee.Gas - 100)
+	// Sign
+	sigsV2, err = types.NewTestTx2(newCtx, privs, clientCtx.TxGenerator, txBuilder, accNums, seqs)
+	require.NoError(t, err)
+	txBuilder.SetSignatures(sigsV2...)
+	// Run ante handler
+	newCtx, err = anteHandler(newCtx, txBuilder.GetTx(), false)
+	require.Error(t, err, "transaction failed on simulate mode with gas limit too low")
 
+	// Round 3: update tx with exact simulated gas estimate
+	txBuilder.SetGasLimit(fee.Gas)
+	// Sign
+	sigsV2, err = types.NewTestTx2(newCtx, privs, clientCtx.TxGenerator, txBuilder, accNums, seqs)
+	require.NoError(t, err)
+	txBuilder.SetSignatures(sigsV2...)
+	// Run ante handler
+	_, err = anteHandler(newCtx, txBuilder.GetTx(), false)
 	require.Nil(t, err, "transaction failed with gas estimate")
 }
 

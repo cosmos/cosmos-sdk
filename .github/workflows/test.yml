@@ -73,10 +73,9 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-2:
@@ -111,10 +110,9 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-3:
@@ -149,10 +147,9 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-4:
@@ -187,10 +184,9 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   integration-tests:

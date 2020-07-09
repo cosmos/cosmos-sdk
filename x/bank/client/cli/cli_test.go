@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		s.Run(tc.name, func() {
 			buf.Reset()
 
-			cmd := cli.GetBalancesCmd(clientCtx)
+			cmd := cli.GetBalancesCmd()
 			cmd.SetErr(buf)
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)
@@ -167,7 +167,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 		s.Run(tc.name, func() {
 			buf.Reset()
 
-			cmd := cli.GetCmdQueryTotalSupply(clientCtx)
+			cmd := cli.GetCmdQueryTotalSupply()
 			cmd.SetErr(buf)
 			cmd.SetOut(buf)
 			cmd.SetArgs(tc.args)

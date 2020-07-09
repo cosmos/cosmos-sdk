@@ -172,7 +172,7 @@ func (k Keeper) ChanOpenTry(
 		ctx, connectionEnd, proofHeight, proofInit,
 		counterparty.PortID, counterparty.ChannelID, expectedChannel,
 	); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel state verification failed")
+		return nil, err
 	}
 
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -247,7 +247,7 @@ func (k Keeper) ChanOpenAck(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel state verification failed")
+		return err
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> OPEN", portID, channelID, channel.State))
@@ -314,7 +314,7 @@ func (k Keeper) ChanOpenConfirm(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel state verification failed")
+		return err
 	}
 
 	channel.State = types.OPEN
@@ -422,7 +422,7 @@ func (k Keeper) ChanCloseConfirm(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel state verification failed")
+		return err
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))

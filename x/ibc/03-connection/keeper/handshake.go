@@ -87,14 +87,14 @@ func (k Keeper) ConnOpenTry(
 		ctx, connection, proofHeight, proofInit, counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
-		return sdkerrors.Wrap(err, "connection state verification failed")
+		return err
 	}
 
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(
 		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "client consensus state verification failed")
+		return err
 	}
 
 	// If connection already exists for connectionID, ensure that the existing connection's counterparty
@@ -188,14 +188,14 @@ func (k Keeper) ConnOpenAck(
 		ctx, connection, proofHeight, proofTry, connection.Counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
-		return sdkerrors.Wrap(err, "connection state verification failed")
+		return err
 	}
 
 	// Ensure that ChainB has stored the correct ConsensusState for chainA at the consensusHeight
 	if err := k.VerifyClientConsensusState(
 		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "client consensus state verification failed")
+		return err
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> OPEN ", connectionID, connection.State))
@@ -240,7 +240,7 @@ func (k Keeper) ConnOpenConfirm(
 		ctx, connection, proofHeight, proofAck, connection.Counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
-		return sdkerrors.Wrap(err, "connection state verification failed")
+		return err
 	}
 
 	// Update ChainB's connection to Open

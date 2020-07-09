@@ -1,10 +1,10 @@
 package cli
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/stretchr/testify/require"
 
@@ -64,9 +64,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 func TestParseProposal(t *testing.T) {
 	cdc := codec.New()
-	okJSON, err := ioutil.TempFile("", "proposal")
-	require.Nil(t, err, "unexpected error")
-	_, err = okJSON.WriteString(`
+	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
 {
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
@@ -75,7 +73,7 @@ func TestParseProposal(t *testing.T) {
   "deposit": "1000stake"
 }
 `)
-	require.NoError(t, err)
+	t.Cleanup(cleanup)
 
 	proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, okJSON.Name())
 	require.NoError(t, err)

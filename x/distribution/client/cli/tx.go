@@ -243,7 +243,7 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 }
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
-func GetCmdSubmitProposal(clientCtx client.Context) *cobra.Command {
+func GetCmdSubmitProposal() *cobra.Command {
 	return &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),

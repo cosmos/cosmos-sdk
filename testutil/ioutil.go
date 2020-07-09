@@ -31,7 +31,10 @@ func ApplyMockIO(c *cobra.Command) (*strings.Reader, *bytes.Buffer, *bytes.Buffe
 	return mockIn, mockOut, mockErr
 }
 
-// Write the given string to a new temporary file
+// Write the given string to a new temporary file.
+// Returns an open file and a clean up function that
+// the caller must call to remove the file when it is
+// no longer needed.
 func WriteToNewTempFile(t testing.TB, s string) (*os.File, func()) {
 	fp, err := ioutil.TempFile("", t.Name()+"_")
 	require.Nil(t, err)

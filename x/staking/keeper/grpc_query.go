@@ -324,7 +324,7 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 	store := ctx.KVStore(k.storeKey)
 	switch {
 	case !req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && !req.DstValidatorAddr.Empty():
-		redels, res, err = queryRedelegation(ctx, k, req)
+		redels, err = queryRedelegation(ctx, k, req)
 		if err != nil {
 			return nil, status.Errorf(
 				codes.NotFound,
@@ -339,6 +339,12 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 		return nil, err
 	}
 
+	if len(redels) == 0 {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"redelegation not found for given address %d from %d to %d",
+			req.DelegatorAddr, req.SrcValidatorAddr, req.DstValidatorAddr)
+	}
 	redelResponses, err := RedelegationsToRedelegationResponses(ctx, k.Keeper, redels)
 	if err != nil {
 		return nil, err
@@ -409,17 +415,17 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
 	redel, found := k.GetRedelegation(ctx, req.DelegatorAddr, req.SrcValidatorAddr, req.DstValidatorAddr)
 	if !found {
-		return nil, nil, status.Errorf(
+		return nil, status.Errorf(
 			codes.NotFound,
 			"redelegation not found for delegator address %d from validator address %d",
 			req.DelegatorAddr, req.SrcValidatorAddr)
 	}
 	redels = []types.Redelegation{redel}
 
-	return redels, nil, err
+	return redels, err
 }
 
 func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {

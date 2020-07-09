@@ -565,7 +565,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
-	val1, val2 := vals[0], vals[1]
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
+	val1, val2, val3, val4 := vals[0], vals[1], valAddrs[3], valAddrs[4]
 	delAmount := sdk.TokensFromConsensusPower(1)
 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, sdk.Unbonded, val1, true)
 	suite.NoError(err)
@@ -591,7 +592,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 			},
 			false,
 		},
-		{"query redelegations with delegatoraddr, sourceValAddr, destValAddr",
+		{"request redelegations with non existent pairs",
+			func() {
+				req = &types.QueryRedelegationsRequest{DelegatorAddr: addrAcc, SrcValidatorAddr: val3,
+					DstValidatorAddr: val4}
+			},
+			false,
+		},
+		{"request redelegations with delegatoraddr, sourceValAddr, destValAddr",
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					DelegatorAddr: addrAcc1, SrcValidatorAddr: val1.OperatorAddress,
@@ -599,7 +607,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 			},
 			true,
 		},
-		{"query redelegations with delegatoraddr and sourceValAddr",
+		{"request redelegations with delegatoraddr and sourceValAddr",
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					DelegatorAddr: addrAcc1, SrcValidatorAddr: val1.OperatorAddress,
@@ -629,7 +637,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 				suite.Equal(redel.ValidatorDstAddress, res.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
 				suite.Len(redel.Entries, len(res.RedelegationResponses[0].Entries))
 			} else {
-				suite.Nil(res.RedelegationResponses)
+				suite.Nil(res)
 			}
 		})
 	}

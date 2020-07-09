@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,7 +39,7 @@ func Test_showKeysCmd(t *testing.T) {
 func Test_runShowCmd(t *testing.T) {
 	cmd := ShowKeysCmd()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn, _, _ := testutil.ApplyMockIO(cmd)
 
 	cmd.SetArgs([]string{"invalid"})
 	require.EqualError(t, cmd.Execute(), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
@@ -46,7 +47,7 @@ func Test_runShowCmd(t *testing.T) {
 	cmd.SetArgs([]string{"invalid1", "invalid2"})
 	require.EqualError(t, cmd.Execute(), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
 
-	kbHome, cleanUp := tests.NewTestCaseDir(t)
+	kbHome, cleanUp := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp)
 
 	fakeKeyName1 := "runShowCmd_Key1"

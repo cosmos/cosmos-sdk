@@ -1,14 +1,24 @@
-package tests
+package testutil
 
 import (
 	"bytes"
 	"io/ioutil"
 	"os"
 	"strings"
+	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
+
+// NewTestCaseDir creates a new temporary directory for a test case.
+// Returns the directory path and a cleanup function.
+// nolint: errcheck
+func NewTestCaseDir(t testing.TB) (string, func()) {
+	dir, err := ioutil.TempDir("", t.Name()+"_")
+	require.NoError(t, err)
+	return dir, func() { os.RemoveAll(dir) }
+}
 
 // ApplyMockIO replaces stdin/out/err with buffers that can be used during testing.
 func ApplyMockIO(c *cobra.Command) (*strings.Reader, *bytes.Buffer, *bytes.Buffer) {
@@ -22,8 +32,8 @@ func ApplyMockIO(c *cobra.Command) (*strings.Reader, *bytes.Buffer, *bytes.Buffe
 }
 
 // Write the given string to a new temporary file
-func WriteToNewTempFile(t require.TestingT, s string) (*os.File, func()) {
-	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
+func WriteToNewTempFile(t testing.TB, s string) (*os.File, func()) {
+	fp, err := ioutil.TempFile("", t.Name()+"_")
 	require.Nil(t, err)
 
 	_, err = fp.WriteString(s)
@@ -31,5 +41,3 @@ func WriteToNewTempFile(t require.TestingT, s string) (*os.File, func()) {
 
 	return fp, func() { os.Remove(fp.Name()) }
 }
-
-// DONTCOVER

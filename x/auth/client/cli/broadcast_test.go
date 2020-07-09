@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
@@ -31,7 +31,7 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
 	cmd := GetBroadcastCommand(clientCtx)
 
-	testDir, cleanFunc := tests.NewTestCaseDir(t)
+	testDir, cleanFunc := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanFunc)
 
 	// Create new file with tx

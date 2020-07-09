@@ -10,13 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
 	cmd := DeleteKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn, _, _ := testutil.ApplyMockIO(cmd)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
 	forceF, _ := cmd.Flags().GetBool(flagForce)
@@ -27,7 +28,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 	// Now add a temporary keybase
-	kbHome, cleanUp := tests.NewTestCaseDir(t)
+	kbHome, cleanUp := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp)
 
 	path := sdk.GetConfig().GetFullFundraiserPath()

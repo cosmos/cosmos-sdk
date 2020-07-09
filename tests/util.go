@@ -2,13 +2,9 @@ package tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -113,15 +109,6 @@ func WaitForStart(url string) {
 	}
 	// still haven't started up?! panic!
 	panic(err)
-}
-
-// NewTestCaseDir creates a new temporary directory for a test case.
-// Returns the directory path and a cleanup function.
-// nolint: errcheck
-func NewTestCaseDir(t testing.TB) (string, func()) {
-	dir, err := ioutil.TempDir("", t.Name()+"_")
-	require.NoError(t, err)
-	return dir, func() { os.RemoveAll(dir) }
 }
 
 var cdc = codec.New()

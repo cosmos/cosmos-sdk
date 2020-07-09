@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -17,10 +18,10 @@ import (
 func Test_runExportCmd(t *testing.T) {
 	cmd := ExportKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn, _, _ := testutil.ApplyMockIO(cmd)
 
 	// Now add a temporary keybase
-	kbHome, cleanUp := tests.NewTestCaseDir(t)
+	kbHome, cleanUp := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp)
 
 	// create a key

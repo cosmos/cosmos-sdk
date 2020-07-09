@@ -1,14 +1,14 @@
 /*
-Package testutil implements and exposes a fully operational in-process Tendermint
+Package network implements and exposes a fully operational in-process Tendermint
 test network that consists of at least one or potentially many validators. This
 test network can be used primarily for integration tests or unit test suites.
 
-The testnetwork utilizes SimApp as the ABCI application and uses all the modules
+The test network utilizes SimApp as the ABCI application and uses all the modules
 defined in the Cosmos SDK. An in-process test network can be configured with any
 number of validators as well as account funds and even custom genesis state.
 
 When creating a test network, a series of Validator objects are returned. Each
-Validator object has useful information such as their address and pubkey. A
+Validator object has useful information such as their address and public key. A
 Validator will also provide its RPC, P2P, and API addresses that can be useful
 for integration testing. In addition, a Tendermint local RPC client is also provided
 which can be handy for making direct RPC calls to Tendermint.
@@ -35,7 +35,7 @@ A typical testing flow might look like the following:
 		cfg.NumValidators = 1
 
 		s.cfg = cfg
-		s.network = testutil.NewTestNetwork(s.T(), cfg)
+		s.network = testutil.New(s.T(), cfg)
 
 		_, err := s.network.WaitForHeight(1)
 		s.Require().NoError(err)
@@ -62,4 +62,4 @@ A typical testing flow might look like the following:
 		suite.Run(t, new(IntegrationTestSuite))
 	}
 */
-package testutil
+package network

@@ -94,7 +94,7 @@ func printAndValidateSigs(
 		)
 
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
-			cmd.Println("ERROR: signature does not match its respective signer")
+			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
 		}
 
@@ -117,12 +117,12 @@ func printAndValidateSigs(
 			case *signing.SingleSignatureData:
 				sigBytes, err := signModeHandler.GetSignBytes(data.SignMode, signingData, tx)
 				if err != nil {
-					cmd.Println("ERROR: can't get sign bytes")
+					sigSanity = "ERROR: can't get sign bytes"
 					success = false
 				}
 
 				if ok := pubKey.VerifyBytes(sigBytes, data.Signature); !ok {
-					cmd.Println("ERROR: signature invalid")
+					sigSanity = "ERROR: signature invalid"
 					success = false
 				}
 			case *signing.MultiSignatureData:
@@ -150,16 +150,17 @@ func printAndValidateSigs(
 
 					multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.GetThreshold(), len(pks))
 					multiSigMsg = b.String()
-					cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 				} else {
-					cmd.Println("ERROR: expected multisig pub key")
+					sigSanity = "ERROR: expected multisig pub key"
 					success = false
 				}
 			default:
-				cmd.Println("ERROR: unexpected ModeInfo")
+				sigSanity = "ERROR: unexpected ModeInfo"
 				success = false
 			}
 		}
+
+		cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	cmd.Println("")

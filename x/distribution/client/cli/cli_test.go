@@ -25,7 +25,11 @@ type IntegrationTestSuite struct {
 	network *testnet.Network
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+// SetupTest creates a new network for _each_ integration test. We create a new
+// network for each test because there are some state modifications that are
+// needed to be made in order to make useful queries. However, we don't want
+// these state changes to be present in other tests.
+func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := testnet.DefaultConfig()
@@ -52,7 +56,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+// TearDownTest cleans up the curret test network after _each_ test.
+func (s *IntegrationTestSuite) TearDownTest() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }

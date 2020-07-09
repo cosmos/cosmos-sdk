@@ -23,10 +23,13 @@ var _ types.QueryServer = Querier{}
 // Validators queries all validators that match the given status
 func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest) (*types.QueryValidatorsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Status != "" && !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
+	if req.Status == "" {
+		return nil, status.Error(codes.InvalidArgument, "status cannot be empty")
+	}
+	if !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
 	}
 	var validators types.Validators
@@ -52,7 +55,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryValidatorsResponse{Validators: validators, Res: res}, nil
@@ -105,23 +108,16 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		return true, nil
 	})
 	if err != nil {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"unable to find delegations for validator %d", req.ValidatorAddr)
-	}
-
-	if len(delegations) == 0 {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"unable to find delegations for validator %d", req.ValidatorAddr)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Unable to convert delegations")
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryValidatorDelegationsResponse{DelegationResponses: delResponses, Res: res}, nil
+	return &types.QueryValidatorDelegationsResponse{
+		DelegationResponses: delResponses, Res: res}, nil
 }
 
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator
@@ -131,7 +127,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	}
 
 	if req.ValidatorAddr.Empty() {
-		return nil, status.Error(codes.InvalidArgument, "validator address is empty")
+		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 	var ubds types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
@@ -147,7 +143,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryValidatorUnbondingDelegationsResponse{
@@ -159,11 +155,14 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 // Delegation queries delegate info for given validator delegator pair
 func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest) (*types.QueryDelegationResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.DelegatorAddr.Empty() || req.ValidatorAddr.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	if req.DelegatorAddr.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
+	}
+	if req.ValidatorAddr.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -177,7 +176,7 @@ func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest
 
 	delResponse, err := DelegationToDelegationResponse(ctx, k.Keeper, delegation)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Unable to convert delegations")
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryDelegationResponse{DelegationResponse: &delResponse}, nil
@@ -189,14 +188,20 @@ func (k Querier) UnbondingDelegation(c context.Context, req *types.QueryUnbondin
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.DelegatorAddr.Empty() || req.ValidatorAddr.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	if req.DelegatorAddr.Empty() {
+		return nil, status.Errorf(codes.InvalidArgument, "delegator address cannot be empty")
 	}
+	if req.ValidatorAddr.Empty() {
+		return nil, status.Errorf(codes.InvalidArgument, "validator address cannot be empty")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	unbond, found := k.GetUnbondingDelegation(ctx, req.DelegatorAddr, req.ValidatorAddr)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "unbonding delegation with delegator %s not found for"+
-			"validator %s", req.DelegatorAddr, req.ValidatorAddr)
+		return nil, status.Errorf(
+			codes.NotFound,
+			"unbonding delegation with delegator %s not found for validator %s",
+			req.DelegatorAddr, req.ValidatorAddr)
 	}
 
 	return &types.QueryUnbondingDelegationResponse{Unbond: unbond}, nil
@@ -208,8 +213,8 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.DelegatorAddr == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	if req.DelegatorAddr.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
 	var delegations types.Delegations
 	ctx := sdk.UnwrapSDKContext(c)
@@ -225,17 +230,17 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	if delegations == nil {
 		return nil, status.Errorf(
 			codes.NotFound,
-			"unable to find delegations for address %d", req.DelegatorAddr)
+			"unable to find delegations for address %s", req.DelegatorAddr)
 	}
 	delegationResps, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Res: res}, nil
@@ -245,16 +250,20 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 // DelegatorValidator queries validator info for given delegator validator pair
 func (k Querier) DelegatorValidator(c context.Context, req *types.QueryDelegatorValidatorRequest) (*types.QueryDelegatorValidatorResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.DelegatorAddr == nil || req.ValidatorAddr == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	if req.DelegatorAddr.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
+	if req.ValidatorAddr.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 	validator, err := k.GetDelegatorValidator(ctx, req.DelegatorAddr, req.ValidatorAddr)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryDelegatorValidatorResponse{Validator: validator}, nil
@@ -263,11 +272,11 @@ func (k Querier) DelegatorValidator(c context.Context, req *types.QueryDelegator
 // DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
 func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.QueryDelegatorUnbondingDelegationsRequest) (*types.QueryDelegatorUnbondingDelegationsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.DelegatorAddr == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid request")
+	if req.DelegatorAddr.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
 	var unbondingDelegations types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
@@ -283,17 +292,11 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 		return nil
 	})
 	if err != nil {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"unable to find delegations for address %d due to error %v", req.DelegatorAddr, err)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if len(unbondingDelegations) == 0 {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"delegations for address %d don't exist", req.DelegatorAddr)
-	}
-	return &types.QueryDelegatorUnbondingDelegationsResponse{UnbondingResponses: unbondingDelegations, Res: res}, nil
+	return &types.QueryDelegatorUnbondingDelegationsResponse{
+		UnbondingResponses: unbondingDelegations, Res: res}, nil
 }
 
 // HistoricalInfo queries the historical info for given height
@@ -302,10 +305,13 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.Height < 0 {
+		return nil, status.Error(codes.InvalidArgument, "height cannot be negative")
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 	hi, found := k.GetHistoricalInfo(ctx, req.Height)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "historical info not found")
+		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)
 	}
 
 	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
@@ -313,7 +319,7 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 
 func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	var redels types.Redelegations
@@ -325,29 +331,17 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 	switch {
 	case !req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && !req.DstValidatorAddr.Empty():
 		redels, err = queryRedelegation(ctx, k, req)
-		if err != nil {
-			return nil, status.Errorf(
-				codes.NotFound,
-				"redelegation not found for delegator address %d", req.DelegatorAddr)
-		}
 	case req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && req.DstValidatorAddr.Empty():
 		redels, res, err = queryRedelegationsFromSrcValidator(store, k, req)
 	default:
 		redels, res, err = queryAllRedelegations(store, k, req)
 	}
 	if err != nil {
-		return nil, err
-	}
-
-	if len(redels) == 0 {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"redelegation not found for given address %d from %d to %d",
-			req.DelegatorAddr, req.SrcValidatorAddr, req.DstValidatorAddr)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	redelResponses, err := RedelegationsToRedelegationResponses(ctx, k.Keeper, redels)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryRedelegationsResponse{RedelegationResponses: redelResponses, Res: res}, nil
@@ -355,11 +349,11 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 
 func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.DelegatorAddr.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
 	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
@@ -382,7 +376,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Res: res}, nil
@@ -394,10 +388,6 @@ func (k Querier) Pool(c context.Context, _ *types.QueryPoolRequest) (*types.Quer
 	bondDenom := k.BondDenom(ctx)
 	bondedPool := k.GetBondedPool(ctx)
 	notBondedPool := k.GetNotBondedPool(ctx)
-
-	if bondedPool == nil || notBondedPool == nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "pool accounts haven't been set")
-	}
 
 	pool := types.NewPool(
 		k.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount,
@@ -420,7 +410,7 @@ func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegations
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
-			"redelegation not found for delegator address %d from validator address %d",
+			"redelegation not found for delegator address %s from validator address %s",
 			req.DelegatorAddr, req.SrcValidatorAddr)
 	}
 	redels = []types.Redelegation{redel}

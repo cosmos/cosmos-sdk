@@ -63,6 +63,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			},
 			false,
 		},
+		{
+			"invalid request",
+			func() {
+				req = &types.QueryValidatorsRequest{Status: "test"}
+			},
+			false,
+		},
 		{"valid request",
 			func() {
 				req = &types.QueryValidatorsRequest{Status: sdk.Bonded.String(),
@@ -343,17 +350,20 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		msg      string
 		malleate func()
 		expPass  bool
+		expErr   bool
 	}{
 		{"empty request",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{}
 			},
 			false,
+			true,
 		},
 		{"invalid validator delegator pair",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal2}
 			},
+			false,
 			false,
 		},
 		{"valid request",
@@ -362,6 +372,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 					Req: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
+			false,
 		},
 	}
 
@@ -369,13 +380,16 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.ValidatorDelegations(gocontext.Background(), req)
-			if tc.expPass {
+			if tc.expPass && !tc.expErr {
 				suite.NoError(err)
 				suite.Len(res.DelegationResponses, 1)
 				suite.NotNil(res.Res.NextKey)
 				suite.Equal(uint64(2), res.Res.Total)
 				suite.Equal(addrVal1, res.DelegationResponses[0].Delegation.ValidatorAddress)
 				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
+			} else if !tc.expPass && !tc.expErr {
+				suite.NoError(err)
+				suite.Nil(res.DelegationResponses)
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -455,17 +469,20 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 		msg      string
 		malleate func()
 		expPass  bool
+		expErr   bool
 	}{
 		{"empty request",
 			func() {
 				req = &types.QueryDelegatorUnbondingDelegationsRequest{}
 			},
 			false,
+			true,
 		},
 		{"invalid request",
 			func() {
 				req = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc1}
 			},
+			false,
 			false,
 		},
 		{"valid request",
@@ -474,6 +491,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 					Req: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
+			false,
 		},
 	}
 
@@ -481,12 +499,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), req)
-			if tc.expPass {
+			if tc.expPass && !tc.expErr {
 				suite.NoError(err)
 				suite.NotNil(res.Res.NextKey)
 				suite.Equal(uint64(2), res.Res.Total)
 				suite.Len(res.UnbondingResponses, 1)
 				suite.Equal(unbond, res.UnbondingResponses[0])
+			} else if !tc.expPass && !tc.expErr {
+				suite.NoError(err)
+				suite.Nil(res.UnbondingResponses)
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -585,11 +606,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 		msg      string
 		malleate func()
 		expPass  bool
+		expErr   bool
 	}{
 		{"request redelegations for non existant addr",
 			func() {
 				req = &types.QueryRedelegationsRequest{DelegatorAddr: addrAcc}
 			},
+			false,
 			false,
 		},
 		{"request redelegations with non existent pairs",
@@ -598,6 +621,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 					DstValidatorAddr: val4}
 			},
 			false,
+			true,
 		},
 		{"request redelegations with delegatoraddr, sourceValAddr, destValAddr",
 			func() {
@@ -606,6 +630,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 					DstValidatorAddr: val2.OperatorAddress, Req: &query.PageRequest{}}
 			},
 			true,
+			false,
 		},
 		{"request redelegations with delegatoraddr and sourceValAddr",
 			func() {
@@ -614,6 +639,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 					Req: &query.PageRequest{}}
 			},
 			true,
+			false,
 		},
 		{"query redelegations with sourceValAddr only",
 			func() {
@@ -622,6 +648,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 					Req:              &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
+			false,
 		},
 	}
 
@@ -629,14 +656,18 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.Redelegations(gocontext.Background(), req)
-			if tc.expPass {
+			if tc.expPass && !tc.expErr {
 				suite.NoError(err)
 				suite.Len(res.RedelegationResponses, len(redel.Entries))
 				suite.Equal(redel.DelegatorAddress, res.RedelegationResponses[0].Redelegation.DelegatorAddress)
 				suite.Equal(redel.ValidatorSrcAddress, res.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
 				suite.Equal(redel.ValidatorDstAddress, res.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
 				suite.Len(redel.Entries, len(res.RedelegationResponses[0].Entries))
+			} else if !tc.expPass && !tc.expErr {
+				suite.NoError(err)
+				suite.Nil(res.RedelegationResponses)
 			} else {
+				suite.Error(err)
 				suite.Nil(res)
 			}
 		})

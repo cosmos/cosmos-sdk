@@ -148,10 +148,7 @@ func printAndValidateSigs(
 						}
 					}
 
-					thresholdPk, ok := multiPK.(multisig.ThresholdPubKey)
-					if ok {
-						multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", thresholdPk.GetThreshold(), len(pks))
-					}
+					multiSigHeader = fmt.Sprintf(" [multisig threshold: %d/%d]", multiPK.GetThreshold(), len(pks))
 					multiSigMsg = b.String()
 					cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 				} else {

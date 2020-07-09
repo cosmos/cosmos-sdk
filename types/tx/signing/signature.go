@@ -15,7 +15,3 @@ type SignatureV2 struct {
 	// the signatures themselves for either single or multi-signatures.
 	Data SignatureData
 }
-
-type HasSignaturesV2 interface {
-	GetSignaturesV2() ([]SignatureV2, error)
-}

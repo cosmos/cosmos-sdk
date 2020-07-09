@@ -17,10 +17,8 @@ type PubKey interface {
 
 	// GetPubKeys returns the crypto.PubKey's nested within the multi-sig PubKey
 	GetPubKeys() []crypto.PubKey
-}
 
-type ThresholdPubKey interface {
-	PubKey
+	// GetThreshold returns the threshold number of signatures that must be obtained to verify a signature.
 	GetThreshold() uint
 }
 

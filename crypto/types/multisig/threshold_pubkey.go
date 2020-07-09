@@ -14,7 +14,7 @@ type PubKeyMultisigThreshold struct {
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 
-var _ ThresholdPubKey = PubKeyMultisigThreshold{}
+var _ PubKey = PubKeyMultisigThreshold{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
@@ -155,6 +155,7 @@ func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
 	return true
 }
 
+// GetThreshold implements the PubKey.GetThreshold method
 func (pk PubKeyMultisigThreshold) GetThreshold() uint {
 	return pk.K
 }

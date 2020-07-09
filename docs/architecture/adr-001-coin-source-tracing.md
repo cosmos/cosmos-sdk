@@ -11,12 +11,12 @@ Proposed
 ## Context
 
 The specification for IBC cross-chain fungible token transfers
-([ICS20]((https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer)), needs to
+([ICS20](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer)), needs to
 be aware of the origin any token denomination in order to relay a `Packet` which contains the sender
 and recipient addressed in the
 [`FungibleTokenPacketData`](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures).
 
-The Packet relay, works as follows (per
+The Packet relay works as follows (per
 [specification](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay)):
 
 > - When acting as the **source** zone, the bridge module escrows an existing local asset
@@ -57,11 +57,11 @@ validation on the receiving chain.
 
 2. The existence of special characters and upercase letters on the denomination:
 
-In the SDK everytime a Coin is initialized trhough the constructor function `NewCoin`, a validation
+In the SDK everytime a `Coin` is initialized trhough the constructor function `NewCoin`, a validation
 of a coin's denom is performed according to a
 [Regex](https://github.com/cosmos/cosmos-sdk/blob/a940214a4923a3bf9a9161cd14bd3072299cd0c9/types/coin.go#L583),
-where only lowercase alphanumeric characters are accepted. While this is deriable for native denoms
-to keep a clean UX, it supposes a challenge for IBC as ports and channels maight be randomly
+where only lowercase alphanumeric characters are accepted. While this is desirable for native denoms
+to keep a clean UX, it supposes a challenge for IBC as ports and channels might be randomly
 generated with special carracters and uppercases as per the [ICS 024 - Host
 Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements#paths-identifiers-separators)
 specification.
@@ -70,7 +70,9 @@ specification.
 
 Introduce a new `Trace` field to the SDK's `Coin` type so that the two problems are mitigated.
 
-```proto
+<!-- TODO: change field to metadata -->
+
+```protobuf
 // Coin defines a token with a denomination and an amount.
 //
 // NOTE: The amount field is an Int which implements the custom method
@@ -150,16 +152,25 @@ func (coin *Coin) PopTrace() (Trace, error) {
   }
 ```
 
+<!-- TODO: updates to ICS20 -->
+
 ### Positive
 
 - Clearer separation of the origin tracing behaviour of the token (transfer prefix) from the original
-  `Coin` denomination.
-- Prevents clients from having to strip the denomination.
-- Cleaner `Coin` denominations.
+  `Coin` denomination
+- Consistent validation of `Coin` fields
+- Prevents clients from having to strip the denomination
+- Cleaner `Coin` denominations for IBC instead of prefixed ones
 
 ### Negative
 
+- `Coin` metadata size is not bounded, which might result in a significant increase of the size per
+  `Coin` compared with the current implementation.
+
 ### Neutral
+
+- Additional field to the `Coin` type
+- Slight difference with the ICS20 spec
 
 ## References
 

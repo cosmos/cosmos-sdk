@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func Test_RunMnemonicCmdNormal(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	require.Equal(t, "EOF", err.Error())
 
 	// Try again
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn, _, _ := testutil.ApplyMockIO(cmd)
 	mockIn.Reset("Hi!\n")
 	err = cmd.Execute()
 	require.Error(t, err)

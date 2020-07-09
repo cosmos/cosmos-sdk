@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestNewInfo(t *testing.T) {
@@ -40,7 +40,7 @@ go version go1.14 linux/amd64`
 
 func Test_runVersionCmd(t *testing.T) {
 	cmd := NewVersionCommand()
-	_, mockOut, _ := tests.ApplyMockIO(cmd)
+	_, mockOut, _ := testutil.ApplyMockIO(cmd)
 
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=''", cli.OutputFlag),

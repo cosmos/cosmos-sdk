@@ -10,7 +10,7 @@ import (
 
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,16 +30,16 @@ func TestPublicKeyUnsafe(t *testing.T) {
 
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
 		fmt.Sprintf("%x", priv.PubKey().Bytes()),
-		"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
-		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+		pubKeyAddr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	addr := sdk.AccAddress(priv.PubKey().Address()).String()
 	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
-		addr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+		addr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 }
 
 func TestPublicKeyUnsafeHDPath(t *testing.T) {
@@ -78,7 +78,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedAnswers[i], pubKeyAddr,
-			"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Store and restore
 		serializedPk := priv.Bytes()
@@ -108,15 +108,15 @@ func TestPublicKeySafe(t *testing.T) {
 
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
 		fmt.Sprintf("%x", priv.PubKey().Bytes()),
-		"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
-		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+		pubKeyAddr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
-		addr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+		addr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	addr2 := sdk.AccAddress(priv.PubKey().Address()).String()
 	require.Equal(t, addr, addr2)
@@ -167,7 +167,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.Equal(t, addr2, addr)
 		require.Equal(t,
 			expectedAddrs[i], addr,
-			"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Check other methods
 		require.NoError(t, priv.(PrivKeyLedgerSecp256k1).ValidateKey())
@@ -178,7 +178,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedPubKeys[i], pubKeyAddr,
-			"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Store and restore
 		serializedPk := priv.Bytes()
@@ -220,7 +220,7 @@ func TestSignaturesHD(t *testing.T) {
 		require.Nil(t, err)
 
 		valid := pub.VerifyBytes(msg, sig)
-		require.True(t, valid, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
+		require.True(t, valid, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 	}
 }
 

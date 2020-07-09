@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -59,9 +58,11 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
-	buf := new(bytes.Buffer)
+	cmd := flags.GetCommands(cli.GetCmdQueryParams())[0]
+	_, out, _ := testutil.ApplyMockIO(cmd)
+
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
+	clientCtx := val.ClientCtx.WithOutput(out)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -90,23 +91,21 @@ withdraw_addr_enabled: true`,
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
-			cmd := cli.GetCmdQueryParams()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(cmd.ExecuteContext(ctx))
-			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
-	buf := new(bytes.Buffer)
+	cmd := flags.GetCommands(cli.GetCmdQueryValidatorOutstandingRewards())[0]
+	_, out, _ := testutil.ApplyMockIO(cmd)
+
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
+	clientCtx := val.ClientCtx.WithOutput(out)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -155,11 +154,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
-			cmd := cli.GetCmdQueryValidatorOutstandingRewards()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -167,16 +162,18 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 			}
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
-	buf := new(bytes.Buffer)
+	cmd := flags.GetCommands(cli.GetCmdQueryValidatorCommission())[0]
+	_, out, _ := testutil.ApplyMockIO(cmd)
+
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
+	clientCtx := val.ClientCtx.WithOutput(out)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -225,11 +222,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
-			cmd := cli.GetCmdQueryValidatorCommission()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -237,16 +230,18 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 			}
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
-	buf := new(bytes.Buffer)
+	cmd := flags.GetCommands(cli.GetCmdQueryValidatorSlashes())[0]
+	_, out, _ := testutil.ApplyMockIO(cmd)
+
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
+	clientCtx := val.ClientCtx.WithOutput(out)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -311,11 +306,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
-			cmd := cli.GetCmdQueryValidatorSlashes()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -323,7 +314,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 			}
 		})
 	}

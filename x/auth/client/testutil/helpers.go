@@ -33,7 +33,8 @@ func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string) 
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--from=%s", from.String()),
-		fmt.Sprintf("--%s=%s", flags.FlagHome, strings.Replace(clientCtx.HomeDir, "simd", "simcli", 0)),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, strings.Replace(clientCtx.HomeDir, "simd", "simcli", 1)),
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
 		filename,
 	}
 
@@ -63,6 +64,32 @@ func TxBroadcast(f *cli.Fixtures, fileName string, flags ...string) (bool, strin
 func TxEncode(f *cli.Fixtures, fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimdBinary, f.Flags(), fileName)
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+func TxValidateSignaturesExec(clientCtx client.Context, filename string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	clientCtx = clientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := cli2.GetValidateSignaturesCommand(clientCtx)
+	cmd.SetErr(buf)
+	cmd.SetOut(buf)
+
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
+		filename,
+	}
+
+	cmd.SetArgs(args)
+
+	if err := cmd.ExecuteContext(ctx); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 // TxValidateSignatures is simcli tx validate-signatures

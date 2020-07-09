@@ -68,65 +68,28 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	unsignedTx, cleanup := tests.WriteToNewTempFile(s.T(), string(res))
 	defer cleanup()
 
-	exec, err := authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
+	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
 	s.Require().NoError(err)
 
-	fmt.Printf("%s", exec)
-}
+	var signedTx types.StdTx
+	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &signedTx)
+	s.Require().NoError(err)
 
-func TestCLIValidateSignatures(t *testing.T) {
-	t.SkipNow()
-	t.Parallel()
-	f := cli.InitFixtures(t)
+	signedTxFile, cleanup := tests.WriteToNewTempFile(s.T(), string(res))
+	defer cleanup()
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
 
-	f.ValidateGenesis()
+	signedTx.Memo = "MODIFIED STD TX"
+	bz, err := val.ClientCtx.JSONMarshaler.MarshalJSON(signedTx)
+	s.Require().NoError(err)
 
-	fooAddr := f.KeyAddress(cli.KeyFoo)
-	barAddr := f.KeyAddress(cli.KeyBar)
+	modifiedTxFile, cleanup := tests.WriteToNewTempFile(s.T(), string(bz))
+	defer cleanup()
 
-	// generate sendTx with default gas
-	success, stdout, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewInt64Coin("stake", 10), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-
-	// write  unsigned tx to file
-	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// validate we can successfully sign
-	success, stdout, _ = authtest.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
-	require.True(t, success)
-
-	stdTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-
-	require.Equal(t, len(stdTx.Msgs), 1)
-	require.Equal(t, 1, len(stdTx.GetSignatures()))
-	require.Equal(t, fooAddr.String(), stdTx.GetSigners()[0].String())
-
-	// write signed tx to file
-	signedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// validate signatures
-	success, _, _ = authtest.TxValidateSignatures(f, signedTxFile.Name())
-	require.True(t, success)
-
-	// modify the transaction
-	stdTx.Memo = "MODIFIED-ORIGINAL-TX-BAD"
-	bz := cli.MarshalStdTx(t, f.Cdc, stdTx)
-	modSignedTxFile, cleanup := tests.WriteToNewTempFile(t, string(bz))
-	t.Cleanup(cleanup)
-
-	// validate signature validation failure due to different transaction sig bytes
-	success, _, _ = authtest.TxValidateSignatures(f, modSignedTxFile.Name())
-	require.False(t, success)
-
-	// Cleanup testing directories
-	f.Cleanup()
+	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
+	s.Require().EqualError(err, "signatures validation failed")
 }
 
 func TestCLISignBatch(t *testing.T) {

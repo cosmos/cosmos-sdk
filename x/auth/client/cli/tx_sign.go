@@ -190,6 +190,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
+	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd = flags.PostCommands(cmd)[0]
 	cmd.MarkFlagRequired(flags.FlagFrom)
 
@@ -218,8 +219,6 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 		}
 		stdTx := tx.(types.StdTx)
 
-		fmt.Printf("FROOOOOOM %s\n", viper.GetString(flags.FlagFrom))
-
 		// if --signature-only is on, then override --append
 		var newTx types.StdTx
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
@@ -245,14 +244,14 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 			return err
 		}
 
-		json, err := getSignatureJSON(clientCtx.Codec, newTx, generateSignatureOnly)
+		json, err := getSignatureJSON(clientCtx.JSONMarshaler, newTx, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
 
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 		if outputDoc == "" {
-			fmt.Printf("%s\n", json)
+			cmd.Printf("%s\n", json)
 			return nil
 		}
 
@@ -267,7 +266,7 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 	}
 }
 
-func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, generateSignatureOnly bool) ([]byte, error) {
 	if generateSignatureOnly {
 		return cdc.MarshalJSON(newTx.Signatures[0])
 	}

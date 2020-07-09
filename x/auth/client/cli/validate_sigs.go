@@ -32,6 +32,8 @@ transaction will be not be performed as that will require RPC communication with
 		Args:   cobra.ExactArgs(1),
 	}
 
+	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
+
 	return flags.PostCommands(cmd)[0]
 }
 
@@ -89,7 +91,7 @@ func printAndValidateSigs(
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			acc, err := types.NewAccountRetriever(authclient.Codec).GetAccount(clientCtx, sigAddr)
+			acc, err := types.NewAccountRetriever(clientCtx.JSONMarshaler).GetAccount(clientCtx, sigAddr)
 			if err != nil {
 				cmd.Printf("failed to get account: %s\n", sigAddr)
 				return false
@@ -142,7 +144,7 @@ func readStdTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, file
 	}
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	clientCtx = clientCtx.InitWithInput(inBuf)
+	clientCtx.WithInput(inBuf)
 
 	home, _ := cmd.Flags().GetString(flags.FlagHome)
 	txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), home)

@@ -36,7 +36,7 @@ func ApplyMockIO(c *cobra.Command) (*strings.Reader, *bytes.Buffer, *bytes.Buffe
 // the caller must call to remove the file when it is
 // no longer needed.
 func WriteToNewTempFile(t testing.TB, s string) (*os.File, func()) {
-	fp, err := ioutil.TempFile("", t.Name()+"_")
+	fp, err := ioutil.TempFile("", strings.ReplaceAll(t.Name(), "/", "_")+"_")
 	require.Nil(t, err)
 
 	_, err = fp.WriteString(s)

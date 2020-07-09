@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -21,18 +23,18 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testutil.Config
-	network *testutil.Network
+	cfg     network.Config
+	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testutil.DefaultConfig()
+	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = testutil.NewTestNetwork(s.T(), cfg)
+	s.network = network.New(s.T(), cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -65,7 +67,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	s.Require().NoError(err)
 
 	// write  unsigned tx to file
-	unsignedTx, cleanup := tests.WriteToNewTempFile(s.T(), string(res))
+	unsignedTx, cleanup := testutil.WriteToNewTempFile(s.T(), string(res))
 	defer cleanup()
 
 	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
@@ -75,7 +77,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &signedTx)
 	s.Require().NoError(err)
 
-	signedTxFile, cleanup := tests.WriteToNewTempFile(s.T(), string(res))
+	signedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(res))
 	defer cleanup()
 
 	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
@@ -85,7 +87,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	bz, err := val.ClientCtx.JSONMarshaler.MarshalJSON(signedTx)
 	s.Require().NoError(err)
 
-	modifiedTxFile, cleanup := tests.WriteToNewTempFile(s.T(), string(bz))
+	modifiedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(bz))
 	defer cleanup()
 
 	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
@@ -107,7 +109,7 @@ func TestCLISignBatch(t *testing.T) {
 	require.Empty(t, stderr)
 
 	// Write the output to disk
-	batchfile, cleanup1 := tests.WriteToNewTempFile(t, strings.Repeat(generatedStdTx, 3))
+	batchfile, cleanup1 := testutil.WriteToNewTempFile(t, strings.Repeat(generatedStdTx, 3))
 	t.Cleanup(cleanup1)
 
 	// sign-batch file - offline is set but account-number and sequence are not
@@ -127,7 +129,7 @@ func TestCLISignBatch(t *testing.T) {
 	require.Empty(t, stderr)
 	require.Equal(t, 3, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
 
-	malformedFile, cleanup2 := tests.WriteToNewTempFile(t, fmt.Sprintf("%smalformed", generatedStdTx))
+	malformedFile, cleanup2 := testutil.WriteToNewTempFile(t, fmt.Sprintf("%smalformed", generatedStdTx))
 	t.Cleanup(cleanup2)
 
 	// sign-batch file
@@ -185,7 +187,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, len(msg.Msgs), 1)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Test validate-signatures
@@ -213,7 +215,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, fooAddr.String(), msg.GetSigners()[0].String())
 
 	// Write the output to disk
-	signedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	signedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Test validate-signatures
@@ -267,7 +269,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Sign with foo's key
@@ -275,7 +277,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	fooSignatureFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	fooSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Multisign, not enough signatures
@@ -283,7 +285,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	signedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	signedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
@@ -318,7 +320,7 @@ func TestCLIEncode(t *testing.T) {
 	require.Empty(t, stderr)
 
 	// Write it to disk
-	jsonTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Run the encode command
@@ -356,7 +358,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Sign with foo's key
@@ -364,7 +366,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	fooSignatureFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	fooSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Sign with baz's key
@@ -372,7 +374,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	bazSignatureFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	bazSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Multisign, keys in different order
@@ -381,7 +383,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	signedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	signedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
@@ -422,7 +424,7 @@ func TestCLIMultisign(t *testing.T) {
 	require.Empty(t, stderr)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Sign with foo's key
@@ -430,7 +432,7 @@ func TestCLIMultisign(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	fooSignatureFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	fooSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Sign with bar's key
@@ -438,7 +440,7 @@ func TestCLIMultisign(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	barSignatureFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	barSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Multisign
@@ -455,7 +457,7 @@ func TestCLIMultisign(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	signedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	signedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature

@@ -119,6 +119,15 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 		expectedOutput string
 	}{
 		{
+			"invalid validator address",
+			[]string{
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				"foo",
+			},
+			true,
+			"",
+		},
+		{
 			"default output",
 			[]string{
 				fmt.Sprintf("--%s=3", flags.FlagHeight),
@@ -154,7 +163,77 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 
 			err := cmd.ExecuteContext(ctx)
 			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
+	buf := new(bytes.Buffer)
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	s.network.WaitForHeight(3)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			"invalid validator address",
+			[]string{
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				"foo",
+			},
+			true,
+			"",
+		},
+		{
+			"default output",
+			[]string{
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				sdk.ValAddress(val.Address).String(),
+			},
+			false,
+			`{"commission":[{"denom":"stake","amount":"232.260000000000000000"}]}`,
+		},
+		{
+			"text output",
+			[]string{
+				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				sdk.ValAddress(val.Address).String(),
+			},
+			false,
+			`commission:
+- amount: "232.260000000000000000"
+  denom: stake`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			buf.Reset()
+
+			cmd := cli.GetCmdQueryValidatorCommission()
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
+			cmd.SetArgs(tc.args)
+
+			err := cmd.ExecuteContext(ctx)
+			if tc.expectErr {
+				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))

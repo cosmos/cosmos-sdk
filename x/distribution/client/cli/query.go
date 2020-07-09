@@ -124,7 +124,7 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 
 // GetCmdQueryValidatorCommission implements the query validator commission command.
 func GetCmdQueryValidatorCommission() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "commission [validator]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution validator commission",
@@ -162,6 +162,8 @@ $ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 			return clientCtx.PrintOutput(valCom)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetCmdQueryValidatorSlashes implements the query validator slashes command.

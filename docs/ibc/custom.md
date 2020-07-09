@@ -150,7 +150,12 @@ Application modules are exepcted to verify versioning used during the channel ha
 * `ChanOpenTry` callback should verify that the `MsgChanOpenTry.Version` is valid and that `MsgChanOpenTry.CounterpartyVersion` is valid.
 * `ChanOpenAck` callback should verify that the `MsgChanOpenAck.CounterpartyVersion` is valid and supported.
 
-Versions must be strings but can implement any versioning structure.
+Versions must be strings but can implement any versioning structure. If your application plans to
+have linear releases then semantic versioning is recommended. If your application plans to release
+various features in between major releases then it is advised to use the same versioning scheme
+as IBC. This versioning scheme specifies a version identifier and compatible feature set with
+that identifier. Valid version selection includes selecting a compatible version identifier with
+a subset of features supported by your application for that version.
 
 ### Bind Ports
 

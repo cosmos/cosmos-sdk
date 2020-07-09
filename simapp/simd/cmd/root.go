@@ -74,11 +74,11 @@ func init() {
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
-		AddGenesisAccountCmd(simapp.DefaultNodeHome),
+		AddGenesisAccountCmd(),
 		cli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -114,7 +114,7 @@ func queryCommand() *cobra.Command {
 	)
 
 	simapp.ModuleBasics.AddQueryCommands(cmd, initClientCtx)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
+	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
@@ -141,7 +141,7 @@ func txCommand() *cobra.Command {
 	)
 
 	simapp.ModuleBasics.AddTxCommands(cmd, initClientCtx)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
+	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }

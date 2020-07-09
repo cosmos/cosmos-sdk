@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -21,6 +22,8 @@ type DistributionTestSuite struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	queryClient types.QueryClient
+	addrs       []sdk.AccAddress
+	valAddrs    []sdk.ValAddress
 }
 
 func (suite *DistributionTestSuite) SetupTest() {
@@ -34,140 +37,300 @@ func (suite *DistributionTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
+
+	suite.addrs = simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+	suite.valAddrs = simapp.ConvertAddrsToValAddrs(suite.addrs)
 }
 
 func (suite *DistributionTestSuite) TestGRPCParams() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	params := types.Params{
-		CommunityTax:        sdk.NewDecWithPrec(3, 1),
-		BaseProposerReward:  sdk.NewDecWithPrec(2, 1),
-		BonusProposerReward: sdk.NewDecWithPrec(1, 1),
-		WithdrawAddrEnabled: true,
+	var (
+		params    types.Params
+		req       *types.QueryParamsRequest
+		expParams types.Params
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty params request",
+			func() {
+				req = &types.QueryParamsRequest{}
+				expParams = types.DefaultParams()
+			},
+			true,
+		},
+		{
+			"valid request",
+			func() {
+				params = types.Params{
+					CommunityTax:        sdk.NewDecWithPrec(3, 1),
+					BaseProposerReward:  sdk.NewDecWithPrec(2, 1),
+					BonusProposerReward: sdk.NewDecWithPrec(1, 1),
+					WithdrawAddrEnabled: true,
+				}
+
+				app.DistrKeeper.SetParams(ctx, params)
+				req = &types.QueryParamsRequest{}
+				expParams = params
+			},
+			true,
+		},
 	}
 
-	app.DistrKeeper.SetParams(ctx, params)
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
 
-	paramsRes, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(paramsRes.Params, params)
+			paramsRes, err := queryClient.Params(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(paramsRes)
+				suite.Require().Equal(paramsRes.Params, expParams)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
 }
 
 func (suite *DistributionTestSuite) TestGRPCValidatorOutstandingRewards() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5000)),
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(300)),
 	}
 
-	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
-
-	validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(gocontext.Background(),
-		&types.QueryValidatorOutstandingRewardsRequest{})
-	suite.Require().Error(err)
-	suite.Require().Nil(validatorOutstandingRewards)
-
 	// set outstanding rewards
 	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
 	rewards := app.DistrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0])
 
-	validatorOutstandingRewards, err = queryClient.ValidatorOutstandingRewards(gocontext.Background(),
-		&types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: valAddrs[0]})
-	suite.Require().NoError(err)
-	suite.Require().Equal(rewards, validatorOutstandingRewards.Rewards)
-	suite.Require().Equal(valCommission, validatorOutstandingRewards.Rewards.Rewards)
+	var req *types.QueryValidatorOutstandingRewardsRequest
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &types.QueryValidatorOutstandingRewardsRequest{}
+			},
+			false,
+		}, {
+			"valid request",
+			func() {
+				req = &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: valAddrs[0]}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			validatorOutstandingRewards, err := queryClient.ValidatorOutstandingRewards(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(rewards, validatorOutstandingRewards.Rewards)
+				suite.Require().Equal(valCommission, validatorOutstandingRewards.Rewards.Rewards)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(validatorOutstandingRewards)
+			}
+		})
+	}
 }
 
 func (suite *DistributionTestSuite) TestGRPCValidatorCommission() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
-
-	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
-	valOpAddr1 := valAddrs[0]
+	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
 
 	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, types.ValidatorAccumulatedCommission{Commission: commission})
+	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: commission})
 
-	req := &types.QueryValidatorCommissionRequest{}
-	commissionRes, err := queryClient.ValidatorCommission(gocontext.Background(), req)
-	suite.Require().Error(err)
-	suite.Require().Nil(commissionRes)
+	var req *types.QueryValidatorCommissionRequest
 
-	req = &types.QueryValidatorCommissionRequest{ValidatorAddress: valOpAddr1}
-	commissionRes, err = queryClient.ValidatorCommission(gocontext.Background(), req)
-	suite.Require().NoError(err)
-	suite.Require().Equal(commissionRes.Commission.Commission, commission)
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &types.QueryValidatorCommissionRequest{}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				req = &types.QueryValidatorCommissionRequest{ValidatorAddress: valAddrs[0]}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			commissionRes, err := queryClient.ValidatorCommission(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(commissionRes)
+				suite.Require().Equal(commissionRes.Commission.Commission, commission)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(commissionRes)
+			}
+		})
+	}
 }
 
 func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
 
-	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
-	valOpAddr1 := valAddrs[0]
-
-	slashOne := types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1))
-	slashTwo := types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(6, 1))
-
-	app.DistrKeeper.SetValidatorSlashEvent(ctx, valOpAddr1, 3, 0, slashOne)
-	app.DistrKeeper.SetValidatorSlashEvent(ctx, valOpAddr1, 7, 0, slashTwo)
-
-	pageReq := &query.PageRequest{
-		Limit: 1,
+	slashes := []types.ValidatorSlashEvent{
+		types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(5, sdk.NewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(5, 1)),
+		types.NewValidatorSlashEvent(9, sdk.NewDecWithPrec(5, 1)),
 	}
 
-	slashes, err := queryClient.ValidatorSlashes(gocontext.Background(), &types.QueryValidatorSlashesRequest{})
-	suite.Require().Error(err)
-	suite.Require().Nil(slashes)
-
-	req := &types.QueryValidatorSlashesRequest{
-		ValidatorAddress: valOpAddr1,
-		StartingHeight:   1,
-		EndingHeight:     10,
-		Req:              pageReq,
+	for i, slash := range slashes {
+		app.DistrKeeper.SetValidatorSlashEvent(ctx, valAddrs[0], uint64(i+2), 0, slash)
 	}
 
-	slashes, err = queryClient.ValidatorSlashes(gocontext.Background(), req)
+	var (
+		req    *types.QueryValidatorSlashesRequest
+		expRes *types.QueryValidatorSlashesResponse
+	)
 
-	suite.Require().NoError(err)
-	suite.Require().Len(slashes.Slashes, 1)
-	suite.Require().Equal(slashOne, slashes.Slashes[0])
-	suite.Require().NotNil(slashes.Res.NextKey)
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &types.QueryValidatorSlashesRequest{}
+				expRes = &types.QueryValidatorSlashesResponse{}
+			},
+			false,
+		},
+		{
+			"no slash event validator request",
+			func() {
+				req = &types.QueryValidatorSlashesRequest{
+					ValidatorAddress: valAddrs[1],
+					StartingHeight:   1,
+					EndingHeight:     10,
+				}
+				expRes = &types.QueryValidatorSlashesResponse{Res: &query.PageResponse{}}
+			},
+			true,
+		},
+		{
+			"request slashes with page 2 and limit 2",
+			func() {
+				pageReq := &query.PageRequest{
+					Offset: 2,
+					Limit:  2,
+				}
 
-	pageReq.Key = slashes.Res.NextKey
-	req.Req = pageReq
+				req = &types.QueryValidatorSlashesRequest{
+					ValidatorAddress: valAddrs[0],
+					StartingHeight:   1,
+					EndingHeight:     10,
+					Req:              pageReq,
+				}
 
-	slashes, err = queryClient.ValidatorSlashes(gocontext.Background(), req)
-	suite.Require().NoError(err)
-	suite.Require().Len(slashes.Slashes, 1)
-	suite.Require().Equal(slashTwo, slashes.Slashes[0])
-	suite.Require().Empty(slashes.Res)
+				expRes = &types.QueryValidatorSlashesResponse{
+					Slashes: slashes[2:],
+				}
+			},
+			true,
+		},
+		{
+			"request slashes with page limit 3 and count total",
+			func() {
+				pageReq := &query.PageRequest{
+					Limit:      3,
+					CountTotal: true,
+				}
 
-	pageReq = &query.PageRequest{Limit: 2}
-	req.Req = pageReq
+				req = &types.QueryValidatorSlashesRequest{
+					ValidatorAddress: valAddrs[0],
+					StartingHeight:   1,
+					EndingHeight:     10,
+					Req:              pageReq,
+				}
 
-	slashes, err = queryClient.ValidatorSlashes(gocontext.Background(), req)
-	suite.Require().NoError(err)
-	suite.Require().Len(slashes.Slashes, 2)
-	suite.Require().Equal(slashOne, slashes.Slashes[0])
-	suite.Require().Equal(slashTwo, slashes.Slashes[1])
-	suite.Require().Empty(slashes.Res)
+				expRes = &types.QueryValidatorSlashesResponse{
+					Slashes: slashes[:3],
+				}
+			},
+			true,
+		},
+		{
+			"request slashes with page limit 4 and count total",
+			func() {
+				pageReq := &query.PageRequest{
+					Limit:      4,
+					CountTotal: true,
+				}
+
+				req = &types.QueryValidatorSlashesRequest{
+					ValidatorAddress: valAddrs[0],
+					StartingHeight:   1,
+					EndingHeight:     10,
+					Req:              pageReq,
+				}
+
+				expRes = &types.QueryValidatorSlashesResponse{
+					Slashes: slashes[:4],
+				}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			slashesRes, err := queryClient.ValidatorSlashes(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes.GetSlashes(), slashesRes.GetSlashes())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(slashesRes)
+			}
+		})
+	}
 }
 
 func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
-	valOpAddr1 := valAddrs[0]
+	app, ctx, addrs, valAddrs := suite.app, suite.ctx, suite.addrs, suite.valAddrs
 
 	sh := staking.NewHandler(app.StakingKeeper)
 	comm := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := stakingtypes.NewMsgCreateValidator(
-		valOpAddr1, valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, comm, sdk.OneInt(),
+		valAddrs[0], valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, comm, sdk.OneInt(),
 	)
 
 	res, err := sh(ctx, msg)
@@ -181,78 +344,292 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	val := app.StakingKeeper.Validator(ctx, valOpAddr1)
+	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 
 	initial := int64(10)
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
-	req := &types.QueryDelegationRewardsRequest{
-		DelegatorAddress: addr[0],
-		ValidatorAddress: valOpAddr1,
+	// test command delegation rewards grpc
+	var (
+		req    *types.QueryDelegationRewardsRequest
+		expRes *types.QueryDelegationRewardsResponse
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &types.QueryDelegationRewardsRequest{}
+			},
+			false,
+		},
+		{
+			"request with wrong delegator and validator",
+			func() {
+				req = &types.QueryDelegationRewardsRequest{
+					DelegatorAddress: addrs[1],
+					ValidatorAddress: valAddrs[0],
+				}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				req = &types.QueryDelegationRewardsRequest{
+					DelegatorAddress: addrs[0],
+					ValidatorAddress: valAddrs[0],
+				}
+
+				expRes = &types.QueryDelegationRewardsResponse{
+					Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}},
+				}
+			},
+			true,
+		},
 	}
 
-	rewards, err := queryClient.DelegationRewards(gocontext.Background(), &types.QueryDelegationRewardsRequest{})
-	suite.Require().Error(err)
-	suite.Require().Nil(rewards)
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
 
-	rewards, err = queryClient.DelegationRewards(gocontext.Background(), req)
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards.Rewards)
+			rewards, err := queryClient.DelegationRewards(gocontext.Background(), req)
 
-	totalRewards, err := queryClient.DelegationTotalRewards(gocontext.Background(), &types.QueryDelegationTotalRewardsRequest{})
-	suite.Require().Error(err)
-	suite.Require().Nil(totalRewards)
-
-	totalRewardsReq := &types.QueryDelegationTotalRewardsRequest{
-		DelegatorAddress: sdk.AccAddress(valOpAddr1),
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes, rewards)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(rewards)
+			}
+		})
 	}
 
-	totalRewards, err = queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
-	suite.Require().NoError(err)
+	// test command delegator total rewards grpc
+	var (
+		totalRewardsReq    *types.QueryDelegationTotalRewardsRequest
+		expTotalRewardsRes *types.QueryDelegationTotalRewardsResponse
+	)
 
-	expectedDelReward := types.NewDelegationDelegatorReward(valOpAddr1,
-		sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5)})
-	wantDelRewards := types.NewQueryDelegatorTotalRewardsResponse(
-		[]types.DelegationDelegatorReward{expectedDelReward}, expectedDelReward.Reward)
-	suite.Require().Equal(wantDelRewards.Rewards, totalRewards.Rewards)
-	suite.Require().Equal(wantDelRewards.Total, totalRewards.Total)
+	testCases = []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{}
+			},
+			false,
+		},
+		{
+			"wrong total delegation rewards",
+			func() {
+				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{}
+			},
+			false,
+		},
+		{
+			"valid total delegation rewards",
+			func() {
+				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{
+					DelegatorAddress: addrs[0],
+				}
 
-	validators, err := queryClient.DelegatorValidators(gocontext.Background(), &types.QueryDelegatorValidatorsRequest{})
-	suite.Require().Error(err)
-	suite.Require().Nil(validators, 1)
+				expectedDelReward := types.NewDelegationDelegatorReward(valAddrs[0],
+					sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5)})
 
-	validators, err = queryClient.DelegatorValidators(gocontext.Background(),
-		&types.QueryDelegatorValidatorsRequest{DelegatorAddress: sdk.AccAddress(valOpAddr1)})
-	suite.Require().NoError(err)
-	suite.Require().Len(validators.Validators, 1)
-	suite.Require().Equal(validators.Validators[0], valOpAddr1)
+				expTotalRewardsRes = &types.QueryDelegationTotalRewardsResponse{
+					Rewards: []types.DelegationDelegatorReward{expectedDelReward},
+					Total:   expectedDelReward.Reward,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			totalRewardsRes, err := queryClient.DelegationTotalRewards(gocontext.Background(), totalRewardsReq)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(totalRewardsRes, expTotalRewardsRes)
+			} else {
+
+				suite.Require().Error(err)
+				suite.Require().Nil(totalRewardsRes)
+			}
+		})
+	}
+
+	// test command validator delegators grpc
+	var (
+		delegatorValidatorsReq    *types.QueryDelegatorValidatorsRequest
+		expDelegatorValidatorsRes *types.QueryDelegatorValidatorsResponse
+	)
+
+	testCases = []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{}
+			},
+			false,
+		},
+		{
+			"request no delegations address",
+			func() {
+				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
+					DelegatorAddress: addrs[1],
+				}
+
+				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{}
+			},
+			true,
+		},
+		{
+			"valid request",
+			func() {
+				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
+					DelegatorAddress: addrs[0],
+				}
+				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{
+					Validators: valAddrs[:1],
+				}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			validators, err := queryClient.DelegatorValidators(gocontext.Background(), delegatorValidatorsReq)
+			fmt.Println("validators, err", validators, err)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(validators, expDelegatorValidatorsRes)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(validators)
+			}
+		})
+	}
 }
 
 func (suite *DistributionTestSuite) TestGRPCDelegatorWithdrawAddress() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
-	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
-
-	err := app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
+	err := app.DistrKeeper.SetWithdrawAddr(ctx, addrs[0], addrs[1])
 	suite.Require().Nil(err)
 
-	withdrawAddress, err := queryClient.DelegatorWithdrawAddress(gocontext.Background(), &types.QueryDelegatorWithdrawAddressRequest{})
-	suite.Require().Error(err)
-	suite.Require().Nil(withdrawAddress)
+	var req *types.QueryDelegatorWithdrawAddressRequest
 
-	withdrawAddress, err = queryClient.DelegatorWithdrawAddress(gocontext.Background(),
-		&types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addr[0]})
-	suite.Require().NoError(err)
-	suite.Require().Equal(withdrawAddress.WithdrawAddress, addr[1])
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &types.QueryDelegatorWithdrawAddressRequest{}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				req = &types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addrs[0]}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			withdrawAddress, err := queryClient.DelegatorWithdrawAddress(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1])
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(withdrawAddress)
+			}
+		})
+	}
 }
 
 func (suite *DistributionTestSuite) TestGRPCCommunityPool() {
-	queryClient := suite.queryClient
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
-	pool, err := queryClient.CommunityPool(gocontext.Background(), &types.QueryCommunityPoolRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Empty(pool)
+	var (
+		req     *types.QueryCommunityPoolRequest
+		expPool *types.QueryCommunityPoolResponse
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"valid request empty community pool",
+			func() {
+				req = &types.QueryCommunityPoolRequest{}
+				expPool = &types.QueryCommunityPoolResponse{}
+			},
+			true,
+		},
+		{
+			"valid request",
+			func() {
+				amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+				suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addrs[0], amount))
+
+				err := app.DistrKeeper.FundCommunityPool(ctx, amount, addrs[0])
+				suite.Require().Nil(err)
+				req = &types.QueryCommunityPoolRequest{}
+
+				expPool = &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(amount...)}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			pool, err := queryClient.CommunityPool(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expPool, pool)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(pool)
+			}
+		})
+	}
 }
 
 func TestDistributionTestSuite(t *testing.T) {

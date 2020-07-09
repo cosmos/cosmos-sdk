@@ -63,10 +63,9 @@ account key. It implies --signature-only.
 func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		clientCtx := client.Context{}.WithInput(inBuf).WithCodec(cdc)
+		clientCtx := client.GetClientContextFromCmd(cmd)
 
-		home, _ := cmd.Flags().GetString(flags.FlagHome)
-		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), home)
+		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
 		if err != nil {
 			return err
 		}

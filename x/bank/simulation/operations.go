@@ -103,8 +103,9 @@ func sendMsgSend(
 			return err
 		}
 	}
-
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
 	tx := helpers.GenTx(
+		txGen,
 		[]sdk.Msg{msg},
 		fees,
 		helpers.DefaultGenTxGas,
@@ -247,7 +248,9 @@ func sendMsgMultiSend(
 		}
 	}
 
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
 	tx := helpers.GenTx(
+		txGen,
 		[]sdk.Msg{msg},
 		fees,
 		helpers.DefaultGenTxGas,

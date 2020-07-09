@@ -232,7 +232,7 @@ func (k Keeper) TimeoutOnClose(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel state verification failed")
+		return err
 	}
 
 	var err error

@@ -1,4 +1,4 @@
-package testutil
+package network
 
 import (
 	"bufio"
@@ -144,7 +144,7 @@ type (
 	}
 )
 
-func NewTestNetwork(t *testing.T, cfg Config) *Network {
+func New(t *testing.T, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()

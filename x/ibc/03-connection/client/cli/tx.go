@@ -16,18 +16,22 @@ import (
 
 // NewConnectionOpenInitCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
-func NewConnectionOpenInitCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
 		Short: "Initialize connection on chain A",
 		Long:  "Initialize a connection on chain A with a given counterparty chain B",
 		Example: fmt.Sprintf(
 			"%s tx %s %s open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			connectionID := args[0]
 			clientID := args[1]
@@ -48,7 +52,7 @@ func NewConnectionOpenInitCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -57,7 +61,7 @@ func NewConnectionOpenInitCmd(clientCtx client.Context) *cobra.Command {
 
 // NewConnectionOpenTryCmd defines the command to relay a try open a connection on
 // chain B
-func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenTryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
@@ -68,11 +72,15 @@ func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
 			`%s tx %s %s open-try connection-id] [client-id] \
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] \
 [counterparty-versions] [path/to/proof_init.json] [path/tp/proof_consensus.json]`,
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			connectionID := args[0]
 			clientID := args[1]
@@ -113,7 +121,7 @@ func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -122,18 +130,22 @@ func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
 
 // NewConnectionOpenAckCmd defines the command to relay the acceptance of a
 // connection open attempt from chain B to chain A
-func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
 		Short: "relay the acceptance of a connection open attempt",
 		Long:  "Relay the acceptance of a connection open attempt from chain B to chain A",
 		Example: fmt.Sprintf(
 			"%s tx %s %s open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			connectionID := args[0]
 
@@ -164,7 +176,7 @@ func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -173,18 +185,22 @@ func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
 
 // NewConnectionOpenConfirmCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
-func NewConnectionOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenConfirmCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-confirm [connection-id] [path/to/proof_ack.json]",
 		Short: "confirm to chain B that connection is open on chain A",
 		Long:  "Confirm to chain B that connection is open on chain A",
 		Example: fmt.Sprintf(
 			"%s tx %s %s open-confirm [connection-id] [path/to/proof_ack.json]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			connectionID := args[0]
 
@@ -206,7 +222,7 @@ func NewConnectionOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

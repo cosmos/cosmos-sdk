@@ -22,7 +22,7 @@ const (
 // GetQueryCmd returns the parent command for all x/bank CLi query commands. The
 // provided clientCtx should have, at a minimum, a verifier, Tendermint RPC client,
 // and marshaler set.
-func GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the bank module",
@@ -32,14 +32,14 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetBalancesCmd(clientCtx),
-		GetCmdQueryTotalSupply(clientCtx),
+		GetBalancesCmd(),
+		GetCmdQueryTotalSupply(),
 	)
 
 	return cmd
 }
 
-func GetBalancesCmd(clientCtx client.Context) *cobra.Command {
+func GetBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "balances [address]",
 		Short: "Query for account balances by address",
@@ -50,11 +50,12 @@ Example:
   $ %s query %s balances [address]
   $ %s query %s balances [address] --denom=[denom]
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -97,7 +98,7 @@ Example:
 	return flags.GetCommands(cmd)[0]
 }
 
-func GetCmdQueryTotalSupply(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryTotalSupply() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total",
 		Short: "Query the total supply of coins of the chain",
@@ -110,10 +111,11 @@ Example:
 To query for the total supply of a specific coin denomination use:
   $ %s query %s total --denom=[denom]
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err

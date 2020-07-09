@@ -26,7 +26,7 @@ func NewQuerier(k AccountKeeper) sdk.Querier {
 }
 
 func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper) ([]byte, error) {
-	var params types.QueryAccountParams
+	var params types.QueryAccountRequest
 	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}

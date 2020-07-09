@@ -65,6 +65,7 @@ older clients.
 
 ### API Breaking Changes
 
+* (codec) [\#6666](https://github.com/cosmos/cosmos-sdk/issues/6666) Removed `*codec.MarshalIndentFromJSON` as it is unused, untested and expensive.
 * (modules) [\#6564](https://github.com/cosmos/cosmos-sdk/pull/6564) Constant `DefaultParamspace` is removed from all modules, use ModuleName instead.
 * (client) [\#6525](https://github.com/cosmos/cosmos-sdk/pull/6525) Removed support for `indent` in JSON responses. Clients should consider piping to an external tool such as `jq`.
 * (x/staking) [\#6451](https://github.com/cosmos/cosmos-sdk/pull/6451) `DefaultParamspace` and `ParamKeyTable` in staking module are moved from keeper to types to enforce consistency.

@@ -436,7 +436,46 @@ total:
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
+	cmd := flags.GetCommands(cli.GetCmdQueryCommunityPool())[0]
+	_, out, _ := testutil.ApplyMockIO(cmd)
 
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx.WithOutput(out)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	_, err := s.network.WaitForHeight(3)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"default output",
+			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight)},
+			``,
+		},
+		{
+			"text output",
+			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag), fmt.Sprintf("--%s=3", flags.FlagHeight)},
+			``,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			out.Reset()
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(cmd.ExecuteContext(ctx))
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

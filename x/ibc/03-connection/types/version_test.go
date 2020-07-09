@@ -92,7 +92,7 @@ func TestPickVersion(t *testing.T) {
 	}
 }
 
-func TestVerifyProposedFeatureSet(t *testing.T) {
+func TestVerifyProposedVersion(t *testing.T) {
 	testCases := []struct {
 		name             string
 		proposedVersion  string
@@ -103,6 +103,8 @@ func TestVerifyProposedFeatureSet(t *testing.T) {
 		{"empty feature sets not supported", types.CreateVersionString("1", []string{}), types.DefaultIBCVersion, false},
 		{"one feature missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDER_UNORDERED", "ORDER_DAG"}), false},
 		{"both features missing", types.DefaultIBCVersion, types.CreateVersionString("1", []string{"ORDER_DAG"}), false},
+		{"could not unpack proposed version", "(invalid version)", types.DefaultIBCVersion, false},
+		{"could not unpack supported version", types.DefaultIBCVersion, "(invalid version)", false},
 	}
 
 	for i, tc := range testCases {

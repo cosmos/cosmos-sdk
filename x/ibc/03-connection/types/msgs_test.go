@@ -115,6 +115,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{types.DefaultIBCVersion}, suite.proof, suite.proof, 10, 0, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{types.DefaultIBCVersion}, suite.proof, suite.proof, 10, 10, nil),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{types.DefaultIBCVersion}, suite.proof, suite.proof, 10, 10, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"(invalid version)"}, suite.proof, suite.proof, 10, 10, signer),
 	}
 
 	var testCases = []struct {
@@ -134,6 +135,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		{testMsgs[9], false, "invalid consensusHeight"},
 		{testMsgs[10], false, "empty singer"},
 		{testMsgs[11], true, "success"},
+		{testMsgs[12], false, "invalid version"},
 	}
 
 	for i, tc := range testCases {

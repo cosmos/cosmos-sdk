@@ -14,6 +14,8 @@ var (
 	// ORDERED and UNORDERED channels and requires at least one channel type
 	// to be agreed upon.
 	DefaultIBCVersion           = CreateVersionString(DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
+
+	// DefaultIBCVersionIdentifier is the IBC v1.0.0 protocol version identifier
 	DefaultIBCVersionIdentifier = "1"
 
 	// AllowNilFeatureSet is a helper map to indicate if a specified version

@@ -456,12 +456,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 		{
 			"default output",
 			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight)},
-			``,
+			`[{"denom":"stake","amount":"4.740000000000000000"}]`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag), fmt.Sprintf("--%s=3", flags.FlagHeight)},
-			``,
+			`- amount: "4.740000000000000000"
+  denom: stake`,
 		},
 	}
 

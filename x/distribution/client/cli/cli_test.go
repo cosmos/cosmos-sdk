@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -21,14 +22,14 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testutil.Config
-	network *testutil.Network
+	cfg     testnet.Config
+	network *testnet.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testutil.DefaultConfig()
+	cfg := testnet.DefaultConfig()
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
 
@@ -46,7 +47,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-	s.network = testutil.NewTestNetwork(s.T(), cfg)
+	s.network = testnet.New(s.T(), cfg)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -329,9 +330,11 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
-	buf := new(bytes.Buffer)
+	cmd := flags.GetCommands(cli.GetCmdQueryDelegatorRewards())[0]
+	_, out, _ := testutil.ApplyMockIO(cmd)
+
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
+	clientCtx := val.ClientCtx.WithOutput(out)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -387,11 +390,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
-			cmd := cli.GetCmdQueryDelegatorRewards()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -399,7 +398,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 			}
 		})
 	}

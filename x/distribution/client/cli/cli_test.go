@@ -65,14 +65,7 @@ func (s *IntegrationTestSuite) TearDownTest() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
-	cmd := flags.GetCommands(cli.GetCmdQueryParams())[0]
-	_, out, _ := testutil.ApplyMockIO(cmd)
-
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name           string
@@ -98,6 +91,14 @@ withdraw_addr_enabled: true`,
 		tc := tc
 
 		s.Run(tc.name, func() {
+			cmd := flags.GetCommands(cli.GetCmdQueryParams())[0]
+			_, out, _ := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 			out.Reset()
 			cmd.SetArgs(tc.args)
 
@@ -108,14 +109,7 @@ withdraw_addr_enabled: true`,
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
-	cmd := flags.GetCommands(cli.GetCmdQueryValidatorOutstandingRewards())[0]
-	_, out, _ := testutil.ApplyMockIO(cmd)
-
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	_, err := s.network.WaitForHeight(3)
 	s.Require().NoError(err)
@@ -162,6 +156,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			cmd := flags.GetCommands(cli.GetCmdQueryValidatorOutstandingRewards())[0]
+			_, out, _ := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 			out.Reset()
 			cmd.SetArgs(tc.args)
 
@@ -177,14 +179,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
-	cmd := flags.GetCommands(cli.GetCmdQueryValidatorCommission())[0]
-	_, out, _ := testutil.ApplyMockIO(cmd)
-
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	_, err := s.network.WaitForHeight(3)
 	s.Require().NoError(err)
@@ -211,7 +206,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 				sdk.ValAddress(val.Address).String(),
 			},
 			false,
-			`{"commission":[{"denom":"stake","amount":"232.260000000000000000"}]}`,
+			`{"commission":[{"denom":"stake","amount":"116.130000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -222,7 +217,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 			},
 			false,
 			`commission:
-- amount: "232.260000000000000000"
+- amount: "116.130000000000000000"
   denom: stake`,
 		},
 	}
@@ -231,6 +226,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			cmd := flags.GetCommands(cli.GetCmdQueryValidatorCommission())[0]
+			_, out, _ := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 			out.Reset()
 			cmd.SetArgs(tc.args)
 
@@ -246,14 +249,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
-	cmd := flags.GetCommands(cli.GetCmdQueryValidatorSlashes())[0]
-	_, out, _ := testutil.ApplyMockIO(cmd)
-
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	_, err := s.network.WaitForHeight(3)
 	s.Require().NoError(err)
@@ -316,6 +312,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			cmd := flags.GetCommands(cli.GetCmdQueryValidatorSlashes())[0]
+			_, out, _ := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 			out.Reset()
 			cmd.SetArgs(tc.args)
 
@@ -331,20 +335,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
-	cmd := flags.GetCommands(cli.GetCmdQueryDelegatorRewards())[0]
-	_, out, _ := testutil.ApplyMockIO(cmd)
-
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-	_, err := s.network.WaitForHeightWithTimeout(10, 20*time.Second)
-	s.Require().NoError(err)
-
 	addr := val.Address
 	valAddr := sdk.ValAddress(addr)
+
+	_, err := s.network.WaitForHeightWithTimeout(10, time.Minute)
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name           string
@@ -422,6 +418,14 @@ total:
 		tc := tc
 
 		s.Run(tc.name, func() {
+			cmd := flags.GetCommands(cli.GetCmdQueryDelegatorRewards())[0]
+			_, out, _ := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 			out.Reset()
 			cmd.SetArgs(tc.args)
 
@@ -437,14 +441,7 @@ total:
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
-	cmd := flags.GetCommands(cli.GetCmdQueryCommunityPool())[0]
-	_, out, _ := testutil.ApplyMockIO(cmd)
-
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	_, err := s.network.WaitForHeight(3)
 	s.Require().NoError(err)
@@ -471,6 +468,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			cmd := flags.GetCommands(cli.GetCmdQueryCommunityPool())[0]
+			_, out, _ := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 			out.Reset()
 			cmd.SetArgs(tc.args)
 
@@ -482,10 +487,6 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 
 func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name         string
@@ -535,6 +536,11 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 			bz, err := distrtestutil.MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -550,7 +556,64 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
+	val := s.network.Validators[0]
 
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     fmt.Stringer
+		expectedCode uint32
+	}{
+		{
+			"valid transaction (offline)",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := flags.PostCommands(cli.NewWithdrawAllRewardsCmd())[0]
+			_, out, _ := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
+			cmd.SetArgs(tc.args)
+
+			err := cmd.ExecuteContext(ctx)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {

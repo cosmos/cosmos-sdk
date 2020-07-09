@@ -103,7 +103,7 @@ func (c Context) WithBlockHeader(header abci.Header) Context {
 	return c
 }
 
-// WithBlockTime returns a Context with an updated header.Time in UTC time
+// WithBlockTime returns a Context with an updated tendermint block header time in UTC time
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519

@@ -1,17 +1,17 @@
 package client_test
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestCreateVerifier(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "example")
-	require.NoError(t, err)
+	tmpDir, cleanup := testutil.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
 
 	testCases := []struct {
 		name      string

@@ -22,15 +22,6 @@ func NewQueryAllEvidenceRequest(req *query.PageRequest) *QueryAllEvidenceRequest
 	return &QueryAllEvidenceRequest{Req: req}
 }
 
-// QueryEvidenceParams defines the parameters necessary for querying Evidence.
-type QueryEvidenceParams struct {
-	EvidenceHash string `json:"evidence_hash" yaml:"evidence_hash"`
-}
-
-func NewQueryEvidenceParams(hash string) QueryEvidenceParams {
-	return QueryEvidenceParams{EvidenceHash: hash}
-}
-
 // QueryAllEvidenceParams defines the parameters necessary for querying for all Evidence.
 type QueryAllEvidenceParams struct {
 	Page  int `json:"page" yaml:"page"`

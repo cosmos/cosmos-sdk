@@ -100,17 +100,7 @@ func TestSimulateGasCost(t *testing.T) {
 	simulatedGas := newCtx.GasMeter().GasConsumed()
 	fee.Gas = simulatedGas
 
-	// Round 2: update tx with simulated gas estimate, minus 1
-	txBuilder.SetGasLimit(fee.Gas - 100)
-	// Sign
-	sigsV2, err = types.NewTestTx2(newCtx, privs, clientCtx.TxGenerator, txBuilder, accNums, seqs)
-	require.NoError(t, err)
-	txBuilder.SetSignatures(sigsV2...)
-	// Run ante handler
-	newCtx, err = anteHandler(newCtx, txBuilder.GetTx(), false)
-	require.Error(t, err, "transaction failed on simulate mode with gas limit too low")
-
-	// Round 3: update tx with exact simulated gas estimate
+	// Round 2: update tx with exact simulated gas estimate
 	txBuilder.SetGasLimit(fee.Gas)
 	// Sign
 	sigsV2, err = types.NewTestTx2(newCtx, privs, clientCtx.TxGenerator, txBuilder, accNums, seqs)

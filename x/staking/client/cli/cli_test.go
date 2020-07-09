@@ -16,7 +16,8 @@ import (
 )
 
 func TestCLICreateValidator(t *testing.T) {
-	t.SkipNow() // TODO: Bring back once viper is refactored.
+	t.SkipNow() // Recreate when using CLI tests.
+
 	t.Parallel()
 	f := cli.InitFixtures(t)
 

@@ -21,7 +21,6 @@ type Fixtures struct {
 	BuildDir       string
 	RootDir        string
 	SimdBinary     string
-	SimcliBinary   string
 	ChainID        string
 	RPCAddr        string
 	Port           string
@@ -56,7 +55,6 @@ func NewFixtures(t *testing.T) *Fixtures {
 		BuildDir:       buildDir,
 		RootDir:        tmpDir,
 		SimdBinary:     filepath.Join(buildDir, "simd"),
-		SimcliBinary:   filepath.Join(buildDir, "simcli"),
 		SimdHome:       filepath.Join(tmpDir, ".simd"),
 		SimcliHome:     filepath.Join(tmpDir, ".simcli"),
 		RPCAddr:        servAddr,

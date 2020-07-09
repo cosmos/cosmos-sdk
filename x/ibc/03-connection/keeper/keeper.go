@@ -171,23 +171,3 @@ func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID st
 	k.SetClientConnectionPaths(ctx, clientID, conns)
 	return nil
 }
-
-// removeConnectionFromClient is used to remove a connection identifier from the
-// set of connections associated with a client.
-//
-// CONTRACT: client must already exist
-// nolint: unused
-func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) error {
-	conns, found := k.GetClientConnectionPaths(ctx, clientID)
-	if !found {
-		return sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, clientID)
-	}
-
-	conns, ok := host.RemovePath(conns, connectionID)
-	if !ok {
-		return sdkerrors.Wrap(types.ErrConnectionPath, clientID)
-	}
-
-	k.SetClientConnectionPaths(ctx, clientID, conns)
-	return nil
-}

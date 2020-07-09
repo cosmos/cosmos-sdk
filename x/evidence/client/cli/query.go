@@ -28,7 +28,7 @@ Example:
 $ %s query %s DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
 $ %s query %s --page=2 --limit=50
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args:                       cobra.MaximumNArgs(1),

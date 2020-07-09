@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -25,9 +24,19 @@ const (
 	FlagUpgradeInfo   = "info"
 )
 
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   types.ModuleName,
+		Short: "Upgrade transaction subcommands",
+	}
+	cmd.AddCommand(flags.PostCommands()...)
+
+	return cmd
+}
+
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func NewCmdSubmitUpgradeProposal(clientCtx client.Context) *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),

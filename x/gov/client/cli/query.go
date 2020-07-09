@@ -55,7 +55,7 @@ proposal-id by running "%s query gov proposals".
 Example:
 $ %s query gov proposal 1
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -94,7 +94,7 @@ $ %s query gov proposals --voter cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 $ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
 $ %s query gov proposals --page=2 --limit=100
 `,
-				version.ClientName, version.ClientName, version.ClientName, version.ClientName,
+				version.AppName, version.AppName, version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -182,7 +182,7 @@ func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -252,7 +252,7 @@ Example:
 $ %[1]s query gov votes 1
 $ %[1]s query gov votes 1 --page=2 --limit=100
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -316,7 +316,7 @@ func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -379,7 +379,7 @@ You can find the proposal-id by running "%s query gov proposals".
 Example:
 $ %s query gov deposits 1
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -437,7 +437,7 @@ the proposal-id by running "%s query gov proposals".
 Example:
 $ %s query gov tally 1
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -486,7 +486,7 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query gov params
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.NoArgs,
@@ -531,7 +531,7 @@ $ %s query gov param voting
 $ %s query gov param tallying
 $ %s query gov param deposit
 `,
-				version.ClientName, version.ClientName, version.ClientName,
+				version.AppName, version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -577,7 +577,7 @@ func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s query gov proposer 1
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

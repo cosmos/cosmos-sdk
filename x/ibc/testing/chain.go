@@ -603,14 +603,34 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// PacketExecuted simulates receiving and wiritng an acknowledgement to the chain.
+// PacketExecuted simulates receiving and writing an acknowledgement to the chain.
 func (chain *TestChain) PacketExecuted(
+	packet channelexported.PacketI,
+) error {
+	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
+
+	// no need to send message, acting as a handler
+	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
+}
+
+// AcknowledgementExecuted simulates deleting a packet commitment with the
+// given packet sequence.
+func (chain *TestChain) AcknowledgementExecuted(
 	packet channelexported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.AcknowledgementExecuted(chain.GetContext(), channelCap, packet)
 	if err != nil {
 		return err
 	}

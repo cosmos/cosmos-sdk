@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,12 +23,16 @@ const (
 )
 
 // ExportCmd dumps app state to JSON.
-func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *cobra.Command {
+func ExportCmd(appExporter AppExporter) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := ctx.Config
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.JSONMarshaler
+
+			serverCtx := GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
 
 			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 			config.SetRoot(homeDir)
@@ -61,12 +66,12 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
 			jailWhiteList, _ := cmd.Flags().GetStringSlice(flagJailWhitelist)
 
-			appState, validators, cp, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
+			appState, validators, cp, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
 			}
 
-			doc, err := tmtypes.GenesisDocFromFile(ctx.Config.GenesisFile())
+			doc, err := tmtypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())
 			if err != nil {
 				return err
 			}

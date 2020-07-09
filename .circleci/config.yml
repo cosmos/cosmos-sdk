@@ -38,10 +38,10 @@ jobs:
       - checkout
       - run:
           name: "Build docs"
-          command: make build-docs
+          command: make build-docs LEDGER_ENABLED=false
       - run:
           name: "Upload docs to S3"
-          command: make sync-docs
+          command: make sync-docs LEDGER_ENABLED=false
 
 workflows:
   version: 2

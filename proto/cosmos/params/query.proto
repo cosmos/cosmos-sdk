@@ -1,0 +1,25 @@
+syntax = "proto3";
+package cosmos.params;
+
+import "gogoproto/gogo.proto";
+import "cosmos/params/params.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
+
+// Query creates service with Parameters as rpc
+service Query{
+    // Parameters queries all params
+    rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) {}
+}
+
+// QueryParametersRequest is request type for the Query/Parameters RPC method
+message QueryParametersRequest{
+    string subspace = 1;
+
+    string key = 2;
+}
+
+// QueryParametersResponse is response type for the Query/Parameters RPC method
+message QueryParametersResponse{
+    cosmos.params.ParamChange params = 1 [(gogoproto.nullable) = false];
+} 

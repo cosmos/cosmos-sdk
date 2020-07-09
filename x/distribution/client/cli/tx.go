@@ -16,11 +16,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+// Transaction flags for the x/distribution module
 var (
-	flagOnlyFromValidator = "only-from-validator"
-	flagIsValidator       = "is-validator"
-	flagCommission        = "commission"
-	flagMaxMessagesPerTx  = "max-msgs"
+	FlagCommission       = "commission"
+	FlagMaxMessagesPerTx = "max-msgs"
 )
 
 const (
@@ -38,7 +37,7 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	distTxCmd.AddCommand(flags.PostCommands(
-		NewWithdrawRewardsCmd(clientCtx),
+		NewWithdrawRewardsCmd(),
 		NewWithdrawAllRewardsCmd(clientCtx),
 		NewSetWithdrawAddrCmd(clientCtx),
 		NewFundCommunityPoolCmd(clientCtx),
@@ -77,7 +76,7 @@ func newSplitAndApply(
 	return nil
 }
 
-func NewWithdrawRewardsCmd(clientCtx client.Context) *cobra.Command {
+func NewWithdrawRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [validator-addr]",
 		Short: "Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
@@ -94,7 +93,11 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			delAddr := clientCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -104,7 +107,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 
 			msgs := []sdk.Msg{types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)}
 
-			if commission, _ := cmd.Flags().GetBool(flagCommission); commission {
+			if commission, _ := cmd.Flags().GetBool(FlagCommission); commission {
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
@@ -114,11 +117,11 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				}
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
 		},
 	}
 
-	cmd.Flags().Bool(flagCommission, false, "also withdraw validator's commission")
+	cmd.Flags().Bool(FlagCommission, false, "also withdraw validator's commission")
 	return cmd
 }
 
@@ -152,12 +155,12 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 				return err
 			}
 
-			chunkSize, _ := cmd.Flags().GetInt(flagMaxMessagesPerTx)
+			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
 			return newSplitAndApply(tx.GenerateOrBroadcastTx, clientCtx, msgs, chunkSize)
 		},
 	}
 
-	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
+	cmd.Flags().Int(FlagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	return cmd
 }
 

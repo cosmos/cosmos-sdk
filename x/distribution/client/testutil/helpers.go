@@ -1,16 +1,49 @@
 package testutil
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrcli "github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
+
+func MsgWithdrawDelegatorRewardExec(clientCtx client.Context, valAddr fmt.Stringer, extraArgs ...string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	clientCtx = clientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	args := []string{valAddr.String()}
+	args = append(args, extraArgs...)
+
+	cmd := flags.PostCommands(distrcli.NewWithdrawRewardsCmd())[0]
+	cmd.SetErr(buf)
+	cmd.SetOut(buf)
+	cmd.SetArgs(args)
+
+	if err := cmd.ExecuteContext(ctx); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+// ----------------------------------------------------------------------------
+// TODO: REMOVE ALL FUNCTIONS BELOW.
+//
+// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
+// ----------------------------------------------------------------------------
 
 // TxWithdrawRewards raises a txn to withdraw rewards
 func TxWithdrawRewards(f *cli.Fixtures, valAddr sdk.ValAddress, from string, flags ...string) bool {

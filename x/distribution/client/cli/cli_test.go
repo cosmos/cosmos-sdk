@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -115,7 +116,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeight(3)
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name           string
@@ -183,7 +185,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeight(3)
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name           string
@@ -251,7 +254,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeight(3)
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name           string
@@ -335,7 +339,11 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeightWithTimeout(10, 20*time.Second)
+	s.Require().NoError(err)
+
+	addr := val.Address
+	valAddr := sdk.ValAddress(addr)
 
 	testCases := []struct {
 		name           string
@@ -346,8 +354,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 		{
 			"invalid delegator address",
 			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				"foo", sdk.ValAddress(val.Address).String(),
+				fmt.Sprintf("--%s=5", flags.FlagHeight),
+				"foo", valAddr.String(),
 			},
 			true,
 			"",
@@ -355,8 +363,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 		{
 			"invalid validator address",
 			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				val.Address.String(), "foo",
+				fmt.Sprintf("--%s=5", flags.FlagHeight),
+				addr.String(), "foo",
 			},
 			true,
 			"",
@@ -364,21 +372,48 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 		{
 			"default output",
 			[]string{
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				val.Address.String(), sdk.ValAddress(val.Address).String(),
+				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				addr.String(),
 			},
 			false,
-			"null",
+			fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[{"denom":"stake","amount":"387.100000000000000000"}]}],"total":[{"denom":"stake","amount":"387.100000000000000000"}]}`, valAddr.String()),
+		},
+		{
+			"default output (specific validator)",
+			[]string{
+				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				addr.String(), valAddr.String(),
+			},
+			false,
+			`[{"denom":"stake","amount":"387.100000000000000000"}]`,
 		},
 		{
 			"text output",
 			[]string{
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
-				fmt.Sprintf("--%s=3", flags.FlagHeight),
-				val.Address.String(), sdk.ValAddress(val.Address).String(),
+				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				addr.String(),
 			},
 			false,
-			"null",
+			fmt.Sprintf(`rewards:
+- reward:
+  - amount: "387.100000000000000000"
+    denom: stake
+  validator_address: %s
+total:
+- amount: "387.100000000000000000"
+  denom: stake`, valAddr.String()),
+		},
+		{
+			"text output (specific validator)",
+			[]string{
+				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				addr.String(), valAddr.String(),
+			},
+			false,
+			`- amount: "387.100000000000000000"
+  denom: stake`,
 		},
 	}
 

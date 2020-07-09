@@ -21,7 +21,7 @@ const (
 
 // GenTx generates a signed mock transaction.
 func GenTx(gen client.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) sdk.Tx {
-	sigs := make([]signing.SignatureV2, len(priv)) //nolint:staticcheck // SA1019: authtypes.StdSignature is deprecated
+	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))

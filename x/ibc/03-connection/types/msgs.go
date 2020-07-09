@@ -37,10 +37,10 @@ func (msg MsgConnectionOpenInit) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid connection ID: %s", msg.ConnectionID)
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid client ID: %s", msg.ClientID)
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -94,10 +94,10 @@ func (msg MsgConnectionOpenTry) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid connection ID: %s", msg.ConnectionID)
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid client ID: %s", msg.ClientID)
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if len(msg.CounterpartyVersions) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty counterparty versions")
@@ -228,7 +228,7 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid connection ID %s", msg.ConnectionID)
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")

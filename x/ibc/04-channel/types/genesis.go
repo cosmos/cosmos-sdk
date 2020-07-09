@@ -91,37 +91,37 @@ func DefaultGenesisState() GenesisState {
 func (gs GenesisState) Validate() error {
 	for i, channel := range gs.Channels {
 		if err := channel.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid channel %d: %w", i, err)
+			return fmt.Errorf("invalid channel %v channel index %d: %w", channel, i, err)
 		}
 	}
 
 	for i, ack := range gs.Acknowledgements {
 		if err := ack.Validate(); err != nil {
-			return fmt.Errorf("invalid acknowledgement %d: %w", i, err)
+			return fmt.Errorf("invalid acknowledgement %v ack index %d: %w", ack, i, err)
 		}
 	}
 
 	for i, commitment := range gs.Commitments {
 		if err := commitment.Validate(); err != nil {
-			return fmt.Errorf("invalid commitment %d: %w", i, err)
+			return fmt.Errorf("invalid commitment %v index %d: %w", commitment, i, err)
 		}
 	}
 
 	for i, ss := range gs.SendSequences {
 		if err := ss.Validate(); err != nil {
-			return fmt.Errorf("invalid send sequence %d: %w", i, err)
+			return fmt.Errorf("invalid send sequence %v index %d: %w", ss, i, err)
 		}
 	}
 
 	for i, rs := range gs.RecvSequences {
 		if err := rs.Validate(); err != nil {
-			return fmt.Errorf("invalid receive sequence %d: %w", i, err)
+			return fmt.Errorf("invalid receive sequence %v index %d: %w", rs, i, err)
 		}
 	}
 
 	for i, as := range gs.AckSequences {
 		if err := as.Validate(); err != nil {
-			return fmt.Errorf("invalid acknowledgement sequence %d: %w", i, err)
+			return fmt.Errorf("invalid acknowledgement sequence %v index %d: %w", as, i, err)
 		}
 	}
 
@@ -130,10 +130,10 @@ func (gs GenesisState) Validate() error {
 
 func validateGenFields(portID, channelID string, sequence uint64) error {
 	if err := host.PortIdentifierValidator(portID); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if err := host.ChannelIdentifierValidator(channelID); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if sequence == 0 {
 		return errors.New("sequence cannot be 0")

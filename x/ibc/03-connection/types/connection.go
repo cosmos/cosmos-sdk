@@ -51,10 +51,10 @@ func (c ConnectionEnd) GetVersions() []string {
 // counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(c.ID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid connection ID: %s", c.ID)
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if len(c.Versions) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty connection versions")
@@ -96,10 +96,10 @@ func (c Counterparty) GetPrefix() commitmentexported.Prefix {
 // ValidateBasic performs a basic validation check of the identifiers and prefix
 func (c Counterparty) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(c.ConnectionID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid counterparty connection ID %s", c.ConnectionID)
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid counterparty client ID %s", c.ClientID)
+		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
 	if c.Prefix.Empty() {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty prefix cannot be empty")

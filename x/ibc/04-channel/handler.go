@@ -16,7 +16,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 		portCap, msg.Channel.Counterparty, msg.Channel.Version,
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrap(err, "channel handshake open init failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -45,7 +45,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrap(err, "channel handshake open try failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -74,7 +74,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 		ctx, msg.PortID, msg.ChannelID, channelCap, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
 	)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake open ack failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
@@ -103,7 +103,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelOpenConfirm) (*sdk.Result, error) {
 	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofAck, msg.ProofHeight)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake open confirm failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
@@ -132,7 +132,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelCloseInit) (*sdk.Result, error) {
 	err := k.ChanCloseInit(ctx, msg.PortID, msg.ChannelID, channelCap)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake close init failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
@@ -161,7 +161,7 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelCloseConfirm) (*sdk.Result, error) {
 	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofInit, msg.ProofHeight)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake close confirm failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)

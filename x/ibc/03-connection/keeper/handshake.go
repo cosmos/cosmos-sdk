@@ -198,11 +198,12 @@ func (k Keeper) ConnOpenAck(
 		return sdkerrors.Wrap(err, "client consensus state verification failed")
 	}
 
+	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> OPEN ", connectionID, connection.State))
+
 	// Update connection state to Open
 	connection.State = types.OPEN
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT|TRYOPEN -> OPEN ", connectionID))
 	return nil
 }
 

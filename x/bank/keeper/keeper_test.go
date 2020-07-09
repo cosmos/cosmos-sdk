@@ -69,7 +69,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	app.BankKeeper.SetSendEnabled(ctx, true)
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
 	suite.app = app
 	suite.ctx = ctx
@@ -454,9 +454,45 @@ func (suite *IntegrationTestSuite) TestBalance() {
 
 func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app, ctx := suite.app, suite.ctx
-	enabled := false
-	app.BankKeeper.SetSendEnabled(ctx, enabled)
-	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx))
+	enabled := true
+	params := types.DefaultParams()
+	suite.Require().Equal(enabled, params.DefaultSendEnabled)
+
+	app.BankKeeper.SetParams(ctx, params)
+
+	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
+	fooCoin := sdk.NewCoin("foocoin", sdk.OneInt())
+	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
+
+	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+
+	// Both coins should be send enabled.
+	err := app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	suite.Require().NoError(err)
+
+	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
+	params.DefaultSendEnabled = !enabled
+	params = params.SetSendEnabledParam(fooCoin.Denom, enabled)
+	app.BankKeeper.SetParams(ctx, params)
+
+	// Expect our specific override to be enabled, others to be !enabled.
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, fooCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+
+	// Foo coin should be send enabled.
+	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin)
+	suite.Require().NoError(err)
+
+	// Expect an error when one coin is not send enabled.
+	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	suite.Require().Error(err)
+
+	// Expect an error when all coins are not send enabled.
+	err = app.BankKeeper.SendEnabledCoins(ctx, bondCoin, barCoin)
+	suite.Require().Error(err)
 }
 
 func (suite *IntegrationTestSuite) TestHasBalance() {
@@ -531,7 +567,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	app, ctx := suite.app, suite.ctx
 
-	app.BankKeeper.SetSendEnabled(ctx, true)
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))

@@ -17,6 +17,7 @@ examples/build/*
 docs/_build
 docs/tutorial
 docs/node_modules
+docs/modules
 dist
 tools-stamp
 proto-tools-stamp

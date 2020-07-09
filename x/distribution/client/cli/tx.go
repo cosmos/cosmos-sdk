@@ -90,7 +90,7 @@ Example:
 $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
 $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --commission
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -133,7 +133,7 @@ func NewWithdrawAllRewardsCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx distribution withdraw-all-rewards --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.NoArgs,
@@ -172,7 +172,7 @@ func NewSetWithdrawAddrCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -207,7 +207,7 @@ func NewFundCommunityPoolCmd(clientCtx client.Context) *cobra.Command {
 Example:
 $ %s tx distribution fund-community-pool 100uatom --from mykey
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -254,7 +254,7 @@ Where proposal.json contains:
   "deposit": "1000stake"
 }
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

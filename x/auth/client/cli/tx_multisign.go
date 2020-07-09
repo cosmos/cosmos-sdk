@@ -41,7 +41,7 @@ The --offline flag makes sure that the client will not reach out to an external 
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: makeMultiSignCmd(clientCtx),

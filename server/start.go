@@ -48,7 +48,7 @@ const (
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) *cobra.Command {
+func StartCmd(appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -74,20 +74,29 @@ will not be able to commit subsequent blocks.
 For profiling and benchmarking purposes, CPU profiling can be enabled via the '--cpu-profile' flag
 which accepts a path for the resulting pprof file.
 `,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			_, err := GetPruningOptionsFromFlags(ctx.Viper)
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			serverCtx := GetServerContextFromCmd(cmd)
+
+			// Bind flags to the Context's Viper so the app construction can set
+			// options accordingly.
+			serverCtx.Viper.BindPFlags(cmd.Flags())
+
+			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			return err
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			serverCtx := GetServerContextFromCmd(cmd)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
 			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
 			if !withTM {
-				ctx.Logger.Info("starting ABCI without Tendermint")
-				return startStandAlone(ctx, appCreator)
+				serverCtx.Logger.Info("starting ABCI without Tendermint")
+				return startStandAlone(serverCtx, appCreator)
 			}
 
-			ctx.Logger.Info("starting ABCI with Tendermint")
+			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(ctx, cdc, appCreator)
+			err := startInProcess(serverCtx, clientCtx.JSONMarshaler, appCreator)
 			return err
 		},
 	}
@@ -108,10 +117,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
-
-	// Bind flags to the Context's Viper so the app construction can set options
-	// accordingly.
-	ctx.Viper.BindPFlags(cmd.Flags())
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -147,9 +152,8 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		tmos.Exit(err.Error())
 	}
 
-	tmos.TrapSignal(ctx.Logger, func() {
-		err = svr.Stop()
-		if err != nil {
+	TrapSignal(func() {
+		if err = svr.Stop(); err != nil {
 			tmos.Exit(err.Error())
 		}
 	})

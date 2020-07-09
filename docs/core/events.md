@@ -109,8 +109,8 @@ The `type` and `attribute` value of the `query` allow you to filter the specific
 }
 ```
 
-where `senderAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format. 
+where `senderAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format.
 
 ## Next {hide}
 
-Learn about [object-capabilities](./ocap.md) {hide}
+Learn about SDK [telemetry](./telemetry.md) {hide}

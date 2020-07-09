@@ -328,6 +328,87 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
+	buf := new(bytes.Buffer)
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	s.network.WaitForHeight(3)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			"invalid delegator address",
+			[]string{
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				"foo", sdk.ValAddress(val.Address).String(),
+			},
+			true,
+			"",
+		},
+		{
+			"invalid validator address",
+			[]string{
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				val.Address.String(), "foo",
+			},
+			true,
+			"",
+		},
+		{
+			"default output",
+			[]string{
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				val.Address.String(), sdk.ValAddress(val.Address).String(),
+			},
+			false,
+			"null",
+		},
+		{
+			"text output",
+			[]string{
+				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=3", flags.FlagHeight),
+				val.Address.String(), sdk.ValAddress(val.Address).String(),
+			},
+			false,
+			"null",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			buf.Reset()
+
+			cmd := cli.GetCmdQueryDelegatorRewards()
+			cmd.SetErr(buf)
+			cmd.SetOut(buf)
+			cmd.SetArgs(tc.args)
+
+			err := cmd.ExecuteContext(ctx)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(buf.String()))
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
+
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

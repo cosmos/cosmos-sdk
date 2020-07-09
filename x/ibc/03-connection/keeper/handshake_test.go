@@ -76,12 +76,12 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 		}, true},
-		{"consensus height > latest height", func() {
+		{"consensus height >= latest height", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			consensusHeight = uint64(suite.chainB.GetContext().BlockHeight()) + 1
+			consensusHeight = uint64(suite.chainB.GetContext().BlockHeight())
 		}, false},
 		{"self consensus state not found", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -219,7 +219,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 		}, true},
-		{"consensus height > latest height", func() {
+		{"consensus height >= latest height", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			consensusHeight = uint64(suite.chainA.GetContext().BlockHeight()) + 1
+			consensusHeight = uint64(suite.chainA.GetContext().BlockHeight())
 		}, false},
 		{"connection not found", func() {
 			// connections are never created

@@ -36,13 +36,13 @@ func TestQueryAccount(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountParams([]byte("")))
+	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountRequest([]byte("")))
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	_, _, addr := types.KeyTestPubAddr()
-	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
+	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountRequest(addr))
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)

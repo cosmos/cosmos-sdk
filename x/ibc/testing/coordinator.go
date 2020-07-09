@@ -232,6 +232,29 @@ func (coord *Coordinator) PacketExecuted(
 	return nil
 }
 
+// AcknowledgementExecuted deletes the packet commitment with the given
+// packet sequence since the acknowledgement has been verified.
+func (coord *Coordinator) AcknowledgementExecuted(
+	source, counterparty *TestChain,
+	packet channelexported.PacketI,
+	counterpartyClientID string,
+) error {
+	if err := source.AcknowledgementExecuted(packet); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // IncrementTime iterates through all the TestChain's and increments their current header time
 // by 5 seconds.
 //

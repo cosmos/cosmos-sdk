@@ -146,8 +146,14 @@ type Header interface {
 // negative if a < b
 // zero     if a = b
 // positive if a > b
+//
+// Decrement will return a decremented height from the given height. If this is not possible,
+// an error is returned
+// Valid returns true if height is valid, false otherwise
 type Height interface {
 	Compare(h Height) (int64, error)
+	Decrement() (Height, error)
+	Valid() bool
 	String() string
 }
 

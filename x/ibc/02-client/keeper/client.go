@@ -66,7 +66,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	var (
 		consensusState  exported.ConsensusState
-		consensusHeight uint64
+		consensusHeight exported.Height
 		err             error
 	)
 
@@ -81,7 +81,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
 			ctx.BlockHeight(),
 		)
-		consensusHeight = uint64(ctx.BlockHeight())
+		consensusHeight = localhosttypes.Height(ctx.BlockHeight())
 	default:
 		err = types.ErrInvalidClientType
 	}
@@ -106,7 +106,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			types.EventTypeUpdateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
 		),
 	)
 
@@ -131,7 +131,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrap(types.ErrClientNotFound, misbehaviour.GetClientID())
 	}
 
-	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
+	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), misbehaviour.GetIBCHeight())
 	if !found {
 		return sdkerrors.Wrap(types.ErrConsensusStateNotFound, misbehaviour.GetClientID())
 	}

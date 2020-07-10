@@ -37,6 +37,15 @@ func (h Height) Compare(height clientexported.Height) (int64, error) {
 	return int64(h - localHeight), nil
 }
 
+func (h Height) Decrement() (clientexported.Height, error) {
+	if h == Height(1) {
+		return Height(0), sdkerrors.Wrap(clienttypes.ErrInvalidHeight, "cannot decrement local height below 1")
+	}
+	return Height(h - 1), nil
+}
+
+func (h Height) Valid() bool { return h != Height(0) }
+
 func (h Height) String() string {
 	return fmt.Sprintf("%d", h)
 }

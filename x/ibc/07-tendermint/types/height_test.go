@@ -46,3 +46,27 @@ func TestCompareHeights(t *testing.T) {
 		}
 	}
 }
+
+func TestDecrement(t *testing.T) {
+	validDecrement := types.NewHeight(3, 3)
+	expected := types.NewHeight(3, 2)
+
+	actual, err := validDecrement.Decrement()
+	require.Equal(t, expected, actual, "decrementing %s did not return expected height: %s. got %s",
+		validDecrement.String(), expected.String(), actual.String())
+	require.Nil(t, err, "decrement returned unexpected error: %v", err)
+
+	invalidDecrement := types.NewHeight(3, 1)
+	actual, err = invalidDecrement.Decrement()
+
+	require.Equal(t, types.Height{}, actual, "invalid decrement returned non-zero height: %s", actual.String())
+	require.NotNil(t, err, "expected error on invalid decrement")
+}
+
+func TestValid(t *testing.T) {
+	valid := types.NewHeight(0, 2)
+	require.True(t, valid.Valid(), "valid height did not return true on Valid()")
+
+	invalid := types.NewHeight(2, 0)
+	require.False(t, invalid.Valid(), "invalid height returned true on Valid()")
+}

@@ -78,7 +78,7 @@ func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType expor
 }
 
 // GetClientConsensusState gets the stored consensus state from a client at a given height.
-func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool) {
+func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height exported.Height) (exported.ConsensusState, bool) {
 	store := k.ClientStore(ctx, clientID)
 	bz := store.Get(host.KeyConsensusState(height))
 	if bz == nil {
@@ -92,7 +92,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 
 // SetClientConsensusState sets a ConsensusState to a particular client at the given
 // height
-func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
+func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height exported.Height, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
 	bz := k.cdc.MustMarshalBinaryBare(consensusState)
 	store.Set(host.KeyConsensusState(height), bz)
@@ -161,7 +161,7 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (clientConsStates []types
 
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular
 // client at the given height
-func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height uint64) bool {
+func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height exported.Height) bool {
 	store := k.ClientStore(ctx, clientID)
 	return store.Has(host.KeyConsensusState(height))
 }
@@ -177,11 +177,18 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 
 // GetClientConsensusStateLTE will get the latest ConsensusState of a particular client at the latest height
 // less than or equal to the given height
-func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight uint64) (exported.ConsensusState, bool) {
-	for i := maxHeight; i > 0; i-- {
-		found := k.HasClientConsensusState(ctx, clientID, i)
+func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight exported.Height) (exported.ConsensusState, bool) {
+	// NOTE: For tendermint Heights this is only implemented for a single epoch
+	height := maxHeight
+	var err error
+	for height.Valid() {
+		found := k.HasClientConsensusState(ctx, clientID, height)
 		if found {
-			return k.GetClientConsensusState(ctx, clientID, i)
+			return k.GetClientConsensusState(ctx, clientID, height)
+		}
+		height, err = height.Decrement()
+		if err != nil {
+			break
 		}
 	}
 	return nil, false
@@ -189,8 +196,14 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
-	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height))
+func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
+	tmHeight, ok := height.(ibctmtypes.Height)
+	if !ok {
+		return nil, false
+	}
+	// Only support retrieving HistoricalInfo from the current epoch for now
+	// TODO: check EpochNumber matches expected
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(tmHeight.EpochHeight))
 	if !found {
 		return nil, false
 	}
@@ -198,7 +211,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	valSet := stakingtypes.Validators(histInfo.Valset)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       height,
+		Height:       tmHeight,
 		Timestamp:    histInfo.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),

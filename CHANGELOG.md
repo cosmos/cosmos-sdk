@@ -352,7 +352,7 @@ to detail this new feature and how state transitions occur.
   now exists a single `Params` type with a getter and setter along with a getter for each individual parameter.
 
 ### Bug Fixes
-* (x/bank) [\#6283](https://github.com/cosmos/cosmos-sdk/pull/6283) Create account if recipient does not exist on handing `MsgMultiSend`.
+* (x/bank) [\#6674](https://github.com/cosmos/cosmos-sdk/pull/6674) Create account if recipient does not exist on handing `MsgMultiSend`.
 * (rest) [\#5508](https://github.com/cosmos/cosmos-sdk/pull/5508) Fix `x/distribution` endpoints to properly return height in the response.
 * (x/genutil) [\#5499](https://github.com/cosmos/cosmos-sdk/pull/) Ensure `DefaultGenesis` returns valid and non-nil default genesis state.
 * (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.

@@ -112,7 +112,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -164,7 +164,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -219,7 +219,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -274,7 +274,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 			funder.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)

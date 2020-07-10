@@ -115,7 +115,7 @@ func sendMsgSend(
 		privkeys...,
 	)
 	if err != nil {
-		simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		return err
 	}
 
 	_, _, err = app.Deliver(tx)

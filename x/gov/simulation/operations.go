@@ -154,7 +154,7 @@ func SimulateSubmitProposal(
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -241,7 +241,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -303,7 +303,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)

@@ -163,7 +163,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -234,7 +234,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -307,7 +307,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -394,7 +394,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)
@@ -504,7 +504,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(tx)

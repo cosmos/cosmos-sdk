@@ -98,7 +98,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
 		_, res, err := app.Deliver(tx)

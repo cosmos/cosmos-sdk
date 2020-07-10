@@ -113,8 +113,14 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().NoError(err)
 
 	// Write the output to disk
-	_, cleanup1 := testutil.WriteToNewTempFile(s.T(), strings.Repeat(string(res), 3))
+	filename, cleanup1 := testutil.WriteToNewTempFile(s.T(), strings.Repeat(string(res), 3))
 	defer cleanup1()
+
+	// sign-batch file - offline is set but account-number and sequence are not
+	cliHome := strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
+	val.ClientCtx.HomeDir = cliHome
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
+	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 }
 
 func TestCLISignBatch(t *testing.T) {

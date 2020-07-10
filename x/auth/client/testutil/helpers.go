@@ -100,6 +100,18 @@ func TxMultisign(f *cli.Fixtures, fileName, name string, signaturesFiles []strin
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags))
 }
 
+func TxSignBatchExec(clientCtx client.Context, from sdk.AccAddress, filename string, extraArgs ...string) ([]byte, error) {
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--from=%s", from.String()),
+		filename,
+	}
+
+	args = append(args, extraArgs...)
+
+	return callCmd(clientCtx, cli2.GetSignBatchCommand, args)
+}
+
 func TxSignBatch(f *cli.Fixtures, signer, fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx sign-batch %v --keyring-backend=test --from=%s %v", f.SimdBinary, f.Flags(), signer, fileName)
 

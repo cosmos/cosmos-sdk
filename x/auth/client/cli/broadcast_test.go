@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -18,7 +19,7 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
 	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
 
-	cmd := GetBroadcastCommand(clientCtx)
+	cmd := GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
 
@@ -28,7 +29,11 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
-	cmd := GetBroadcastCommand(clientCtx)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := GetBroadcastCommand()
 
 	testDir, cleanFunc := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanFunc)
@@ -39,7 +44,8 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	err := ioutil.WriteFile(txFileName, txContents, 0644)
 	require.NoError(t, err)
 
-	err = cmd.RunE(cmd, []string{txFileName})
+	cmd.SetArgs([]string{txFileName})
+	err = cmd.ExecuteContext(ctx)
 
 	// We test it tries to broadcast but we set unsupported tx to get the error.
 	require.EqualError(t, err, "unsupported return type ; supported types: sync, async, block")

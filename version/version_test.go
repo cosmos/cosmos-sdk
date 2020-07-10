@@ -40,7 +40,7 @@ go version go1.14 linux/amd64`
 
 func Test_runVersionCmd(t *testing.T) {
 	cmd := NewVersionCommand()
-	_, mockOut, _ := testutil.ApplyMockIO(cmd)
+	_, mockOut := testutil.ApplyMockIO(cmd)
 
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=''", cli.OutputFlag),

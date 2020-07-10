@@ -52,33 +52,8 @@ func NewTxBuilder(
 	}
 }
 
-// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
-// the command line using Viper.
-// Deprecated in favor of NewTxBuilderFromFlagSet
-func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
-	if err != nil {
-		panic(err)
-	}
-	txbldr := TxBuilder{
-		keybase:            kb,
-		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
-		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                flags.GasFlagVar.Gas,
-		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		simulateAndExecute: flags.GasFlagVar.Simulate,
-		chainID:            viper.GetString(flags.FlagChainID),
-		memo:               viper.GetString(flags.FlagMemo),
-	}
-
-	txbldr = txbldr.WithFees(viper.GetString(flags.FlagFees))
-	txbldr = txbldr.WithGasPrices(viper.GetString(flags.FlagGasPrices))
-
-	return txbldr
-}
-
-// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters extracted from
-// FlagSet (It should deprecate NewTxBuilderFromCLI).
+// NewTxBuilderFromFlags returns a new initialized TxBuilder with parameters extracted from
+// FlagSet.
 func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
 	backend, _ := fs.GetString(flags.FlagKeyringBackend)
 	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)

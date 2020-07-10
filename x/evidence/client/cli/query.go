@@ -65,11 +65,12 @@ func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 }
 
 func queryEvidence(cdc *codec.Codec, clientCtx client.Context, hash string) error {
-	if _, err := hex.DecodeString(hash); err != nil {
+	decodedHash, err := hex.DecodeString(hash)
+	if err != nil {
 		return fmt.Errorf("invalid evidence hash: %w", err)
 	}
 
-	params := types.NewQueryEvidenceParams(hash)
+	params := types.NewQueryEvidenceRequest(decodedHash)
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return fmt.Errorf("failed to marshal query params: %w", err)

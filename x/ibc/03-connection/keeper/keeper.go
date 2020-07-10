@@ -159,7 +159,7 @@ func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.Connecti
 func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) error {
 	_, found := k.clientKeeper.GetClientState(ctx, clientID)
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)

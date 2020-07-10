@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -20,15 +21,43 @@ func NewTestCaseDir(t testing.TB) (string, func()) {
 	return dir, func() { os.RemoveAll(dir) }
 }
 
+// BufferReader is implemented by types that read from a string buffer.
+type BufferReader interface {
+	io.Reader
+	Reset(string)
+}
+
+// BufferWriter is implemented by types that write to a buffer.
+type BufferWriter interface {
+	io.Writer
+	Reset()
+	Bytes() []byte
+	String() string
+}
+
 // ApplyMockIO replaces stdin/out/err with buffers that can be used during testing.
-func ApplyMockIO(c *cobra.Command) (*strings.Reader, *bytes.Buffer, *bytes.Buffer) {
+// Returns an input BufferReader and an output BufferWriter.
+func ApplyMockIO(c *cobra.Command) (BufferReader, BufferWriter) {
 	mockIn := strings.NewReader("")
 	mockOut := bytes.NewBufferString("")
-	mockErr := bytes.NewBufferString("")
+
 	c.SetIn(mockIn)
 	c.SetOut(mockOut)
-	c.SetErr(mockErr)
-	return mockIn, mockOut, mockErr
+	c.SetErr(mockOut)
+
+	return mockIn, mockOut
+}
+
+// ApplyMockIODiscardOutputs replaces a cobra.Command output and error streams with a dummy io.Writer.
+// Replaces and returns the io.Reader associated to the cobra.Command input stream.
+func ApplyMockIODiscardOutErr(c *cobra.Command) BufferReader {
+	mockIn := strings.NewReader("")
+
+	c.SetIn(mockIn)
+	c.SetOut(ioutil.Discard)
+	c.SetErr(ioutil.Discard)
+
+	return mockIn
 }
 
 // Write the given string to a new temporary file.

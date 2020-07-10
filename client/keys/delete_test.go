@@ -16,7 +16,7 @@ import (
 func Test_runDeleteCmd(t *testing.T) {
 	cmd := DeleteKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
 	forceF, _ := cmd.Flags().GetBool(flagForce)

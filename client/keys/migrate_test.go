@@ -2,7 +2,6 @@ package keys
 
 import (
 	"fmt"
-	"io/ioutil"
 	"testing"
 
 	"github.com/otiai10/copy"
@@ -16,8 +15,7 @@ import (
 
 func Test_runMigrateCmd(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
 	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
@@ -35,7 +33,7 @@ func Test_runMigrateCmd(t *testing.T) {
 
 	cmd = MigrateCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),

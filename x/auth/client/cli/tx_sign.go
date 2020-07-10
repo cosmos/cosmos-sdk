@@ -109,6 +109,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			unsignedStdTx := scanner.StdTx()
 			txBldr = txBldr.WithSequence(sequence)
 
+			var err error
 			if multisigAddr.Empty() {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
 				_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
@@ -120,7 +121,6 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			} else {
 				stdTx, err = authclient.SignStdTxWithSignerAddress(txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), unsignedStdTx, true)
 			}
-
 			if err != nil {
 				return err
 			}

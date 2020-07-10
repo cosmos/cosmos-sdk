@@ -94,7 +94,7 @@ func TestSimulateGasCost(t *testing.T) {
 	newCtx, err := anteHandler(cc, txBuilder.GetTx(), true)
 	require.Nil(t, err, "transaction failed on simulate mode")
 
-	// Increment seqs, as we just sent a tx
+	// Increment seqs, as anteHandler calls IncrementSequenceDecorator
 	seqs = []uint64{1, 1, 1}
 	// Get the simulated gas
 	simulatedGas := newCtx.GasMeter().GasConsumed()

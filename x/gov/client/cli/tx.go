@@ -62,14 +62,14 @@ func NewTxCmd(
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal(ctx)
+	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, pcmd := range pcmds {
 		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
 	}
 
 	govTxCmd.AddCommand(flags.PostCommands(
-		NewCmdDeposit(ctx),
-		NewCmdVote(ctx),
+		NewCmdDeposit(),
+		NewCmdVote(),
 		cmdSubmitProp,
 	)...)
 
@@ -77,7 +77,7 @@ func NewTxCmd(
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
-func NewCmdSubmitProposal(clientCtx client.Context) *cobra.Command {
+func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -105,7 +105,11 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			proposal, err := parseSubmitProposalFlags(cmd.Flags())
 			if err != nil {
@@ -142,7 +146,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
-func NewCmdDeposit(clientCtx client.Context) *cobra.Command {
+func NewCmdDeposit() *cobra.Command {
 	return &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
@@ -158,7 +162,11 @@ $ %s tx gov deposit 1 10stake --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -187,7 +195,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 }
 
 // NewCmdVote implements creating a new vote command.
-func NewCmdVote(clientCtx client.Context) *cobra.Command {
+func NewCmdVote() *cobra.Command {
 	return &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
@@ -204,7 +212,11 @@ $ %s tx gov vote 1 yes --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// Get voting address
 			from := clientCtx.GetFromAddress()

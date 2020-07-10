@@ -43,7 +43,7 @@ func DefaultGenesisState() GenesisState {
 func (gs GenesisState) Validate() error {
 	for i, conn := range gs.Connections {
 		if err := conn.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid connection %d: %w", i, err)
+			return fmt.Errorf("invalid connection %v index %d: %w", conn, i, err)
 		}
 	}
 

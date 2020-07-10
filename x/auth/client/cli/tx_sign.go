@@ -248,6 +248,9 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			append, _ := cmd.Flags().GetBool(flagAppend)
 			appendSig := append && !generateSignatureOnly
 			newTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, stdTx, appendSig, clientCtx.Offline)
+			if err != nil {
+				return err
+			}
 		}
 		if err != nil {
 			return err

@@ -262,12 +262,15 @@ func New(t *testing.T, cfg Config) *Network {
 		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
+		commission, err := sdk.NewDecFromStr("0.5")
+		require.NoError(t, err)
+
 		createValMsg := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
 		)
 
@@ -336,6 +339,21 @@ func New(t *testing.T, cfg Config) *Network {
 // an error is returned. Regardless, the latest height queried is returned.
 func (n *Network) WaitForHeight(h int64) (int64, error) {
 	return n.WaitForHeightWithTimeout(h, 10*time.Second)
+}
+
+// LatestHeight returns the latest height of the network or an error if the
+// query fails or no validators exist.
+func (n *Network) LatestHeight() (int64, error) {
+	if len(n.Validators) == 0 {
+		return 0, errors.New("no validators available")
+	}
+
+	status, err := n.Validators[0].RPCClient.Status()
+	if err != nil {
+		return 0, err
+	}
+
+	return status.SyncInfo.LatestBlockHeight, nil
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can

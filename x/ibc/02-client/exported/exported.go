@@ -20,7 +20,7 @@ type ClientState interface {
 	GetID() string
 	GetChainID() string
 	ClientType() ClientType
-	GetLatestHeight() uint64
+	GetLatestHeight() Height
 	IsFrozen() bool
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
@@ -32,9 +32,9 @@ type ClientState interface {
 		cdc codec.Marshaler,
 		aminoCdc *codec.Codec,
 		root commitmentexported.Root,
-		height uint64,
+		height Height,
 		counterpartyClientIdentifier string,
-		consensusHeight uint64,
+		consensusHeight Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		consensusState ConsensusState,
@@ -42,7 +42,7 @@ type ClientState interface {
 	VerifyConnectionState(
 		store sdk.KVStore,
 		cdc codec.Marshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		connectionID string,
@@ -52,7 +52,7 @@ type ClientState interface {
 	VerifyChannelState(
 		store sdk.KVStore,
 		cdc codec.Marshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -63,7 +63,7 @@ type ClientState interface {
 	VerifyPacketCommitment(
 		store sdk.KVStore,
 		cdc codec.Marshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -75,7 +75,7 @@ type ClientState interface {
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
 		cdc codec.Marshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -87,7 +87,7 @@ type ClientState interface {
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
 		cdc codec.Marshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -98,7 +98,7 @@ type ClientState interface {
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
 		cdc codec.Marshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -113,7 +113,7 @@ type ConsensusState interface {
 	ClientType() ClientType // Consensus kind
 
 	// GetHeight returns the height of the consensus state
-	GetHeight() uint64
+	GetHeight() Height
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
@@ -128,6 +128,7 @@ type ConsensusState interface {
 // Misbehaviour defines a specific consensus kind and an evidence
 type Misbehaviour interface {
 	evidenceexported.Evidence
+	GetIBCHeight() Height
 	ClientType() ClientType
 	GetClientID() string
 }
@@ -135,7 +136,7 @@ type Misbehaviour interface {
 // Header is the consensus state update information
 type Header interface {
 	ClientType() ClientType
-	GetHeight() uint64
+	GetHeight() Height
 }
 
 // Height is an interface for a monotonically increasing data type
@@ -147,6 +148,7 @@ type Header interface {
 // positive if a > b
 type Height interface {
 	Compare(h Height) (int64, error)
+	String() string
 }
 
 // MsgCreateClient defines the msg interface that the

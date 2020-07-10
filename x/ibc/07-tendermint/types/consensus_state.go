@@ -15,13 +15,13 @@ import (
 type ConsensusState struct {
 	Timestamp    time.Time               `json:"timestamp" yaml:"timestamp"`
 	Root         commitmentexported.Root `json:"root" yaml:"root"`
-	Height       uint64                  `json:"height" yaml:"height"`
+	Height       Height                  `json:"height" yaml:"height"`
 	ValidatorSet *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
 }
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmentexported.Root, height uint64,
+	timestamp time.Time, root commitmentexported.Root, height Height,
 	valset *tmtypes.ValidatorSet,
 ) ConsensusState {
 	return ConsensusState{
@@ -43,7 +43,7 @@ func (cs ConsensusState) GetRoot() commitmentexported.Root {
 }
 
 // GetHeight returns the height for the specific consensus state
-func (cs ConsensusState) GetHeight() uint64 {
+func (cs ConsensusState) GetHeight() clientexported.Height {
 	return cs.Height
 }
 
@@ -60,8 +60,8 @@ func (cs ConsensusState) ValidateBasic() error {
 	if cs.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "validator set cannot be nil")
 	}
-	if cs.Height == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "height cannot be 0")
+	if cs.Height.EpochHeight == 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "epoch-height cannot be 0")
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")

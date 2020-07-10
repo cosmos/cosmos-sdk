@@ -17,6 +17,7 @@ var _ clientexported.Header = Header{}
 // Header defines the Tendermint consensus Header
 type Header struct {
 	tmtypes.SignedHeader `json:"signed_header" yaml:"signed_header"` // contains the commitment root
+	Height               Height                                      `json:"height" yaml:"height"` // contains epoch number
 	ValidatorSet         *tmtypes.ValidatorSet                       `json:"validator_set" yaml:"validator_set"`
 }
 
@@ -28,7 +29,7 @@ func (h Header) ClientType() clientexported.ClientType {
 // ConsensusState returns the consensus state associated with the header
 func (h Header) ConsensusState() ConsensusState {
 	return ConsensusState{
-		Height:       uint64(h.Height),
+		Height:       h.Height,
 		Timestamp:    h.Time,
 		Root:         commitmenttypes.NewMerkleRoot(h.AppHash),
 		ValidatorSet: h.ValidatorSet,
@@ -38,8 +39,8 @@ func (h Header) ConsensusState() ConsensusState {
 // GetHeight returns the current height
 //
 // NOTE: also referred as `sequence`
-func (h Header) GetHeight() uint64 {
-	return uint64(h.Height)
+func (h Header) GetHeight() clientexported.Height {
+	return h.Height
 }
 
 // ValidateBasic calls the SignedHeader ValidateBasic function
@@ -53,6 +54,10 @@ func (h Header) ValidateBasic(chainID string) error {
 	}
 	if !bytes.Equal(h.ValidatorsHash, h.ValidatorSet.Hash()) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
+	}
+	if int64(h.Height.EpochHeight) != h.SignedHeader.Height {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidHeader, "epoch-height %d does not equal header height %d",
+			h.Height.EpochHeight, h.SignedHeader.Height)
 	}
 	return nil
 }

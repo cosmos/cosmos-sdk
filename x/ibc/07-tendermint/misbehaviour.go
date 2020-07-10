@@ -20,7 +20,7 @@ func CheckMisbehaviourAndUpdateState(
 	clientState clientexported.ClientState,
 	consensusState clientexported.ConsensusState,
 	misbehaviour clientexported.Misbehaviour,
-	height uint64, // height at which the consensus state was loaded
+	height clientexported.Height, // height at which the consensus state was loaded
 	currentTimestamp time.Time,
 	consensusParams *abci.ConsensusParams,
 ) (clientexported.ClientState, error) {
@@ -31,8 +31,18 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "client state type is not Tendermint")
 	}
 
+	tmEvidence, ok := misbehaviour.(types.Evidence)
+	if !ok {
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
+	}
+
+	tmHeight, ok := tmEvidence.GetIBCHeight().(types.Height)
+	if !ok {
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "height type is not Tendermint")
+	}
+
 	// If client is already frozen at earlier height than evidence, return with error
-	if tmClientState.IsFrozen() && tmClientState.FrozenHeight <= uint64(misbehaviour.GetHeight()) {
+	if cmp, _ := tmClientState.FrozenHeight.Compare(tmEvidence.GetIBCHeight()); tmClientState.IsFrozen() && cmp <= 0 {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
 			"client is already frozen at earlier height %d than misbehaviour height %d", tmClientState.FrozenHeight, misbehaviour.GetHeight())
 	}
@@ -41,32 +51,26 @@ func CheckMisbehaviourAndUpdateState(
 	if !ok {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "consensus state is not Tendermint")
 	}
-
-	tmEvidence, ok := misbehaviour.(types.Evidence)
-	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
-	}
-
 	if err := checkMisbehaviour(
-		tmClientState, tmConsensusState, tmEvidence, height, currentTimestamp, consensusParams,
+		tmClientState, tmConsensusState, tmEvidence, tmHeight, currentTimestamp, consensusParams,
 	); err != nil {
 		return nil, err
 	}
 
-	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
+	tmClientState.FrozenHeight = tmHeight
 	return tmClientState, nil
 }
 
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func checkMisbehaviour(
 	clientState types.ClientState, consensusState types.ConsensusState, evidence types.Evidence,
-	height uint64, currentTimestamp time.Time, consensusParams *abci.ConsensusParams,
+	height types.Height, currentTimestamp time.Time, consensusParams *abci.ConsensusParams,
 ) error {
 	// calculate the age of the misbehaviour evidence
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()
 	ageDuration := currentTimestamp.Sub(infractionTime)
-	ageBlocks := height - uint64(infractionHeight)
+	ageBlocks := height.EpochHeight - uint64(infractionHeight)
 
 	// Reject misbehaviour if the age is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
@@ -87,7 +91,7 @@ func checkMisbehaviour(
 	}
 
 	// check if provided height matches the headers' height
-	if height > uint64(evidence.GetHeight()) {
+	if cmp, _ := height.Compare(evidence.GetIBCHeight()); cmp != 0 {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"height > evidence header height (%d > %d)", height, evidence.GetHeight(),
@@ -109,14 +113,14 @@ func checkMisbehaviour(
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
-		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
+		evidence.ChainID, evidence.Header1.Commit.BlockID, int64(evidence.Header1.Height.EpochHeight),
 		evidence.Header1.Commit, clientState.TrustLevel,
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
-		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
+		evidence.ChainID, evidence.Header2.Commit.BlockID, int64(evidence.Header2.Height.EpochHeight),
 		evidence.Header2.Commit, clientState.TrustLevel,
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)

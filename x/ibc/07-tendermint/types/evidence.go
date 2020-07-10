@@ -22,7 +22,7 @@ var (
 	_ clientexported.Misbehaviour = Evidence{}
 )
 
-// Evidence is a wrapper over tendermint's DuplicateVoteEvidence
+// Evidence is a wrapper over two conflicting headers
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
 	ClientID string `json:"client_id" yaml:"client_id"`
@@ -71,7 +71,14 @@ func (ev Evidence) Hash() tmbytes.HexBytes {
 //
 // NOTE: assumes that evidence headers have the same height
 func (ev Evidence) GetHeight() int64 {
-	return int64(math.Min(float64(ev.Header1.Height), float64(ev.Header2.Height)))
+	return int64(math.Min(float64(ev.Header1.Height.EpochHeight), float64(ev.Header2.Height.EpochHeight)))
+}
+
+// GetIBCHeight returns the Height at which misbehaviour occurred
+//
+// NOTE: evidence headers must have same height
+func (ev Evidence) GetIBCHeight() clientexported.Height {
+	return ev.Header1.Height
 }
 
 // GetTime returns the timestamp at which misbehaviour occurred. It uses the
@@ -102,8 +109,12 @@ func (ev Evidence) ValidateBasic() error {
 		)
 	}
 	// Ensure that Heights are the same
-	if ev.Header1.Height != ev.Header2.Height {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
+	cmp, err := ev.Header1.Height.Compare(ev.Header2.Height)
+	if err != nil {
+		return sdkerrors.Wrapf(ErrInvalidHeightComparison, "header1 Height %s is not same type as header2 Height %s", ev.Header1.Height, ev.Header2.Height)
+	}
+	if cmp != 0 {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%v ≠ %v)", ev.Header1.Height, ev.Header2.Height)
 	}
 	// Ensure that Commit Hashes are different
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {

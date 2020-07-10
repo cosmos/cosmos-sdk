@@ -80,10 +80,19 @@ func checkValidity(
 	}
 
 	// assert header height is newer than any we know
-	if header.GetHeight() <= clientState.GetLatestHeight() {
+	// for now, we only support updates that increment EpochHeight
+	tmClientHeight := clientState.GetLatestHeight().(types.Height)
+	if header.Height.EpochNumber != tmClientHeight.EpochNumber {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header height ≤ latest client state height (%d ≤ %d)", header.GetHeight(), clientState.GetLatestHeight(),
+			"headers updating to epoch number %d from client state epoch %d unsupported",
+			header.Height.EpochNumber, tmClientHeight.EpochNumber,
+		)
+	}
+	if header.Height.EpochHeight <= tmClientHeight.EpochHeight {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader,
+			"header height ≤ latest client state height (%d ≤ %d)", header.Height.EpochHeight, tmClientHeight.EpochHeight,
 		)
 	}
 
@@ -103,7 +112,7 @@ func checkValidity(
 func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
 	clientState.LastHeader = header
 	consensusState := types.ConsensusState{
-		Height:       uint64(header.Height),
+		Height:       header.Height,
 		Timestamp:    header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(header.AppHash),
 		ValidatorSet: header.ValidatorSet,

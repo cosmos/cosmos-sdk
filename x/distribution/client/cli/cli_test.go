@@ -3,6 +3,8 @@ package cli_test
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -743,7 +745,96 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
+	val := s.network.Validators[0]
 
+	invalidPropFile, err := ioutil.TempFile(os.TempDir(), "invalid_community_spend_proposal.*.json")
+	s.Require().NoError(err)
+	defer os.Remove(invalidPropFile.Name())
+
+	invalidProp := `{
+  "title": "",
+  "description": "Pay me some Atoms!",
+  "recipient": "foo",
+  "amount": "-343foocoin",
+  "deposit": -324foocoin
+}`
+
+	_, err = invalidPropFile.WriteString(invalidProp)
+	s.Require().NoError(err)
+
+	validPropFile, err := ioutil.TempFile(os.TempDir(), "valid_community_spend_proposal.*.json")
+	s.Require().NoError(err)
+	defer os.Remove(validPropFile.Name())
+
+	validProp := fmt.Sprintf(`{
+  "title": "Community Pool Spend",
+  "description": "Pay me some Atoms!",
+  "recipient": "%s",
+  "amount": "%s",
+  "deposit": "%s"
+}`, val.Address.String(), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
+
+	_, err = validPropFile.WriteString(validProp)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     fmt.Stringer
+		expectedCode uint32
+	}{
+		{
+			"invalid proposal",
+			[]string{
+				invalidPropFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction",
+			[]string{
+				validPropFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // sync mode as there are no funds yet
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := flags.PostCommands(cli.GetCmdSubmitProposal())[0]
+			_, out := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
+			cmd.SetArgs(tc.args)
+
+			err := cmd.ExecuteContext(ctx)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

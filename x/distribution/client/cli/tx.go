@@ -280,19 +280,18 @@ Where proposal.json contains:
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-
 			amount, err := sdk.ParseCoins(proposal.Amount)
 			if err != nil {
 				return err
 			}
 
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
-
 			deposit, err := sdk.ParseCoins(proposal.Deposit)
 			if err != nil {
 				return err
 			}
+
+			from := clientCtx.GetFromAddress()
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

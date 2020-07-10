@@ -28,8 +28,7 @@ func TestMigrateGenesis(t *testing.T) {
 	target := "v0.36"
 
 	cmd := MigrateGenesisCmd()
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	clientCtx := client.Context{}.WithJSONMarshaler(cdc)
 	ctx := context.Background()

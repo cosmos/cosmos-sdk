@@ -38,7 +38,7 @@ func Test_showKeysCmd(t *testing.T) {
 func Test_runShowCmd(t *testing.T) {
 	cmd := ShowKeysCmd()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{"invalid"})
 	require.EqualError(t, cmd.Execute(), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")

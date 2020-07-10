@@ -49,7 +49,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 
 // TODO Rename to NewTestTx
 // TODO Is this impl better than using TxFactory?
-func NewTestTx2(ctx sdk.Context, privs []crypto.PrivKey, txGenerator client.TxGenerator, txBuilder client.TxBuilder, accNums []uint64, seqs []uint64) ([]signing.SignatureV2, error) {
+func NewTestTx2(ctx sdk.Context, txGenerator client.TxGenerator, txBuilder client.TxBuilder, privs []crypto.PrivKey, accNums []uint64, seqs []uint64) ([]signing.SignatureV2, error) {
 	var sigsV2 []signing.SignatureV2
 
 	for i, priv := range privs {

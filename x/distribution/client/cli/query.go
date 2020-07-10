@@ -25,21 +25,21 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	distQueryCmd.AddCommand(flags.GetCommands(
+	distQueryCmd.AddCommand(
 		GetCmdQueryParams(),
 		GetCmdQueryValidatorOutstandingRewards(),
 		GetCmdQueryValidatorCommission(),
 		GetCmdQueryValidatorSlashes(),
 		GetCmdQueryDelegatorRewards(),
 		GetCmdQueryCommunityPool(),
-	)...)
+	)
 
 	return distQueryCmd
 }
 
 // GetCmdQueryParams implements the query params command.
 func GetCmdQueryParams() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query distribution params",
@@ -64,12 +64,14 @@ func GetCmdQueryParams() *cobra.Command {
 			return clientCtx.PrintOutput(params)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetCmdQueryValidatorOutstandingRewards implements the query validator
 // outstanding rewards command.
 func GetCmdQueryValidatorOutstandingRewards() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "validator-outstanding-rewards [validator]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations",
@@ -116,11 +118,13 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 			return clientCtx.PrintOutput(outstandingRewards)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetCmdQueryValidatorCommission implements the query validator commission command.
 func GetCmdQueryValidatorCommission() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "commission [validator]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution validator commission",
@@ -158,11 +162,13 @@ $ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 			return clientCtx.PrintOutput(valCom)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetCmdQueryValidatorSlashes implements the query validator slashes command.
 func GetCmdQueryValidatorSlashes() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "slashes [validator] [start-height] [end-height]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Query distribution validator slashes",
@@ -216,11 +222,13 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 			return clientCtx.PrintOutput(slashes)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetCmdQueryDelegatorRewards implements the query delegator rewards command.
 func GetCmdQueryDelegatorRewards() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "rewards [delegator-addr] [validator-addr]",
 		Args:  cobra.RangeArgs(1, 2),
 		Short: "Query all distribution delegator rewards or rewards from a particular validator",
@@ -282,11 +290,13 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 			return clientCtx.PrintOutput(result)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetCmdQueryCommunityPool returns the command for fetching community pool info
 func GetCmdQueryCommunityPool() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "community-pool",
 		Args:  cobra.NoArgs,
 		Short: "Query the amount of coins in the community pool",
@@ -319,4 +329,6 @@ $ %s query distribution community-pool
 			return clientCtx.PrintOutput(result)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }

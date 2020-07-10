@@ -285,10 +285,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				fmt.Printf("%s\n", out)
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out, tc.respType), string(out))
-				fmt.Printf("%v\n", tc.respType)
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)

@@ -131,7 +131,6 @@ is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetc
 
 ### State Machine Breaking
 
-* (x/bank) [\#6283](https://github.com/cosmos/cosmos-sdk/pull/6283) Create account if recipient does not exist on handing `MsgMultiSend`.
 * (genesis) [\#5506](https://github.com/cosmos/cosmos-sdk/pull/5506) The `x/distribution` genesis state
   now includes `params` instead of individual parameters.
 * (genesis) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/genaccounts` module has been

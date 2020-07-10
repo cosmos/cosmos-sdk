@@ -188,7 +188,7 @@ func TestSetupGenesis(t *testing.T) {
 
 	defer func() {
 		db.Close()
-		require.NoError(t, os.RemoveAll(dir))
+		//require.NoError(t, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, fauxMerkleModeOpt)

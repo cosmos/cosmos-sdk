@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
-	res, err := bankcli.MsgSendExec(
+	generatedStd, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		val.Address,
@@ -113,66 +113,33 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().NoError(err)
 
 	// Write the output to disk
-	filename, cleanup1 := testutil.WriteToNewTempFile(s.T(), strings.Repeat(string(res), 3))
+	filename, cleanup1 := testutil.WriteToNewTempFile(s.T(), strings.Repeat(string(generatedStd), 3))
 	defer cleanup1()
 
 	// sign-batch file - offline is set but account-number and sequence are not
-	cliHome := strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
-	val.ClientCtx.HomeDir = cliHome
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
+	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
+	res, err := authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
-}
-
-func TestCLISignBatch(t *testing.T) {
-	t.SkipNow()
-	t.Parallel()
-	f := cli.InitFixtures(t)
-
-	fooAddr := f.KeyAddress(cli.KeyFoo)
-	barAddr := f.KeyAddress(cli.KeyBar)
-
-	sendTokens := sdk.TokensFromConsensusPower(10)
-	success, generatedStdTx, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
-
-	require.True(t, success)
-	require.Empty(t, stderr)
-
-	// Write the output to disk
-	batchfile, cleanup1 := testutil.WriteToNewTempFile(t, strings.Repeat(generatedStdTx, 3))
-	t.Cleanup(cleanup1)
-
-	// sign-batch file - offline is set but account-number and sequence are not
-	success, _, stderr = authtest.TxSignBatch(f, cli.KeyFoo, batchfile.Name(), "--offline")
-	require.Contains(t, stderr, "required flag(s) \"account-number\", \"sequence\" not set")
-	require.False(t, success)
 
 	// sign-batch file
-	success, stdout, stderr := authtest.TxSignBatch(f, cli.KeyFoo, batchfile.Name())
-	require.True(t, success)
-	require.Empty(t, stderr)
-	require.Equal(t, 3, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(string(res), "\n"), "\n")))
 
 	// sign-batch file
-	success, stdout, stderr = authtest.TxSignBatch(f, cli.KeyFoo, batchfile.Name(), "--signature-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-	require.Equal(t, 3, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
+	s.Require().Equal(3, len(strings.Split(strings.Trim(string(res), "\n"), "\n")))
 
-	malformedFile, cleanup2 := testutil.WriteToNewTempFile(t, fmt.Sprintf("%smalformed", generatedStdTx))
-	t.Cleanup(cleanup2)
+	// Sign batch malformed tx file.
+	malformedFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf("%smalformed", generatedStd))
+	defer cleanup2()
 
-	// sign-batch file
-	success, stdout, stderr = authtest.TxSignBatch(f, cli.KeyFoo, malformedFile.Name())
-	require.False(t, success)
-	require.Equal(t, 1, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
-	require.Equal(t, "ERROR: cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value\n", stderr)
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	s.Require().EqualError(err, "cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value")
 
-	// sign-batch file
-	success, stdout, _ = authtest.TxSignBatch(f, cli.KeyFoo, malformedFile.Name(), "--signature-only")
-	require.False(t, success)
-	require.Equal(t, 1, len(strings.Split(strings.Trim(stdout, "\n"), "\n")))
-
-	f.Cleanup()
+	// Sign batch malformed tx file signature only.
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
+	s.Require().EqualError(err, "cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value")
 }
 
 func TestCLISendGenerateSignAndBroadcast(t *testing.T) {

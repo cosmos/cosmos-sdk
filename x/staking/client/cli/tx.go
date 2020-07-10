@@ -73,7 +73,7 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
-	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	_ = cmd.MarkFlagRequired(FlagAmount)
@@ -142,7 +142,7 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 	cmd.Flags().AddFlagSet(flagSetDescriptionEdit())
 	cmd.Flags().AddFlagSet(flagSetCommissionUpdate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
-	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -184,7 +184,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -231,7 +231,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -273,7 +273,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

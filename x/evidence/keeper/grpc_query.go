@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,7 +13,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -37,7 +35,12 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 		return nil, status.Errorf(codes.NotFound, "evidence %s not found", req.EvidenceHash)
 	}
 
-	evidenceAny, err := ConvertEvidence(evidence)
+	msg, ok := evidence.(proto.Message)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "can't protomarshal %T", msg)
+	}
+
+	evidenceAny, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -63,7 +66,13 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 		if err != nil {
 			return err
 		}
-		evidenceAny, err := ConvertEvidence(result)
+
+		msg, ok := result.(proto.Message)
+		if !ok {
+			return status.Errorf(codes.Internal, "can't protomarshal %T", msg)
+		}
+
+		evidenceAny, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			return err
 		}
@@ -76,19 +85,4 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 	}
 
 	return &types.QueryAllEvidenceResponse{Evidence: evidence, Res: res}, nil
-}
-
-// ConvertEvidence converts Evidence to Any type
-func ConvertEvidence(evidence exported.Evidence) (*codectypes.Any, error) {
-	msg, ok := evidence.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("can't protomarshal %T", msg)
-	}
-
-	any, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return any, nil
 }

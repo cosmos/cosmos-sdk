@@ -1,0 +1,39 @@
+syntax = "proto3";
+package cosmos.evidence;
+
+import "cosmos/query/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/evidence/types";
+
+// Query defines the gRPC querier service
+service Query {
+  // Evidence queries evidence based on evidence hash
+  rpc Evidence(QueryEvidenceRequest) returns (QueryEvidenceResponse) {}
+
+  // AllEvidence queries all evidence
+  rpc AllEvidence(QueryAllEvidenceRequest) returns (QueryAllEvidenceResponse) {}
+}
+
+// QueryEvidenceRequest is the request type for the Query/Evidence RPC method
+message QueryEvidenceRequest {
+  bytes evidence_hash = 1  [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];;
+}
+
+// QueryEvidenceResponse is the response type for the Query/Evidence RPC method
+message QueryEvidenceResponse {
+  google.protobuf.Any evidence = 1;
+}
+
+// QueryEvidenceRequest is the request type for the Query/AllEvidence RPC method
+message QueryAllEvidenceRequest {
+  cosmos.query.PageRequest req = 1;
+}
+
+// QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method
+message QueryAllEvidenceResponse {
+  repeated google.protobuf.Any evidence = 1;
+
+  cosmos.query.PageResponse res = 2;
+}

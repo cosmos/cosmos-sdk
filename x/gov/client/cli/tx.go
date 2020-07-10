@@ -51,7 +51,6 @@ var ProposalFlags = []string{
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(
-	ctx client.Context,
 	pcmds []*cobra.Command,
 ) *cobra.Command {
 	govTxCmd := &cobra.Command{

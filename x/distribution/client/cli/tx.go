@@ -122,7 +122,8 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 	}
 
 	cmd.Flags().Bool(FlagCommission, false, "Withdraw the validator's commission in addition to the rewards")
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 func NewWithdrawAllRewardsCmd() *cobra.Command {
@@ -165,7 +166,8 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 	}
 
 	cmd.Flags().Int(FlagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 func NewSetWithdrawAddrCmd() *cobra.Command {
@@ -204,7 +206,8 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 func NewFundCommunityPoolCmd() *cobra.Command {
@@ -243,7 +246,8 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
@@ -310,5 +314,6 @@ Where proposal.json contains:
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }

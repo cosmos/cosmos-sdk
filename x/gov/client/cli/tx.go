@@ -64,14 +64,14 @@ func NewTxCmd(
 
 	cmdSubmitProp := NewCmdSubmitProposal(ctx)
 	for _, pcmd := range pcmds {
-		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
+		cmdSubmitProp.AddCommand(pcmd)
 	}
 
-	govTxCmd.AddCommand(flags.PostCommands(
+	govTxCmd.AddCommand(
 		NewCmdDeposit(ctx),
 		NewCmdVote(ctx),
 		cmdSubmitProp,
-	)...)
+	)
 
 	return govTxCmd
 }
@@ -138,12 +138,12 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
 
-	return cmd
+	return flags.PostCommands(cmd)[0]
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
 func NewCmdDeposit(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for an active proposal",
@@ -184,6 +184,8 @@ $ %s tx gov deposit 1 10stake --from mykey
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
+	return flags.PostCommands(cmd)[0]
 }
 
 // NewCmdVote implements creating a new vote command.

@@ -65,7 +65,8 @@ func GetCmdQueryParams() *cobra.Command {
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryValidatorOutstandingRewards implements the query validator
@@ -119,7 +120,8 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryValidatorCommission implements the query validator commission command.
@@ -163,7 +165,8 @@ $ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryValidatorSlashes implements the query validator slashes command.
@@ -223,7 +226,8 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryDelegatorRewards implements the query delegator rewards command.
@@ -291,7 +295,8 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryCommunityPool returns the command for fetching community pool info
@@ -330,5 +335,6 @@ $ %s query distribution community-pool
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }

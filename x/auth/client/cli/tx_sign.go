@@ -22,7 +22,7 @@ const (
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
-func GetSignBatchCommand(clientCtx client.Context) *cobra.Command {
+func GetSignBatchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign-batch [file]",
 		Short: "Sign transaction batch files",

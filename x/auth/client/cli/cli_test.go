@@ -94,6 +94,29 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	s.Require().EqualError(err, "signatures validation failed")
 }
 
+func (s *IntegrationTestSuite) TestCLISignBatch() {
+	val := s.network.Validators[0]
+	res, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+
+	s.Require().NoError(err)
+
+	// Write the output to disk
+	_, cleanup1 := testutil.WriteToNewTempFile(s.T(), strings.Repeat(string(res), 3))
+	defer cleanup1()
+}
+
 func TestCLISignBatch(t *testing.T) {
 	t.SkipNow()
 	t.Parallel()

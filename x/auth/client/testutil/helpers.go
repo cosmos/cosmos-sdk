@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,16 +22,6 @@ import (
 )
 
 func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	clientCtx = clientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-	cmd := cli2.GetSignCommand(clientCtx)
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
-
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--from=%s", from.String()),
@@ -38,7 +30,21 @@ func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string) 
 		filename,
 	}
 
-	cmd.SetArgs(args)
+	return callCmd(clientCtx, cli2.GetSignCommand, args)
+}
+
+func callCmd(clientCtx client.Context, theCmd func(clientCtx client.Context) *cobra.Command, extraArgs []string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	clientCtx = clientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := theCmd(clientCtx)
+	cmd.SetErr(buf)
+	cmd.SetOut(buf)
+
+	cmd.SetArgs(extraArgs)
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
 		return nil, err
@@ -67,29 +73,13 @@ func TxEncode(f *cli.Fixtures, fileName string, flags ...string) (bool, string, 
 }
 
 func TxValidateSignaturesExec(clientCtx client.Context, filename string) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	clientCtx = clientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-	cmd := cli2.GetValidateSignaturesCommand(clientCtx)
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
-
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
 		filename,
 	}
 
-	cmd.SetArgs(args)
-
-	if err := cmd.ExecuteContext(ctx); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+	return callCmd(clientCtx, cli2.GetValidateSignaturesCommand, args)
 }
 
 // TxValidateSignatures is simcli tx validate-signatures

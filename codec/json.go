@@ -2,26 +2,12 @@ package codec
 
 import (
 	"bytes"
-	"encoding/json"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 )
-
-// MarshalIndentFromJSON returns indented JSON-encoded bytes from already encoded
-// JSON bytes. The output encoding will adhere to the original input's encoding
-// (e.g. Proto3).
-func MarshalIndentFromJSON(bz []byte) ([]byte, error) {
-	var generic interface{}
-
-	if err := json.Unmarshal(bz, &generic); err != nil {
-		return nil, err
-	}
-
-	return json.MarshalIndent(generic, "", "  ")
-}
 
 // ProtoMarshalJSON provides an auxiliary function to return Proto3 JSON encoded
 // bytes of a message.

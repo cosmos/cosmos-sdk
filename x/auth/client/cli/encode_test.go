@@ -2,14 +2,13 @@ package cli
 
 import (
 	"encoding/base64"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -21,8 +20,7 @@ func TestGetCommandEncode(t *testing.T) {
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetEncodeCommand(clientCtx)
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
@@ -35,7 +33,7 @@ func TestGetCommandEncode(t *testing.T) {
 	JSONEncoded, err := txGen.TxJSONEncoder()(stdTx)
 	require.NoError(t, err)
 
-	txFile, cleanup := tests.WriteToNewTempFile(t, string(JSONEncoded))
+	txFile, cleanup := testutil.WriteToNewTempFile(t, string(JSONEncoded))
 	txFileName := txFile.Name()
 	t.Cleanup(cleanup)
 
@@ -51,8 +49,7 @@ func TestGetCommandDecode(t *testing.T) {
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetDecodeCommand(clientCtx)
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	sdk.RegisterCodec(encodingConfig.Amino)
 

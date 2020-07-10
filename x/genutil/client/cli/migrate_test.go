@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestGetMigrationCallback(t *testing.T) {
@@ -19,7 +19,7 @@ func TestGetMigrationCallback(t *testing.T) {
 }
 
 func TestMigrateGenesis(t *testing.T) {
-	home, cleanup := tests.NewTestCaseDir(t)
+	home, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	cdc := makeCodec()
@@ -28,8 +28,7 @@ func TestMigrateGenesis(t *testing.T) {
 	target := "v0.36"
 
 	cmd := MigrateGenesisCmd()
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	clientCtx := client.Context{}.WithJSONMarshaler(cdc)
 	ctx := context.Background()

@@ -142,8 +142,12 @@ func readStdTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, file
 	}
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	clientCtx = clientCtx.InitWithInput(inBuf)
-	txBldr := types.NewTxBuilderFromCLI(inBuf)
+	clientCtx = clientCtx.WithInput(inBuf)
+
+	txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
+	if err != nil {
+		return client.Context{}, types.TxBuilder{}, types.StdTx{}, err
+	}
 
 	return clientCtx, txBldr, stdTx, nil
 }

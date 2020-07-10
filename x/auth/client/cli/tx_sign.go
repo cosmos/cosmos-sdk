@@ -63,12 +63,16 @@ account key. It implies --signature-only.
 func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		clientCtx := client.GetClientContextFromCmd(cmd)
+
+		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
+		if err != nil {
+			return err
+		}
+
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
 		var (
-			err          error
 			multisigAddr sdk.AccAddress
 			infile       = os.Stdin
 		)
@@ -184,6 +188,7 @@ be generated via the 'multisign' command.
 	)
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
 	cmd = flags.PostCommands(cmd)[0]
 	cmd.MarkFlagRequired(flags.FlagFrom)
 

@@ -26,21 +26,3 @@ func ProtoMarshalJSON(msg proto.Message) ([]byte, error) {
 
 	return buf.Bytes(), nil
 }
-
-// ProtoMarshalJSONIndent provides an auxiliary function to return Proto3 indented
-// JSON encoded bytes of a message.
-func ProtoMarshalJSONIndent(msg proto.Message) ([]byte, error) {
-	jm := &jsonpb.Marshaler{EmitDefaults: false, OrigName: false, Indent: "  "}
-	err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
-	if err != nil {
-		return nil, err
-	}
-
-	buf := new(bytes.Buffer)
-
-	if err := jm.Marshal(buf, msg); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}

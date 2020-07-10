@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/base64"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,8 +20,7 @@ func TestGetCommandEncode(t *testing.T) {
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetEncodeCommand(clientCtx)
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
@@ -51,8 +49,7 @@ func TestGetCommandDecode(t *testing.T) {
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetDecodeCommand(clientCtx)
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	sdk.RegisterCodec(encodingConfig.Amino)
 

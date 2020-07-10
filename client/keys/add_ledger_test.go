@@ -53,7 +53,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
 	require.NoError(t, cmd.Execute())
 
@@ -85,7 +85,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	// Prepare a keybase
 	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)

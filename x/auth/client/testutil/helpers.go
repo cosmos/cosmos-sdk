@@ -31,6 +31,16 @@ func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string, 
 	return callCmd(clientCtx, cli2.GetSignCommand, args)
 }
 
+func TxBroadcastExec(clientCtx client.Context, filename string, extraArgs ...string) ([]byte, error) {
+	args := []string{
+		filename,
+	}
+
+	args = append(args, extraArgs...)
+
+	return callCmd(clientCtx, cli2.GetBroadcastCommand, args)
+}
+
 func callCmd(clientCtx client.Context, theCmd func(clientCtx client.Context) *cobra.Command, extraArgs []string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	clientCtx = clientCtx.WithOutput(buf)

@@ -331,6 +331,39 @@ func New(t *testing.T, cfg Config) *Network {
 	return network
 }
 
+func (n *Network) WaitForNBlocks(b int64, t time.Duration) error {
+	ticker := time.NewTicker(time.Second)
+	timeout := time.After(t)
+
+	if len(n.Validators) == 0 {
+		return errors.New("no validators available")
+	}
+
+	val := n.Validators[0]
+
+	status, err := val.RPCClient.Status()
+	if err != nil || status == nil {
+		return fmt.Errorf("error getting node status")
+	}
+
+	initialHeight := status.SyncInfo.LatestBlockHeight
+
+	for {
+		select {
+		case <-timeout:
+			return fmt.Errorf("timeout exceeded waiting for block %d", initialHeight+b)
+		case <-ticker.C:
+			status, err := val.RPCClient.Status()
+			if err == nil && status != nil {
+				curHeight := status.SyncInfo.LatestBlockHeight
+				if curHeight >= initialHeight+b {
+					return nil
+				}
+			}
+		}
+	}
+}
+
 // WaitForHeight performs a blocking check where it waits for a block to be
 // committed after a given block. If that height is not reached within a timeout,
 // an error is returned. Regardless, the latest height queried is returned.

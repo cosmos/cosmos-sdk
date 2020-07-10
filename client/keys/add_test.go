@@ -19,7 +19,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)

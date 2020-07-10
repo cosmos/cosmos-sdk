@@ -32,8 +32,6 @@ transaction will be not be performed as that will require RPC communication with
 		Args:   cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
-
 	return flags.PostCommands(cmd)[0]
 }
 
@@ -144,10 +142,9 @@ func readStdTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, file
 	}
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	clientCtx.WithInput(inBuf)
+	clientCtx = clientCtx.WithInput(inBuf)
 
-	home, _ := cmd.Flags().GetString(flags.FlagHome)
-	txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), home)
+	txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
 	if err != nil {
 		return client.Context{}, types.TxBuilder{}, types.StdTx{}, err
 	}

@@ -190,6 +190,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
+	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
 	cmd = flags.PostCommands(cmd)[0]
 	cmd.MarkFlagRequired(flags.FlagFrom)
 

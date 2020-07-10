@@ -80,6 +80,7 @@ dictate how many recent versions are kept on disk and the offset of what version
 respectively, and the latter defines the height interval in which versions are deleted in a batch.
 **Note, there are some client-facing API breaking changes with regard to IAVL, stores, and pruning settings.**
 * (x/distribution) [\#6210](https://github.com/cosmos/cosmos-sdk/pull/6210) Register `MsgFundCommunityPool` in distribution amino codec.
+* (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent `ChainAnteDecorators()` from panicking when empty `AnteDecorator` slice is supplied.
 
 ## [v0.38.4] - 2020-05-21
 

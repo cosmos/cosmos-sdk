@@ -3,7 +3,6 @@ package client_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestValidateCmd(t *testing.T) {
@@ -106,8 +106,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
 
 			cmd := newCmd()
-			cmd.SetOut(ioutil.Discard)
-			cmd.SetErr(ioutil.Discard)
+			_ = testutil.ApplyMockIODiscardOutErr(cmd)
 			cmd.SetArgs(tc.args)
 
 			require.NoError(t, cmd.ExecuteContext(ctx))

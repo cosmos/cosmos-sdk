@@ -13,11 +13,10 @@ import (
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
-func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string, extraArgs ...string) ([]byte, error) {
+func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) ([]byte, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--from=%s", from.String()),
@@ -41,14 +40,14 @@ func TxBroadcastExec(clientCtx client.Context, filename string, extraArgs ...str
 	return callCmd(clientCtx, cli2.GetBroadcastCommand, args)
 }
 
-func callCmd(clientCtx client.Context, theCmd func(clientCtx client.Context) *cobra.Command, extraArgs []string) ([]byte, error) {
+func callCmd(clientCtx client.Context, theCmd func() *cobra.Command, extraArgs []string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	clientCtx = clientCtx.WithOutput(buf)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	cmd := theCmd(clientCtx)
+	cmd := theCmd()
 	cmd.SetErr(buf)
 	cmd.SetOut(buf)
 
@@ -108,7 +107,7 @@ func TxMultisign(f *cli.Fixtures, fileName, name string, signaturesFiles []strin
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags))
 }
 
-func TxSignBatchExec(clientCtx client.Context, from sdk.AccAddress, filename string, extraArgs ...string) ([]byte, error) {
+func TxSignBatchExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) ([]byte, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--from=%s", from.String()),

@@ -24,7 +24,7 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraA
 	return callCmd(clientCtx, bankcli.NewSendTxCmd, args)
 }
 
-func QueryBalancesExec(clientCtx client.Context, address sdk.AccAddress, extraArgs ...string) ([]byte, error) {
+func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) ([]byte, error) {
 	args := []string{address.String()}
 	args = append(args, extraArgs...)
 

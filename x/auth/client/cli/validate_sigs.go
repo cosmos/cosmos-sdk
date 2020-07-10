@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func GetValidateSignaturesCommand(clientCtx client.Context) *cobra.Command {
+func GetValidateSignaturesCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate-signatures [file]",
 		Short: "Validate transactions signatures",
@@ -28,7 +28,7 @@ given transaction. If the --offline flag is also set, signature validation over 
 transaction will be not be performed as that will require RPC communication with a full node.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeValidateSignaturesCmd(clientCtx),
+		RunE:   makeValidateSignaturesCmd(),
 		Args:   cobra.ExactArgs(1),
 	}
 
@@ -37,8 +37,9 @@ transaction will be not be performed as that will require RPC communication with
 	return flags.PostCommands(cmd)[0]
 }
 
-func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
+func makeValidateSignaturesCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		clientCtx := client.GetClientContextFromCmd(cmd)
 		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err

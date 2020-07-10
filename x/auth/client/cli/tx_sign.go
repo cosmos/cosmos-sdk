@@ -109,7 +109,6 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			unsignedStdTx := scanner.StdTx()
 			txBldr = txBldr.WithSequence(sequence)
 
-			var err error
 			if multisigAddr.Empty() {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
 				_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
@@ -118,11 +117,14 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				}
 
 				stdTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, unsignedStdTx, false, true)
+				if err != nil {
+					return err
+				}
 			} else {
 				stdTx, err = authclient.SignStdTxWithSignerAddress(txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), unsignedStdTx, true)
-			}
-			if err != nil {
-				return err
+				if err != nil {
+					return err
+				}
 			}
 
 			json, err := getSignatureJSON(clientCtx.JSONMarshaler, stdTx, generateSignatureOnly)
@@ -159,7 +161,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 }
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(clientCtx client.Context) *cobra.Command {
+func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -179,7 +181,7 @@ key. It implies --signature-only. Full multisig signed transactions may eventual
 be generated via the 'multisign' command.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeSignCmd(clientCtx),
+		RunE:   makeSignCmd(),
 		Args:   cobra.ExactArgs(1),
 	}
 
@@ -210,12 +212,9 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
-		if err != nil {
-			return err
-		}
+		clientCtx := client.GetClientContextFromCmd(cmd)
 
 		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {

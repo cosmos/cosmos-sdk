@@ -18,8 +18,8 @@ func GetTxCmd(clientCtx client.Context) *cobra.Command {
 	}
 	txCmd.AddCommand(
 		GetMultiSignCommand(clientCtx),
-		GetSignCommand(clientCtx),
-		GetValidateSignaturesCommand(clientCtx),
+		GetSignCommand(),
+		GetValidateSignaturesCommand(),
 		GetSignBatchCommand(),
 	)
 	return txCmd

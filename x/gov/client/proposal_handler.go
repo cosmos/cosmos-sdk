@@ -11,7 +11,7 @@ import (
 type RESTHandlerFn func(client.Context) rest.ProposalRESTHandler
 
 // function to create the cli handler
-type CLIHandlerFn func(client.Context) *cobra.Command
+type CLIHandlerFn func() *cobra.Command
 
 // The combined type for a proposal handler for both cli and rest
 type ProposalHandler struct {

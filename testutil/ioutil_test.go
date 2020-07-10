@@ -29,7 +29,6 @@ func TestNewTestCaseDir(t *testing.T) {
 
 func TestApplyMockIO(t *testing.T) {
 	cmd := &cobra.Command{}
-
 	oldStdin := cmd.InOrStdin()
 	oldStdout := cmd.OutOrStdout()
 	oldStderr := cmd.ErrOrStderr()
@@ -39,6 +38,7 @@ func TestApplyMockIO(t *testing.T) {
 	require.NotEqual(t, cmd.InOrStdin(), oldStdin)
 	require.NotEqual(t, cmd.OutOrStdout(), oldStdout)
 	require.NotEqual(t, cmd.ErrOrStderr(), oldStderr)
+	require.Equal(t, cmd.ErrOrStderr(), cmd.OutOrStdout())
 }
 
 func TestWriteToNewTempFile(t *testing.T) {
@@ -52,4 +52,14 @@ func TestWriteToNewTempFile(t *testing.T) {
 	cleanup()
 
 	require.NoFileExists(t, tempfile.Name())
+}
+
+func TestApplyMockIODiscardOutErr(t *testing.T) {
+	cmd := &cobra.Command{}
+	oldStdin := cmd.InOrStdin()
+
+	testutil.ApplyMockIODiscardOutErr(cmd)
+	require.NotEqual(t, cmd.InOrStdin(), oldStdin)
+	require.Equal(t, cmd.OutOrStdout(), ioutil.Discard)
+	require.Equal(t, cmd.ErrOrStderr(), ioutil.Discard)
 }

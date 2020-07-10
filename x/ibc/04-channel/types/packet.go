@@ -72,28 +72,16 @@ func (p Packet) GetTimeoutTimestamp() uint64 { return p.TimeoutTimestamp }
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(p.SourcePort); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid source port ID: %s", p.SourcePort).Error(),
-		)
+		return sdkerrors.Wrap(err, "invalid source port ID")
 	}
 	if err := host.PortIdentifierValidator(p.DestinationPort); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid destination port ID: %s", p.DestinationPort).Error(),
-		)
+		return sdkerrors.Wrap(err, "invalid destination port ID")
 	}
 	if err := host.ChannelIdentifierValidator(p.SourceChannel); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid source channel ID: %s", p.SourceChannel).Error(),
-		)
+		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
 	if err := host.ChannelIdentifierValidator(p.DestinationChannel); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid destination channel ID: %s", p.DestinationChannel).Error(),
-		)
+		return sdkerrors.Wrap(err, "invalid destination channel ID")
 	}
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")

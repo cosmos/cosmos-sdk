@@ -8,7 +8,7 @@ import "cosmos/distribution/distribution.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 
-// Query provides defines the gRPC querier service
+// Query defines the gRPC querier service for distribution module
 service Query {
   // Params queries params of distribution module
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {}

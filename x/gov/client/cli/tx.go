@@ -50,10 +50,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(
-	ctx client.Context,
-	pcmds []*cobra.Command,
-) *cobra.Command {
+func NewTxCmd(ctx client.Context, propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -63,8 +60,8 @@ func NewTxCmd(
 	}
 
 	cmdSubmitProp := NewCmdSubmitProposal(ctx)
-	for _, pcmd := range pcmds {
-		cmdSubmitProp.AddCommand(pcmd)
+	for _, propCmd := range propCmds {
+		cmdSubmitProp.AddCommand(propCmd)
 	}
 
 	govTxCmd.AddCommand(
@@ -137,8 +134,9 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
 	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	flags.AddTxFlagsToCmd(cmd)
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
@@ -185,12 +183,14 @@ $ %s tx gov deposit 1 10stake --from mykey
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewCmdVote implements creating a new vote command.
 func NewCmdVote(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
@@ -233,6 +233,8 @@ $ %s tx gov vote 1 yes --from mykey
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
-}
 
-// DONTCOVER
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}

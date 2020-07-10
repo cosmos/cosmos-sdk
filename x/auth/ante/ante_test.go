@@ -8,7 +8,9 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
@@ -21,6 +23,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -49,56 +52,71 @@ func setupTxBuilder() (client.Context, client.TxBuilder) {
 	return clientCtx, txBuilder
 }
 
+// TestAccount represents an account used in the tests below
+type TestAccount struct {
+	priv crypto.PrivKey
+	acc  types.AccountI
+}
+
+// Create `numAccs` accounts, and return all relevant information about them.
+func createTestAccounts(numAccs int, app *simapp.SimApp, ctx sdk.Context, t *testing.T) []TestAccount {
+	var accounts []TestAccount
+
+	for i := 0; i < numAccs; i++ {
+		priv, _, addr := types.KeyTestPubAddr()
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		err := acc.SetAccountNumber(uint64(i))
+		require.NoError(t, err)
+		app.AccountKeeper.SetAccount(ctx, acc)
+		app.BankKeeper.SetBalances(ctx, acc.GetAddress(), types.NewTestCoins())
+
+		accounts = append(accounts, TestAccount{priv, acc})
+
+	}
+
+	return accounts
+}
+
+// Helper function to create a tx given multiple inputs.
+func createTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64, ctx sdk.Context, txGenerator client.TxGenerator, txBuilder client.TxBuilder, t *testing.T) xauthsigning.SigFeeMemoTx {
+	var sigsV2 []signing.SignatureV2
+	for i, priv := range privs {
+		sigV2, err := tx.SignWithPriv(priv, accNums[i], seqs[i], ctx.ChainID(), txGenerator, txBuilder)
+		require.NoError(t, err)
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
+	txBuilder.SetSignatures(sigsV2...)
+
+	return txBuilder.GetTx()
+}
+
 // Test that simulate transaction accurately estimates gas cost
 func TestSimulateGasCost(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
-
-	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	priv2, _, addr2 := types.KeyTestPubAddr()
-	priv3, _, addr3 := types.KeyTestPubAddr()
-
-	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	require.NoError(t, acc1.SetAccountNumber(0))
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	err := app.BankKeeper.SetBalances(ctx, acc1.GetAddress(), types.NewTestCoins())
-	require.NoError(t, err)
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	require.NoError(t, acc2.SetAccountNumber(1))
-	app.AccountKeeper.SetAccount(ctx, acc2)
-	err = app.BankKeeper.SetBalances(ctx, acc2.GetAddress(), types.NewTestCoins())
-	require.NoError(t, err)
-	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
-	require.NoError(t, acc3.SetAccountNumber(2))
-	app.AccountKeeper.SetAccount(ctx, acc3)
-	err = app.BankKeeper.SetBalances(ctx, acc3.GetAddress(), types.NewTestCoins())
-	require.NoError(t, err)
-
+	accounts := createTestAccounts(3, app, ctx, t)
 	clientCtx, txBuilder := setupTxBuilder()
 
 	// set up msgs and fee
-	msg1 := testdata.NewTestMsg(addr1, addr2)
-	msg2 := testdata.NewTestMsg(addr3, addr1)
-	msg3 := testdata.NewTestMsg(addr2, addr3)
+	msg1 := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
+	msg2 := testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress())
+	msg3 := testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[2].acc.GetAddress())
 	txBuilder.SetMsgs(msg1, msg2, msg3)
 
 	// signers in order. seqs are all 0 because it is in genesis block
-	privs, accNums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+	privs, accNums, seqs := []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
 
 	// Round 1: tx with 150atom
 	fee := types.NewTestStdFee()
 	txBuilder.SetFeeAmount(fee.GetAmount())
-	// Sign
-	sigsV2, err := types.NewTestTx2(ctx, clientCtx.TxGenerator, txBuilder, privs, accNums, seqs)
-	require.NoError(t, err)
-	txBuilder.SetSignatures(sigsV2...)
+	tx := createTestTx(privs, accNums, seqs, ctx, clientCtx.TxGenerator, txBuilder, t)
+	println(tx.GetFee())
 	// Run ante handler
 	cc, _ := ctx.CacheContext()
-	newCtx, err := anteHandler(cc, txBuilder.GetTx(), true)
+	newCtx, err := anteHandler(cc, tx, true)
 	require.Nil(t, err, "transaction failed on simulate mode")
 
 	// Increment seqs, as anteHandler calls IncrementSequenceDecorator
@@ -110,11 +128,9 @@ func TestSimulateGasCost(t *testing.T) {
 	// Round 2: update tx with exact simulated gas estimate
 	txBuilder.SetGasLimit(fee.Gas)
 	// Sign
-	sigsV2, err = types.NewTestTx2(newCtx, clientCtx.TxGenerator, txBuilder, privs, accNums, seqs)
-	require.NoError(t, err)
-	txBuilder.SetSignatures(sigsV2...)
+	tx = createTestTx(privs, accNums, seqs, newCtx, clientCtx.TxGenerator, txBuilder, t)
 	// Run ante handler
-	_, err = anteHandler(newCtx, txBuilder.GetTx(), false)
+	_, err = anteHandler(newCtx, tx, false)
 	require.Nil(t, err, "transaction failed with gas estimate")
 }
 
@@ -140,38 +156,32 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 	// test no signatures
 	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
-	sigsV2, err := types.NewTestTx2(ctx, clientCtx.TxGenerator, txBuilder, privs, accNums, seqs)
-	require.NoError(t, err)
-	txBuilder.SetSignatures(sigsV2...)
+	tx := createTestTx(privs, accNums, seqs, ctx, clientCtx.TxGenerator, txBuilder, t)
 
 	// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 	expectedSigners := []sdk.AccAddress{addr1, addr2, addr3}
-	stdTx := txBuilder.GetTx().(types.StdTx)
+	stdTx := tx.(types.StdTx)
 	require.Equal(t, expectedSigners, stdTx.GetSigners())
 
 	// Check no signatures fails
-	checkInvalidTx(t, anteHandler, ctx, txBuilder.GetTx(), false, sdkerrors.ErrNoSignatures)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrNoSignatures)
 
 	// test num sigs dont match GetSigners
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	sigsV2, err = types.NewTestTx2(ctx, clientCtx.TxGenerator, txBuilder, privs, accNums, seqs)
-	require.NoError(t, err)
-	txBuilder.SetSignatures(sigsV2...)
-	checkInvalidTx(t, anteHandler, ctx, txBuilder.GetTx(), false, sdkerrors.ErrUnauthorized)
+	tx = createTestTx(privs, accNums, seqs, ctx, clientCtx.TxGenerator, txBuilder, t)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnauthorized)
 
 	// test an unrecognized account
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	sigsV2, err = types.NewTestTx2(ctx, clientCtx.TxGenerator, txBuilder, privs, accNums, seqs)
-	require.NoError(t, err)
-	txBuilder.SetSignatures(sigsV2...)
-	checkInvalidTx(t, anteHandler, ctx, txBuilder.GetTx(), false, sdkerrors.ErrUnknownAddress)
+	tx = createTestTx(privs, accNums, seqs, ctx, clientCtx.TxGenerator, txBuilder, t)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnknownAddress)
 
 	// save the first account, but second is still unrecognized
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	err = app.BankKeeper.SetBalances(ctx, addr1, fee.Amount)
+	err := app.BankKeeper.SetBalances(ctx, addr1, fee.Amount)
 	require.NoError(t, err)
-	checkInvalidTx(t, anteHandler, ctx, txBuilder.GetTx(), false, sdkerrors.ErrUnknownAddress)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnknownAddress)
 }
 
 // Test logic around account number checking with one signer and many signers.

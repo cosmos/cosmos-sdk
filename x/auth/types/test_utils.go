@@ -4,10 +4,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func NewTestStdFee() StdFee {
@@ -45,56 +42,6 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 
 	tx := NewStdTx(msgs, fee, sigs, "")
 	return tx
-}
-
-// TODO Rename to NewTestTx
-// TODO Is this impl better than using TxFactory?
-func NewTestTx2(ctx sdk.Context, txGenerator client.TxGenerator, txBuilder client.TxBuilder, privs []crypto.PrivKey, accNums []uint64, seqs []uint64) ([]signing.SignatureV2, error) {
-	var sigsV2 []signing.SignatureV2
-
-	for i, priv := range privs {
-		sigData := &signing.SingleSignatureData{
-			SignMode:  txGenerator.SignModeHandler().DefaultMode(),
-			Signature: nil,
-		}
-		sig := signing.SignatureV2{
-			PubKey: priv.PubKey(),
-			Data:   sigData,
-		}
-
-		err := txBuilder.SetSignatures(sig)
-		if err != nil {
-			return nil, err
-		}
-
-		signBytes, err := txGenerator.SignModeHandler().GetSignBytes(
-			txGenerator.SignModeHandler().DefaultMode(),
-			authsigning.SignerData{
-				ChainID:         ctx.ChainID(),
-				AccountNumber:   accNums[i],
-				AccountSequence: seqs[i],
-			},
-			txBuilder.GetTx(),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		sigBytes, err := priv.Sign(signBytes)
-		if err != nil {
-			return nil, err
-		}
-
-		sigData.Signature = sigBytes
-		sig = signing.SignatureV2{
-			PubKey: priv.PubKey(),
-			Data:   sigData,
-		}
-
-		sigsV2 = append(sigsV2, sig)
-	}
-
-	return sigsV2, nil
 }
 
 func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, memo string) sdk.Tx {

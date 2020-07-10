@@ -10,6 +10,7 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/spf13/pflag"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -310,6 +311,60 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	return txf, nil
 }
 
+// Helper function get generate the sign bytes to be signed and signature data.
+// Used in SignWithPriv and in Sign functions.
+func getSignBytes(pubKey crypto.PubKey, accNum uint64, seq uint64, chainID string, txGenerator client.TxGenerator, txBuilder client.TxBuilder) (*signing.SingleSignatureData, []byte, error) {
+	sigData := &signing.SingleSignatureData{
+		SignMode:  txGenerator.SignModeHandler().DefaultMode(),
+		Signature: nil,
+	}
+	sig := signing.SignatureV2{
+		PubKey: pubKey,
+		Data:   sigData,
+	}
+
+	// Here, we're first setting a SignatureV2 with nil as signature, this is
+	// to set the SignerInfos, used to generate the sign bytes below.
+	err := txBuilder.SetSignatures(sig)
+	if err != nil {
+		return sigData, nil, err
+	}
+
+	signBytes, err := txGenerator.SignModeHandler().GetSignBytes(
+		txGenerator.SignModeHandler().DefaultMode(),
+		authsigning.SignerData{
+			ChainID:         chainID,
+			AccountNumber:   accNum,
+			AccountSequence: seq,
+		},
+		txBuilder.GetTx(),
+	)
+	if err != nil {
+		return sigData, nil, err
+	}
+
+	return sigData, signBytes, nil
+}
+
+// SignWithPriv signs a given tx with the given private key, and returns the
+// corresponding SignatureV2 if the signing is successful.
+func SignWithPriv(priv crypto.PrivKey, accNum uint64, seq uint64, chainID string, txGenerator client.TxGenerator, txBuilder client.TxBuilder) (signing.SignatureV2, error) {
+	var sigV2 signing.SignatureV2
+
+	sigData, sigBytes, err := getSignBytes(priv.PubKey(), accNum, seq, chainID, txGenerator, txBuilder)
+	if err != nil {
+		return sigV2, err
+	}
+
+	sigData.Signature = sigBytes
+	sigV2 = signing.SignatureV2{
+		PubKey: priv.PubKey(),
+		Data:   sigData,
+	}
+
+	return sigV2, err
+}
+
 // Sign signs a given tx with the provided name and passphrase. If the Factory's
 // Keybase is not set, a new one will be created based on the client's backend.
 // The bytes signed over are canconical. The resulting signature will be set on
@@ -318,7 +373,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name string, tx client.TxBuilder) error {
+func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -334,30 +389,9 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 		return err
 	}
 
-	// Here, we're first setting a SignatureV2 with nil as signature, this is
-	// to set the SignerInfos.
 	pubKey := key.GetPubKey()
-	sigData := &signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
-	}
-	sig := signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   sigData,
-	}
-	err = tx.SetSignatures(sig)
-	if err != nil {
-		return err
-	}
 
-	signBytes, err := txf.txGenerator.SignModeHandler().GetSignBytes(
-		signMode,
-		authsigning.SignerData{
-			ChainID:         txf.chainID,
-			AccountNumber:   txf.accountNumber,
-			AccountSequence: txf.sequence,
-		}, tx.GetTx(),
-	)
+	sigData, signBytes, err := getSignBytes(pubKey, txf.accountNumber, txf.sequence, txf.chainID, txf.txGenerator, txBuilder)
 	if err != nil {
 		return err
 	}
@@ -369,14 +403,14 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 	}
 
 	sigData.Signature = sigBytes
-	sig = signing.SignatureV2{
+	sig := signing.SignatureV2{
 		PubKey: pubKey,
 		Data:   sigData,
 	}
 
 	// And here the tx is populated with the correct signature in
 	// SingleSignatureData
-	return tx.SetSignatures(sig)
+	return txBuilder.SetSignatures(sig)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

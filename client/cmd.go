@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,6 +80,11 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // flags that do not necessarily change with context. These must be checked if
 // the caller explicitly changed the values.
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	if flagSet.Changed(cli.OutputFlag) {
+		output, _ := flagSet.GetString(cli.OutputFlag)
+		clientCtx = clientCtx.WithOutputFormat(output)
+	}
+
 	if flagSet.Changed(flags.FlagHome) {
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)

@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -80,6 +79,7 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+		c.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 
 		// TODO: REMOVE VIPER CALLS!
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))

@@ -17,7 +17,7 @@ import (
 func Test_runExportCmd(t *testing.T) {
 	cmd := ExportKeyCommand()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := testutil.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	// Now add a temporary keybase
 	kbHome, cleanUp := testutil.NewTestCaseDir(t)

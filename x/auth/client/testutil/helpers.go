@@ -8,20 +8,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
-func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string) ([]byte, error) {
+func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string, extraArgs ...string) ([]byte, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--from=%s", from.String()),
@@ -29,6 +25,8 @@ func TxSignExec(clientCtx client.Context, from sdk.AccAddress, filename string) 
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
 		filename,
 	}
+
+	args = append(args, extraArgs...)
 
 	return callCmd(clientCtx, cli2.GetSignCommand, args)
 }
@@ -47,7 +45,7 @@ func callCmd(clientCtx client.Context, theCmd func(clientCtx client.Context) *co
 	cmd.SetArgs(extraArgs)
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
-		return nil, err
+		return buf.Bytes(), err
 	}
 
 	return buf.Bytes(), nil
@@ -110,12 +108,6 @@ func TxSignBatchExec(clientCtx client.Context, from sdk.AccAddress, filename str
 	args = append(args, extraArgs...)
 
 	return callCmd(clientCtx, cli2.GetSignBatchCommand, args)
-}
-
-func TxSignBatch(f *cli.Fixtures, signer, fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx sign-batch %v --keyring-backend=test --from=%s %v", f.SimdBinary, f.Flags(), signer, fileName)
-
-	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
 // TxDecode is simcli tx decode

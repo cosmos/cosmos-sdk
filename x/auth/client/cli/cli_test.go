@@ -142,6 +142,118 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().EqualError(err, "cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value")
 }
 
+func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
+	val := s.network.Validators[0]
+	generatedStd, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	stdTx := cli.UnmarshalStdTx(s.T(), val.ClientCtx.JSONMarshaler, string(generatedStd))
+	s.Require().Equal(stdTx.Fee.Gas, uint64(flags.DefaultGasLimit))
+	s.Require().Equal(len(stdTx.Msgs), 1)
+	s.Require().Equal(0, len(stdTx.GetSignatures()))
+
+	// Test generate sendTx with --gas=$amount
+	generatedStd, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", 100),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	stdTx = cli.UnmarshalStdTx(s.T(), val.ClientCtx.JSONMarshaler, string(generatedStd))
+	s.Require().Equal(stdTx.Fee.Gas, uint64(100))
+	s.Require().Equal(len(stdTx.Msgs), 1)
+	s.Require().Equal(0, len(stdTx.GetSignatures()))
+
+	// Test generate sendTx, estimate gas
+	generatedStd, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	stdTx = cli.UnmarshalStdTx(s.T(), val.ClientCtx.JSONMarshaler, string(generatedStd))
+	s.Require().True(stdTx.Fee.Gas > 0)
+	s.Require().Equal(len(stdTx.Msgs), 1)
+
+	// Write the output to disk
+	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(generatedStd))
+	defer cleanup()
+
+	// Test validate-signatures
+	res, err := authtest.TxValidateSignaturesExec(val.ClientCtx, unsignedTxFile.Name())
+	s.Require().EqualError(err, "signatures validation failed")
+	s.Require().True(strings.Contains(string(res), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", val.Address.String())))
+
+	// Test sign
+
+	// Does not work in offline mode
+	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTxFile.Name(), "--offline")
+	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
+
+	// But works offline if we set account number and sequence
+	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTxFile.Name(), "--offline", "--offline", "--account-number", "1", "--sequence", "1")
+	s.Require().NoError(err)
+
+	// Sign transaction
+	generatedStd, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTxFile.Name())
+	s.Require().NoError(err)
+
+	stdTx = cli.UnmarshalStdTx(s.T(), val.ClientCtx.JSONMarshaler, string(generatedStd))
+	s.Require().Equal(len(stdTx.Msgs), 1)
+	s.Require().Equal(1, len(stdTx.GetSignatures()))
+	s.Require().Equal(val.Address.String(), stdTx.GetSigners()[0].String())
+
+	// Write the output to disk
+	unsignedTxFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(generatedStd))
+	defer cleanup2()
+
+	// Validate Signature
+	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, unsignedTxFile.Name())
+	s.Require().NoError(err)
+	s.Require().True(strings.Contains(string(res), "[OK]"))
+
+	// Ensure foo has right amount of funds
+	startTokens := sdk.TokensFromConsensusPower(400)
+	resp, err := bankcli.QueryBalancesExec(val.ClientCtx, val.Address)
+	s.Require().NoError(err)
+
+	var coins sdk.Coins
+	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	s.Require().NoError(err)
+	s.Require().Equal(startTokens, coins.AmountOf(cli.Denom))
+}
+
 func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.SkipNow()
 	t.Parallel()

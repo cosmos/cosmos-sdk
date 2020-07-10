@@ -7,7 +7,7 @@ import "cosmos/gov/gov.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
-// Query provides defines the gRPC querier service
+// Query defines the gRPC querier service for gov module
 service Query {
   // Proposal returns proposal details based on ProposalID
   rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {}

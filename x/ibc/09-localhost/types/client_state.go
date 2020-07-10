@@ -22,7 +22,24 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
+var (
+	_ clientexported.Height      = Height(0)
+	_ clientexported.ClientState = ClientState{}
+)
+
+type Height int64
+
+func (h Height) Compare(height clientexported.Height) (int64, error) {
+	localHeight, ok := height.(Height)
+	if !ok {
+		return 0, sdkerrors.Wrapf(clienttypes.ErrInvalidHeight, "%s height is not localhost height", height.String())
+	}
+	return int64(h - localHeight), nil
+}
+
+func (h Height) String() string {
+	return fmt.Sprintf("%d", h)
+}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
@@ -56,8 +73,8 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 }
 
 // GetLatestHeight returns the latest height stored.
-func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.Height)
+func (cs ClientState) GetLatestHeight() clientexported.Height {
+	return Height(cs.Height)
 }
 
 // IsFrozen returns false.
@@ -90,9 +107,9 @@ func (cs ClientState) VerifyClientConsensusState(
 	_ codec.Marshaler,
 	aminoCdc *codec.Codec,
 	_ commitmentexported.Root,
-	height uint64,
+	height clientexported.Height,
 	_ string,
-	consensusHeight uint64,
+	consensusHeight clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	consensusState clientexported.ConsensusState,
@@ -127,7 +144,7 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.Marshaler,
-	_ uint64,
+	_ clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	connectionID string,
@@ -165,7 +182,7 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.Marshaler,
-	_ uint64,
+	_ clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -204,7 +221,7 @@ func (cs ClientState) VerifyChannelState(
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	_ codec.Marshaler,
-	_ uint64,
+	_ clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -238,7 +255,7 @@ func (cs ClientState) VerifyPacketCommitment(
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	_ codec.Marshaler,
-	_ uint64,
+	_ clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -273,7 +290,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	_ codec.Marshaler,
-	_ uint64,
+	_ clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -299,7 +316,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	_ codec.Marshaler,
-	_ uint64,
+	_ clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	portID,

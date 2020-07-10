@@ -149,6 +149,38 @@ func TestSendKeeper(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestInputOutputNewAccount(t *testing.T) {
+	app, ctx := createTestApp(false)
+	balances := sdk.NewCoins(sdk.NewInt64Coin("foo", 100), sdk.NewInt64Coin("bar", 50))
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	require.NoError(t, app.BankKeeper.SetCoins(ctx, addr1, balances))
+
+	acc1Balances := app.BankKeeper.GetCoins(ctx, addr1)
+	require.Equal(t, balances, acc1Balances)
+
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	require.Nil(t, app.AccountKeeper.GetAccount(ctx, addr2))
+	require.Empty(t, app.BankKeeper.GetCoins(ctx, addr2))
+
+	inputs := []types.Input{
+		{Address: addr1, Coins: sdk.NewCoins(sdk.NewInt64Coin("foo", 30), sdk.NewInt64Coin("bar", 10))},
+	}
+	outputs := []types.Output{
+		{Address: addr2, Coins: sdk.NewCoins(sdk.NewInt64Coin("foo", 30), sdk.NewInt64Coin("bar", 10))},
+	}
+
+	require.NoError(t, app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+
+	expected := sdk.NewCoins(sdk.NewInt64Coin("foo", 30), sdk.NewInt64Coin("bar", 10))
+	acc2Balances := app.BankKeeper.GetCoins(ctx, addr2)
+	require.Equal(t, expected, acc2Balances)
+	require.NotNil(t, app.AccountKeeper.GetAccount(ctx, addr2))
+}
+
 func TestMsgSendEvents(t *testing.T) {
 	app, ctx := createTestApp(false)
 

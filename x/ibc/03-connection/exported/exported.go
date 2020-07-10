@@ -10,7 +10,7 @@ type ConnectionI interface {
 	GetClientID() string
 	GetState() int32
 	GetCounterparty() CounterpartyI
-	GetVersions() []string
+	GetVersions() []VersionI
 	ValidateBasic() error
 }
 
@@ -19,5 +19,12 @@ type CounterpartyI interface {
 	GetClientID() string
 	GetConnectionID() string
 	GetPrefix() commitmentexported.Prefix
+	ValidateBasic() error
+}
+
+// VersionI describes the required methods for a version.
+type VersionI interface {
+	GetIdentifier() string
+	GetFeatures() []string
 	ValidateBasic() error
 }

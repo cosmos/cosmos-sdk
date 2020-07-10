@@ -48,7 +48,7 @@ func (k Keeper) ConnOpenTry(
 	connectionID string, // desiredIdentifier
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string, // clientID of chainA
-	counterpartyVersions []string, // supported versions of chain A
+	counterpartyVersions []types.Version, // supported versions of chain A
 	proofInit []byte, // proof that chainA stored connectionEnd in state (on ConnOpenInit)
 	proofConsensus []byte, // proof that chainA stored chainB's consensus state at consensus height
 	proofHeight uint64, // height at which relayer constructs proof of A storing connectionEnd in state
@@ -128,7 +128,7 @@ func (k Keeper) ConnOpenTry(
 func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
-	version string, // version that ChainB chose in ConnOpenTry
+	version Version, // version that ChainB chose in ConnOpenTry
 	proofTry []byte, // proof that connectionEnd was added to ChainB state in ConnOpenTry
 	proofConsensus []byte, // proof that chainB has stored ConsensusState of chainA on its client
 	proofHeight uint64, // height that relayer constructed proofTry

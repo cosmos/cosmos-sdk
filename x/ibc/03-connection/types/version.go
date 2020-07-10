@@ -1,11 +1,10 @@
 package types
 
 import (
-	"fmt"
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 )
 
 var (
@@ -13,7 +12,7 @@ var (
 	// in connection version negotiation. The current version supports only
 	// ORDERED and UNORDERED channels and requires at least one channel type
 	// to be agreed upon.
-	DefaultIBCVersion = CreateVersionString(DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
+	DefaultIBCVersion = NewVersion(DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
 
 	// DefaultIBCVersionIdentifier is the IBC v1.0.0 protocol version identifier
 	DefaultIBCVersionIdentifier = "1"
@@ -26,115 +25,85 @@ var (
 	}
 )
 
+var _ exported.VersionI = (*Version)(nil)
+
+// NewVersion returns a new instance of Version.
+func NewVersion(identifier string, features []string) Version {
+	return Version{
+		Identifier: identifier,
+		Features:   features,
+	}
+}
+
+// GetIdentifier implements the VersionI interface
+func (version Version) GetIdentifier() string {
+	return version.Identifier
+}
+
+// GetFeatures implements the VersionI interface
+func (version Version) GetFeatures() []string {
+	return version.Features
+}
+
+// ValidateBasic does basic validation of the version identifier and features.
+func (version Version) ValidateBasic() error {
+	if strings.TrimSpace(version.Identifier) == "" {
+		return sdkerrors.Wrap(ErrInvalidVersion, "version identifier cannot be blank")
+	}
+	for i, feature := range version.Features {
+		if strings.TrimSpace(feature) == "" {
+			return sdkerrors.Wrapf(ErrInvalidVersion, "feature cannot be blank, index %d", i)
+		}
+	}
+
+	return nil
+}
+
 // GetCompatibleVersions returns a descending ordered set of compatible IBC
 // versions for the caller chain's connection end. The latest supported
 // version should be first element and the set should descend to the oldest
 // supported version.
-func GetCompatibleVersions() []string {
-	return []string{DefaultIBCVersion}
-}
-
-// CreateVersionString constructs a valid connection version given a
-// version identifier and feature set. The format is written as:
-//
-// ([version_identifier],[feature_0,feature_1,feature_2...])
-//
-// A connection version is considered invalid if it is not in this format
-// or violates one of these rules:
-// - the version identifier is empty or contains commas
-// - a specified feature contains commas
-func CreateVersionString(identifier string, featureSet []string) string {
-	return fmt.Sprintf("(%s,[%s])", identifier, strings.Join(featureSet, ","))
-}
-
-// UnpackVersion parses a version string and returns the identifier and the
-// feature set of a version. An error is returned if the version is not valid.
-func UnpackVersion(version string) (string, []string, error) {
-	// validate version so valid splitting assumptions can be made
-	if err := host.VersionValidator(version); err != nil {
-		return "", nil, err
-	}
-
-	// peel off prefix and suffix of the tuple
-	version = strings.TrimPrefix(version, "(")
-	version = strings.TrimSuffix(version, ")")
-
-	// split into identifier and feature set
-	splitVersion := strings.SplitN(version, ",", 2)
-	if splitVersion[0] == version {
-		return "", nil, sdkerrors.Wrapf(ErrInvalidVersion, "failed to split version '%s' into identifier and features", version)
-	}
-	identifier := splitVersion[0]
-
-	// peel off prefix and suffix of features
-	featureSet := strings.TrimPrefix(splitVersion[1], "[")
-	featureSet = strings.TrimSuffix(featureSet, "]")
-
-	// check if features are empty
-	if len(featureSet) == 0 {
-		return identifier, []string{}, nil
-	}
-
-	features := strings.Split(featureSet, ",")
-
-	return identifier, features, nil
+func GetCompatibleVersions() []Version {
+	return []Version{DefaultIBCVersion}
 }
 
 // FindSupportedVersion returns the version with a matching version identifier
 // if it exists. The returned boolean is true if the version is found and
 // false otherwise.
-func FindSupportedVersion(version string, supportedVersions []string) (string, bool) {
-	identifier, _, err := UnpackVersion(version)
-	if err != nil {
-		return "", false
-	}
-
+func FindSupportedVersion(version Version, supportedVersions []Version) (Version, bool) {
 	for _, supportedVersion := range supportedVersions {
-		supportedIdentifier, _, err := UnpackVersion(supportedVersion)
-		if err != nil {
-			continue
-		}
-
-		if identifier == supportedIdentifier {
+		if version.GetIdentifier() == supportedVersion.GetIdentifier() {
 			return supportedVersion, true
 		}
 	}
-	return "", false
+	return Version{}, false
 }
 
 // PickVersion iterates over the descending ordered set of compatible IBC
 // versions and selects the first version with a version identifier that is
 // supported by the counterparty. The returned version contains a feature
 // set with the intersection of the features supported by the source and
-// counterparty chains. This function is called in the ConnOpenTry handshake
-// procedure.
-func PickVersion(counterpartyVersions []string) (string, error) {
+// counterparty chains. If the feature set intersection is nil and this is
+// not allowed for the choosen version identifier then the search for a
+// compatible version continues. This function is called in the ConnOpenTry
+// handshake procedure.
+func PickVersion(counterpartyVersions []Version) (Version, error) {
 	supportedVersions := GetCompatibleVersions()
 
-	for _, ver := range supportedVersions {
+	for _, supportedVersion := range supportedVersions {
 		// check if the source version is supported by the counterparty
-		if counterpartyVer, found := FindSupportedVersion(ver, counterpartyVersions); found {
-			sourceIdentifier, sourceFeatures, err := UnpackVersion(ver)
-			if err != nil {
-				return "", err
-			}
+		if counterpartyVersion, found := FindSupportedVersion(supportedVersion, counterpartyVersions); found {
 
-			_, counterpartyFeatures, err := UnpackVersion(counterpartyVer)
-			if err != nil {
-				return "", err
-			}
-
-			featureSet := GetFeatureSetIntersection(sourceFeatures, counterpartyFeatures)
-			if len(featureSet) == 0 && !allowNilFeatureSet[ver] {
+			featureSet := GetFeatureSetIntersection(supportedVersion.GetFeatures(), counterpartyVersion.GetFeatures())
+			if len(featureSet) == 0 && !allowNilFeatureSet[supportedVersion.GetIdentifier()] {
 				continue
 			}
 
-			version := CreateVersionString(sourceIdentifier, featureSet)
-			return version, nil
+			return NewVersion(supportedVersion.GetIdentifier(), featureSet), nil
 		}
 	}
 
-	return "", sdkerrors.Wrapf(
+	return Version{}, sdkerrors.Wrapf(
 		ErrVersionNegotiationFailed,
 		"failed to find a matching counterparty version (%s) from the supported version list (%s)", counterpartyVersions, supportedVersions,
 	)
@@ -158,29 +127,27 @@ func GetFeatureSetIntersection(sourceFeatureSet, counterpartyFeatureSet []string
 // proposed version is supported by this chain. If the feature set is
 // empty it verifies that this is allowed for the specified version
 // identifier.
-func VerifyProposedVersion(proposedVersion, supportedVersion string) error {
-	proposedIdentifier, proposedFeatureSet, err := UnpackVersion(proposedVersion)
-	if err != nil {
-		return sdkerrors.Wrap(err, "could not unpack proposed version")
-	}
-
-	if len(proposedFeatureSet) == 0 && !allowNilFeatureSet[proposedIdentifier] {
+func VerifyProposedVersion(proposedVersion, supportedVersion Version) error {
+	// sanity check
+	if proposedVersion.GetIdentifier() != supportedVersion.GetIdentifier() {
 		return sdkerrors.Wrapf(
 			ErrVersionNegotiationFailed,
-			"nil feature sets are not supported for version identifier (%s)", proposedIdentifier,
+			"proposed version identifier does not equal supported version identifier (%s != %s)", proposedVersion.GetIdentifier(), supportedVersion.GetIdentifier(),
 		)
 	}
 
-	_, supportedFeatureSet, err := UnpackVersion(supportedVersion)
-	if err != nil {
-		return sdkerrors.Wrap(err, "could not unpack supported version")
+	if len(proposedVersion.GetFeatures()) == 0 && !allowNilFeatureSet[proposedVersion.GetIdentifier()] {
+		return sdkerrors.Wrapf(
+			ErrVersionNegotiationFailed,
+			"nil feature sets are not supported for version identifier (%s)", proposedVersion.GetIdentifier(),
+		)
 	}
 
-	for _, proposedFeature := range proposedFeatureSet {
-		if !contains(proposedFeature, supportedFeatureSet) {
+	for _, proposedFeature := range proposedVersion.GetFeatures() {
+		if !contains(proposedFeature, supportedVersion.GetFeatures()) {
 			return sdkerrors.Wrapf(
 				ErrVersionNegotiationFailed,
-				"proposed feature set (%s) is not a supported feature set (%s)", proposedFeatureSet, supportedFeatureSet,
+				"proposed feature (%s) is not a supported feature set (%s)", proposedFeature, supportedVersion.GetFeatures(),
 			)
 		}
 	}
@@ -188,15 +155,10 @@ func VerifyProposedVersion(proposedVersion, supportedVersion string) error {
 	return nil
 }
 
-// VerifySupportedFeature takes in a version string and feature string and returns
+// VerifySupportedFeature takes in a version and feature string and returns
 // true if the feature is supported by the version and false otherwise.
-func VerifySupportedFeature(version, feature string) bool {
-	_, featureSet, err := UnpackVersion(version)
-	if err != nil {
-		return false
-	}
-
-	for _, f := range featureSet {
+func VerifySupportedFeature(version Version, feature string) bool {
+	for _, f := range version.GetFeatures() {
 		if f == feature {
 			return true
 		}

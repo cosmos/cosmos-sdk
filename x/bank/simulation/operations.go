@@ -104,7 +104,7 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeEncodingConfig().TxGenerator
-	tx := helpers.GenTx(
+	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -114,6 +114,9 @@ func sendMsgSend(
 		[]uint64{account.GetSequence()},
 		privkeys...,
 	)
+	if err != nil {
+		simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+	}
 
 	_, _, err = app.Deliver(tx)
 	if err != nil {
@@ -249,7 +252,7 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeEncodingConfig().TxGenerator
-	tx := helpers.GenTx(
+	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -259,6 +262,9 @@ func sendMsgMultiSend(
 		sequenceNumbers,
 		privkeys...,
 	)
+	if err != nil {
+		simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+	}
 
 	_, _, err = app.Deliver(tx)
 	if err != nil {

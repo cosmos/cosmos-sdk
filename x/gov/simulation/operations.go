@@ -143,7 +143,7 @@ func SimulateSubmitProposal(
 		}
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -153,6 +153,9 @@ func SimulateSubmitProposal(
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -227,7 +230,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		}
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -237,7 +240,9 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
-
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 		_, _, err = app.Deliver(tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
@@ -287,7 +292,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -297,6 +302,9 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {

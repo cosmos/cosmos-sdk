@@ -20,7 +20,7 @@ const (
 )
 
 // GenTx generates a signed mock transaction.
-func GenTx(gen client.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) sdk.Tx {
+func GenTx(gen client.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo
@@ -42,11 +42,11 @@ func GenTx(gen client.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64,
 	tx := gen.NewTxBuilder()
 	err := tx.SetMsgs(msgs...)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	err = tx.SetSignatures(sigs...)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	tx.SetMemo(memo)
 	tx.SetFeeAmount(feeAmt)
@@ -73,5 +73,5 @@ func GenTx(gen client.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64,
 		}
 	}
 
-	return tx.GetTx()
+	return tx.GetTx(), nil
 }

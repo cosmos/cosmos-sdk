@@ -101,7 +101,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -111,6 +111,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -150,7 +153,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -160,6 +163,9 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -202,7 +208,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -212,6 +218,9 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -254,7 +263,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -264,6 +273,9 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 			[]uint64{account.GetSequence()},
 			funder.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {

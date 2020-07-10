@@ -87,7 +87,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -97,6 +97,9 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, res, err := app.Deliver(tx)
 

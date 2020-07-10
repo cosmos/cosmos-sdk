@@ -152,7 +152,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			selfDelegation, description, commission, sdk.OneInt())
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -162,6 +162,9 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -220,7 +223,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -230,6 +233,9 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -290,7 +296,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -300,6 +306,9 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -374,7 +383,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		}
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -384,6 +393,9 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
@@ -481,7 +493,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 		)
 
 		txGen := simappparams.MakeEncodingConfig().TxGenerator
-		tx := helpers.GenTx(
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -491,6 +503,9 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx")
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {

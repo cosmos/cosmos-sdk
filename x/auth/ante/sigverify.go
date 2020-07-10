@@ -319,7 +319,6 @@ func DefaultSigVerificationGasConsumer(
 ) error {
 	pubkey := sig.PubKey
 
-	fmt.Println("DefaultSigVerificationGasConsumer ", pubkey)
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKeyEd25519:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")

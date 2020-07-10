@@ -39,8 +39,9 @@ $ %s query %s --page=2 --limit=50
 
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of evidence to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of evidence to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
-	return flags.GetCommands(cmd)[0]
+	return cmd
 }
 
 // QueryEvidenceCmd returns the command handler for evidence querying. Evidence

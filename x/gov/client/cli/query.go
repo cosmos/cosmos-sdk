@@ -27,7 +27,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	govQueryCmd.AddCommand(flags.GetCommands(
+	govQueryCmd.AddCommand(
 		GetCmdQueryProposal(queryRoute, cdc),
 		GetCmdQueryProposals(queryRoute, cdc),
 		GetCmdQueryVote(queryRoute, cdc),
@@ -37,14 +37,15 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryProposer(queryRoute, cdc),
 		GetCmdQueryDeposit(queryRoute, cdc),
 		GetCmdQueryDeposits(queryRoute, cdc),
-		GetCmdQueryTally(queryRoute, cdc))...)
+		GetCmdQueryTally(queryRoute, cdc),
+	)
 
 	return govQueryCmd
 }
 
 // GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "proposal [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query details of a single proposal",
@@ -78,6 +79,10 @@ $ %s query gov proposal 1
 			return clientCtx.PrintOutput(proposal) // nolint:errcheck
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryProposals implements a query proposals command.
@@ -165,6 +170,7 @@ $ %s query gov proposals --page=2 --limit=100
 	cmd.Flags().String(flagDepositor, "", "(optional) filter by proposals deposited on by depositor")
 	cmd.Flags().String(flagVoter, "", "(optional) filter by proposals voted on by voted")
 	cmd.Flags().String(flagStatus, "", "(optional) filter proposals by proposal status, status: deposit_period/voting_period/passed/rejected")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -172,7 +178,7 @@ $ %s query gov proposals --page=2 --limit=100
 // Command to Get a Proposal Information
 // GetCmdQueryVote implements the query proposal vote command.
 func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [voter-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single vote",
@@ -237,6 +243,10 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			return clientCtx.PrintOutput(vote)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryVotes implements the command to query for proposal votes.
@@ -298,15 +308,18 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			return clientCtx.PrintOutput(votes)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of votes to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of votes to query for")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // Command to Get a specific Deposit Information
 // GetCmdQueryDeposit implements the query proposal deposit command.
 func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "deposit [proposal-id] [depositer-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a deposit",
@@ -364,11 +377,15 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			return clientCtx.PrintOutput(deposit)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryDeposits implements the command to query for proposal deposits.
 func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "deposits [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query deposits on a proposal",
@@ -422,11 +439,15 @@ $ %s query gov deposits 1
 			return clientCtx.PrintOutput(dep)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryTally implements the command to query for proposal tally result.
 func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "tally [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Get the tally of a proposal vote",
@@ -473,11 +494,15 @@ $ %s query gov tally 1
 			return clientCtx.PrintOutput(tally)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the parameters of the governance process",
 		Long: strings.TrimSpace(
@@ -515,11 +540,15 @@ $ %s query gov params
 			return clientCtx.PrintOutput(types.NewParams(votingParams, tallyParams, depositParams))
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "param [param-type]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
@@ -563,11 +592,15 @@ $ %s query gov param deposit
 			return clientCtx.PrintOutput(out)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryProposer implements the query proposer command.
 func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "proposer [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the proposer of a governance proposal",
@@ -597,6 +630,8 @@ $ %s query gov proposer 1
 			return clientCtx.PrintOutput(prop)
 		},
 	}
-}
 
-// DONTCOVER
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

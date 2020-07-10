@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -18,7 +17,7 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	queryCmd.AddCommand(flags.GetCommands(
+	queryCmd.AddCommand(
 		GetCmdQueryChannels(),
 		GetCmdQueryChannel(),
 		GetCmdQueryConnectionChannels(),
@@ -28,7 +27,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryUnrelayedPackets(),
 		GetCmdQueryNextSequenceReceive(),
 		// TODO: next sequence Send ?
-	)...)
+	)
 
 	return queryCmd
 }
@@ -43,14 +42,14 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(flags.PostCommands(
+	txCmd.AddCommand(
 		NewChannelOpenInitCmd(),
 		NewChannelOpenTryCmd(),
 		NewChannelOpenAckCmd(),
 		NewChannelOpenConfirmCmd(),
 		NewChannelCloseInitCmd(),
 		NewChannelCloseConfirmCmd(),
-	)...)
+	)
 
 	return txCmd
 }

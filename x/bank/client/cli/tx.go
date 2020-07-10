@@ -59,5 +59,7 @@ func NewSendTxCmd() *cobra.Command {
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

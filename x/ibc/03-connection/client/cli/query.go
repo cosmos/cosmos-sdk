@@ -51,8 +51,10 @@ func GetCmdQueryConnections() *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -84,7 +86,9 @@ func GetCmdQueryConnection() *cobra.Command {
 			return clientCtx.PrintOutput(connRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -116,7 +120,9 @@ func GetCmdQueryClientConnections() *cobra.Command {
 			return clientCtx.PrintOutput(connPathsRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

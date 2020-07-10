@@ -66,10 +66,7 @@ const (
 
 // LineBreak can be included in a command list to provide a blank line
 // to help with readability
-var (
-	LineBreak  = &cobra.Command{Run: func(*cobra.Command, []string) {}}
-	GasFlagVar = GasSetting{Gas: DefaultGasLimit}
-)
+var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 
 // AddQueryFlagsToCmd adds common flags to a module query command.
 func AddQueryFlagsToCmd(cmd *cobra.Command) {
@@ -133,27 +130,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	viper.BindPFlag(FlagUseLedger, cmd.Flags().Lookup(FlagUseLedger))
 	viper.BindPFlag(FlagNode, cmd.Flags().Lookup(FlagNode))
 	viper.BindPFlag(FlagKeyringBackend, cmd.Flags().Lookup(FlagKeyringBackend))
-}
-
-// GetCommands adds common flags to query commands.
-//
-// TODO: REMOVE.
-func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
-	for _, c := range cmds {
-		AddQueryFlagsToCmd(c)
-	}
-
-	return cmds
-}
-
-// PostCommands adds common flags for commands to post tx
-//
-// TODO: REMOVE.
-func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
-	for _, c := range cmds {
-		AddTxFlagsToCmd(c)
-	}
-	return cmds
 }
 
 // GasSetting encapsulates the possible values passed through the --gas flag.

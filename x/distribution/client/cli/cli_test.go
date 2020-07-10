@@ -92,7 +92,7 @@ withdraw_addr_enabled: true`,
 
 		s.Run(tc.name, func() {
 			cmd := flags.GetCommands(cli.GetCmdQueryParams())[0]
-			_, out, _ := testutil.ApplyMockIO(cmd)
+			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
 
@@ -157,7 +157,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 
 		s.Run(tc.name, func() {
 			cmd := flags.GetCommands(cli.GetCmdQueryValidatorOutstandingRewards())[0]
-			_, out, _ := testutil.ApplyMockIO(cmd)
+			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
 
@@ -227,7 +227,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 
 		s.Run(tc.name, func() {
 			cmd := flags.GetCommands(cli.GetCmdQueryValidatorCommission())[0]
-			_, out, _ := testutil.ApplyMockIO(cmd)
+			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
 
@@ -313,7 +313,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 
 		s.Run(tc.name, func() {
 			cmd := flags.GetCommands(cli.GetCmdQueryValidatorSlashes())[0]
-			_, out, _ := testutil.ApplyMockIO(cmd)
+			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
 
@@ -419,7 +419,7 @@ total:
 
 		s.Run(tc.name, func() {
 			cmd := flags.GetCommands(cli.GetCmdQueryDelegatorRewards())[0]
-			_, out, _ := testutil.ApplyMockIO(cmd)
+			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
 
@@ -469,7 +469,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 
 		s.Run(tc.name, func() {
 			cmd := flags.GetCommands(cli.GetCmdQueryCommunityPool())[0]
-			_, out, _ := testutil.ApplyMockIO(cmd)
+			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
 
@@ -592,7 +592,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 
 		s.Run(tc.name, func() {
 			cmd := flags.PostCommands(cli.NewWithdrawAllRewardsCmd())[0]
-			_, out, _ := testutil.ApplyMockIO(cmd)
+			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
 

@@ -21,9 +21,7 @@ const (
 
 	// DefaultKeyringBackend
 	DefaultKeyringBackend = keyring.BackendOS
-)
 
-const (
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for
 	// the tx to be committed in a block.
 	BroadcastBlock = "block"
@@ -50,6 +48,7 @@ const (
 	FlagSequence         = "sequence"
 	FlagMemo             = "memo"
 	FlagFees             = "fees"
+	FlagGas              = "gas"
 	FlagGasPrices        = "gas-prices"
 	FlagBroadcastMode    = "broadcast-mode"
 	FlagDryRun           = "dry-run"
@@ -109,16 +108,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
 
-	// --gas can accept integers and "simulate"
-	//
-	// TODO: Remove usage of var in favor of string as this is technical creating
-	// a singleton usage pattern and can cause issues in parallel tests.
-	//
-	// REF: https://github.com/cosmos/cosmos-sdk/issues/6545
-	cmd.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
-		"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
-		GasFlagAuto, DefaultGasLimit,
-	))
+	// --gas can accept integers and "auto"
+	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
 
 	cmd.MarkFlagRequired(FlagChainID)
 
@@ -138,35 +129,32 @@ type GasSetting struct {
 	Gas      uint64
 }
 
-// Type returns the flag's value type.
-func (v *GasSetting) Type() string { return "string" }
-
-// Set parses and sets the value of the --gas flag.
-func (v *GasSetting) Set(s string) (err error) {
-	v.Simulate, v.Gas, err = ParseGas(s)
-	return
-}
-
 func (v *GasSetting) String() string {
 	if v.Simulate {
 		return GasFlagAuto
 	}
+
 	return strconv.FormatUint(v.Gas, 10)
 }
 
-// ParseGas parses the value of the gas option.
-func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
+// ParseGasSetting parses a string gas value. The value may either be 'auto',
+// which indicates a transaction should be executed in simulate mode to
+// automatically find a sufficient gas value, or a string integer. It returns an
+// error if a string integer is provided which cannot be parsed.
+func ParseGasSetting(gasStr string) (GasSetting, error) {
 	switch gasStr {
 	case "":
-		gas = DefaultGasLimit
+		return GasSetting{false, DefaultGasLimit}, nil
+
 	case GasFlagAuto:
-		simulateAndExecute = true
+		return GasSetting{true, 0}, nil
+
 	default:
-		gas, err = strconv.ParseUint(gasStr, 10, 64)
+		gas, err := strconv.ParseUint(gasStr, 10, 64)
 		if err != nil {
-			err = fmt.Errorf("gas must be either integer or %q", GasFlagAuto)
-			return
+			return GasSetting{}, fmt.Errorf("gas must be either integer or %s", GasFlagAuto)
 		}
+
+		return GasSetting{false, gas}, nil
 	}
-	return
 }

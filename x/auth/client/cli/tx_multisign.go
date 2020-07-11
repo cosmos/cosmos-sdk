@@ -51,8 +51,9 @@ recommended to set such parameters manually.
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	flags.AddTxFlagsToCmd(cmd)
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {

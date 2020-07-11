@@ -54,8 +54,10 @@ func GetCmdQueryChannels() *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -90,7 +92,10 @@ func GetCmdQueryChannel() *cobra.Command {
 			return clientCtx.PrintOutput(channelRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -131,8 +136,10 @@ func GetCmdQueryConnectionChannels() *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -164,6 +171,9 @@ func GetCmdQueryChannelClientState() *cobra.Command {
 			return clientCtx.PrintOutput(clientStateRes)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -205,8 +215,10 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -246,7 +258,10 @@ func GetCmdQueryPacketCommitment() *cobra.Command {
 			return clientCtx.PrintOutput(res)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -302,9 +317,11 @@ An unrelayed packet corresponds to:
 			return clientCtx.PrintOutput(res)
 		},
 	}
+
 	cmd.Flags().Int64Slice(flagSequences, []int64{}, "comma separated list of packet sequence numbers")
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -339,7 +356,9 @@ func GetCmdQueryNextSequenceReceive() *cobra.Command {
 			return clientCtx.PrintOutput(sequenceRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

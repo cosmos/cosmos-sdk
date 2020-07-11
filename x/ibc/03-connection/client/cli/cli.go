@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
@@ -17,11 +16,11 @@ func GetQueryCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 	}
 
-	queryCmd.AddCommand(flags.GetCommands(
+	queryCmd.AddCommand(
 		GetCmdQueryConnections(),
 		GetCmdQueryConnection(),
 		GetCmdQueryClientConnections(),
-	)...)
+	)
 
 	return queryCmd
 }
@@ -36,12 +35,12 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(flags.PostCommands(
+	txCmd.AddCommand(
 		NewConnectionOpenInitCmd(),
 		NewConnectionOpenTryCmd(),
 		NewConnectionOpenAckCmd(),
 		NewConnectionOpenConfirmCmd(),
-	)...)
+	)
 
 	return txCmd
 }

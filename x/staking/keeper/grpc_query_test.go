@@ -63,6 +63,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			},
 			false,
 		},
+		{"invalid request with empty status",
+			func() {
+				req = &types.QueryValidatorsRequest{Status: ""}
+			},
+			false,
+		},
 		{
 			"invalid request",
 			func() {
@@ -549,6 +555,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 		{"empty request",
 			func() {
 				req = &types.QueryHistoricalInfoRequest{}
+			},
+			false,
+		},
+		{"invalid request with negative height",
+			func() {
+				req = &types.QueryHistoricalInfoRequest{Height: -1}
 			},
 			false,
 		},

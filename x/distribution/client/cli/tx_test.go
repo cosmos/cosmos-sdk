@@ -3,6 +3,8 @@ package cli
 import (
 	"testing"
 
+	"github.com/spf13/pflag"
+
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/testutil"
 
@@ -19,7 +21,7 @@ import (
 func Test_splitAndCall_NoMessages(t *testing.T) {
 	clientCtx := client.Context{}
 
-	err := newSplitAndApply(nil, clientCtx, nil, 10)
+	err := newSplitAndApply(nil, clientCtx, nil, nil, 10)
 	assert.NoError(t, err, "")
 }
 
@@ -42,7 +44,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	callCount := 0
 	err := newSplitAndApply(
-		func(clientCtx client.Context, msgs ...sdk.Msg) error {
+		func(clientCtx client.Context, fs *pflag.FlagSet, msgs ...sdk.Msg) error {
 			callCount++
 
 			assert.NotNil(t, clientCtx)
@@ -56,7 +58,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 			return nil
 		},
-		clientCtx, msgs, chunkSize)
+		clientCtx, nil, msgs, chunkSize)
 
 	assert.NoError(t, err, "")
 	assert.Equal(t, 3, callCount)

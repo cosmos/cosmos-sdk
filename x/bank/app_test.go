@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -111,7 +110,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := abci.Header{Height: app.LastBlockHeight() + 1}
-	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	txGen := simapp.MakeEncodingConfig().TxGenerator
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
@@ -179,7 +178,7 @@ func TestSendToModuleAcc(t *testing.T) {
 			origSeq := res1.GetSequence()
 
 			header := abci.Header{Height: app.LastBlockHeight() + 1}
-			txGen := simappparams.MakeEncodingConfig().TxGenerator
+			txGen := simapp.MakeEncodingConfig().TxGenerator
 			_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{test.msg}, []uint64{origAccNum}, []uint64{origSeq}, test.expSimPass, test.expPass, priv1)
 			if test.expPass {
 				require.NoError(t, err)
@@ -250,7 +249,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simapp.MakeEncodingConfig().TxGenerator
 		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		if tc.expPass {
 			require.NoError(t, err)
@@ -302,7 +301,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simapp.MakeEncodingConfig().TxGenerator
 		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -357,7 +356,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simapp.MakeEncodingConfig().TxGenerator
 		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
@@ -410,7 +409,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simapp.MakeEncodingConfig().TxGenerator
 		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 

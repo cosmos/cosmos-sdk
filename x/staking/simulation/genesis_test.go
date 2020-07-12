@@ -64,7 +64,6 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-
 	cdc := codec.New()
 
 	s := rand.NewSource(1)

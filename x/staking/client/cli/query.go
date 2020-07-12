@@ -24,7 +24,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	stakingQueryCmd.AddCommand(flags.GetCommands(
+	stakingQueryCmd.AddCommand(
 		GetCmdQueryDelegation(queryRoute, cdc),
 		GetCmdQueryDelegations(queryRoute, cdc),
 		GetCmdQueryUnbondingDelegation(queryRoute, cdc),
@@ -38,14 +38,15 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryValidatorRedelegations(queryRoute, cdc),
 		GetCmdQueryHistoricalInfo(queryRoute, cdc),
 		GetCmdQueryParams(queryRoute, cdc),
-		GetCmdQueryPool(queryRoute, cdc))...)
+		GetCmdQueryPool(queryRoute, cdc),
+	)
 
 	return stakingQueryCmd
 }
 
 // GetCmdQueryValidator implements the validator query command.
 func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "validator [validator-addr]",
 		Short: "Query a validator",
 		Long: strings.TrimSpace(
@@ -83,11 +84,15 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 			return clientCtx.PrintOutput(validator)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryValidators implements the query all validators command.
 func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "validators",
 		Short: "Query for all validators",
 		Args:  cobra.NoArgs,
@@ -121,6 +126,10 @@ $ %s query staking validators
 			return clientCtx.PrintOutput(validators)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
@@ -167,6 +176,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of unbonding delegations to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -174,7 +184,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations
 // from a validator command.
 func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "redelegations-from [validator-addr]",
 		Short: "Query all outgoing redelegatations from a validator",
 		Long: strings.TrimSpace(
@@ -214,11 +224,15 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryDelegation the query delegation command.
 func GetCmdQueryDelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delegation [delegator-addr] [validator-addr]",
 		Short: "Query a delegation based on address and validator address",
 		Long: strings.TrimSpace(
@@ -263,12 +277,16 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryDelegations implements the command to query all the delegations
 // made from one delegator.
 func GetCmdQueryDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made by one delegator",
 		Long: strings.TrimSpace(
@@ -308,6 +326,10 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryValidatorDelegations implements the command to query all the
@@ -358,6 +380,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of delegations to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of delegations to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -365,7 +388,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 // GetCmdQueryUnbondingDelegation implements the command to query a single
 // unbonding-delegation record.
 func GetCmdQueryUnbondingDelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "unbonding-delegation [delegator-addr] [validator-addr]",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
 		Long: strings.TrimSpace(
@@ -410,12 +433,16 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 			return clientCtx.PrintOutput(ubd)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryUnbondingDelegations implements the command to query all the
 // unbonding-delegation records for a delegator.
 func GetCmdQueryUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
 		Long: strings.TrimSpace(
@@ -455,12 +482,16 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 			return clientCtx.PrintOutput(ubds)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryRedelegation implements the command to query a single
 // redelegation record.
 func GetCmdQueryRedelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr]",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
 		Long: strings.TrimSpace(
@@ -510,12 +541,16 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryRedelegations implements the command to query all the
 // redelegation records for a delegator.
 func GetCmdQueryRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "redelegations [delegator-addr]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query all redelegations records for one delegator",
@@ -555,11 +590,15 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryHistoricalInfo implements the historical info query command
 func GetCmdQueryHistoricalInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "historical-info [height]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query historical info at given height",
@@ -599,11 +638,15 @@ $ %s query staking historical-info 5
 			return clientCtx.PrintOutput(resp)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryPool implements the pool query command.
 func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "pool",
 		Args:  cobra.NoArgs,
 		Short: "Query the current staking pool values",
@@ -632,11 +675,15 @@ $ %s query staking pool
 			return clientCtx.PrintOutput(pool)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryParams implements the params query command.
 func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query the current staking parameters information",
@@ -663,4 +710,8 @@ $ %s query staking params
 			return clientCtx.PrintOutput(params)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

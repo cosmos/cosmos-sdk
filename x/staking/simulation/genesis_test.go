@@ -26,7 +26,6 @@ func TestRandomizedGenState(t *testing.T) {
 		Cdc:       cdc,
 		Rand:      r,
 		NumBonded: 3,
-		// Accounts:  make([]simtypes.Account, 10),
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: 1000,
 		GenState:     make(map[string]json.RawMessage),

@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 )
 
 var (
@@ -43,12 +42,22 @@ func (version Version) GetFeatures() []string {
 	return version.Features
 }
 
+// ToString proto encodes the version and returns the bytes as a string.
+func (version Version) ToString() (string, error) {
+	ver, err := SubModuleCdc.MarshalBinaryBare(&version)
+	if err != nil {
+		return "", err
+	}
+
+	return string(ver), nil
+}
+
 // ValidateVersion does basic validation of the version identifier and
 // features. It unmarshals the version string into a Version object.
 func ValidateVersion(ver string) error {
 	var version Version
 	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(ver), &version); err != nil {
-		return sdkerrors.Wrap(err, "failed to unmarshal version string %s", ver)
+		return sdkerrors.Wrapf(err, "failed to unmarshal version string %s", ver)
 	}
 
 	if strings.TrimSpace(version.Identifier) == "" {
@@ -71,6 +80,57 @@ func GetCompatibleVersions() []Version {
 	return []Version{DefaultIBCVersion}
 }
 
+func GetCompatibleVersionStrings() []string {
+	versions, err := VersionsToStrings(GetCompatibleVersions())
+	if err != nil {
+		panic(err) // shouldn't occur with properly set hardcoded versions
+	}
+
+	return versions
+}
+
+// VersionsToStrings iterates over the provided versions and marshals each
+// into proto encoded strings. This represents the stored value of the version
+// in the connection end as well as the value passed over the wire.
+func VersionsToStrings(versions []Version) ([]string, error) {
+	var versionsStr []string
+
+	for _, version := range versions {
+		ver, err := version.ToString()
+		if err != nil {
+			return nil, err
+		}
+
+		versionsStr = append(versionsStr, ver)
+	}
+
+	return versionsStr, nil
+}
+
+func StringToVersion(versionStr string) (Version, error) {
+	var version Version
+	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(versionStr), &version); err != nil {
+		return Version{}, sdkerrors.Wrapf(err, "failed to unmarshal version string %s", versionStr)
+	}
+
+	return version, nil
+}
+
+func StringsToVersions(versionsStr []string) ([]Version, error) {
+	var versions []Version
+
+	for _, verStr := range versionsStr {
+		version, err := StringToVersion(verStr)
+		if err != nil {
+			return nil, err
+		}
+
+		versions = append(versions, version)
+	}
+
+	return versions, nil
+}
+
 // FindSupportedVersion returns the version with a matching version identifier
 // if it exists. The returned boolean is true if the version is found and
 // false otherwise.
@@ -91,7 +151,11 @@ func FindSupportedVersion(version Version, supportedVersions []Version) (Version
 // not allowed for the choosen version identifier then the search for a
 // compatible version continues. This function is called in the ConnOpenTry
 // handshake procedure.
-func PickVersion(counterpartyVersions []Version) (Version, error) {
+func PickVersion(counterpartyVersionsStr []string) (string, error) {
+	counterpartyVersions, err := StringsToVersions(counterpartyVersionsStr)
+	if err != nil {
+		return "", sdkerrors.Wrapf(err, "failed to unmarshal counterparty versions (%s) when attempting to pick compatible version", counterpartyVersionsStr)
+	}
 	supportedVersions := GetCompatibleVersions()
 
 	for _, supportedVersion := range supportedVersions {
@@ -103,11 +167,11 @@ func PickVersion(counterpartyVersions []Version) (Version, error) {
 				continue
 			}
 
-			return NewVersion(supportedVersion.GetIdentifier(), featureSet), nil
+			return NewVersion(supportedVersion.GetIdentifier(), featureSet).ToString()
 		}
 	}
 
-	return Version{}, sdkerrors.Wrapf(
+	return "", sdkerrors.Wrapf(
 		ErrVersionNegotiationFailed,
 		"failed to find a matching counterparty version (%s) from the supported version list (%s)", counterpartyVersions, supportedVersions,
 	)
@@ -161,7 +225,12 @@ func VerifyProposedVersion(proposedVersion, supportedVersion Version) error {
 
 // VerifySupportedFeature takes in a version and feature string and returns
 // true if the feature is supported by the version and false otherwise.
-func VerifySupportedFeature(version Version, feature string) bool {
+func VerifySupportedFeature(versionStr, feature string) bool {
+	version, err := StringToVersion(versionStr)
+	if err != nil {
+		return false
+	}
+
 	for _, f := range version.GetFeatures() {
 		if f == feature {
 			return true

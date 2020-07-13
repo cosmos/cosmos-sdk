@@ -51,7 +51,7 @@ var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
 
-	ConnectionVersion = connectiontypes.DefaultIBCVersion
+	ConnectionVersion = connectiontypes.GetCompatibleVersionStrings()[0]
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI

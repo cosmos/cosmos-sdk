@@ -42,7 +42,6 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's tendermint validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			cfg := ctx.Config
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 
@@ -75,7 +74,6 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's tendermint validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			cfg := ctx.Config
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())

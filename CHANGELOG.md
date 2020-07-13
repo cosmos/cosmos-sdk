@@ -86,6 +86,12 @@ respectively, and the latter defines the height interval in which versions are d
 * (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent `ChainAnteDecorators()` from panicking when empty `AnteDecorator` slice is supplied.
 * (baseapp) [\#6306](https://github.com/cosmos/cosmos-sdk/issues/6306) Prevent events emitted by the antehandler from being persisted between transactions.
 
+## [v0.38.5] - 2020-07-02
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.33.6](https://github.com/tendermint/tendermint/releases/tag/v0.33.6).
+
 ## [v0.38.4] - 2020-05-21
 
 ### Bug Fixes

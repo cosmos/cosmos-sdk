@@ -123,3 +123,9 @@ Their responsibilites include:
  * Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
 
 The Stable Release Managers are appointed by the Interchain Foundation.
+
+*Stable Release Managers* for the **0.39 «Launchpad»** release series follow:
+
+* @alessio - Alessio Treglia
+* @clevinson - Cory Levinson-
+* @ethanfrey - Ethan Frey

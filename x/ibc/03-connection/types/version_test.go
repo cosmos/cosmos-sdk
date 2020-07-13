@@ -35,6 +35,30 @@ func TestValidateVersion(t *testing.T) {
 	}
 }
 
+func TestStringToVersion(t *testing.T) {
+	testCases := []struct {
+		name       string
+		version    string
+		expVersion types.Version
+		expPass    bool
+	}{
+		{"valid version", ibctesting.ConnectionVersion, types.DefaultIBCVersion, true},
+		{"invalid version", "not a proto encoded version", types.Version{}, false},
+		{"empty string", "       ", types.Version{}, false},
+	}
+
+	for i, tc := range testCases {
+		version, err := types.StringToVersion(tc.version)
+
+		if tc.expPass {
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
+			require.Equal(t, tc.expVersion, version)
+		} else {
+			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
+		}
+	}
+}
+
 func TestFindSupportedVersion(t *testing.T) {
 	testCases := []struct {
 		name              string
@@ -103,6 +127,7 @@ func TestVerifyProposedVersion(t *testing.T) {
 		{"empty feature sets not supported", types.NewVersion("1", []string{}), types.DefaultIBCVersion, false},
 		{"one feature missing", types.DefaultIBCVersion, types.NewVersion("1", []string{"ORDER_UNORDERED", "ORDER_DAG"}), false},
 		{"both features missing", types.DefaultIBCVersion, types.NewVersion("1", []string{"ORDER_DAG"}), false},
+		{"identifiers do not match", types.NewVersion("2", []string{"ORDER_UNORDERED", "ORDER_ORDERED"}), types.DefaultIBCVersion, false},
 	}
 
 	for i, tc := range testCases {
@@ -131,6 +156,7 @@ func TestVerifySupportedFeature(t *testing.T) {
 		{"check UNORDERED supported", ibctesting.ConnectionVersion, "ORDER_UNORDERED", true},
 		{"check DAG unsupported", ibctesting.ConnectionVersion, "ORDER_DAG", false},
 		{"check empty feature set returns false", nilFeatures, "ORDER_ORDERED", false},
+		{"failed to unmarshal version", "not an encoded version", "ORDER_ORDERED", false},
 	}
 
 	for i, tc := range testCases {

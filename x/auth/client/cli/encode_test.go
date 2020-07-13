@@ -15,11 +15,8 @@ import (
 
 func TestGetCommandEncode(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
-	clientCtx := client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator).
-		WithJSONMarshaler(encodingConfig.Marshaler)
 
-	cmd := GetEncodeCommand(clientCtx)
+	cmd := GetEncodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	authtypes.RegisterCodec(encodingConfig.Amino)
@@ -48,7 +45,7 @@ func TestGetCommandDecode(t *testing.T) {
 		WithTxGenerator(encodingConfig.TxGenerator).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
-	cmd := GetDecodeCommand(clientCtx)
+	cmd := GetDecodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	sdk.RegisterCodec(encodingConfig.Amino)

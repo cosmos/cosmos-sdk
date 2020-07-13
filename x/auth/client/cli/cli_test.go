@@ -305,7 +305,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
-	s.T().SkipNow()
+	s.T().SkipNow() // TODO check encoding.
 	val1 := s.network.Validators[0]
 
 	codec := codec2.New()
@@ -382,90 +382,41 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	fmt.Printf("%s", exec)
 }
 
-func TestCLIMultisignInsufficientCosigners(t *testing.T) {
-	t.SkipNow()
-	t.Parallel()
-	f := cli.InitFixtures(t)
-
-	// start simd server with minimum fees
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
-
-	fooBarBazAddr := f.KeyAddress(cli.KeyFooBarBaz)
-	barAddr := f.KeyAddress(cli.KeyBar)
-
-	// Send some tokens from one account to the other
-	success, _, _ := bankcli.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
-	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Test generate sendTx with multisig
-	success, stdout, _ := bankcli.TxSend(f, fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 5), "--generate-only")
-	require.True(t, success)
-
-	// Write the output to disk
-	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// Sign with foo's key
-	success, stdout, _ = authtest.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
-	require.True(t, success)
-
-	// Write the output to disk
-	fooSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// Multisign, not enough signatures
-	success, stdout, _ = authtest.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{fooSignatureFile.Name()})
-	require.True(t, success)
-
-	// Write the output to disk
-	signedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// Validate the multisignature
-	success, _, _ = authtest.TxValidateSignatures(f, signedTxFile.Name())
-	require.False(t, success)
-
-	// Broadcast the transaction
-	success, stdOut, _ := authtest.TxBroadcast(f, signedTxFile.Name())
-	require.Contains(t, stdOut, "signature verification failed")
-	require.True(t, success)
-
-	// Cleanup testing directories
-	f.Cleanup()
-}
-
-func TestCLIEncode(t *testing.T) {
-	t.SkipNow()
-	t.Parallel()
-	f := cli.InitFixtures(t)
-
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
-
-	// Build a testing transaction and write it to disk
-	barAddr := f.KeyAddress(cli.KeyBar)
-	keyAddr := f.KeyAddress(cli.KeyFoo)
+func (s *IntegrationTestSuite) TestCLIEncode() {
+	val1 := s.network.Validators[0]
 
 	sendTokens := sdk.TokensFromConsensusPower(10)
-	success, stdout, stderr := bankcli.TxSend(f, keyAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only", "--memo", "deadbeef")
-	require.True(t, success)
-	require.Empty(t, stderr)
 
-	// Write it to disk
-	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
+	normalGeneratedTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sendTokens),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), "--memo", "deadbeef",
+	)
+	s.Require().NoError(err)
 
-	// Run the encode command
-	success, base64Encoded, _ := authtest.TxEncode(f, jsonTxFile.Name())
-	require.True(t, success)
-	trimmedBase64 := strings.Trim(base64Encoded, "\"\n")
+	// Save tx to file
+	savedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(normalGeneratedTx))
+	defer cleanup()
+
+	// Enconde
+	encodeExec, err := authtest.TxEncodeExec(val1.ClientCtx, savedTxFile.Name())
+	s.Require().NoError(err)
+
+	trimmedBase64 := strings.Trim(string(encodeExec), "\"\n")
 	// Check that the transaction decodes as expected
-	success, stdout, stderr = authtest.TxDecode(f, trimmedBase64)
-	decodedTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.Equal(t, "deadbeef", decodedTx.Memo)
+
+	decodedTx, err := authtest.TxDecodeExec(val1.ClientCtx, trimmedBase64)
+	s.Require().NoError(err)
+
+	theTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, string(decodedTx))
+	s.Require().Equal("deadbeef", theTx.Memo)
 }
 
 func TestCLIMultisignSortSignatures(t *testing.T) {

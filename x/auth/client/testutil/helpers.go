@@ -73,6 +73,17 @@ func TxBroadcast(f *cli.Fixtures, fileName string, flags ...string) (bool, strin
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
+func TxEncodeExec(clientCtx client.Context, filename string, extraArgs ...string) ([]byte, error) {
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		filename,
+	}
+
+	args = append(args, extraArgs...)
+
+	return callCmd(clientCtx, cli2.GetEncodeCommand, args)
+}
+
 // TxEncode is simcli tx encode
 func TxEncode(f *cli.Fixtures, fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimdBinary, f.Flags(), fileName)
@@ -130,6 +141,17 @@ func TxSignBatchExec(clientCtx client.Context, from fmt.Stringer, filename strin
 	args = append(args, extraArgs...)
 
 	return callCmd(clientCtx, cli2.GetSignBatchCommand, args)
+}
+
+func TxDecodeExec(clientCtx client.Context, encodedTx string, extraArgs ...string) ([]byte, error) {
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		encodedTx,
+	}
+
+	args = append(args, extraArgs...)
+
+	return callCmd(clientCtx, cli2.GetDecodeCommand, args)
 }
 
 // TxDecode is simcli tx decode

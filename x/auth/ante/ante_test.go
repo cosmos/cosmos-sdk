@@ -52,10 +52,12 @@ func incrementSeq(seqs []uint64) []uint64 {
 	return newSeqs
 }
 
-// TestAccount represents an account used in the tests below
+// TestAccount represents an account used in the tests below. It's simply an
+// AccountI, where we have access to the PrivKey.
 type TestAccount struct {
+	types.AccountI
+
 	priv crypto.PrivKey
-	acc  types.AccountI
 }
 
 type AnteTestSuite struct {
@@ -92,7 +94,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		suite.app.BankKeeper.SetBalances(suite.ctx, addr, types.NewTestCoins())
 
-		accounts = append(accounts, TestAccount{priv, acc})
+		accounts = append(accounts, TestAccount{acc, priv})
 	}
 
 	return accounts
@@ -119,9 +121,9 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(3)
 	msgs := []sdk.Msg{
-		testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
-		testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress()),
-		testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[2].acc.GetAddress()),
+		testdata.NewTestMsg(accounts[0].GetAddress(), accounts[1].GetAddress()),
+		testdata.NewTestMsg(accounts[2].GetAddress(), accounts[0].GetAddress()),
+		testdata.NewTestMsg(accounts[1].GetAddress(), accounts[2].GetAddress()),
 	}
 	fee := types.NewTestStdFee()
 	seqs := []uint64{0, 0, 0}

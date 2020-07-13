@@ -312,7 +312,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 }
 
 // Helper function get generate the sign bytes to be signed and signature data.
-// Used in SignWithPriv and in Sign functions.
+// Used in SignWithPrivKey and in Sign functions.
 func getSignBytes(pubKey crypto.PubKey, accNum uint64, seq uint64, chainID string, txGenerator client.TxGenerator, txBuilder client.TxBuilder) (*signing.SingleSignatureData, []byte, error) {
 	sigData := &signing.SingleSignatureData{
 		SignMode:  txGenerator.SignModeHandler().DefaultMode(),
@@ -346,9 +346,9 @@ func getSignBytes(pubKey crypto.PubKey, accNum uint64, seq uint64, chainID strin
 	return sigData, signBytes, nil
 }
 
-// SignWithPriv signs a given tx with the given private key, and returns the
+// SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
-func SignWithPriv(priv crypto.PrivKey, accNum uint64, seq uint64, chainID string, txGenerator client.TxGenerator, txBuilder client.TxBuilder) (signing.SignatureV2, error) {
+func SignWithPrivKey(priv crypto.PrivKey, accNum uint64, seq uint64, chainID string, txGenerator client.TxGenerator, txBuilder client.TxBuilder) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2
 
 	sigData, sigBytes, err := getSignBytes(priv.PubKey(), accNum, seq, chainID, txGenerator, txBuilder)

@@ -40,6 +40,18 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	require.True(t, errors.Is(expErr, err))
 }
 
+// Increment the sequences in a sequences array. To be called after each
+// IncrementSequenceDecorator.
+func incrementSeq(seqs []uint64) []uint64 {
+	var newSeqs []uint64
+
+	for _, value := range seqs {
+		newSeqs = append(newSeqs, value+1)
+	}
+
+	return newSeqs
+}
+
 // TestAccount represents an account used in the tests below
 type TestAccount struct {
 	priv crypto.PrivKey
@@ -92,7 +104,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64) xauthsigning.SigFeeMemoTx {
 	var sigsV2 []signing.SignatureV2
 	for i, priv := range privs {
-		sigV2, err := tx.SignWithPriv(priv, accNums[i], seqs[i], suite.ctx.ChainID(), suite.clientCtx.TxGenerator, suite.txBuilder)
+		sigV2, err := tx.SignWithPrivKey(priv, accNums[i], seqs[i], suite.ctx.ChainID(), suite.clientCtx.TxGenerator, suite.txBuilder)
 		suite.Require().NoError(err)
 
 		sigsV2 = append(sigsV2, sigV2)
@@ -104,7 +116,21 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 
 // Test that simulate transaction accurately estimates gas cost
 func (suite *AnteTestSuite) TestSimulateGasCost() {
+	suite.SetupTest() // reset
+	accounts := suite.CreateTestAccounts(3)
+
+	fmt.Println("chainID", suite.ctx.ChainID())
+
+	// Same data for every test cases
+	msgs := []sdk.Msg{
+		testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
+		testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress()),
+		testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[2].acc.GetAddress()),
+	}
 	fee := types.NewTestStdFee()
+	seqs := []uint64{0, 0, 0}
+	privs := []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}
+	accNums := []uint64{0, 1, 2}
 
 	testCases := []struct {
 		msg      string
@@ -136,31 +162,22 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
-
-			accounts := suite.CreateTestAccounts(3)
-
-			// Same data for every test cases
-			msgs := []sdk.Msg{
-				testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
-				testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress()),
-				testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[2].acc.GetAddress()),
-			}
-			privs := []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}
-			accNums := []uint64{0, 1, 2}
-			seqs := []uint64{0, 0, 0}
-
+			// Create new txBuilder for each test case
+			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
 			suite.txBuilder.SetMsgs(msgs...)
 
 			tc.malleate()
 
+			fmt.Println("SEQS", seqs)
 			tx := suite.CreateTestTx(privs, accNums, seqs)
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
-			suite.ctx = newCtx
 
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(newCtx)
+
+				suite.ctx = newCtx
+				seqs = incrementSeq(seqs)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -170,6 +187,8 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 
 // Test various error cases in the AnteHandler control flow.
 func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
+	suite.SetupTest() // reset
+
 	var (
 		accounts []TestAccount
 		privs    []crypto.PrivKey
@@ -189,6 +208,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			func() {
 				privs, accNums, seqs = []crypto.PrivKey{}, []uint64{}, []uint64{}
 
+				// tx := suite.CreateTestTx(privs, accNums, seqs)
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 				expectedSigners := []sdk.AccAddress{
 					accounts[0].acc.GetAddress(),
@@ -199,15 +219,15 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 				suite.Require().Equal(expectedSigners, stdTx.GetSigners())
 			},
 			false,
-			true,
+			false,
 			sdkerrors.ErrNoSignatures,
 		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
-			accounts := suite.CreateTestAccounts(3)
+			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			accounts = suite.CreateTestAccounts(3)
 
 			msgs := []sdk.Msg{
 				testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
@@ -222,11 +242,13 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 
 			tx := suite.CreateTestTx(privs, accNums, seqs)
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
-			suite.ctx = newCtx
 
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(newCtx)
+
+				suite.ctx = newCtx
+				seqs = incrementSeq(seqs)
 			} else {
 				suite.Require().Error(err)
 			}

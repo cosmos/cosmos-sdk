@@ -15,7 +15,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-type GRPCTestSuite struct {
+type KeeperTestSuite struct {
 	suite.Suite
 
 	app         *simapp.SimApp
@@ -24,7 +24,7 @@ type GRPCTestSuite struct {
 	addrs       []sdk.AccAddress
 }
 
-func (suite *GRPCTestSuite) SetupTest() {
+func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -38,7 +38,7 @@ func (suite *GRPCTestSuite) SetupTest() {
 	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryProposal() {
+func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	var (
@@ -62,6 +62,13 @@ func (suite *GRPCTestSuite) TestGRPCQueryProposal() {
 			"non existing proposal request",
 			func() {
 				req = &types.QueryProposalRequest{ProposalId: 3}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &types.QueryProposalRequest{ProposalId: 0}
 			},
 			false,
 		},
@@ -97,7 +104,7 @@ func (suite *GRPCTestSuite) TestGRPCQueryProposal() {
 	}
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryProposals() {
+func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	testProposals := []types.Proposal{}
@@ -239,7 +246,7 @@ func (suite *GRPCTestSuite) TestGRPCQueryProposals() {
 	}
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryVote() {
+func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	var (
@@ -257,6 +264,26 @@ func (suite *GRPCTestSuite) TestGRPCQueryVote() {
 			"empty request",
 			func() {
 				req = &types.QueryVoteRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &types.QueryVoteRequest{
+					ProposalId: 0,
+					Voter:      addrs[0],
+				}
+			},
+			false,
+		},
+		{
+			"empty voter request",
+			func() {
+				req = &types.QueryVoteRequest{
+					ProposalId: 1,
+					Voter:      nil,
+				}
 			},
 			false,
 		},
@@ -333,7 +360,7 @@ func (suite *GRPCTestSuite) TestGRPCQueryVote() {
 	}
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryVotes() {
+func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
@@ -354,6 +381,15 @@ func (suite *GRPCTestSuite) TestGRPCQueryVotes() {
 			"empty request",
 			func() {
 				req = &types.QueryVotesRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &types.QueryVotesRequest{
+					ProposalId: 0,
+				}
 			},
 			false,
 		},
@@ -422,7 +458,7 @@ func (suite *GRPCTestSuite) TestGRPCQueryVotes() {
 	}
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryParams() {
+func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
 
 	var (
@@ -503,7 +539,7 @@ func (suite *GRPCTestSuite) TestGRPCQueryParams() {
 	}
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryDeposit() {
+func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	var (
@@ -521,6 +557,26 @@ func (suite *GRPCTestSuite) TestGRPCQueryDeposit() {
 			"empty request",
 			func() {
 				req = &types.QueryDepositRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &types.QueryDepositRequest{
+					ProposalId: 0,
+					Depositor:  addrs[0],
+				}
+			},
+			false,
+		},
+		{
+			"empty deposit address request",
+			func() {
+				req = &types.QueryDepositRequest{
+					ProposalId: 1,
+					Depositor:  nil,
+				}
 			},
 			false,
 		},
@@ -584,7 +640,7 @@ func (suite *GRPCTestSuite) TestGRPCQueryDeposit() {
 	}
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryDeposits() {
+func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	var (
@@ -602,6 +658,15 @@ func (suite *GRPCTestSuite) TestGRPCQueryDeposits() {
 			"empty request",
 			func() {
 				req = &types.QueryDepositsRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &types.QueryDepositsRequest{
+					ProposalId: 0,
+				}
 			},
 			false,
 		},
@@ -667,89 +732,9 @@ func (suite *GRPCTestSuite) TestGRPCQueryDeposits() {
 			}
 		})
 	}
-
-	// pageReq := &query.PageRequest{Limit: 1}
-
-	// req := &types.QueryDepositsRequest{
-	// 	ProposalId: 0,
-	// 	Req:        pageReq,
-	// }
-
-	// deposits, err := queryClient.Deposits(gocontext.Background(), req)
-	// suite.Require().Error(err)
-	// suite.Require().Nil(deposits)
-
-	// proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal)
-	// suite.Require().NoError(err)
-	// proposalID := proposal.ProposalID
-
-	// req = &types.QueryDepositsRequest{
-	// 	ProposalId: proposalID,
-	// 	Req:        pageReq,
-	// }
-
-	// deposits, err = queryClient.Deposits(gocontext.Background(), req)
-	// suite.Require().NoError(err)
-	// suite.Require().Empty(deposits.Deposits)
-	// suite.Require().Empty(deposits.Res)
-
-	// depositAmount1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20)))
-	// deposit1 := types.NewDeposit(proposalID, addrs[0], depositAmount1)
-	// app.GovKeeper.SetDeposit(ctx, deposit1)
-
-	// depositAmount2 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(30)))
-	// deposit2 := types.NewDeposit(proposalID, addrs[1], depositAmount2)
-	// app.GovKeeper.SetDeposit(ctx, deposit2)
-
-	// proposal.Status = types.StatusVotingPeriod
-	// app.GovKeeper.SetProposal(ctx, proposal)
-
-	// pageReq = &query.PageRequest{Limit: 1}
-
-	// req = &types.QueryDepositsRequest{
-	// 	ProposalId: proposalID,
-	// 	Req:        pageReq,
-	// }
-
-	// deposits, err = queryClient.Deposits(gocontext.Background(), req)
-
-	// suite.Require().NoError(err)
-	// suite.Require().Len(deposits.Deposits, 1)
-	// suite.Require().Equal(depositAmount1, deposits.Deposits[0].Amount)
-	// suite.Require().NotEmpty(deposits.Res.NextKey)
-
-	// // query vote with limit 1, next key and expect NextKey to be nil.
-	// pageReq = &query.PageRequest{
-	// 	Key:   deposits.Res.NextKey,
-	// 	Limit: 1,
-	// }
-
-	// req = &types.QueryDepositsRequest{
-	// 	ProposalId: proposalID,
-	// 	Req:        pageReq,
-	// }
-
-	// deposits, err = queryClient.Deposits(gocontext.Background(), req)
-	// suite.Require().NoError(err)
-	// suite.Require().Len(deposits.Deposits, 1)
-	// suite.Require().Equal(depositAmount2, deposits.Deposits[0].Amount)
-	// suite.Require().Empty(deposits.Res)
-
-	// // query vote with limit 2 and expect NextKey to be nil.
-	// pageReq = &query.PageRequest{Limit: 2}
-
-	// req = &types.QueryDepositsRequest{
-	// 	ProposalId: proposalID,
-	// 	Req:        pageReq,
-	// }
-
-	// deposits, err = queryClient.Deposits(gocontext.Background(), req)
-	// suite.Require().NoError(err)
-	// suite.Require().Len(deposits.Deposits, 2)
-	// suite.Require().Empty(deposits.Res)
 }
 
-func (suite *GRPCTestSuite) TestGRPCQueryTally() {
+func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	addrs, _ := createValidators(ctx, app, []int64{5, 5, 5})
@@ -769,6 +754,13 @@ func (suite *GRPCTestSuite) TestGRPCQueryTally() {
 			"empty request",
 			func() {
 				req = &types.QueryTallyResultRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &types.QueryTallyResultRequest{ProposalId: 0}
 			},
 			false,
 		},
@@ -850,5 +842,5 @@ func (suite *GRPCTestSuite) TestGRPCQueryTally() {
 }
 
 func TestGRPCTestSuite(t *testing.T) {
-	suite.Run(t, new(GRPCTestSuite))
+	suite.Run(t, new(KeeperTestSuite))
 }

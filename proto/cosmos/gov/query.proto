@@ -12,10 +12,10 @@ service Query {
   // Proposal returns proposal details based on ProposalID
   rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {}
 
-  // Proposals queries all proposals.
+  // Proposals queries all proposals based on given status
   rpc Proposals (QueryProposalsRequest) returns (QueryProposalsResponse) {}
 
-  // Vote returns Voted information based on proposalID, voterAddr
+  // Vote queries Voted information based on proposalID, voterAddr
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {}
 
   // Votes queries votes of a given proposal
@@ -27,7 +27,7 @@ service Query {
   // Deposit queries single deposit information based proposalID, depositAddr
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {}
 
-  // Deposits returns all deposits of a single proposal
+  // Deposits queries all deposits of a single proposal
   rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {}
 
   // TallyResult queries the tally of a proposal vote

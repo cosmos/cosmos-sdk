@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +15,12 @@ var _ types.QueryServer = Keeper{}
 
 // Proposal returns proposal details based on ProposalID
 func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*types.QueryProposalResponse, error) {
-	if req == nil || req.ProposalId == 0 {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -42,7 +45,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 		var p types.Proposal
 		err := q.cdc.UnmarshalBinaryBare(value, &p)
 		if err != nil {
-			return false, err
+			return false, status.Error(codes.Internal, err.Error())
 		}
 
 		matchVoter, matchDepositor, matchStatus := true, true, true
@@ -73,7 +76,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryProposalsResponse{Proposals: filteredProposals, Res: res}, nil
@@ -81,16 +84,24 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 
 // Vote returns Voted information based on proposalID, voterAddr
 func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.QueryVoteResponse, error) {
-	if req == nil || req.ProposalId == 0 || req.Voter == nil {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+	}
+
+	if req.Voter == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty voter address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	vote, found := q.GetVote(ctx, req.ProposalId, req.Voter)
 	if !found {
-		return nil, status.Error(codes.InvalidArgument,
-			fmt.Sprintf("Voter: %v not found for proposal: %v", req.Voter, req.ProposalId))
+		return nil, status.Errorf(codes.InvalidArgument,
+			"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 	}
 
 	return &types.QueryVoteResponse{Vote: vote}, nil
@@ -98,8 +109,12 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 
 // Votes returns single proposal's votes
 func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
-	if req == nil || req.ProposalId == 0 {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
 	}
 
 	var votes types.Votes
@@ -120,7 +135,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryVotesResponse{Votes: votes, Res: res}, nil
@@ -128,8 +143,12 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 
 // Params queries all params
 func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	if req == nil || req.ParamsType == "" {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ParamsType == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty params type")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -148,22 +167,31 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 		return &types.QueryParamsResponse{TallyParams: tallyParams}, nil
 
 	default:
-		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid query request path", req.ParamsType)
+		return nil, status.Errorf(codes.InvalidArgument,
+			"%s is not a valid query request path", req.ParamsType)
 	}
 }
 
 // Deposit queries single deposit information based proposalID, depositAddr
 func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {
-	if req == nil || req.ProposalId == 0 || req.Depositor == nil {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+	}
+
+	if req.Depositor == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty depositor address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	deposit, found := q.GetDeposit(ctx, req.ProposalId, req.Depositor)
 	if !found {
-		return nil, status.Error(codes.InvalidArgument,
-			fmt.Sprintf("Depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId))
+		return nil, status.Errorf(codes.InvalidArgument,
+			"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
 	}
 
 	return &types.QueryDepositResponse{Deposit: deposit}, nil
@@ -171,8 +199,12 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 
 // Deposits returns single proposal's all deposits
 func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
-	if req == nil || req.ProposalId == 0 {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
 	}
 
 	var deposits types.Deposits
@@ -192,7 +224,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryDepositsResponse{Deposits: deposits, Res: res}, nil
@@ -200,15 +232,19 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 
 // TallyResult queries the tally of a proposal vote
 func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultRequest) (*types.QueryTallyResultResponse, error) {
-	if req == nil || req.ProposalId == 0 {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ProposalId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	proposal, ok := q.GetProposal(ctx, req.ProposalId)
 	if !ok {
-		return nil, status.Errorf(codes.NotFound, "Proposal: %d doesn't exist", req.ProposalId)
+		return nil, status.Errorf(codes.NotFound, "proposal: %d doesn't exist", req.ProposalId)
 	}
 
 	var tallyResult types.TallyResult

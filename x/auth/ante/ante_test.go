@@ -983,6 +983,26 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			false,
 			sdkerrors.ErrUnauthorized,
 		},
+		{
+			"test wrong signer if public key exist",
+			func() {
+				fee = types.NewTestStdFee()
+				privs, accNums, seqs = []crypto.PrivKey{accounts[1].priv}, []uint64{0}, []uint64{1}
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
+		{
+			"test wrong signer if public doesn't exist",
+			func() {
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].GetAddress())}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{0}
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1011,56 +1031,89 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 	}
 }
 
-func TestAnteHandlerSetPubKey(t *testing.T) {
-	// setup
-	app, ctx := createTestApp(true)
-	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
+func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
+	suite.SetupTest(false) // setup
 
-	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	_, _, addr2 := types.KeyTestPubAddr()
-
-	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	require.NoError(t, acc1.SetAccountNumber(0))
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	require.NoError(t, acc2.SetAccountNumber(1))
-	app.AccountKeeper.SetAccount(ctx, acc2)
-	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
-
-	var tx sdk.Tx
-
-	// test good tx and set public key
-	msg := testdata.NewTestMsg(addr1)
-	msgs := []sdk.Msg{msg}
-	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(2)
 	fee := types.NewTestStdFee()
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkValidTx(t, anteHandler, ctx, tx, false)
+	privs, accNums, seqs := []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 
-	acc1 = app.AccountKeeper.GetAccount(ctx, addr1)
-	require.Equal(t, acc1.GetPubKey(), priv1.PubKey())
+	// Variable data per test case
+	var (
+		msgs []sdk.Msg
+	)
 
-	// test public key not found
-	msg = testdata.NewTestMsg(addr2)
-	msgs = []sdk.Msg{msg}
-	tx = types.NewTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	sigs := tx.(types.StdTx).Signatures
-	sigs[0].PubKey = nil
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInvalidPubKey)
+	testCases := []struct {
+		desc     string
+		malleate func()
+		simulate bool
+		expPass  bool
+		expErr   error
+	}{
+		{
+			"test good tx",
+			func() {
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[0].GetAddress())}
+			},
+			false,
+			true,
+			nil,
+		},
+		{
+			"make sure public key has been set (tx should fail because of replay protection)",
+			func() {
+				acc := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[0].GetAddress())
+				suite.Require().Equal(acc.GetPubKey(), accounts[0].priv.PubKey())
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		// {
+		// 	"test public key not found",
+		// 	func() {
+		// 		msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].GetAddress())}
+		// 		tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+		// 		sigs := tx.(types.StdTx).Signatures
+		// 		sigs[0].PubKey = nil
 
-	acc2 = app.AccountKeeper.GetAccount(ctx, addr2)
-	require.Nil(t, acc2.GetPubKey())
+		// 		// Run anteHandler manually here, because we manually modified the tx.
+		// 		_, err := suite.anteHandler(suite.ctx, tx, false)
+		// 		suite.Require().Error(err)
+		// 		fmt.Println("ERR", err)
+		// 		suite.Require().True(errors.Is(err, sdkerrors.ErrInvalidPubKey))
+		// 	},
+		// 	false,
+		// 	true,
+		// 	nil,
+		// },
+	}
 
-	// test invalid signature and public key
-	tx = types.NewTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInvalidPubKey)
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
 
-	acc2 = app.AccountKeeper.GetAccount(ctx, addr2)
-	require.Nil(t, acc2.GetPubKey())
+			tc.malleate()
+
+			suite.txBuilder.SetMsgs(msgs...)
+			suite.txBuilder.SetFeeAmount(fee.GetAmount())
+			suite.txBuilder.SetGasLimit(fee.GetGas())
+
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(newCtx)
+
+				suite.ctx = newCtx
+			} else {
+				suite.Require().Error(err)
+				suite.Require().True(errors.Is(err, tc.expErr))
+			}
+		})
+	}
 }
 
 func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []crypto.PubKey, signatures [][]byte) {

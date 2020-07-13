@@ -104,7 +104,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64) xauthsigning.SigFeeMemoTx {
 	var sigsV2 []signing.SignatureV2
 	for i, priv := range privs {
-		sigV2, err := tx.SignWithPrivKey(priv, accNums[i], seqs[i], suite.ctx.ChainID(), suite.clientCtx.TxGenerator, suite.txBuilder)
+		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), priv, accNums[i], seqs[i], suite.ctx.ChainID(), suite.clientCtx.TxGenerator, suite.txBuilder)
 		suite.Require().NoError(err)
 
 		sigsV2 = append(sigsV2, sigV2)
@@ -289,18 +289,8 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
-	// accounts := suite.CreateTestAccounts(2)
+	accounts := suite.CreateTestAccounts(2)
 	fee := types.NewTestStdFee()
-
-	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
-
-	// set the accounts
-	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	require.NoError(suite.T(), acc1.SetAccountNumber(0))
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr1, types.NewTestCoins())
-	require.NoError(suite.T(), err)
 
 	// Variable data per test case
 	var (
@@ -320,10 +310,10 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 		{
 			"good tx from one signer",
 			func() {
-				msg := testdata.NewTestMsg(addr1)
+				msg := testdata.NewTestMsg(accounts[0].GetAddress())
 				msgs = []sdk.Msg{msg}
 
-				privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
 			true,
@@ -332,10 +322,10 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 		{
 			"new tx from wrong account number",
 			func() {
-				msg := testdata.NewTestMsg(addr1)
+				msg := testdata.NewTestMsg(accounts[0].GetAddress())
 				msgs = []sdk.Msg{msg}
 
-				privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{1}, []uint64{1}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{1}
 			},
 			false,
 			false,
@@ -344,10 +334,34 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 		{
 			"new tx from correct account number",
 			func() {
-				msg := testdata.NewTestMsg(addr1)
+				msg := testdata.NewTestMsg(accounts[0].GetAddress())
 				msgs = []sdk.Msg{msg}
 
-				privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{1}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
+			},
+			false,
+			true,
+			nil,
+		},
+		{
+			"new tx with another signer and incorrect account numbers",
+			func() {
+				msg1 := testdata.NewTestMsg(accounts[0].GetAddress(), accounts[1].GetAddress())
+				msg2 := testdata.NewTestMsg(accounts[1].GetAddress(), accounts[0].GetAddress())
+				msgs = []sdk.Msg{msg1, msg2}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{1, 0}, []uint64{2, 0}
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		{
+			"new tx with correct account numbers",
+			func() {
+				msg1 := testdata.NewTestMsg(accounts[0].GetAddress(), accounts[1].GetAddress())
+				msg2 := testdata.NewTestMsg(accounts[1].GetAddress(), accounts[0].GetAddress())
+				msgs = []sdk.Msg{msg1, msg2}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{2, 0}
 			},
 			false,
 			true,
@@ -375,7 +389,6 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 				suite.ctx = newCtx
 			} else {
 				suite.Require().Error(err)
-				fmt.Println(err)
 				suite.Require().True(errors.Is(err, tc.expErr))
 			}
 		})

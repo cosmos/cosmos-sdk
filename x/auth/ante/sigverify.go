@@ -172,8 +172,6 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	fmt.Println("SIMULATE=", simulate)
-
 	// no need to verify signatures on recheck tx
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)

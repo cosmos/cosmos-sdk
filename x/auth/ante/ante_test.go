@@ -625,44 +625,95 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 }
 
 // Test logic around fee deduction.
-func TestAnteHandlerFees(t *testing.T) {
-	// setup
-	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
+func (suite *AnteTestSuite) TestAnteHandlerFees() {
+	suite.SetupTest(true) // setup
 
-	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	// Same data for every test cases
+	priv0, _, addr0 := types.KeyTestPubAddr()
 
-	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	app.AccountKeeper.SetAccount(ctx, acc1)
-
-	// msg and signatures
-	var tx sdk.Tx
-	msg := testdata.NewTestMsg(addr1)
-	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+	msg := testdata.NewTestMsg(addr0)
 	fee := types.NewTestStdFee()
-	msgs := []sdk.Msg{msg}
+	privs, accNums, seqs := []crypto.PrivKey{priv0}, []uint64{0}, []uint64{0}
 
-	// signer does not have enough funds to pay the fee
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInsufficientFunds)
+	testCases := []struct {
+		desc     string
+		malleate func()
+		simulate bool
+		expPass  bool
+		expErr   error
+	}{
+		{
+			"signer has no funds",
+			func() {
+				seqs = []uint64{0}
+			},
+			false,
+			false,
+			sdkerrors.ErrInsufficientFunds,
+		},
+		{
+			"signer does not have enough funds to pay the fee",
+			func() {
+				suite.app.BankKeeper.SetBalances(suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
+			},
+			false,
+			false,
+			sdkerrors.ErrInsufficientFunds,
+		},
+		{
+			"signer as enough funds, should pass",
+			func() {
+				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInsufficientFunds)
+				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
+				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
-	modAcc := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
+				suite.app.BankKeeper.SetBalances(suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+			},
+			false,
+			true,
+			nil,
+		},
+		{
+			"signer doesn't have any more funds",
+			func() {
+				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-	require.True(t, app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).Empty())
-	require.True(sdk.IntEq(t, app.BankKeeper.GetAllBalances(ctx, addr1).AmountOf("atom"), sdk.NewInt(149)))
+				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
+				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
+			},
+			false,
+			false,
+			sdkerrors.ErrInsufficientFunds,
+		},
+	}
 
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
-	checkValidTx(t, anteHandler, ctx, tx, false)
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
 
-	require.True(sdk.IntEq(t, app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
-	require.True(sdk.IntEq(t, app.BankKeeper.GetAllBalances(ctx, addr1).AmountOf("atom"), sdk.NewInt(0)))
+			tc.malleate()
+
+			suite.txBuilder.SetMsgs(msg)
+			suite.txBuilder.SetFeeAmount(fee.GetAmount())
+			suite.txBuilder.SetGasLimit(fee.GetGas())
+
+			tx := suite.CreateTestTx(privs, accNums, seqs)
+			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(newCtx)
+
+				suite.ctx = newCtx
+			} else {
+				suite.Require().Error(err)
+				suite.Require().True(errors.Is(err, tc.expErr))
+			}
+		})
+	}
 }
 
 // Test logic around memo gas consumption.

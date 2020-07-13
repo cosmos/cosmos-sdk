@@ -16,7 +16,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-type DistributionTestSuite struct {
+type KeeperTestSuite struct {
 	suite.Suite
 
 	app         *simapp.SimApp
@@ -26,7 +26,7 @@ type DistributionTestSuite struct {
 	valAddrs    []sdk.ValAddress
 }
 
-func (suite *DistributionTestSuite) SetupTest() {
+func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -42,7 +42,7 @@ func (suite *DistributionTestSuite) SetupTest() {
 	suite.valAddrs = simapp.ConvertAddrsToValAddrs(suite.addrs)
 }
 
-func (suite *DistributionTestSuite) TestGRPCParams() {
+func (suite *KeeperTestSuite) TestGRPCParams() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	var (
@@ -99,7 +99,7 @@ func (suite *DistributionTestSuite) TestGRPCParams() {
 	}
 }
 
-func (suite *DistributionTestSuite) TestGRPCValidatorOutstandingRewards() {
+func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
 	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
 
 	valCommission := sdk.DecCoins{
@@ -151,7 +151,7 @@ func (suite *DistributionTestSuite) TestGRPCValidatorOutstandingRewards() {
 	}
 }
 
-func (suite *DistributionTestSuite) TestGRPCValidatorCommission() {
+func (suite *KeeperTestSuite) TestGRPCValidatorCommission() {
 	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
 
 	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
@@ -198,7 +198,7 @@ func (suite *DistributionTestSuite) TestGRPCValidatorCommission() {
 	}
 }
 
-func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
+func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
 
 	slashes := []types.ValidatorSlashEvent{
@@ -231,6 +231,18 @@ func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
 			false,
 		},
 		{
+			"Ending height lesser than start height request",
+			func() {
+				req = &types.QueryValidatorSlashesRequest{
+					ValidatorAddress: valAddrs[1],
+					StartingHeight:   10,
+					EndingHeight:     1,
+				}
+				expRes = &types.QueryValidatorSlashesResponse{Res: &query.PageResponse{}}
+			},
+			false,
+		},
+		{
 			"no slash event validator request",
 			func() {
 				req = &types.QueryValidatorSlashesRequest{
@@ -243,7 +255,7 @@ func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
 			true,
 		},
 		{
-			"request slashes with page 2 and limit 2",
+			"request slashes with offset 2 and limit 2",
 			func() {
 				pageReq := &query.PageRequest{
 					Offset: 2,
@@ -324,7 +336,7 @@ func (suite *DistributionTestSuite) TestGRPCValidatorSlashes() {
 	}
 }
 
-func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
+func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	app, ctx, addrs, valAddrs := suite.app, suite.ctx, suite.addrs, suite.valAddrs
 
 	sh := staking.NewHandler(app.StakingKeeper)
@@ -369,11 +381,31 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 			false,
 		},
 		{
+			"empty delegator request",
+			func() {
+				req = &types.QueryDelegationRewardsRequest{
+					DelegatorAddress: nil,
+					ValidatorAddress: valAddrs[0],
+				}
+			},
+			false,
+		},
+		{
+			"empty validator request",
+			func() {
+				req = &types.QueryDelegationRewardsRequest{
+					DelegatorAddress: addrs[1],
+					ValidatorAddress: nil,
+				}
+			},
+			false,
+		},
+		{
 			"request with wrong delegator and validator",
 			func() {
 				req = &types.QueryDelegationRewardsRequest{
 					DelegatorAddress: addrs[1],
-					ValidatorAddress: valAddrs[0],
+					ValidatorAddress: valAddrs[1],
 				}
 			},
 			false,
@@ -423,13 +455,6 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 	}{
 		{
 			"empty request",
-			func() {
-				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{}
-			},
-			false,
-		},
-		{
-			"wrong total delegation rewards",
 			func() {
 				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{}
 			},
@@ -519,7 +544,6 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 			testCase.malleate()
 
 			validators, err := queryClient.DelegatorValidators(gocontext.Background(), delegatorValidatorsReq)
-			fmt.Println("validators, err", validators, err)
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
@@ -532,7 +556,7 @@ func (suite *DistributionTestSuite) TestGRPCDelegationRewards() {
 	}
 }
 
-func (suite *DistributionTestSuite) TestGRPCDelegatorWithdrawAddress() {
+func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	err := app.DistrKeeper.SetWithdrawAddr(ctx, addrs[0], addrs[1])
@@ -578,7 +602,7 @@ func (suite *DistributionTestSuite) TestGRPCDelegatorWithdrawAddress() {
 	}
 }
 
-func (suite *DistributionTestSuite) TestGRPCCommunityPool() {
+func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	var (
@@ -633,5 +657,5 @@ func (suite *DistributionTestSuite) TestGRPCCommunityPool() {
 }
 
 func TestDistributionTestSuite(t *testing.T) {
-	suite.Run(t, new(DistributionTestSuite))
+	suite.Run(t, new(KeeperTestSuite))
 }

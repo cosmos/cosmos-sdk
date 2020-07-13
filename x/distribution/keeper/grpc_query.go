@@ -26,8 +26,12 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 
 // ValidatorOutstandingRewards queries rewards of a validator address
 func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryValidatorOutstandingRewardsRequest) (*types.QueryValidatorOutstandingRewardsResponse, error) {
-	if req.String() == "" || req.ValidatorAddress.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -38,8 +42,12 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 
 // ValidatorCommission queries accumulated commission for a validator
 func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidatorCommissionRequest) (*types.QueryValidatorCommissionResponse, error) {
-	if req.String() == "" || req.ValidatorAddress.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -50,8 +58,16 @@ func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidator
 
 // ValidatorSlashes queries slash events of a validator
 func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSlashesRequest) (*types.QueryValidatorSlashesResponse, error) {
-	if req.String() == "" || req.ValidatorAddress.Empty() || req.EndingHeight < req.StartingHeight {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	if req.EndingHeight < req.StartingHeight {
+		return nil, status.Error(codes.InvalidArgument, "starting height greater than ending height")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -86,8 +102,16 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 
 // DelegationRewards the total rewards accrued by a delegation
 func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationRewardsRequest) (*types.QueryDelegationRewardsResponse, error) {
-	if req.String() == "" || req.DelegatorAddress.Empty() || req.ValidatorAddress.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.DelegatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
+	}
+
+	if req.ValidatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -110,8 +134,12 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 
 // DelegationTotalRewards the total rewards accrued by a each validator
 func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
-	if req.String() == "" || req.DelegatorAddress.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.DelegatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -138,8 +166,12 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 
 // DelegatorValidators queries the validators list of a delegator
 func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
-	if req.String() == "" || req.DelegatorAddress.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.DelegatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -159,8 +191,12 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 
 // DelegatorWithdrawAddress queries Query/delegatorWithdrawAddress
 func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDelegatorWithdrawAddressRequest) (*types.QueryDelegatorWithdrawAddressResponse, error) {
-	if req.String() == "" || req.DelegatorAddress.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.DelegatorAddress.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

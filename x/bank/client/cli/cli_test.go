@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"testing"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -43,12 +43,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestGetBalancesCmd() {
-	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
@@ -95,11 +90,15 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
 			cmd := cli.GetBalancesCmd()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			_, out := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -107,7 +106,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(buf.Bytes(), tc.respType))
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -115,12 +114,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
-	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
@@ -165,11 +159,15 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
 			cmd := cli.GetCmdQueryTotalSupply()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			_, out := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -177,7 +175,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(buf.Bytes(), tc.respType), buf.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -185,9 +183,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
-	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
 
 	testCases := []struct {
 		name         string
@@ -274,19 +270,17 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
+			clientCtx := val.ClientCtx
 
-			cmd := cli.NewSendTxCmd()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
-			cmd.SetArgs(tc.args)
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-			out, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out, tc.respType), string(out))
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType), string(bz))
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)

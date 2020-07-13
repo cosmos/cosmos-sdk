@@ -945,11 +945,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Proposal returns proposal details based on ProposalID
+	// Proposal queries proposal details based on ProposalID
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
-	// Proposals queries all proposals.
+	// Proposals queries all proposals based on given status
 	Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error)
-	// Vote returns Voted information based on proposalID, voterAddr
+	// Vote queries Voted information based on proposalID, voterAddr
 	Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal
 	Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error)
@@ -957,7 +957,7 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Deposit queries single deposit information based proposalID, depositAddr
 	Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error)
-	// Deposits returns all deposits of a single proposal
+	// Deposits queries all deposits of a single proposal
 	Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
 	// TallyResult queries the tally of a proposal vote
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
@@ -1045,11 +1045,11 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Proposal returns proposal details based on ProposalID
+	// Proposal queries proposal details based on ProposalID
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
-	// Proposals queries all proposals.
+	// Proposals queries all proposals based on given status
 	Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
-	// Vote returns Voted information based on proposalID, voterAddr
+	// Vote queries Voted information based on proposalID, voterAddr
 	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal
 	Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
@@ -1057,7 +1057,7 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Deposit queries single deposit information based proposalID, depositAddr
 	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
-	// Deposits returns all deposits of a single proposal
+	// Deposits queries all deposits of a single proposal
 	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
 	// TallyResult queries the tally of a proposal vote
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)

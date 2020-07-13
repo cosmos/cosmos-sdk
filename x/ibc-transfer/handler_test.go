@@ -284,7 +284,7 @@ func (chain *TestChain) createConnection(
 		State:        state,
 		ClientID:     clientID,
 		Counterparty: counterparty,
-		Versions:     connectiontypes.GetCompatibleVersions(),
+		Versions:     connectiontypes.GetCompatibleVersionStrings(),
 	}
 	ctx := chain.GetContext()
 	chain.App.IBCKeeper.ConnectionKeeper.SetConnection(ctx, connID, connection)

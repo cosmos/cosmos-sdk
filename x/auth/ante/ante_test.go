@@ -1245,12 +1245,11 @@ func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
 }
 
 // Test custom SignatureVerificationGasConsumer
-func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
-	// setup
-	app, ctx := createTestApp(true)
-	ctx = ctx.WithBlockHeight(1)
+func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
+	suite.SetupTest(true) // setup
+
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
+	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, *suite.app.IBCKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
 		switch pubkey := sig.PubKey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -1260,35 +1259,80 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 		}
 	}, types.LegacyAminoJSONHandler{})
 
-	// verify that an secp256k1 account gets rejected
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
-
-	var tx sdk.Tx
-	msg := testdata.NewTestMsg(addr1)
-	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(1)
 	fee := types.NewTestStdFee()
-	msgs := []sdk.Msg{msg}
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInvalidPubKey)
 
-	// verify that an ed25519 account gets accepted
-	priv2 := ed25519.GenPrivKey()
-	pub2 := priv2.PubKey()
-	addr2 := sdk.AccAddress(pub2.Address())
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	// Variable data per test case
+	var (
+		accNums []uint64
+		msgs    []sdk.Msg
+		privs   []crypto.PrivKey
+		seqs    []uint64
+	)
 
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
-	require.NoError(t, acc2.SetAccountNumber(1))
-	app.AccountKeeper.SetAccount(ctx, acc2)
-	msg = testdata.NewTestMsg(addr2)
-	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}
-	fee = types.NewTestStdFee()
-	msgs = []sdk.Msg{msg}
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkValidTx(t, anteHandler, ctx, tx, false)
+	testCases := []struct {
+		desc     string
+		malleate func()
+		simulate bool
+		expPass  bool
+		expErr   error
+	}{
+		{
+			"verify that an secp256k1 account gets rejected",
+			func() {
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[0].GetAddress())}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
+		{
+			"verify that an ed25519 account gets accepted",
+			func() {
+				priv1 := ed25519.GenPrivKey()
+				pub1 := priv1.PubKey()
+				addr1 := sdk.AccAddress(pub1.Address())
+				acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+
+				suite.Require().NoError(suite.app.BankKeeper.SetBalances(suite.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
+				suite.Require().NoError(acc1.SetAccountNumber(1))
+				suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+				msg := testdata.NewTestMsg(addr1)
+				privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{1}, []uint64{0}
+				msgs = []sdk.Msg{msg}
+			},
+			false,
+			true,
+			nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+
+			tc.malleate()
+
+			suite.txBuilder.SetMsgs(msgs...)
+			suite.txBuilder.SetFeeAmount(fee.GetAmount())
+			suite.txBuilder.SetGasLimit(fee.GetGas())
+
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(newCtx)
+
+				suite.ctx = newCtx
+			} else {
+				suite.Require().Error(err)
+				suite.Require().True(errors.Is(err, tc.expErr))
+			}
+		})
+	}
 }
 
 func TestAnteHandlerReCheck(t *testing.T) {

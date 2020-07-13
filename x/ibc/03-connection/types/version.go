@@ -103,15 +103,15 @@ func StringToVersion(encodedVersion string) (Version, error) {
 // StringsToVersions returns the supplied list of proto encoded version strings
 // as unmarshalled Version structs.
 func StringsToVersions(encodedVersions []string) ([]Version, error) {
-	var versions []Version
+	versions := make([]Version, len(encodedVersions))
 
-	for _, encodedVersion := range encodedVersions {
+	for i, encodedVersion := range encodedVersions {
 		version, err := StringToVersion(encodedVersion)
 		if err != nil {
 			return nil, err
 		}
 
-		versions = append(versions, version)
+		versions[i] = version
 	}
 
 	return versions, nil

@@ -11,11 +11,10 @@ import (
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 )
 
-// TestIntegrationTestSuites runs integration tests for all the Cosmos SDK modules.
+// TestIntegrationTestSuites runs integration tests for all the Cosmos SDK modules used in simapp.
 // Apps can re-use the integration test suites for the modules they import.
 func TestIntegrationTestSuites(t *testing.T) {
-	// because of the way testify test suites are setup, this should run test
-	// suites in parallel
+	// because of the way testify test suites are setup, this should run test suites in parallel
 	t.Parallel()
 
 	// apps should setup their own config based on the default config, but at

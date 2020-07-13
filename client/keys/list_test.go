@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,18 +18,18 @@ func Test_runListCmd(t *testing.T) {
 	cmd := ListKeysCmd()
 	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 
-	kbHome1, cleanUp1 := tests.NewTestCaseDir(t)
+	kbHome1, cleanUp1 := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp1)
 
-	kbHome2, cleanUp2 := tests.NewTestCaseDir(t)
+	kbHome2, cleanUp2 := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp2)
 
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn)
 	require.NoError(t, err)
 
 	path := "" //sdk.GetConfig().GetFullFundraiserPath()
-	_, err = kb.NewAccount("something", tests.TestMnemonic, "", path, hd.Secp256k1)
+	_, err = kb.NewAccount("something", testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {

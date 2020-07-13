@@ -12,25 +12,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // GetCmdQueryClientStates defines the command to query all the light clients
 // that this chain mantains.
-func GetCmdQueryClientStates(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryClientStates() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "states",
-		Short: "Query all available light clients",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all available light clients
-
-Example:
-$ %s query ibc client states
-		`, version.AppName),
-		),
-		Example: fmt.Sprintf("%s query ibc client states", version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+		Use:     "states",
+		Short:   "Query all available light clients",
+		Long:    "Query all available light clients",
+		Example: fmt.Sprintf("%s query %s %s states", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
@@ -47,26 +47,26 @@ $ %s query ibc client states
 
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // GetCmdQueryClientState defines the command to query the state of a client with
 // a given id as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
-func GetCmdQueryClientState(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryClientState() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "state [client-id]",
-		Short: "Query a client state",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query stored client state
-
-Example:
-$ %s query ibc client state [client-id]
-		`, version.AppName),
-		),
-		Args: cobra.ExactArgs(1),
+		Use:     "state [client-id]",
+		Short:   "Query a client state",
+		Long:    "Query stored client state",
+		Example: fmt.Sprintf("%s query %s %s state [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
@@ -86,20 +86,26 @@ $ %s query ibc client state [client-id]
 	}
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // GetCmdQueryConsensusState defines the command to query the consensus state of
 // the chain as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
-func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
+func GetCmdQueryConsensusState() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "consensus-state [client-id] [height]",
 		Short:   "Query the consensus state of a client at a given height",
 		Long:    "Query the consensus state for a particular light client at a given height",
-		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.AppName),
+		Example: fmt.Sprintf("%s query %s %s  consensus-state [client-id] [height]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
@@ -124,18 +130,24 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 	}
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // GetCmdQueryHeader defines the command to query the latest header on the chain
-func GetCmdQueryHeader(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+func GetCmdQueryHeader() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:     "header",
 		Short:   "Query the latest header of the running chain",
 		Long:    "Query the latest Tendermint header of the running chain",
-		Example: fmt.Sprintf("%s query ibc client header", version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+		Example: fmt.Sprintf("%s query %s %s  header", version.AppName, host.ModuleName, types.SubModuleName),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			header, height, err := utils.QueryTendermintHeader(clientCtx)
 			if err != nil {
@@ -146,24 +158,27 @@ func GetCmdQueryHeader(clientCtx client.Context) *cobra.Command {
 			return clientCtx.PrintOutput(header)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdNodeConsensusState defines the command to query the latest consensus state of a node
 // The result is feed to client creation
-func GetCmdNodeConsensusState(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
-		Use:   "node-state",
-		Short: "Query a node consensus state",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query a node consensus state. This result is feed to the client creation transaction.
-
-Example:
-$ %s query ibc client node-state
-		`, version.AppName),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+func GetCmdNodeConsensusState() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "node-state",
+		Short:   "Query a node consensus state",
+		Long:    "Query a node consensus state. This result is feed to the client creation transaction.",
+		Example: fmt.Sprintf("%s query %s %s node-state", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			state, height, err := utils.QueryNodeConsensusState(clientCtx)
 			if err != nil {
@@ -174,18 +189,8 @@ $ %s query ibc client node-state
 			return clientCtx.PrintOutput(state)
 		},
 	}
-}
 
-// GetCmdQueryPath defines the command to query the commitment path.
-func GetCmdQueryPath(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
-		Use:   "path",
-		Short: "Query the commitment path of the running chain",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+	flags.AddQueryFlagsToCmd(cmd)
 
-			path := commitmenttypes.NewMerklePrefix([]byte("ibc"))
-			return clientCtx.PrintOutput(path)
-		},
-	}
+	return cmd
 }

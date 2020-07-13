@@ -3,24 +3,23 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
-// GetTxCmd returns the transaction commands for IBC clients
-func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
-	ics07TendermintTxCmd := &cobra.Command{
-		Use:                        "tendermint",
-		Short:                      "Tendermint transaction subcommands",
+// NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
+func NewTxCmd() *cobra.Command {
+	txCmd := &cobra.Command{
+		Use:                        types.SubModuleName,
+		Short:                      "Tendermint client transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ics07TendermintTxCmd.AddCommand(flags.PostCommands(
-		GetCmdCreateClient(cdc),
-		GetCmdUpdateClient(cdc),
-		GetCmdSubmitMisbehaviour(cdc),
-	)...)
+	txCmd.AddCommand(
+		NewCreateClientCmd(),
+		NewUpdateClientCmd(),
+		NewSubmitMisbehaviourCmd(),
+	)
 
-	return ics07TendermintTxCmd
+	return txCmd
 }

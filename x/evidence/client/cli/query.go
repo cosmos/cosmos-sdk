@@ -39,8 +39,9 @@ $ %s query %s --page=2 --limit=50
 
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of evidence to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of evidence to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
-	return flags.GetCommands(cmd)[0]
+	return cmd
 }
 
 // QueryEvidenceCmd returns the command handler for evidence querying. Evidence
@@ -65,11 +66,12 @@ func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 }
 
 func queryEvidence(cdc *codec.Codec, clientCtx client.Context, hash string) error {
-	if _, err := hex.DecodeString(hash); err != nil {
+	decodedHash, err := hex.DecodeString(hash)
+	if err != nil {
 		return fmt.Errorf("invalid evidence hash: %w", err)
 	}
 
-	params := types.NewQueryEvidenceParams(hash)
+	params := types.NewQueryEvidenceRequest(decodedHash)
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return fmt.Errorf("failed to marshal query params: %w", err)

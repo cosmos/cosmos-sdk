@@ -56,6 +56,9 @@ func (c ConnectionEnd) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}
+	if len(c.Versions) == 0 {
+		return sdkerrors.Wrap(ErrInvalidVersion, "versions cannot be empty")
+	}
 	for _, version := range c.Versions {
 		if err := ValidateVersion(version); err != nil {
 			return err

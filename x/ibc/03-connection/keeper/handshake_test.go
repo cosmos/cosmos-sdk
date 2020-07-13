@@ -102,7 +102,9 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			versions = []string{"(version won't match,[])"}
+			version, err := types.NewVersion("0.0", nil).ToString()
+			suite.Require().NoError(err)
+			versions = []string{version}
 		}, false},
 		{"connection state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -140,9 +142,9 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		tc := tc
 
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                        // reset
-			consensusHeight = 0                      // must be explicitly changed in malleate
-			versions = types.GetCompatibleVersions() // must be explicitly changed in malleate
+			suite.SetupTest()                              // reset
+			consensusHeight = 0                            // must be explicitly changed in malleate
+			versions = types.GetCompatibleVersionStrings() // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -274,7 +276,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			version = types.CreateVersionString(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED", "ORDER_DAG"})
+			version, err = types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED", "ORDER_DAG"}).ToString()
+			suite.Require().NoError(err)
 		}, false},
 		{"self consensus state not found", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -315,9 +318,9 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                          // reset
-			version = types.GetCompatibleVersions()[0] // must be explicitly changed in malleate
-			consensusHeight = 0                        // must be explicitly changed in malleate
+			suite.SetupTest()                                // reset
+			version = types.GetCompatibleVersionStrings()[0] // must be explicitly changed in malleate
+			consensusHeight = 0                              // must be explicitly changed in malleate
 
 			tc.malleate()
 

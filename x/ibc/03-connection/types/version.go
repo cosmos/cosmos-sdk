@@ -44,20 +44,20 @@ func (version Version) GetFeatures() []string {
 
 // ToString proto encodes the version and returns the bytes as a string.
 func (version Version) ToString() (string, error) {
-	ver, err := SubModuleCdc.MarshalBinaryBare(&version)
+	encodedVersion, err := SubModuleCdc.MarshalBinaryBare(&version)
 	if err != nil {
 		return "", err
 	}
 
-	return string(ver), nil
+	return string(encodedVersion), nil
 }
 
 // ValidateVersion does basic validation of the version identifier and
 // features. It unmarshals the version string into a Version object.
-func ValidateVersion(ver string) error {
+func ValidateVersion(encodedVersion string) error {
 	var version Version
-	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(ver), &version); err != nil {
-		return sdkerrors.Wrapf(err, "failed to unmarshal version string %s", ver)
+	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(encodedVersion), &version); err != nil {
+		return sdkerrors.Wrapf(err, "failed to unmarshal version string %s", encodedVersion)
 	}
 
 	if strings.TrimSpace(version.Identifier) == "" {
@@ -80,10 +80,12 @@ func GetCompatibleVersions() []Version {
 	return []Version{DefaultIBCVersion}
 }
 
+// GetCompatibleVersionStrings returns the return value from GetCompatibleVersions
+// as a proto encoded string.
 func GetCompatibleVersionStrings() []string {
 	versions, err := VersionsToStrings(GetCompatibleVersions())
 	if err != nil {
-		panic(err) // shouldn't occur with properly set hardcoded versions
+		panic(err) // should not occur with properly set hardcoded versions
 	}
 
 	return versions
@@ -93,7 +95,7 @@ func GetCompatibleVersionStrings() []string {
 // into proto encoded strings. This represents the stored value of the version
 // in the connection end as well as the value passed over the wire.
 func VersionsToStrings(versions []Version) ([]string, error) {
-	var versionsStr []string
+	var encodedVersions []string
 
 	for _, version := range versions {
 		ver, err := version.ToString()
@@ -101,26 +103,29 @@ func VersionsToStrings(versions []Version) ([]string, error) {
 			return nil, err
 		}
 
-		versionsStr = append(versionsStr, ver)
+		encodedVersions = append(encodedVersions, ver)
 	}
 
-	return versionsStr, nil
+	return encodedVersions, nil
 }
 
-func StringToVersion(versionStr string) (Version, error) {
+// StringToVersion unmarshals a proto encoded version into a Version struct.
+func StringToVersion(encodedVersion string) (Version, error) {
 	var version Version
-	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(versionStr), &version); err != nil {
-		return Version{}, sdkerrors.Wrapf(err, "failed to unmarshal version string %s", versionStr)
+	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(encodedVersion), &version); err != nil {
+		return Version{}, sdkerrors.Wrapf(err, "failed to unmarshal version string %s", encodedVersion)
 	}
 
 	return version, nil
 }
 
-func StringsToVersions(versionsStr []string) ([]Version, error) {
+// StringsToVersions returns the supplied list of proto encoded version strings
+// as unmarshalled Version structs.
+func StringsToVersions(encodedVersions []string) ([]Version, error) {
 	var versions []Version
 
-	for _, verStr := range versionsStr {
-		version, err := StringToVersion(verStr)
+	for _, encodedVersion := range encodedVersions {
+		version, err := StringToVersion(encodedVersion)
 		if err != nil {
 			return nil, err
 		}
@@ -151,10 +156,10 @@ func FindSupportedVersion(version Version, supportedVersions []Version) (Version
 // not allowed for the choosen version identifier then the search for a
 // compatible version continues. This function is called in the ConnOpenTry
 // handshake procedure.
-func PickVersion(counterpartyVersionsStr []string) (string, error) {
-	counterpartyVersions, err := StringsToVersions(counterpartyVersionsStr)
+func PickVersion(encodedCounterpartyVersions []string) (string, error) {
+	counterpartyVersions, err := StringsToVersions(encodedCounterpartyVersions)
 	if err != nil {
-		return "", sdkerrors.Wrapf(err, "failed to unmarshal counterparty versions (%s) when attempting to pick compatible version", counterpartyVersionsStr)
+		return "", sdkerrors.Wrapf(err, "failed to unmarshal counterparty versions (%s) when attempting to pick compatible version", encodedCounterpartyVersions)
 	}
 	supportedVersions := GetCompatibleVersions()
 
@@ -225,8 +230,8 @@ func VerifyProposedVersion(proposedVersion, supportedVersion Version) error {
 
 // VerifySupportedFeature takes in a version and feature string and returns
 // true if the feature is supported by the version and false otherwise.
-func VerifySupportedFeature(versionStr, feature string) bool {
-	version, err := StringToVersion(versionStr)
+func VerifySupportedFeature(encodedVersion, feature string) bool {
+	version, err := StringToVersion(encodedVersion)
 	if err != nil {
 		return false
 	}

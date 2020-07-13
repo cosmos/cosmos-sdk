@@ -128,7 +128,7 @@ func (k Keeper) ConnOpenTry(
 func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
-	versionStr string, // version that ChainB chose in ConnOpenTry
+	encodedVersion string, // version that ChainB chose in ConnOpenTry
 	proofTry []byte, // proof that connectionEnd was added to ChainB state in ConnOpenTry
 	proofConsensus []byte, // proof that chainB has stored ConsensusState of chainA on its client
 	proofHeight uint64, // height that relayer constructed proofTry
@@ -157,7 +157,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Check that ChainB's proposed version identifier is supported by chainA
-	version, err := types.StringToVersion(versionStr)
+	version, err := types.StringToVersion(encodedVersion)
 	if err != nil {
 		return sdkerrors.Wrap(err, "version negotiation failed")
 	}
@@ -183,7 +183,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{versionStr})
+	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{encodedVersion})
 
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
 	if err := k.VerifyConnectionState(
@@ -202,7 +202,7 @@ func (k Keeper) ConnOpenAck(
 
 	// Update connection state to Open
 	connection.State = types.OPEN
-	connection.Versions = []string{versionStr}
+	connection.Versions = []string{encodedVersion}
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT -> OPEN ", connectionID))
 	return nil

@@ -40,18 +40,6 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	require.True(t, errors.Is(expErr, err))
 }
 
-// Increment the sequences in a sequences array. To be called after each
-// IncrementSequenceDecorator.
-func incrementSeq(seqs []uint64) []uint64 {
-	var newSeqs []uint64
-
-	for _, value := range seqs {
-		newSeqs = append(newSeqs, value+1)
-	}
-
-	return newSeqs
-}
-
 // TestAccount represents an account used in the tests below. It's simply an
 // AccountI, where we have access to the PrivKey.
 type TestAccount struct {
@@ -101,10 +89,10 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 }
 
 // Helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64) xauthsigning.SigFeeMemoTx {
+func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
 	var sigsV2 []signing.SignatureV2
 	for i, priv := range privs {
-		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), priv, accNums[i], seqs[i], suite.ctx.ChainID(), suite.clientCtx.TxGenerator, suite.txBuilder)
+		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), priv, accNums[i], seqs[i], chainID, suite.clientCtx.TxGenerator, suite.txBuilder)
 		suite.Require().NoError(err)
 
 		sigsV2 = append(sigsV2, sigV2)
@@ -151,6 +139,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 				simulatedGas := suite.ctx.GasMeter().GasConsumed()
 				fee.Gas = simulatedGas
 
+				seqs = []uint64{1, 1, 1}
 				suite.txBuilder.SetFeeAmount(fee.GetAmount())
 				suite.txBuilder.SetGasLimit(fee.Gas)
 			},
@@ -167,7 +156,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 
 			tc.malleate()
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -175,7 +164,6 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 				suite.Require().NotNil(newCtx)
 
 				suite.ctx = newCtx
-				seqs = incrementSeq(seqs)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -268,7 +256,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 
 			tc.malleate()
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -370,7 +358,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 			suite.txBuilder.SetFeeAmount(fee.GetAmount())
 			suite.txBuilder.SetGasLimit(fee.GetGas())
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -475,7 +463,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 			suite.txBuilder.SetFeeAmount(fee.GetAmount())
 			suite.txBuilder.SetGasLimit(fee.GetGas())
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -608,7 +596,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			suite.txBuilder.SetFeeAmount(fee.GetAmount())
 			suite.txBuilder.SetGasLimit(fee.GetGas())
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -700,7 +688,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 			suite.txBuilder.SetFeeAmount(fee.GetAmount())
 			suite.txBuilder.SetGasLimit(fee.GetGas())
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -788,7 +776,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 			suite.txBuilder.SetFeeAmount(fee.GetAmount())
 			suite.txBuilder.SetGasLimit(fee.GetGas())
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -882,7 +870,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 			suite.txBuilder.SetFeeAmount(fee.GetAmount())
 			suite.txBuilder.SetGasLimit(fee.GetGas())
 
-			tx := suite.CreateTestTx(privs, accNums, seqs)
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 			if tc.expPass {
@@ -898,81 +886,129 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 	}
 }
 
-func TestAnteHandlerBadSignBytes(t *testing.T) {
-	// setup
-	app, ctx := createTestApp(true)
-	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
+func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
+	suite.SetupTest(false) // setup
 
-	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	priv2, _, addr2 := types.KeyTestPubAddr()
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(2)
+	msg0 := testdata.NewTestMsg(accounts[0].GetAddress())
 
-	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	require.NoError(t, acc1.SetAccountNumber(0))
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	require.NoError(t, acc2.SetAccountNumber(1))
-	app.AccountKeeper.SetAccount(ctx, acc2)
-	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
-
-	var tx sdk.Tx
-	msg := testdata.NewTestMsg(addr1)
-	msgs := []sdk.Msg{msg}
-	fee := types.NewTestStdFee()
-	fee2 := types.NewTestStdFee()
-	fee2.Gas += 100
-	fee3 := types.NewTestStdFee()
-	fee3.Amount[0].Amount = fee3.Amount[0].Amount.AddRaw(100)
-
-	// test good tx and signBytes
-	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkValidTx(t, anteHandler, ctx, tx, false)
-
-	chainID := ctx.ChainID()
-	chainID2 := chainID + "somemorestuff"
-	errUnauth := sdkerrors.ErrUnauthorized
-
-	cases := []struct {
+	// Variable data per test case
+	var (
+		accNums []uint64
 		chainID string
-		accnum  uint64
-		seq     uint64
 		fee     types.StdFee
 		msgs    []sdk.Msg
-		err     error
+		privs   []crypto.PrivKey
+		seqs    []uint64
+	)
+
+	testCases := []struct {
+		desc     string
+		malleate func()
+		simulate bool
+		expPass  bool
+		expErr   error
 	}{
-		{chainID2, 0, 1, fee, msgs, errUnauth},                                 // test wrong chain_id
-		{chainID, 0, 2, fee, msgs, errUnauth},                                  // test wrong seqs
-		{chainID, 1, 1, fee, msgs, errUnauth},                                  // test wrong accnum
-		{chainID, 0, 1, fee, []sdk.Msg{testdata.NewTestMsg(addr2)}, errUnauth}, // test wrong msg
-		{chainID, 0, 1, fee2, msgs, errUnauth},                                 // test wrong fee
-		{chainID, 0, 1, fee3, msgs, errUnauth},                                 // test wrong fee
+		{
+			"test good tx and signBytes",
+			func() {
+				chainID = suite.ctx.ChainID()
+				fee = types.NewTestStdFee()
+				msgs = []sdk.Msg{msg0}
+				privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+			},
+			false,
+			true,
+			nil,
+		},
+		{
+			"test wrong chainID",
+			func() {
+				seqs = []uint64{1} // Back to correct seqs
+				chainID = "chain-foo"
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		{
+			"test wrong seqs",
+			func() {
+				chainID = suite.ctx.ChainID() // Back to correct chainID
+				seqs = []uint64{2}
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		{
+			"test wrong accNums",
+			func() {
+				seqs = []uint64{1} // Back to correct seqs
+				accNums = []uint64{1}
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		// {
+		// 	"test wrong msg",
+		// 	func() {
+		// 		accNums = []uint64{0} // Back to correct accNums
+		// 		msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].GetAddress())}
+		// 	},
+		// 	false,
+		// 	false,
+		// 	sdkerrors.ErrUnauthorized,
+		// },
+		{
+			"test wrong fee gas",
+			func() {
+				msgs = []sdk.Msg{msg0} // Back to correct msgs
+				fee = types.NewTestStdFee()
+				fee.Gas += 100
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		{
+			"test wrong fee amount",
+			func() {
+				fee = types.NewTestStdFee()
+				fee.Amount[0].Amount = fee.Amount[0].Amount.AddRaw(100)
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
 	}
 
-	privs, seqs = []crypto.PrivKey{priv1}, []uint64{1}
-	for _, cs := range cases {
-		tx := types.NewTestTxWithSignBytes(
-			msgs, privs, accnums, seqs, fee,
-			types.StdSignBytes(cs.chainID, cs.accnum, cs.seq, cs.fee, cs.msgs, ""),
-			"",
-		)
-		checkInvalidTx(t, anteHandler, ctx, tx, false, cs.err)
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+
+			tc.malleate()
+
+			suite.txBuilder.SetMsgs(msgs...)
+			suite.txBuilder.SetFeeAmount(fee.GetAmount())
+			suite.txBuilder.SetGasLimit(fee.GetGas())
+
+			tx := suite.CreateTestTx(privs, accNums, seqs, chainID)
+			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(newCtx)
+
+				suite.ctx = newCtx
+			} else {
+				suite.Require().Error(err)
+				suite.Require().True(errors.Is(err, tc.expErr))
+			}
+		})
 	}
-
-	// test wrong signer if public key exist
-	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{0}, []uint64{1}
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInvalidPubKey)
-
-	// test wrong signer if public doesn't exist
-	msg = testdata.NewTestMsg(addr2)
-	msgs = []sdk.Msg{msg}
-	privs, accnums, seqs = []crypto.PrivKey{priv1}, []uint64{1}, []uint64{0}
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInvalidPubKey)
 }
 
 func TestAnteHandlerSetPubKey(t *testing.T) {

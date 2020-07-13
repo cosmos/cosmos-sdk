@@ -23,7 +23,7 @@ This policy presently applies *only* to the following release series:
 Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
 and must follow the [Point Release Procedure](CONTRIBUTING.md).
 
-## Rationale
+### Rationale
 
 Unlike in-development `master` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
 and by a significantly different demographic of users. During development, changes in the `master` branch 

@@ -12,7 +12,7 @@ migrates to a newer release of the Cosmos-SDK.
 
 The **0.39 «Launchpad»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
 
-# Stable Release Policy
+## Stable Release Policy
 
 This policy presently applies *only* to the following release series:
 

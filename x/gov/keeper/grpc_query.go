@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"google.golang.org/grpc/codes"
@@ -18,14 +17,14 @@ var _ types.QueryServer = Keeper{}
 // Proposal returns proposal details based on ProposalID
 func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*types.QueryProposalResponse, error) {
 	if req == nil || req.ProposalId == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	proposal, found := q.GetProposal(ctx, req.ProposalId)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", req.ProposalId)
+		return nil, status.Errorf(codes.NotFound, "proposal: %d doesn't exist", req.ProposalId)
 	}
 
 	return &types.QueryProposalResponse{Proposal: proposal}, nil
@@ -83,14 +82,14 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 // Vote returns Voted information based on proposalID, voterAddr
 func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.QueryVoteResponse, error) {
 	if req == nil || req.ProposalId == 0 || req.Voter == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	vote, found := q.GetVote(ctx, req.ProposalId, req.Voter)
 	if !found {
-		return nil, status.Errorf(codes.InvalidArgument,
+		return nil, status.Error(codes.InvalidArgument,
 			fmt.Sprintf("Voter: %v not found for proposal: %v", req.Voter, req.ProposalId))
 	}
 
@@ -100,7 +99,7 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 // Votes returns single proposal's votes
 func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
 	if req == nil || req.ProposalId == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	var votes types.Votes
@@ -130,7 +129,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 // Params queries all params
 func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil || req.ParamsType == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -149,21 +148,21 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 		return &types.QueryParamsResponse{TallyParams: tallyParams}, nil
 
 	default:
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "%s is not a valid query request path", req.ParamsType)
+		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid query request path", req.ParamsType)
 	}
 }
 
 // Deposit queries single deposit information based proposalID, depositAddr
 func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {
 	if req == nil || req.ProposalId == 0 || req.Depositor == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	deposit, found := q.GetDeposit(ctx, req.ProposalId, req.Depositor)
 	if !found {
-		return nil, status.Errorf(codes.InvalidArgument,
+		return nil, status.Error(codes.InvalidArgument,
 			fmt.Sprintf("Depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId))
 	}
 
@@ -173,7 +172,7 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 // Deposits returns single proposal's all deposits
 func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
 	if req == nil || req.ProposalId == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	var deposits types.Deposits
@@ -202,14 +201,14 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 // TallyResult queries the tally of a proposal vote
 func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultRequest) (*types.QueryTallyResultResponse, error) {
 	if req == nil || req.ProposalId == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	proposal, ok := q.GetProposal(ctx, req.ProposalId)
 	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", req.ProposalId)
+		return nil, status.Errorf(codes.NotFound, "Proposal: %d doesn't exist", req.ProposalId)
 	}
 
 	var tallyResult types.TallyResult

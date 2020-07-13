@@ -93,7 +93,7 @@ withdraw_addr_enabled: true`,
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.GetCommands(cli.GetCmdQueryParams())[0]
+			cmd := cli.GetCmdQueryParams()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -158,7 +158,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.GetCommands(cli.GetCmdQueryValidatorOutstandingRewards())[0]
+			cmd := cli.GetCmdQueryValidatorOutstandingRewards()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -228,7 +228,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.GetCommands(cli.GetCmdQueryValidatorCommission())[0]
+			cmd := cli.GetCmdQueryValidatorCommission()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -314,7 +314,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.GetCommands(cli.GetCmdQueryValidatorSlashes())[0]
+			cmd := cli.GetCmdQueryValidatorSlashes()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -420,7 +420,7 @@ total:
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.GetCommands(cli.GetCmdQueryDelegatorRewards())[0]
+			cmd := cli.GetCmdQueryDelegatorRewards()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -470,7 +470,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.GetCommands(cli.GetCmdQueryCommunityPool())[0]
+			cmd := cli.GetCmdQueryCommunityPool()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -593,7 +593,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.PostCommands(cli.NewWithdrawAllRewardsCmd())[0]
+			cmd := cli.NewWithdrawAllRewardsCmd()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -656,7 +656,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.PostCommands(cli.NewSetWithdrawAddrCmd())[0]
+			cmd := cli.NewSetWithdrawAddrCmd()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -719,7 +719,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.PostCommands(cli.NewFundCommunityPoolCmd())[0]
+			cmd := cli.NewFundCommunityPoolCmd()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)
@@ -812,7 +812,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := flags.PostCommands(cli.GetCmdSubmitProposal())[0]
+			cmd := cli.GetCmdSubmitProposal()
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)

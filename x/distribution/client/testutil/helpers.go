@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	distrcli "github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 )
 
@@ -20,7 +19,7 @@ func MsgWithdrawDelegatorRewardExec(clientCtx client.Context, valAddr fmt.String
 	args := []string{valAddr.String()}
 	args = append(args, extraArgs...)
 
-	cmd := flags.PostCommands(distrcli.NewWithdrawRewardsCmd())[0]
+	cmd := distrcli.NewWithdrawRewardsCmd()
 	cmd.SetErr(buf)
 	cmd.SetOut(buf)
 	cmd.SetArgs(args)

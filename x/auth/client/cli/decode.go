@@ -42,5 +42,7 @@ func GetDecodeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolP(flagHex, "x", false, "Treat input as hexadecimal instead of base64")
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

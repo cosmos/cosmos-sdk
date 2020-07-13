@@ -33,8 +33,9 @@ transaction will be not be performed as that will require RPC communication with
 	}
 
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
+	flags.AddTxFlagsToCmd(cmd)
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func makeValidateSignaturesCmd() func(cmd *cobra.Command, args []string) error {

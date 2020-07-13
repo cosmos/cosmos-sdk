@@ -67,14 +67,14 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 			return false, err
 		}
 
-		if result.ValidatorPeriod >= req.StartingHeight && result.ValidatorPeriod <= req.EndingHeight {
-			if accumulate {
-				events = append(events, result)
-			}
-			return true, nil
+		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
+			return false, nil
 		}
 
-		return false, nil
+		if accumulate {
+			events = append(events, result)
+		}
+		return true, nil
 	})
 
 	if err != nil {

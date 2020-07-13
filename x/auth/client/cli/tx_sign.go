@@ -48,14 +48,11 @@ account key. It implies --signature-only.
 		Args:   cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().String(
-		flagMultisig, "",
-		"Address of the multisig account on behalf of which the transaction shall be signed",
-	)
+	cmd.Flags().String(flagMultisig, "", "Address of the multisig account on behalf of which the transaction shall be signed")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().Bool(flagSigOnly, true, "Print only the generated signature, then exit")
-	cmd = flags.PostCommands(cmd)[0]
 	cmd.MarkFlagRequired(flags.FlagFrom)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -178,19 +175,13 @@ be generated via the 'multisign' command.
 		Args:   cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().String(
-		flagMultisig, "",
-		"Address of the multisig account on behalf of which the transaction shall be signed",
-	)
-	cmd.Flags().Bool(
-		flagAppend, true,
-		"Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on",
-	)
+	cmd.Flags().String(flagMultisig, "", "Address of the multisig account on behalf of which the transaction shall be signed")
+	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on")
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
-	cmd = flags.PostCommands(cmd)[0]
 	cmd.MarkFlagRequired(flags.FlagFrom)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

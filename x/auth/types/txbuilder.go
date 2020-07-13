@@ -52,8 +52,8 @@ func NewTxBuilder(
 	}
 }
 
-// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters extracted from
-// FlagSet (It should deprecate NewTxBuilderFromCLI).
+// NewTxBuilderFromFlags returns a new initialized TxBuilder with parameters extracted from
+// FlagSet.
 func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
 	backend, _ := fs.GetString(flags.FlagKeyringBackend)
 	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
@@ -65,13 +65,19 @@ func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath strin
 	fees, _ := fs.GetString(flags.FlagFees)
 	gasPrices, _ := fs.GetString(flags.FlagGasPrices)
 
+	gasStr, _ := fs.GetString(flags.FlagGas)
+	gasSetting, err := flags.ParseGasSetting(gasStr)
+	if err != nil {
+		return TxBuilder{}, err
+	}
+
 	txbldr := TxBuilder{
 		keybase:            kb,
 		accountNumber:      accNum,
 		sequence:           seq,
-		gas:                flags.GasFlagVar.Gas,
+		gas:                gasSetting.Gas,
+		simulateAndExecute: gasSetting.Simulate,
 		gasAdjustment:      gasAdjustment,
-		simulateAndExecute: flags.GasFlagVar.Simulate,
 		chainID:            chainID,
 		memo:               memo,
 	}

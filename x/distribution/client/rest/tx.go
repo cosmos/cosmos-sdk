@@ -80,7 +80,7 @@ func newWithdrawDelegatorRewardsHandlerFn(clientCtx client.Context) http.Handler
 			return
 		}
 
-		msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, types.QuerierRoute, delAddr)
+		msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, delAddr)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -207,11 +207,11 @@ func newFundCommunityPoolHandlerFn(clientCtx client.Context) http.HandlerFunc {
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ---------------------------------------------------------------------------
-func registerTxRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
 	// Withdraw all delegator rewards
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
-		withdrawDelegatorRewardsHandlerFn(clientCtx, queryRoute),
+		withdrawDelegatorRewardsHandlerFn(clientCtx),
 	).Methods("POST")
 
 	// Withdraw delegation rewards
@@ -241,7 +241,7 @@ func registerTxRoutes(clientCtx client.Context, r *mux.Router, queryRoute string
 }
 
 // Withdraw delegator rewards
-func withdrawDelegatorRewardsHandlerFn(clientCtx client.Context, queryRoute string) http.HandlerFunc {
+func withdrawDelegatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
@@ -259,7 +259,7 @@ func withdrawDelegatorRewardsHandlerFn(clientCtx client.Context, queryRoute stri
 			return
 		}
 
-		msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, queryRoute, delAddr)
+		msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, delAddr)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

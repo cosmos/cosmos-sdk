@@ -52,13 +52,16 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
 	memo, _ := flagSet.GetString(flags.FlagMemo)
 
+	gasStr, _ := flagSet.GetString(flags.FlagGas)
+	gasSetting, _ := flags.ParseGasSetting(gasStr)
+
 	f := Factory{
 		txGenerator:        clientCtx.TxGenerator,
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
-		gas:                flags.GasFlagVar.Gas,
-		simulateAndExecute: flags.GasFlagVar.Simulate,
+		gas:                gasSetting.Gas,
+		simulateAndExecute: gasSetting.Simulate,
 		accountNumber:      accNum,
 		sequence:           accSeq,
 		gasAdjustment:      gasAdj,
@@ -96,14 +99,16 @@ func NewFactoryFromDeprecated(input io.Reader) Factory {
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
 
+	gasSetting, _ := flags.ParseGasSetting(viper.GetString(flags.FlagGas))
+
 	f := Factory{
 		keybase:            kb,
 		chainID:            viper.GetString(flags.FlagChainID),
 		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
 		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                flags.GasFlagVar.Gas,
+		gas:                gasSetting.Gas,
+		simulateAndExecute: gasSetting.Simulate,
 		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		simulateAndExecute: flags.GasFlagVar.Simulate,
 		memo:               viper.GetString(flags.FlagMemo),
 		signMode:           signMode,
 	}

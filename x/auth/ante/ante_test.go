@@ -1335,46 +1335,41 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	}
 }
 
-func TestAnteHandlerReCheck(t *testing.T) {
-	// setup
-	app, ctx := createTestApp(true)
-	// set blockheight and recheck=true
-	ctx = ctx.WithBlockHeight(1)
-	ctx = ctx.WithIsReCheckTx(true)
+func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
+	suite.SetupTest(true) // setup
+	// Set recheck=true
+	suite.ctx = suite.ctx.WithIsReCheckTx(true)
+	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
 
-	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	// priv2, _, addr2 := types.KeyTestPubAddr()
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(1)
 
-	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	require.NoError(t, acc1.SetAccountNumber(0))
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
+	fee := types.NewTestStdFee()
+	suite.txBuilder.SetFeeAmount(fee.GetAmount())
+	suite.txBuilder.SetGasLimit(fee.GetGas())
 
-	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
+	msg := testdata.NewTestMsg(accounts[0].GetAddress())
+	msgs := []sdk.Msg{msg}
+	suite.txBuilder.SetMsgs(msgs...)
+
+	suite.txBuilder.SetMemo("thisisatestmemo")
 
 	// test that operations skipped on recheck do not run
-
-	msg := testdata.NewTestMsg(addr1)
-	msgs := []sdk.Msg{msg}
-	fee := types.NewTestStdFee()
-
-	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := types.NewTestTxWithMemo(ctx, msgs, privs, accnums, seqs, fee, "thisisatestmemo")
+	privs, accNums, seqs := []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+	tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 
 	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
 	// since these decorators don't run on recheck, the tx should pass the antehandler
 	stdTx := tx.(types.StdTx)
 	stdTx.Signatures = []types.StdSignature{}
 
-	_, err := antehandler(ctx, stdTx, false)
-	require.Nil(t, err, "AnteHandler errored on recheck unexpectedly: %v", err)
+	_, err := suite.anteHandler(suite.ctx, stdTx, false)
+	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)
 
-	tx = types.NewTestTxWithMemo(ctx, msgs, privs, accnums, seqs, fee, "thisisatestmemo")
+	tx = suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 	txBytes, err := json.Marshal(tx)
-	require.Nil(t, err, "Error marshalling tx: %v", err)
-	ctx = ctx.WithTxBytes(txBytes)
+	suite.Require().Nil(err, "Error marshalling tx: %v", err)
+	suite.ctx = suite.ctx.WithTxBytes(txBytes)
 
 	// require that state machine param-dependent checking is still run on recheck since parameters can change between check and recheck
 	testCases := []struct {
@@ -1387,33 +1382,33 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		// set testcase parameters
-		app.AccountKeeper.SetParams(ctx, tc.params)
+		suite.app.AccountKeeper.SetParams(suite.ctx, tc.params)
 
-		_, err := antehandler(ctx, tx, false)
+		_, err := suite.anteHandler(suite.ctx, tx, false)
 
-		require.NotNil(t, err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
+		suite.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
 		// reset parameters to default values
-		app.AccountKeeper.SetParams(ctx, types.DefaultParams())
+		suite.app.AccountKeeper.SetParams(suite.ctx, types.DefaultParams())
 	}
 
 	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck
 	// create new minimum gas price so antehandler fails on recheck
-	ctx = ctx.WithMinGasPrices([]sdk.DecCoin{{
+	suite.ctx = suite.ctx.WithMinGasPrices([]sdk.DecCoin{{
 		Denom:  "dnecoin", // fee does not have this denom
 		Amount: sdk.NewDec(5),
 	}})
-	_, err = antehandler(ctx, tx, false)
-	require.NotNil(t, err, "antehandler on recheck did not fail when mingasPrice was changed")
+	_, err = suite.anteHandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "antehandler on recheck did not fail when mingasPrice was changed")
 	// reset min gasprice
-	ctx = ctx.WithMinGasPrices(sdk.DecCoins{})
+	suite.ctx = suite.ctx.WithMinGasPrices(sdk.DecCoins{})
 
 	// remove funds for account so antehandler fails on recheck
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins())
+	suite.app.AccountKeeper.SetAccount(suite.ctx, accounts[0])
+	suite.app.BankKeeper.SetBalances(suite.ctx, accounts[0].GetAddress(), sdk.NewCoins())
 
-	_, err = antehandler(ctx, tx, false)
-	require.NotNil(t, err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
+	_, err = suite.anteHandler(suite.ctx, tx, false)
+	suite.Require().NotNil(err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
 }
 
 func TestAnteTestSuite(t *testing.T) {

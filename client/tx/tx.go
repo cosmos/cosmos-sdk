@@ -150,7 +150,7 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	simAndExec, gas, err := flags.ParseGas(br.Gas)
+	gasSetting, err := flags.ParseGasSetting(br.Gas)
 	if rest.CheckBadRequestError(w, err) {
 		return
 	}
@@ -158,14 +158,14 @@ func WriteGeneratedTxResponse(
 	txf := Factory{fees: br.Fees, gasPrices: br.GasPrices}.
 		WithAccountNumber(br.AccountNumber).
 		WithSequence(br.Sequence).
-		WithGas(gas).
+		WithGas(gasSetting.Gas).
 		WithGasAdjustment(gasAdj).
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
 		WithTxGenerator(ctx.TxGenerator)
 
-	if br.Simulate || simAndExec {
+	if br.Simulate || gasSetting.Simulate {
 		if gasAdj < 0 {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, sdkerrors.ErrorInvalidGasAdjustment.Error())
 			return

@@ -37,12 +37,12 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	distTxCmd.AddCommand(flags.PostCommands(
+	distTxCmd.AddCommand(
 		NewWithdrawRewardsCmd(),
 		NewWithdrawAllRewardsCmd(),
 		NewSetWithdrawAddrCmd(),
 		NewFundCommunityPoolCmd(),
-	)...)
+	)
 
 	return distTxCmd
 }
@@ -122,6 +122,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 	}
 
 	cmd.Flags().Bool(FlagCommission, false, "Withdraw the validator's commission in addition to the rewards")
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -165,11 +166,12 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 	}
 
 	cmd.Flags().Int(FlagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
 func NewSetWithdrawAddrCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
 		Long: strings.TrimSpace(
@@ -203,10 +205,13 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 func NewFundCommunityPoolCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "fund-community-pool [amount]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Funds the community pool with the specified amount",
@@ -240,11 +245,14 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
 func GetCmdSubmitProposal() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a community pool spend proposal",
@@ -305,4 +313,7 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }

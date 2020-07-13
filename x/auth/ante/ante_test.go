@@ -1171,7 +1171,7 @@ func TestCountSubkeys(t *testing.T) {
 	type args struct {
 		pub crypto.PubKey
 	}
-	tests := []struct {
+	testCases := []struct {
 		name string
 		args args
 		want int
@@ -1180,51 +1180,68 @@ func TestCountSubkeys(t *testing.T) {
 		{"single level multikey", args{singleLevelMultiKey}, 5},
 		{"multi level multikey", args{multiLevelMultiKey}, 11},
 	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(T *testing.T) {
-			require.Equal(t, tt.want, types.CountSubKeys(tt.args.pub))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(T *testing.T) {
+			require.Equal(t, tc.want, types.CountSubKeys(tc.args.pub))
 		})
 	}
 }
 
-func TestAnteHandlerSigLimitExceeded(t *testing.T) {
-	// setup
-	app, ctx := createTestApp(true)
-	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
+func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
+	suite.SetupTest(true) // setup
 
-	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	priv2, _, addr2 := types.KeyTestPubAddr()
-	priv3, _, addr3 := types.KeyTestPubAddr()
-	priv4, _, addr4 := types.KeyTestPubAddr()
-	priv5, _, addr5 := types.KeyTestPubAddr()
-	priv6, _, addr6 := types.KeyTestPubAddr()
-	priv7, _, addr7 := types.KeyTestPubAddr()
-	priv8, _, addr8 := types.KeyTestPubAddr()
-
-	addrs := []sdk.AccAddress{addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8}
-
-	// set the accounts
-	for i, addr := range addrs {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		err := acc.SetAccountNumber(uint64(i))
-		require.NoError(t, err)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		app.BankKeeper.SetBalances(ctx, addr, types.NewTestCoins())
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(8)
+	var addrs []sdk.AccAddress
+	var privs []crypto.PrivKey
+	for i := 0; i < 8; i++ {
+		addrs = append(addrs, accounts[i].GetAddress())
+		privs = append(privs, accounts[i].priv)
 	}
-
-	var tx sdk.Tx
-	msg := testdata.NewTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
-	msgs := []sdk.Msg{msg}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addrs...)}
+	accNums, seqs := []uint64{0, 1, 2, 3, 4, 5, 6, 7}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	fee := types.NewTestStdFee()
 
-	// test rejection logic
-	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8},
-		[]uint64{0, 1, 2, 3, 4, 5, 6, 7}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
-	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrTooManySignatures)
+	testCases := []struct {
+		desc     string
+		malleate func()
+		simulate bool
+		expPass  bool
+		expErr   error
+	}{
+		{
+			"test rejection logic",
+			func() {},
+			false,
+			false,
+			sdkerrors.ErrTooManySignatures,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+
+			tc.malleate()
+
+			suite.txBuilder.SetMsgs(msgs...)
+			suite.txBuilder.SetFeeAmount(fee.GetAmount())
+			suite.txBuilder.SetGasLimit(fee.GetGas())
+
+			tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(newCtx)
+
+				suite.ctx = newCtx
+			} else {
+				suite.Require().Error(err)
+				suite.Require().True(errors.Is(err, tc.expErr))
+			}
+		})
+	}
 }
 
 // Test custom SignatureVerificationGasConsumer

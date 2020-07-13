@@ -26,7 +26,7 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, connectionID, clientID, counterparty, types.GetCompatibleVersionStrings())
+	connection := types.NewConnectionEnd(types.INIT, connectionID, clientID, counterparty, types.GetCompatibleEncodedVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
@@ -156,7 +156,7 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	version, err := types.StringToVersion(encodedVersion)
+	version, err := types.DecodeVersion(encodedVersion)
 	if err != nil {
 		return sdkerrors.Wrap(err, "version negotiation failed")
 	}

@@ -22,7 +22,7 @@ func TestValidateVersion(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		encodedVersion, err := tc.version.ToString()
+		encodedVersion, err := tc.version.Encode()
 		require.NoError(t, err, "test case %d failed to marshal version string: %s", i, tc.name)
 
 		err = types.ValidateVersion(encodedVersion)
@@ -35,7 +35,7 @@ func TestValidateVersion(t *testing.T) {
 	}
 }
 
-func TestStringToVersion(t *testing.T) {
+func TestDecodeVersion(t *testing.T) {
 	testCases := []struct {
 		name       string
 		version    string
@@ -48,7 +48,7 @@ func TestStringToVersion(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		version, err := types.StringToVersion(tc.version)
+		version, err := types.DecodeVersion(tc.version)
 
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
@@ -98,7 +98,7 @@ func TestPickVersion(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		encodedCounterpartyVersions, err := types.VersionsToStrings(tc.counterpartyVersions)
+		encodedCounterpartyVersions, err := types.EncodeVersions(tc.counterpartyVersions)
 		require.NoError(t, err)
 
 		encodedVersion, err := types.PickVersion(encodedCounterpartyVersions)
@@ -106,7 +106,7 @@ func TestPickVersion(t *testing.T) {
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
 
-			version, err := types.StringToVersion(encodedVersion)
+			version, err := types.DecodeVersion(encodedVersion)
 			require.NoError(t, err)
 			require.Equal(t, tc.expVer, version, "valid test case %d falied: %s", i, tc.name)
 		} else {
@@ -143,7 +143,7 @@ func TestVerifyProposedVersion(t *testing.T) {
 }
 
 func TestVerifySupportedFeature(t *testing.T) {
-	nilFeatures, err := types.NewVersion(types.DefaultIBCVersionIdentifier, nil).ToString()
+	nilFeatures, err := types.NewVersion(types.DefaultIBCVersionIdentifier, nil).Encode()
 	require.NoError(t, err)
 
 	testCases := []struct {

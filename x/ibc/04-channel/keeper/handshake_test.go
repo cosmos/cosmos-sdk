@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			// modify connA versions
 			conn := suite.chainA.GetConnection(connA)
 
-			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).ToString()
+			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
 			suite.Require().NoError(err)
 			conn.Versions = append(conn.Versions, version)
 
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			// modify connA versions to only support UNORDERED channels
 			conn := suite.chainA.GetConnection(connA)
 
-			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).ToString()
+			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
 			suite.Require().NoError(err)
 			conn.Versions = []string{version}
 
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			// modify connB versions
 			conn := suite.chainB.GetConnection(connB)
 
-			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).ToString()
+			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
 			suite.Require().NoError(err)
 			conn.Versions = append(conn.Versions, version)
 
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			// modify connA versions to only support UNORDERED channels
 			conn := suite.chainA.GetConnection(connA)
 
-			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).ToString()
+			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
 			suite.Require().NoError(err)
 			conn.Versions = []string{version}
 

@@ -10,24 +10,21 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-
+	"github.com/stretchr/testify/suite"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	"github.com/stretchr/testify/suite"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codec2 "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -278,7 +275,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "cannot broadcast tx during offline mode")
 
-	err = waitForNextBlock(val1, s.network)
+	err = waitForNextBlock(s.network)
 	s.Require().NoError(err)
 
 	// Broadcast correct transaction.
@@ -286,7 +283,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(val1, s.network)
+	err = waitForNextBlock(s.network)
 	s.Require().NoError(err)
 
 	// Ensure destiny account state
@@ -341,7 +338,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	)
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(val1, s.network)
+	err = waitForNextBlock(s.network)
 	s.Require().NoError(err)
 
 	// Generate multisig transaction.
@@ -457,7 +454,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	)
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(val1, s.network)
+	err = waitForNextBlock(s.network)
 	s.Require().NoError(err)
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
@@ -516,7 +513,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(val1, s.network)
+	err = waitForNextBlock(s.network)
 	s.Require().NoError(err)
 }
 
@@ -555,7 +552,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 
-	err = waitForNextBlock(val1, s.network)
+	err = waitForNextBlock(s.network)
 	s.Require().NoError(err)
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
@@ -620,22 +617,8 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(val1, s.network)
+	err = waitForNextBlock(s.network)
 	s.Require().NoError(err)
-}
-
-func waitForNextBlock(val1 *network.Validator, network *network.Network) error {
-	status, err := val1.RPCClient.Status()
-	if err != nil {
-		return err
-	}
-	lastBlock := status.SyncInfo.LatestBlockHeight
-	_, err = network.WaitForHeightWithTimeout(lastBlock+1, 10*time.Second)
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
@@ -676,4 +659,18 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func waitForNextBlock(network *network.Network) error {
+	lastBlock, err := network.LatestHeight()
+	if err != nil {
+		return err
+	}
+
+	_, err = network.WaitForHeightWithTimeout(lastBlock+1, 10*time.Second)
+	if err != nil {
+		return err
+	}
+
+	return err
 }

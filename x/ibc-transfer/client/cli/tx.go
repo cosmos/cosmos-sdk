@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -57,6 +58,7 @@ func NewTransferTxCmd() *cobra.Command {
 
 	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultAbsolutePacketTimeoutHeight, "Absolute timeout block height. The timeout is disabled when set to 0.")
 	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultAbsolutePacketTimeoutTimestamp, "Absolute timeout timestamp in nanoseconds. The timeout is disabled when set to 0.")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

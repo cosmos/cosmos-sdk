@@ -30,13 +30,12 @@ func GetTxCmd() *cobra.Command {
 		Use:   types.ModuleName,
 		Short: "Upgrade transaction subcommands",
 	}
-	cmd.AddCommand(flags.PostCommands()...)
 
 	return cmd
 }
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func NewCmdSubmitUpgradeProposal(clientCtx client.Context) *cobra.Command {
+func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
@@ -45,13 +44,18 @@ func NewCmdSubmitUpgradeProposal(clientCtx client.Context) *cobra.Command {
 			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
 			"You may include info to reference a binary download link, in a format compatible with: https://github.com/regen-network/cosmosd",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			name := args[0]
 			content, err := parseArgsToContent(cmd, name)
 			if err != nil {
 				return err
 			}
 
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
 			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
@@ -72,7 +76,7 @@ func NewCmdSubmitUpgradeProposal(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -135,6 +139,7 @@ func NewCmdSubmitCancelUpgradeProposal(clientCtx client.Context) *cobra.Command 
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

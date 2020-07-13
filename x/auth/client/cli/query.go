@@ -69,7 +69,9 @@ $ <appcli> query auth params
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetAccountCmd returns a query account that will display the state of the
@@ -97,7 +99,9 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // QueryTxsByEventsCmd returns a command to search through transactions by events.

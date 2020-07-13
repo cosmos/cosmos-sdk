@@ -51,13 +51,13 @@ func (c ConnectionEnd) GetVersions() []string {
 // counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(c.ID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid connection ID: %s", c.ID)
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if len(c.Versions) == 0 {
-		return sdkerrors.Wrap(ErrInvalidVersion, "versions cannot be empty")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty connection versions")
 	}
 	for _, version := range c.Versions {
 		if err := ValidateVersion(version); err != nil {

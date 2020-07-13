@@ -1,22 +1,24 @@
-package testutil
+package network_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	network *Network
+	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = NewTestNetwork(s.T(), DefaultConfig())
+	s.network = network.New(s.T(), network.DefaultConfig())
 	s.Require().NotNil(s.network)
 
 	_, err := s.network.WaitForHeight(1)

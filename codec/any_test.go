@@ -1,6 +1,7 @@
 package codec_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -53,4 +54,13 @@ func TestMarshalAny(t *testing.T) {
 	registry = NewTestInterfaceRegistry()
 	err = codec.UnmarshalAny(cdc, nil, bz)
 	require.Error(t, err)
+}
+
+func TestMarshalAnyNonProtoErrors(t *testing.T) {
+	registry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+
+	_, err := codec.MarshalAny(cdc, 29)
+	require.Error(t, err)
+	require.Equal(t, err, errors.New("can't proto marshal int"))
 }

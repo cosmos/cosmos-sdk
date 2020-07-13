@@ -58,7 +58,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "channel open init callback failed")
 			}
 
 			return res, nil
@@ -80,7 +80,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 			err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "channel open try callback failed")
 			}
 
 			return res, nil
@@ -99,7 +99,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			err = cbs.OnChanOpenAck(ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "channel open ack callback failed")
 			}
 			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 
@@ -117,7 +117,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			err = cbs.OnChanOpenConfirm(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "channel open confirm callback failed")
 			}
 			return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 
@@ -135,7 +135,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			err = cbs.OnChanCloseInit(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "channel close init callback failed")
 			}
 			return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, cap, msg)
 
@@ -153,7 +153,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			err = cbs.OnChanCloseConfirm(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "channel close confirm callback failed")
 			}
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, cap, msg)
 
@@ -174,7 +174,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Perform application logic callback
 			res, ack, err := cbs.OnRecvPacket(ctx, msg.Packet)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "receive packet callback failed")
 			}
 
 			// Set packet acknowledgement
@@ -200,7 +200,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Perform application logic callback
 			res, err := cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "acknowledge packet callback failed")
 			}
 
 			// Delete packet commitment
@@ -226,7 +226,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			// Perform application logic callback
 			res, err := cbs.OnTimeoutPacket(ctx, msg.Packet)
 			if err != nil {
-				return nil, err
+				return nil, sdkerrors.Wrap(err, "timeout packet callback failed")
 			}
 
 			// Delete packet commitment

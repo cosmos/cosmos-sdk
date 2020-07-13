@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -23,12 +22,13 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ibcTxCmd.AddCommand(flags.PostCommands(
+	ibcTxCmd.AddCommand(
 		tendermint.GetTxCmd(),
 		localhost.GetTxCmd(),
 		connection.GetTxCmd(),
 		channel.GetTxCmd(),
-	)...)
+	)
+
 	return ibcTxCmd
 }
 
@@ -43,10 +43,11 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ibcQueryCmd.AddCommand(flags.GetCommands(
+	ibcQueryCmd.AddCommand(
 		ibcclient.GetQueryCmd(),
 		connection.GetQueryCmd(),
 		channel.GetQueryCmd(),
-	)...)
+	)
+
 	return ibcQueryCmd
 }

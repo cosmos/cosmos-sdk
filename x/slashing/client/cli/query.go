@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -28,6 +29,7 @@ func GetQueryCmd() *cobra.Command {
 	slashingQueryCmd.AddCommand(
 		GetCmdQuerySigningInfo(),
 		GetCmdQueryParams(),
+		GetCmdQuerySigningInfos(),
 	)
 
 	return slashingQueryCmd
@@ -66,6 +68,43 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			}
 
 			return clientCtx.PrintOutput(res.ValSigningInfo)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQuerySigningInfos implements the command to query signing infos.
+func GetCmdQuerySigningInfos() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signing-infos",
+		Short: "Query signing information of all validators",
+		Long: strings.TrimSpace(`signing infos of validators:
+
+$ <appcli> query slashing signing-infos
+`),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			pageReq := &query.PageRequest{}
+
+			params := &types.QuerySigningInfosRequest{Req: pageReq}
+			res, err := queryClient.SigningInfos(context.Background(), params)
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res.Info)
 		},
 	}
 

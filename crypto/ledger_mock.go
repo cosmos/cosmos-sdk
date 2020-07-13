@@ -58,7 +58,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), derivedPriv[:])
+	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), derivedPriv)
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -72,13 +72,13 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(pk[:], btcec.S256())
+	cmp, err := btcec.ParsePubKey(pk, btcec.S256())
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKey
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	// Generate the bech32 addr using existing tmcrypto/etc.
 	addr := sdk.AccAddress(compressedPublicKey.Address()).String()

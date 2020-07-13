@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -146,6 +147,9 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 func TestStdSignatureMarshalYAML(t *testing.T) {
 	_, pubKey, _ := KeyTestPubAddr()
+	cdc := codec.New()
+	RegisterCodec(cdc)
+	cryptoamino.RegisterCrypto(cdc)
 
 	testCases := []struct {
 		sig    StdSignature
@@ -156,11 +160,11 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 			"|\n  pubkey: \"\"\n  signature: \"\"\n",
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: []byte("dummySig")},
+			StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: []byte("dummySig")},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: 64756D6D79536967\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: nil},
+			StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: nil},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 	}

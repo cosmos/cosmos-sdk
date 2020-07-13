@@ -531,11 +531,11 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String()), Index: true},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String()), Index: true},
 	)
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -543,7 +543,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String()), Index: true},
 	)
 
 	suite.Require().Equal(abci.Event(event1), events[0])
@@ -605,7 +605,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String()), Index: true},
 	)
 	suite.Require().Equal(abci.Event(event1), events[0])
 
@@ -627,7 +627,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String()), Index: true},
 	)
 	event3 := sdk.Event{
 		Type:       types.EventTypeTransfer,
@@ -635,22 +635,22 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String()), Index: true},
 	)
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String()), Index: true})
 	event4 := sdk.Event{
 		Type:       types.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
 	}
 	event4.Attributes = append(
 		event4.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String()), Index: true},
 	)
 	event4.Attributes = append(
 		event4.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String()), Index: true},
 	)
 
 	suite.Require().Equal(abci.Event(event1), events[1])

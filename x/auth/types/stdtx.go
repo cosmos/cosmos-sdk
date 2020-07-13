@@ -73,7 +73,7 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 func NewStdSignature(pk crypto.PubKey, sig []byte) StdSignature {
 	var pkBz []byte
 	if pk != nil {
-		pkBz = pk.Bytes()
+		pkBz = amino.MustMarshalBinaryBare(pk)
 	}
 
 	return StdSignature{PubKey: pkBz, Signature: sig}
@@ -92,6 +92,7 @@ func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
 	}
 
 	amino.MustUnmarshalBinaryBare(ss.PubKey, &pk)
+
 	return pk
 }
 

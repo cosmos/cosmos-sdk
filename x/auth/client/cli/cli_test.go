@@ -9,10 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/stretchr/testify/require"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
@@ -277,7 +278,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "cannot broadcast tx during offline mode")
 
-	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	err = waitForNextBlock(val1, s.network)
 	s.Require().NoError(err)
 
 	// Broadcast correct transaction.
@@ -285,7 +286,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	err = waitForNextBlock(val1, s.network)
 	s.Require().NoError(err)
 
 	// Ensure destiny account state
@@ -340,7 +341,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	)
 	s.Require().NoError(err)
 
-	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	err = waitForNextBlock(val1, s.network)
 	s.Require().NoError(err)
 
 	// Generate multisig transaction.
@@ -456,7 +457,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	)
 	s.Require().NoError(err)
 
-	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	err = waitForNextBlock(val1, s.network)
 	s.Require().NoError(err)
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
@@ -515,7 +516,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	err = waitForNextBlock(val1, s.network)
 	s.Require().NoError(err)
 }
 
@@ -553,9 +554,8 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
-	s.Require().NoError(err)
 
-	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	err = waitForNextBlock(val1, s.network)
 	s.Require().NoError(err)
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
@@ -620,8 +620,22 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	err = waitForNextBlock(val1, s.network)
 	s.Require().NoError(err)
+}
+
+func waitForNextBlock(val1 *network.Validator, network *network.Network) error {
+	status, err := val1.RPCClient.Status()
+	if err != nil {
+		return err
+	}
+	lastBlock := status.SyncInfo.LatestBlockHeight
+	_, err = network.WaitForHeightWithTimeout(lastBlock+1, 10*time.Second)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {

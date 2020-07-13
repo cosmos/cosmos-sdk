@@ -67,7 +67,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	}
 
 	if req.EndingHeight < req.StartingHeight {
-		return nil, status.Error(codes.InvalidArgument, "starting height greater than ending height")
+		return nil, status.Errorf(codes.InvalidArgument, "starting height greater than ending height (%d > %d)", req.StartingHeight, req.EndingHeight)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

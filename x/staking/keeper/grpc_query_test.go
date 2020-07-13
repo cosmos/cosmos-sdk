@@ -3,50 +3,13 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
-	"testing"
 
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
-
-type KeeperTestSuite struct {
-	suite.Suite
-
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	addrs       []sdk.AccAddress
-	vals        []types.Validator
-	queryClient types.QueryClient
-}
-
-func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
-
-	addrs, _, validators := createValidators(ctx, app, []int64{9, 8, 7})
-	header := abci.Header{
-		ChainID: "HelloChain",
-		Height:  5,
-	}
-
-	hi := types.NewHistoricalInfo(header, validators)
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi)
-
-	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
-}
 
 func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 	queryClient, vals := suite.queryClient, suite.vals
@@ -766,8 +729,4 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	return addrs, valAddrs, vals
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -134,7 +135,20 @@ func printAndValidateSigs(
 
 	return success
 }
+func readTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filename string) (client.Context, tx.Factory, sdk.Tx, error) {
+	stdTx, err := authclient.ReadTxFromFile(clientCtx, filename)
+	if err != nil {
+		return clientCtx, tx.Factory{}, nil, err
+	}
 
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+	clientCtx = clientCtx.InitWithInput(inBuf)
+	txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+
+	return clientCtx, txFactory, stdTx, nil
+}
+
+// deprecated
 func readStdTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filename string) (
 	client.Context, types.TxBuilder, sdk.Tx, error,
 ) {

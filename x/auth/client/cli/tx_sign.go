@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clitx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -197,14 +198,14 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
+		clientCtx, txF, tx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
-		stdTx := tx.(types.StdTx)
-
+		txGen := clientCtx.TxGenerator
+		txBuilder := txGen.NewTxBuilder()
 		// if --signature-only is on, then override --append
-		var newTx types.StdTx
+		var newTx sdk.Tx
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
 
@@ -215,21 +216,22 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 			if err != nil {
 				return err
 			}
-			newTx, err = authclient.SignStdTxWithSignerAddress(
-				txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), stdTx, clientCtx.Offline,
-			)
+
+			err = clitx.Sign(txBuilder, clientCtx.GetFromName(), tx)
 			generateSignatureOnly = true
 		} else {
 			append, _ := cmd.Flags().GetBool(flagAppend)
 			appendSig := append && !generateSignatureOnly
-			newTx, err = authclient.SignStdTx(txBldr, clientCtx, clientCtx.GetFromName(), stdTx, appendSig, clientCtx.Offline)
+			if appendSig {
+				err = clitx.Sign(txF, clientCtx.GetFromName(), txBuilder)
+			}
 		}
 
 		if err != nil {
 			return err
 		}
 
-		json, err := getSignatureJSON(clientCtx.Codec, newTx, generateSignatureOnly)
+		json, err := newGetSignatureJSON(clientCtx.Codec, txGen, txBuilder, newTx, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -257,4 +259,12 @@ func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, generateSignatureOnly
 	}
 
 	return cdc.MarshalJSON(newTx)
+}
+
+func newGetSignatureJSON(cdc *codec.Codec, txGen client.TxGenerator, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
+	if generateSignatureOnly {
+		return cdc.MarshalJSON(txBldr.GetTx().GetSignatures())
+	}
+
+	return txGen.TxEncoder()(newTx)
 }

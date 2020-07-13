@@ -11,7 +11,7 @@ import (
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state State, connectionID, clientID string, counterparty Counterparty, versions []Version) ConnectionEnd {
+func NewConnectionEnd(state State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		ID:           connectionID,
 		ClientID:     clientID,
@@ -42,7 +42,7 @@ func (c ConnectionEnd) GetCounterparty() exported.CounterpartyI {
 }
 
 // GetVersions implements the Connection interface
-func (c ConnectionEnd) GetVersions() []exported.VersionI {
+func (c ConnectionEnd) GetVersions() []string {
 	return c.Versions
 }
 
@@ -57,7 +57,7 @@ func (c ConnectionEnd) ValidateBasic() error {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}
 	for _, version := range c.Versions {
-		if err := version.ValidateBasic(); err != nil {
+		if err := ValidateVersion(version); err != nil {
 			return err
 		}
 	}

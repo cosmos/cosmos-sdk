@@ -34,8 +34,7 @@ message MsgConnectionOpenTry {
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  repeated Version counterparty_versions = 4 [
-    (gogoproto.nullable) = false,
+  repeated string counterparty_versions = 4 [
     (gogoproto.moretags) = "yaml:\"counterparty_versions\""
   ];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
@@ -57,7 +56,7 @@ message MsgConnectionOpenAck {
     (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
-  Version version = 2 [(gogoproto.nullable) = false];
+  string version = 2;
   // proof of the initialization the connection on Chain B: `UNITIALIZED ->
   // TRYOPEN`
   bytes proof_try = 3 [(gogoproto.moretags) = "yaml:\"proof_try\""];
@@ -102,7 +101,7 @@ message ConnectionEnd {
   ];
   // IBC version which can be utilised to determine encodings or protocols for
   // channels or packets utilising this connection
-  repeated Version versions = 3 [(gogoproto.nullable) = false];
+  repeated string versions = 3;
   // current state of the connection end.
   State state = 4;
   // counterparty chain associated with this connection.
@@ -161,15 +160,4 @@ message ConnectionPaths {
   ];
   // list of connection paths
   repeated string paths = 2;
-}
-
-// Version defines the versioning scheme used to negotiate the IBC verison in
-// the connection handshake.
-message Version {
-  option (gogoproto.goproto_getters) = false;
-
-  // unique version identifier
-  string identifier = 1;
-  // list of features compatible with the specified identifier
-  repeated string features = 2;
 }

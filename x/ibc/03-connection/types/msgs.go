@@ -64,7 +64,7 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	counterpartyVersions []Version, proofInit, proofConsensus []byte,
+	counterpartyVersions []string, proofInit, proofConsensus []byte,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
@@ -102,9 +102,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if len(msg.CounterpartyVersions) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing counterparty versions")
 	}
-	for _, version := range msg.CounterpartyVersions {
-		if err := version.ValidateBasic(); err != nil {
-			return err
+	for i, version := range msg.CounterpartyVersions {
+		if err := ValidateVersion(version); err != nil {
+			return sdkerrors.Wrapf(err, "basic validation failed on version with index %d", i)
 		}
 	}
 	if len(msg.ProofInit) == 0 {
@@ -140,7 +140,7 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
 	connectionID string, proofTry, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, version Version,
+	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	return &MsgConnectionOpenAck{
@@ -169,7 +169,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if err := msg.Version.ValidateBasic(); err != nil {
+	if err := ValidateVersion(msg.Version); err != nil {
 		return err
 	}
 	if len(msg.ProofTry) == 0 {

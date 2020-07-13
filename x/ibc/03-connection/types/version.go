@@ -25,8 +25,6 @@ var (
 	}
 )
 
-var _ exported.VersionI = (*Version)(nil)
-
 // NewVersion returns a new instance of Version.
 func NewVersion(identifier string, features []string) Version {
 	return Version{
@@ -45,8 +43,14 @@ func (version Version) GetFeatures() []string {
 	return version.Features
 }
 
-// ValidateBasic does basic validation of the version identifier and features.
-func (version Version) ValidateBasic() error {
+// ValidateVersion does basic validation of the version identifier and
+// features. It unmarshals the version string into a Version object.
+func ValidateVersion(ver string) error {
+	var version Version
+	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(ver), &version); err != nil {
+		return sdkerrors.Wrap(err, "failed to unmarshal version string %s", ver)
+	}
+
 	if strings.TrimSpace(version.Identifier) == "" {
 		return sdkerrors.Wrap(ErrInvalidVersion, "version identifier cannot be blank")
 	}

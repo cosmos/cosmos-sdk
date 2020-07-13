@@ -139,3 +139,16 @@ Explanation on how regressions might manifest - even if it's unlikely.
 It is assumed that stable release fixes are well-tested and they come with a low risk of regressions.
 It's crucial to make the effort of thinking about what could happen in case a regression emerges.
 ```
+
+## Stable Release Managers
+
+The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos-SDK Stable Release series,
+according to the [stable release policy](#stable-release-policy) and [release procedure](#stable-release-exception-procedure).
+Decisions are made by consensus.
+
+Their responsibilites include:
+ * Driving the Stable Release Exception process.
+ * Approving/rejecting proposed changes to a stable release series.
+ * Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
+
+The Stable Release Managers are appointed by the Interchain Foundation.

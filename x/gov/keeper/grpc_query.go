@@ -43,8 +43,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 
 	res, err := query.FilteredPaginate(proposalStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var p types.Proposal
-		err := q.cdc.UnmarshalBinaryBare(value, &p)
-		if err != nil {
+		if err := q.cdc.UnmarshalBinaryBare(value, &p); err != nil {
 			return false, status.Error(codes.Internal, err.Error())
 		}
 
@@ -69,6 +68,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 			if accumulate {
 				filteredProposals = append(filteredProposals, p)
 			}
+
 			return true, nil
 		}
 
@@ -124,13 +124,12 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
 
 	res, err := query.Paginate(votesStore, req.Req, func(key []byte, value []byte) error {
-		var result types.Vote
-		err := q.cdc.UnmarshalBinaryBare(value, &result)
-		if err != nil {
+		var vote types.Vote
+		if err := q.cdc.UnmarshalBinaryBare(value, &vote); err != nil {
 			return err
 		}
 
-		votes = append(votes, result)
+		votes = append(votes, vote)
 		return nil
 	})
 
@@ -214,12 +213,12 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
 
 	res, err := query.Paginate(depositStore, req.Req, func(key []byte, value []byte) error {
-		var result types.Deposit
-		err := q.cdc.UnmarshalBinaryBare(value, &result)
-		if err != nil {
+		var deposit types.Deposit
+		if err := q.cdc.UnmarshalBinaryBare(value, &deposit); err != nil {
 			return err
 		}
-		deposits = append(deposits, result)
+
+		deposits = append(deposits, deposit)
 		return nil
 	})
 

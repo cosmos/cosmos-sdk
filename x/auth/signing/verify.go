@@ -15,6 +15,7 @@ import (
 func VerifySignature(pubKey crypto.PubKey, signingData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
+		fmt.Println("VerifySignature", signingData)
 		signBytes, err := handler.GetSignBytes(data.SignMode, signingData, tx)
 		if err != nil {
 			return err

@@ -274,10 +274,8 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 				suite.Require().NotNil(newCtx)
 
 				suite.ctx = newCtx
-				seqs = incrementSeq(seqs)
 			} else {
 				suite.Require().Error(err)
-				fmt.Println(err)
 				suite.Require().True(errors.Is(err, tc.expErr))
 			}
 		})
@@ -291,10 +289,6 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 	// Same data for every test cases
 	// accounts := suite.CreateTestAccounts(2)
 	fee := types.NewTestStdFee()
-
-	// fmt.Println("ACCOJNT0", accounts[0].acc.GetAddress())
-	// fmt.Println("ACCOJNT0", accounts[0].acc.GetPubKey())
-	// fmt.Println("ACCOJNT0", accounts[0].priv.PubKey().Address())
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -333,6 +327,30 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 			true,
 			nil,
 		},
+		{
+			"new tx from wrong account number",
+			func() {
+				msg := testdata.NewTestMsg(addr1)
+				msgs = []sdk.Msg{msg}
+
+				privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{1}, []uint64{1}
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		{
+			"new tx from correct account number",
+			func() {
+				msg := testdata.NewTestMsg(addr1)
+				msgs = []sdk.Msg{msg}
+
+				privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{1}
+			},
+			false,
+			true,
+			nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -353,7 +371,6 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 				suite.Require().NotNil(newCtx)
 
 				suite.ctx = newCtx
-				seqs = incrementSeq(seqs)
 			} else {
 				suite.Require().Error(err)
 				fmt.Println(err)

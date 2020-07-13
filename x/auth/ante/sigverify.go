@@ -172,6 +172,8 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	fmt.Println("SIMULATE=", simulate)
+
 	// no need to verify signatures on recheck tx
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
@@ -230,7 +232,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrUnauthorized,
-					"signature verification failed; verify correct account sequence (%d) and chain-id (%s)", signerAccs[i].GetSequence(), ctx.ChainID())
+					"signature verification failed; verify correct account number (%d), account sequence (%d), and chain-id (%s)", signerAccs[i].GetAccountNumber(), signerAccs[i].GetSequence(), ctx.ChainID())
 			}
 		}
 	}

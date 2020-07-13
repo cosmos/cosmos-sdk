@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"encoding/base64"
 	"testing"
 
@@ -34,7 +35,14 @@ func TestGetCommandEncode(t *testing.T) {
 	txFileName := txFile.Name()
 	t.Cleanup(cleanup)
 
-	err = cmd.RunE(cmd, []string{txFileName})
+	ctx := context.Background()
+	clientCtx := client.Context{}.
+		WithTxGenerator(encodingConfig.TxGenerator).
+		WithJSONMarshaler(encodingConfig.Marshaler)
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd.SetArgs([]string{txFileName})
+	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 }
 
@@ -64,7 +72,10 @@ func TestGetCommandDecode(t *testing.T) {
 	// Convert the transaction into base64 encoded string
 	base64Encoded := base64.StdEncoding.EncodeToString(txBytes)
 
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
 	// Execute the command
 	cmd.SetArgs([]string{base64Encoded})
-	require.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.ExecuteContext(ctx))
 }

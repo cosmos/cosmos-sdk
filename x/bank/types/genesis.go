@@ -49,6 +49,16 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 	return balances
 }
 
+// ValidateGenesis performs basic validation of supply genesis data returning an
+// error for any failed validation criteria.
+func ValidateGenesis(data GenesisState) error {
+	if err := data.Params.Validate(); err != nil {
+		return err
+	}
+
+	return NewSupply(data.Supply).ValidateBasic()
+}
+
 // NewGenesisState creates a new genesis state.
 func NewGenesisState(params Params, balances []Balance, supply sdk.Coins) GenesisState {
 	return GenesisState{

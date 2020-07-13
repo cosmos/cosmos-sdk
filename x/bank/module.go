@@ -6,7 +6,6 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -55,7 +54,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return ValidateGenesis(data)
+	return types.ValidateGenesis(data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the bank module.
@@ -127,14 +126,14 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, genesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the bank
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 

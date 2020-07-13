@@ -1,70 +1,71 @@
-package distribution
+package keeper
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, keeper keeper.Keeper, data types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
-	keeper.SetFeePool(ctx, data.FeePool)
-	keeper.SetParams(ctx, data.Params)
+	k.SetFeePool(ctx, data.FeePool)
+	k.SetParams(ctx, data.Params)
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		keeper.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddress, dwi.WithdrawAddress)
+		k.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddress, dwi.WithdrawAddress)
 	}
-	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
+
+	k.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
+
 	for _, rew := range data.OutstandingRewards {
-		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		k.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
-		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
+		k.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
 	}
 	for _, his := range data.ValidatorHistoricalRewards {
-		keeper.SetValidatorHistoricalRewards(ctx, his.ValidatorAddress, his.Period, his.Rewards)
+		k.SetValidatorHistoricalRewards(ctx, his.ValidatorAddress, his.Period, his.Rewards)
 	}
 	for _, cur := range data.ValidatorCurrentRewards {
-		keeper.SetValidatorCurrentRewards(ctx, cur.ValidatorAddress, cur.Rewards)
+		k.SetValidatorCurrentRewards(ctx, cur.ValidatorAddress, cur.Rewards)
 	}
 	for _, del := range data.DelegatorStartingInfos {
-		keeper.SetDelegatorStartingInfo(ctx, del.ValidatorAddress, del.DelegatorAddress, del.StartingInfo)
+		k.SetDelegatorStartingInfo(ctx, del.ValidatorAddress, del.DelegatorAddress, del.StartingInfo)
 	}
 	for _, evt := range data.ValidatorSlashEvents {
-		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Period, evt.Event)
+		k.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Period, evt.Event)
 	}
 
 	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
 
 	// check if the module account exists
-	moduleAcc := keeper.GetDistributionAccount(ctx)
+	moduleAcc := k.GetDistributionAccount(ctx)
 	if moduleAcc == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	balances := bk.GetAllBalances(ctx, moduleAcc.GetAddress())
+	balances := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
 	if balances.IsZero() {
-		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), moduleHoldingsInt); err != nil {
+		if err := k.bankKeeper.SetBalances(ctx, moduleAcc.GetAddress(), moduleHoldingsInt); err != nil {
 			panic(err)
 		}
 
-		ak.SetModuleAccount(ctx, moduleAcc)
+		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
-	feePool := keeper.GetFeePool(ctx)
-	params := keeper.GetParams(ctx)
+func (k Keeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
+	feePool := k.GetFeePool(ctx)
+	params := k.GetParams(ctx)
 
 	dwi := make([]types.DelegatorWithdrawInfo, 0)
-	keeper.IterateDelegatorWithdrawAddrs(ctx, func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool) {
+	k.IterateDelegatorWithdrawAddrs(ctx, func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
 			DelegatorAddress: del,
 			WithdrawAddress:  addr,
@@ -72,9 +73,10 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 		return false
 	})
 
-	pp := keeper.GetPreviousProposerConsAddr(ctx)
+	pp := k.GetPreviousProposerConsAddr(ctx)
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
-	keeper.IterateValidatorOutstandingRewards(ctx,
+
+	k.IterateValidatorOutstandingRewards(ctx,
 		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
 				ValidatorAddress:   addr,
@@ -85,7 +87,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	)
 
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
-	keeper.IterateValidatorAccumulatedCommissions(ctx,
+	k.IterateValidatorAccumulatedCommissions(ctx,
 		func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool) {
 			acc = append(acc, types.ValidatorAccumulatedCommissionRecord{
 				ValidatorAddress: addr,
@@ -96,7 +98,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	)
 
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
-	keeper.IterateValidatorHistoricalRewards(ctx,
+	k.IterateValidatorHistoricalRewards(ctx,
 		func(val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) (stop bool) {
 			his = append(his, types.ValidatorHistoricalRewardsRecord{
 				ValidatorAddress: val,
@@ -108,7 +110,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	)
 
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
-	keeper.IterateValidatorCurrentRewards(ctx,
+	k.IterateValidatorCurrentRewards(ctx,
 		func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool) {
 			cur = append(cur, types.ValidatorCurrentRewardsRecord{
 				ValidatorAddress: val,
@@ -117,8 +119,9 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 			return false
 		},
 	)
+
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
-	keeper.IterateDelegatorStartingInfos(ctx,
+	k.IterateDelegatorStartingInfos(ctx,
 		func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool) {
 			dels = append(dels, types.DelegatorStartingInfoRecord{
 				ValidatorAddress: val,
@@ -130,7 +133,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	)
 
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
-	keeper.IterateValidatorSlashEvents(ctx,
+	k.IterateValidatorSlashEvents(ctx,
 		func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool) {
 			slashes = append(slashes, types.ValidatorSlashEventRecord{
 				ValidatorAddress: val,

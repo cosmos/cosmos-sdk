@@ -47,6 +47,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -85,6 +86,8 @@ func GetCmdQueryClientState() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -127,12 +130,14 @@ func GetCmdQueryConsensusState() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // GetCmdQueryHeader defines the command to query the latest header on the chain
 func GetCmdQueryHeader() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "header",
 		Short:   "Query the latest header of the running chain",
 		Long:    "Query the latest Tendermint header of the running chain",
@@ -153,12 +158,16 @@ func GetCmdQueryHeader() *cobra.Command {
 			return clientCtx.PrintOutput(header)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdNodeConsensusState defines the command to query the latest consensus state of a node
 // The result is feed to client creation
 func GetCmdNodeConsensusState() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "node-state",
 		Short:   "Query a node consensus state",
 		Long:    "Query a node consensus state. This result is feed to the client creation transaction.",
@@ -180,4 +189,8 @@ func GetCmdNodeConsensusState() *cobra.Command {
 			return clientCtx.PrintOutput(state)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

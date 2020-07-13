@@ -88,7 +88,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
 	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(clientCtx))
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler())
 	}
 
 	return cli.NewTxCmd(clientCtx, proposalCLIHandlers)

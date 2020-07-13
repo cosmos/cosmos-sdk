@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"testing"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
@@ -41,12 +41,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
-	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name         string
@@ -94,11 +89,15 @@ func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
-
 			cmd := cli.NewMsgVerifyInvariantTxCmd()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			_, out := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -106,7 +105,7 @@ func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(buf.Bytes(), tc.respType), buf.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)

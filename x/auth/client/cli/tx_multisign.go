@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -50,8 +51,9 @@ recommended to set such parameters manually.
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	flags.AddTxFlagsToCmd(cmd)
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
@@ -83,7 +85,10 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), homeDir)
+		if err != nil {
+			return errors.Wrap(err, "error creating tx builder from flags")
+		}
 
 		if !clientCtx.Offline {
 			accnum, seq, err := types.NewAccountRetriever(authclient.Codec).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())

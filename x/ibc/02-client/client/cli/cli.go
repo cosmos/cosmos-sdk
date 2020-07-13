@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
@@ -18,12 +17,13 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	queryCmd.AddCommand(flags.GetCommands(
+	queryCmd.AddCommand(
 		GetCmdQueryClientStates(),
 		GetCmdQueryClientState(),
 		GetCmdQueryConsensusState(),
 		GetCmdQueryHeader(),
 		GetCmdNodeConsensusState(),
-	)...)
+	)
+
 	return queryCmd
 }

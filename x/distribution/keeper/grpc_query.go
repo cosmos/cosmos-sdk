@@ -104,9 +104,6 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
 	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	if rewards == nil {
-		rewards = sdk.DecCoins{}
-	}
 
 	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
@@ -176,9 +173,6 @@ func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDele
 func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	pool := k.GetFeePoolCommunityCoins(ctx)
-	if pool == nil {
-		pool = sdk.DecCoins{}
-	}
 
 	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
 }

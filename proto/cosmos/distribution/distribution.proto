@@ -189,7 +189,6 @@ message DelegationDelegatorReward {
   ];
 
   repeated cosmos.DecCoin reward = 2 [
-    (gogoproto.moretags)     = "yaml:\"reward\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];

@@ -31,6 +31,7 @@ type BufferReader interface {
 type BufferWriter interface {
 	io.Writer
 	Reset()
+	Bytes() []byte
 	String() string
 }
 

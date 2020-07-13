@@ -21,11 +21,9 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	mintingQueryCmd.AddCommand(
-		flags.GetCommands(
-			GetCmdQueryParams(),
-			GetCmdQueryInflation(),
-			GetCmdQueryAnnualProvisions(),
-		)...,
+		GetCmdQueryParams(),
+		GetCmdQueryInflation(),
+		GetCmdQueryAnnualProvisions(),
 	)
 
 	return mintingQueryCmd
@@ -34,7 +32,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdQueryParams implements a command to return the current minting
 // parameters.
 func GetCmdQueryParams() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current minting parameters",
 		Args:  cobra.NoArgs,
@@ -52,12 +50,16 @@ func GetCmdQueryParams() *cobra.Command {
 			return clientCtx.PrintOutput(res.Params)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryInflation implements a command to return the current minting
 // inflation value.
 func GetCmdQueryInflation() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "inflation",
 		Short: "Query the current minting inflation value",
 		Args:  cobra.NoArgs,
@@ -75,12 +77,16 @@ func GetCmdQueryInflation() *cobra.Command {
 			return clientCtx.PrintOutput(res.Inflation)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryAnnualProvisions implements a command to return the current minting
 // annual provisions value.
 func GetCmdQueryAnnualProvisions() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "annual-provisions",
 		Short: "Query the current minting annual provisions value",
 		Args:  cobra.NoArgs,
@@ -98,4 +104,8 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 			return clientCtx.PrintOutput(res.AnnualProvisions)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

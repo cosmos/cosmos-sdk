@@ -26,10 +26,8 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	slashingQueryCmd.AddCommand(
-		flags.GetCommands(
-			GetCmdQuerySigningInfo(),
-			GetCmdQueryParams(),
-		)...,
+		GetCmdQuerySigningInfo(),
+		GetCmdQueryParams(),
 	)
 
 	return slashingQueryCmd
@@ -38,7 +36,7 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
 func GetCmdQuerySigningInfo() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "signing-info [validator-conspub]",
 		Short: "Query a validator's signing information",
 		Long: strings.TrimSpace(`Use a validators' consensus public key to find the signing-info for that validator:
@@ -70,11 +68,15 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			return clientCtx.PrintOutput(res.ValSigningInfo)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryParams implements a command to fetch slashing parameters.
 func GetCmdQueryParams() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current slashing parameters",
 		Args:  cobra.NoArgs,
@@ -96,4 +98,8 @@ $ <appcli> query slashing params
 			return clientCtx.PrintOutput(res.Params)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

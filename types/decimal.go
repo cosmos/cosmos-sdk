@@ -700,7 +700,8 @@ func (d *Dec) MarshalTo(data []byte) (n int, err error) {
 	if d.i == nil {
 		d.i = new(big.Int)
 	}
-	if len(d.i.Bytes()) == 0 {
+
+	if d.i.Cmp(zeroInt) == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

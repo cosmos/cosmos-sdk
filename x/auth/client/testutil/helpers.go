@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) ([]byte, error) {
@@ -25,7 +25,7 @@ func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, ex
 
 	args = append(args, extraArgs...)
 
-	return callCmd(clientCtx, cli2.GetSignCommand, args)
+	return callCmd(clientCtx, cli.GetSignCommand, args)
 }
 
 func TxBroadcastExec(clientCtx client.Context, filename string, extraArgs ...string) ([]byte, error) {
@@ -35,7 +35,7 @@ func TxBroadcastExec(clientCtx client.Context, filename string, extraArgs ...str
 
 	args = append(args, extraArgs...)
 
-	return callCmd(clientCtx, cli2.GetBroadcastCommand, args)
+	return callCmd(clientCtx, cli.GetBroadcastCommand, args)
 }
 
 func callCmd(clientCtx client.Context, theCmd func() *cobra.Command, extraArgs []string) ([]byte, error) {
@@ -66,7 +66,7 @@ func TxEncodeExec(clientCtx client.Context, filename string, extraArgs ...string
 
 	args = append(args, extraArgs...)
 
-	return callCmd(clientCtx, cli2.GetEncodeCommand, args)
+	return callCmd(clientCtx, cli.GetEncodeCommand, args)
 }
 
 func TxValidateSignaturesExec(clientCtx client.Context, filename string) ([]byte, error) {
@@ -76,7 +76,7 @@ func TxValidateSignaturesExec(clientCtx client.Context, filename string) ([]byte
 		filename,
 	}
 
-	return callCmd(clientCtx, cli2.GetValidateSignaturesCommand, args)
+	return callCmd(clientCtx, cli.GetValidateSignaturesCommand, args)
 }
 
 func TxMultiSignExec(clientCtx client.Context, from string, filename string, extraArgs ...string) ([]byte, error) {
@@ -89,7 +89,7 @@ func TxMultiSignExec(clientCtx client.Context, from string, filename string, ext
 
 	args = append(args, extraArgs...)
 
-	return callCmd(clientCtx, cli2.GetMultiSignCommand, args)
+	return callCmd(clientCtx, cli.GetMultiSignCommand, args)
 }
 
 func TxSignBatchExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) ([]byte, error) {
@@ -101,7 +101,7 @@ func TxSignBatchExec(clientCtx client.Context, from fmt.Stringer, filename strin
 
 	args = append(args, extraArgs...)
 
-	return callCmd(clientCtx, cli2.GetSignBatchCommand, args)
+	return callCmd(clientCtx, cli.GetSignBatchCommand, args)
 }
 
 func TxDecodeExec(clientCtx client.Context, encodedTx string, extraArgs ...string) ([]byte, error) {
@@ -112,7 +112,7 @@ func TxDecodeExec(clientCtx client.Context, encodedTx string, extraArgs ...strin
 
 	args = append(args, extraArgs...)
 
-	return callCmd(clientCtx, cli2.GetDecodeCommand, args)
+	return callCmd(clientCtx, cli.GetDecodeCommand, args)
 }
 
 // DONTCOVER

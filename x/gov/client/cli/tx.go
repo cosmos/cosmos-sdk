@@ -50,9 +50,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(
-	pcmds []*cobra.Command,
-) *cobra.Command {
+func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -62,8 +60,8 @@ func NewTxCmd(
 	}
 
 	cmdSubmitProp := NewCmdSubmitProposal()
-	for _, pcmd := range pcmds {
-		cmdSubmitProp.AddCommand(pcmd)
+	for _, propCmd := range propCmds {
+		cmdSubmitProp.AddCommand(propCmd)
 	}
 
 	govTxCmd.AddCommand(

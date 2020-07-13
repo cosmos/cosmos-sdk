@@ -479,7 +479,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			false,
 		},
 		{
-			"deposit params requset",
+			"deposit params request",
 			func() {
 				req = &types.QueryParamsRequest{ParamsType: types.ParamDeposit}
 				expRes = &types.QueryParamsResponse{
@@ -490,7 +490,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			true,
 		},
 		{
-			"voting params requset",
+			"voting params request",
 			func() {
 				req = &types.QueryParamsRequest{ParamsType: types.ParamVoting}
 				expRes = &types.QueryParamsResponse{
@@ -501,7 +501,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			true,
 		},
 		{
-			"tally params requset",
+			"tally params request",
 			func() {
 				req = &types.QueryParamsRequest{ParamsType: types.ParamTallying}
 				expRes = &types.QueryParamsResponse{
@@ -511,7 +511,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			true,
 		},
 		{
-			"tally params requset",
+			"invalid request",
 			func() {
 				req = &types.QueryParamsRequest{ParamsType: "wrongPath"}
 				expRes = &types.QueryParamsResponse{}

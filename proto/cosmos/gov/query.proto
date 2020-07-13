@@ -9,7 +9,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
 // Query defines the gRPC querier service for gov module
 service Query {
-  // Proposal returns proposal details based on ProposalID
+  // Proposal queries proposal details based on ProposalID
   rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {}
 
   // Proposals queries all proposals based on given status

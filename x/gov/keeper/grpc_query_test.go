@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			true,
 		},
 		{
-			"request with limit 3 and count all",
+			"request with limit 2 and count true",
 			func() {
 				req = &types.QueryProposalsRequest{
 					Req: &query.PageRequest{Limit: 2, CountTotal: true},

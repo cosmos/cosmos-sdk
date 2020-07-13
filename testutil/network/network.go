@@ -334,6 +334,7 @@ func New(t *testing.T, cfg Config) *Network {
 	return network
 }
 
+// WaitForNBlocks waits for N blocks or timeout.
 func (n *Network) WaitForNBlocks(b int64, t time.Duration) error {
 	ticker := time.NewTicker(time.Second)
 	timeout := time.After(t)

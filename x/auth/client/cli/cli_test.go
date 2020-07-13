@@ -1,10 +1,18 @@
 package cli_test
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/stretchr/testify/require"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
@@ -614,6 +622,42 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	err = s.network.WaitForNBlocks(1, 10*time.Second)
 	s.Require().NoError(err)
+}
+
+func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
+	clientCtx := client.Context{}.WithOffline(true)
+	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
+
+	cmd := cli2.GetBroadcastCommand()
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
+
+	require.EqualError(t, cmd.Execute(), "cannot broadcast tx during offline mode")
+}
+
+func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := cli2.GetBroadcastCommand()
+
+	testDir, cleanFunc := testutil.NewTestCaseDir(t)
+	t.Cleanup(cleanFunc)
+
+	// Create new file with tx
+	txContents := []byte("{\"type\":\"cosmos-sdk/StdTx\",\"value\":{\"msg\":[{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{\"from_address\":\"cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw\",\"to_address\":\"cosmos1wc8mpr8m3sy3ap3j7fsgqfzx36um05pystems4\",\"amount\":[{\"denom\":\"stake\",\"amount\":\"10000\"}]}}],\"fee\":{\"amount\":[],\"gas\":\"200000\"},\"signatures\":null,\"memo\":\"\"}}")
+	txFileName := filepath.Join(testDir, "tx.json")
+	err := ioutil.WriteFile(txFileName, txContents, 0644)
+	require.NoError(t, err)
+
+	cmd.SetArgs([]string{txFileName})
+	err = cmd.ExecuteContext(ctx)
+
+	// We test it tries to broadcast but we set unsupported tx to get the error.
+	require.EqualError(t, err, "unsupported return type ; supported types: sync, async, block")
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

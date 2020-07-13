@@ -227,6 +227,12 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
 
+		from, _ := cmd.Flags().GetString(flags.FlagFrom)
+		_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
+		if err != nil {
+			return fmt.Errorf("error getting account from keybase: %w", err)
+		}
+
 		if multisigAddrStr != "" {
 			var multisigAddr sdk.AccAddress
 
@@ -234,17 +240,12 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+
 			newTx, err = authclient.SignStdTxWithSignerAddress(
-				txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), stdTx, clientCtx.Offline,
+				txBldr, clientCtx, multisigAddr, fromName, stdTx, clientCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {
-			from, _ := cmd.Flags().GetString(flags.FlagFrom)
-			_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
-			if err != nil {
-				return fmt.Errorf("error getting account from keybase: %w", err)
-			}
-
 			append, _ := cmd.Flags().GetBool(flagAppend)
 			appendSig := append && !generateSignatureOnly
 			newTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, stdTx, appendSig, clientCtx.Offline)

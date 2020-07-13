@@ -6,6 +6,14 @@ import (
 	"testing"
 	"time"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	codec2 "github.com/cosmos/cosmos-sdk/codec"
+
+	tmcrypto "github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
@@ -276,8 +284,6 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	fmt.Printf("%s \n", res)
-
 	err = s.network.WaitForNBlocks(1, 10*time.Second)
 	s.Require().NoError(err)
 
@@ -296,6 +302,84 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewInt(389999990), coins.AmountOf(cli.Denom))
+}
+
+func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
+	s.T().SkipNow()
+	val1 := s.network.Validators[0]
+
+	codec := codec2.New()
+	sdk.RegisterCodec(codec)
+	banktypes.RegisterCodec(codec)
+	val1.ClientCtx.Codec = codec
+
+	// Generate 2 accounts and a multisig.
+	account1, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	account2, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	multisigInfo, err := val1.ClientCtx.Keyring.SaveMultisig("multi", multi)
+	s.Require().NoError(err)
+
+	// Send coins from validator to multisig.
+	_, err = bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		multisigInfo.GetAddress(),
+		sdk.NewCoins(
+			sdk.NewInt64Coin(cli.Denom, 10),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+
+	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	s.Require().NoError(err)
+
+	// Generate multisig transaction.
+	multiGeneratedTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		multisigInfo.GetAddress(),
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(cli.Denom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save tx to file
+	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(multiGeneratedTx))
+	defer cleanup()
+
+	// Multisign, sign with one signature
+	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
+	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	s.Require().NoError(err)
+
+	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(account1Signature))
+	defer cleanup2()
+
+	multiSigWith1Signature, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name())
+	s.Require().NoError(err)
+
+	// Save tx to file
+	multiSigWith1SignatureFile, cleanup3 := testutil.WriteToNewTempFile(s.T(), string(multiSigWith1Signature))
+	defer cleanup3()
+
+	exec, err := authtest.TxValidateSignaturesExec(val1.ClientCtx, multiSigWith1SignatureFile.Name())
+	s.Require().NoError(err)
+
+	fmt.Printf("%s", exec)
 }
 
 func TestCLIMultisignInsufficientCosigners(t *testing.T) {

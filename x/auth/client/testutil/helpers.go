@@ -97,6 +97,19 @@ func TxValidateSignatures(f *cli.Fixtures, fileName string, flags ...string) (bo
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
+func TxMultiSignExec(clientCtx client.Context, from string, filename string, extraArgs ...string) ([]byte, error) {
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
+		filename,
+		from,
+	}
+
+	args = append(args, extraArgs...)
+
+	return callCmd(clientCtx, cli2.GetMultiSignCommand, args)
+}
+
 // TxMultisign is simcli tx multisign
 func TxMultisign(f *cli.Fixtures, fileName, name string, signaturesFiles []string,
 	flags ...string) (bool, string, string) {

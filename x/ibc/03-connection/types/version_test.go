@@ -106,7 +106,7 @@ func TestVerifyProposedVersion(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		err := types.VerifyProposedVersion(tc.proposedVersion, tc.supportedVersion)
+		err := tc.supportedVersion.VerifyProposedVersion(tc.proposedVersion)
 
 		if tc.expPass {
 			require.NoError(t, err, "test case %d: %s", i, tc.name)

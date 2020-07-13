@@ -156,12 +156,12 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	// Check that ChainB's proposed version identifier is supported by chainA
 	version, err := types.StringToVersion(encodedVersion)
 	if err != nil {
 		return sdkerrors.Wrap(err, "version negotiation failed")
 	}
 
+	// Check that ChainB's proposed version identifier is supported by chainA
 	supportedVersion, found := types.FindSupportedVersion(version, types.GetCompatibleVersions())
 	if !found {
 		return sdkerrors.Wrapf(
@@ -171,7 +171,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Check that ChainB's proposed feature set is supported by chainA
-	if err := types.VerifyProposedVersion(version, supportedVersion); err != nil {
+	if err := supportedVersion.VerifyProposedVersion(version); err != nil {
 		return err
 	}
 

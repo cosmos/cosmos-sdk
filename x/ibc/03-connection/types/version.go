@@ -42,16 +42,6 @@ func (version Version) GetFeatures() []string {
 	return version.Features
 }
 
-// ToString proto encodes the version and returns the bytes as a string.
-func (version Version) ToString() (string, error) {
-	encodedVersion, err := SubModuleCdc.MarshalBinaryBare(&version)
-	if err != nil {
-		return "", err
-	}
-
-	return string(encodedVersion), nil
-}
-
 // ValidateVersion does basic validation of the version identifier and
 // features. It unmarshals the version string into a Version object.
 func ValidateVersion(encodedVersion string) error {
@@ -72,38 +62,29 @@ func ValidateVersion(encodedVersion string) error {
 	return nil
 }
 
-// GetCompatibleVersions returns a descending ordered set of compatible IBC
-// versions for the caller chain's connection end. The latest supported
-// version should be first element and the set should descend to the oldest
-// supported version.
-func GetCompatibleVersions() []Version {
-	return []Version{DefaultIBCVersion}
-}
-
-// GetCompatibleVersionStrings returns the return value from GetCompatibleVersions
-// as a proto encoded string.
-func GetCompatibleVersionStrings() []string {
-	versions, err := VersionsToStrings(GetCompatibleVersions())
+// ToString proto encodes the version and returns the bytes as a string.
+func (version Version) ToString() (string, error) {
+	encodedVersion, err := SubModuleCdc.MarshalBinaryBare(&version)
 	if err != nil {
-		panic(err) // should not occur with properly set hardcoded versions
+		return "", err
 	}
 
-	return versions
+	return string(encodedVersion), nil
 }
 
 // VersionsToStrings iterates over the provided versions and marshals each
 // into proto encoded strings. This represents the stored value of the version
 // in the connection end as well as the value passed over the wire.
 func VersionsToStrings(versions []Version) ([]string, error) {
-	var encodedVersions []string
+	encodedVersions := make([]string, len(versions))
 
-	for _, version := range versions {
+	for i, version := range versions {
 		ver, err := version.ToString()
 		if err != nil {
 			return nil, err
 		}
 
-		encodedVersions = append(encodedVersions, ver)
+		encodedVersions[i] = ver
 	}
 
 	return encodedVersions, nil
@@ -136,6 +117,25 @@ func StringsToVersions(encodedVersions []string) ([]Version, error) {
 	return versions, nil
 }
 
+// GetCompatibleVersions returns a descending ordered set of compatible IBC
+// versions for the caller chain's connection end. The latest supported
+// version should be first element and the set should descend to the oldest
+// supported version.
+func GetCompatibleVersions() []Version {
+	return []Version{DefaultIBCVersion}
+}
+
+// GetCompatibleVersionStrings returns the return value from GetCompatibleVersions
+// as a proto encoded string.
+func GetCompatibleVersionStrings() []string {
+	versions, err := VersionsToStrings(GetCompatibleVersions())
+	if err != nil {
+		panic(err) // should not occur with properly set hardcoded versions
+	}
+
+	return versions
+}
+
 // FindSupportedVersion returns the version with a matching version identifier
 // if it exists. The returned boolean is true if the version is found and
 // false otherwise.
@@ -153,7 +153,7 @@ func FindSupportedVersion(version Version, supportedVersions []Version) (Version
 // supported by the counterparty. The returned version contains a feature
 // set with the intersection of the features supported by the source and
 // counterparty chains. If the feature set intersection is nil and this is
-// not allowed for the choosen version identifier then the search for a
+// not allowed for the chosen version identifier then the search for a
 // compatible version continues. This function is called in the ConnOpenTry
 // handshake procedure.
 func PickVersion(encodedCounterpartyVersions []string) (string, error) {
@@ -200,12 +200,11 @@ func GetFeatureSetIntersection(sourceFeatureSet, counterpartyFeatureSet []string
 // proposed version is supported by this chain. If the feature set is
 // empty it verifies that this is allowed for the specified version
 // identifier.
-func VerifyProposedVersion(proposedVersion, supportedVersion Version) error {
-	// sanity check
-	if proposedVersion.GetIdentifier() != supportedVersion.GetIdentifier() {
+func (version Version) VerifyProposedVersion(proposedVersion Version) error {
+	if proposedVersion.GetIdentifier() != version.GetIdentifier() {
 		return sdkerrors.Wrapf(
 			ErrVersionNegotiationFailed,
-			"proposed version identifier does not equal supported version identifier (%s != %s)", proposedVersion.GetIdentifier(), supportedVersion.GetIdentifier(),
+			"proposed version identifier does not equal supported version identifier (%s != %s)", proposedVersion.GetIdentifier(), version.GetIdentifier(),
 		)
 	}
 
@@ -217,10 +216,10 @@ func VerifyProposedVersion(proposedVersion, supportedVersion Version) error {
 	}
 
 	for _, proposedFeature := range proposedVersion.GetFeatures() {
-		if !contains(proposedFeature, supportedVersion.GetFeatures()) {
+		if !contains(proposedFeature, version.GetFeatures()) {
 			return sdkerrors.Wrapf(
 				ErrVersionNegotiationFailed,
-				"proposed feature (%s) is not a supported feature set (%s)", proposedFeature, supportedVersion.GetFeatures(),
+				"proposed feature (%s) is not a supported feature set (%s)", proposedFeature, version.GetFeatures(),
 			)
 		}
 	}
@@ -248,7 +247,7 @@ func VerifySupportedFeature(encodedVersion, feature string) bool {
 // string set.
 func contains(elem string, set []string) bool {
 	for _, element := range set {
-		if strings.TrimSpace(elem) == strings.TrimSpace(element) {
+		if elem == element {
 			return true
 		}
 	}

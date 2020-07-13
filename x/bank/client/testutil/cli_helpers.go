@@ -3,8 +3,6 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,14 +17,14 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraA
 	args := []string{from.String(), to.String(), amount.String()}
 	args = append(args, extraArgs...)
 
-	return testutil.CallCliCmd(clientCtx, bankcli.NewSendTxCmd, args)
+	return client.CallCliCmd(clientCtx, bankcli.NewSendTxCmd, args)
 }
 
 func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) ([]byte, error) {
 	args := []string{address.String()}
 	args = append(args, extraArgs...)
 
-	return testutil.CallCliCmd(clientCtx, bankcli.GetBalancesCmd, args)
+	return client.CallCliCmd(clientCtx, bankcli.GetBalancesCmd, args)
 }
 
 // ----------------------------------------------------------------------------

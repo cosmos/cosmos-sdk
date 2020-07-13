@@ -1,4 +1,4 @@
-package cli_test
+package testutil
 
 import (
 	"context"
@@ -6,11 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"testing"
 	"time"
-
-	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -18,8 +14,9 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -29,6 +26,10 @@ type IntegrationTestSuite struct {
 	network *testnet.Network
 }
 
+func NewIntegrationTestSuite(cfg testnet.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 // SetupTest creates a new network for _each_ integration test. We create a new
 // network for each test because there are some state modifications that are
 // needed to be made in order to make useful queries. However, we don't want
@@ -36,9 +37,8 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testnet.DefaultConfig()
+	cfg := s.cfg
 	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
 
 	var mintData minttypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
@@ -543,7 +543,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-			bz, err := distrtestutil.MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
+			bz, err := MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -835,8 +835,4 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -58,5 +58,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

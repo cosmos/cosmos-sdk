@@ -1,20 +1,18 @@
 package cli
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
 
 func TestParseProposal(t *testing.T) {
 	cdc := codec.New()
-	okJSON, err := ioutil.TempFile("", "proposal")
-	require.Nil(t, err, "unexpected error")
-	_, err = okJSON.WriteString(`
+	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
 {
   "title": "Staking Param Change",
   "description": "Update max validators",
@@ -28,7 +26,7 @@ func TestParseProposal(t *testing.T) {
   "deposit": "1000stake"
 }
 `)
-	require.NoError(t, err)
+	t.Cleanup(cleanup)
 
 	proposal, err := utils.ParseParamChangeProposalJSON(cdc, okJSON.Name())
 	require.NoError(t, err)

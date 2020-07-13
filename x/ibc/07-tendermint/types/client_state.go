@@ -196,7 +196,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	}
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
+		return err
 	}
 
 	return nil
@@ -235,7 +235,7 @@ func (cs ClientState) VerifyConnectionState(
 	}
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
+		return err
 	}
 
 	return nil
@@ -275,7 +275,7 @@ func (cs ClientState) VerifyChannelState(
 	}
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
+		return err
 	}
 
 	return nil
@@ -337,7 +337,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	}
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
+		return err
 	}
 
 	return nil
@@ -368,7 +368,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	}
 
 	if err := merkleProof.VerifyNonMembership(cs.ProofSpecs, consensusState.GetRoot(), path); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
+		return err
 	}
 
 	return nil
@@ -400,7 +400,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
+		return err
 	}
 
 	return nil

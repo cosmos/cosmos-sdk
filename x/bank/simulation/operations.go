@@ -59,12 +59,12 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "transfers are not enabled"), nil, nil
-		}
-
 		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+
+		// Check send_enabled status of each coin denom
+		if err := bk.SendEnabledCoins(ctx, coins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
+		}
 
 		if skip {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "skip all transfers"), nil, nil
@@ -130,10 +130,6 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "transfers are not enabled"), nil, nil
-		}
-
 		// random number of inputs/outputs between [1, 3]
 		inputs := make([]types.Input, r.Intn(3)+1)
 		outputs := make([]types.Output, r.Intn(3)+1)
@@ -167,6 +163,11 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			// set next input and accumulate total sent coins
 			inputs[i] = types.NewInput(simAccount.Address, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
+		}
+
+		// Check send_enabled status of each sent coin denom
+		if err := bk.SendEnabledCoins(ctx, totalSentCoins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
 		}
 
 		for o := range outputs {

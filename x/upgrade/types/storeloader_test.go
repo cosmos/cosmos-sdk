@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -67,7 +67,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
 	// set a temporary home dir
-	homeDir, cleanup := tests.NewTestCaseDir(t)
+	homeDir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")

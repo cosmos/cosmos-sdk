@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -73,6 +74,8 @@ type KeeperTestSuite struct {
 	ctx     sdk.Context
 	querier sdk.Querier
 	app     *simapp.SimApp
+
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -97,6 +100,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 		addr := sdk.AccAddress(addr)
 		app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
 	}
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

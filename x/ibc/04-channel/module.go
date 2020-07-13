@@ -22,8 +22,8 @@ func GetTxCmd() *cobra.Command {
 }
 
 // GetQueryCmd returns the root query command for IBC channels.
-func GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx)
+func GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // RegisterRESTRoutes registers the REST routes for IBC channels.

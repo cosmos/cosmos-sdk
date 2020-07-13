@@ -84,16 +84,19 @@ func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log
 	}
 }
 
+// WithContext returns a Context with an updated context.Context.
 func (c Context) WithContext(ctx context.Context) Context {
 	c.ctx = ctx
 	return c
 }
 
+// WithMultiStore returns a Context with an updated MultiStore.
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	c.ms = ms
 	return c
 }
 
+// WithBlockHeader returns a Context with an updated tendermint block header in UTC time.
 func (c Context) WithBlockHeader(header tmproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
@@ -101,6 +104,7 @@ func (c Context) WithBlockHeader(header tmproto.Header) Context {
 	return c
 }
 
+// WithBlockTime returns a Context with an updated tendermint block header time in UTC time
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
@@ -108,48 +112,57 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 	return c.WithBlockHeader(newHeader)
 }
 
+// WithProposer returns a Context with an updated proposer consensus address.
 func (c Context) WithProposer(addr ConsAddress) Context {
 	newHeader := c.BlockHeader()
 	newHeader.ProposerAddress = addr.Bytes()
 	return c.WithBlockHeader(newHeader)
 }
 
+// WithBlockHeight returns a Context with an updated block height.
 func (c Context) WithBlockHeight(height int64) Context {
 	newHeader := c.BlockHeader()
 	newHeader.Height = height
 	return c.WithBlockHeader(newHeader)
 }
 
+// WithChainID returns a Context with an updated chain identifier.
 func (c Context) WithChainID(chainID string) Context {
 	c.chainID = chainID
 	return c
 }
 
+// WithTxBytes returns a Context with an updated txBytes.
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	c.txBytes = txBytes
 	return c
 }
 
+// WithLogger returns a Context with an updated logger.
 func (c Context) WithLogger(logger log.Logger) Context {
 	c.logger = logger
 	return c
 }
 
+// WithVoteInfos returns a Context with an updated consensus VoteInfo.
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c
 }
 
+// WithGasMeter returns a Context with an updated transaction GasMeter.
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	c.gasMeter = meter
 	return c
 }
 
+// WithBlockGasMeter returns a Context with an updated block GasMeter
 func (c Context) WithBlockGasMeter(meter GasMeter) Context {
 	c.blockGasMeter = meter
 	return c
 }
 
+// WithIsCheckTx enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	c.checkTx = isCheckTx
 	return c
@@ -165,16 +178,19 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	return c
 }
 
+// WithMinGasPrices returns a Context with an updated minimum gas price value
 func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 	c.minGasPrice = gasPrices
 	return c
 }
 
+// WithConsensusParams returns a Context with an updated consensus params
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
 
+// WithEventManager returns a Context with an updated event manager
 func (c Context) WithEventManager(em *EventManager) Context {
 	c.eventManager = em
 	return c

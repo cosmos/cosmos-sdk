@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -31,7 +32,7 @@ func (suite *SlashingTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	app.BankKeeper.SetSendEnabled(ctx, true)
+	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.TokensFromConsensusPower(200))

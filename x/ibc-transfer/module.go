@@ -76,7 +76,7 @@ func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 }
 
 // GetQueryCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
 	return nil
 }
 
@@ -195,12 +195,12 @@ func (am AppModule) OnChanOpenInit(
 	}
 
 	if version != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got: %s, expected %s", version, types.Version)
 	}
 
 	// Claim channel capability passed back by IBC module
 	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
-		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, err.Error())
+		return err
 	}
 
 	// TODO: escrow
@@ -227,16 +227,16 @@ func (am AppModule) OnChanOpenTry(
 	}
 
 	if version != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got: %s, expected %s", version, types.Version)
 	}
 
 	if counterpartyVersion != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
 	}
 
 	// Claim channel capability passed back by IBC module
 	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
-		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, err.Error())
+		return err
 	}
 
 	// TODO: escrow
@@ -250,7 +250,7 @@ func (am AppModule) OnChanOpenAck(
 	counterpartyVersion string,
 ) error {
 	if counterpartyVersion != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: %s, expected %s", counterpartyVersion, types.Version)
 	}
 	return nil
 }

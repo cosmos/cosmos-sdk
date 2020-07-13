@@ -7,8 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -39,13 +37,13 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	stakingTxCmd.AddCommand(flags.PostCommands(
+	stakingTxCmd.AddCommand(
 		NewCreateValidatorCmd(clientCtx),
 		NewEditValidatorCmd(clientCtx),
 		NewDelegateCmd(clientCtx),
 		NewRedelegateCmd(clientCtx),
 		NewUnbondCmd(clientCtx),
-	)...)
+	)
 
 	return stakingTxCmd
 }
@@ -55,24 +53,27 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
-			txf := tx.NewFactoryFromDeprecated(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+			clientCtx.WithInput(cmd.InOrStdin())
 
-			txf, msg, err := NewBuildCreateValidatorMsg(clientCtx, txf)
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
+
 	cmd.Flags().AddFlagSet(FlagSetPublicKey())
 	cmd.Flags().AddFlagSet(FlagSetAmount())
-	cmd.Flags().AddFlagSet(fsDescriptionCreate)
+	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
 	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
+	flags.AddTxFlagsToCmd(cmd)
 
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	_ = cmd.MarkFlagRequired(FlagAmount)
@@ -87,20 +88,26 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := clientCtx.WithInput(cmd.InOrStdin())
 
 			valAddr := clientCtx.GetFromAddress()
+
+			moniker, _ := cmd.Flags().GetString(FlagMoniker)
+			identity, _ := cmd.Flags().GetString(FlagIdentity)
+			website, _ := cmd.Flags().GetString(FlagWebsite)
+			security, _ := cmd.Flags().GetString(FlagSecurityContact)
+			details, _ := cmd.Flags().GetString(FlagDetails)
 			description := types.NewDescription(
-				viper.GetString(FlagMoniker),
-				viper.GetString(FlagIdentity),
-				viper.GetString(FlagWebsite),
-				viper.GetString(FlagSecurityContact),
-				viper.GetString(FlagDetails),
+				moniker,
+				identity,
+				website,
+				security,
+				details,
 			)
 
 			var newRate *sdk.Dec
 
-			commissionRate := viper.GetString(FlagCommissionRate)
+			commissionRate, _ := cmd.Flags().GetString(FlagCommissionRate)
 			if commissionRate != "" {
 				rate, err := sdk.NewDecFromStr(commissionRate)
 				if err != nil {
@@ -112,7 +119,7 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 
 			var newMinSelfDelegation *sdk.Int
 
-			minSelfDelegationString := viper.GetString(FlagMinSelfDelegation)
+			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
 				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
 				if !ok {
@@ -132,9 +139,10 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsDescriptionEdit)
-	cmd.Flags().AddFlagSet(fsCommissionUpdate)
+	cmd.Flags().AddFlagSet(flagSetDescriptionEdit())
+	cmd.Flags().AddFlagSet(flagSetCommissionUpdate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -175,6 +183,8 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -221,6 +231,8 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -261,35 +273,43 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
-func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory) (tx.Factory, sdk.Msg, error) {
-	amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
+func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	fAmount, _ := fs.GetString(FlagAmount)
+	amount, err := sdk.ParseCoin(fAmount)
 	if err != nil {
 		return txf, nil, err
 	}
 
 	valAddr := clientCtx.GetFromAddress()
-	pkStr := viper.GetString(FlagPubKey)
+	pkStr, _ := fs.GetString(FlagPubKey)
 
 	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pkStr)
 	if err != nil {
 		return txf, nil, err
 	}
 
+	moniker, _ := fs.GetString(FlagMoniker)
+	identity, _ := fs.GetString(FlagIdentity)
+	website, _ := fs.GetString(FlagWebsite)
+	security, _ := fs.GetString(FlagSecurityContact)
+	details, _ := fs.GetString(FlagDetails)
 	description := types.NewDescription(
-		viper.GetString(FlagMoniker),
-		viper.GetString(FlagIdentity),
-		viper.GetString(FlagWebsite),
-		viper.GetString(FlagSecurityContact),
-		viper.GetString(FlagDetails),
+		moniker,
+		identity,
+		website,
+		security,
+		details,
 	)
 
 	// get the initial validator commission parameters
-	rateStr := viper.GetString(FlagCommissionRate)
-	maxRateStr := viper.GetString(FlagCommissionMaxRate)
-	maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
+	rateStr, _ := fs.GetString(FlagCommissionRate)
+	maxRateStr, _ := fs.GetString(FlagCommissionMaxRate)
+	maxChangeRateStr, _ := fs.GetString(FlagCommissionMaxChangeRate)
 
 	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
 	if err != nil {
@@ -297,7 +317,7 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory) (tx.Fa
 	}
 
 	// get the initial validator min self delegation
-	msbStr := viper.GetString(FlagMinSelfDelegation)
+	msbStr, _ := fs.GetString(FlagMinSelfDelegation)
 
 	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
 	if !ok {
@@ -311,9 +331,10 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory) (tx.Fa
 		return txf, nil, err
 	}
 
-	if viper.GetBool(flags.FlagGenerateOnly) {
-		ip := viper.GetString(FlagIP)
-		nodeID := viper.GetString(FlagNodeID)
+	genOnly, _ := fs.GetBool(flags.FlagGenerateOnly)
+	if genOnly {
+		ip, _ := fs.GetString(FlagIP)
+		nodeID, _ := fs.GetString(FlagNodeID)
 
 		if nodeID != "" && ip != "" {
 			txf = txf.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
@@ -329,6 +350,7 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
 	fsCreateValidator.String(FlagIP, ipDefault, "The node's public IP")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")
+	fsCreateValidator.String(FlagMoniker, "", "The validator's (optional) moniker")
 	fsCreateValidator.String(FlagWebsite, "", "The validator's (optional) website")
 	fsCreateValidator.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
@@ -353,7 +375,6 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 
 type TxCreateValidatorConfig struct {
 	ChainID string
-	From    string
 	NodeID  string
 	Moniker string
 
@@ -374,9 +395,7 @@ type TxCreateValidatorConfig struct {
 	Identity        string
 }
 
-func PrepareConfigForTxCreateValidator(
-	config *cfg.Config, flagSet *flag.FlagSet, nodeID, chainID string, valPubKey crypto.PubKey,
-) (TxCreateValidatorConfig, error) {
+func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey crypto.PubKey) (TxCreateValidatorConfig, error) {
 	c := TxCreateValidatorConfig{}
 
 	ip, err := flagSet.GetString(FlagIP)
@@ -413,12 +432,6 @@ func PrepareConfigForTxCreateValidator(
 	}
 	c.Identity = identity
 
-	c.ChainID = chainID
-	c.From, err = flagSet.GetString(flags.FlagName)
-	if err != nil {
-		return c, err
-	}
-
 	c.Amount, err = flagSet.GetString(FlagAmount)
 	if err != nil {
 		return c, err
@@ -447,15 +460,12 @@ func PrepareConfigForTxCreateValidator(
 	c.NodeID = nodeID
 	c.TrustNode = true
 	c.PubKey = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
-	c.Moniker = config.Moniker
 	c.Website = website
 	c.SecurityContact = securityContact
 	c.Details = details
 	c.Identity = identity
-
-	if config.Moniker == "" {
-		c.Moniker = c.From
-	}
+	c.ChainID = chainID
+	c.Moniker = moniker
 
 	if c.Amount == "" {
 		c.Amount = defaultAmount

@@ -4,13 +4,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -115,7 +115,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	dir, clean := tests.NewTestCaseDir(t)
+	dir, clean := testutil.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
 	path := hd.CreateHDPath(118, 0, 0).String()

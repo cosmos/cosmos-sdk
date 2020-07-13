@@ -18,7 +18,7 @@ This policy presently applies *only* to the following release series:
 
 * **0.39 «Launchpad»**
 
-## Point Releases
+### Point Releases
 
 Once a Cosmos-SDK release has been completed and published, updates for it are released under certain circumstances
 and must follow the [Point Release Procedure](CONTRIBUTING.md).

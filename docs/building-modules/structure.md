@@ -23,6 +23,7 @@ x/{module}
 │   └── exported.go
 ├── keeper
 │   ├── invariants.go
+│   ├── genesis.go
 │   ├── keeper.go
 │   ├── ...
 │   └── querier.go
@@ -46,7 +47,6 @@ x/{module}
 │   ├── params.go
 │   └── proposals.go
 ├── abci.go
-├── genesis.go
 ├── handler.go
 ├── ...
 └── module.go
@@ -64,8 +64,6 @@ to the contract's implementing module and this is where `exported/` comes into p
 Types defined here allow for `expected_keepers.go` in other modules to define
 contracts that use single canonical types. This pattern allows for code to remain
 DRY and also alleviates import cycle chaos.
-- `genesis.go`: The module's genesis related business logic (e.g. `InitGenesis`).
-Note, genesis types are defined in `internal/types`.
 - `handler.go`: The module's message handlers.
 - `keeper/`: The module's keeper implementation along with any auxiliary
 implementations such as the querier and invariants.

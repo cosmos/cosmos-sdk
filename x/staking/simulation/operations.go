@@ -318,6 +318,9 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		valAddr := validator.GetOperator()
 		delegations := k.GetValidatorDelegations(ctx, validator.OperatorAddress)
+		if delegations == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "keeper does have any delegation entries"), nil, nil
+		}
 
 		// get random delegator from validator
 		delegation := delegations[r.Intn(len(delegations))]
@@ -400,6 +403,9 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		srcAddr := srcVal.GetOperator()
 		delegations := k.GetValidatorDelegations(ctx, srcAddr)
+		if delegations == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "keeper does have any delegation entries"), nil, nil
+		}
 
 		// get random delegator from src validator
 		delegation := delegations[r.Intn(len(delegations))]

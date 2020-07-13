@@ -32,7 +32,9 @@ transaction will be not be performed as that will require RPC communication with
 		Args:   cobra.ExactArgs(1),
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {

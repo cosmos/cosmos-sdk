@@ -30,7 +30,6 @@ func GetTxCmd() *cobra.Command {
 		Use:   types.ModuleName,
 		Short: "Upgrade transaction subcommands",
 	}
-	cmd.AddCommand(flags.PostCommands()...)
 
 	return cmd
 }
@@ -140,6 +139,7 @@ func NewCmdSubmitCancelUpgradeProposal(clientCtx client.Context) *cobra.Command 
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

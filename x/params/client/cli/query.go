@@ -21,9 +21,9 @@ func NewQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(flags.GetCommands(
+	cmd.AddCommand(
 		NewQuerySubspaceParamsCmd(),
-	)...)
+	)
 
 	return cmd
 }
@@ -31,7 +31,7 @@ func NewQueryCmd() *cobra.Command {
 // NewQuerySubspaceParamsCmd returns a CLI command handler for querying subspace
 // parameters managed by the x/params module.
 func NewQuerySubspaceParamsCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "subspace [subspace] [key]",
 		Short: "Query for raw parameters by subspace and key",
 		Args:  cobra.ExactArgs(2),
@@ -49,4 +49,8 @@ func NewQuerySubspaceParamsCmd() *cobra.Command {
 			return clientCtx.PrintOutput(resp.Params)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

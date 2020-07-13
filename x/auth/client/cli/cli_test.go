@@ -19,11 +19,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -419,143 +417,208 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 	s.Require().Equal("deadbeef", theTx.Memo)
 }
 
-func TestCLIMultisignSortSignatures(t *testing.T) {
-	t.SkipNow()
-	t.Parallel()
-	f := cli.InitFixtures(t)
+func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
+	s.T().SkipNow()
+	val1 := s.network.Validators[0]
 
-	// start simd server with minimum fees
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	codec := codec2.New()
+	sdk.RegisterCodec(codec)
+	banktypes.RegisterCodec(codec)
+	val1.ClientCtx.Codec = codec
 
-	fooBarBazAddr := f.KeyAddress(cli.KeyFooBarBaz)
-	barAddr := f.KeyAddress(cli.KeyBar)
+	// Generate 2 accounts and a multisig.
+	account1, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
 
-	// Send some tokens from one account to the other
-	success, _, _ := bankcli.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
-	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	account2, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
 
-	// Ensure account balances match expected
-	require.Equal(t, int64(10), bankcli.QueryBalances(f, fooBarBazAddr).AmountOf(cli.Denom).Int64())
+	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	multisigInfo, err := val1.ClientCtx.Keyring.SaveMultisig("multi", multi)
+	s.Require().NoError(err)
 
-	// Test generate sendTx with multisig
-	success, stdout, _ := bankcli.TxSend(f, fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 5), "--generate-only")
-	require.True(t, success)
+	// Send coins from validator to multisig.
+	sendTokens := sdk.NewInt64Coin(cli.Denom, 10)
+	_, err = bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		multisigInfo.GetAddress(),
+		sdk.NewCoins(
+			sendTokens,
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+
+	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	s.Require().NoError(err)
+
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	s.Require().NoError(err)
+
+	var coins sdk.Coins
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	s.Require().NoError(err)
+	s.Require().Equal(sendTokens.Amount, coins.AmountOf(cli.Denom))
+
+	// Generate multisig transaction.
+	multiGeneratedTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		multisigInfo.GetAddress(),
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(cli.Denom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save tx to file
+	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(multiGeneratedTx))
+	defer cleanup()
+
+	// Sign with account1
+	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
+	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	s.Require().NoError(err)
+
+	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(account1Signature))
+	defer cleanup2()
+
+	// Sign with account1
+	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	s.Require().NoError(err)
+
+	sign2File, cleanup3 := testutil.WriteToNewTempFile(s.T(), string(account2Signature))
+	defer cleanup3()
+
+	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	s.Require().NoError(err)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
+	signedTxFile, cleanup4 := testutil.WriteToNewTempFile(s.T(), string(multiSigWith2Signatures))
+	defer cleanup4()
 
-	// Sign with foo's key
-	success, stdout, _ = authtest.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
-	require.True(t, success)
+	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
 
-	// Write the output to disk
-	fooSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
+	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
 
-	// Sign with baz's key
-	success, stdout, _ = authtest.TxSign(f, cli.KeyBaz, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
-	require.True(t, success)
-
-	// Write the output to disk
-	bazSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// Multisign, keys in different order
-	success, stdout, _ = authtest.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
-		bazSignatureFile.Name(), fooSignatureFile.Name()})
-	require.True(t, success)
-
-	// Write the output to disk
-	signedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// Validate the multisignature
-	success, _, _ = authtest.TxValidateSignatures(f, signedTxFile.Name())
-	require.True(t, success)
-
-	// Broadcast the transaction
-	success, _, _ = authtest.TxBroadcast(f, signedTxFile.Name())
-	require.True(t, success)
-
-	// Cleanup testing directories
-	f.Cleanup()
+	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	s.Require().NoError(err)
 }
 
-func TestCLIMultisign(t *testing.T) {
-	t.SkipNow()
-	t.Parallel()
-	f := cli.InitFixtures(t)
+func (s *IntegrationTestSuite) TestCLIMultisign() {
+	s.T().SkipNow()
+	val1 := s.network.Validators[0]
 
-	// start simd server with minimum fees
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	codec := codec2.New()
+	sdk.RegisterCodec(codec)
+	banktypes.RegisterCodec(codec)
+	val1.ClientCtx.Codec = codec
 
-	fooBarBazAddr := f.KeyAddress(cli.KeyFooBarBaz)
-	bazAddr := f.KeyAddress(cli.KeyBaz)
+	// Generate 2 accounts and a multisig.
+	account1, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
 
-	// Send some tokens from one account to the other
-	success, _, _ := bankcli.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
-	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	account2, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
 
-	// Ensure account balances match expected
-	require.Equal(t, int64(10), bankcli.QueryBalances(f, fooBarBazAddr).AmountOf(cli.Denom).Int64())
+	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	multisigInfo, err := val1.ClientCtx.Keyring.SaveMultisig("multi", multi)
+	s.Require().NoError(err)
 
-	// Test generate sendTx with multisig
-	success, stdout, stderr := bankcli.TxSend(f, fooBarBazAddr.String(), bazAddr, sdk.NewInt64Coin(cli.Denom, 10), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
+	// Send coins from validator to multisig.
+	sendTokens := sdk.NewInt64Coin(cli.Denom, 10)
+	_, err = bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		multisigInfo.GetAddress(),
+		sdk.NewCoins(
+			sendTokens,
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+
+	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	s.Require().NoError(err)
+
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	s.Require().NoError(err)
+
+	var coins sdk.Coins
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	s.Require().NoError(err)
+	s.Require().Equal(sendTokens.Amount, coins.AmountOf(cli.Denom))
+
+	// Generate multisig transaction.
+	multiGeneratedTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		multisigInfo.GetAddress(),
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(cli.Denom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save tx to file
+	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(multiGeneratedTx))
+	defer cleanup()
+
+	// Sign with account1
+	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
+	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	s.Require().NoError(err)
+
+	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(account1Signature))
+	defer cleanup2()
+
+	// Sign with account1
+	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	s.Require().NoError(err)
+
+	sign2File, cleanup3 := testutil.WriteToNewTempFile(s.T(), string(account2Signature))
+	defer cleanup3()
+
+	// Does not work in offline mode.
+	val1.ClientCtx.Offline = true
+	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	s.Require().EqualError(err, "couldn't verify signature")
+
+	val1.ClientCtx.Offline = false
+	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	s.Require().NoError(err)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
+	signedTxFile, cleanup4 := testutil.WriteToNewTempFile(s.T(), string(multiSigWith2Signatures))
+	defer cleanup4()
 
-	// Sign with foo's key
-	success, stdout, _ = authtest.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
-	require.True(t, success)
+	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
 
-	// Write the output to disk
-	fooSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
+	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
+	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
 
-	// Sign with bar's key
-	success, stdout, _ = authtest.TxSign(f, cli.KeyBar, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
-	require.True(t, success)
-
-	// Write the output to disk
-	barSignatureFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// Multisign
-
-	// Does not work in offline mode
-	success, stdout, _ = authtest.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
-		fooSignatureFile.Name(), barSignatureFile.Name()}, "--offline")
-	require.Contains(t, "couldn't verify signature", stdout)
-	require.False(t, success)
-
-	// Success multisign
-	success, stdout, _ = authtest.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
-		fooSignatureFile.Name(), barSignatureFile.Name()})
-	require.True(t, success)
-
-	// Write the output to disk
-	signedTxFile, cleanup := testutil.WriteToNewTempFile(t, stdout)
-	t.Cleanup(cleanup)
-
-	// Validate the multisignature
-	success, _, _ = authtest.TxValidateSignatures(f, signedTxFile.Name())
-	require.True(t, success)
-
-	// Broadcast the transaction
-	success, _, _ = authtest.TxBroadcast(f, signedTxFile.Name())
-	require.True(t, success)
-
-	// Cleanup testing directories
-	f.Cleanup()
+	err = s.network.WaitForNBlocks(1, 10*time.Second)
+	s.Require().NoError(err)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

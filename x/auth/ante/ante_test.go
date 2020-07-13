@@ -78,7 +78,6 @@ func (suite *AnteTestSuite) SetupTest() {
 	suite.clientCtx = client.Context{}.
 		WithTxGenerator(encodingConfig.TxGenerator).
 		WithJSONMarshaler(encodingConfig.Marshaler)
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
 }
 
 // Create `numAccs` accounts, and return all relevant information about them.
@@ -94,7 +93,6 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 		suite.app.BankKeeper.SetBalances(suite.ctx, acc.GetAddress(), types.NewTestCoins())
 
 		accounts = append(accounts, TestAccount{priv, acc})
-
 	}
 
 	return accounts
@@ -117,11 +115,9 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 // Test that simulate transaction accurately estimates gas cost
 func (suite *AnteTestSuite) TestSimulateGasCost() {
 	suite.SetupTest() // reset
-	accounts := suite.CreateTestAccounts(3)
-
-	fmt.Println("chainID", suite.ctx.ChainID())
 
 	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(3)
 	msgs := []sdk.Msg{
 		testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
 		testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress()),
@@ -151,8 +147,8 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 			func() {
 				simulatedGas := suite.ctx.GasMeter().GasConsumed()
 				fee.Gas = simulatedGas
+				fmt.Println("simulatedGas", simulatedGas)
 
-				// Round 2: update tx with exact simulated gas estimate
 				suite.txBuilder.SetGasLimit(fee.Gas)
 			},
 			false,
@@ -162,13 +158,12 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			// Create new txBuilder for each test case
 			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+
 			suite.txBuilder.SetMsgs(msgs...)
 
 			tc.malleate()
 
-			fmt.Println("SEQS", seqs)
 			tx := suite.CreateTestTx(privs, accNums, seqs)
 			newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
@@ -176,7 +171,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(newCtx)
 
-				suite.ctx = newCtx
+				// suite.ctx = newCtx
 				seqs = incrementSeq(seqs)
 			} else {
 				suite.Require().Error(err)
@@ -189,11 +184,20 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 	suite.SetupTest() // reset
 
+	// Same data for every test cases
+	priv0, _, addr0 := types.KeyTestPubAddr()
+	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv2, _, addr2 := types.KeyTestPubAddr()
+	msgs := []sdk.Msg{
+		testdata.NewTestMsg(addr0, addr1),
+		testdata.NewTestMsg(addr0, addr2),
+	}
+	fee := types.NewTestStdFee()
+
 	var (
-		accounts []TestAccount
-		privs    []crypto.PrivKey
-		accNums  []uint64
-		seqs     []uint64
+		privs   []crypto.PrivKey
+		accNums []uint64
+		seqs    []uint64
 	)
 
 	testCases := []struct {
@@ -204,17 +208,13 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 		expErr   error
 	}{
 		{
-			"no signatures",
+			"no signatures fails",
 			func() {
 				privs, accNums, seqs = []crypto.PrivKey{}, []uint64{}, []uint64{}
 
 				// tx := suite.CreateTestTx(privs, accNums, seqs)
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
-				expectedSigners := []sdk.AccAddress{
-					accounts[0].acc.GetAddress(),
-					accounts[1].acc.GetAddress(),
-					accounts[2].acc.GetAddress(),
-				}
+				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
 				stdTx := suite.txBuilder.GetTx().(types.StdTx)
 				suite.Require().Equal(expectedSigners, stdTx.GetSigners())
 			},
@@ -222,20 +222,43 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			false,
 			sdkerrors.ErrNoSignatures,
 		},
+		{
+			"num sigs dont match GetSigners",
+			func() {
+				privs, accNums, seqs = []crypto.PrivKey{priv0}, []uint64{0}, []uint64{0}
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized,
+		},
+		{
+			"unrecognized account",
+			func() {
+				privs, accNums, seqs = []crypto.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+			},
+			false,
+			false,
+			sdkerrors.ErrUnknownAddress,
+		},
+		{
+			"save the first account, but second is still unrecognized",
+			func() {
+				acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+				suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+				err := suite.app.BankKeeper.SetBalances(suite.ctx, addr0, fee.Amount)
+				suite.Require().NoError(err)
+			},
+			false,
+			false,
+			sdkerrors.ErrUnknownAddress,
+		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
-			accounts = suite.CreateTestAccounts(3)
 
-			msgs := []sdk.Msg{
-				testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress()),
-				testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[2].acc.GetAddress()),
-			}
 			suite.txBuilder.SetMsgs(msgs...)
-
-			fee := types.NewTestStdFee()
 			suite.txBuilder.SetFeeAmount(fee.GetAmount())
 
 			tc.malleate()
@@ -251,26 +274,11 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 				seqs = incrementSeq(seqs)
 			} else {
 				suite.Require().Error(err)
+				fmt.Println(err)
+				suite.Require().True(errors.Is(err, tc.expErr))
 			}
 		})
 	}
-
-	// // test num sigs dont match GetSigners
-	// privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-	// tx = createTestTx(privs, accNums, seqs, ctx, clientCtx.TxGenerator, txBuilder, t)
-	// checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnauthorized)
-
-	// // test an unrecognized account
-	// privs, accNums, seqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	// tx = createTestTx(privs, accNums, seqs, ctx, clientCtx.TxGenerator, txBuilder, t)
-	// checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnknownAddress)
-
-	// // save the first account, but second is still unrecognized
-	// acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, accounts[0].acc.GetAddress())
-	// app.AccountKeeper.SetAccount(ctx, acc1)
-	// err := app.BankKeeper.SetBalances(ctx, accounts[0].acc.GetAddress(), fee.Amount)
-	// require.NoError(t, err)
-	// checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnknownAddress)
 }
 
 // Test logic around account number checking with one signer and many signers.

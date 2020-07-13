@@ -24,6 +24,9 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
+	InitGenesis(sdk.Context, types.GenesisState)
+	ExportGenesis(sdk.Context) types.GenesisState
+
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
 

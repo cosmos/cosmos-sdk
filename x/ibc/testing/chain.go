@@ -205,7 +205,6 @@ func (chain *TestChain) NextBlock() {
 
 // SendMsg delivers a transaction through the application. It updates the senders sequence
 // number and updates the TestChain's headers.
-// TODO: update SignCheckDeliver to use tx generator
 func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,

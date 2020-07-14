@@ -590,8 +590,6 @@ const (
 func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error) {
 	var bech32Prefix string
 
-	fmt.Println(len(pubkey.Bytes()))
-
 	switch pkt {
 	case Bech32PubKeyTypeAccPub:
 		bech32Prefix = GetConfig().GetBech32AccountPubPrefix()

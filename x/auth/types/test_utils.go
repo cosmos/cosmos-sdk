@@ -37,7 +37,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 			panic(err)
 		}
 
-		sigs[i] = StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
+		sigs[i] = StdSignature{PubKey: amino.Amino.MustMarshalBinaryBare(priv.PubKey()), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
@@ -53,8 +53,7 @@ func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 		if err != nil {
 			panic(err)
 		}
-
-		sigs[i] = StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
+		sigs[i] = StdSignature{PubKey: amino.Amino.MustMarshalBinaryBare(priv.PubKey()), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, memo)

@@ -87,11 +87,6 @@ func TestTraceKVStoreSet(t *testing.T) {
 		expectedOut string
 	}{
 		{
-			key:         []byte{},
-			value:       nil,
-			expectedOut: "{\"operation\":\"write\",\"key\":\"\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-		},
-		{
 			key:         kvPairs[0].Key,
 			value:       kvPairs[0].Value,
 			expectedOut: "{\"operation\":\"write\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"dmFsdWUwMDAwMDAwMQ==\",\"metadata\":{\"blockHeight\":64}}\n",
@@ -114,10 +109,6 @@ func TestTraceKVStoreDelete(t *testing.T) {
 		key         []byte
 		expectedOut string
 	}{
-		{
-			key:         []byte{},
-			expectedOut: "{\"operation\":\"delete\",\"key\":\"\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-		},
 		{
 			key:         kvPairs[0].Key,
 			expectedOut: "{\"operation\":\"delete\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",

@@ -54,7 +54,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 
 	t.Cleanup(func() {
 		if err := iterator.Close; err != nil {
-			t.Error("error cleaning up iterator:", err())
+			t.Logf("error cleaning up iterator: %v", err())
 		}
 	})
 
@@ -75,7 +75,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	reverseIterator := st.ReverseIterator(nil, nil)
 	t.Cleanup(func() {
 		if err := reverseIterator.Close; err != nil {
-			t.Error("error cleaning up iterator:", err())
+			t.Logf("error cleaning up iterator: %v", err())
 		}
 	})
 	require.Equal(t, reverseIterator.Key(), keyFmt(2))

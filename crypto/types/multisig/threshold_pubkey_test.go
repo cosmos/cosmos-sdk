@@ -6,16 +6,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/sr25519"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // This tests multisig functionality, but it expects the first k signatures to be valid
@@ -189,11 +190,11 @@ func TestMultiSigMigration(t *testing.T) {
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
 	cdc := codec.New()
-
+	cryptocodec.RegisterCrypto(cdc)
 	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := authtypes.StdSignature{PubKey: pkSet[1].Bytes(), Signature: msg}
+	sig := authtypes.StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pkSet[1]), Signature: msg}
 	sigV2, err := authtypes.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 

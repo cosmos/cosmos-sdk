@@ -63,6 +63,9 @@ func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 // GetData implements PacketI interface
 func (p Packet) GetData() []byte { return p.Data }
 
+// GetTimeoutEpoch implements PacketI interface
+func (p Packet) GetTimeoutEpoch() uint64 { return p.TimeoutEpoch }
+
 // GetTimeoutHeight implements PacketI interface
 func (p Packet) GetTimeoutHeight() uint64 { return p.TimeoutHeight }
 

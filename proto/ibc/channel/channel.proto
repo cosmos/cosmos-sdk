@@ -22,8 +22,9 @@ message MsgChannelOpenTry {
   Channel channel              = 3 [(gogoproto.nullable) = false];
   string  counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
   bytes   proof_init           = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  uint64  proof_height         = 6 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes   signer               = 7 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64  proof_epoch = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64  proof_height         = 7 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes   signer               = 8 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
@@ -34,7 +35,8 @@ message MsgChannelOpenAck {
   string counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
   bytes  proof_try            = 4 [(gogoproto.moretags) = "yaml:\"proof_try\""];
   uint64 proof_height         = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer               = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64  proof_epoch = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  bytes  signer               = 7 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
@@ -43,8 +45,9 @@ message MsgChannelOpenConfirm {
   string port_id      = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
   string channel_id   = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
   bytes  proof_ack    = 3 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
-  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64  proof_epoch = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes  signer       = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain A
@@ -61,25 +64,28 @@ message MsgChannelCloseConfirm {
   string port_id      = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
   string channel_id   = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
   bytes  proof_init   = 3 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64  proof_epoch = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes  signer       = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgPacket receives incoming IBC packet
 message MsgPacket {
   Packet packet       = 1 [(gogoproto.nullable) = false];
   bytes  proof        = 2;
-  uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64  proof_epoch = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes  signer       = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgTimeout receives timed-out packet
 message MsgTimeout {
   Packet packet             = 1 [(gogoproto.nullable) = false];
   bytes  proof              = 2;
-  uint64 proof_height       = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  uint64 next_sequence_recv = 4 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
-  bytes  signer             = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64  proof_epoch = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height       = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  uint64 next_sequence_recv = 5 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
+  bytes  signer             = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgAcknowledgement receives incoming IBC acknowledgement
@@ -87,8 +93,9 @@ message MsgAcknowledgement {
   Packet packet          = 1 [(gogoproto.nullable) = false];
   bytes  acknowledgement = 2;
   bytes  proof           = 3;
-  uint64 proof_height    = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer          = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64  proof_epoch = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height    = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes  signer          = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // Channel defines pipeline for exactly-once packet delivery between specific
@@ -190,10 +197,12 @@ message Packet {
   string destination_channel = 5 [(gogoproto.moretags) = "yaml:\"destination_channel\""];
   // actual opaque bytes transferred directly to the application module
   bytes data = 6;
+  // block epoch on which packet times out
+  uint64 timeout_epoch = 7 [(gogoproto.moretags) = "yaml:\"timeout_epoch\""];
   // block height after which the packet times out
-  uint64 timeout_height = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  uint64 timeout_height = 8 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
   // block timestamp (in nanoseconds) after which the packet times out
-  uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
 // PacketAckCommitment defines the genesis type necessary to retrieve and store

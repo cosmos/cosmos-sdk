@@ -24,12 +24,13 @@ message MsgConnectionOpenTry {
   repeated string counterparty_versions = 4 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`
   bytes  proof_init   = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  uint64 proof_height = 6;
+  uint64 proof_epoch = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height = 7;
   // proof of client consensus state
-  bytes proof_consensus = 7
+  bytes proof_consensus = 8
       [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_height = 8 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes  signer           = 9 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 consensus_height = 9 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
+  bytes  signer           = 10 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
@@ -40,12 +41,13 @@ message MsgConnectionOpenAck {
   // proof of the initialization the connection on Chain B: `UNITIALIZED -> TRYOPEN`
   bytes proof_try = 3
       [(gogoproto.moretags) = "yaml:\"proof_try\""];
-  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  uint64 proof_epoch = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of client consensus state
-  bytes proof_consensus = 5
+  bytes proof_consensus = 6
       [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_height = 6 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes  signer           = 7 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 consensus_height = 7 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
+  bytes  signer           = 8 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
@@ -55,8 +57,9 @@ message MsgConnectionOpenConfirm {
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
   bytes proof_ack = 2
       [(gogoproto.moretags) = "yaml:\"proof_ack\""];
-  uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 proof_epoch = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes  signer       = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // ICS03 - Connection Data Structures as defined in

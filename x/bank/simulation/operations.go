@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -104,11 +104,11 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeEncodingConfig().TxGenerator
-	tx, err := simapp.GenTx(
+	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		simapp.DefaultGenTxGas,
+		helpers.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -252,11 +252,11 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeEncodingConfig().TxGenerator
-	tx, err := simapp.GenTx(
+	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		simapp.DefaultGenTxGas,
+		helpers.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,

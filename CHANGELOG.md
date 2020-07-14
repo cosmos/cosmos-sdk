@@ -84,7 +84,16 @@ respectively, and the latter defines the height interval in which versions are d
 **Note, there are some client-facing API breaking changes with regard to IAVL, stores, and pruning settings.**
 * (x/distribution) [\#6210](https://github.com/cosmos/cosmos-sdk/pull/6210) Register `MsgFundCommunityPool` in distribution amino codec.
 * (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent `ChainAnteDecorators()` from panicking when empty `AnteDecorator` slice is supplied.
+* (baseapp) [\#6306](https://github.com/cosmos/cosmos-sdk/issues/6306) Prevent events emitted by the antehandler from being persisted between transactions.
+* (client/keys) [\#5091](https://github.com/cosmos/cosmos-sdk/issues/5091) `keys parse` does not honor client app's configuration.
+* (x/bank) [\#6674](https://github.com/cosmos/cosmos-sdk/pull/6674) Create account if recipient does not exist on handing `MsgMultiSend`.
 * (x/auth) [\#6287](https://github.com/cosmos/cosmos-sdk/pull/6287) Fix nonce stuck when sending multiple transactions from an account in a same block.
+
+## [v0.38.5] - 2020-07-02
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.33.6](https://github.com/tendermint/tendermint/releases/tag/v0.33.6).
 
 ## [v0.38.4] - 2020-05-21
 
@@ -356,7 +365,6 @@ to detail this new feature and how state transitions occur.
   now exists a single `Params` type with a getter and setter along with a getter for each individual parameter.
 
 ### Bug Fixes
-
 * (rest) [\#5508](https://github.com/cosmos/cosmos-sdk/pull/5508) Fix `x/distribution` endpoints to properly return height in the response.
 * (x/genutil) [\#5499](https://github.com/cosmos/cosmos-sdk/pull/) Ensure `DefaultGenesis` returns valid and non-nil default genesis state.
 * (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.

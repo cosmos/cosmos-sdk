@@ -179,9 +179,6 @@ func WaitForStart(url string) {
 	panic(err)
 }
 
-// TODO: these functions just print to Stdout.
-// consider using the logger.
-
 // Wait for the RPC server to respond to /status
 func WaitForRPC(laddr string) {
 	fmt.Println("LADDR", laddr)

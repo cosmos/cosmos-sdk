@@ -403,12 +403,15 @@ func (chain *TestChain) ConnectionOpenTry(
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
+	// For now, assume our own epoch numebr is 0, while retrieving epoch number for counterparty
+	// from keeper
+	// TODO: Extract our epoch number from chain-id
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterparty.GetPrefix(), []string{ConnectionVersion},
 		proofInit, proofConsensus,
-		proofHeight, consensusHeight,
+		0, proofHeight, consensusHeight.EpochNumber, consensusHeight.EpochHeight,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -424,10 +427,13 @@ func (chain *TestChain) ConnectionOpenAck(
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
+	// For now, assume our own epoch numebr is 0, while retrieving epoch number for counterparty
+	// from keeper
+	// TODO: Extract our epoch number from chain-id
 	msg := connectiontypes.NewMsgConnectionOpenAck(
 		connection.ID,
 		proofTry, proofConsensus,
-		proofHeight, consensusHeight,
+		0, proofHeight, consensusHeight.EpochNumber, consensusHeight.EpochHeight,
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -444,7 +450,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 
 	msg := connectiontypes.NewMsgConnectionOpenConfirm(
 		connection.ID,
-		proof, height,
+		proof, 0, height,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -532,7 +538,7 @@ func (chain *TestChain) ChanOpenTry(
 		ChannelVersion, order, []string{connectionID},
 		counterpartyCh.PortID, counterpartyCh.ID,
 		ChannelVersion,
-		proof, height,
+		proof, 0, height,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -548,7 +554,7 @@ func (chain *TestChain) ChanOpenAck(
 	msg := channeltypes.NewMsgChannelOpenAck(
 		ch.PortID, ch.ID,
 		ChannelVersion,
-		proof, height,
+		proof, 0, height,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -563,7 +569,7 @@ func (chain *TestChain) ChanOpenConfirm(
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
 		ch.PortID, ch.ID,
-		proof, height,
+		proof, 0, height,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)

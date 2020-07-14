@@ -1,12 +1,9 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-
-	"github.com/spf13/cobra"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 
 	"github.com/stretchr/testify/require"
 
@@ -22,31 +19,14 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraA
 	args := []string{from.String(), to.String(), amount.String()}
 	args = append(args, extraArgs...)
 
-	return callCliCmd(clientCtx, bankcli.NewSendTxCmd, args)
+	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(), args)
 }
 
 func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) ([]byte, error) {
 	args := []string{address.String()}
 	args = append(args, extraArgs...)
 
-	return callCliCmd(clientCtx, bankcli.GetBalancesCmd, args)
-}
-
-func callCliCmd(clientCtx client.Context, theCmd func() *cobra.Command, extraArgs []string) ([]byte, error) {
-	cmd := theCmd()
-	cmd.SetArgs(extraArgs)
-
-	_, out := testutil.ApplyMockIO(cmd)
-	clientCtx = clientCtx.WithOutput(out)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-	if err := cmd.ExecuteContext(ctx); err != nil {
-		return out.Bytes(), err
-	}
-
-	return out.Bytes(), nil
+	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), args)
 }
 
 // ----------------------------------------------------------------------------

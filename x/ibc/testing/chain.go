@@ -22,6 +22,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -39,7 +40,7 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ChannelVersion = "ics20-1"
+	ChannelVersion = ibctransfertypes.Version
 	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
@@ -51,7 +52,7 @@ var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
 
-	ConnectionVersion = connectiontypes.DefaultIBCVersion
+	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI

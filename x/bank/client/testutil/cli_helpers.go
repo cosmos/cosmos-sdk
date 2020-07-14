@@ -35,7 +35,7 @@ func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs
 func callCliCmd(clientCtx client.Context, theCmd func() *cobra.Command, extraArgs []string) ([]byte, error) {
 	cmd := theCmd()
 
-	_, out := testutil.ApplyMockIO(theCmd())
+	_, out := testutil.ApplyMockIO(cmd)
 	clientCtx = clientCtx.WithOutput(out)
 
 	ctx := context.Background()

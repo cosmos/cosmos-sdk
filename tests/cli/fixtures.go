@@ -7,34 +7,30 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/std"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
-)
-
-var (
-	cdc = std.MakeCodec(simapp.ModuleBasics)
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 )
 
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
-	BuildDir     string
-	RootDir      string
-	SimdBinary   string
-	SimcliBinary string
-	ChainID      string
-	RPCAddr      string
-	Port         string
-	SimdHome     string
-	SimcliHome   string
-	P2PAddr      string
+	BuildDir       string
+	RootDir        string
+	SimdBinary     string
+	ChainID        string
+	RPCAddr        string
+	Port           string
+	SimdHome       string
+	SimcliHome     string
+	P2PAddr        string
 	GRPCAddr     string
-	Cdc          *codec.Codec
-	T            *testing.T
+	Cdc            *codec.Codec
+	EncodingConfig params.EncodingConfig
+	T              *testing.T
 }
 
 // NewFixtures creates a new instance of Fixtures with many vars set
@@ -56,19 +52,21 @@ func NewFixtures(t *testing.T) *Fixtures {
 		t.Skip("builddir is empty, skipping")
 	}
 
+	encodingConfig := simapp.MakeEncodingConfig()
+
 	return &Fixtures{
-		T:            t,
-		BuildDir:     buildDir,
-		RootDir:      tmpDir,
-		SimdBinary:   filepath.Join(buildDir, "simd"),
-		SimcliBinary: filepath.Join(buildDir, "simcli"),
-		SimdHome:     filepath.Join(tmpDir, ".simd"),
-		SimcliHome:   filepath.Join(tmpDir, ".simcli"),
-		RPCAddr:      servAddr,
-		P2PAddr:      p2pAddr,
+		T:              t,
+		BuildDir:       buildDir,
+		RootDir:        tmpDir,
+		SimdBinary:     filepath.Join(buildDir, "simd"),
+		SimdHome:       filepath.Join(tmpDir, ".simd"),
+		SimcliHome:     filepath.Join(tmpDir, ".simcli"),
+		RPCAddr:        servAddr,
+		P2PAddr:        p2pAddr,
 		GRPCAddr:     grpcAddr,
-		Cdc:          cdc,
-		Port:         port,
+		Cdc:            encodingConfig.Amino,
+		EncodingConfig: encodingConfig,
+		Port:           port,
 	}
 }
 

@@ -104,7 +104,6 @@ x/
 │  ├── types
 │  │   ├── errors.go
 │  │   └── keys.go
-│  ├── alias.go
 │  ├── handler.go
 │  └── module.go
 └── ibc-transfer/

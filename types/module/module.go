@@ -105,7 +105,10 @@ func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rou
 	}
 }
 
-// AddTxCommands adds all tx commands to the rootTxCmd
+// AddTxCommands adds all tx commands to the rootTxCmd.
+//
+// TODO: Remove clientCtx argument.
+// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx client.Context) {
 	for _, b := range bm {
 		if cmd := b.GetTxCmd(ctx); cmd != nil {
@@ -114,7 +117,10 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx client.Contex
 	}
 }
 
-// AddQueryCommands adds all query commands to the rootQueryCmd
+// AddQueryCommands adds all query commands to the rootQueryCmd.
+//
+// TODO: Remove clientCtx argument.
+// REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, clientCtx client.Context) {
 	for _, b := range bm {
 		if cmd := b.GetQueryCmd(clientCtx); cmd != nil {

@@ -3,10 +3,15 @@ package client
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil"
+
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -118,22 +123,28 @@ func TestConfiguredTxEncoder(t *testing.T) {
 
 func TestReadStdTxFromFile(t *testing.T) {
 	t.Parallel()
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
+
+	encodingConfig := simappparams.MakeEncodingConfig()
+	sdk.RegisterCodec(encodingConfig.Amino)
+
+	txGen := encodingConfig.TxGenerator
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxGenerator(txGen)
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
 
 	// Write it to the file
-	encodedTx, _ := cdc.MarshalJSON(stdTx)
-	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
-	defer os.Remove(jsonTxFile.Name())
+	encodedTx, err := txGen.TxJSONEncoder()(stdTx)
+	require.NoError(t, err)
+	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
+	t.Cleanup(cleanup)
 
 	// Read it back
-	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
+	decodedTx, err := ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
-	require.Equal(t, decodedTx.Memo, "foomemo")
+	require.Equal(t, decodedTx.(authtypes.StdTx).Memo, "foomemo")
 }
 
 func TestBatchScanner_Scan(t *testing.T) {
@@ -185,7 +196,7 @@ malformed
 }
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
@@ -195,14 +206,46 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
-func writeToNewTempFile(t *testing.T, data string) *os.File {
-	fp, err := ioutil.TempFile(os.TempDir(), "client_tx_test")
-	require.NoError(t, err)
+func TestPrepareTxBuilder(t *testing.T) {
+	cdc := makeCodec()
 
-	_, err = fp.WriteString(data)
-	require.NoError(t, err)
+	encodingConfig := simappparams.MakeEncodingConfig()
+	sdk.RegisterCodec(encodingConfig.Amino)
 
-	return fp
+	fromAddr := sdk.AccAddress("test-addr0000000000")
+	fromAddrStr := fromAddr.String()
+
+	var accNum uint64 = 10
+	var accSeq uint64 = 17
+
+	txGen := encodingConfig.TxGenerator
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithTxGenerator(txGen).
+		WithJSONMarshaler(encodingConfig.Marshaler).
+		WithAccountRetriever(client.TestAccountRetriever{Accounts: map[string]struct {
+			Address sdk.AccAddress
+			Num     uint64
+			Seq     uint64
+		}{
+			fromAddrStr: {
+				Address: fromAddr,
+				Num:     accNum,
+				Seq:     accSeq,
+			},
+		}}).
+		WithFromAddress(fromAddr)
+
+	bldr := authtypes.NewTxBuilder(
+		authtypes.DefaultTxEncoder(cdc), 0, 0,
+		200000, 1.1, false, "test-chain",
+		"test-builder", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
+		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))})
+
+	bldr, err := PrepareTxBuilder(bldr, clientCtx)
+	require.NoError(t, err)
+	require.Equal(t, accNum, bldr.AccountNumber())
+	require.Equal(t, accSeq, bldr.Sequence())
 }
 
 func makeCodec() *codec.Codec {
@@ -210,6 +253,6 @@ func makeCodec() *codec.Codec {
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	authtypes.RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }

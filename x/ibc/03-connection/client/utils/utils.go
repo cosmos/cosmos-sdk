@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 
@@ -15,101 +16,90 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// QueryAllConnections returns all the connections. It _does not_ return
-// any merkle proof.
-func QueryAllConnections(clientCtx client.Context, page, limit int) ([]types.ConnectionEnd, int64, error) {
-	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
-	}
-
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllConnections)
-	res, height, err := clientCtx.QueryWithData(route, bz)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var connections []types.ConnectionEnd
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &connections)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
-	}
-	return connections, height, nil
-}
-
-// QueryConnection queries the store to get a connection end and a merkle
-// proof.
+// QueryConnection returns a connection end.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryConnection(
 	clientCtx client.Context, connectionID string, prove bool,
-) (types.ConnectionResponse, error) {
+) (*types.QueryConnectionResponse, error) {
+	if prove {
+		return queryConnectionABCI(clientCtx, connectionID)
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryConnectionRequest{
+		ConnectionID: connectionID,
+	}
+
+	return queryClient.Connection(context.Background(), req)
+}
+
+func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.QueryConnectionResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyConnection(connectionID),
-		Prove: prove,
+		Prove: true,
 	}
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return types.ConnectionResponse{}, err
+		return nil, err
 	}
 
 	var connection types.ConnectionEnd
 	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &connection); err != nil {
-		return types.ConnectionResponse{}, err
+		return nil, err
 	}
 
-	connRes := types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height)
+	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	if err != nil {
+		return nil, err
+	}
 
-	return connRes, nil
+	return types.NewQueryConnectionResponse(connection, proofBz, res.Height), nil
 }
 
-// QueryAllClientConnectionPaths returns all the client connections paths. It
-// _does not_ return any merkle proof.
-func QueryAllClientConnectionPaths(clientCtx client.Context, page, limit int) ([]types.ConnectionPaths, int64, error) {
-	params := types.NewQueryAllConnectionsParams(page, limit)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
-	}
-
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllClientConnections)
-	res, height, err := clientCtx.QueryWithData(route, bz)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var connectionPaths []types.ConnectionPaths
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &connectionPaths)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal client connection paths: %w", err)
-	}
-	return connectionPaths, height, nil
-}
-
-// QueryClientConnections queries the store to get the registered connection paths
-// registered for a particular client and a merkle proof.
+// QueryClientConnections queries the connection paths registered for a particular client.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryClientConnections(
 	clientCtx client.Context, clientID string, prove bool,
-) (types.ClientConnectionsResponse, error) {
+) (*types.QueryClientConnectionsResponse, error) {
+	if prove {
+		return queryClientConnectionsABCI(clientCtx, clientID)
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryClientConnectionsRequest{
+		ClientID: clientID,
+	}
+
+	return queryClient.ClientConnections(context.Background(), req)
+}
+
+func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*types.QueryClientConnectionsResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.KeyClientConnections(clientID),
-		Prove: prove,
+		Prove: true,
 	}
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return types.ClientConnectionsResponse{}, err
+		return nil, err
 	}
 
 	var paths []string
 	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &paths); err != nil {
-		return types.ClientConnectionsResponse{}, err
+		return nil, err
 	}
 
-	connPathsRes := types.NewClientConnectionsResponse(clientID, paths, res.Proof, res.Height)
-	return connPathsRes, nil
+	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, res.Height), nil
 }
 
 // ParsePrefix unmarshals an cmd input argument from a JSON string to a commitment

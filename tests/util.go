@@ -2,25 +2,14 @@ package tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmjsonrpc "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
-
-// Wait for the next tendermint block from the Tendermint RPC
-// on localhost
-func WaitForNextHeightTM(port string) {
-	WaitForNextNBlocksTM(1, port)
-}
 
 // Wait for N tendermint blocks to pass using the Tendermint RPC
 // on localhost
@@ -83,62 +72,6 @@ func waitForHeightTM(height int64, url string) {
 	}
 }
 
-// Wait for height from the LCD API on localhost
-func WaitForHeight(height int64, port string) {
-	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
-	waitForHeight(height, url)
-}
-
-// Whether or not an HTTP status code was "successful"
-func StatusOK(statusCode int) bool {
-	switch statusCode {
-	case http.StatusOK:
-	case http.StatusCreated:
-	case http.StatusNoContent:
-		return true
-	}
-	return false
-}
-
-func waitForHeight(height int64, url string) {
-	var res *http.Response
-	var err error
-
-	for {
-		// Since this is in a testing file we are accepting nolint to be passed
-		res, err = http.Get(url) // nolint:gosec
-		if err != nil {
-			panic(err)
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			panic(err)
-		}
-
-		if err = res.Body.Close(); err != nil {
-			panic(err)
-		}
-
-		var resultBlock ctypes.ResultBlock
-		if err = cdc.UnmarshalJSON(body, &resultBlock); err != nil {
-			panic(err)
-		}
-
-		if resultBlock.Block != nil && resultBlock.Block.Height >= height {
-			return
-		}
-
-		time.Sleep(time.Millisecond * 100)
-	}
-}
-
-// wait for tendermint to start by querying the LCD
-func WaitForLCDStart(port string) {
-	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
-	WaitForStart(url)
-}
-
 // wait for tendermint to start by querying tendermint
 func WaitForTMStart(port string) {
 	url := fmt.Sprintf("http://localhost:%v/block", port)
@@ -176,54 +109,6 @@ func WaitForStart(url string) {
 	}
 	// still haven't started up?! panic!
 	panic(err)
-}
-
-// TODO: these functions just print to Stdout.
-// consider using the logger.
-
-// Wait for the RPC server to respond to /status
-func WaitForRPC(laddr string) {
-	fmt.Println("LADDR", laddr)
-	client, err := tmjsonrpc.New(laddr)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create Tendermint RPC client: %s", err))
-	}
-
-	ctypes.RegisterAmino(client.Codec())
-	result := new(ctypes.ResultStatus)
-	for {
-		_, err := client.Call("status", map[string]interface{}{}, result)
-		if err == nil {
-			return
-		}
-		fmt.Printf("Waiting for RPC server to start on %s:%v\n", laddr, err)
-		time.Sleep(time.Millisecond)
-	}
-}
-
-// ExtractPortFromAddress extract port from listenAddress
-// The listenAddress must be some strings like tcp://0.0.0.0:12345
-func ExtractPortFromAddress(listenAddress string) string {
-	stringList := strings.Split(listenAddress, ":")
-	length := len(stringList)
-	if length != 3 {
-		panic(fmt.Errorf("expected listen address: tcp://0.0.0.0:12345, got %s", listenAddress))
-	}
-	return stringList[2]
-}
-
-type NamedTestingT interface {
-	require.TestingT
-	Name() string
-}
-
-// NewTestCaseDir creates a new temporary directory for a test case.
-// Returns the directory path and a cleanup function.
-// nolint: errcheck
-func NewTestCaseDir(t NamedTestingT) (string, func()) {
-	dir, err := ioutil.TempDir("", t.Name()+"_")
-	require.NoError(t, err)
-	return dir, func() { os.RemoveAll(dir) }
 }
 
 var cdc = codec.New()

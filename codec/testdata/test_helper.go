@@ -1,8 +1,9 @@
 package testdata
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {

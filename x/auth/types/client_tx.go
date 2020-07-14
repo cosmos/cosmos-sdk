@@ -20,7 +20,7 @@ type StdTxBuilder struct {
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() sdk.Tx {
+func (s *StdTxBuilder) GetTx() authsigning.SigFeeMemoTx {
 	return s.StdTx
 }
 
@@ -87,8 +87,22 @@ func (s StdTxGenerator) NewTxBuilder() client.TxBuilder {
 }
 
 // MarshalTx implements TxGenerator.MarshalTx
-func (s StdTxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
-	return DefaultTxEncoder(s.Cdc)(tx)
+func (s StdTxGenerator) TxEncoder() sdk.TxEncoder {
+	return DefaultTxEncoder(s.Cdc)
+}
+
+func (s StdTxGenerator) TxDecoder() sdk.TxDecoder {
+	return DefaultTxDecoder(s.Cdc)
+}
+
+func (s StdTxGenerator) TxJSONEncoder() sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
+		return s.Cdc.MarshalJSON(tx)
+	}
+}
+
+func (s StdTxGenerator) TxJSONDecoder() sdk.TxDecoder {
+	return DefaultJSONTxDecoder(s.Cdc)
 }
 
 func (s StdTxGenerator) SignModeHandler() authsigning.SignModeHandler {

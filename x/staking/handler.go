@@ -3,10 +3,12 @@ package staking
 import (
 	"time"
 
+	"github.com/armon/go-metrics"
 	gogotypes "github.com/gogo/protobuf/types"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -57,8 +59,9 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 		return nil, types.ErrValidatorPubKeyExists
 	}
 
-	if msg.Value.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Value.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Value.Denom, bondDenom)
 	}
 
 	if _, err := msg.Description.EnsureLength(); err != nil {
@@ -184,8 +187,9 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 		return nil, types.ErrNoValidatorFound
 	}
 
-	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	// NOTE: source funds are always unbonded
@@ -193,6 +197,15 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		telemetry.IncrCounter(1, types.ModuleName, "delegate")
+		telemetry.SetGaugeWithLabels(
+			[]string{"tx", "msg", msg.Type()},
+			float32(msg.Amount.Amount.Int64()),
+			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+		)
+	}()
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -218,8 +231,9 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 		return nil, err
 	}
 
-	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, shares)
@@ -231,6 +245,15 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 	if err != nil {
 		return nil, types.ErrBadRedelegationAddr
 	}
+
+	defer func() {
+		telemetry.IncrCounter(1, types.ModuleName, "undelegate")
+		telemetry.SetGaugeWithLabels(
+			[]string{"tx", "msg", msg.Type()},
+			float32(msg.Amount.Amount.Int64()),
+			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+		)
+	}()
 
 	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -258,8 +281,9 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 		return nil, err
 	}
 
-	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	completionTime, err := k.BeginRedelegation(
@@ -273,6 +297,15 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 	if err != nil {
 		return nil, types.ErrBadRedelegationAddr
 	}
+
+	defer func() {
+		telemetry.IncrCounter(1, types.ModuleName, "redelegate")
+		telemetry.SetGaugeWithLabels(
+			[]string{"tx", "msg", msg.Type()},
+			float32(msg.Amount.Amount.Int64()),
+			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+		)
+	}()
 
 	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)
 	ctx.EventManager().EmitEvents(sdk.Events{

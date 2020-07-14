@@ -2,11 +2,18 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 // SubModuleCdc defines the IBC client codec.
 var SubModuleCdc *codec.Codec
+
+func init() {
+	SubModuleCdc = codec.New()
+	cryptocodec.RegisterCrypto(SubModuleCdc)
+	RegisterCodec(SubModuleCdc)
+}
 
 // RegisterCodec registers the IBC client interfaces and types
 func RegisterCodec(cdc *codec.Codec) {
@@ -16,10 +23,4 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)
 	cdc.RegisterInterface((*exported.Header)(nil), nil)
 	cdc.RegisterInterface((*exported.Misbehaviour)(nil), nil)
-
-	SetSubModuleCodec(cdc)
-}
-
-func SetSubModuleCodec(cdc *codec.Codec) {
-	SubModuleCdc = cdc
 }

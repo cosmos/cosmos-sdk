@@ -1,35 +1,36 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/tests"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
-	cdc := codec.New()
-	cmd := GetBroadcastCommand(cdc)
+	clientCtx := client.Context{}.WithOffline(true)
+	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
 
-	viper.Set(flags.FlagOffline, true)
+	cmd := GetBroadcastCommand(clientCtx)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
 
-	err := cmd.RunE(nil, []string{})
-	require.EqualError(t, err, "cannot broadcast tx during offline mode")
+	require.EqualError(t, cmd.Execute(), "cannot broadcast tx during offline mode")
 }
 
 func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
-	cdc := codec.New()
-	cmd := GetBroadcastCommand(cdc)
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
+	cmd := GetBroadcastCommand(clientCtx)
 
-	viper.Set(flags.FlagOffline, false)
-
-	testDir, cleanFunc := tests.NewTestCaseDir(t)
+	testDir, cleanFunc := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanFunc)
 
 	// Create new file with tx

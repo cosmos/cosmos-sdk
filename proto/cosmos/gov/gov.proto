@@ -1,0 +1,162 @@
+syntax = "proto3";
+package cosmos.gov;
+
+import "cosmos/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all)         = false;
+option (gogoproto.goproto_getters_all)  = false;
+
+// MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
+// proposal Content.
+message MsgSubmitProposal {
+  option (gogoproto.equal) = true;
+
+  google.protobuf.Any content          = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  repeated cosmos.Coin initial_deposit = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"initial_deposit\""
+  ];
+  bytes proposer = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+// MsgVote defines a message to cast a vote
+message MsgVote {
+  option (gogoproto.equal) = true;
+
+  uint64 proposal_id = 1 [
+    (gogoproto.jsontag)    = "proposal_id",
+    (gogoproto.customname) = "ProposalID",
+    (gogoproto.moretags)   = "yaml:\"proposal_id\""
+  ];
+  bytes      voter  = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  VoteOption option = 3;
+}
+
+// MsgDeposit defines a message to submit a deposit to an existing proposal
+message MsgDeposit {
+  option (gogoproto.equal) = true;
+
+  uint64 proposal_id = 1 [
+    (gogoproto.jsontag)    = "proposal_id",
+    (gogoproto.customname) = "ProposalID",
+    (gogoproto.moretags)   = "yaml:\"proposal_id\""
+  ];
+  bytes    depositor          = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  repeated cosmos.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// VoteOption defines a vote option
+enum VoteOption {
+  option (gogoproto.enum_stringer)         = false;
+  option (gogoproto.goproto_enum_stringer) = false;
+  option (gogoproto.goproto_enum_prefix)   = false;
+
+  // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
+  VOTE_OPTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OptionEmpty"];
+  // VOTE_OPTION_YES defines a yes vote option.
+  VOTE_OPTION_YES = 1 [(gogoproto.enumvalue_customname) = "OptionYes"];
+  // VOTE_OPTION_ABSTAIN defines an abstain vote option.
+  VOTE_OPTION_ABSTAIN = 2 [(gogoproto.enumvalue_customname) = "OptionAbstain"];
+  // VOTE_OPTION_NO defines a no vote option.
+  VOTE_OPTION_NO = 3 [(gogoproto.enumvalue_customname) = "OptionNo"];
+  // VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  VOTE_OPTION_NO_WITH_VETO = 4 [(gogoproto.enumvalue_customname) = "OptionNoWithVeto"];
+}
+
+// TextProposal defines a standard text proposal whose changes need to be
+// manually updated in case of approval
+message TextProposal {
+  option (cosmos_proto.implements_interface) = "Content";
+
+  option (gogoproto.equal) = true;
+
+  string title       = 1;
+  string description = 2;
+}
+
+// Deposit defines an amount deposited by an account address to an active proposal
+message Deposit {
+  option (gogoproto.equal) = true;
+
+  uint64   proposal_id = 1 [(gogoproto.customname) = "ProposalID", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  bytes    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  repeated cosmos.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// Proposal defines the core field members of a governance proposal
+message Proposal {
+  option (gogoproto.equal) = true;
+
+  uint64 proposal_id = 1
+      [(gogoproto.customname) = "ProposalID", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+  google.protobuf.Any content            = 2 [(cosmos_proto.accepts_interface) = "Content"];
+  ProposalStatus      status             = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
+  TallyResult         final_tally_result = 4
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"final_tally_result\""];
+  google.protobuf.Timestamp submit_time = 5
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"submit_time\""];
+  google.protobuf.Timestamp deposit_end_time = 6
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"deposit_end_time\""];
+  repeated cosmos.Coin total_deposit = 7 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"total_deposit\""
+  ];
+  google.protobuf.Timestamp voting_start_time = 8
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_start_time\""];
+  google.protobuf.Timestamp voting_end_time = 9
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_end_time\""];
+}
+
+// ProposalStatus is a type alias that represents a proposal status as a byte
+enum ProposalStatus {
+  option (gogoproto.enum_stringer)         = false;
+  option (gogoproto.goproto_enum_stringer) = false;
+  option (gogoproto.goproto_enum_prefix)   = false;
+
+  // PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
+  PROPOSAL_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "StatusNil"];
+  // PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
+  PROPOSAL_STATUS_DEPOSIT_PERIOD = 1 [(gogoproto.enumvalue_customname) = "StatusDepositPeriod"];
+  // PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
+  PROPOSAL_STATUS_VOTING_PERIOD = 2 [(gogoproto.enumvalue_customname) = "StatusVotingPeriod"];
+  // PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
+  PROPOSAL_STATUS_PASSED = 3 [(gogoproto.enumvalue_customname) = "StatusPassed"];
+  // PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
+  PROPOSAL_STATUS_REJECTED = 4 [(gogoproto.enumvalue_customname) = "StatusRejected"];
+  // PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+  PROPOSAL_STATUS_FAILED = 5 [(gogoproto.enumvalue_customname) = "StatusFailed"];
+}
+
+// TallyResult defines a standard tally for a proposal
+message TallyResult {
+  option (gogoproto.equal) = true;
+
+  string yes     = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string abstain = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string no      = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string no_with_veto = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"no_with_veto\""
+  ];
+}
+
+// Vote defines a vote on a governance proposal. A vote corresponds to a proposal
+// ID, the voter, and the vote option.
+message Vote {
+  option (gogoproto.equal) = true;
+
+  uint64     proposal_id = 1 [(gogoproto.customname) = "ProposalID", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  VoteOption option      = 3;
+}

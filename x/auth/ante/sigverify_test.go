@@ -2,7 +2,10 @@ package ante_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 
@@ -35,7 +38,7 @@ func TestSetPubKey(t *testing.T) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs[i] = types.NewTestMsg(addr)
+		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
 	fee := types.NewTestStdFee()
@@ -73,12 +76,10 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
 		require.NoError(t, err)
 	}
-	aminoMultisignature1, err := types.SignatureDataToAminoSignature(cdc, multisignature1)
-	require.NoError(t, err)
 
 	type args struct {
 		meter  sdk.GasMeter
-		sig    []byte
+		sig    signing.SignatureData
 		pubkey crypto.PubKey
 		params types.Params
 	}
@@ -90,13 +91,17 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}{
 		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
 		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostSecp256k1, false},
-		{"Multisig", args{sdk.NewInfiniteGasMeter(), aminoMultisignature1, multisigKey1, params}, expectedCost1, false},
+		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			err := ante.DefaultSigVerificationGasConsumer(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
+			sigV2 := signing.SignatureV2{
+				PubKey: tt.args.pubkey,
+				Data:   tt.args.sig,
+			}
+			err := ante.DefaultSigVerificationGasConsumer(tt.args.meter, sigV2, tt.args.params)
 
 			if tt.shouldErr {
 				require.NotNil(t, err)
@@ -127,13 +132,13 @@ func TestSigVerification(t *testing.T) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs[i] = types.NewTestMsg(addr)
+		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
 	fee := types.NewTestStdFee()
 
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
-	svd := ante.NewSigVerificationDecorator(app.AccountKeeper)
+	svd := ante.NewSigVerificationDecorator(app.AccountKeeper, types.LegacyAminoJSONHandler{})
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
@@ -199,7 +204,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs[i] = types.NewTestMsg(addr)
+		msgs[i] = testdata.NewTestMsg(addr)
 		accNums[i] = uint64(i)
 		seqs[i] = uint64(0)
 	}
@@ -210,7 +215,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(app.AccountKeeper)
+	svd := ante.NewSigVerificationDecorator(app.AccountKeeper, types.LegacyAminoJSONHandler{})
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params
@@ -229,7 +234,7 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 	require.NoError(t, acc.SetAccountNumber(uint64(50)))
 	app.AccountKeeper.SetAccount(ctx, acc)
 
-	msgs := []sdk.Msg{types.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	privKeys := []crypto.PrivKey{priv}
 	accNums := []uint64{app.AccountKeeper.GetAccount(ctx, addr).GetAccountNumber()}
 	accSeqs := []uint64{app.AccountKeeper.GetAccount(ctx, addr).GetSequence()}

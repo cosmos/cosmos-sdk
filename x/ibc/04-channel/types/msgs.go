@@ -12,7 +12,7 @@ import (
 
 var _ sdk.Msg = &MsgChannelOpenInit{}
 
-// NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
+// NewMsgChannelOpenInit creates a new MsgChannelOpenInit
 func NewMsgChannelOpenInit(
 	portID, channelID string, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,

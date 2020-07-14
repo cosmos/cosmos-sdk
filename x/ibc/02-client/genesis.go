@@ -3,12 +3,14 @@ package client
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // InitGenesis initializes the ibc client submodule's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, client := range gs.Clients {
 		k.SetClientState(ctx, client)
 		k.SetClientType(ctx, client.GetID(), client.ClientType())
@@ -39,8 +41,8 @@ func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 }
 
 // ExportGenesis returns the ibc client submodule's exported genesis.
-func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	return GenesisState{
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
+	return types.GenesisState{
 		Clients:          k.GetAllClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
 		CreateLocalhost:  true,

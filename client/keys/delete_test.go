@@ -1,25 +1,25 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
-	deleteKeyCommand := DeleteKeyCommand()
-	mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
+	cmd := DeleteKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
-	yesF, _ := deleteKeyCommand.Flags().GetBool(flagYes)
-	forceF, _ := deleteKeyCommand.Flags().GetBool(flagForce)
+	yesF, _ := cmd.Flags().GetBool(flagYes)
+	forceF, _ := cmd.Flags().GetBool(flagForce)
 
 	require.False(t, yesF)
 	require.False(t, forceF)
@@ -27,26 +27,32 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 	// Now add a temporary keybase
-	kbHome, cleanUp := tests.NewTestCaseDir(t)
+	kbHome, cleanUp := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp)
-	viper.Set(flags.FlagHome, kbHome)
 
-	// Now
 	path := sdk.GetConfig().GetFullFundraiserPath()
-	backend := viper.GetString(flags.FlagKeyringBackend)
-	kb, err := keyring.New(sdk.KeyringServiceName(), backend, kbHome, mockIn)
+
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
-	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, hd.Secp256k1)
+
+	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
+
 	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
-	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
+	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
+	err = cmd.Execute()
 	require.Error(t, err)
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
-	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	err = cmd.Execute()
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
 
@@ -54,17 +60,28 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now there is a confirmation
-	viper.Set(flagYes, true)
-	require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	require.NoError(t, cmd.Execute())
 
 	_, err = kb.Key(fakeKeyName1)
 	require.Error(t, err) // Key1 is gone
 
-	viper.Set(flagYes, true)
 	_, err = kb.Key(fakeKeyName2)
 	require.NoError(t, err)
-	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
-	require.NoError(t, err)
+
+	cmd.SetArgs([]string{
+		fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	require.NoError(t, cmd.Execute())
+
 	_, err = kb.Key(fakeKeyName2)
 	require.Error(t, err) // Key2 is gone
 }

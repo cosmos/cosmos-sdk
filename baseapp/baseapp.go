@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -96,6 +96,9 @@ type BaseApp struct { // nolint: maligned
 
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
+
+	// trace set will return full stack traces for errors in ABCI Log field
+	trace bool
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -277,6 +280,10 @@ func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 	app.interBlockCache = cache
 }
 
+func (app *BaseApp) setTrace(trace bool) {
+	app.trace = trace
+}
+
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
@@ -292,7 +299,7 @@ func (app *BaseApp) Router() sdk.Router {
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
-func (app *BaseApp) GRPCQueryRouter() grpc.Server { return app.grpcQueryRouter }
+func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // RegisterGRPC registers gRPC services directly with the gRPC server
 func (app *BaseApp) RegisterGRPC(grpc.Server) {}

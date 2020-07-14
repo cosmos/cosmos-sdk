@@ -13,7 +13,11 @@ type (
 	TxGenerator interface {
 		NewTxBuilder() TxBuilder
 		SignModeHandler() signing.SignModeHandler
-		MarshalTx(tx sdk.Tx) ([]byte, error)
+
+		TxEncoder() sdk.TxEncoder
+		TxDecoder() sdk.TxDecoder
+		TxJSONEncoder() sdk.TxEncoder
+		TxJSONDecoder() sdk.TxDecoder
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction
@@ -21,7 +25,7 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	TxBuilder interface {
-		GetTx() sdk.Tx
+		GetTx() signing.SigFeeMemoTx
 
 		SetMsgs(msgs ...sdk.Msg) error
 		SetSignatures(signatures ...signingtypes.SignatureV2) error

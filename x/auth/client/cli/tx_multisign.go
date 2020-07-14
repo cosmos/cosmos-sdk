@@ -11,13 +11,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -60,8 +62,7 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 	return func(cmd *cobra.Command, args []string) (err error) {
 		clientCtx = clientCtx.Init()
 		cdc := clientCtx.Codec
-		tx, err := authclient.ReadTxFromFile(clientCtx, args[0])
-		stdTx := tx.(types.StdTx)
+		stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
 			return
 		}
@@ -85,9 +86,10 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), homeDir)
+		clientCtx = clientCtx.InitWithInput(inBuf)
+		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 		if err != nil {
-			return errors.Wrap(err, "error creating tx builder from flags")
+			return errors.Wrap(err, "error creating stdTx builder from flags")
 		}
 
 		if !clientCtx.Offline {
@@ -96,31 +98,34 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 				return err
 			}
 
-			txBldr = txBldr.WithAccountNumber(accnum).WithSequence(seq)
+			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
+
+		feeTx := stdTx.(sdk.FeeTx)
+		fee := types.StdFee{
+			Amount: feeTx.GetFee(),
+			Gas:    feeTx.GetGas(),
+		}
+		memoTx := stdTx.(sdk.TxWithMemo)
 
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
-			stdSig, err := readAndUnmarshalStdSignature(cdc, args[i])
+			stdSig, err := readAndUnmarshalStdSignature(clientCtx, args[i])
 			if err != nil {
 				return err
 			}
 
-			// Validate each signature
-			sigBytes := types.StdSignBytes(
-				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
-				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
-			)
-			if ok := stdSig.GetPubKey().VerifyBytes(sigBytes, stdSig.Signature); !ok {
+			signingData := signing.SignerData{
+				ChainID:         txFactory.ChainID(),
+				AccountNumber:   txFactory.AccountNumber(),
+				AccountSequence: txFactory.Sequence(),
+			}
+			err = signing.VerifySignature(stdSig.PubKey, signingData, stdSig.Data, clientCtx.TxGenerator.SignModeHandler(), stdTx)
+			if err != nil {
 				return fmt.Errorf("couldn't verify signature")
 			}
 
-			sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
-			if err != nil {
-				return nil
-			}
-
-			if err := multisig.AddSignatureV2(multisigSig, sigV2, multisigPub.PubKeys); err != nil {
+			if err := multisig.AddSignatureV2(multisigSig, stdSig, multisigPub.PubKeys); err != nil {
 				return err
 			}
 		}
@@ -130,11 +135,26 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			return err
 		}
 
-		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                        //nolint:staticcheck
-		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo()) //nolint:staticcheck
+		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                   //nolint:staticcheck
+		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo()) //nolint:staticcheck
 
 		var json []byte
 
+		txBuilder := clientCtx.TxGenerator.NewTxBuilder()
+		if err != nil {
+			return err
+		}
+
+		sigBldr := signingtypes.SignatureV2{
+			PubKey: multisigPub,
+			Data:   multisigSig,
+		}
+
+		err = txBuilder.SetSignatures(sigBldr)
+
+		if err != nil {
+			return err
+		}
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		if sigOnly {
 			json, err = cdc.MarshalJSON(newTx.Signatures[0])
@@ -163,12 +183,12 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 	}
 }
 
-func readAndUnmarshalStdSignature(cdc *codec.Codec, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
+func readAndUnmarshalStdSignature(clientCtx client.Context, filename string) (stdSig signingtypes.SignatureV2, err error) { //nolint:staticcheck
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return
 	}
-	if err = cdc.UnmarshalJSON(bytes, &stdSig); err != nil {
+	if err = clientCtx.JSONMarshaler.UnmarshalJSON(bytes, &stdSig); err != nil {
 		return
 	}
 	return

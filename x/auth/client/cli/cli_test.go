@@ -74,21 +74,21 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	s.Require().NoError(err)
 
 	var tx types.StdTx
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &tx)
+	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &tx)
 	s.Require().NoError(err)
 
 	// write  unsigned tx to file
-	unsignedTx, cleanup := testutil.WriteToNewTempFile(s.T(), string(res))
+	unsignedTx, cleanup := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer cleanup()
 
 	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
 	s.Require().NoError(err)
 
 	var signedTx types.StdTx
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &signedTx)
+	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &signedTx)
 	s.Require().NoError(err)
 
-	signedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(res))
+	signedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer cleanup()
 
 	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
@@ -124,7 +124,7 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().NoError(err)
 
 	// Write the output to disk
-	filename, cleanup1 := testutil.WriteToNewTempFile(s.T(), strings.Repeat(string(generatedStd), 3))
+	filename, cleanup1 := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
 	defer cleanup1()
 
 	// sign-batch file - offline is set but account-number and sequence are not
@@ -135,11 +135,12 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	// sign-batch file
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().NoError(err)
-	s.Require().Equal(3, len(strings.Split(strings.Trim(string(res), "\n"), "\n")))
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
-	s.Require().Equal(3, len(strings.Split(strings.Trim(string(res), "\n"), "\n")))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// Sign batch malformed tx file.
 	malformedFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf("%smalformed", generatedStd))
@@ -175,7 +176,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	normalGeneratedStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, string(normalGeneratedTx))
+	normalGeneratedStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, normalGeneratedTx.String())
 	s.Require().Equal(normalGeneratedStdTx.Fee.Gas, uint64(flags.DefaultGasLimit))
 	s.Require().Equal(len(normalGeneratedStdTx.Msgs), 1)
 	s.Require().Equal(0, len(normalGeneratedStdTx.GetSignatures()))
@@ -196,7 +197,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	limitedGasStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, string(limitedGasGeneratedTx))
+	limitedGasStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, limitedGasGeneratedTx.String())
 	s.Require().Equal(limitedGasStdTx.Fee.Gas, uint64(100))
 	s.Require().Equal(len(limitedGasStdTx.Msgs), 1)
 	s.Require().Equal(0, len(limitedGasStdTx.GetSignatures()))
@@ -217,18 +218,18 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	finalStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, string(finalGeneratedTx))
+	finalStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, finalGeneratedTx.String())
 	s.Require().Equal(uint64(flags.DefaultGasLimit), finalStdTx.Fee.Gas)
 	s.Require().Equal(len(finalStdTx.Msgs), 1)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(finalGeneratedTx))
+	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), finalGeneratedTx.String())
 	defer cleanup()
 
 	// Test validate-signatures
 	res, err := authtest.TxValidateSignaturesExec(val1.ClientCtx, unsignedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
-	s.Require().True(strings.Contains(string(res), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", val1.Address.String())))
+	s.Require().True(strings.Contains(res.String(), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", val1.Address.String())))
 
 	// Test sign
 
@@ -245,19 +246,19 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
 	s.Require().NoError(err)
 
-	signedFinalTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, string(signedTx))
+	signedFinalTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, signedTx.String())
 	s.Require().Equal(len(signedFinalTx.Msgs), 1)
 	s.Require().Equal(1, len(signedFinalTx.GetSignatures()))
 	s.Require().Equal(val1.Address.String(), signedFinalTx.GetSigners()[0].String())
 
 	// Write the output to disk
-	signedTxFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(signedTx))
+	signedTxFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 	defer cleanup2()
 
 	// Validate Signature
 	res, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
-	s.Require().True(strings.Contains(string(res), "[OK]"))
+	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
 	// Ensure foo has right amount of funds
 	startTokens := sdk.TokensFromConsensusPower(400)
@@ -265,7 +266,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 
 	var coins sdk.Coins
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
 	s.Require().Equal(startTokens, coins.AmountOf(cli.Denom))
 
@@ -290,7 +291,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, account.GetAddress())
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
 	s.Require().Equal(sendTokens, coins.AmountOf(cli.Denom))
 
@@ -298,7 +299,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewInt(389999990), coins.AmountOf(cli.Denom))
 }
@@ -357,7 +358,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	s.Require().NoError(err)
 
 	// Save tx to file
-	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(multiGeneratedTx))
+	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
 	defer cleanup()
 
 	// Multisign, sign with one signature
@@ -365,14 +366,14 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
-	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(account1Signature))
+	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 	defer cleanup2()
 
 	multiSigWith1Signature, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name())
 	s.Require().NoError(err)
 
 	// Save tx to file
-	multiSigWith1SignatureFile, cleanup3 := testutil.WriteToNewTempFile(s.T(), string(multiSigWith1Signature))
+	multiSigWith1SignatureFile, cleanup3 := testutil.WriteToNewTempFile(s.T(), multiSigWith1Signature.String())
 	defer cleanup3()
 
 	exec, err := authtest.TxValidateSignaturesExec(val1.ClientCtx, multiSigWith1SignatureFile.Name())
@@ -401,20 +402,20 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 	s.Require().NoError(err)
 
 	// Save tx to file
-	savedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(normalGeneratedTx))
+	savedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
 	defer cleanup()
 
 	// Enconde
 	encodeExec, err := authtest.TxEncodeExec(val1.ClientCtx, savedTxFile.Name())
 	s.Require().NoError(err)
 
-	trimmedBase64 := strings.Trim(string(encodeExec), "\"\n")
+	trimmedBase64 := strings.Trim(encodeExec.String(), "\"\n")
 	// Check that the transaction decodes as expected
 
 	decodedTx, err := authtest.TxDecodeExec(val1.ClientCtx, trimmedBase64)
 	s.Require().NoError(err)
 
-	theTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, string(decodedTx))
+	theTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, decodedTx.String())
 	s.Require().Equal("deadbeef", theTx.Memo)
 }
 
@@ -461,7 +462,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 
 	var coins sdk.Coins
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
 	s.Require().Equal(sendTokens.Amount, coins.AmountOf(cli.Denom))
 
@@ -481,7 +482,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 
 	// Save tx to file
-	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(multiGeneratedTx))
+	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
 	defer cleanup()
 
 	// Sign with account1
@@ -489,21 +490,21 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
-	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(account1Signature))
+	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 	defer cleanup2()
 
 	// Sign with account1
 	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
-	sign2File, cleanup3 := testutil.WriteToNewTempFile(s.T(), string(account2Signature))
+	sign2File, cleanup3 := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 	defer cleanup3()
 
 	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// Write the output to disk
-	signedTxFile, cleanup4 := testutil.WriteToNewTempFile(s.T(), string(multiSigWith2Signatures))
+	signedTxFile, cleanup4 := testutil.WriteToNewTempFile(s.T(), multiSigWith2Signatures.String())
 	defer cleanup4()
 
 	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
@@ -559,7 +560,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	var coins sdk.Coins
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
 	s.Require().Equal(sendTokens.Amount, coins.AmountOf(cli.Denom))
 
@@ -579,7 +580,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	// Save tx to file
-	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(multiGeneratedTx))
+	multiGeneratedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
 	defer cleanup()
 
 	// Sign with account1
@@ -587,14 +588,14 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
-	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(account1Signature))
+	sign1File, cleanup2 := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 	defer cleanup2()
 
 	// Sign with account1
 	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
-	sign2File, cleanup3 := testutil.WriteToNewTempFile(s.T(), string(account2Signature))
+	sign2File, cleanup3 := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 	defer cleanup3()
 
 	// Does not work in offline mode.
@@ -607,7 +608,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	// Write the output to disk
-	signedTxFile, cleanup4 := testutil.WriteToNewTempFile(s.T(), string(multiSigWith2Signatures))
+	signedTxFile, cleanup4 := testutil.WriteToNewTempFile(s.T(), multiSigWith2Signatures.String())
 	defer cleanup4()
 
 	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())

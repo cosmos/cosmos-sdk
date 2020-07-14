@@ -10,7 +10,7 @@ import (
 )
 
 // ExecTestCLICmd builds the client context, mocks the output and executes the command.
-func ExecTestCLICmd(clientCtx client.Context, cmd *cobra.Command, extraArgs []string) ([]byte, error) {
+func ExecTestCLICmd(clientCtx client.Context, cmd *cobra.Command, extraArgs []string) (testutil.BufferWriter, error) {
 	cmd.SetArgs(extraArgs)
 
 	_, out := testutil.ApplyMockIO(cmd)
@@ -20,8 +20,8 @@ func ExecTestCLICmd(clientCtx client.Context, cmd *cobra.Command, extraArgs []st
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
-		return out.Bytes(), err
+		return out, err
 	}
 
-	return out.Bytes(), nil
+	return out, nil
 }

@@ -5,7 +5,7 @@ option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
 
 import "gogoproto/gogo.proto";
 import "tendermint/types/types.proto";
-import "tendermint/crypto/keys/types.proto";
+import "tendermint/crypto/keys.proto";
 
 // DuplicateVoteEvidence contains evidence a validator signed two conflicting
 // votes.
@@ -60,6 +60,6 @@ message EvidenceData {
 }
 
 message ProofOfLockChange {
-  repeated Vote                    votes   = 1;
-  tendermint.crypto.keys.PublicKey pub_key = 2;
+  repeated Vote               votes   = 1;
+  tendermint.crypto.PublicKey pub_key = 2;
 }

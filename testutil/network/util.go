@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -45,10 +46,12 @@ func startInProcess(cfg Config, val *Validator) error {
 		logger.With("module", val.Moniker),
 	)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	if err := tmNode.Start(); err != nil {
+		fmt.Println(err)
 		return err
 	}
 

@@ -9,7 +9,7 @@ import (
 	iavltree "github.com/cosmos/iavl"
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"

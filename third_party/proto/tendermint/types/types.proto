@@ -6,18 +6,18 @@ option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "tendermint/libs/bits/types.proto";
-import "tendermint/crypto/merkle/types.proto";
-import "tendermint/version/version.proto";
+import "tendermint/crypto/proof.proto";
+import "tendermint/version/types.proto";
 
 // BlockIdFlag indicates which BlcokID the signature is for
 enum BlockIDFlag {
   option (gogoproto.goproto_enum_stringer) = true;
   option (gogoproto.goproto_enum_prefix)   = false;
 
-  BLOCKD_ID_FLAG_UNKNOWN = 0;
-  BLOCK_ID_FLAG_ABSENT   = 1 [(gogoproto.enumvalue_customname) = "BlockIDFlagAbsent"];
-  BLOCK_ID_FLAG_COMMIT   = 2 [(gogoproto.enumvalue_customname) = "BlockIDFlagCommit"];
-  BLOCK_ID_FLAG_NIL      = 3 [(gogoproto.enumvalue_customname) = "BlockIDFlagNil"];
+  BLOCK_ID_FLAG_UNKNOWN = 0 [(gogoproto.enumvalue_customname) = "BlockIDFlagUnknown"];
+  BLOCK_ID_FLAG_ABSENT  = 1 [(gogoproto.enumvalue_customname) = "BlockIDFlagAbsent"];
+  BLOCK_ID_FLAG_COMMIT  = 2 [(gogoproto.enumvalue_customname) = "BlockIDFlagCommit"];
+  BLOCK_ID_FLAG_NIL     = 3 [(gogoproto.enumvalue_customname) = "BlockIDFlagNil"];
 }
 
 // SignedMsgType is a type of signed message in the consensus.
@@ -25,13 +25,13 @@ enum SignedMsgType {
   option (gogoproto.goproto_enum_stringer) = true;
   option (gogoproto.goproto_enum_prefix)   = false;
 
-  SIGNED_MSG_TYPE_UNKNOWN = 0;
+  SIGNED_MSG_TYPE_UNKNOWN   = 0 [(gogoproto.enumvalue_customname) = "UnknownType"];
   // Votes
-  PREVOTE_TYPE   = 1 [(gogoproto.enumvalue_customname) = "PrevoteType"];
-  PRECOMMIT_TYPE = 2 [(gogoproto.enumvalue_customname) = "PrecommitType"];
+  SIGNED_MSG_TYPE_PREVOTE   = 1 [(gogoproto.enumvalue_customname) = "PrevoteType"];
+  SIGNED_MSG_TYPE_PRECOMMIT = 2 [(gogoproto.enumvalue_customname) = "PrecommitType"];
 
   // Proposals
-  PROPOSAL_TYPE = 32 [(gogoproto.enumvalue_customname) = "ProposalType"];
+  SIGNED_MSG_TYPE_PROPOSAL  = 32 [(gogoproto.enumvalue_customname) = "ProposalType"];
 }
 
 // PartsetHeader
@@ -41,9 +41,9 @@ message PartSetHeader {
 }
 
 message Part {
-  uint32                         index = 1;
-  bytes                          bytes = 2;
-  tendermint.crypto.merkle.Proof proof = 3 [(gogoproto.nullable) = false];
+  uint32                  index = 1;
+  bytes                   bytes = 2;
+  tendermint.crypto.Proof proof = 3 [(gogoproto.nullable) = false];
 }
 
 // BlockID
@@ -150,7 +150,7 @@ message BlockMeta {
 
 // TxProof represents a Merkle proof of the presence of a transaction in the Merkle tree.
 message TxProof {
-  bytes                          root_hash = 1;
-  bytes                          data      = 2;
-  tendermint.crypto.merkle.Proof Proof     = 3;
+  bytes                   root_hash = 1;
+  bytes                   data      = 2;
+  tendermint.crypto.Proof proof     = 3;
 }

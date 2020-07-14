@@ -132,10 +132,6 @@ func TestTraceKVStoreHas(t *testing.T) {
 		expected bool
 	}{
 		{
-			key:      []byte{},
-			expected: false,
-		},
-		{
 			key:      kvPairs[0].Key,
 			expected: true,
 		},

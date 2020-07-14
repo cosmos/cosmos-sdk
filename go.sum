@@ -97,6 +97,8 @@ github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d h1:49RLWk1j44Xu4fj
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/iavl v0.13.4-0.20200708112742-ed5b4bb147e3 h1:FVpczbOxAE7FM5tWeHBtHeKyGpMt1IByUXUrmR0sfGA=
 github.com/cosmos/iavl v0.13.4-0.20200708112742-ed5b4bb147e3/go.mod h1:tdmYDeAbTxK+MpPyFgQOJvNF7ZILdp/rehCp49zz7VU=
+github.com/cosmos/iavl v0.13.4-0.20200714154344-89524cdc51be h1:gPXabvAPawITO5ryB5nCNKmo48951tVD2NTTcV/wNR8=
+github.com/cosmos/iavl v0.13.4-0.20200714154344-89524cdc51be/go.mod h1:A9QZVVJuZUBVkvuJQ60QXjRGyxBmHvsXC7ExnwB8wWs=
 github.com/cosmos/ledger-cosmos-go v0.11.1 h1:9JIYsGnXP613pb2vPjFeMMjBI5lEDsEaF6oYorTy6J4=
 github.com/cosmos/ledger-cosmos-go v0.11.1/go.mod h1:J8//BsAGTo3OC/vDLjMRFLW6q0WAaXvHnVc7ZmE8iUY=
 github.com/cosmos/ledger-go v0.9.2 h1:Nnao/dLwaVTk1Q5U9THldpUMMXU94BOTWPddSmVB6pI=

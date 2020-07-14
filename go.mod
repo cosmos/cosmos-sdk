@@ -10,7 +10,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/confio/ics23/go v0.0.0-20200610201322-18c7bd6b2dd3
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
-	github.com/cosmos/iavl v0.13.4-0.20200708112742-ed5b4bb147e3
+	github.com/cosmos/iavl v0.13.4-0.20200714154344-89524cdc51be
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gibson042/canonicaljson-go v1.0.3
 	github.com/gogo/protobuf v1.3.1
@@ -37,10 +37,12 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/tendermint v0.34.0-dev1.0.20200707171757-ebd2cbec97b7
+	github.com/tendermint/tendermint v0.34.0-dev1.0.20200714110441-6ccccb0933d4
 	github.com/tendermint/tm-db v0.6.0
 	google.golang.org/grpc v1.30.0
 	gopkg.in/yaml.v2 v2.3.0
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
+
+replace github.com/tendermint/tendermint => ../tendermint

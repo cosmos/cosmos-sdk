@@ -373,7 +373,7 @@ proto-update-deps:
 	@curl -sSL $(TM_URL)/proto/tendermint/types/params.proto > $(TM_TYPES)/params.proto
 
 	@mkdir -p $(TM_MERKLE_TYPES)
-	@curl -sSL $(TM_URL)/proto/tendermint/crypto/merkle/types.proto > $(TM_MERKLE_TYPES)/types.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/crypto/merkle.proto > $(TM_MERKLE_TYPES)/types.proto
 
 	@mkdir -p $(TM_KEY_TYPES)
 	@curl -sSL $(TM_URL)/proto/tendermint/crypto/keys/types.proto > $(TM_KEY_TYPES)/types.proto

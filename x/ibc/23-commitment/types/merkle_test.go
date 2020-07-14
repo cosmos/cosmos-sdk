@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 func (suite *MerkleTestSuite) TestVerifyMembership() {

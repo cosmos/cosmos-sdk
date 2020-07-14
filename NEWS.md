@@ -68,7 +68,6 @@ index b0c86f4a..4a3a8518 100644
  	)
 ```
 
-
 ### Migrate a node from 0.38.5 to 0.39.0
 
 Note: **do not modify pruning settings with any release prior to `v0.39.0` as that may cause data corruption**.
@@ -83,6 +82,10 @@ The following instructions assume that **pruning settings have not been modified
 * Otherwise, set the `KeepEvery` setting to the same as the previous `KeepEvery` setting (both `<=v0.38.5` and `v0.39.0` default to `KeepEvery:100`). Upgrade to `v0.39.0` is then safe as long as you wait one `KeepEvery` interval plus one `KeepRecent` interval **plus** one pruning `Interval` before changing pruning settings or deleting the last `<=v0.38.5` height (so wait *210* heights with the default configuration).
 
 * Otherwise, make sure the last version persisted with `<=v0.38.5` is never deleted after upgrading to `v0.39.0`, as doing so may cause data loss and data corruption.
+
+## Regression in the signature verification when multiple transactions in the same block are sent from the same account
+
+When multiple transactions in the same block are sent (and correctly signed) by the same account, chances are that some of them could be rejected and the error `unauthorized: signature verification failed` would be returned due to the account's sequence (*nonce*) getting stuck and not being incremented by the ante handler. This behaviour was [a regression](https://github.com/cosmos/cosmos-sdk/issues/6287) introduced in the `v0.38` release series and did not occur in the `v0.37` release series.
 
 ## Changes to ABCI Query's "app/simulate" path
 

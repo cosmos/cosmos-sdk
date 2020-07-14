@@ -56,15 +56,17 @@ in the channel handshake callbacks.
 During `ChanOpenInit`, a version string is passed in and set in party A's 
 channel state.
 
-During `ChanOpenTry`, a version string and counterparty version string are 
-passed in. The counterparty version string must match the version string used
-in `ChanOpenInit` otherwise channel state verification will fail. The version
-string could be anything (even different than the proposed one by party A).
-However, it is expected to be fully supported by party A.
+During `ChanOpenTry`, a version string for party A and for party B are passed
+in. The party A version string must match the version string used in 
+`ChanOpenInit` otherwise channel state verification will fail. The party B
+version string could be anything (even different than the proposed one by
+party A). However, the proposed version by party B is expected to be fully
+supported by party A.
 
 During the `ChanOpenAck` callback, the application module is expected to verify
-the counterparty version using the `MsgChanOpenAck.CounterpartyVersion` field. 
-The application module should throw an error if the version string is not valid.
+the version proposed by party B using the `MsgChanOpenAck` `CounterpartyVersion`
+field. The application module should throw an error if the version string is
+not valid.
 
 Application modules may implement their own versioning system, such as semantic
 versioning, or they may lean upon the versioning system used for in connection

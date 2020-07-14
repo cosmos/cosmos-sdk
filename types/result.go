@@ -110,9 +110,10 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 
 // NewResponseFormatBroadcastTxCommit returns a TxResponse given a
 // ResultBroadcastTxCommit from tendermint.
-func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
-		return TxResponse{}
+		// TODO: Clarify whether or not this should return nil
+		return &TxResponse{}
 	}
 
 	if !res.CheckTx.IsOK() {
@@ -122,9 +123,9 @@ func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxR
 	return newTxResponseDeliverTx(res)
 }
 
-func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
-		return TxResponse{}
+		return nil
 	}
 
 	var txHash string
@@ -134,7 +135,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 
 	parsedLogs, _ := ParseABCILogs(res.CheckTx.Log)
 
-	return TxResponse{
+	return &TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
 		Codespace: res.CheckTx.Codespace,
@@ -148,9 +149,9 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	}
 }
 
-func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) *TxResponse {
 	if res == nil {
-		return TxResponse{}
+		return nil
 	}
 
 	var txHash string
@@ -160,7 +161,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 
 	parsedLogs, _ := ParseABCILogs(res.DeliverTx.Log)
 
-	return TxResponse{
+	return &TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
 		Codespace: res.DeliverTx.Codespace,
@@ -175,14 +176,14 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 }
 
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
-func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
+func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) *TxResponse {
 	if res == nil {
-		return TxResponse{}
+		return &TxResponse{}
 	}
 
 	parsedLogs, _ := ParseABCILogs(res.Log)
 
-	return TxResponse{
+	return &TxResponse{
 		Code:      res.Code,
 		Codespace: res.Codespace,
 		Data:      res.Data.String(),

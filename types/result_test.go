@@ -119,7 +119,7 @@ func TestResponseResultTx(t *testing.T) {
 		Log:       `[]`,
 		Hash:      bytes.HexBytes([]byte("test")),
 	}
-	require.Equal(t, sdk.TxResponse{
+	require.Equal(t, &sdk.TxResponse{
 		Code:      1,
 		Codespace: "codespace",
 		Data:      "64617461",
@@ -127,12 +127,12 @@ func TestResponseResultTx(t *testing.T) {
 		Logs:      logs,
 		TxHash:    "74657374",
 	}, sdk.NewResponseFormatBroadcastTx(resultBroadcastTx))
-	require.Equal(t, sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTx(nil))
+	require.Equal(t, &sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTx(nil))
 }
 
 func TestResponseFormatBroadcastTxCommit(t *testing.T) {
 	// test nil
-	require.Equal(t, sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTxCommit(nil))
+	require.Equal(t, &sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTxCommit(nil))
 
 	logs, err := sdk.ParseABCILogs(`[]`)
 	require.NoError(t, err)
@@ -165,7 +165,7 @@ func TestResponseFormatBroadcastTxCommit(t *testing.T) {
 		},
 	}
 
-	want := sdk.TxResponse{
+	want := &sdk.TxResponse{
 		Height:    10,
 		TxHash:    "74657374",
 		Codespace: "codespace",

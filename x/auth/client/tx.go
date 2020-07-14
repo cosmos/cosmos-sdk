@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -166,56 +167,45 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, ms
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(
-	txBldr authtypes.TxBuilder, clientCtx client.Context, name string,
-	stdTx authtypes.StdTx, appendSig bool, offline bool,
-) (authtypes.StdTx, error) {
-
-	var signedStdTx authtypes.StdTx
-
-	info, err := txBldr.Keybase().Key(name)
+func SignStdTx(txFactory tx.Factory, clientCtx client.Context, name string,
+	stdTx client.TxBuilder, appendSig bool, offline bool) error {
+	info, err := txFactory.Keybase().Key(name)
 	if err != nil {
-		return signedStdTx, err
+		return err
 	}
-
-	addr := info.GetPubKey().Address()
-
-	// check whether the address is a signer
-	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	addr := sdk.AccAddress(info.GetPubKey().Address())
+	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetTx().(authtypes.StdTx).GetSigners()) {
+		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
-
 	if !offline {
-		txBldr, err = populateAccountFromState(txBldr, clientCtx, sdk.AccAddress(addr))
+		txFactory, err = populateAccountFromState(txFactory, clientCtx, sdk.AccAddress(addr))
 		if err != nil {
-			return signedStdTx, err
+			return err
 		}
 	}
 
-	return txBldr.SignStdTx(name, stdTx, appendSig)
+	return tx.Sign(txFactory, name, stdTx)
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func SignStdTxWithSignerAddress(
-	txBldr authtypes.TxBuilder, clientCtx client.Context,
-	addr sdk.AccAddress, name string, stdTx authtypes.StdTx, offline bool,
-) (signedStdTx authtypes.StdTx, err error) {
+func SignStdTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
+	name string, txBuilder client.TxBuilder, offline bool) (err error) {
 
 	// check whether the address is a signer
-	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
+		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
-		txBldr, err = populateAccountFromState(txBldr, clientCtx, addr)
+		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
 		if err != nil {
-			return signedStdTx, err
+			return err
 		}
 	}
 
-	return txBldr.SignStdTx(name, stdTx, false)
+	return tx.Sign(txFactory, name, txBuilder)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
@@ -270,8 +260,8 @@ func (bs *BatchScanner) Scan() bool {
 }
 
 func populateAccountFromState(
-	txBldr authtypes.TxBuilder, clientCtx client.Context, addr sdk.AccAddress,
-) (authtypes.TxBuilder, error) {
+	txBldr tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
+) (tx.Factory, error) {
 
 	num, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 	if err != nil {

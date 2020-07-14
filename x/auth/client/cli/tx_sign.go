@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clitx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -198,7 +197,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, txF, tx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
+		clientCtx, txF, _, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
@@ -217,13 +216,15 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 				return err
 			}
 
-			err = clitx.Sign(txBuilder, clientCtx.GetFromName(), tx)
+			err = authclient.SignStdTxWithSignerAddress(
+				txF, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline,
+			)
 			generateSignatureOnly = true
 		} else {
 			append, _ := cmd.Flags().GetBool(flagAppend)
 			appendSig := append && !generateSignatureOnly
 			if appendSig {
-				err = clitx.Sign(txF, clientCtx.GetFromName(), txBuilder)
+				err = authclient.SignStdTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, appendSig, clientCtx.Offline)
 			}
 		}
 

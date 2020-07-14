@@ -51,7 +51,7 @@ the amount of gas, it now returns the result of the transaction as well.
 
 ## bank.send event comes with sender information
 
-The `bank.send` event used to carrie only the recipient and amount. It was assumed that the sender of the funds was `message.sender`.
+The `bank.send` event used to carry only the recipient and amount. It was assumed that the sender of the funds was `message.sender`.
 This is often not true when a module call the bank keeper directly. This may be due to staking distribution, or via a cosmwasm contract that released funds (where I discovered the issue).
 
 `bank.send` now contains the entire triple `(sender, recipient, amount)`.

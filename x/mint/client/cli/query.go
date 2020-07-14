@@ -23,11 +23,9 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	mintingQueryCmd.AddCommand(
-		flags.GetCommands(
-			GetCmdQueryParams(cdc),
-			GetCmdQueryInflation(cdc),
-			GetCmdQueryAnnualProvisions(cdc),
-		)...,
+		GetCmdQueryParams(cdc),
+		GetCmdQueryInflation(cdc),
+		GetCmdQueryAnnualProvisions(cdc),
 	)
 
 	return mintingQueryCmd
@@ -36,7 +34,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryParams implements a command to return the current minting
 // parameters.
 func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current minting parameters",
 		Args:  cobra.NoArgs,
@@ -57,12 +55,16 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 			return clientCtx.PrintOutput(params)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryInflation implements a command to return the current minting
 // inflation value.
 func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "inflation",
 		Short: "Query the current minting inflation value",
 		Args:  cobra.NoArgs,
@@ -83,12 +85,16 @@ func GetCmdQueryInflation(cdc *codec.Codec) *cobra.Command {
 			return clientCtx.PrintOutput(inflation)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdQueryAnnualProvisions implements a command to return the current minting
 // annual provisions value.
 func GetCmdQueryAnnualProvisions(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "annual-provisions",
 		Short: "Query the current minting annual provisions value",
 		Args:  cobra.NoArgs,
@@ -109,4 +115,8 @@ func GetCmdQueryAnnualProvisions(cdc *codec.Codec) *cobra.Command {
 			return clientCtx.PrintOutput(inflation)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

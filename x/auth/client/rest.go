@@ -19,17 +19,17 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, clientCtx client.Context,
 		return
 	}
 
-	simAndExec, gas, err := flags.ParseGas(br.Gas)
+	gasSetting, err := flags.ParseGasSetting(br.Gas)
 	if rest.CheckBadRequestError(w, err) {
 		return
 	}
 
 	txBldr := types.NewTxBuilder(
-		GetTxEncoder(clientCtx.Codec), br.AccountNumber, br.Sequence, gas, gasAdj,
+		GetTxEncoder(clientCtx.Codec), br.AccountNumber, br.Sequence, gasSetting.Gas, gasAdj,
 		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
 	)
 
-	if br.Simulate || simAndExec {
+	if br.Simulate || gasSetting.Simulate {
 		if gasAdj < 0 {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, errors.ErrorInvalidGasAdjustment.Error())
 			return

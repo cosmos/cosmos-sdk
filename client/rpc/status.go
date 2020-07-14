@@ -28,7 +28,6 @@ func StatusCommand() *cobra.Command {
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -53,12 +52,7 @@ func printNodeStatus(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var output []byte
-	if clientCtx.Indent {
-		output, err = legacy.Cdc.MarshalJSONIndent(status, "", "  ")
-	} else {
-		output, err = legacy.Cdc.MarshalJSON(status)
-	}
+	output, err := legacy.Cdc.MarshalJSON(status)
 	if err != nil {
 		return err
 	}

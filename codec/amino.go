@@ -3,6 +3,7 @@ package codec
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -171,7 +172,7 @@ func (cdc *Codec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 }
 
 func (*Codec) UnpackAny(*types.Any, interface{}) error {
-	return fmt.Errorf("AminoCodec can't handle unpack protobuf Any's")
+	return errors.New("AminoCodec can't handle unpack protobuf Any's")
 }
 
 func (cdc *Codec) RegisterInterface(ptr interface{}, iopts *amino.InterfaceOptions) {

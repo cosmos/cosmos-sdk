@@ -4,22 +4,24 @@ import (
 	"encoding/base64"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetCommandEncode(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
+	clientCtx := client.Context{}.
 		WithTxGenerator(encodingConfig.TxGenerator).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetEncodeCommand(clientCtx)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
+
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
 
@@ -31,7 +33,7 @@ func TestGetCommandEncode(t *testing.T) {
 	JSONEncoded, err := txGen.TxJSONEncoder()(stdTx)
 	require.NoError(t, err)
 
-	txFile, cleanup := tests.WriteToNewTempFile(t, string(JSONEncoded))
+	txFile, cleanup := testutil.WriteToNewTempFile(t, string(JSONEncoded))
 	txFileName := txFile.Name()
 	t.Cleanup(cleanup)
 
@@ -42,12 +44,12 @@ func TestGetCommandEncode(t *testing.T) {
 func TestGetCommandDecode(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
+	clientCtx := client.Context{}.
 		WithTxGenerator(encodingConfig.TxGenerator).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetDecodeCommand(clientCtx)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	sdk.RegisterCodec(encodingConfig.Amino)
 
@@ -66,6 +68,6 @@ func TestGetCommandDecode(t *testing.T) {
 	base64Encoded := base64.StdEncoding.EncodeToString(txBytes)
 
 	// Execute the command
-	err = runDecodeTxString(clientCtx)(cmd, []string{base64Encoded})
-	require.NoError(t, err)
+	cmd.SetArgs([]string{base64Encoded})
+	require.NoError(t, cmd.Execute())
 }

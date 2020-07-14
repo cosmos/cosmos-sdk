@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -288,11 +289,6 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body int
 
 	default:
 		resp, err = marshaler.MarshalJSON(body)
-
-		if ctx.Indent && err == nil {
-			resp, err = codec.MarshalIndentFromJSON(resp)
-		}
-
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -332,11 +328,6 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 
 	default:
 		result, err = marshaler.MarshalJSON(resp)
-
-		if ctx.Indent && err == nil {
-			result, err = codec.MarshalIndentFromJSON(result)
-		}
-
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -345,10 +336,6 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 	wrappedResp := NewResponseWithHeight(ctx.Height, result)
 
 	output, err := marshaler.MarshalJSON(wrappedResp)
-	if ctx.Indent && err == nil {
-		output, err = codec.MarshalIndentFromJSON(output)
-	}
-
 	if CheckInternalServerError(w, err) {
 		return
 	}
@@ -455,4 +442,24 @@ func GetRequest(url string) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+// PostRequest defines a wrapper around an HTTP POST request with a provided URL and data.
+// An error is returned if the request or reading the body fails.
+func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
+	res, err := http.Post(url, contentType, bytes.NewBuffer(data)) // nolint:gosec
+	if err != nil {
+		return nil, fmt.Errorf("error while sending post request: %w", err)
+	}
+
+	bz, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, err
+	}
+
+	return bz, nil
 }

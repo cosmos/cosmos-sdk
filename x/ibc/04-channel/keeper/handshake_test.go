@@ -23,14 +23,16 @@ type testCase = struct {
 // can succeed.
 func (suite *KeeperTestSuite) TestChanOpenInit() {
 	var (
-		connA   *ibctesting.TestConnection
-		connB   *ibctesting.TestConnection
-		portCap *capabilitytypes.Capability
+		connA    *ibctesting.TestConnection
+		connB    *ibctesting.TestConnection
+		features []string
+		portCap  *capabilitytypes.Capability
 	)
 
 	testCases := []testCase{
 		{"success", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			features = []string{"ORDER_ORDERED", "ORDER_UNORDERED"}
 			suite.chainA.CreatePortCapability(connA.NextTestChannel().PortID)
 			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel().PortID)
 		}, true},
@@ -56,8 +58,46 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 		}, false},
 		{"capability is incorrect", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			features = []string{"ORDER_ORDERED", "ORDER_UNORDERED"}
 			portCap = capabilitytypes.NewCapability(3)
 		}, false},
+		{"connection version not negotiated", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			// modify connA versions
+			conn := suite.chainA.GetConnection(connA)
+
+			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = append(conn.Versions, version)
+
+			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
+				suite.chainA.GetContext(),
+				connA.ID, conn,
+			)
+			features = []string{"ORDER_ORDERED", "ORDER_UNORDERED"}
+			suite.chainA.CreatePortCapability(connA.NextTestChannel().PortID)
+			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel().PortID)
+		}, false},
+		{"connection does not support ORDERED channels", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			// modify connA versions to only support UNORDERED channels
+			conn := suite.chainA.GetConnection(connA)
+
+			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = []string{version}
+
+			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
+				suite.chainA.GetContext(),
+				connA.ID, conn,
+			)
+			// NOTE: Opening UNORDERED channels is still expected to pass but ORDERED channels should fail
+			features = []string{"ORDER_UNORDERED"}
+			suite.chainA.CreatePortCapability(connA.NextTestChannel().PortID)
+			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel().PortID)
+		}, true},
 	}
 
 	for _, tc := range testCases {
@@ -76,7 +116,17 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 					channelA.PortID, channelA.ID, portCap, counterparty, ibctesting.ChannelVersion,
 				)
 
-				if tc.expPass {
+				// check if order is supported by channel to determine expected behaviour
+				orderSupported := false
+				for _, f := range features {
+					if f == order.String() {
+						orderSupported = true
+					}
+				}
+
+				// Testcase must have expectedPass = true AND channel order supported before
+				// asserting the channel handshake initiation succeeded
+				if tc.expPass && orderSupported {
 					suite.Require().NoError(err)
 					suite.Require().NotNil(cap)
 
@@ -158,6 +208,42 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
 
 			portCap = capabilitytypes.NewCapability(3)
+		}, false},
+		{"connection version not negotiated", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+
+			// modify connB versions
+			conn := suite.chainB.GetConnection(connB)
+
+			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = append(conn.Versions, version)
+
+			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(
+				suite.chainB.GetContext(),
+				connB.ID, conn,
+			)
+			suite.chainB.CreatePortCapability(connB.NextTestChannel().PortID)
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel().PortID)
+		}, false},
+		{"connection does not support ORDERED channels", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+
+			// modify connA versions to only support UNORDERED channels
+			conn := suite.chainA.GetConnection(connA)
+
+			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = []string{version}
+
+			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
+				suite.chainA.GetContext(),
+				connA.ID, conn,
+			)
+			suite.chainA.CreatePortCapability(connA.NextTestChannel().PortID)
+			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel().PortID)
 		}, false},
 	}
 
@@ -294,6 +380,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			heightDiff = 0    // must be explicitly changed
+
 			tc.malleate()
 
 			channelA := connA.FirstOrNextTestChannel()

@@ -17,6 +17,12 @@ func Paginate(
 	req *PageRequest,
 	onResult func(key []byte, value []byte) error,
 ) (*PageResponse, error) {
+
+	// if the PageRequest is nil, use default PageRequest
+	if req == nil {
+		req = &PageRequest{}
+	}
+
 	offset := req.Offset
 	key := req.Key
 	limit := req.Limit
@@ -45,7 +51,9 @@ func Paginate(
 				nextKey = iterator.Key()
 				break
 			}
-
+			if iterator.Error() != nil {
+				return nil, iterator.Error()
+			}
 			err := onResult(iterator.Key(), iterator.Value())
 			if err != nil {
 				return nil, err
@@ -78,9 +86,15 @@ func Paginate(
 			if err != nil {
 				return nil, err
 			}
-		} else if !countTotal {
+		} else if count == end+1 {
 			nextKey = iterator.Key()
-			break
+
+			if !countTotal {
+				break
+			}
+		}
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
 		}
 	}
 

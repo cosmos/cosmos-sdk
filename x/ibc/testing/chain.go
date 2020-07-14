@@ -21,6 +21,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -29,6 +30,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -37,9 +39,8 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ConnectionVersion = "1.0.0"
-	ChannelVersion    = "ics20-1"
-	InvalidID         = "IDisInvalid"
+	ChannelVersion = ibctransfertypes.Version
+	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
 
@@ -49,6 +50,8 @@ const (
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
+
+	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -63,7 +66,8 @@ type TestChain struct {
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
 	CurrentHeader abci.Header       // header for current block height
-	Querier       sdk.Querier
+	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
+	QueryServer   types.QueryServer
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -118,6 +122,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		App:           app,
 		CurrentHeader: header,
 		Querier:       keeper.NewQuerier(*app.IBCKeeper),
+		QueryServer:   app.IBCKeeper,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -157,6 +162,20 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
 	return proof, uint64(res.Height) + 1
+}
+
+// QueryConsensusStateProof performs an abci query for a consensus state
+// stored on the given clientID. The proof and consensusHeight are returned.
+func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, uint64) {
+	// retrieve consensus state to provide proof for
+	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
+	require.True(chain.t, found)
+
+	consensusHeight := consState.GetHeight()
+	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
+	proofConsensus, _ := chain.QueryProof(consensusKey)
+
+	return proofConsensus, consensusHeight
 }
 
 // NextBlock sets the last header to the current header and increments the current header to be
@@ -255,19 +274,36 @@ func (chain *TestChain) NewClientID(counterpartyChainID string) string {
 	return clientID
 }
 
-// NewConnection appends a new TestConnection which contains references to the connection id,
-// client id and counterparty client id. The connection id format:
+// AddTestConnection appends a new TestConnection which contains references
+// to the connection id, client id and counterparty client id.
+func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	conn := chain.ConstructNextTestConnection(clientID, counterpartyClientID)
+
+	chain.Connections = append(chain.Connections, conn)
+	return conn
+}
+
+// ConstructNextTestConnection constructs the next test connection to be
+// created given a clientID and counterparty clientID. The connection id
+// format:
 // connectionid<index>
-func (chain *TestChain) NewTestConnection(clientID, counterpartyClientID string) *TestConnection {
+func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
 	connectionID := ConnectionIDPrefix + strconv.Itoa(len(chain.Connections))
-	conn := &TestConnection{
+	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
 		CounterpartyClientID: counterpartyClientID,
 	}
+}
 
-	chain.Connections = append(chain.Connections, conn)
-	return conn
+// FirstTestConnection returns the first test connection for a given clientID.
+// The connection may or may not exist in the chain state.
+func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	if len(chain.Connections) > 0 {
+		return chain.Connections[0]
+	}
+
+	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
@@ -366,13 +402,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retrieve consensus state to provide proof for
-	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
-	require.True(chain.t, found)
-
-	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
-	proofConsensus, _ := counterparty.QueryProof(consensusKey)
+	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
@@ -393,13 +423,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retrieve consensus state to provide proof for
-	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
-	require.True(chain.t, found)
-
-	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
-	proofConsensus, _ := counterparty.QueryProof(consensusKey)
+	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
 		connection.ID,
@@ -580,14 +604,34 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// PacketExecuted simulates receiving and wiritng an acknowledgement to the chain.
+// PacketExecuted simulates receiving and writing an acknowledgement to the chain.
 func (chain *TestChain) PacketExecuted(
+	packet channelexported.PacketI,
+) error {
+	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
+
+	// no need to send message, acting as a handler
+	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
+}
+
+// AcknowledgementExecuted simulates deleting a packet commitment with the
+// given packet sequence.
+func (chain *TestChain) AcknowledgementExecuted(
 	packet channelexported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.AcknowledgementExecuted(chain.GetContext(), channelCap, packet)
 	if err != nil {
 		return err
 	}

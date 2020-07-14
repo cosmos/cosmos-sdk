@@ -28,7 +28,7 @@ func CheckMisbehaviourAndUpdateState(
 	// cast the interface to specific types before checking for misbehaviour
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "client state type is not Tendermint")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState)
 	}
 
 	// If client is already frozen at earlier height than evidence, return with error
@@ -39,12 +39,12 @@ func CheckMisbehaviourAndUpdateState(
 
 	tmConsensusState, ok := consensusState.(types.ConsensusState)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "consensus state is not Tendermint")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", consensusState, types.ConsensusState{})
 	}
 
 	tmEvidence, ok := misbehaviour.(types.Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, types.Evidence{})
 	}
 
 	if err := checkMisbehaviour(
@@ -108,14 +108,14 @@ func checkMisbehaviour(
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
+	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
 		evidence.Header1.Commit, clientState.TrustLevel,
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
-	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
+	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
 		evidence.Header2.Commit, clientState.TrustLevel,
 	); err != nil {

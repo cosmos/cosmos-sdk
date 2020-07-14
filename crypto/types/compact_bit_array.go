@@ -26,8 +26,8 @@ func NewCompactBitArray(bits int) *CompactBitArray {
 	}
 }
 
-// Size returns the number of bits in the bitarray
-func (bA *CompactBitArray) Size() int {
+// Count returns the number of bits in the bitarray
+func (bA *CompactBitArray) Count() int {
 	if bA == nil {
 		return 0
 	} else if bA.ExtraBitsStored == uint32(0) {
@@ -38,12 +38,12 @@ func (bA *CompactBitArray) Size() int {
 }
 
 // GetIndex returns the bit at index i within the bit array.
-// The behavior is undefined if i >= bA.Size()
+// The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) GetIndex(i int) bool {
 	if bA == nil {
 		return false
 	}
-	if i >= bA.Size() {
+	if i >= bA.Count() {
 		return false
 	}
 
@@ -51,13 +51,13 @@ func (bA *CompactBitArray) GetIndex(i int) bool {
 }
 
 // SetIndex sets the bit at index i within the bit array.
-// The behavior is undefined if i >= bA.Size()
+// The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 	if bA == nil {
 		return false
 	}
 
-	if i >= bA.Size() {
+	if i >= bA.Count() {
 		return false
 	}
 
@@ -115,7 +115,7 @@ func (bA *CompactBitArray) StringIndented(indent string) string {
 	}
 	lines := []string{}
 	bits := ""
-	size := bA.Size()
+	size := bA.Count()
 	for i := 0; i < size; i++ {
 		if bA.GetIndex(i) {
 			bits += "x"
@@ -152,7 +152,7 @@ func (bA *CompactBitArray) MarshalJSON() ([]byte, error) {
 	}
 
 	bits := `"`
-	size := bA.Size()
+	size := bA.Count()
 	for i := 0; i < size; i++ {
 		if bA.GetIndex(i) {
 			bits += `x`
@@ -204,7 +204,7 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 // CompactMarshal is a space efficient encoding for CompactBitArray.
 // It is not amino compatible.
 func (bA *CompactBitArray) CompactMarshal() []byte {
-	size := bA.Size()
+	size := bA.Count()
 	if size <= 0 {
 		return []byte("null")
 	}

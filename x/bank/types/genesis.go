@@ -14,9 +14,9 @@ var _ exported.GenesisBalance = (*Balance)(nil)
 
 // GenesisState defines the bank module's genesis state.
 type GenesisState struct {
-	SendEnabled bool      `json:"send_enabled" yaml:"send_enabled"`
-	Balances    []Balance `json:"balances" yaml:"balances"`
-	Supply      sdk.Coins `json:"supply" yaml:"supply"`
+	Params   Params    `json:"params" yaml:"params"`
+	Balances []Balance `json:"balances" yaml:"balances"`
+	Supply   sdk.Coins `json:"supply" yaml:"supply"`
 }
 
 // Balance defines an account address and balance pair used in the bank module's
@@ -49,18 +49,28 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 	return balances
 }
 
+// ValidateGenesis performs basic validation of supply genesis data returning an
+// error for any failed validation criteria.
+func ValidateGenesis(data GenesisState) error {
+	if err := data.Params.Validate(); err != nil {
+		return err
+	}
+
+	return NewSupply(data.Supply).ValidateBasic()
+}
+
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(sendEnabled bool, balances []Balance, supply sdk.Coins) GenesisState {
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins) GenesisState {
 	return GenesisState{
-		SendEnabled: sendEnabled,
-		Balances:    balances,
-		Supply:      supply,
+		Params:   params,
+		Balances: balances,
+		Supply:   supply,
 	}
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(true, []Balance{}, DefaultSupply().GetTotal())
+	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal())
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application

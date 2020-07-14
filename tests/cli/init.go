@@ -17,8 +17,6 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	// reset test state
 	f.UnsafeResetAll()
 
-	f.CLIConfig("keyring-backend", "test")
-
 	// ensure keystore has foo and bar keys
 	f.KeysDelete(KeyFoo)
 	f.KeysDelete(KeyBar)
@@ -28,18 +26,10 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	f.KeysAdd(KeyBar)
 	f.KeysAdd(KeyBaz)
 	f.KeysAdd(KeyVesting)
-	f.KeysAdd(KeyFooBarBaz, "--multisig-threshold=2", fmt.Sprintf(
-		"--multisig=%s,%s,%s", KeyFoo, KeyBar, KeyBaz))
-
-	// ensure that CLI output is in JSON format
-	f.CLIConfig("output", "json")
+	f.KeysAdd(KeyFooBarBaz, "--multisig-threshold=2", fmt.Sprintf("--multisig=%s,%s,%s", KeyFoo, KeyBar, KeyBaz))
 
 	// NOTE: SDInit sets the ChainID
 	f.SDInit(KeyFoo)
-
-	f.CLIConfig("chain-id", f.ChainID)
-	f.CLIConfig("broadcast-mode", "block")
-	f.CLIConfig("trust-node", "true")
 
 	// start an account with tokens
 	f.AddGenesisAccount(f.KeyAddress(KeyFoo), StartCoins)
@@ -66,5 +56,5 @@ func (f *Fixtures) Cleanup(dirs ...string) {
 
 // Flags returns the flags necessary for making most CLI calls
 func (f *Fixtures) Flags() string {
-	return fmt.Sprintf("--home=%s --node=%s", f.SimcliHome, f.RPCAddr)
+	return fmt.Sprintf("--home=%s --node=%s --chain-id=%s --output=json", f.SimcliHome, f.RPCAddr, f.ChainID)
 }

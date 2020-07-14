@@ -26,7 +26,48 @@ may want to provide either of the granular pruning values:
 
 The former two options dictate how many recent versions are kept on disk and the offset of what versions are kept after that
 respectively, and the latter defines the height interval in which versions are deleted in a batch. **Note: there are are some
-client application breaking changes with regard to IAVL, stores, and pruning settings.**
+client application breaking changes with regard to IAVL, stores, and pruning settings.** An example patch follows:
+
+```patch
+From 5884171ba73c3054e98564c39adc9cbbab8d4646 Mon Sep 17 00:00:00 2001
+From: Alessio Treglia <alessio@tendermint.com>
+Date: Tue, 14 Jul 2020 14:54:19 +0100
+Subject: [PATCH 2/4] use new pruning options
+
+---
+ cmd/cnd/main.go | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/cmd/cnd/main.go b/cmd/cnd/main.go
+index b0c86f4a..4a3a8518 100644
+--- a/cmd/cnd/main.go
++++ b/cmd/cnd/main.go
+@@ -23,7 +23,6 @@ import (
+ 	comgenutilcli "github.com/commercionetwork/commercionetwork/x/genutil/client/cli"
+ 	"github.com/cosmos/cosmos-sdk/baseapp"
+ 	"github.com/cosmos/cosmos-sdk/server"
+-	"github.com/cosmos/cosmos-sdk/store"
+ 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+ 	"github.com/cosmos/cosmos-sdk/x/staking"
+ )
+@@ -87,9 +86,14 @@ func main() {
+ }
+ 
+ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
++	pruningOpts, err := server.GetPruningOptionsFromFlags()
++	if err != nil {
++		panic(err)
++	}
++
+ 	return app.NewCommercioNetworkApp(
+ 		logger, db, traceStore, true, invCheckPeriod,
+-		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
++		baseapp.SetPruning(pruningOpts),
+ 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
+ 		baseapp.SetHaltHeight(uint64(viper.GetInt(server.FlagHaltHeight))),
+ 	)
+```
+
 
 ### Migrate a node from 0.38.5 to 0.39.0
 

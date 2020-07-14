@@ -226,7 +226,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
-func NewBatchScanner(cdc *codec.Codec, r io.Reader) *BatchScanner {
+func NewBatchScanner(cdc codec.JSONMarshaler, r io.Reader) *BatchScanner {
 	return &BatchScanner{Scanner: bufio.NewScanner(r), cdc: cdc}
 }
 
@@ -234,13 +234,13 @@ func NewBatchScanner(cdc *codec.Codec, r io.Reader) *BatchScanner {
 // of newline-delimited JSON encoded StdTx.
 type BatchScanner struct {
 	*bufio.Scanner
-	stdTx        authtypes.StdTx
-	cdc          *codec.Codec
+	stdTx        sdk.Tx
+	cdc          codec.JSONMarshaler
 	unmarshalErr error
 }
 
 // StdTx returns the most recent StdTx unmarshalled by a call to Scan.
-func (bs BatchScanner) StdTx() authtypes.StdTx { return bs.stdTx }
+func (bs BatchScanner) StdTx() sdk.Tx { return bs.stdTx }
 
 // UnmarshalErr returns the first unmarshalling error that was encountered by the scanner.
 func (bs BatchScanner) UnmarshalErr() error { return bs.unmarshalErr }

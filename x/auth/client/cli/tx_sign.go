@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
@@ -8,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -21,7 +23,7 @@ const (
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
-func GetSignBatchCommand(codec *codec.Codec) *cobra.Command {
+func GetSignBatchCommand(clientCtx client.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign-batch [file]",
 		Short: "Sign transaction batch files",
@@ -43,7 +45,7 @@ The --multisig=<multisig_key> flag generates a signature on behalf of a multisig
 account key. It implies --signature-only.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeSignBatchCmd(codec),
+		RunE:   makeSignBatchCmd(clientCtx),
 		Args:   cobra.ExactArgs(1),
 	}
 
@@ -56,81 +58,79 @@ account key. It implies --signature-only.
 	return cmd
 }
 
-func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
-	return nil
-	// return func(cmd *cobra.Command, args []string) error {
-	// 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	// 	clientCtx := client.GetClientContextFromCmd(cmd)
-	//
-	// 	txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-	//
-	// 	var (
-	// 		multisigAddr sdk.AccAddress
-	// 		infile       = os.Stdin
-	// 	)
-	//
-	// 	// validate multisig address if there's any
-	// 	if ms, _ := cmd.Flags().GetString(flagMultisig); ms != "" {
-	// 		multisigAddr, err = sdk.AccAddressFromBech32(ms)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	//
-	// 	// prepare output document
-	// 	closeFunc, err := setOutputFile(cmd)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	defer closeFunc()
-	// 	clientCtx.WithOutput(cmd.OutOrStdout())
-	//
-	// 	if args[0] != "-" {
-	// 		infile, err = os.Open(args[0])
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	//
-	// 	scanner := authclient.NewBatchScanner(cdc, infile)
-	//
-	// 	for sequence := txBldr.Sequence(); scanner.Scan(); sequence++ {
-	// 		var stdTx types.StdTx
-	//
-	// 		unsignedStdTx := scanner.StdTx()
-	// 		txBldr = txBldr.WithSequence(sequence)
-	//
-	// 		if multisigAddr.Empty() {
-	// 			homeDir, _ := cmd.Flags().GetString(flags.FlagFrom)
-	// 			stdTx, err = authclient.SignStdTx(txBldr, clientCtx, homeDir, unsignedStdTx, false, true)
-	// 		} else {
-	// 			stdTx, err = authclient.SignStdTxWithSignerAddress(txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), unsignedStdTx, true)
-	// 		}
-	//
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	//
-	// 		json, err := getSignatureJSON(cdc, stdTx, generateSignatureOnly)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	//
-	// 		cmd.Printf("%s\n", json)
-	// 	}
-	//
-	// 	if err := scanner.UnmarshalErr(); err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	return scanner.Err()
-	// }
+func makeSignBatchCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		inBuf := bufio.NewReader(cmd.InOrStdin())
+		clientCtx = clientCtx.InitWithInput(inBuf)
+		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+
+		txGen := clientCtx.TxGenerator
+		txBuilder := txGen.NewTxBuilder()
+		var err error
+		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
+
+		var (
+			multisigAddr sdk.AccAddress
+			infile       = os.Stdin
+		)
+
+		// validate multisig address if there's any
+		if ms, _ := cmd.Flags().GetString(flagMultisig); ms != "" {
+			multisigAddr, err = sdk.AccAddressFromBech32(ms)
+			if err != nil {
+				return err
+			}
+		}
+
+		// prepare output document
+		closeFunc, err := setOutputFile(cmd)
+		if err != nil {
+			return err
+		}
+
+		defer closeFunc()
+		clientCtx.WithOutput(cmd.OutOrStdout())
+
+		if args[0] != "-" {
+			infile, err = os.Open(args[0])
+			if err != nil {
+				return err
+			}
+		}
+
+		scanner := authclient.NewBatchScanner(clientCtx.JSONMarshaler, infile)
+
+		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
+			var stdTx types.StdTx
+
+			unsignedStdTx := scanner.StdTx()
+			txFactory = txFactory.WithSequence(sequence)
+
+			if multisigAddr.Empty() {
+				homeDir, _ := cmd.Flags().GetString(flags.FlagFrom)
+				err = authclient.SignStdTx(txFactory, clientCtx, homeDir, txBuilder, false, true)
+			} else {
+				err = authclient.SignStdTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, true)
+			}
+
+			if err != nil {
+				return err
+			}
+
+			json, err := newGetSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, stdTx, generateSignatureOnly)
+			if err != nil {
+				return err
+			}
+
+			cmd.Printf("%s\n", json)
+		}
+
+		if err := scanner.UnmarshalErr(); err != nil {
+			return err
+		}
+
+		return scanner.Err()
+	}
 }
 
 func setOutputFile(cmd *cobra.Command) (func(), error) {

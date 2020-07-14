@@ -237,6 +237,21 @@ func (tx StdTx) GetSignatures() [][]byte {
 	return sigs
 }
 
+// GetSignaturesV2 implements SigVerifiableTx.GetSignaturesV2
+func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
+	res := make([]signing.SignatureV2, len(tx.Signatures))
+
+	for i, sig := range tx.Signatures {
+		var err error
+		res[i], err = StdSignatureToSignatureV2(legacy.Cdc, sig)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "Unable to convert signature %v to V2", sig)
+		}
+	}
+
+	return res, nil
+}
+
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() []crypto.PubKey {
@@ -247,20 +262,6 @@ func (tx StdTx) GetPubKeys() []crypto.PubKey {
 	}
 
 	return pks
-}
-
-// GetSignBytes returns the signBytes of the tx for a given signer
-func (tx StdTx) GetSignBytes(ctx sdk.Context, acc AccountI) []byte {
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
-	var accNum uint64
-	if !genesis {
-		accNum = acc.GetAccountNumber()
-	}
-
-	return StdSignBytes(
-		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo,
-	)
 }
 
 // GetGas returns the Gas in StdFee
@@ -342,6 +343,25 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
+func DefaultJSONTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		var tx = StdTx{}
+
+		if len(txBytes) == 0 {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+		}
+
+		// StdTx.Msg is an interface. The concrete types
+		// are registered by MakeTxCodec
+		err := cdc.UnmarshalJSON(txBytes, &tx)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		return tx, nil
+	}
+}
+
 // DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
@@ -393,7 +413,7 @@ func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signin
 	sigDatas := make([]signing.SignatureData, len(sigs))
 	pubKeys := multiPK.GetPubKeys()
 	bitArray := multiSig.BitArray
-	n := multiSig.BitArray.Size()
+	n := multiSig.BitArray.Count()
 	signatures := multisig.NewMultisig(n)
 	sigIdx := 0
 	for i := 0; i < n; i++ {

@@ -99,12 +99,13 @@ func querySupplyOf(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, er
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	supply := k.GetSupply(ctx).GetTotal().AmountOf(params.Denom)
+	amount := k.GetSupply(ctx).GetTotal().AmountOf(params.Denom)
+	supply := sdk.NewCoin(params.Denom, amount)
 
-	res, err := supply.MarshalJSON()
+	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, supply)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
-	return res, nil
+	return bz, nil
 }

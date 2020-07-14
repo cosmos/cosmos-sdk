@@ -18,6 +18,9 @@ import (
 
 // Keeper defines the IBC connection keeper
 type Keeper struct {
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
 	storeKey     sdk.StoreKey
 	cdc          codec.Marshaler // hybrid codec
 	clientKeeper types.ClientKeeper
@@ -154,7 +157,7 @@ func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.Connecti
 func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) error {
 	_, found := k.clientKeeper.GetClientState(ctx, clientID)
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
@@ -163,26 +166,6 @@ func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID st
 	}
 
 	conns = append(conns, connectionID)
-	k.SetClientConnectionPaths(ctx, clientID, conns)
-	return nil
-}
-
-// removeConnectionFromClient is used to remove a connection identifier from the
-// set of connections associated with a client.
-//
-// CONTRACT: client must already exist
-// nolint: unused
-func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) error {
-	conns, found := k.GetClientConnectionPaths(ctx, clientID)
-	if !found {
-		return sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, clientID)
-	}
-
-	conns, ok := host.RemovePath(conns, connectionID)
-	if !ok {
-		return sdkerrors.Wrap(types.ErrConnectionPath, clientID)
-	}
-
 	k.SetClientConnectionPaths(ctx, clientID, conns)
 	return nil
 }

@@ -6,12 +6,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// ConnectionPaths define all the connection paths for a given client state.
-type ConnectionPaths struct {
-	ClientID string   `json:"client_id" yaml:"client_id"`
-	Paths    []string `json:"paths" yaml:"paths"`
-}
-
 // NewConnectionPaths creates a ConnectionPaths instance.
 func NewConnectionPaths(id string, paths []string) ConnectionPaths {
 	return ConnectionPaths{
@@ -49,7 +43,7 @@ func DefaultGenesisState() GenesisState {
 func (gs GenesisState) Validate() error {
 	for i, conn := range gs.Connections {
 		if err := conn.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid connection %d: %w", i, err)
+			return fmt.Errorf("invalid connection %v index %d: %w", conn, i, err)
 		}
 	}
 

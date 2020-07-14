@@ -16,6 +16,8 @@ import (
 )
 
 func TestCLICreateValidator(t *testing.T) {
+	t.SkipNow() // Recreate when using CLI tests.
+
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -40,7 +42,7 @@ func TestCLICreateValidator(t *testing.T) {
 	bankclienttestutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	require.Equal(t, sendTokens, bankclienttestutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
+	require.Equal(t, sendTokens.String(), bankclienttestutil.QueryBalances(f, barAddr).AmountOf(cli.Denom).String())
 
 	// Generate a create validator transaction and ensure correctness
 	success, stdout, stderr := testutil.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewInt64Coin(cli.Denom, 2), "--generate-only")

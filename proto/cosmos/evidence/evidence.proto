@@ -1,0 +1,32 @@
+syntax = "proto3";
+package cosmos.evidence;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/evidence/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+// MsgSubmitEvidence defines an sdk.Msg type that supports submitting arbitrary
+// Evidence.
+message MsgSubmitEvidence {
+  option (gogoproto.goproto_getters)  = false;
+  bytes submitter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  google.protobuf.Any evidence = 2;
+}
+
+// Equivocation implements the Evidence interface and defines evidence of double
+// signing misbehavior.
+message Equivocation {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  int64                     height            = 1;
+  google.protobuf.Timestamp time              = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  int64                     power             = 3;
+  bytes                     consensus_address = 4 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress",
+    (gogoproto.moretags) = "yaml:\"consensus_address\""
+  ];
+}

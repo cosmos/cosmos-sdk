@@ -15,9 +15,6 @@ import (
 
 // Staking params default values
 const (
-	// Default parameter namespace
-	DefaultParamspace = ModuleName
-
 	// DefaultUnbondingTime reflects three weeks in seconds as the default
 	// unbonding time.
 	// TODO: Justify our choice of default here.

@@ -13,7 +13,7 @@ import (
 
 // QueryMintingParams returns the current minting parameters
 func QueryMintingParams(f *cli.Fixtures, flags ...string) types.Params {
-	cmd := fmt.Sprintf("%s query mint params %v", f.SimcliBinary, f.Flags())
+	cmd := fmt.Sprintf("%s query mint params %v", f.SimdBinary, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
 
@@ -24,7 +24,7 @@ func QueryMintingParams(f *cli.Fixtures, flags ...string) types.Params {
 
 // QueryInflation returns the current minting inflation value
 func QueryInflation(f *cli.Fixtures, flags ...string) sdk.Dec {
-	cmd := fmt.Sprintf("%s query mint inflation %v", f.SimcliBinary, f.Flags())
+	cmd := fmt.Sprintf("%s query mint inflation %v", f.SimdBinary, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
 
@@ -35,7 +35,7 @@ func QueryInflation(f *cli.Fixtures, flags ...string) sdk.Dec {
 
 // QueryAnnualProvisions returns the current minting annual provisions value
 func QueryAnnualProvisions(f *cli.Fixtures, flags ...string) sdk.Dec {
-	cmd := fmt.Sprintf("%s query mint annual-provisions %v", f.SimcliBinary, f.Flags())
+	cmd := fmt.Sprintf("%s query mint annual-provisions %v", f.SimdBinary, f.Flags())
 	out, errStr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	require.Empty(f.T, errStr)
 

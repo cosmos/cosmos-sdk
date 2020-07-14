@@ -4,7 +4,7 @@ option  go_package = "github.com/tendermint/tendermint/crypto/merkle";
 
 // For more information on gogo.proto, see:
 // https://github.com/gogo/protobuf/blob/master/extensions.md
-import "third_party/proto/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 option (gogoproto.marshaler_all)   = true;
 option (gogoproto.unmarshaler_all) = true;

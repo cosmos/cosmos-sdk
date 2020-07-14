@@ -3,6 +3,8 @@ package ante_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -22,7 +24,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	priv1, _, addr1 := types.KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := types.NewTestMsg(addr1)
+	msg1 := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}
@@ -68,7 +70,7 @@ func TestDeductFees(t *testing.T) {
 	priv1, _, addr1 := types.KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := types.NewTestMsg(addr1)
+	msg1 := testdata.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}

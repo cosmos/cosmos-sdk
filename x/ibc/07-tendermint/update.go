@@ -28,15 +28,15 @@ func CheckValidityAndUpdateState(
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
-			clienttypes.ErrInvalidClientType, "light client is not from Tendermint",
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState,
 		)
 	}
 
 	tmHeader, ok := header.(types.Header)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
-			clienttypes.ErrInvalidHeader, "header is not from Tendermint",
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader, "expected type %T, got %T", types.Header{}, header,
 		)
 	}
 
@@ -115,7 +115,7 @@ func checkValidity(
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
+		return sdkerrors.Wrap(err, "failed to verify header")
 	}
 	return nil
 }

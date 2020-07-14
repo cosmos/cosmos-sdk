@@ -7,10 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
-	return sdk.NewTestMsg(addrs...)
-}
-
 func NewTestStdFee() StdFee {
 	return NewStdFee(100000,
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),

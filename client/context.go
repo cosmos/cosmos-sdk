@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
@@ -25,38 +27,36 @@ import (
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-	FromAddress      sdk.AccAddress
-	Client           rpcclient.Client
-	ChainID          string
-	JSONMarshaler    codec.JSONMarshaler
-	Input            io.Reader
-	Keyring          keyring.Keyring
-	Output           io.Writer
-	OutputFormat     string
-	Height           int64
-	HomeDir          string
-	From             string
-	BroadcastMode    string
-	FromName         string
-	TrustNode        bool
-	UseLedger        bool
-	Simulate         bool
-	GenerateOnly     bool
-	Offline          bool
-	Indent           bool
-	SkipConfirm      bool
-	TxGenerator      TxGenerator
-	AccountRetriever AccountRetriever
-
-	// TODO: API and CLI interfaces are migrating to a single binary (i.e be part of
-	// the same process of the application). We need to groom through these fields
-	// and remove any that no longer make sense.
-	NodeURI  string
-	Verifier tmlite.Verifier
+	FromAddress       sdk.AccAddress
+	Client            rpcclient.Client
+	ChainID           string
+	JSONMarshaler     codec.JSONMarshaler
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Input             io.Reader
+	Keyring           keyring.Keyring
+	Output            io.Writer
+	OutputFormat      string
+	Height            int64
+	HomeDir           string
+	From              string
+	BroadcastMode     string
+	FromName          string
+	TrustNode         bool
+	UseLedger         bool
+	Simulate          bool
+	GenerateOnly      bool
+	Offline           bool
+	SkipConfirm       bool
+	TxGenerator       TxGenerator
+	AccountRetriever  AccountRetriever
+	NodeURI           string
+	Verifier          tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
 }
+
+// TODO: Remove all New* and Init* methods.
 
 // NewContextWithInputAndFrom returns a new initialized Context with parameters from the
 // command line using Viper. It takes a io.Reader and and key name or address and populates
@@ -82,12 +82,6 @@ func NewContextWithFrom(from string) Context {
 // NewContext returns a new initialized Context with parameters from the
 // command line using Viper.
 func NewContext() Context { return NewContextWithFrom(viper.GetString(flags.FlagFrom)) }
-
-// NewContextWithInput returns a new initialized Context with a io.Reader and parameters
-// from the command line using Viper.
-func NewContextWithInput(input io.Reader) Context {
-	return NewContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
-}
 
 // InitWithInputAndFrom returns a new Context re-initialized from an existing
 // Context with a new io.Reader and from parameter
@@ -127,33 +121,29 @@ func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
 	ctx.BroadcastMode = viper.GetString(flags.FlagBroadcastMode)
 	ctx.Simulate = viper.GetBool(flags.FlagDryRun)
 	ctx.Offline = offline
-	ctx.Indent = viper.GetBool(flags.FlagIndentResponse)
 	ctx.SkipConfirm = viper.GetBool(flags.FlagSkipConfirmation)
+	ctx.HomeDir = viper.GetString(flags.FlagHome)
+	ctx.GenerateOnly = viper.GetBool(flags.FlagGenerateOnly)
 
-	homedir := viper.GetString(flags.FlagHome)
-	genOnly := viper.GetBool(flags.FlagGenerateOnly)
 	backend := viper.GetString(flags.FlagKeyringBackend)
 	if len(backend) == 0 {
 		backend = keyring.BackendMemory
 	}
 
-	kr, err := newKeyringFromFlags(backend, homedir, input, genOnly)
+	kr, err := newKeyringFromFlags(ctx, backend)
 	if err != nil {
 		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
 	}
 
-	fromAddress, fromName, err := GetFromFields(kr, from, genOnly)
+	fromAddress, fromName, err := GetFromFields(kr, from, ctx.GenerateOnly)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
 	}
 
-	ctx.HomeDir = homedir
-
 	ctx.Keyring = kr
 	ctx.FromAddress = fromAddress
 	ctx.FromName = fromName
-	ctx.GenerateOnly = genOnly
 
 	if offline {
 		return ctx
@@ -229,6 +219,12 @@ func (ctx Context) WithTrustNode(trustNode bool) Context {
 	return ctx
 }
 
+// WithOutputFormat returns a copy of the context with an updated OutputFormat field.
+func (ctx Context) WithOutputFormat(format string) Context {
+	ctx.OutputFormat = format
+	return ctx
+}
+
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx Context) WithNodeURI(nodeURI string) Context {
 	ctx.NodeURI = nodeURI
@@ -290,6 +286,12 @@ func (ctx Context) WithSimulation(simulate bool) Context {
 	return ctx
 }
 
+// WithOffline returns a copy of the context with updated Offline value.
+func (ctx Context) WithOffline(offline bool) Context {
+	ctx.Offline = offline
+	return ctx
+}
+
 // WithFromName returns a copy of the context with an updated from account name.
 func (ctx Context) WithFromName(name string) Context {
 	ctx.FromName = name
@@ -310,6 +312,13 @@ func (ctx Context) WithBroadcastMode(mode string) Context {
 	return ctx
 }
 
+// WithSkipConfirmation returns a copy of the context with an updated SkipConfirm
+// value.
+func (ctx Context) WithSkipConfirmation(skip bool) Context {
+	ctx.SkipConfirm = skip
+	return ctx
+}
+
 // WithTxGenerator returns the context with an updated TxGenerator
 func (ctx Context) WithTxGenerator(generator TxGenerator) Context {
 	ctx.TxGenerator = generator
@@ -319,6 +328,12 @@ func (ctx Context) WithTxGenerator(generator TxGenerator) Context {
 // WithAccountRetriever returns the context with an updated AccountRetriever
 func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 	ctx.AccountRetriever = retriever
+	return ctx
+}
+
+// WithInterfaceRegistry returns the context with an updated InterfaceRegistry
+func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) Context {
+	ctx.InterfaceRegistry = interfaceRegistry
 	return ctx
 }
 
@@ -335,6 +350,7 @@ func (ctx Context) PrintOutput(toPrint interface{}) error {
 	if ctx.OutputFormat == "text" {
 		// handle text format by decoding and re-encoding JSON as YAML
 		var j interface{}
+
 		err = json.Unmarshal(out, &j)
 		if err != nil {
 			return err
@@ -344,18 +360,9 @@ func (ctx Context) PrintOutput(toPrint interface{}) error {
 		if err != nil {
 			return err
 		}
-	} else if ctx.Indent {
-		// To JSON indent, we re-encode the already encoded JSON given there is no
-		// error. The re-encoded JSON uses the standard library as the initial encoded
-		// JSON should have the correct output produced by ctx.JSONMarshaler.
-		out, err = codec.MarshalIndentFromJSON(out)
-		if err != nil {
-			return err
-		}
 	}
 
 	writer := ctx.Output
-	// default to stdout
 	if writer == nil {
 		writer = os.Stdout
 	}
@@ -409,9 +416,10 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 	return info.GetAddress(), info.GetName(), nil
 }
 
-func newKeyringFromFlags(backend, homedir string, input io.Reader, genOnly bool) (keyring.Keyring, error) {
-	if genOnly {
-		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, homedir, input)
+func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
+	if ctx.GenerateOnly {
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.HomeDir, ctx.Input)
 	}
-	return keyring.New(sdk.KeyringServiceName(), backend, homedir, input)
+
+	return keyring.New(sdk.KeyringServiceName(), backend, ctx.HomeDir, ctx.Input)
 }

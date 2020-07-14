@@ -113,9 +113,6 @@ func validateTallyParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.Quorum.IsNil() || v.Threshold.IsNil() || v.Veto.IsNil() {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
 	if v.Quorum.IsNegative() {
 		return fmt.Errorf("quorom cannot be negative: %s", v.Quorum)
 	}

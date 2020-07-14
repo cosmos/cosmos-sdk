@@ -1,10 +1,11 @@
 package testutil
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/spf13/cobra"
 
@@ -96,23 +97,21 @@ func TxDecodeExec(clientCtx client.Context, encodedTx string, extraArgs ...strin
 }
 
 func callCliCmd(clientCtx client.Context, theCmd func() *cobra.Command, extraArgs []string) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	clientCtx = clientCtx.WithOutput(buf)
+	cmd := theCmd()
+
+	_, out := testutil.ApplyMockIO(theCmd())
+	clientCtx = clientCtx.WithOutput(out)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	cmd := theCmd()
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
-
 	cmd.SetArgs(extraArgs)
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
-		return buf.Bytes(), err
+		return out.Bytes(), err
 	}
 
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
 
 // DONTCOVER

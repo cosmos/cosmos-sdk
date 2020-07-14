@@ -1,6 +1,9 @@
 package ante_test
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -79,4 +82,35 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 	suite.txBuilder.SetSignatures(sigsV2...)
 
 	return suite.txBuilder.GetTx()
+}
+
+type TestCase struct {
+	desc     string
+	malleate func()
+	simulate bool
+	expPass  bool
+	expErr   error
+}
+
+// CreateTestTx is a helper function to create a tx given multiple inputs.
+func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, fee types.StdFee, accNums []uint64, accSeqs []uint64, chainID string, tc TestCase) {
+	suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.txBuilder.SetMsgs(msgs...)
+		suite.txBuilder.SetFeeAmount(fee.GetAmount())
+		suite.txBuilder.SetGasLimit(fee.GetGas())
+
+		tx := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
+		newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+
+		if tc.expPass {
+			suite.Require().NoError(err)
+			suite.Require().NotNil(newCtx)
+
+			suite.ctx = newCtx
+		} else {
+			suite.Require().Error(err)
+			suite.Require().True(errors.Is(err, tc.expErr))
+		}
+	})
+
 }

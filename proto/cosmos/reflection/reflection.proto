@@ -1,0 +1,23 @@
+syntax = "proto3";
+package cosmos.reflection;
+
+option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/reflection";
+
+service ReflectionService {
+    rpc ListInterfaces(ListInterfacesRequest) returns (ListInterfacesResponse) {};
+    rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {};
+}
+
+message ListInterfacesRequest { }
+
+message ListInterfacesResponse {
+    repeated string interface_names = 1;
+}
+
+message ListImplementationsRequest {
+    string interface_name = 1;
+}
+
+message ListImplementationsResponse {
+    repeated string implementation_message_names = 1;
+}

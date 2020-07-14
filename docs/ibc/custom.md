@@ -142,6 +142,28 @@ OnChanCloseConfirm(
 }
 ```
 
+#### Channel Handshake Version Negotiation
+
+Application modules are expected to verify versioning used during the channel handshake procedure.
+
+* `ChanOpenInit` callback should verify that the `MsgChanOpenInit.Version` is valid
+* `ChanOpenTry` callback should verify that the `MsgChanOpenTry.Version` is valid and that `MsgChanOpenTry.CounterpartyVersion` is valid.
+* `ChanOpenAck` callback should verify that the `MsgChanOpenAck.CounterpartyVersion` is valid and supported.
+
+Versions must be strings but can implement any versioning structure. If your application plans to
+have linear releases then semantic versioning is recommended. If your application plans to release
+various features in between major releases then it is advised to use the same versioning scheme
+as IBC. This versioning scheme specifies a version identifier and compatible feature set with
+that identifier. Valid version selection includes selecting a compatible version identifier with
+a subset of features supported by your application for that version. The struct is used for this
+scheme can be found in `03-connection/types`.
+
+Since the version type is a string, applications have the ability to do simple version verification
+via string matching or they can use the already impelemented versioning system and pass the proto
+encoded version into each handhshake call as necessary.
+
+ICS20 currently implements basic string matching with a single supported version.
+
 ### Bind Ports
 
 Currently, ports must be bound on app initialization. A module may bind to ports in `InitGenesis`

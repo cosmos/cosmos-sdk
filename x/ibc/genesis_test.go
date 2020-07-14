@@ -11,6 +11,7 @@ import (
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -47,7 +48,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.ConnectionEnd{
-						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{connectiontypes.DefaultIBCVersion}),
+						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion}),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),

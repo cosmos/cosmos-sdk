@@ -8,14 +8,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	// Group slashing queries under a subcommand
 	slashingQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -26,8 +25,8 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	slashingQueryCmd.AddCommand(
-		GetCmdQuerySigningInfo(queryRoute, cdc),
-		GetCmdQueryParams(cdc),
+		GetCmdQuerySigningInfo(),
+		GetCmdQueryParams(),
 	)
 
 	return slashingQueryCmd
@@ -35,7 +34,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
-func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQuerySigningInfo() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signing-info [validator-conspub]",
 		Short: "Query a validator's signing information",
@@ -45,7 +44,11 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, args[0])
 			if err != nil {
@@ -55,7 +58,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			consAddr := sdk.ConsAddress(pk.Address())
 			key := types.ValidatorSigningInfoKey(consAddr)
 
-			res, _, err := clientCtx.QueryStore(key, storeName)
+			res, _, err := clientCtx.QueryStore(key, types.StoreKey)
 			if err != nil {
 				return err
 			}
@@ -80,7 +83,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 }
 
 // GetCmdQueryParams implements a command to fetch slashing parameters.
-func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current slashing parameters",
@@ -90,16 +93,23 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 $ <appcli> query slashing params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
-			route := fmt.Sprintf("custom/%s/parameters", types.QuerierRoute)
+			route := fmt.Sprintf("custom/%s/parameters", types.StoreKey)
 			res, _, err := clientCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
 			var params types.Params
-			cdc.MustUnmarshalJSON(res, &params)
+			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &params); err != nil {
+				return err
+			}
+
 			return clientCtx.PrintOutput(params)
 		},
 	}

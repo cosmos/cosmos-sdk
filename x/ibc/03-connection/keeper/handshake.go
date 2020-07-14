@@ -26,7 +26,7 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, connectionID, clientID, counterparty, types.GetCompatibleVersions())
+	connection := types.NewConnectionEnd(types.INIT, connectionID, clientID, counterparty, types.GetCompatibleEncodedVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
@@ -128,7 +128,7 @@ func (k Keeper) ConnOpenTry(
 func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
-	version string, // version that ChainB chose in ConnOpenTry
+	encodedVersion string, // version that ChainB chose in ConnOpenTry
 	proofTry []byte, // proof that connectionEnd was added to ChainB state in ConnOpenTry
 	proofConsensus []byte, // proof that chainB has stored ConsensusState of chainA on its client
 	proofHeight uint64, // height that relayer constructed proofTry
@@ -156,7 +156,12 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	// Check that ChainB's proposed version number is supported by chainA
+	version, err := types.DecodeVersion(encodedVersion)
+	if err != nil {
+		return sdkerrors.Wrap(err, "version negotiation failed")
+	}
+
+	// Check that ChainB's proposed version identifier is supported by chainA
 	supportedVersion, found := types.FindSupportedVersion(version, types.GetCompatibleVersions())
 	if !found {
 		return sdkerrors.Wrapf(
@@ -166,11 +171,8 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Check that ChainB's proposed feature set is supported by chainA
-	if !types.VerifyProposedFeatureSet(version, supportedVersion) {
-		return sdkerrors.Wrapf(
-			types.ErrVersionNegotiationFailed,
-			"connection version feature set provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
-		)
+	if err := supportedVersion.VerifyProposedVersion(version); err != nil {
+		return err
 	}
 
 	// Retrieve chainA's consensus state at consensusheight
@@ -181,7 +183,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
+	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{encodedVersion})
 
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
 	if err := k.VerifyConnectionState(
@@ -202,7 +204,7 @@ func (k Keeper) ConnOpenAck(
 
 	// Update connection state to Open
 	connection.State = types.OPEN
-	connection.Versions = []string{version}
+	connection.Versions = []string{encodedVersion}
 	k.SetConnection(ctx, connectionID, connection)
 	return nil
 }

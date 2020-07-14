@@ -529,18 +529,27 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 		Type:       types.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
 	}
+
 	event1.Attributes = append(
 		event1.Attributes,
 		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String()), Index: true},
 	)
+
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeySender), Value: []byte(addr.String()), Index: true},
+	)
+
 	event1.Attributes = append(
 		event1.Attributes,
 		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String()), Index: true},
 	)
+
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
 		Attributes: []abci.EventAttribute{},
 	}
+
 	event2.Attributes = append(
 		event2.Attributes,
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String()), Index: true},

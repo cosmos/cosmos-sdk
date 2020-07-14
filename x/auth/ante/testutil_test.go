@@ -67,12 +67,6 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	return accounts
 }
 
-func (suite *AnteTestSuite) CreateTestFee() StdFee {
-	return NewStdFee(100000,
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
-	)
-}
-
 // CreateTestTx is a helper function to create a tx given multiple inputs.
 func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
 	var sigsV2 []signing.SignatureV2

@@ -78,7 +78,7 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 
 	suite.Require().NotNil(err, "Did not error on tx with high memo")
 
-	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
+	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 	validTx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
 
 	// require small memos pass ValidateMemo Decorator

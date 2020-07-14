@@ -1,11 +1,7 @@
 package client
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-
-	"github.com/spf13/cobra"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -37,25 +33,4 @@ func (t TestAccountRetriever) GetAccountNumberSequence(_ NodeQuerier, addr sdk.A
 		return 0, 0, fmt.Errorf("account %s not found", addr)
 	}
 	return acc.Num, acc.Seq, nil
-}
-
-// CallCliCmd calls theCmd cobra command and returns the output in bytes.
-func CallCliCmd(clientCtx Context, theCmd func() *cobra.Command, extraArgs []string) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	clientCtx = clientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, ClientContextKey, &clientCtx)
-
-	cmd := theCmd()
-	cmd.SetErr(buf)
-	cmd.SetOut(buf)
-
-	cmd.SetArgs(extraArgs)
-
-	if err := cmd.ExecuteContext(ctx); err != nil {
-		return buf.Bytes(), err
-	}
-
-	return buf.Bytes(), nil
 }

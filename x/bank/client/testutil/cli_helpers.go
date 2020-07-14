@@ -1,7 +1,11 @@
 package testutil
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+
+	"github.com/spf13/cobra"
 
 	"github.com/stretchr/testify/require"
 
@@ -17,14 +21,34 @@ func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraA
 	args := []string{from.String(), to.String(), amount.String()}
 	args = append(args, extraArgs...)
 
-	return client.CallCliCmd(clientCtx, bankcli.NewSendTxCmd, args)
+	return callCliCmd(clientCtx, bankcli.NewSendTxCmd, args)
 }
 
 func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) ([]byte, error) {
 	args := []string{address.String()}
 	args = append(args, extraArgs...)
 
-	return client.CallCliCmd(clientCtx, bankcli.GetBalancesCmd, args)
+	return callCliCmd(clientCtx, bankcli.GetBalancesCmd, args)
+}
+
+func callCliCmd(clientCtx client.Context, theCmd func() *cobra.Command, extraArgs []string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	clientCtx = clientCtx.WithOutput(buf)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := theCmd()
+	cmd.SetErr(buf)
+	cmd.SetOut(buf)
+
+	cmd.SetArgs(extraArgs)
+
+	if err := cmd.ExecuteContext(ctx); err != nil {
+		return buf.Bytes(), err
+	}
+
+	return buf.Bytes(), nil
 }
 
 // ----------------------------------------------------------------------------

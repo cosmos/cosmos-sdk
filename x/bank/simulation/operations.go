@@ -103,8 +103,9 @@ func sendMsgSend(
 			return err
 		}
 	}
-
-	tx := helpers.GenTx(
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	tx, err := helpers.GenTx(
+		txGen,
 		[]sdk.Msg{msg},
 		fees,
 		helpers.DefaultGenTxGas,
@@ -113,6 +114,9 @@ func sendMsgSend(
 		[]uint64{account.GetSequence()},
 		privkeys...,
 	)
+	if err != nil {
+		return err
+	}
 
 	_, _, err = app.Deliver(tx)
 	if err != nil {
@@ -247,7 +251,9 @@ func sendMsgMultiSend(
 		}
 	}
 
-	tx := helpers.GenTx(
+	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	tx, err := helpers.GenTx(
+		txGen,
 		[]sdk.Msg{msg},
 		fees,
 		helpers.DefaultGenTxGas,
@@ -256,6 +262,9 @@ func sendMsgMultiSend(
 		sequenceNumbers,
 		privkeys...,
 	)
+	if err != nil {
+		return err
+	}
 
 	_, _, err = app.Deliver(tx)
 	if err != nil {

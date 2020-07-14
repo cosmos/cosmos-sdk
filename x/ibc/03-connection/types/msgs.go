@@ -65,7 +65,7 @@ func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
 	counterpartyVersions []string, proofInit, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
+	proofEpoch, proofHeight, consensusEpoch, consensusHeight uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	return &MsgConnectionOpenTry{
@@ -75,7 +75,9 @@ func NewMsgConnectionOpenTry(
 		CounterpartyVersions: counterpartyVersions,
 		ProofInit:            proofInit,
 		ProofConsensus:       proofConsensus,
+		ProofEpoch:           proofEpoch,
 		ProofHeight:          proofHeight,
+		ConsensusEpoch:       consensusEpoch,
 		ConsensusHeight:      consensusHeight,
 		Signer:               signer,
 	}
@@ -140,14 +142,16 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
 	connectionID string, proofTry, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, version string,
-	signer sdk.AccAddress,
+	proofEpoch, proofHeight, consensusEpoch, consensusHeight uint64,
+	version string, signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	return &MsgConnectionOpenAck{
 		ConnectionID:    connectionID,
 		ProofTry:        proofTry,
 		ProofConsensus:  proofConsensus,
+		ProofEpoch:      proofEpoch,
 		ProofHeight:     proofHeight,
+		ConsensusEpoch:  consensusEpoch,
 		ConsensusHeight: consensusHeight,
 		Version:         version,
 		Signer:          signer,
@@ -204,12 +208,13 @@ var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck []byte, proofHeight uint64,
+	connectionID string, proofAck []byte, proofEpoch, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenConfirm {
 	return &MsgConnectionOpenConfirm{
 		ConnectionID: connectionID,
 		ProofAck:     proofAck,
+		ProofEpoch:   proofEpoch,
 		ProofHeight:  proofHeight,
 		Signer:       signer,
 	}

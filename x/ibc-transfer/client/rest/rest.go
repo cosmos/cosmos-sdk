@@ -23,6 +23,7 @@ type TransferTxReq struct {
 	BaseReq          rest.BaseReq `json:"base_req" yaml:"base_req"`
 	Amount           sdk.Coins    `json:"amount" yaml:"amount"`
 	Receiver         string       `json:"receiver" yaml:"receiver"`
+	TimeoutEpoch     uint64       `json:"timeout_epoch" yaml:"timeout_epoch"`
 	TimeoutHeight    uint64       `json:"timeout_height" yaml:"timeout_height"`
 	TimeoutTimestamp uint64       `json:"timeout_timestamp" yaml:"timeout_timestamp"`
 }

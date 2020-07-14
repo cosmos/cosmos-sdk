@@ -14,6 +14,10 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+const (
+	flagProofEpoch, flagConsensusEpoch string = "proof-epoch", "consensus-epoch"
+)
+
 // NewConnectionOpenInitCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
 func NewConnectionOpenInitCmd(clientCtx client.Context) *cobra.Command {
@@ -103,10 +107,19 @@ func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			proofEpoch, err := cmd.Flags().GetInt(flagProofEpoch)
+			if err != nil {
+				return err
+			}
+			consensusEpoch, err := cmd.Flags().GetInt(flagConsensusEpoch)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofConsensus, proofHeight,
-				consensusHeight, clientCtx.GetFromAddress(),
+				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofConsensus, uint64(proofEpoch), proofHeight,
+				uint64(consensusEpoch), consensusHeight, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -116,6 +129,9 @@ func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
+	cmd.Flags().Int(flagProofEpoch, 0, "epoch for proof height")
+	cmd.Flags().Int(flagConsensusEpoch, 0, "epoch for consensus height")
 
 	return cmd
 }
@@ -153,11 +169,20 @@ func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			proofEpoch, err := cmd.Flags().GetInt(flagProofEpoch)
+			if err != nil {
+				return err
+			}
+			consensusEpoch, err := cmd.Flags().GetInt(flagConsensusEpoch)
+			if err != nil {
+				return err
+			}
+
 			version := args[3]
 
 			msg := types.NewMsgConnectionOpenAck(
-				connectionID, proofTry, proofConsensus, proofHeight,
-				consensusHeight, version, clientCtx.GetFromAddress(),
+				connectionID, proofTry, proofConsensus, uint64(proofEpoch), proofHeight,
+				uint64(consensusEpoch), consensusHeight, version, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -167,6 +192,9 @@ func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
+	cmd.Flags().Int(flagProofEpoch, 0, "epoch for proof height")
+	cmd.Flags().Int(flagConsensusEpoch, 0, "epoch for consensus height")
 
 	return cmd
 }
@@ -198,8 +226,13 @@ func NewConnectionOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			proofEpoch, err := cmd.Flags().GetInt(flagProofEpoch)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgConnectionOpenConfirm(
-				connectionID, proofAck, proofHeight, clientCtx.GetFromAddress(),
+				connectionID, proofAck, uint64(proofEpoch), proofHeight, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -209,6 +242,8 @@ func NewConnectionOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
+	cmd.Flags().Int(flagProofEpoch, 0, "epoch for proof height")
 
 	return cmd
 }

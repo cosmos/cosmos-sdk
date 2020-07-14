@@ -165,7 +165,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 
 // QueryConsensusStateProof performs an abci query for a consensus state
 // stored on the given clientID. The proof and consensusHeight are returned.
-func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, uint64) {
+func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clientexported.Height) {
 	// retrieve consensus state to provide proof for
 	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
 	require.True(chain.t, found)

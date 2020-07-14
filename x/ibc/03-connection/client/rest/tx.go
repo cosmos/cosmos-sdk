@@ -95,8 +95,8 @@ func connectionOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		msg := types.NewMsgConnectionOpenTry(
 			req.ConnectionID, req.ClientID, req.CounterpartyConnectionID,
 			req.CounterpartyClientID, req.CounterpartyPrefix, req.CounterpartyVersions,
-			req.ProofInit, req.ProofConsensus, req.ProofHeight,
-			req.ConsensusHeight, fromAddr,
+			req.ProofInit, req.ProofConsensus, req.ProofEpoch, req.ProofHeight,
+			req.ConsensusEpoch, req.ConsensusHeight, fromAddr,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {
@@ -143,8 +143,8 @@ func connectionOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		// create the message
 		msg := types.NewMsgConnectionOpenAck(
-			connectionID, req.ProofTry, req.ProofConsensus, req.ProofHeight,
-			req.ConsensusHeight, req.Version, fromAddr,
+			connectionID, req.ProofTry, req.ProofConsensus, req.ProofEpoch, req.ProofHeight,
+			req.ConsensusEpoch, req.ConsensusHeight, req.Version, fromAddr,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {
@@ -191,7 +191,7 @@ func connectionOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		// create the message
 		msg := types.NewMsgConnectionOpenConfirm(
-			connectionID, req.ProofAck, req.ProofHeight, fromAddr,
+			connectionID, req.ProofAck, req.ProofEpoch, req.ProofHeight, fromAddr,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {

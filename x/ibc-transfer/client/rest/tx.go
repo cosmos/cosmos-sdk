@@ -59,6 +59,7 @@ func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			req.Amount,
 			fromAddr,
 			req.Receiver,
+			req.TimeoutEpoch,
 			req.TimeoutHeight,
 			req.TimeoutTimestamp,
 		)

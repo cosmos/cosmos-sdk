@@ -17,6 +17,7 @@ import (
 const (
 	FlagOrdered    = "ordered"
 	FlagIBCVersion = "ibc-version"
+	FlagProofEpoch = "proof-epoch"
 )
 
 // NewChannelOpenInitCmd returns the command to create a MsgChannelOpenInit transaction
@@ -83,10 +84,15 @@ func NewChannelOpenTryCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			proofEpoch, err := cmd.Flags().GetInt(FlagProofEpoch)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgChannelOpenTry(
 				portID, channelID, version, order, hops,
 				counterpartyPortID, counterpartyChannelID, version,
-				proofInit, uint64(proofHeight), clientCtx.GetFromAddress(),
+				proofInit, uint64(proofEpoch), uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -98,6 +104,7 @@ func NewChannelOpenTryCmd(clientCtx client.Context) *cobra.Command {
 
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
 	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
+	cmd.Flags().Int(FlagProofEpoch, 0, "epoch for proof height")
 
 	return cmd
 }
@@ -127,8 +134,13 @@ func NewChannelOpenAckCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			proofEpoch, err := cmd.Flags().GetInt(FlagProofEpoch)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgChannelOpenAck(
-				portID, channelID, version, proofTry, uint64(proofHeight), clientCtx.GetFromAddress(),
+				portID, channelID, version, proofTry, uint64(proofEpoch), uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -139,13 +151,14 @@ func NewChannelOpenAckCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
+	cmd.Flags().Int(FlagProofEpoch, 0, "epoch for proof height")
 
 	return cmd
 }
 
 // NewChannelOpenConfirmCmd returns the command to create a MsgChannelOpenConfirm transaction
 func NewChannelOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof_ack.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenConfirm message",
 		Args:  cobra.ExactArgs(4),
@@ -165,8 +178,13 @@ func NewChannelOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			proofEpoch, err := cmd.Flags().GetInt(FlagProofEpoch)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgChannelOpenConfirm(
-				portID, channelID, proofAck, uint64(proofHeight), clientCtx.GetFromAddress(),
+				portID, channelID, proofAck, uint64(proofEpoch), uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -175,6 +193,10 @@ func NewChannelOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
+	cmd.Flags().Int(FlagProofEpoch, 0, "epoch for proof height")
+
+	return cmd
 }
 
 // NewChannelCloseInitCmd returns the command to create a MsgChannelCloseInit transaction
@@ -201,7 +223,7 @@ func NewChannelCloseInitCmd(clientCtx client.Context) *cobra.Command {
 
 // NewChannelCloseConfirmCmd returns the command to create a MsgChannelCloseConfirm transaction
 func NewChannelCloseConfirmCmd(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof_init.json] [proof-height]",
 		Short: "Creates and sends a ChannelCloseConfirm message",
 		Args:  cobra.ExactArgs(4),
@@ -221,8 +243,13 @@ func NewChannelCloseConfirmCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
+			proofEpoch, err := cmd.Flags().GetInt(FlagProofEpoch)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgChannelCloseConfirm(
-				portID, channelID, proofInit, uint64(proofHeight), clientCtx.GetFromAddress(),
+				portID, channelID, proofInit, uint64(proofEpoch), uint64(proofHeight), clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -231,6 +258,10 @@ func NewChannelCloseConfirmCmd(clientCtx client.Context) *cobra.Command {
 			return tx.GenerateOrBroadcastTx(clientCtx, msg)
 		},
 	}
+
+	cmd.Flags().Int(FlagProofEpoch, 0, "epoch for proof height")
+
+	return cmd
 }
 
 func channelOrder(fs *pflag.FlagSet) types.Order {

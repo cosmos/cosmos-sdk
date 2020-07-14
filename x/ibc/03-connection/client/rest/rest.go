@@ -40,7 +40,9 @@ type ConnectionOpenTryReq struct {
 	CounterpartyVersions     []string                     `json:"counterparty_versions" yaml:"counterparty_versions"`
 	ProofInit                []byte                       `json:"proof_init" yaml:"proof_init"`
 	ProofConsensus           []byte                       `json:"proof_consensus" yaml:"proof_consensus"`
+	ProofEpoch               uint64                       `json:"proof_epoch" yaml:"proof_epoch"`
 	ProofHeight              uint64                       `json:"proof_height" yaml:"proof_height"`
+	ConsensusEpoch           uint64                       `json:"consensus_epoch" yaml:"consensus_epoch"`
 	ConsensusHeight          uint64                       `json:"consensus_height" yaml:"consensus_height"`
 }
 
@@ -49,7 +51,9 @@ type ConnectionOpenAckReq struct {
 	BaseReq         rest.BaseReq `json:"base_req" yaml:"base_req"`
 	ProofTry        []byte       `json:"proof_try" yaml:"proof_try"`
 	ProofConsensus  []byte       `json:"proof_consensus" yaml:"proof_consensus"`
+	ProofEpoch      uint64       `json:"proof_epoch" yaml:"proof_epoch"`
 	ProofHeight     uint64       `json:"proof_height" yaml:"proof_height"`
+	ConsensusEpoch  uint64       `json:"consensus_epoch" yaml:"consensus_epoch"`
 	ConsensusHeight uint64       `json:"consensus_height" yaml:"consensus_height"`
 	Version         string       `json:"version" yaml:"version"`
 }
@@ -58,5 +62,6 @@ type ConnectionOpenAckReq struct {
 type ConnectionOpenConfirmReq struct {
 	BaseReq     rest.BaseReq `json:"base_req" yaml:"base_req"`
 	ProofAck    []byte       `json:"proof_ack" yaml:"proof_ack"`
+	ProofEpoch  uint64       `json:"proof_epoch" yaml:"proof_epoch"`
 	ProofHeight uint64       `json:"proof_height" yaml:"proof_height"`
 }

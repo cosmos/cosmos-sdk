@@ -28,12 +28,14 @@ message MsgTransfer {
   ];
   // the recipient address on the destination chain
   string receiver = 5;
+  // Timeout epoch is epoch in which timeout occurs
+  uint64 timeout_epoch = 6 [(gogoproto.moretags) = "yaml:\"timeout_epoch\""];
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
-  uint64 timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  uint64 timeout_height = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload

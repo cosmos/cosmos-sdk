@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	flagTimeoutEpoch     = "timeout-epoch"
 	flagTimeoutHeight    = "timeout-height"
 	flagTimeoutTimestamp = "timeout-timestamp"
 )
@@ -39,9 +40,10 @@ func NewTransferTxCmd(clientCtx client.Context) *cobra.Command {
 
 			timeoutHeight, _ := cmd.Flags().GetUint64(flagTimeoutHeight)
 			timeoutTimestamp, _ := cmd.Flags().GetUint64(flagTimeoutHeight)
+			timeoutEpoch, _ := cmd.Flags().GetUint64(flagTimeoutEpoch)
 
 			msg := types.NewMsgTransfer(
-				srcPort, srcChannel, coins, sender, receiver, timeoutHeight, timeoutTimestamp,
+				srcPort, srcChannel, coins, sender, receiver, timeoutEpoch, timeoutHeight, timeoutTimestamp,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -53,6 +55,7 @@ func NewTransferTxCmd(clientCtx client.Context) *cobra.Command {
 
 	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultAbsolutePacketTimeoutHeight, "Absolute timeout block height. The timeout is disabled when set to 0.")
 	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultAbsolutePacketTimeoutTimestamp, "Absolute timeout timestamp in nanoseconds. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagTimeoutEpoch, 0, "Absolute timeout block epoch.")
 
 	return cmd
 }

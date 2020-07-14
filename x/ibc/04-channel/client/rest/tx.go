@@ -112,6 +112,7 @@ func channelOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			req.CounterpartyChannelID,
 			req.CounterpartyVersion,
 			req.ProofInit,
+			req.ProofEpoch,
 			req.ProofHeight,
 			fromAddr,
 		)
@@ -166,6 +167,7 @@ func channelOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			channelID,
 			req.CounterpartyVersion,
 			req.ProofTry,
+			req.ProofEpoch,
 			req.ProofHeight,
 			fromAddr,
 		)
@@ -220,6 +222,7 @@ func channelOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			channelID,
 			req.ProofAck,
 			req.ProofHeight,
+			req.ProofEpoch,
 			fromAddr,
 		)
 
@@ -324,6 +327,7 @@ func channelCloseConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			channelID,
 			req.ProofInit,
 			req.ProofHeight,
+			req.ProofEpoch,
 			fromAddr,
 		)
 
@@ -368,6 +372,7 @@ func recvPacketHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		msg := types.NewMsgPacket(
 			req.Packet,
 			req.Proofs,
+			req.Epoch,
 			req.Height,
 			fromAddr,
 		)

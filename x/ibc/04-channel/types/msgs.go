@@ -65,7 +65,7 @@ var _ sdk.Msg = &MsgChannelOpenTry{}
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
-	proofInit []byte, proofHeight uint64, signer sdk.AccAddress,
+	proofInit []byte, proofEpoch, proofHeight uint64, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
@@ -74,6 +74,7 @@ func NewMsgChannelOpenTry(
 		ChannelID:           channelID,
 		Channel:             channel,
 		CounterpartyVersion: counterpartyVersion,
+		ProofEpoch:          proofEpoch,
 		ProofInit:           proofInit,
 		ProofHeight:         proofHeight,
 		Signer:              signer,
@@ -125,14 +126,15 @@ var _ sdk.Msg = &MsgChannelOpenAck{}
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
-	portID, channelID string, cpv string, proofTry []byte, proofHeight uint64,
-	signer sdk.AccAddress,
+	portID, channelID string, cpv string, proofTry []byte,
+	proofEpoch, proofHeight uint64, signer sdk.AccAddress,
 ) *MsgChannelOpenAck {
 	return &MsgChannelOpenAck{
 		PortID:              portID,
 		ChannelID:           channelID,
 		CounterpartyVersion: cpv,
 		ProofTry:            proofTry,
+		ProofEpoch:          proofEpoch,
 		ProofHeight:         proofHeight,
 		Signer:              signer,
 	}
@@ -183,13 +185,14 @@ var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
-	portID, channelID string, proofAck []byte, proofHeight uint64,
+	portID, channelID string, proofAck []byte, proofEpoch, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgChannelOpenConfirm {
 	return &MsgChannelOpenConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofAck:    proofAck,
+		ProofEpoch:  proofEpoch,
 		ProofHeight: proofHeight,
 		Signer:      signer,
 	}
@@ -282,13 +285,14 @@ var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
-	portID, channelID string, proofInit []byte, proofHeight uint64,
+	portID, channelID string, proofInit []byte, proofEpoch, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgChannelCloseConfirm {
 	return &MsgChannelCloseConfirm{
 		PortID:      portID,
 		ChannelID:   channelID,
 		ProofInit:   proofInit,
+		ProofEpoch:  proofEpoch,
 		ProofHeight: proofHeight,
 		Signer:      signer,
 	}
@@ -336,12 +340,13 @@ var _ sdk.Msg = &MsgPacket{}
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(
-	packet Packet, proof []byte, proofHeight uint64,
+	packet Packet, proof []byte, proofEpoch, proofHeight uint64,
 	signer sdk.AccAddress,
 ) *MsgPacket {
 	return &MsgPacket{
 		Packet:      packet,
 		Proof:       proof,
+		ProofEpoch:  proofEpoch,
 		ProofHeight: proofHeight,
 		Signer:      signer,
 	}
@@ -394,12 +399,13 @@ var _ sdk.Msg = &MsgTimeout{}
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof []byte,
-	proofHeight uint64, signer sdk.AccAddress,
+	proofEpoch, proofHeight uint64, signer sdk.AccAddress,
 ) *MsgTimeout {
 	return &MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
 		Proof:            proof,
+		ProofEpoch:       proofEpoch,
 		ProofHeight:      proofHeight,
 		Signer:           signer,
 	}
@@ -444,11 +450,12 @@ var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof []byte, proofHeight uint64, signer sdk.AccAddress) *MsgAcknowledgement {
+	packet Packet, ack []byte, proof []byte, proofEpoch, proofHeight uint64, signer sdk.AccAddress) *MsgAcknowledgement {
 	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
 		Proof:           proof,
+		ProofEpoch:      proofEpoch,
 		ProofHeight:     proofHeight,
 		Signer:          signer,
 	}

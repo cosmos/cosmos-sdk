@@ -13,93 +13,14 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-// run the tx through the anteHandler and ensure its valid
-func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
-	_, err := anteHandler(ctx, tx, simulate)
-	require.Nil(t, err)
-}
-
-// run the tx through the anteHandler and ensure it fails with the given code
-func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, expErr error) {
-	_, err := anteHandler(ctx, tx, simulate)
-	require.NotNil(t, err)
-	require.True(t, errors.Is(expErr, err))
-}
-
-// TestAccount represents an account used in the tests below. It's simply an
-// AccountI, where we have access to the PrivKey.
-type TestAccount struct {
-	acc  types.AccountI
-	priv crypto.PrivKey
-}
-
-type AnteTestSuite struct {
-	suite.Suite
-
-	app         *simapp.SimApp
-	anteHandler sdk.AnteHandler
-	ctx         sdk.Context
-	clientCtx   client.Context
-	txBuilder   client.TxBuilder
-}
-
-func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
-	suite.app, suite.ctx = createTestApp(isCheckTx)
-	suite.ctx = suite.ctx.WithBlockHeight(1)
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, *suite.app.IBCKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
-
-	// set up the TxBuilder
-	encodingConfig := simappparams.MakeEncodingConfig()
-	suite.clientCtx = client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator).
-		WithJSONMarshaler(encodingConfig.Marshaler)
-}
-
-// Create `numAccs` accounts, and return all relevant information about them.
-func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
-	var accounts []TestAccount
-
-	for i := 0; i < numAccs; i++ {
-		priv, _, addr := types.KeyTestPubAddr()
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		err := acc.SetAccountNumber(uint64(i))
-		suite.Require().NoError(err)
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		suite.app.BankKeeper.SetBalances(suite.ctx, addr, types.NewTestCoins())
-
-		accounts = append(accounts, TestAccount{acc, priv})
-	}
-
-	return accounts
-}
-
-// Helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
-	var sigsV2 []signing.SignatureV2
-	for i, priv := range privs {
-		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), priv, accNums[i], seqs[i], chainID, suite.clientCtx.TxGenerator, suite.txBuilder)
-		suite.Require().NoError(err)
-
-		sigsV2 = append(sigsV2, sigV2)
-	}
-	suite.txBuilder.SetSignatures(sigsV2...)
-
-	return suite.txBuilder.GetTx()
-}
 
 // Test that simulate transaction accurately estimates gas cost
 func (suite *AnteTestSuite) TestSimulateGasCost() {

@@ -4,39 +4,12 @@ import (
 	gocontext "context"
 	"fmt"
 	"strconv"
-	"testing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
-
-type KeeperTestSuite struct {
-	suite.Suite
-
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	queryClient types.QueryClient
-	addrs       []sdk.AccAddress
-}
-
-func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.GovKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-
-	suite.app = app
-	suite.ctx = ctx
-	suite.queryClient = queryClient
-	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
-}
 
 func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
@@ -839,8 +812,4 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 			}
 		})
 	}
-}
-
-func TestGRPCTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

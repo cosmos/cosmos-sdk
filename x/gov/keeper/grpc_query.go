@@ -20,14 +20,14 @@ func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*t
 	}
 
 	if req.ProposalId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	proposal, found := q.GetProposal(ctx, req.ProposalId)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "proposal: %d doesn't exist", req.ProposalId)
+		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
 	return &types.QueryProposalResponse{Proposal: proposal}, nil
@@ -89,7 +89,7 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 	}
 
 	if req.ProposalId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
 	if req.Voter == nil {
@@ -114,7 +114,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 	}
 
 	if req.ProposalId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
 	var votes types.Votes
@@ -146,10 +146,6 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.ParamsType == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty params type")
-	}
-
 	ctx := sdk.UnwrapSDKContext(c)
 
 	switch req.ParamsType {
@@ -167,7 +163,7 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
-			"%s is not a valid query request path", req.ParamsType)
+			"%s is not a valid parameter type", req.ParamsType)
 	}
 }
 
@@ -178,7 +174,7 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 	}
 
 	if req.ProposalId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
 	if req.Depositor == nil {
@@ -203,7 +199,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 	}
 
 	if req.ProposalId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
 	var deposits types.Deposits
@@ -236,14 +232,14 @@ func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultReques
 	}
 
 	if req.ProposalId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "proposal id should not be: 0")
+		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	proposal, ok := q.GetProposal(ctx, req.ProposalId)
 	if !ok {
-		return nil, status.Errorf(codes.NotFound, "proposal: %d doesn't exist", req.ProposalId)
+		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
 	var tallyResult types.TallyResult

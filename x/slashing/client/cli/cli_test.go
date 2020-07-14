@@ -118,16 +118,16 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		{
 			"default output",
 			[]string{},
-			`{"json:\"signed_blocks_window\"":"100","json:\"min_signed_per_window\"":"0.500000000000000000","json:\"downtime_jail_duration\"":"600000000000","json:\"slash_fraction_double_sign\"":"0.050000000000000000","json:\"slash_fraction_downtime\"":"0.010000000000000000"}`,
+			`{"signed_blocks_window":"100","min_signed_per_window":"0.500000000000000000","downtime_jail_duration":"600000000000","slash_fraction_double_sign":"0.050000000000000000","slash_fraction_downtime":"0.010000000000000000"}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`json:"downtime_jail_duration": "600000000000"
-json:"min_signed_per_window": "0.500000000000000000"
-json:"signed_blocks_window": "100"
-json:"slash_fraction_double_sign": "0.050000000000000000"
-json:"slash_fraction_downtime": "0.010000000000000000"`,
+			`downtime_jail_duration: "600000000000"
+min_signed_per_window: "0.500000000000000000"
+signed_blocks_window: "100"
+slash_fraction_double_sign: "0.050000000000000000"
+slash_fraction_downtime: "0.010000000000000000"`,
 		},
 	}
 

@@ -66,7 +66,7 @@ func QueryClientState(
 // QueryConsensusState queries the store to get the consensus state and a merkle
 // proof.
 func QueryConsensusState(
-	clientCtx client.Context, clientID string, height uint64, prove bool,
+	clientCtx client.Context, clientID string, height exported.Height, prove bool,
 ) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 

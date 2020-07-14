@@ -180,14 +180,14 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight exported.Height) (exported.ConsensusState, bool) {
 	// NOTE: For tendermint Heights this is only implemented for a single epoch
 	height := maxHeight
-	var err error
+	var success bool
 	for height.Valid() {
 		found := k.HasClientConsensusState(ctx, clientID, height)
 		if found {
 			return k.GetClientConsensusState(ctx, clientID, height)
 		}
-		height, err = height.Decrement()
-		if err != nil {
+		height, success = height.Decrement()
+		if !success {
 			break
 		}
 	}
@@ -197,13 +197,9 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
-	tmHeight, ok := height.(ibctmtypes.Height)
-	if !ok {
-		return nil, false
-	}
 	// Only support retrieving HistoricalInfo from the current epoch for now
 	// TODO: check EpochNumber matches expected
-	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(tmHeight.EpochHeight))
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height.EpochHeight))
 	if !found {
 		return nil, false
 	}
@@ -211,7 +207,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 	valSet := stakingtypes.Validators(histInfo.Valset)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       tmHeight,
+		Height:       height,
 		Timestamp:    histInfo.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),

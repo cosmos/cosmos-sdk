@@ -81,7 +81,7 @@ func checkValidity(
 
 	// assert header height is newer than any we know
 	// for now, we only support updates that increment EpochHeight
-	tmClientHeight := clientState.GetLatestHeight().(types.Height)
+	tmClientHeight := clientState.GetLatestHeight()
 	if header.Height.EpochNumber != tmClientHeight.EpochNumber {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,

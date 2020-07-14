@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -51,13 +52,15 @@ func (k Keeper) ConnOpenTry(
 	counterpartyVersions []string, // supported versions of chain A
 	proofInit []byte, // proof that chainA stored connectionEnd in state (on ConnOpenInit)
 	proofConsensus []byte, // proof that chainA stored chainB's consensus state at consensus height
-	proofHeight uint64, // height at which relayer constructs proof of A storing connectionEnd in state
-	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
+	proofHeight clientexported.Height, // height at which relayer constructs proof of A storing connectionEnd in state
+	consensusHeight clientexported.Height, // latest height of chain B which chain A has stored in its chain B client
 ) error {
-	if consensusHeight >= uint64(ctx.BlockHeight()) {
+	// ConsensusHeight must be less than current height
+	// NOTE: Only epoch=0 supported for now
+	if consensusHeight.Compare(clientexported.NewHeight(0, uint64(ctx.BlockHeight()))) != -1 {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+			"consensus height is greater than or equal to the current block height (%v >= %v)", consensusHeight, ctx.BlockHeight(),
 		)
 	}
 
@@ -131,14 +134,15 @@ func (k Keeper) ConnOpenAck(
 	version string, // version that ChainB chose in ConnOpenTry
 	proofTry []byte, // proof that connectionEnd was added to ChainB state in ConnOpenTry
 	proofConsensus []byte, // proof that chainB has stored ConsensusState of chainA on its client
-	proofHeight uint64, // height that relayer constructed proofTry
-	consensusHeight uint64, // latest height of chainA that chainB has stored on its chainA client
+	proofHeight clientexported.Height, // height that relayer constructed proofTry
+	consensusHeight clientexported.Height, // latest height of chainA that chainB has stored on its chainA client
 ) error {
-	// Check that chainB client hasn't stored invalid height
-	if consensusHeight >= uint64(ctx.BlockHeight()) {
+	// ConsensusHeight must be less than current height
+	// NOTE: Only epoch=0 supported for now
+	if consensusHeight.Compare(clientexported.NewHeight(0, uint64(ctx.BlockHeight()))) != -1 {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+			"consensus height is greater than or equal to the current block height (%v >= %v)", consensusHeight, ctx.BlockHeight(),
 		)
 	}
 
@@ -214,7 +218,7 @@ func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
 	proofAck []byte, // proof that connection opened on ChainA during ConnOpenAck
-	proofHeight uint64, // height that relayer constructed proofAck
+	proofHeight clientexported.Height, // height that relayer constructed proofAck
 ) error {
 	// Retrieve connection
 	connection, found := k.GetConnection(ctx, connectionID)

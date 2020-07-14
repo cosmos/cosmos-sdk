@@ -2,6 +2,7 @@ package connection
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
@@ -35,10 +36,13 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenTry) (*sdk.Result, error) {
+	// For now, convert uint64 heights to clientexported.Height
+	proofHeight := clientexported.NewHeight(0, msg.ProofHeight)
+	consensusHeight := clientexported.NewHeight(0, msg.ConsensusHeight)
 	if err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
-		msg.ProofHeight, msg.ConsensusHeight,
+		proofHeight, consensusHeight,
 	); err != nil {
 		return nil, err
 	}
@@ -64,9 +68,12 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenAck) (*sdk.Result, error) {
+	// For now, convert uint64 heights to clientexported.Height
+	proofHeight := clientexported.NewHeight(0, msg.ProofHeight)
+	consensusHeight := clientexported.NewHeight(0, msg.ConsensusHeight)
 	if err := k.ConnOpenAck(
 		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
-		msg.ProofHeight, msg.ConsensusHeight,
+		proofHeight, consensusHeight,
 	); err != nil {
 		return nil, err
 	}
@@ -94,8 +101,10 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
 func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenConfirm) (*sdk.Result, error) {
+	// For now, convert uint64 heights to clientexported.Height
+	proofHeight := clientexported.NewHeight(0, msg.ProofHeight)
 	if err := k.ConnOpenConfirm(
-		ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight,
+		ctx, msg.ConnectionID, msg.ProofAck, proofHeight,
 	); err != nil {
 		return nil, err
 	}

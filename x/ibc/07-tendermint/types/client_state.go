@@ -43,7 +43,7 @@ type ClientState struct {
 	MaxClockDrift time.Duration
 
 	// Block height when the client was frozen due to a misbehaviour
-	FrozenHeight Height `json:"frozen_height" yaml:"frozen_height"`
+	FrozenHeight clientexported.Height `json:"frozen_height" yaml:"frozen_height"`
 
 	// Last Header that was stored by client
 	LastHeader Header `json:"last_header" yaml:"last_header"`
@@ -85,7 +85,7 @@ func NewClientState(
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
 		LastHeader:      header,
-		FrozenHeight:    Height{0, 0},
+		FrozenHeight:    clientexported.Height{0, 0},
 		ProofSpecs:      specs,
 	}
 }
@@ -417,20 +417,14 @@ func sanitizeVerificationArgs(
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) (merkleProof commitmenttypes.MerkleProof, err error) {
-	if _, ok := height.(Height); !ok {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
-			ErrInvalidHeightComparison,
-			"height %s is not tendermint height", height.String(),
-		)
-	}
-	if cmp, _ := cs.GetLatestHeight().Compare(height); cmp < 0 {
+	if cmp := cs.GetLatestHeight().Compare(height); cmp < 0 {
 		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"client state (%s) height < proof height (%s < %s)", cs.ID, cs.GetLatestHeight().String(), height.String(),
 		)
 	}
 
-	if cmp, _ := cs.FrozenHeight.Compare(height); cs.IsFrozen() && cmp >= 0 {
+	if cmp := cs.FrozenHeight.Compare(height); cs.IsFrozen() && cmp >= 0 {
 		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"frozen client %s frozen height <= proof height (%s <= %s)", cs.ID, cs.FrozenHeight.String(), height.String(),

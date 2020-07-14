@@ -23,32 +23,8 @@ import (
 )
 
 var (
-	_ clientexported.Height      = Height(0)
 	_ clientexported.ClientState = ClientState{}
 )
-
-type Height int64
-
-func (h Height) Compare(height clientexported.Height) (int64, error) {
-	localHeight, ok := height.(Height)
-	if !ok {
-		return 0, sdkerrors.Wrapf(clienttypes.ErrInvalidHeight, "%s height is not localhost height", height.String())
-	}
-	return int64(h - localHeight), nil
-}
-
-func (h Height) Decrement() (clientexported.Height, error) {
-	if h == Height(1) {
-		return Height(0), sdkerrors.Wrap(clienttypes.ErrInvalidHeight, "cannot decrement local height below 1")
-	}
-	return Height(h - 1), nil
-}
-
-func (h Height) Valid() bool { return h != Height(0) }
-
-func (h Height) String() string {
-	return fmt.Sprintf("%d", h)
-}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
@@ -83,7 +59,8 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() clientexported.Height {
-	return Height(cs.Height)
+	// Currently only support epoch-0
+	return clientexported.NewHeight(0, uint64(cs.Height))
 }
 
 // IsFrozen returns false.

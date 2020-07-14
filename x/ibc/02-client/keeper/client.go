@@ -81,7 +81,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
 			ctx.BlockHeight(),
 		)
-		consensusHeight = localhosttypes.Height(ctx.BlockHeight())
+		consensusHeight = exported.NewHeight(0, uint64(ctx.BlockHeight()))
 	default:
 		err = types.ErrInvalidClientType
 	}

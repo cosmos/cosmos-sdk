@@ -17,7 +17,7 @@ var _ clientexported.Header = Header{}
 // Header defines the Tendermint consensus Header
 type Header struct {
 	tmtypes.SignedHeader `json:"signed_header" yaml:"signed_header"` // contains the commitment root
-	Height               Height                                      `json:"height" yaml:"height"` // contains epoch number
+	Height               clientexported.Height                       `json:"height" yaml:"height"` // contains epoch number
 	ValidatorSet         *tmtypes.ValidatorSet                       `json:"validator_set" yaml:"validator_set"`
 }
 

@@ -2,6 +2,7 @@ package exported
 
 import (
 	"encoding/json"
+	"fmt"
 
 	ics23 "github.com/confio/ics23/go"
 
@@ -139,24 +140,6 @@ type Header interface {
 	GetHeight() Height
 }
 
-// Height is an interface for a monotonically increasing data type
-// that can be compared against for the purposes of updating and freezing clients
-// Compare implements a method to compare two heights. When comparing two heights a, b
-// we can call a.Compare(b) which will return
-// negative if a < b
-// zero     if a = b
-// positive if a > b
-//
-// Decrement will return a decremented height from the given height. If this is not possible,
-// an error is returned
-// Valid returns true if height is valid, false otherwise
-type Height interface {
-	Compare(h Height) (int64, error)
-	Decrement() (Height, error)
-	Valid() bool
-	String() string
-}
-
 // MsgCreateClient defines the msg interface that the
 // CreateClient Handler expects
 type MsgCreateClient interface {
@@ -233,4 +216,62 @@ func ClientTypeFromString(clientType string) ClientType {
 	default:
 		return 0
 	}
+}
+
+// Height is an interface for a monotonically increasing data type
+// that can be compared against for the purposes of updating and freezing clients
+// Compare implements a method to compare two heights. When comparing two heights a, b
+// we can call a.Compare(b) which will return
+// negative if a < b
+// zero     if a = b
+// positive if a > b
+//
+// Decrement will return a decremented height from the given height. If this is not possible,
+// an error is returned
+// Valid returns true if height is valid, false otherwise
+type Height struct {
+	EpochNumber uint64 `json:"epoch_number" yaml:"epoch_number"`
+	EpochHeight uint64 `json:"epoch_height" yaml:"epoch_height"`
+}
+
+func NewHeight(epochNumber, epochHeight uint64) Height {
+	return Height{
+		EpochNumber: epochNumber,
+		EpochHeight: epochHeight,
+	}
+}
+
+// Compare implements clientexported.Height
+// It first compares based on epoch numbers, whichever has the higher epoch number is the higher height
+// If epoch number is the same, then the epoch height is compared
+func (h Height) Compare(other Height) int64 {
+	if h.EpochNumber != other.EpochNumber {
+		return int64(h.EpochNumber) - int64(other.EpochNumber)
+	}
+	return int64(h.EpochHeight) - int64(other.EpochHeight)
+}
+
+// Decrement implements clientexported.Height
+// Decrement will return a new height with the EpochHeight decremented
+// If the EpochHeight is already at lowest value (1), then false success flag is returend
+func (h Height) Decrement() (decremented Height, success bool) {
+	if h.EpochHeight <= 1 {
+		return Height{}, false
+	}
+	return NewHeight(h.EpochNumber, h.EpochHeight-1), true
+}
+
+// Valid implements clientexported.Height
+// Returns false if EpochHeight is 0
+func (h Height) Valid() bool {
+	return h.EpochHeight != 0
+}
+
+func (h Height) String() string {
+	return fmt.Sprintf("epoch:%d-height:%d", h.EpochNumber, h.EpochHeight)
+}
+
+// IsZero returns true if height epoch and epoch-height are both 0
+func (h Height) IsZero() bool {
+	return h.EpochNumber == 0 && h.EpochHeight == 0
 }

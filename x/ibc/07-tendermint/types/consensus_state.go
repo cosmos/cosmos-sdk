@@ -15,13 +15,13 @@ import (
 type ConsensusState struct {
 	Timestamp    time.Time               `json:"timestamp" yaml:"timestamp"`
 	Root         commitmentexported.Root `json:"root" yaml:"root"`
-	Height       Height                  `json:"height" yaml:"height"`
+	Height       clientexported.Height   `json:"height" yaml:"height"`
 	ValidatorSet *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
 }
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmentexported.Root, height Height,
+	timestamp time.Time, root commitmentexported.Root, height clientexported.Height,
 	valset *tmtypes.ValidatorSet,
 ) ConsensusState {
 	return ConsensusState{

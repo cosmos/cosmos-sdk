@@ -14,8 +14,8 @@ import (
 func (k Keeper) VerifyClientConsensusState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
-	consensusHeight uint64,
+	height clientexported.Height,
+	consensusHeight clientexported.Height,
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
@@ -41,7 +41,7 @@ func (k Keeper) VerifyClientConsensusState(
 func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height clientexported.Height,
 	proof []byte,
 	connectionID string,
 	connectionEnd exported.ConnectionI, // opposite connection
@@ -73,7 +73,7 @@ func (k Keeper) VerifyConnectionState(
 func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height clientexported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -107,7 +107,7 @@ func (k Keeper) VerifyChannelState(
 func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height clientexported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -142,7 +142,7 @@ func (k Keeper) VerifyPacketCommitment(
 func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height clientexported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -178,7 +178,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height clientexported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -212,7 +212,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height clientexported.Height,
 	proof []byte,
 	portID,
 	channelID string,

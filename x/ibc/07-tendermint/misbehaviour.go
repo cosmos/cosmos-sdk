@@ -36,13 +36,10 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
 	}
 
-	tmHeight, ok := tmEvidence.GetIBCHeight().(types.Height)
-	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "height type is not Tendermint")
-	}
+	tmHeight := tmEvidence.GetIBCHeight()
 
 	// If client is already frozen at earlier height than evidence, return with error
-	if cmp, _ := tmClientState.FrozenHeight.Compare(tmEvidence.GetIBCHeight()); tmClientState.IsFrozen() && cmp <= 0 {
+	if cmp := tmClientState.FrozenHeight.Compare(tmEvidence.GetIBCHeight()); tmClientState.IsFrozen() && cmp <= 0 {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
 			"client is already frozen at earlier height %d than misbehaviour height %d", tmClientState.FrozenHeight, misbehaviour.GetHeight())
 	}
@@ -64,7 +61,7 @@ func CheckMisbehaviourAndUpdateState(
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func checkMisbehaviour(
 	clientState types.ClientState, consensusState types.ConsensusState, evidence types.Evidence,
-	height types.Height, currentTimestamp time.Time, consensusParams *abci.ConsensusParams,
+	height clientexported.Height, currentTimestamp time.Time, consensusParams *abci.ConsensusParams,
 ) error {
 	// calculate the age of the misbehaviour evidence
 	infractionHeight := evidence.GetHeight()
@@ -91,7 +88,7 @@ func checkMisbehaviour(
 	}
 
 	// check if provided height matches the headers' height
-	if cmp, _ := height.Compare(evidence.GetIBCHeight()); cmp != 0 {
+	if cmp := height.Compare(evidence.GetIBCHeight()); cmp != 0 {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"height > evidence header height (%d > %d)", height, evidence.GetHeight(),

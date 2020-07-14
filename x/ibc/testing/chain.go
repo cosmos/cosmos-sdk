@@ -16,11 +16,13 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -38,7 +40,7 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ChannelVersion = "ics20-1"
+	ChannelVersion = ibctransfertypes.Version
 	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
@@ -50,7 +52,7 @@ var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
 
-	ConnectionVersion = connectiontypes.DefaultIBCVersion
+	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -67,6 +69,7 @@ type TestChain struct {
 	CurrentHeader abci.Header       // header for current block height
 	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
 	QueryServer   types.QueryServer
+	TxGenerator   client.TxGenerator
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -114,6 +117,8 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Time:   globalStartTime,
 	}
 
+	txGenerator := simapp.MakeEncodingConfig().TxGenerator
+
 	// create an account to send transactions from
 	chain := &TestChain{
 		t:             t,
@@ -122,6 +127,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		CurrentHeader: header,
 		Querier:       keeper.NewQuerier(*app.IBCKeeper),
 		QueryServer:   app.IBCKeeper,
+		TxGenerator:   txGenerator,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -203,7 +209,7 @@ func (chain *TestChain) NextBlock() {
 func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,
-		chain.App.Codec(),
+		chain.TxGenerator,
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		[]sdk.Msg{msg},

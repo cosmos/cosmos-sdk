@@ -1,6 +1,8 @@
-# Cosmos-SDK v0.39.0
+# Cosmos-SDK v0.39.0 Release Notes
 
 This is the inaugural release of the **Cosmos SDK 0.39 «Launchpad»** release series.
+
+See the [Cosmos SDK 0.39.0 milestone](https://github.com/cosmos/cosmos-sdk/milestone/27?closed=1) on our issue tracker for details.
 
 ## Changes to IAVL and store pruning
 

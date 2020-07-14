@@ -85,7 +85,7 @@ The following instructions assume that **pruning settings have not been modified
 
 ## Regression in the signature verification when multiple transactions in the same block are sent from the same account
 
-When multiple transactions in the same block are sent (and correctly signed) by the same account, chances are that some of them could be rejected and the error `unauthorized: signature verification failed` would be returned due to the account's sequence (*nonce*) getting stuck and not being incremented by the ante handler. This behaviour was [a regression](https://github.com/cosmos/cosmos-sdk/issues/6287) introduced in the `v0.38` release series and did not occur in the `v0.37` release series.
+When multiple transactions in the same block are sent (and correctly signed) by the same account, chances are that some of them could be rejected and the error `unauthorized: signature verification failed` would be returned due to the account's sequence (*nonce*) getting stuck and not being incremented by the ante handler. This behaviour was [a regression](https://github.com/cosmos/cosmos-sdk/issues/6287) introduced in the `v0.38` release series, it did not occur in the `v0.37` release series and is now fixed in this release.
 
 ## Changes to ABCI Query's "app/simulate" path
 

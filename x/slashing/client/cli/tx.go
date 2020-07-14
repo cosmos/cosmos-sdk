@@ -47,7 +47,7 @@ $ <appcli> tx slashing unjail --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

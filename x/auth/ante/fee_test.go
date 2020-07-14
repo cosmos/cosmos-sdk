@@ -30,8 +30,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.txBuilder.SetFeeAmount(fee.GetAmount())
 	suite.txBuilder.SetGasLimit(fee.GetGas())
 
-	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
@@ -77,8 +77,8 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	suite.txBuilder.SetFeeAmount(fee.GetAmount())
 	suite.txBuilder.SetGasLimit(fee.GetGas())
 
-	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	// Set account with insufficient funds
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)

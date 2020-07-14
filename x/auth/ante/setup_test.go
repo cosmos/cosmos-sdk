@@ -28,8 +28,8 @@ func (suite *AnteTestSuite) TestSetup() {
 	suite.txBuilder.SetFeeAmount(fee.GetAmount())
 	suite.txBuilder.SetGasLimit(fee.GetGas())
 
-	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	sud := ante.NewSetUpContextDecorator()
 	antehandler := sdk.ChainAnteDecorators(sud)
@@ -61,8 +61,8 @@ func (suite *AnteTestSuite) TestRecoverPanic() {
 	suite.txBuilder.SetFeeAmount(fee.GetAmount())
 	suite.txBuilder.SetGasLimit(fee.GetGas())
 
-	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	sud := ante.NewSetUpContextDecorator()
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})

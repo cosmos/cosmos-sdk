@@ -68,10 +68,10 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, seqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
+func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
 	var sigsV2 []signing.SignatureV2
 	for i, priv := range privs {
-		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), priv, accNums[i], seqs[i], chainID, suite.clientCtx.TxGenerator, suite.txBuilder)
+		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), priv, accNums[i], accSeqs[i], chainID, suite.clientCtx.TxGenerator, suite.txBuilder)
 		suite.Require().NoError(err)
 
 		sigsV2 = append(sigsV2, sigV2)

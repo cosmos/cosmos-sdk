@@ -29,8 +29,8 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 	suite.txBuilder.SetFeeAmount(fee.GetAmount())
 	suite.txBuilder.SetGasLimit(fee.GetGas())
 
-	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
-	invalidTx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	privs, accNums, accSeqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
+	invalidTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	vbd := ante.NewValidateBasicDecorator()
 	antehandler := sdk.ChainAnteDecorators(vbd)
@@ -38,8 +38,8 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 
 	suite.Require().NotNil(err, "Did not error on invalid tx")
 
-	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	validTx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	privs, accNums, accSeqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	validTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	_, err = antehandler(suite.ctx, validTx, false)
 	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
@@ -67,9 +67,9 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 	suite.txBuilder.SetFeeAmount(fee.GetAmount())
 	suite.txBuilder.SetGasLimit(fee.GetGas())
 
-	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
-	invalidTx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	invalidTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	// require that long memos get rejected
 	vmd := ante.NewValidateMemoDecorator(suite.app.AccountKeeper)
@@ -79,7 +79,7 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 	suite.Require().NotNil(err, "Did not error on tx with high memo")
 
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-	validTx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	validTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
 	// require small memos pass ValidateMemo Decorator
 	_, err = antehandler(suite.ctx, validTx, false)
@@ -101,8 +101,8 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.txBuilder.SetGasLimit(fee.GetGas())
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
-	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, seqs, suite.ctx.ChainID())
+	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	txBytes, err := json.Marshal(tx)
 	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 

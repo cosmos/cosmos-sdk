@@ -8,7 +8,7 @@ import (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(clientCtx client.Context) *cobra.Command {
+func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Auth transaction subcommands",
@@ -17,10 +17,10 @@ func GetTxCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
-		GetMultiSignCommand(clientCtx),
-		GetSignCommand(clientCtx),
-		GetValidateSignaturesCommand(clientCtx),
-		GetSignBatchCommand(clientCtx.Codec),
+		GetMultiSignCommand(),
+		GetSignCommand(),
+		GetValidateSignaturesCommand(),
+		GetSignBatchCommand(),
 	)
 	return txCmd
 }

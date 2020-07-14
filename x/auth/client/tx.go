@@ -236,7 +236,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
-func NewBatchScanner(cdc *codec.Codec, r io.Reader) *BatchScanner {
+func NewBatchScanner(cdc codec.JSONMarshaler, r io.Reader) *BatchScanner {
 	return &BatchScanner{Scanner: bufio.NewScanner(r), cdc: cdc}
 }
 
@@ -245,7 +245,7 @@ func NewBatchScanner(cdc *codec.Codec, r io.Reader) *BatchScanner {
 type BatchScanner struct {
 	*bufio.Scanner
 	stdTx        authtypes.StdTx
-	cdc          *codec.Codec
+	cdc          codec.JSONMarshaler
 	unmarshalErr error
 }
 

@@ -29,8 +29,9 @@ message MsgConnectionOpenTry {
   // proof of client consensus state
   bytes proof_consensus = 8
       [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_height = 9 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes  signer           = 10 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 consensus_epoch = 9 [(gogoproto.moretags) = "yaml:\"consensus_epoch\""];
+  uint64 consensus_height = 10 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
+  bytes  signer           = 11 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
@@ -46,8 +47,9 @@ message MsgConnectionOpenAck {
   // proof of client consensus state
   bytes proof_consensus = 6
       [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_height = 7 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes  signer           = 8 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64 consensus_epoch = 7 [(gogoproto.moretags) = "yaml:\"consensus_epoch\""];
+  uint64 consensus_height = 8 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
+  bytes  signer           = 9 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge

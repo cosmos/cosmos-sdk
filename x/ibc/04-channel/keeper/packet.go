@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -77,10 +78,11 @@ func (k Keeper) SendPacket(
 
 	// check if packet timeouted on the receiving chain
 	latestHeight := clientState.GetLatestHeight()
-	if packet.GetTimeoutHeight() != 0 && latestHeight >= packet.GetTimeoutHeight() {
+	timeoutHeight := clientexported.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutHeight())
+	if packet.GetTimeoutHeight() != 0 && latestHeight.Compare(timeoutHeight) != -1 {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"receiving chain block height >= packet timeout height (%d >= %d)", latestHeight, packet.GetTimeoutHeight(),
+			"receiving chain block height >= packet timeout height (%v >= %v)", latestHeight, timeoutHeight,
 		)
 	}
 
@@ -121,6 +123,7 @@ func (k Keeper) SendPacket(
 		sdk.NewEvent(
 			types.EventTypeSendPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutEpoch, fmt.Sprintf("%d", packet.GetTimeoutEpoch())),
 			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
@@ -141,7 +144,7 @@ func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight clientexported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -186,10 +189,13 @@ func (k Keeper) RecvPacket(
 	}
 
 	// check if packet timeouted by comparing it with the latest height of the chain
-	if packet.GetTimeoutHeight() != 0 && uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
+	// support current height with epoch-0 for now
+	blockHeight := clientexported.NewHeight(0, uint64(ctx.BlockHeight()))
+	timeoutHeight := clientexported.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutHeight())
+	if packet.GetTimeoutHeight() != 0 && blockHeight.Compare(timeoutHeight) != -1 {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"block height >= packet timeout height (%d >= %d)", uint64(ctx.BlockHeight()), packet.GetTimeoutHeight(),
+			"block height >= packet timeout height (%v >= %v)", blockHeight, timeoutHeight,
 		)
 	}
 
@@ -306,6 +312,7 @@ func (k Keeper) PacketExecuted(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
 			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
+			sdk.NewAttribute(types.AttributeKeyTimeoutEpoch, fmt.Sprintf("%d", packet.GetTimeoutEpoch())),
 			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
@@ -330,7 +337,7 @@ func (k Keeper) AcknowledgePacket(
 	packet exported.PacketI,
 	acknowledgement []byte,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight clientexported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
@@ -462,6 +469,7 @@ func (k Keeper) AcknowledgementExecuted(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeAcknowledgePacket,
+			sdk.NewAttribute(types.AttributeKeyTimeoutEpoch, fmt.Sprintf("%d", packet.GetTimeoutEpoch())),
 			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),

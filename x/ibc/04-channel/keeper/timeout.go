@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -23,7 +24,7 @@ func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	proof []byte,
-	proofHeight,
+	proofHeight clientexported.Height,
 	nextSequenceRecv uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -72,7 +73,8 @@ func (k Keeper) TimeoutPacket(
 		return err
 	}
 
-	if (packet.GetTimeoutHeight() == 0 || proofHeight < packet.GetTimeoutHeight()) &&
+	timeoutHeight := clientexported.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutHeight())
+	if (packet.GetTimeoutHeight() == 0 || proofHeight.Compare(timeoutHeight) == -1) &&
 		(packet.GetTimeoutTimestamp() == 0 || proofTimestamp < packet.GetTimeoutTimestamp()) {
 		return sdkerrors.Wrap(types.ErrPacketTimeout, "packet timeout has not been reached for height or timestamp")
 	}
@@ -170,7 +172,7 @@ func (k Keeper) TimeoutOnClose(
 	packet exported.PacketI,
 	proof,
 	proofClosed []byte,
-	proofHeight,
+	proofHeight clientexported.Height,
 	nextSequenceRecv uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())

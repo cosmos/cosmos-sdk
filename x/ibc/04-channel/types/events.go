@@ -21,6 +21,7 @@ const (
 
 	AttributeKeyData             = "packet_data"
 	AttributeKeyAck              = "packet_ack"
+	AttributeKeyTimeoutEpoch     = "packet_timeout_epoch"
 	AttributeKeyTimeoutHeight    = "packet_timeout_height"
 	AttributeKeyTimeoutTimestamp = "packet_timeout_timestamp"
 	AttributeKeySequence         = "packet_sequence"

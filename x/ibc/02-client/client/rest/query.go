@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
@@ -110,6 +111,11 @@ func queryConsensusStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		epoch, err := strconv.ParseUint(vars[RestRootEpoch], 10, 64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
@@ -118,7 +124,8 @@ func queryConsensusStateHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
+		clientHeight := exported.NewHeight(epoch, height)
+		csRes, err := utils.QueryConsensusState(clientCtx, clientID, clientHeight, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

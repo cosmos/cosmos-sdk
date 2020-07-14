@@ -12,8 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
+
+const flagEpoch = "epoch"
 
 // GetCmdQueryClientStates defines the command to query all the light clients
 // that this chain mantains.
@@ -111,9 +114,15 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 				return fmt.Errorf("expected integer height, got: %s", args[1])
 			}
 
+			epoch, err := cmd.Flags().GetInt(flagEpoch)
+			if err != nil {
+				return fmt.Errorf("expected integer epoch: %v", err)
+			}
+
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
-			csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
+			clientHeight := exported.NewHeight(uint64(epoch), height)
+			csRes, err := utils.QueryConsensusState(clientCtx, clientID, clientHeight, prove)
 			if err != nil {
 				return err
 			}
@@ -124,6 +133,7 @@ func GetCmdQueryConsensusState(clientCtx client.Context) *cobra.Command {
 	}
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	cmd.Flags().Int(flagEpoch, 0, "epoch for the consensus state")
 	return cmd
 }
 

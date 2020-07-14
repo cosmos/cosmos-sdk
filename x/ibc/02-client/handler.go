@@ -20,7 +20,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 
 	var (
 		clientState     exported.ClientState
-		consensusHeight uint64
+		consensusHeight exported.Height
 	)
 
 	switch clientType {
@@ -38,8 +38,9 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 		consensusHeight = msg.GetConsensusState().GetHeight()
 	case exported.Localhost:
 		// msg client id is always "localhost"
+		// Localhost epoch is always 0 for now
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
-		consensusHeight = uint64(ctx.BlockHeight())
+		consensusHeight = exported.NewHeight(0, uint64(ctx.BlockHeight()))
 	default:
 		return nil, sdkerrors.Wrap(types.ErrInvalidClientType, msg.GetClientType())
 	}
@@ -56,7 +57,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 			types.EventTypeCreateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.GetClientID()),
 			sdk.NewAttribute(types.AttributeKeyClientType, msg.GetClientType()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%v", consensusHeight)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

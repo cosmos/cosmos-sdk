@@ -33,11 +33,17 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		case clientexported.MsgUpdateClient:
 			_, err = pvr.clientKeeper.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
 		case *channeltypes.MsgPacket:
-			err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
+			// For now, convert uint64 heights to clientexported.Height
+			proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
+			err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, proofHeight)
 		case *channeltypes.MsgAcknowledgement:
-			err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+			// For now, convert uint64 heights to clientexported.Height
+			proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
+			err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, proofHeight)
 		case *channeltypes.MsgTimeout:
-			err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+			// For now, convert uint64 heights to clientexported.Height
+			proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
+			err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, proofHeight, msg.NextSequenceRecv)
 		default:
 			// don't emit sender event for other msg types
 			continue

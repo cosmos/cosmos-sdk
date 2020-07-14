@@ -9,6 +9,7 @@ import (
 // REST client flags
 const (
 	RestClientID   = "client-id"
+	RestRootEpoch  = "epoch"
 	RestRootHeight = "height"
 )
 

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -41,8 +42,10 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
 func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabilitytypes.Capability, msg *types.MsgChannelOpenTry) (*sdk.Result, *capabilitytypes.Capability, error) {
+	// For now, convert uint64 heights to clientexported.Height
+	proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
 	capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
-		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
+		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, proofHeight,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -70,8 +73,10 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 
 // HandleMsgChannelOpenAck defines the sdk.Handler for MsgChannelOpenAck
 func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelOpenAck) (*sdk.Result, error) {
+	// For now, convert uint64 heights to clientexported.Height
+	proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
 	err := k.ChanOpenAck(
-		ctx, msg.PortID, msg.ChannelID, channelCap, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
+		ctx, msg.PortID, msg.ChannelID, channelCap, msg.CounterpartyVersion, msg.ProofTry, proofHeight,
 	)
 	if err != nil {
 		return nil, err
@@ -101,7 +106,9 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 
 // HandleMsgChannelOpenConfirm defines the sdk.Handler for MsgChannelOpenConfirm
 func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelOpenConfirm) (*sdk.Result, error) {
-	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofAck, msg.ProofHeight)
+	// For now, convert uint64 heights to clientexported.Height
+	proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
+	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofAck, proofHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +166,9 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 
 // HandleMsgChannelCloseConfirm defines the sdk.Handler for MsgChannelCloseConfirm
 func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelCloseConfirm) (*sdk.Result, error) {
-	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofInit, msg.ProofHeight)
+	// For now, convert uint64 heights to clientexported.Height
+	proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
+	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofInit, proofHeight)
 	if err != nil {
 		return nil, err
 	}

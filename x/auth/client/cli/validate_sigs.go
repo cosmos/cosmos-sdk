@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func GetValidateSignaturesCommand(clientCtx client.Context) *cobra.Command {
+func GetValidateSignaturesCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate-signatures [file]",
 		Short: "Validate transactions signatures",
@@ -28,17 +28,19 @@ given transaction. If the --offline flag is also set, signature validation over 
 transaction will be not be performed as that will require RPC communication with a full node.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeValidateSignaturesCmd(clientCtx),
+		RunE:   makeValidateSignaturesCmd(),
 		Args:   cobra.ExactArgs(1),
 	}
 
+	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-func makeValidateSignaturesCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
+func makeValidateSignaturesCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		clientCtx := client.GetClientContextFromCmd(cmd)
 		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
@@ -91,7 +93,7 @@ func printAndValidateSigs(
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			acc, err := types.NewAccountRetriever(authclient.Codec).GetAccount(clientCtx, sigAddr)
+			acc, err := types.NewAccountRetriever(clientCtx.JSONMarshaler).GetAccount(clientCtx, sigAddr)
 			if err != nil {
 				cmd.Printf("failed to get account: %s\n", sigAddr)
 				return false

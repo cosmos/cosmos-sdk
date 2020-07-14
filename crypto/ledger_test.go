@@ -81,7 +81,8 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Store and restore
-		serializedPk := priv.Bytes()
+
+		serializedPk := cdc.Amino.MustMarshalBinaryBare(priv)
 		require.NotNil(t, serializedPk)
 		require.True(t, len(serializedPk) >= 50)
 
@@ -181,7 +182,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Store and restore
-		serializedPk := priv.Bytes()
+		serializedPk := cdc.Amino.MustMarshalBinaryBare(priv)
 		require.NotNil(t, serializedPk)
 		require.True(t, len(serializedPk) >= 50)
 
@@ -252,7 +253,7 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 	require.True(t, valid)
 
 	// make sure pubkeys serialize properly as well
-	bs = pub.Bytes()
+	bs = cdc.Amino.MustMarshalBinaryBare(pub)
 	bpub, err := cryptoAmino.PubKeyFromBytes(bs)
 	require.NoError(t, err)
 	require.Equal(t, pub, bpub)

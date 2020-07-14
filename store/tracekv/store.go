@@ -54,6 +54,7 @@ func (tkv *Store) Get(key []byte) []byte {
 	value := tkv.parent.Get(key)
 
 	writeOperation(tkv.writer, readOp, tkv.context, key, value)
+
 	return value
 }
 

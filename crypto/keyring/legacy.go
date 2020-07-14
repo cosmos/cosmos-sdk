@@ -159,7 +159,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return
 	}
 
-	return crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), string(info.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(CryptoCdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), string(info.GetAlgo())), nil
 }
 
 // ExportPrivKey returns a private key in ASCII armored format.

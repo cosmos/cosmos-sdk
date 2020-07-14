@@ -50,11 +50,12 @@ func TestTraceKVStoreGet(t *testing.T) {
 		expectedValue []byte
 		expectedOut   string
 	}{
-		{
-			key:           []byte{},
-			expectedValue: nil,
-			expectedOut:   "{\"operation\":\"read\",\"key\":\"\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-		},
+		// TODO: key types can not me empty
+		// {
+		// 	key:           []byte{},
+		// 	expectedValue: nil,
+		// 	expectedOut:   "{\"operation\":\"read\",\"key\":\"\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+		// },
 		{
 			key:           kvPairs[0].Key,
 			expectedValue: kvPairs[0].Value,

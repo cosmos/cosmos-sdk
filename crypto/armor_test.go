@@ -39,7 +39,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	require.Empty(t, algo)
 
 	// wrong key type
-	armored = crypto.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
+	armored = crypto.ArmorPubKeyBytes(keyring.CryptoCdc.Amino.MustMarshalBinaryBare(priv.PubKey), "")
 	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unrecognized armor type")
@@ -50,7 +50,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), crypto.BcryptSecurityParameter)
 		require.NoError(t, err)
 		key = tmcrypto.Sha256(key) // get 32 bytes
-		privKeyBytes := privKey.Bytes()
+		privKeyBytes := keyring.CryptoCdc.Amino.MustMarshalBinaryBare(privKey)
 		return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 	}
 	saltBytes, encBytes := encryptPrivKeyFn(priv, "passphrase")
@@ -74,7 +74,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	// Add keys and see they return in alphabetical order
 	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
-	armored := crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "")
+	armored := crypto.ArmorPubKeyBytes(keyring.CryptoCdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "")
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err := cryptoAmino.PubKeyFromBytes(pubBytes)
@@ -82,7 +82,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
 
-	armored = crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "unknown")
+	armored = crypto.ArmorPubKeyBytes(keyring.CryptoCdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "unknown")
 	pubBytes, algo, err = crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err = cryptoAmino.PubKeyFromBytes(pubBytes)

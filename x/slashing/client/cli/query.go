@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -58,13 +57,8 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			consAddr := sdk.ConsAddress(pk.Address())
 			params := &types.QuerySigningInfoRequest{ConsAddress: consAddr}
 			res, err := queryClient.SigningInfo(context.Background(), params)
-
 			if err != nil {
 				return err
-			}
-
-			if res.String() == "" {
-				return fmt.Errorf("validator %s not found in slashing store", consAddr)
 			}
 
 			return clientCtx.PrintOutput(res.ValSigningInfo)
@@ -95,11 +89,8 @@ $ <appcli> query slashing signing-infos
 				return err
 			}
 
-			pageReq := &query.PageRequest{}
-
-			params := &types.QuerySigningInfosRequest{Req: pageReq}
+			params := &types.QuerySigningInfosRequest{Req: &query.PageRequest{}}
 			res, err := queryClient.SigningInfos(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

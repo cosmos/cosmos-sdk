@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -79,7 +80,13 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 		return err
 	}
 
-	return clientCtx.PrintOutput(res.Evidence)
+	var evidence exported.Evidence
+	err = clientCtx.InterfaceRegistry.UnpackAny(res.Evidence, &evidence)
+	if err != nil {
+		return err
+	}
+
+	return clientCtx.PrintOutput(evidence)
 }
 
 func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) error {
@@ -95,5 +102,11 @@ func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) erro
 		return err
 	}
 
-	return clientCtx.PrintOutput(res.Evidence)
+	var evidences []exported.Evidence
+	err = clientCtx.InterfaceRegistry.UnpackAny(res.Evidence, &evidences)
+	if err != nil {
+		return err
+	}
+
+	return clientCtx.PrintOutput(evidences)
 }

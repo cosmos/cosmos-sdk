@@ -235,11 +235,11 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 		simulate    bool
 		expectedSeq uint64
 	}{
-		{ctx.WithIsReCheckTx(true), false, 0},
-		{ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 1},
 		{ctx.WithIsReCheckTx(true), false, 1},
-		{ctx.WithIsReCheckTx(true), false, 1},
-		{ctx.WithIsReCheckTx(true), true, 2},
+		{ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 2},
+		{ctx.WithIsReCheckTx(true), false, 3},
+		{ctx.WithIsReCheckTx(true), false, 4},
+		{ctx.WithIsReCheckTx(true), true, 5},
 	}
 
 	for i, tc := range testCases {

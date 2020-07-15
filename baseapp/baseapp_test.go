@@ -168,7 +168,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db)
-	rs.SetPruning(store.PruneSyncable)
+	rs.SetPruning(store.PruneDefault)
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -273,7 +273,7 @@ func TestSetLoader(t *testing.T) {
 
 func TestAppVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneSyncable)
+	pruningOpt := SetPruning(store.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -329,8 +329,9 @@ func TestLoadVersionInvalid(t *testing.T) {
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := store.PruningOptions{
-		KeepEvery:     2,
-		SnapshotEvery: 6,
+		KeepRecent: 2,
+		KeepEvery:  3,
+		Interval:   1,
 	}
 	pruningOpt := SetPruning(pruningOptions)
 	db := dbm.NewMemDB()
@@ -351,61 +352,33 @@ func TestLoadVersionPruning(t *testing.T) {
 	require.Equal(t, int64(0), lastHeight)
 	require.Equal(t, emptyCommitID, lastID)
 
-	// execute a block
-	header := abci.Header{Height: 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res := app.Commit()
+	var lastCommitID sdk.CommitID
 
-	// execute a block, collect commit ID
-	header = abci.Header{Height: 2}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
+	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
+	// (keep recent) and 3 (keep every).
+	for i := int64(1); i <= 7; i++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: i}})
+		res := app.Commit()
+		lastCommitID = sdk.CommitID{Version: i, Hash: res.Data}
+	}
 
-	// execute a block
-	header = abci.Header{Height: 3}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-	commitID3 := sdk.CommitID{Version: 3, Hash: res.Data}
+	for _, v := range []int64{1, 2, 4} {
+		_, err = app.cms.CacheMultiStoreWithVersion(v)
+		require.Error(t, err)
+	}
 
-	// reload with LoadLatestVersion, check it loads last flushed version
+	for _, v := range []int64{3, 5, 6, 7} {
+		_, err = app.cms.CacheMultiStoreWithVersion(v)
+		require.NoError(t, err)
+	}
+
+	// reload with LoadLatestVersion, check it loads last version
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
+
 	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
-	testLoadVersionHelper(t, app, int64(2), commitID2)
-
-	// re-execute block 3 and check it is same CommitID
-	header = abci.Header{Height: 3}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-	recommitID3 := sdk.CommitID{Version: 3, Hash: res.Data}
-	require.Equal(t, commitID3, recommitID3, "Commits of identical blocks not equal after reload")
-
-	// execute a block, collect commit ID
-	header = abci.Header{Height: 4}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-	commitID4 := sdk.CommitID{Version: 4, Hash: res.Data}
-
-	// execute a block
-	header = abci.Header{Height: 5}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-
-	// reload with LoadLatestVersion, check it loads last flushed version
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
-	err = app.LoadLatestVersion(capKey)
-	require.Nil(t, err)
-	testLoadVersionHelper(t, app, int64(4), commitID4)
-
-	// reload with LoadVersion of previous flushed version
-	// and check it fails since previous flush should be pruned
-	app = NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
-	err = app.LoadVersion(2, capKey)
-	require.NotNil(t, err)
+	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }
 
 func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
@@ -685,20 +658,33 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
 
 		if txTest.FailOnAnte {
-			return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
-		_, err = incrementingCounter(t, store, storeKey, txTest.Counter)
+		_, err := incrementingCounter(t, store, storeKey, txTest.Counter)
 		if err != nil {
-			return newCtx, err
+			return ctx, err
 		}
 
-		return newCtx, nil
+		ctx.EventManager().EmitEvents(
+			counterEvent("ante_handler", txTest.Counter),
+		)
+
+		return ctx, nil
+	}
+}
+
+func counterEvent(evType string, msgCount int64) sdk.Events {
+	return sdk.Events{
+		sdk.NewEvent(
+			evType,
+			sdk.NewAttribute("update_counter", fmt.Sprintf("%d", msgCount)),
+		),
 	}
 }
 
@@ -985,10 +971,13 @@ func TestSimulateTx(t *testing.T) {
 		queryResult := app.Query(query)
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
-		var res uint64
-		err = codec.Cdc.UnmarshalBinaryLengthPrefixed(queryResult.Value, &res)
+		var simRes sdk.SimulationResponse
+		err = codec.Cdc.UnmarshalBinaryBare(queryResult.Value, &simRes)
 		require.NoError(t, err)
-		require.Equal(t, gasConsumed, res)
+		require.Equal(t, gInfo, simRes.GasInfo)
+		require.Equal(t, result.Log, simRes.Result.Log)
+		require.Equal(t, result.Events, simRes.Result.Events)
+		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}
@@ -1312,6 +1301,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx := app.getState(runTxModeDeliver).ctx
@@ -1327,6 +1317,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Empty(t, res.Events)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = app.getState(runTxModeDeliver).ctx
@@ -1342,6 +1333,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.NotEmpty(t, res.Events)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = app.getState(runTxModeDeliver).ctx

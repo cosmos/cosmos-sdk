@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,6 +18,11 @@ type BaseConfig struct {
 	// transaction. A transaction's fees must meet the minimum of any denomination
 	// specified in this config (e.g. 0.25token1;0.0001token2).
 	MinGasPrices string `mapstructure:"minimum-gas-prices"`
+
+	Pruning           string `mapstructure:"pruning"`
+	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
+	PruningKeepEvery  string `mapstructure:"pruning-keep-every"`
+	PruningInterval   string `mapstructure:"pruning-interval"`
 
 	// HaltHeight contains a non-zero block height at which a node will gracefully
 	// halt and shutdown that can be used to assist upgrades and testing.
@@ -34,8 +39,6 @@ type BaseConfig struct {
 
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
-
-	Pruning string `mapstructure:"pruning"`
 }
 
 // Config defines the server's top level configuration
@@ -73,10 +76,13 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 // DefaultConfig returns server's default configuration.
 func DefaultConfig() *Config {
 	return &Config{
-		BaseConfig{
-			MinGasPrices:    defaultMinGasPrices,
-			InterBlockCache: true,
-			Pruning:         store.PruningStrategySyncable,
+		BaseConfig: BaseConfig{
+			MinGasPrices:      defaultMinGasPrices,
+			InterBlockCache:   true,
+			Pruning:           storetypes.PruningOptionDefault,
+			PruningKeepRecent: "0",
+			PruningKeepEvery:  "0",
+			PruningInterval:   "0",
 		},
 	}
 }

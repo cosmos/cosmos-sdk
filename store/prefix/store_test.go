@@ -86,7 +86,7 @@ func TestIAVLStorePrefix(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, err := tiavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
-	iavlStore := iavl.UnsafeNewStore(tree, types.PruneNothing)
+	iavlStore := iavl.UnsafeNewStore(tree)
 
 	testPrefixStore(t, iavlStore, []byte("test"))
 }

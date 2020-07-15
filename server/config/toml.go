@@ -18,6 +18,17 @@ const defaultConfigTemplate = `# This is a TOML config file.
 # specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
+# default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
+# nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
+# everything: all saved states will be deleted, storing only the current state; pruning at 10 block intervals
+# custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
+pruning = "{{ .BaseConfig.Pruning }}"
+
+# These are applied if and only if the pruning strategy is custom.
+pruning-keep-recent = "{{ .BaseConfig.PruningKeepRecent }}"
+pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
+pruning-interval = "{{ .BaseConfig.PruningInterval }}"
+
 # HaltHeight contains a non-zero block height at which a node will gracefully
 # halt and shutdown that can be used to assist upgrades and testing.
 #
@@ -33,12 +44,6 @@ halt-time = {{ .BaseConfig.HaltTime }}
 
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
-
-# Pruning sets the pruning strategy: syncable, nothing, everything
-# syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
-# nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: all saved states will be deleted, storing only the current state
-pruning = "{{ .BaseConfig.Pruning }}"
 `
 
 var configTemplate *template.Template

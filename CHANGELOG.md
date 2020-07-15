@@ -35,6 +35,60 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v0.39.0] - TBD
+
+### Improvements
+
+The pruning changes introduced in 0.38.0 has bugs that may cause data loss, even after upgrading
+to 0.38.5. When upgrading from 0.38.x it is important to follow the instructions below, to prevent
+data loss and database corruption.
+
+Do not modify pruning settings with <=0.38.4 as that may cause data corruption - the following
+assumes pruning settings have not been modified since the node started using 0.38.x. The default
+pruning setting `syncable` used `KeepEvery:100`.
+
+* If using `KeepEvery:1` (pruning settings `nothing` or `everything`), upgrading to 0.38.5 is safe.
+* Otherwise, halt block processing with `--halt-height` after committing a height divisible by
+  `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The node must _never_ have processed a
+  height beyond that at any time in its past. Upgrading to 0.38.5 is then safe.
+* Otherwise, set the 0.38.5 `KeepEvery` setting to the same as the previous `KeepEvery` setting
+  (<=0.38.4 and 0.38.5 both default to `KeepEvery:100`). Upgrading to 0.38.5 is then safe as long
+  as you wait one `KeepEvery` interval plus one `KeepRecent` interval plus one pruning `Interval`
+  before changing pruning settings or deleting the last <=0.38.4 height (so wait 210 heights with
+  the default configuration).
+* Otherwise, make sure the last version persisted with <=0.38.4 is never deleted after upgrading to
+  0.38.5, as doing so may cause data loss and data corruption.
+* Otherwise, consider syncing the node from scratch with 0.38.5.
+
+* (deps) Bump Tendermint version to [v0.33.6](https://github.com/tendermint/tendermint/releases/tag/v0.33.6)
+* (deps) Bump IAVL version to [v0.14.0](https://github.com/cosmos/iavl/releases/tag/v0.14.0)
+* (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) `CLIContext` additions:
+  * Introduce `QueryABCI` that returns the full `abci.ResponseQuery` with inclusion Merkle proofs.
+  * Added `prove` flag for Merkle proof verification.
+
+### API Breaking Changes
+
+* (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and `Result` from the execution.
+
+### Bug Fixes
+
+* (store) Revert IAVL pruning functionality introduced in [v0.13.0](https://github.com/cosmos/iavl/releases/tag/v0.13.0),
+where the IAVL no longer keeps states in-memory in which it flushes periodically. IAVL now commits and
+flushes every state to disk as it did pre-v0.13.0. The SDK's multi-store will track and ensure the proper
+heights are pruned. The operator can set the pruning options via a `pruning` config via the CLI or
+through `app.toml`. The `pruning` flag exposes `default|everything|nothing|custom` as options --
+see docs for further details. If the operator chooses `custom`, they may provide granular pruning
+options `pruning-keep-recent`, `pruning-keep-every`, and `pruning-interval`. The former two options
+dictate how many recent versions are kept on disk and the offset of what versions are kept after that
+respectively, and the latter defines the height interval in which versions are deleted in a batch.
+**Note, there are some client-facing API breaking changes with regard to IAVL, stores, and pruning settings.**
+* (x/distribution) [\#6210](https://github.com/cosmos/cosmos-sdk/pull/6210) Register `MsgFundCommunityPool` in distribution amino codec.
+* (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent `ChainAnteDecorators()` from panicking when empty `AnteDecorator` slice is supplied.
+* (baseapp) [\#6306](https://github.com/cosmos/cosmos-sdk/issues/6306) Prevent events emitted by the antehandler from being persisted between transactions.
+* (client/keys) [\#5091](https://github.com/cosmos/cosmos-sdk/issues/5091) `keys parse` does not honor client app's configuration.
+* (x/bank) [\#6674](https://github.com/cosmos/cosmos-sdk/pull/6674) Create account if recipient does not exist on handing `MsgMultiSend`.
+* (x/auth) [\#6287](https://github.com/cosmos/cosmos-sdk/pull/6287) Fix nonce stuck when sending multiple transactions from an account in a same block.
+
 ## [v0.38.5] - 2020-07-02
 
 ### Improvements
@@ -311,7 +365,6 @@ to detail this new feature and how state transitions occur.
   now exists a single `Params` type with a getter and setter along with a getter for each individual parameter.
 
 ### Bug Fixes
-
 * (rest) [\#5508](https://github.com/cosmos/cosmos-sdk/pull/5508) Fix `x/distribution` endpoints to properly return height in the response.
 * (x/genutil) [\#5499](https://github.com/cosmos/cosmos-sdk/pull/) Ensure `DefaultGenesis` returns valid and non-nil default genesis state.
 * (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.

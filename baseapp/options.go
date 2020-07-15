@@ -44,6 +44,11 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
+// SetTrace will turn on or off trace flag
+func SetTrace(trace bool) func(*BaseApp) {
+	return func(app *BaseApp) { app.setTrace(trace) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

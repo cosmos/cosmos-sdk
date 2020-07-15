@@ -13,6 +13,7 @@ const (
 	QueryChannel                   = "channel"
 	QueryConnectionChannels        = "connection-channels"
 	QueryChannelClientState        = "channel-client-state"
+	QueryChannelConsensusState     = "channel-consensus-state"
 	QueryPacketCommitments         = "packet-commitments"
 	QueryUnrelayedAcknowledgements = "unrelayed-acknowledgements"
 	QueryUnrelayedPacketSends      = "unrelayed-packet-sends"
@@ -58,6 +59,14 @@ func NewQueryNextSequenceReceiveResponse(
 // NewQueryChannelClientStateRequest creates a new QueryChannelClientStateRequest instance.
 func NewQueryChannelClientStateRequest(portID, channelID string) *QueryChannelClientStateRequest {
 	return &QueryChannelClientStateRequest{
+		PortID:    portID,
+		ChannelID: channelID,
+	}
+}
+
+// NewQueryChannelConsensusStateRequest creates a new QueryChannelConsensusStateRequest instance.
+func NewQueryChannelConsensusStateRequest(portID, channelID string) *QueryChannelConsensusStateRequest {
+	return &QueryChannelConsensusStateRequest{
 		PortID:    portID,
 		ChannelID: channelID,
 	}

@@ -74,13 +74,24 @@ Note: **do not modify pruning settings with any release prior to `v0.39.0` as th
 
 The following instructions assume that **pruning settings have not been modified since the node started using 0.38.x. Note: the default pruning setting `syncable` used `KeepEvery:100`.
 
-* **Manual hard fork** (also know as *The Simple and Tested Upgrade Path*):
-  - Stop the node and export the current state, e.g.: `appd export --for-zero-height > export_genesis.json`.
-  - Manually update the chain id and genesis time fields in `export_genesis.json`. 
-  - Make a backup copy of the old `genesis.json` file and replace it with `export_genesis.json`. Note: do rename `export_genesis.json` to `genesis.json`.
-  - Replace the old binary with the new one and restart the service using the new binary.
+#### Chain Hard Fork (also know as The Tested Upgrade Path)
 
-Alternatively, you can try follow *one of* the following strategies:
+This strategy entails performing a hard fork of your chain.
+It takes time, coordination and a few technical steps that the validators of the network must follow.
+
+In preparation of the upgrade, you need to export the current state. This operation should be be performed on one node:
+
+ * Stop the node and export the current state, e.g.: `appd export --for-zero-height > export_genesis.json`.
+ * Manually replace the chain id and genesis time fields in `export_genesis.json` with the values that the network had agreed upon.
+
+Follow these steps to perform the upgrade:
+
+* Make a backup copy of the old `genesis.json` file in your server application's config directory (e.g. `$HOME/.appd/config/genesis.json`) and replace it with `export_genesis.json`. Note: do rename `export_genesis.json` to `genesis.json`.
+* Replace the old binary with the new one and restart the service using the new binary.
+
+#### Alternative strategies
+
+Alternatively, you can follow *one of* the following strategies:
 
 * Replace the application server's binary and perform a full sync of the node from scratch.
 

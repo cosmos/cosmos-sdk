@@ -126,7 +126,6 @@ func CollectTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
 			return appGenTxs, persistentPeers, fmt.Errorf("expected TxWithMemo, got %T", genStdTx)
 		}
 		nodeAddrIP := memoTx.GetMemo()
-		fmt.Printf("NODE: %v", nodeAddrIP)
 		if len(nodeAddrIP) == 0 {
 			return appGenTxs, persistentPeers, fmt.Errorf("failed to find node's address and IP in %s", fo.Name())
 		}

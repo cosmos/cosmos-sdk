@@ -171,6 +171,7 @@ message DepositParams {
     (gogoproto.moretags)     = "yaml:\"min_deposit\"",
     (gogoproto.jsontag)      = "min_deposit,omitempty"
   ];
+
   //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months.
   google.protobuf.Duration max_deposit_period = 2 [
     (gogoproto.nullable)    = false,
@@ -199,12 +200,14 @@ message TallyParams {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag) = "quorum,omitempty"
   ];
+
   //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5.
   bytes threshold = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
     (gogoproto.nullable) = false,
     (gogoproto.jsontag) = "threshold,omitempty"
   ];
+  
   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3.
   bytes veto = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 

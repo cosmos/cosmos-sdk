@@ -83,12 +83,6 @@ func NewContextWithFrom(from string) Context {
 // command line using Viper.
 func NewContext() Context { return NewContextWithFrom(viper.GetString(flags.FlagFrom)) }
 
-// NewContextWithInput returns a new initialized Context with a io.Reader and parameters
-// from the command line using Viper.
-func NewContextWithInput(input io.Reader) Context {
-	return NewContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
-}
-
 // InitWithInputAndFrom returns a new Context re-initialized from an existing
 // Context with a new io.Reader and from parameter
 func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
@@ -222,6 +216,12 @@ func (ctx Context) WithFrom(from string) Context {
 // WithTrustNode returns a copy of the context with an updated TrustNode flag.
 func (ctx Context) WithTrustNode(trustNode bool) Context {
 	ctx.TrustNode = trustNode
+	return ctx
+}
+
+// WithOutputFormat returns a copy of the context with an updated OutputFormat field.
+func (ctx Context) WithOutputFormat(format string) Context {
+	ctx.OutputFormat = format
 	return ctx
 }
 

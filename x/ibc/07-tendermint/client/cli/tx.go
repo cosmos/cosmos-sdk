@@ -16,6 +16,7 @@ import (
 	lite "github.com/tendermint/tendermint/lite2"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -119,6 +120,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -126,7 +128,7 @@ func NewCreateClientCmd() *cobra.Command {
 // NewUpdateClientCmd defines the command to update a client as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#update
 func NewUpdateClientCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "update [client-id] [path/to/header.json]",
 		Short: "update existing client with a header",
 		Long:  "update existing tendermint client with a tendermint header",
@@ -164,13 +166,17 @@ func NewUpdateClientCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewSubmitMisbehaviourCmd defines the command to submit a misbehaviour to invalidate
 // previous state roots and prevent future updates as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
 func NewSubmitMisbehaviourCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "misbehaviour [path/to/evidence.json]",
 		Short: "submit a client misbehaviour",
 		Long:  "submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates",
@@ -206,6 +212,10 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 func parseFraction(fraction string) (tmmath.Fraction, error) {

@@ -3,7 +3,6 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
@@ -16,9 +15,9 @@ func NewTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 	}
 
-	txCmd.AddCommand(flags.PostCommands(
+	txCmd.AddCommand(
 		NewCreateClientCmd(),
-	)...)
+	)
 
 	return txCmd
 }

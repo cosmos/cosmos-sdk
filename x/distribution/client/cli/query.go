@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
@@ -17,7 +16,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	distQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the distribution module",
@@ -26,26 +25,30 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	distQueryCmd.AddCommand(flags.GetCommands(
-		GetCmdQueryParams(queryRoute, cdc),
-		GetCmdQueryValidatorOutstandingRewards(queryRoute, cdc),
-		GetCmdQueryValidatorCommission(queryRoute, cdc),
-		GetCmdQueryValidatorSlashes(queryRoute, cdc),
-		GetCmdQueryDelegatorRewards(queryRoute, cdc),
-		GetCmdQueryCommunityPool(queryRoute, cdc),
-	)...)
+	distQueryCmd.AddCommand(
+		GetCmdQueryParams(),
+		GetCmdQueryValidatorOutstandingRewards(),
+		GetCmdQueryValidatorCommission(),
+		GetCmdQueryValidatorSlashes(),
+		GetCmdQueryDelegatorRewards(),
+		GetCmdQueryCommunityPool(),
+	)
 
 	return distQueryCmd
 }
 
 // GetCmdQueryParams implements the query params command.
-func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+func GetCmdQueryParams() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query distribution params",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
 			res, _, err := clientCtx.QueryWithData(route, nil)
@@ -54,24 +57,27 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			var params types.Params
-			if err := cdc.UnmarshalJSON(res, &params); err != nil {
+			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &params); err != nil {
 				return fmt.Errorf("failed to unmarshal params: %w", err)
 			}
 
 			return clientCtx.PrintOutput(params)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
-// GetCmdQueryValidatorOutstandingRewards implements the query validator outstanding rewards command.
-func GetCmdQueryValidatorOutstandingRewards(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+// GetCmdQueryValidatorOutstandingRewards implements the query validator
+// outstanding rewards command.
+func GetCmdQueryValidatorOutstandingRewards() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "validator-outstanding-rewards [validator]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query distribution outstanding (un-withdrawn) rewards
-for a validator and all their delegations.
+			fmt.Sprintf(`Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations.
 
 Example:
 $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xwnmfayc64ycprww49n33mtm92ne
@@ -80,7 +86,11 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -88,13 +98,13 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 			}
 
 			params := types.NewQueryValidatorOutstandingRewardsParams(valAddr)
-			bz, err := cdc.MarshalJSON(params)
+			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
 			resp, _, err := clientCtx.QueryWithData(
-				fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorOutstandingRewards),
+				fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidatorOutstandingRewards),
 				bz,
 			)
 			if err != nil {
@@ -102,18 +112,21 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 			}
 
 			var outstandingRewards types.ValidatorOutstandingRewards
-			if err := cdc.UnmarshalJSON(resp, &outstandingRewards); err != nil {
+			if err := clientCtx.JSONMarshaler.UnmarshalJSON(resp, &outstandingRewards); err != nil {
 				return err
 			}
 
 			return clientCtx.PrintOutput(outstandingRewards)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryValidatorCommission implements the query validator commission command.
-func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+func GetCmdQueryValidatorCommission() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "commission [validator]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution validator commission",
@@ -127,28 +140,38 @@ $ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := common.QueryValidatorCommission(clientCtx, queryRoute, validatorAddr)
+			res, err := common.QueryValidatorCommission(clientCtx, validatorAddr)
 			if err != nil {
 				return err
 			}
 
 			var valCom types.ValidatorAccumulatedCommission
-			cdc.MustUnmarshalJSON(res, &valCom)
+			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &valCom); err != nil {
+				return err
+			}
+
 			return clientCtx.PrintOutput(valCom)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryValidatorSlashes implements the query validator slashes command.
-func GetCmdQueryValidatorSlashes(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+func GetCmdQueryValidatorSlashes() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "slashes [validator] [start-height] [end-height]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Query distribution validator slashes",
@@ -162,7 +185,11 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -180,29 +207,33 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 			}
 
 			params := types.NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)
-			bz, err := cdc.MarshalJSON(params)
+			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_slashes", queryRoute), bz)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_slashes", types.QuerierRoute), bz)
 			if err != nil {
 				return err
 			}
 
 			var slashes []types.ValidatorSlashEvent
-			if err = cdc.UnmarshalJSON(res, &slashes); err != nil {
+			if err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &slashes); err != nil {
 				return fmt.Errorf("failed to unmarshal response: %w", err)
 			}
+
 			return clientCtx.PrintOutput(slashes)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryDelegatorRewards implements the query delegator rewards command.
-func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "rewards [delegator-addr] [<validator-addr>]",
+func GetCmdQueryDelegatorRewards() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rewards [delegator-addr] [validator-addr]",
 		Args:  cobra.RangeArgs(1, 2),
 		Short: "Query all distribution delegator rewards or rewards from a particular validator",
 		Long: strings.TrimSpace(
@@ -216,17 +247,21 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// query for rewards from a particular delegation
 			if len(args) == 2 {
-				resp, _, err := common.QueryDelegationRewards(clientCtx, queryRoute, args[0], args[1])
+				resp, _, err := common.QueryDelegationRewards(clientCtx, args[0], args[1])
 				if err != nil {
 					return err
 				}
 
 				var result sdk.DecCoins
-				if err = cdc.UnmarshalJSON(resp, &result); err != nil {
+				if err = clientCtx.JSONMarshaler.UnmarshalJSON(resp, &result); err != nil {
 					return fmt.Errorf("failed to unmarshal response: %w", err)
 				}
 
@@ -239,31 +274,34 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 			}
 
 			params := types.NewQueryDelegatorParams(delegatorAddr)
-			bz, err := cdc.MarshalJSON(params)
+			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 			if err != nil {
 				return fmt.Errorf("failed to marshal params: %w", err)
 			}
 
 			// query for delegator total rewards
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards)
+			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorTotalRewards)
 			res, _, err := clientCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
 			var result types.QueryDelegatorTotalRewardsResponse
-			if err = cdc.UnmarshalJSON(res, &result); err != nil {
+			if err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &result); err != nil {
 				return fmt.Errorf("failed to unmarshal response: %w", err)
 			}
 
 			return clientCtx.PrintOutput(result)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetCmdQueryCommunityPool returns the command for fetching community pool info
-func GetCmdQueryCommunityPool(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+func GetCmdQueryCommunityPool() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "community-pool",
 		Args:  cobra.NoArgs,
 		Short: "Query the amount of coins in the community pool",
@@ -277,16 +315,26 @@ $ %s query distribution community-pool
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
-			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
+			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", types.QuerierRoute), nil)
 			if err != nil {
 				return err
 			}
 
 			var result sdk.DecCoins
-			cdc.MustUnmarshalJSON(res, &result)
+			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &result); err != nil {
+				return err
+			}
+
 			return clientCtx.PrintOutput(result)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }

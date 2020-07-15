@@ -28,6 +28,31 @@ var (
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
+// Deprecated, use fee amount and gas limit separately on TxBuilder.
+func NewTestStdFee() StdFee {
+	return NewStdFee(100000,
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
+	)
+}
+
+// Deprecated, use TxBuilder.
+func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee) sdk.Tx {
+	sigs := make([]StdSignature, len(privs))
+	for i, priv := range privs {
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
+
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+
+		sigs[i] = StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
+	}
+
+	tx := NewStdTx(msgs, fee, sigs, "")
+	return tx
+}
+
 func TestStdTx(t *testing.T) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := NewTestStdFee()

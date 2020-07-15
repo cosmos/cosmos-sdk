@@ -25,10 +25,11 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	fee := types.NewTestStdFee()
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 	suite.txBuilder.SetMsgs(msg)
-	suite.txBuilder.SetFeeAmount(fee.GetAmount())
-	suite.txBuilder.SetGasLimit(fee.GetGas())
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
@@ -72,10 +73,11 @@ func (suite *AnteTestSuite) TestDeductFees() {
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	fee := types.NewTestStdFee()
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 	suite.txBuilder.SetMsgs(msg)
-	suite.txBuilder.SetFeeAmount(fee.GetAmount())
-	suite.txBuilder.SetGasLimit(fee.GetGas())
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())

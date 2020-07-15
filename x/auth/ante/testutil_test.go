@@ -18,8 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// TestAccount represents an account used in the tests below. It's simply an
-// AccountI, where we have access to the PrivKey.
+// TestAccount represents an account used in the tests in x/auth/ante.
 type TestAccount struct {
 	acc  types.AccountI
 	priv crypto.PrivKey
@@ -84,6 +83,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 	return suite.txBuilder.GetTx()
 }
 
+// TestCase represents a test case used in test tables.
 type TestCase struct {
 	desc     string
 	malleate func()
@@ -93,11 +93,11 @@ type TestCase struct {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, fee types.StdFee, accNums []uint64, accSeqs []uint64, chainID string, tc TestCase) {
+func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums []uint64, accSeqs []uint64, chainID string, tc TestCase) {
 	suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 		suite.txBuilder.SetMsgs(msgs...)
-		suite.txBuilder.SetFeeAmount(fee.GetAmount())
-		suite.txBuilder.SetGasLimit(fee.GetGas())
+		suite.txBuilder.SetFeeAmount(feeAmount)
+		suite.txBuilder.SetGasLimit(gasLimit)
 
 		tx := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
 		newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)

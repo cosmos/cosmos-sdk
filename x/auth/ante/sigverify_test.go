@@ -43,9 +43,10 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	}
 	suite.txBuilder.SetMsgs(msgs...)
 
-	fee := types.NewTestStdFee()
-	suite.txBuilder.SetFeeAmount(fee.GetAmount())
-	suite.txBuilder.SetGasLimit(fee.GetGas())
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
 	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
@@ -137,7 +138,8 @@ func (suite *AnteTestSuite) TestSigVerification() {
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
 
-	fee := types.NewTestStdFee()
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.LegacyAminoJSONHandler{})
@@ -165,8 +167,8 @@ func (suite *AnteTestSuite) TestSigVerification() {
 		suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder() // Create new txBuilder for each test
 
 		suite.txBuilder.SetMsgs(msgs...)
-		suite.txBuilder.SetFeeAmount(fee.GetAmount())
-		suite.txBuilder.SetGasLimit(fee.GetGas())
+		suite.txBuilder.SetFeeAmount(feeAmount)
+		suite.txBuilder.SetGasLimit(gasLimit)
 
 		tx := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID())
 
@@ -218,9 +220,10 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 	}
 	suite.txBuilder.SetMsgs(msgs...)
 
-	fee := types.NewTestStdFee()
-	suite.txBuilder.SetFeeAmount(fee.GetAmount())
-	suite.txBuilder.SetGasLimit(fee.GetGas())
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 
@@ -251,9 +254,10 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	privs := []crypto.PrivKey{priv}
 	accNums := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetAccountNumber()}
 	accSeqs := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetSequence()}
-	fee := types.NewTestStdFee()
-	suite.txBuilder.SetFeeAmount(fee.GetAmount())
-	suite.txBuilder.SetGasLimit(fee.GetGas())
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 

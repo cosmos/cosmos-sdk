@@ -5,14 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,7 +20,7 @@ import (
 )
 
 func TestTxBuilder(t *testing.T) {
-	_, pubkey, addr := authtypes.KeyTestPubAddr()
+	_, pubkey, addr := types.KeyTestPubAddr()
 
 	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
 	tx := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
@@ -116,18 +115,17 @@ func TestTxBuilder(t *testing.T) {
 
 func TestBuilderValidateBasic(t *testing.T) {
 	// keys and addresses
-	_, pubKey1, addr1 := authtypes.KeyTestPubAddr()
-	_, pubKey2, addr2 := authtypes.KeyTestPubAddr()
+	_, pubKey1, addr1 := types.KeyTestPubAddr()
+	_, pubKey2, addr2 := types.KeyTestPubAddr()
 
 	// msg and signatures
 	msg1 := testdata.NewTestMsg(addr1, addr2)
-	fee := authtypes.NewTestStdFee()
-
+	feeAmount := testdata.NewTestFeeAmount()
 	msgs := []sdk.Msg{msg1}
 
 	// require to fail validation upon invalid fee
-	badFee := authtypes.NewTestStdFee()
-	badFee.Amount[0].Amount = sdk.NewInt(-5)
+	badFeeAmount := testdata.NewTestFeeAmount()
+	badFeeAmount[0].Amount = sdk.NewInt(-5)
 	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
 	bldr := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
 
@@ -153,7 +151,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	bldr.SetGasLimit(200000)
 	err = bldr.SetSignatures(sig1, sig2)
 	require.NoError(t, err)
-	bldr.SetFeeAmount(badFee.Amount)
+	bldr.SetFeeAmount(badFeeAmount)
 	err = bldr.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ := sdkerrors.ABCIInfo(err, false)
@@ -162,7 +160,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation when no signatures exist
 	err = bldr.SetSignatures()
 	require.NoError(t, err)
-	bldr.SetFeeAmount(fee.Amount)
+	bldr.SetFeeAmount(feeAmount)
 	err = bldr.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
@@ -184,7 +182,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
 
 	require.Error(t, err)
-	bldr.SetFeeAmount(fee.Amount)
+	bldr.SetFeeAmount(feeAmount)
 	err = bldr.SetSignatures(sig1, sig2)
 	require.NoError(t, err)
 	err = bldr.ValidateBasic()

@@ -396,7 +396,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 
 	pubKey := key.GetPubKey()
 
-	sigData, signBytes, err := getSignBytes(txf.signMode, pubKey, txf.accountNumber, txf.sequence, txf.chainID, txf.txGenerator, txBuilder)
+	sigData, signBytes, err := getSignBytes(signMode, pubKey, txf.accountNumber, txf.sequence, txf.chainID, txf.txGenerator, txBuilder)
 	if err != nil {
 		return err
 	}

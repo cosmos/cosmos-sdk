@@ -23,10 +23,11 @@ func (suite *AnteTestSuite) TestSetup() {
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	fee := types.NewTestStdFee()
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 	suite.txBuilder.SetMsgs(msg)
-	suite.txBuilder.SetFeeAmount(fee.GetAmount())
-	suite.txBuilder.SetGasLimit(fee.GetGas())
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
@@ -44,7 +45,7 @@ func (suite *AnteTestSuite) TestSetup() {
 	suite.Require().Nil(err, "SetUpContextDecorator returned error")
 
 	// Context GasMeter Limit should be set after SetUpContextDecorator runs
-	suite.Require().Equal(fee.Gas, newCtx.GasMeter().Limit(), "GasMeter not set correctly")
+	suite.Require().Equal(gasLimit, newCtx.GasMeter().Limit(), "GasMeter not set correctly")
 }
 
 func (suite *AnteTestSuite) TestRecoverPanic() {
@@ -56,10 +57,11 @@ func (suite *AnteTestSuite) TestRecoverPanic() {
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	fee := types.NewTestStdFee()
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 	suite.txBuilder.SetMsgs(msg)
-	suite.txBuilder.SetFeeAmount(fee.GetAmount())
-	suite.txBuilder.SetGasLimit(fee.GetGas())
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
@@ -75,7 +77,7 @@ func (suite *AnteTestSuite) TestRecoverPanic() {
 	suite.Require().NotNil(err, "Did not return error on OutOfGas panic")
 
 	suite.Require().True(sdkerrors.ErrOutOfGas.Is(err), "Returned error is not an out of gas error")
-	suite.Require().Equal(fee.Gas, newCtx.GasMeter().Limit())
+	suite.Require().Equal(gasLimit, newCtx.GasMeter().Limit())
 
 	antehandler = sdk.ChainAnteDecorators(sud, PanicDecorator{})
 	suite.Require().Panics(func() { antehandler(suite.ctx, tx, false) }, "Recovered from non-Out-of-Gas panic") // nolint:errcheck

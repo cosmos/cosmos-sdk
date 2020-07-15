@@ -95,7 +95,9 @@ Example:
 	}
 
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 func GetCmdQueryTotalSupply() *cobra.Command {
@@ -147,5 +149,7 @@ To query for the total supply of a specific coin denomination use:
 	}
 
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

@@ -7,12 +7,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // NewQueryCmd returns a root CLI command handler for all x/params query commands.
-func NewQueryCmd(m codec.JSONMarshaler) *cobra.Command {
+func NewQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the params module",
@@ -21,25 +20,29 @@ func NewQueryCmd(m codec.JSONMarshaler) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(NewQuerySubspaceParamsCmd(m))
+	cmd.AddCommand(NewQuerySubspaceParamsCmd())
 
 	return cmd
 }
 
 // NewQuerySubspaceParamsCmd returns a CLI command handler for querying subspace
 // parameters managed by the x/params module.
-func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
+func NewQuerySubspaceParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subspace [subspace] [key]",
 		Short: "Query for raw parameters by subspace and key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithJSONMarshaler(m)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			params := types.NewQuerySubspaceParams(args[0], args[1])
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
 
-			bz, err := m.MarshalJSON(params)
+			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 			if err != nil {
 				return fmt.Errorf("failed to marshal params: %w", err)
 			}
@@ -50,7 +53,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 			}
 
 			var resp types.SubspaceParamsResponse
-			if err := m.UnmarshalJSON(bz, &resp); err != nil {
+			if err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &resp); err != nil {
 				return err
 			}
 
@@ -58,5 +61,7 @@ func NewQuerySubspaceParamsCmd(m codec.JSONMarshaler) *cobra.Command {
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

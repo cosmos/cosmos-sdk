@@ -3,12 +3,11 @@ package client
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 
@@ -139,8 +138,8 @@ func TestReadStdTxFromFile(t *testing.T) {
 	// Write it to the file
 	encodedTx, err := txGen.TxJSONEncoder()(stdTx)
 	require.NoError(t, err)
-	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
-	defer os.Remove(jsonTxFile.Name())
+	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
+	t.Cleanup(cleanup)
 
 	// Read it back
 	decodedTx, err := ReadTxFromFile(clientCtx, jsonTxFile.Name())
@@ -247,16 +246,6 @@ func TestPrepareTxBuilder(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, accNum, bldr.AccountNumber())
 	require.Equal(t, accSeq, bldr.Sequence())
-}
-
-func writeToNewTempFile(t *testing.T, data string) *os.File {
-	fp, err := ioutil.TempFile(os.TempDir(), "client_tx_test")
-	require.NoError(t, err)
-
-	_, err = fp.WriteString(data)
-	require.NoError(t, err)
-
-	return fp
 }
 
 func makeCodec() *codec.Codec {

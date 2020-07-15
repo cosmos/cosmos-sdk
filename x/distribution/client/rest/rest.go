@@ -20,9 +20,9 @@ func RegisterHandlers(clientCtx client.Context, r *mux.Router) {
 }
 
 // RegisterRoutes register distribution REST routes.
-func RegisterRoutes(clientCtx client.Context, r *mux.Router, queryRoute string) {
+func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 	registerQueryRoutes(clientCtx, r)
-	registerTxRoutes(clientCtx, r, queryRoute)
+	registerTxRoutes(clientCtx, r)
 }
 
 // TODO add proto compatible Handler after x/gov migration

@@ -108,7 +108,7 @@ func delegationRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		valAddr := mux.Vars(r)["validatorAddr"]
 
 		// query for rewards from a particular delegation
-		res, height, ok := checkResponseQueryDelegationRewards(w, clientCtx, types.QuerierRoute, delAddr, valAddr)
+		res, height, ok := checkResponseQueryDelegationRewards(w, clientCtx, delAddr, valAddr)
 		if !ok {
 			return
 		}
@@ -174,7 +174,7 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// query commission
-		bz, err := common.QueryValidatorCommission(clientCtx, types.QuerierRoute, valAddr)
+		bz, err := common.QueryValidatorCommission(clientCtx, valAddr)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -186,7 +186,7 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		// self bond rewards
 		delAddr := sdk.AccAddress(valAddr)
-		bz, height, ok := checkResponseQueryDelegationRewards(w, clientCtx, types.QuerierRoute, delAddr.String(), valAddr.String())
+		bz, height, ok := checkResponseQueryDelegationRewards(w, clientCtx, delAddr.String(), valAddr.String())
 		if !ok {
 			return
 		}
@@ -221,7 +221,7 @@ func validatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		delAddr := sdk.AccAddress(validatorAddr).String()
-		bz, height, ok := checkResponseQueryDelegationRewards(w, clientCtx, types.QuerierRoute, delAddr, valAddr)
+		bz, height, ok := checkResponseQueryDelegationRewards(w, clientCtx, delAddr, valAddr)
 		if !ok {
 			return
 		}
@@ -297,10 +297,10 @@ func outstandingRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 }
 
 func checkResponseQueryDelegationRewards(
-	w http.ResponseWriter, clientCtx client.Context, queryRoute, delAddr, valAddr string,
+	w http.ResponseWriter, clientCtx client.Context, delAddr, valAddr string,
 ) (res []byte, height int64, ok bool) {
 
-	res, height, err := common.QueryDelegationRewards(clientCtx, queryRoute, delAddr, valAddr)
+	res, height, err := common.QueryDelegationRewards(clientCtx, delAddr, valAddr)
 	if rest.CheckInternalServerError(w, err) {
 		return nil, 0, false
 	}

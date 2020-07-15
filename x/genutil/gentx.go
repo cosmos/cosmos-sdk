@@ -18,7 +18,7 @@ import (
 
 // SetGenTxsInAppGenesisState - sets the genesis transactions in the app genesis state
 func SetGenTxsInAppGenesisState(
-	cdc codec.JSONMarshaler, appGenesisState map[string]json.RawMessage, genTxs []authtypes.StdTx,
+	cdc codec.JSONMarshaler, appGenesisState map[string]json.RawMessage, genTxs []sdk.Tx,
 ) (map[string]json.RawMessage, error) {
 
 	genesisState := types.GetGenesisStateFromAppState(cdc, appGenesisState)

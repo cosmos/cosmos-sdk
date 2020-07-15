@@ -17,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -29,7 +28,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, config *cfg.Config,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
-	appGenTxs, persistentPeers, err := CollectStdTxs(
+	appGenTxs, persistentPeers, err := CollectTxs(
 		cdc, config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
 	)
 	if err != nil {
@@ -66,11 +65,11 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, config *cfg.Config,
 	return appState, err
 }
 
-// CollectStdTxs processes and validates application's genesis StdTxs and returns
+// CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
-func CollectStdTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
+func CollectTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
 	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
-) (appGenTxs []authtypes.StdTx, persistentPeers string, err error) {
+) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
@@ -111,7 +110,7 @@ func CollectStdTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
 			return appGenTxs, persistentPeers, err
 		}
 
-		var genStdTx authtypes.StdTx
+		var genStdTx sdk.Tx
 		if err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
@@ -121,7 +120,13 @@ func CollectStdTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
 		// the memo flag is used to store
 		// the ip and node-id, for example this may be:
 		// "528fd3df22b31f4969b05652bfe8f0fe921321d5@192.168.2.37:26656"
-		nodeAddrIP := genStdTx.GetMemo()
+
+		memoTx, ok := genStdTx.(sdk.TxWithMemo)
+		if !ok {
+			return appGenTxs, persistentPeers, fmt.Errorf("expected TxWithMemo, got %T", genStdTx)
+		}
+		nodeAddrIP := memoTx.GetMemo()
+		fmt.Printf("NODE: %v", nodeAddrIP)
 		if len(nodeAddrIP) == 0 {
 			return appGenTxs, persistentPeers, fmt.Errorf("failed to find node's address and IP in %s", fo.Name())
 		}

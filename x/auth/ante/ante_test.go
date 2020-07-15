@@ -2,6 +2,7 @@ package ante_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -102,12 +103,12 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			func() {
 				privs, accNums, accSeqs = []crypto.PrivKey{}, []uint64{}, []uint64{}
 
-				// TODO Amaury
-				// tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-				// // tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
-				// expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
-				// stdTx := tx.(types.StdTx)
-				// suite.Require().Equal(expectedSigners, stdTx.GetSigners())
+				// Create tx manually to test the tx's signers
+				suite.txBuilder.SetMsgs(msgs...)
+				tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
+				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
+				suite.Require().Equal(expectedSigners, tx.GetSigners())
 			},
 			false,
 			false,
@@ -715,17 +716,15 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			false,
 			sdkerrors.ErrUnauthorized,
 		},
-		// TODO Amaury
-		// {
-		// 	"test wrong msg",
-		// 	func() {
-		// 		accNums = []uint64{0} // Back to correct accNums
-		// 		msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
-		// 	},
-		// 	false,
-		// 	false,
-		// 	sdkerrors.ErrUnauthorized,
-		// },
+		{
+			"test wrong msg",
+			func() {
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
 		{
 			"test wrong fee gas",
 			func() {
@@ -818,36 +817,45 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			false,
 			sdkerrors.ErrUnauthorized,
 		},
-		// TODO Amaury
-		// {
-		// 	"test public key not found",
-		// 	func() {
-		// 		accNums = []uint64{1}
-		// 		msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
-		// 		tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-		// 		sigs := tx.(types.StdTx).Signatures
-		// 		sigs[0].PubKey = nil
+		{
+			"test public key not found",
+			func() {
+				accNums = []uint64{1}
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
 
-		// 		// Run anteHandler manually here, because we manually modified the tx.
-		// 		_, err := suite.anteHandler(suite.ctx, tx, false)
-		// 		suite.Require().Error(err)
-		// 		fmt.Println("ERR", err)
-		// 		suite.Require().True(errors.Is(err, sdkerrors.ErrInvalidPubKey))
-		// 	},
-		// 	false,
-		// 	false,
-		// 	sdkerrors.ErrInvalidPubKey,
-		// },
-		// {
-		// 	"make sure public key has NOT been set (tx itself should fail because of replay protection)",
-		// 	func() {
-		// 		acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
-		// 		suite.Require().Nil(acc1.GetPubKey())
-		// 	},
-		// 	false,
-		// 	false,
-		// 	sdkerrors.ErrUnauthorized,
-		// },
+				// Manually create tx, and remove signature
+				tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				sigs := tx.(types.StdTx).Signatures
+				sigs[0].PubKey = nil
+				_, err := suite.anteHandler(suite.ctx, tx, false)
+				suite.Require().Error(err)
+				suite.Require().Equal(err.Error(), "wrong number of signers; expected 0, got 1: unauthorized")
+				suite.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
+		{
+			"make sure previous public key has NOT been set, test invalid signature and public key",
+			func() {
+				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				suite.Require().Nil(acc1.GetPubKey())
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
+		{
+			"make sure previous public key has NOT been set",
+			func() {
+				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				suite.Require().Nil(acc1.GetPubKey())
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
 	}
 
 	for _, tc := range testCases {

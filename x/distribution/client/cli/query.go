@@ -262,7 +262,7 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetRewards())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 

@@ -129,14 +129,14 @@ func txCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetSignCommand(initClientCtx),
-		authcmd.GetSignBatchCommand(encodingConfig.Amino),
-		authcmd.GetMultiSignCommand(initClientCtx),
-		authcmd.GetValidateSignaturesCommand(initClientCtx),
+		authcmd.GetSignCommand(),
+		authcmd.GetSignBatchCommand(),
+		authcmd.GetMultiSignCommand(),
+		authcmd.GetValidateSignaturesCommand(),
 		flags.LineBreak,
-		authcmd.GetBroadcastCommand(initClientCtx),
-		authcmd.GetEncodeCommand(initClientCtx),
-		authcmd.GetDecodeCommand(initClientCtx),
+		authcmd.GetBroadcastCommand(),
+		authcmd.GetEncodeCommand(),
+		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
 	)
 

@@ -112,12 +112,12 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				homeDir, _ := cmd.Flags().GetString(flags.FlagFrom)
 				err = authclient.SignStdTx(txFactory, clientCtx, homeDir, txBuilder, false, true)
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
-				_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
+				_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
 
-				stdTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, unsignedStdTx, false, true)
+				err = authclient.SignStdTx(txFactory, clientCtx, fromName, txBuilder, false, true)
 				if err != nil {
 					return err
 				}
@@ -212,19 +212,20 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx := client.GetClientContextFromCmd(cmd)
 
-		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
 		txGen := clientCtx.TxGenerator
 		txBuilder := txGen.NewTxBuilder()
+		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+
 		// if --signature-only is on, then override --append
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
 
 		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
+		_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}
@@ -238,7 +239,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			err = authclient.SignStdTxWithSignerAddress(
-				txF, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline,
+				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {

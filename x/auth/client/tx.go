@@ -43,7 +43,7 @@ func (gr GasEstimateResponse) String() string {
 // the provided context has generate-only enabled, the tx will only be printed
 // to STDOUT in a fully offline manner. Otherwise, the tx will be signed and
 // broadcasted.
-func GenerateOrBroadcastMsgs(clientCtx client.Context, txBldr authtypes.TxBuilder, msgs []sdk.Msg) error {
+func GenerateOrBroadcastMsgs(clientCtx client.Context, txBldr tx.Factory, msgs []sdk.Msg) error {
 	if clientCtx.GenerateOnly {
 		return PrintUnsignedStdTx(txBldr, clientCtx, msgs)
 	}
@@ -56,7 +56,7 @@ func GenerateOrBroadcastMsgs(clientCtx client.Context, txBldr authtypes.TxBuilde
 // QueryContext. It ensures that the account exists, has a proper number and
 // sequence set. In addition, it builds and signs a transaction with the
 // supplied messages. Finally, it broadcasts the signed transaction to a node.
-func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) error {
+func CompleteAndBroadcastTxCLI(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) error {
 	txBldr, err := PrepareTxBuilder(txBldr, clientCtx)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, clientCtx client.Cont
 
 // EnrichWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichWithGas(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (authtypes.TxBuilder, error) {
+func EnrichWithGas(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) (tx.Factory, error) {
 	_, adjusted, err := simulateMsgs(txBldr, clientCtx, msgs)
 	if err != nil {
 		return txBldr, err
@@ -149,7 +149,7 @@ func CalculateGas(
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
-func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) error {
+func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) error {
 	stdTx, err := buildUnsignedStdTxOffline(txBldr, clientCtx, msgs)
 	if err != nil {
 		return err
@@ -284,7 +284,7 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 
 // simulateMsgs simulates the transaction and returns the simulation response and
 // the adjusted gas value.
-func simulateMsgs(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
+func simulateMsgs(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
 	txBytes, err := txBldr.BuildTxForSim(msgs)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
@@ -307,7 +307,7 @@ func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 }
 
 // PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
-func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (authtypes.TxBuilder, error) {
+func PrepareTxBuilder(txBldr tx.Factory, clientCtx client.Context) (tx.Factory, error) {
 	from := clientCtx.GetFromAddress()
 	accGetter := clientCtx.AccountRetriever
 	if err := accGetter.EnsureExists(clientCtx, from); err != nil {
@@ -334,7 +334,7 @@ func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (aut
 	return txBldr, nil
 }
 
-func buildUnsignedStdTxOffline(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (stdTx authtypes.StdTx, err error) {
+func buildUnsignedStdTxOffline(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) (stdTx authtypes.StdTx, err error) {
 	if txBldr.SimulateAndExecute() {
 		if clientCtx.Offline {
 			return stdTx, errors.New("cannot estimate gas in offline mode")

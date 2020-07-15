@@ -298,7 +298,7 @@ An unrelayed packet corresponds to:
 			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			req := &types.QueryUnrelayedPacketsRequest{
+			req := &types.QueryUnrelayedPacketCommitmentsRequest{
 				PortID:    args[0],
 				ChannelID: args[1],
 				Sequences: seqs,
@@ -308,7 +308,7 @@ An unrelayed packet corresponds to:
 				},
 			}
 
-			res, err := queryClient.UnrelayedPackets(context.Background(), req)
+			res, err := queryClient.UnrelayedPacketCommitments(context.Background(), req)
 			if err != nil {
 				return err
 			}

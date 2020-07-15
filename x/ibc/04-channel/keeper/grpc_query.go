@@ -189,8 +189,32 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 	}, nil
 }
 
-// UnrelayedPackets implements the Query/UnrelayedPackets gRPC method
-func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPacketsRequest) (*types.QueryUnrelayedPacketsResponse, error) {
+// PacketAcknowledgement implements the Query/PacketAcknowledgement gRPC method
+func (q Keeper) PacketAcknowledgement(c context.Context, req *types.QueryPacketAcknowledgementRequest) (*types.QueryPacketAcknowledgementResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
+	if req.Sequence == 0 {
+		return nil, status.Error(codes.InvalidArgument, "packet sequence cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	acknowledgementBz, found := q.GetPacketAcknowledgement(ctx, req.PortID, req.ChannelID, req.Sequence)
+	if !found || len(acknowledgementBz) == 0 {
+		return nil, status.Error(codes.NotFound, "packet acknowledgement hash not found")
+	}
+
+	return types.NewQueryPacketAcknowledgementResponse(req.PortID, req.ChannelID, req.Sequence, acknowledgementBz, nil, ctx.BlockHeight()), nil
+}
+
+// UnrelayedPacketCommitments implements the Query/UnrelayedPackets gRPC method
+func (q Keeper) UnrelayedPacketCommitments(c context.Context, req *types.QueryUnrelayedPacketCommitmentsRequest) (*types.QueryUnrelayedPacketCommitmentsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -202,10 +226,8 @@ func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPac
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var (
-		unrelayedPackets = []uint64{}
-		store            sdk.KVStore
-		res              *query.PageResponse
-		err              error
+		unrelayedCommitments = []uint64{}
+		res                  *query.PageResponse
 	)
 
 	for i, seq := range req.Sequences {
@@ -213,20 +235,63 @@ func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPac
 			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
 		}
 
-		store = prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyPacketAcknowledgement(req.PortID, req.ChannelID, seq))
-		res, err = query.Paginate(store, req.Req, func(_, _ []byte) error {
-			return nil
-		})
-
-		if err != nil {
-			// ignore error and continue to the next sequence item
-			continue
+		// TODO figure out how to paginate
+		if _, found := q.GetPacketAcknowledgement(ctx, req.PortID, req.ChannelID, seq); !found {
+			unrelayedCommitments = append(unrelayedCommitments, seq)
 		}
 
-		unrelayedPackets = append(unrelayedPackets, seq)
 	}
-	return &types.QueryUnrelayedPacketsResponse{
-		Packets: unrelayedPackets,
+	return &types.QueryUnrelayedPacketCommitmentsResponse{
+		Packets: unrelayedCommitments,
+		Res:     res,
+		Height:  ctx.BlockHeight(),
+	}, nil
+}
+
+// UnrelayedPacketAcknowledgements implements the Query/UnrelayedPackets gRPC method
+func (q Keeper) UnrelayedPacketAcknowledgements(c context.Context, req *types.QueryUnrelayedPacketAcknowledgementsRequest) (*types.QueryUnrelayedPacketAcknowledgementsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var (
+		unrelayedAcknowledgements = []uint64{}
+		res                       *query.PageResponse
+		err                       error
+	)
+
+	commReq := &types.QueryPacketCommitmentsRequest{
+		PortID:    req.PortID,
+		ChannelID: req.ChannelID,
+		Req:       req.Req,
+	}
+
+	commRes, err := q.PacketCommitments(c, commReq)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "failed to query for packet commitments using the request %v", commReq)
+	}
+
+	for i, seq := range req.Sequences {
+		if seq == 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
+		}
+
+		for _, comm := range commRes.Commitments {
+			if seq == comm.Sequence {
+				unrelayedAcknowledgements = append(unrelayedAcknowledgements, seq)
+				break
+			}
+		}
+
+	}
+	return &types.QueryUnrelayedPacketAcknowledgementsResponse{
+		Packets: unrelayedAcknowledgements,
 		Res:     res,
 		Height:  ctx.BlockHeight(),
 	}, nil

@@ -270,7 +270,7 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 	return cmd
 }
 
-// GetCmdQueryCommunityPool returns the command for fetching community pool info
+// GetCmdQueryCommunityPool returns the command for fetching community pool info.
 func GetCmdQueryCommunityPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool",

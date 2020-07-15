@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// GetQueryCmd returns the parent command for all x/upgrade CLi query commands
+// GetQueryCmd returns the parent command for all x/upgrade CLi query commands.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   types.ModuleName,
@@ -26,7 +26,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCurrentPlanCmd returns the query upgrade plan command
+// GetCurrentPlanCmd returns the query upgrade plan command.
 func GetCurrentPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plan",
@@ -51,10 +51,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 				return fmt.Errorf("no upgrade scheduled")
 			}
 
-			if err != nil {
-				return err
-			}
-			return clientCtx.PrintOutput(res.Plan)
+			return clientCtx.PrintOutput(res.GetPlan())
 		},
 	}
 
@@ -64,7 +61,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 }
 
 // GetAppliedPlanCmd returns information about the block at which a completed
-// upgrade was applied
+// upgrade was applied.
 func GetAppliedPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "applied [upgrade-name]",

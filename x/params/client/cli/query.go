@@ -41,12 +41,12 @@ func NewQuerySubspaceParamsCmd() *cobra.Command {
 
 			params := proposal.NewQueryParametersRequest(args[0], args[1])
 
-			resp, err := queryClient.Parameters(context.Background(), params)
+			res, err := queryClient.Parameters(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(resp.Params)
+			return clientCtx.PrintOutput(res.GetParams())
 		},
 	}
 

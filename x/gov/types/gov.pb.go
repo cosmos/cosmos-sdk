@@ -432,8 +432,10 @@ var xxx_messageInfo_Vote proto.InternalMessageInfo
 
 // DepositParams defines the params around deposits for governance
 type DepositParams struct {
-	MinDeposit       github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_deposit,omitempty" yaml:"min_deposit"`
-	MaxDepositPeriod time.Duration                            `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty" yaml:"max_deposit_period"`
+	//  Minimum deposit for a proposal to enter voting period.
+	MinDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_deposit,omitempty" yaml:"min_deposit"`
+	//  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months.
+	MaxDepositPeriod time.Duration `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty" yaml:"max_deposit_period"`
 }
 
 func (m *DepositParams) Reset()      { *m = DepositParams{} }
@@ -470,6 +472,7 @@ var xxx_messageInfo_DepositParams proto.InternalMessageInfo
 
 // VotingParams defines the params around Voting in governance
 type VotingParams struct {
+	//  Length of the voting period.
 	VotingPeriod time.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period,omitempty" yaml:"voting_period"`
 }
 
@@ -507,9 +510,12 @@ var xxx_messageInfo_VotingParams proto.InternalMessageInfo
 
 // TallyParams defines the params around Tallying votes in governance
 type TallyParams struct {
-	Quorum    github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=quorum,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quorum,omitempty"`
+	//  Minimum percentage of total stake needed to vote for a result to be considered valid.
+	Quorum github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=quorum,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quorum,omitempty"`
+	//  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5.
 	Threshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=threshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"threshold,omitempty"`
-	Veto      github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=veto,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"veto,omitempty"`
+	//  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3.
+	Veto github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=veto,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"veto,omitempty"`
 }
 
 func (m *TallyParams) Reset()      { *m = TallyParams{} }

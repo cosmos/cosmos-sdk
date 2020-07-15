@@ -240,51 +240,34 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 func (coins Coins) safeAdd(coinsB Coins) Coins {
-	sum := ([]Coin)(nil)
-	indexA, indexB := 0, 0
-	lenA, lenB := len(coins), len(coinsB)
-
-	for {
-		if indexA == lenA {
-			if indexB == lenB {
-				// return nil coins if both sets are empty
-				return sum
-			}
-
-			// return set B (excluding zero coins) if set A is empty
-			return append(sum, removeZeroCoins(coinsB[indexB:])...)
-		} else if indexB == lenB {
-			// return set A (excluding zero coins) if set B is empty
-			return append(sum, removeZeroCoins(coins[indexA:])...)
+	uniqSumByDenom := make(map[string]Coin)
+	combo := append(coins, coinsB...)
+	for _, coin := range combo {
+		if coin.IsZero() {
+			continue
 		}
 
-		coinA, coinB := coins[indexA], coinsB[indexB]
-
-		switch strings.Compare(coinA.Denom, coinB.Denom) {
-		case -1: // coin A denom < coin B denom
-			if !coinA.IsZero() {
-				sum = append(sum, coinA)
-			}
-
-			indexA++
-
-		case 0: // coin A denom == coin B denom
-			res := coinA.Add(coinB)
-			if !res.IsZero() {
-				sum = append(sum, res)
-			}
-
-			indexA++
-			indexB++
-
-		case 1: // coin A denom > coin B denom
-			if !coinB.IsZero() {
-				sum = append(sum, coinB)
-			}
-
-			indexB++
+		sum, ok := uniqSumByDenom[coin.Denom]
+		if !ok { // First time we are adding to this denomination
+			sum = coin
+		} else {
+			sum = sum.Add(coin)
 		}
+		uniqSumByDenom[sum.Denom] = sum
 	}
+	if len(uniqSumByDenom) == 0 {
+		return nil
+	}
+
+	allCoins := make(Coins, 0, len(uniqSumByDenom))
+	for _, sum := range uniqSumByDenom {
+		allCoins = append(allCoins, sum)
+	}
+	allCoins = removeZeroCoins(allCoins)
+	if len(allCoins) == 0 {
+		return nil
+	}
+	return allCoins.Sort()
 }
 
 // DenomsSubsetOf returns true if receiver's denom set

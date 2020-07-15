@@ -290,6 +290,7 @@ func TestAddCoins(t *testing.T) {
 		{Coins{{testDenom1, zero}, {testDenom2, one}}, Coins{{testDenom1, zero}, {testDenom2, zero}}, Coins{{testDenom2, one}}},
 		{Coins{{testDenom1, two}}, Coins{{testDenom2, zero}}, Coins{{testDenom1, two}}},
 		{Coins{{testDenom1, one}}, Coins{{testDenom1, one}, {testDenom2, two}}, Coins{{testDenom1, two}, {testDenom2, two}}},
+		{Coins{{testDenom1, one}, {testDenom2, two}}, Coins{{testDenom1, one}}, Coins{{testDenom1, two}, {testDenom2, two}}},
 		{Coins{{testDenom1, zero}, {testDenom2, zero}}, Coins{{testDenom1, zero}, {testDenom2, zero}}, Coins(nil)},
 	}
 

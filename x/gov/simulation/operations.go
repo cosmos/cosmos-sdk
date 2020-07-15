@@ -60,7 +60,7 @@ func WeightedOperations(
 			wProposalOps,
 			simulation.NewWeightedOperation(
 				weight,
-				SimulateSubmitProposal(ak, bk, k, wContent.ContentSimulatorFn()),
+				SimulateMsgSubmitProposal(ak, bk, k, wContent.ContentSimulatorFn()),
 			),
 		)
 	}
@@ -82,7 +82,7 @@ func WeightedOperations(
 // SimulateSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-func SimulateSubmitProposal(
+func SimulateMsgSubmitProposal(
 	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, contentSim simtypes.ContentSimulatorFn,
 ) simtypes.Operation {
 	// The states are:

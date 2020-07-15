@@ -607,9 +607,9 @@ var (
 // ValidateDenom validates a denomination string returning an error if it is
 // invalid.
 func ValidateDenom(denom string) error {
-	if !reDnm.MatchString(denom) {
-		return fmt.Errorf("invalid denom: %s", denom)
-	}
+	// if !reDnm.MatchString(denom) {
+	// 	return fmt.Errorf("invalid denom: %s", denom)
+	// }
 	return nil
 }
 

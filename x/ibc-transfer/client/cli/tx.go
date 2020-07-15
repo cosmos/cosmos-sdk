@@ -64,7 +64,7 @@ func NewTransferTxCmd() *cobra.Command {
 				return err
 			}
 
-			// if the timeouts are not absolute, retreive latest block height and block timestamp
+			// if the timeouts are not absolute, retrieve latest block height and block timestamp
 			// for the consensus state connected to the destination port/channel
 			if !absoluteTimeouts {
 				consensusState, _, err := channelutils.QueryCounterpartyConsensusState(clientCtx, srcPort, srcChannel)

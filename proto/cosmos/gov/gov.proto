@@ -18,7 +18,7 @@ option (gogoproto.goproto_getters_all)  = false;
 message MsgSubmitProposal {
   option (gogoproto.equal) = true;
 
-  google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  google.protobuf.Any content          = 1 [(cosmos_proto.accepts_interface) = "Content"];
   repeated cosmos.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -32,9 +32,9 @@ message MsgVote {
   option (gogoproto.equal) = true;
 
   uint64 proposal_id = 1 [
+    (gogoproto.jsontag)    = "proposal_id",
     (gogoproto.customname) = "ProposalID",
-    (gogoproto.moretags)   = "yaml:\"proposal_id\"",
-    (gogoproto.jsontag)    = "proposal_id"
+    (gogoproto.moretags)   = "yaml:\"proposal_id\""
   ];
   bytes      voter  = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   VoteOption option = 3;
@@ -45,11 +45,11 @@ message MsgDeposit {
   option (gogoproto.equal) = true;
 
   uint64 proposal_id = 1 [
+    (gogoproto.jsontag)    = "proposal_id",
     (gogoproto.customname) = "ProposalID",
-    (gogoproto.moretags)   = "yaml:\"proposal_id\"",
-    (gogoproto.jsontag)    = "proposal_id"
+    (gogoproto.moretags)   = "yaml:\"proposal_id\""
   ];
-  bytes    depositor                 = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes    depositor          = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -95,13 +95,13 @@ message Deposit {
 
 // Proposal defines the core field members of a governance proposal
 message Proposal {
-  option (gogoproto.equal)            = true;
+  option (gogoproto.equal) = true;
 
   uint64 proposal_id = 1
       [(gogoproto.customname) = "ProposalID", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
-  google.protobuf.Any content = 2 [(cosmos_proto.accepts_interface) = "Content"];
-  ProposalStatus status             = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
-  TallyResult    final_tally_result = 4
+  google.protobuf.Any content            = 2 [(cosmos_proto.accepts_interface) = "Content"];
+  ProposalStatus      status             = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
+  TallyResult         final_tally_result = 4
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"final_tally_result\""];
   google.protobuf.Timestamp submit_time = 5
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"submit_time\""];

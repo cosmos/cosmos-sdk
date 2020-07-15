@@ -16,6 +16,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -68,6 +69,7 @@ type TestChain struct {
 	CurrentHeader abci.Header       // header for current block height
 	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
 	QueryServer   types.QueryServer
+	TxGenerator   client.TxGenerator
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -115,6 +117,8 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Time:   globalStartTime,
 	}
 
+	txGenerator := simapp.MakeEncodingConfig().TxGenerator
+
 	// create an account to send transactions from
 	chain := &TestChain{
 		t:             t,
@@ -123,6 +127,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		CurrentHeader: header,
 		Querier:       keeper.NewQuerier(*app.IBCKeeper),
 		QueryServer:   app.IBCKeeper,
+		TxGenerator:   txGenerator,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -204,7 +209,7 @@ func (chain *TestChain) NextBlock() {
 func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,
-		chain.App.Codec(),
+		chain.TxGenerator,
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		[]sdk.Msg{msg},

@@ -71,15 +71,24 @@ index b0c86f4a..4a3a8518 100644
 ### Migrate a node from 0.38.5 to 0.39.0
 
 Note: **do not modify pruning settings with any release prior to `v0.39.0` as that may cause data corruption**.
+
 The following instructions assume that **pruning settings have not been modified since the node started using 0.38.x. Note: the default pruning setting `syncable` used `KeepEvery:100`.
 
-* The simple upgrade strategy: **perform a full sync of the node from scratch**. Else, follow one of the other strategies.
+* **Manual hard fork** (also know as *The Simple and Tested Upgrade Path*):
+  - Stop the node and export the current state, e.g.: `appd export --for-zero-height > export_genesis.json`.
+  - Manually update the chain id and genesis time fields in `export_genesis.json`. 
+  - Make a backup copy of the old `genesis.json` file and replace it with `export_genesis.json`. Note: do rename `export_genesis.json` to `genesis.json`.
+  - Replace the old binary with the new one and restart the service using the new binary.
 
-* If your node had started with using `KeepEvery:1` (e.g. pruning settings `nothing` or `everything`), upgrading to `v0.39.0` is safe.
+Alternatively, you can try follow *one of* the following strategies:
 
-* Otherwise, do halt block processing with `--halt-height` after committing a height divisible by `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The **node must never have processed a height beyond that at any time in its past**. Upgrading to `v0.39.0` is then safe.
+* Replace the application server's binary and perform a full sync of the node from scratch.
 
-* Otherwise, set the `KeepEvery` setting to the same as the previous `KeepEvery` setting (both `<=v0.38.5` and `v0.39.0` default to `KeepEvery:100`). Upgrade to `v0.39.0` is then safe as long as you wait one `KeepEvery` interval plus one `KeepRecent` interval **plus** one pruning `Interval` before changing pruning settings or deleting the last `<=v0.38.5` height (so wait *210* heights with the default configuration).
+* If your node had started with using `KeepEvery:1` (e.g. pruning settings `nothing` or `everything`), upgrading to `v0.39.0` should be simple and safe.
+
+* Do halt block processing with `--halt-height` after committing a height divisible by `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The **node must never have processed a height beyond that at any time in its past**. Upgrading to `v0.39.0` is then safe.
+
+* Set the `KeepEvery` setting to the same as the previous `KeepEvery` setting (both `<=v0.38.5` and `v0.39.0` default to `KeepEvery:100`). Upgrade to `v0.39.0` is then safe as long as you wait one `KeepEvery` interval plus one `KeepRecent` interval **plus** one pruning `Interval` before changing pruning settings or deleting the last `<=v0.38.5` height (so wait *210* heights with the default configuration).
 
 * Otherwise, make sure the last version persisted with `<=v0.38.5` is never deleted after upgrading to `v0.39.0`, as doing so may cause data loss and data corruption.
 

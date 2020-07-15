@@ -14,15 +14,6 @@ import (
 // - `[`, `]`, `<`, `>`
 var IsValidID = regexp.MustCompile(`^[a-zA-Z0-9\.\_\+\-\#\[\]\<\>]+$`).MatchString
 
-// IsValidConnectionVersion defines the regular expression to check if the
-// string is in the form of a tuple consisting of a string identifier and
-// a set of features. The entire version tuple must be enclosed in parentheses.
-// The version identifier must not contain any commas. The set of features
-// must be enclosed in brackets and separated by commas.
-//
-// valid connection version = ([version_identifier], [feature_0, feature_1, etc])
-var IsValidConnectionVersion = regexp.MustCompile(`^\([^,]+\,\[([^,]+(\,[^,]+)*)?\]\)$`).MatchString
-
 // ICS 024 Identifier and Path Validation Implementation
 //
 // This file defines ValidateFn to validate identifier and path strings
@@ -81,24 +72,6 @@ func ChannelIdentifierValidator(id string) error {
 // alphabetic characters,
 func PortIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 2, 20)
-}
-
-// ConnectionVersionValidator is the default validator function for Connection
-// versions. A valid version must be in semantic versioning form and contain
-// only non-negative integers.
-func ConnectionVersionValidator(version string) error {
-	if strings.TrimSpace(version) == "" {
-		return sdkerrors.Wrap(ErrInvalidVersion, "version cannot be blank")
-	}
-
-	if !IsValidConnectionVersion(version) {
-		return sdkerrors.Wrapf(
-			ErrInvalidVersion,
-			"version '%s' must be in '(version_identifier,[feature_0, feature_1])' with no extra spacing", version,
-		)
-	}
-
-	return nil
 }
 
 // NewPathValidator takes in a Identifier Validator function and returns

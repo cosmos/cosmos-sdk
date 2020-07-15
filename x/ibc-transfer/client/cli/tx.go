@@ -27,9 +27,9 @@ func NewTransferTxCmd() *cobra.Command {
 		Use:   "transfer [src-port] [src-channel] [receiver] [amount]",
 		Short: "Transfer a fungible token through IBC",
 		Long: strings.TrimSpace(`Transfer a fungible token through IBC. Timeouts can be specified
-		as absolute or relative using the abolute timeouts flag. Relative timeouts are added to
-		the block height and block timestamp queried from the latest consensus state corresponding 
-		to the counterparty channel. Any timeout set to 0 is disabled.`),
+as absolute or relative using the "absolute-timeouts" flag. Relative timeouts are added to
+the block height and block timestamp queried from the latest consensus state corresponding
+to the counterparty channel. Any timeout set to 0 is disabled.`),
 		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),
 		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {

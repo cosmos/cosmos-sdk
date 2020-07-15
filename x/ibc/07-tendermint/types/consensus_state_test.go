@@ -49,7 +49,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"height is 0",
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
-				Height:       0,
+				Height:       clientexported.NewHeight(0, 0),
 				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},

@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
@@ -22,12 +23,13 @@ func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.Block
 }
 
 // CreateTestHeader creates a mock header for testing only.
-func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+func CreateTestHeader(chainID string, height clientexported.Height, timestamp time.Time, valSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
 	vsetHash := valSet.Hash()
+	epochHeight := int64(height.EpochHeight)
 	tmHeader := tmtypes.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
 		ChainID:            chainID,
-		Height:             height,
+		Height:             epochHeight,
 		Time:               timestamp,
 		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), maxInt, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
@@ -42,8 +44,8 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 	}
 	hhash := tmHeader.Hash()
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
-	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, valSet)
-	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
+	voteSet := tmtypes.NewVoteSet(chainID, epochHeight, 1, tmtypes.PrecommitType, valSet)
+	commit, err := tmtypes.MakeCommit(blockID, epochHeight, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}
@@ -55,6 +57,7 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 
 	return Header{
 		SignedHeader: signedHeader,
+		Height:       height,
 		ValidatorSet: valSet,
 	}
 }

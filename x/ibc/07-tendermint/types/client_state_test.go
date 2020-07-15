@@ -5,6 +5,7 @@ import (
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -127,7 +128,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
+			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: clientexported.NewHeight(0, uint64(height.EpochHeight-1))},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -208,7 +209,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
+			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: clientexported.NewHeight(0, uint64(height.EpochHeight-1))},
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -291,7 +292,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
+			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: clientexported.NewHeight(0, uint64(height.EpochHeight-1))},
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -371,7 +372,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
+			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: clientexported.NewHeight(0, uint64(height.EpochHeight-1))},
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -451,7 +452,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
+			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: clientexported.NewHeight(0, uint64(height.EpochHeight-1))},
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -528,7 +529,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
+			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: clientexported.NewHeight(0, uint64(height.EpochHeight-1))},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -603,7 +604,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
+			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: clientexported.NewHeight(0, uint64(height.EpochHeight-1))},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},

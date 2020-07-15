@@ -27,7 +27,7 @@ func (suite *TendermintTestSuite) TestEvidence() {
 	suite.Require().Equal(ev.Route(), "client")
 	suite.Require().Equal(ev.Type(), "client_misbehaviour")
 	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(ibctmtypes.SubModuleCdc.MustMarshalBinaryBare(ev))))
-	suite.Require().Equal(ev.GetHeight(), int64(height))
+	suite.Require().True(ev.GetIBCHeight().Compare(height) == 0, "evidence_height")
 }
 
 func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
@@ -35,7 +35,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	altVal := tmtypes.NewValidator(altPubKey, height)
+	altVal := tmtypes.NewValidator(altPubKey, int64(height.EpochHeight))
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -111,7 +111,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"mismatched heights",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, 6, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, 6), suite.now, suite.valSet, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -139,9 +139,9 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(ev.Header1.Height.EpochHeight), 1, tmtypes.PrecommitType, altValSet)
 				var err error
-				ev.Header1.Commit, err = tmtypes.MakeCommit(ev.Header1.Commit.BlockID, ev.Header2.Height, ev.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				ev.Header1.Commit, err = tmtypes.MakeCommit(ev.Header1.Commit.BlockID, int64(ev.Header2.Height.EpochHeight), ev.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err
 			},
 			false,
@@ -156,9 +156,9 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(ev.Header2.Height.EpochHeight), 1, tmtypes.PrecommitType, altValSet)
 				var err error
-				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, int64(ev.Header2.Height.EpochHeight), ev.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err
 			},
 			false,

@@ -14,7 +14,7 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 	}{
 		{"valid header", suite.header, chainID, true},
 		{"signed header basic validation failed", suite.header, "chainID", false},
-		{"validator set nil", ibctmtypes.Header{suite.header.SignedHeader, nil}, chainID, false},
+		{"validator set nil", ibctmtypes.Header{suite.header.SignedHeader, height, nil}, chainID, false},
 	}
 
 	suite.Require().Equal(clientexported.Tendermint, suite.header.ClientType())

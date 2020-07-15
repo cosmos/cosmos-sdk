@@ -1,4 +1,4 @@
-# Cosmos-SDK v0.39.0 Release Notes
+# Cosmos SDK v0.39.0 Release Notes
 
 This is the inaugural release of the **Cosmos SDK 0.39 «Launchpad»** release series.
 

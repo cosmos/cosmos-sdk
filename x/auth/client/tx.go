@@ -125,6 +125,17 @@ func EnrichWithGas(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) 
 	return txBldr.WithGas(adjusted), nil
 }
 
+// EnrichWithGas calculates the gas estimate that would be consumed by the
+// transaction and set the transaction's respective value accordingly.
+func OldEnrichWithGas(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (authtypes.TxBuilder, error) {
+	_, adjusted, err := oldSimulateMsgs(txBldr, clientCtx, msgs)
+	if err != nil {
+		return txBldr, err
+	}
+
+	return txBldr.WithGas(adjusted), nil
+}
+
 // CalculateGas simulates the execution of a transaction and returns
 // the simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
@@ -285,6 +296,17 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 // simulateMsgs simulates the transaction and returns the simulation response and
 // the adjusted gas value.
 func simulateMsgs(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
+	txBytes, err := txBldr.BuildTxForSim(msgs)
+	if err != nil {
+		return sdk.SimulationResponse{}, 0, err
+	}
+
+	return CalculateGas(clientCtx.QueryWithData, clientCtx.Codec, txBytes, txBldr.GasAdjustment())
+}
+
+// simulateMsgs simulates the transaction and returns the simulation response and
+// the adjusted gas value.
+func oldSimulateMsgs(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
 	txBytes, err := txBldr.BuildTxForSim(msgs)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err

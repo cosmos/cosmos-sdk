@@ -13,7 +13,7 @@ type (
 	TxGenerator interface {
 		NewTxBuilder() TxBuilder
 		SignModeHandler() signing.SignModeHandler
-
+		WrapTxBuilder(sdk.Tx) (TxBuilder, error)
 		TxEncoder() sdk.TxEncoder
 		TxDecoder() sdk.TxDecoder
 		TxJSONEncoder() sdk.TxEncoder

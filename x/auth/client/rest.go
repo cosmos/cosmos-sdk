@@ -35,7 +35,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, clientCtx client.Context,
 			return
 		}
 
-		txBldr, err = EnrichWithGas(txBldr, clientCtx, msgs)
+		txBldr, err = OldEnrichWithGas(txBldr, clientCtx, msgs)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

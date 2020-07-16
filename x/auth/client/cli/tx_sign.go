@@ -67,7 +67,6 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		txGen := clientCtx.TxGenerator
-		txBuilder := txGen.NewTxBuilder()
 		var err error
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
@@ -107,6 +106,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 			unsignedStdTx := scanner.StdTx()
 			txFactory = txFactory.WithSequence(sequence)
+			txBuilder, err := clientCtx.TxGenerator.WrapTxBuilder(unsignedStdTx)
+			if err != nil {
+				return err
+			}
 
 			if multisigAddr.Empty() {
 				homeDir, _ := cmd.Flags().GetString(flags.FlagFrom)
@@ -217,7 +220,10 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		txGen := clientCtx.TxGenerator
-		txBuilder := txGen.NewTxBuilder()
+		txBuilder, err := clientCtx.TxGenerator.WrapTxBuilder(newTx)
+		if err != nil {
+			return err
+		}
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		// if --signature-only is on, then override --append

@@ -1,6 +1,10 @@
 package types
 
 import (
+	"fmt"
+
+	"github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -84,6 +88,17 @@ func (s StdTxGenerator) NewTxBuilder() client.TxBuilder {
 		StdTx: StdTx{},
 		cdc:   s.Cdc,
 	}
+}
+
+func (s StdTxGenerator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+	stdTx, ok := newTx.(StdTx)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", &types.Tx{}, newTx)
+	}
+	return &StdTxBuilder{
+		StdTx: stdTx,
+		cdc:   s.Cdc,
+	}, nil
 }
 
 // MarshalTx implements TxGenerator.MarshalTx

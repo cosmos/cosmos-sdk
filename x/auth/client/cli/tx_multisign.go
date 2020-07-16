@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -88,9 +87,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		clientCtx = clientCtx.InitWithInput(inBuf)
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
-		if err != nil {
-			return errors.Wrap(err, "error creating stdTx builder from flags")
-		}
 
 		if !clientCtx.Offline {
 			accnum, seq, err := types.NewAccountRetriever(clientCtx.JSONMarshaler).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())

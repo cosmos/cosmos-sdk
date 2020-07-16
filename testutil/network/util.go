@@ -35,6 +35,8 @@ func startInProcess(cfg Config, val *Validator) error {
 	app := cfg.AppConstructor(*val)
 
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+	g, err := genDocProvider()
+	fmt.Println(g.Validators, "genesis", err)
 	tmNode, err := node.NewNode(
 		tmCfg,
 		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),

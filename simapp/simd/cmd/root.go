@@ -73,7 +73,7 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
+		genutilcli.InitCmd(simapp.ModuleBasics),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}),
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),

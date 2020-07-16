@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/bytes"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,16 +23,17 @@ func TestParseABCILog(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Equal(t, res[0].Log, "")
-	require.Equal(t, res[0].MsgIndex, uint16(1))
+	require.Equal(t, res[0].MsgIndex, uint32(1))
 }
 
 func TestABCIMessageLog(t *testing.T) {
 	t.Parallel()
+	cdc := codec.New()
 	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 
 	msgLogs := sdk.ABCIMessageLogs{msgLog}
-	bz, err := legacy.Cdc.MarshalJSON(msgLogs)
+	bz, err := cdc.MarshalJSON(msgLogs)
 	require.NoError(t, err)
 	require.Equal(t, string(bz), msgLogs.String())
 }
@@ -81,7 +82,7 @@ func TestResponseResultTx(t *testing.T) {
 	}
 	logs, err := sdk.ParseABCILogs(`[]`)
 	require.NoError(t, err)
-	want := sdk.TxResponse{
+	want := &sdk.TxResponse{
 		TxHash:    "74657374",
 		Height:    10,
 		Codespace: "codespace",
@@ -97,7 +98,7 @@ func TestResponseResultTx(t *testing.T) {
 	}
 
 	require.Equal(t, want, sdk.NewResponseResultTx(resultTx, sdk.Tx(nil), "timestamp"))
-	require.Equal(t, sdk.TxResponse{}, sdk.NewResponseResultTx(nil, sdk.Tx(nil), "timestamp"))
+	require.Equal(t, (*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, sdk.Tx(nil), "timestamp"))
 	require.Equal(t, `Response:
   Height: 10
   TxHash: 74657374
@@ -128,12 +129,13 @@ func TestResponseResultTx(t *testing.T) {
 		Logs:      logs,
 		TxHash:    "74657374",
 	}, sdk.NewResponseFormatBroadcastTx(resultBroadcastTx))
-	require.Equal(t, &sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTx(nil))
+
+	require.Equal(t, (*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTx(nil))
 }
 
 func TestResponseFormatBroadcastTxCommit(t *testing.T) {
 	// test nil
-	require.Equal(t, &sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTxCommit(nil))
+	require.Equal(t, (*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTxCommit(nil))
 
 	logs, err := sdk.ParseABCILogs(`[]`)
 	require.NoError(t, err)

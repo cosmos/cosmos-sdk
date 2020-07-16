@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -31,7 +31,6 @@ func TestNetGenesisState(t *testing.T) {
 }
 
 func TestValidateGenesisMultipleMessages(t *testing.T) {
-
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 	comm := stakingtypes.CommissionRates{}
 
@@ -41,10 +40,15 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	msg2 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 
-	genTxs := authtypes.NewStdTx([]sdk.Msg{msg1, msg2}, authtypes.StdFee{}, nil, "")
-	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
+	txGen := params.MakeEncodingConfig().TxGenerator
+	txBuilder := txGen.NewTxBuilder()
+	err := txBuilder.SetMsgs(msg1, msg2)
+	require.NoError(t, err)
 
-	err := ValidateGenesis(genesisState)
+	tx := txBuilder.GetTx()
+	genesisState := NewGenesisStateFromTx([]sdk.Tx{tx})
+
+	err = ValidateGenesis(genesisState)
 	require.Error(t, err)
 }
 
@@ -53,9 +57,14 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
 
-	genTxs := authtypes.NewStdTx([]sdk.Msg{msg1}, authtypes.StdFee{}, nil, "")
-	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
+	txGen := params.MakeEncodingConfig().TxGenerator
+	txBuilder := txGen.NewTxBuilder()
+	err := txBuilder.SetMsgs(msg1)
+	require.NoError(t, err)
 
-	err := ValidateGenesis(genesisState)
+	tx := txBuilder.GetTx()
+	genesisState := NewGenesisStateFromTx([]sdk.Tx{tx})
+
+	err = ValidateGenesis(genesisState)
 	require.Error(t, err)
 }

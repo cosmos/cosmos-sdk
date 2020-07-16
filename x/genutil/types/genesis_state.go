@@ -9,6 +9,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -36,9 +37,9 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
-// NewGenesisStateFromStdTx creates a new GenesisState object
+// NewGenesisStateFromTx creates a new GenesisState object
 // from auth transactions
-func NewGenesisStateFromStdTx(genTxs []authtypes.StdTx) GenesisState {
+func NewGenesisStateFromTx(genTxs []sdk.Tx) GenesisState {
 	genTxsBz := make([]json.RawMessage, len(genTxs))
 	for i, genTx := range genTxs {
 		genTxsBz[i] = ModuleCdc.MustMarshalJSON(genTx)

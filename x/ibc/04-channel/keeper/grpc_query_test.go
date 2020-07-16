@@ -481,6 +481,103 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestQueryPacketAcknowledgement() {
+	var (
+		req    *types.QueryPacketAcknowledgementRequest
+		expAck []byte
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid port ID",
+			func() {
+				req = &types.QueryPacketAcknowledgementRequest{
+					PortID:    "",
+					ChannelID: "test-channel-id",
+					Sequence:  0,
+				}
+			},
+			false,
+		},
+		{
+			"invalid channel ID",
+			func() {
+				req = &types.QueryPacketAcknowledgementRequest{
+					PortID:    "test-port-id",
+					ChannelID: "",
+					Sequence:  0,
+				}
+			},
+			false,
+		},
+		{"invalid sequence",
+			func() {
+				req = &types.QueryPacketAcknowledgementRequest{
+					PortID:    "test-port-id",
+					ChannelID: "test-channel-id",
+					Sequence:  0,
+				}
+			},
+			false,
+		},
+		{"channel not found",
+			func() {
+				req = &types.QueryPacketAcknowledgementRequest{
+					PortID:    "test-port-id",
+					ChannelID: "test-channel-id",
+					Sequence:  1,
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				expAck = []byte("hash")
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, expAck)
+
+				req = &types.QueryPacketAcknowledgementRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+					Sequence:  1,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.PacketAcknowledgement(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expAck, res.Acknowledgement)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
 	var (
 		req    *types.QueryUnrelayedPacketsRequest

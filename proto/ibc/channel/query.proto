@@ -171,7 +171,7 @@ message QueryUnrelayedPacketsRequest {
   bool acknowledgements = 4;
 }
 
-// QueryUnrelayedPacketCommitmentsResponse is the request type for the Query/UnrelayedPacketCommitments RPC method
+// QueryUnrelayedPacketsResponse is the request type for the Query/UnrelayedPacketCommitments RPC method
 message QueryUnrelayedPacketsResponse {
   // list of unrelayed packet sequences
   repeated uint64 sequences = 1;

@@ -864,7 +864,7 @@ func (m *QueryUnrelayedPacketsRequest) GetAcknowledgements() bool {
 	return false
 }
 
-// QueryUnrelayedPacketCommitmentsResponse is the request type for the Query/UnrelayedPacketCommitments RPC method
+// QueryUnrelayedPacketsResponse is the request type for the Query/UnrelayedPacketCommitments RPC method
 type QueryUnrelayedPacketsResponse struct {
 	// list of unrelayed packet sequences
 	Sequences []uint64 `protobuf:"varint,1,rep,packed,name=sequences,proto3" json:"sequences,omitempty"`

@@ -86,8 +86,8 @@ func (f *Fixtures) CollectGenTxs(flags ...string) {
 
 // SDStart runs simd start with the appropriate flags and returns a process
 func (f *Fixtures) SDStart(flags ...string) *tests.Process {
-	cmd := fmt.Sprintf("%s start --home=%s --rpc.laddr=%v --p2p.laddr=%v --grpc.enable --grpc.address=%s",
-		f.SimdBinary, f.SimdHome, f.RPCAddr, f.P2PAddr, f.GRPCAddr)
+	cmd := fmt.Sprintf("%s start --home=%s --rpc.laddr=%v --p2p.laddr=%v --grpc.enable",
+		f.SimdBinary, f.SimdHome, f.RPCAddr, f.P2PAddr)
 	proc := tests.GoExecuteTWithStdout(f.T, AddFlags(cmd, flags))
 	tests.WaitForTMStart(f.Port)
 	tests.WaitForNextNBlocksTM(1, f.Port)

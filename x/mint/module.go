@@ -113,6 +113,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the mint module. It returns

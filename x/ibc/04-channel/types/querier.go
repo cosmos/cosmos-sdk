@@ -9,7 +9,8 @@ import (
 
 // query routes supported by the IBC channel Querier
 const (
-	QueryChannelClientState = "channel-client-state"
+	QueryChannelClientState    = "channel-client-state"
+	QueryChannelConsensusState = "channel-consensus-state"
 )
 
 // NewQueryChannelResponse creates a new QueryChannelResponse instance

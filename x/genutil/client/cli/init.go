@@ -6,11 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/cli"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"

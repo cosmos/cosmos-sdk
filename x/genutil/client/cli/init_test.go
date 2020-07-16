@@ -44,29 +44,67 @@ func createDefaultTendermintConfig(rootDir string) (*tmcfg.Config, error) {
 }
 
 func TestInitCmd(t *testing.T) {
-	home, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
+	tests := []struct {
+		name      string
+		flags     func(dir string) []string
+		shouldErr bool
+		err       error
+	}{
+		{
+			name: "happy path",
+			flags: func(dir string) []string {
+				return []string{
+					"appnode-test",
+					fmt.Sprintf("--%s=%s", flags.FlagHome, dir),
+				}
+			},
+			shouldErr: false,
 
-	logger := log.NewNopLogger()
-	cfg, err := createDefaultTendermintConfig(home)
-	require.NoError(t, err)
-
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
-
-	cmd := InitCmd(testMbm)
-	cmd.SetArgs(
-		[]string{
-			"appnode-test",
-			fmt.Sprintf("--%s=%s", flags.FlagHome, home),
+			err: nil,
 		},
-	)
+		{
+			name: "error: home required flag",
+			flags: func(dir string) []string {
+				return []string{
+					"appnode-test",
+				}
+			},
+			shouldErr: true,
+			err:       fmt.Errorf("required flag(s) \"home\" not set"),
+		},
+	}
 
-	require.NoError(t, cmd.ExecuteContext(ctx))
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			home, cleanup := testutil.NewTestCaseDir(t)
+			defer cleanup()
+
+			logger := log.NewNopLogger()
+			cfg, err := createDefaultTendermintConfig(home)
+			require.NoError(t, err)
+
+			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+			cmd := InitCmd(testMbm)
+			cmd.SetArgs(
+				tt.flags(home),
+			)
+
+			if tt.shouldErr {
+				err := cmd.ExecuteContext(ctx)
+				require.EqualError(t, err, tt.err.Error())
+			} else {
+				require.NoError(t, cmd.ExecuteContext(ctx))
+			}
+		})
+	}
+
 }
 
 func setupClientHome(t *testing.T) func() {

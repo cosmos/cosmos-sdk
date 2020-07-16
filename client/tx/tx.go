@@ -313,7 +313,13 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
-func SignWithPrivKey(signMode signing.SignMode, signerData authsigning.SignerData, txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig) (signing.SignatureV2, error) {
+func SignWithPrivKey(
+	signMode signing.SignMode,
+	signerData authsigning.SignerData,
+	txBuilder client.TxBuilder,
+	priv crypto.PrivKey,
+	txConfig client.TxConfig,
+) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2
 
 	// Generate the bytes to be signed

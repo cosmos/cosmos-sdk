@@ -65,8 +65,6 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			//clientCtx.HomeDir, _ = cmd.Flags().GetString(flags.FlagHome)
-			fmt.Printf("THE HOME DIIIIRRRRR %s\n", clientCtx.HomeDir)
 
 			cdc := clientCtx.JSONMarshaler
 

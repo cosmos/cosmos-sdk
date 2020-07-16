@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abci_server "github.com/tendermint/tendermint/abci/server"
@@ -56,8 +58,13 @@ func TestInitCmd(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := InitCmd(testMbm, home)
-	cmd.SetArgs([]string{"appnode-test"})
+	cmd := InitCmd(testMbm)
+	cmd.SetArgs(
+		[]string{
+			"appnode-test",
+			fmt.Sprintf("--%s=%s", flags.FlagHome, home),
+		},
+	)
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
@@ -85,7 +92,7 @@ func TestEmptyState(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := InitCmd(testMbm, home)
+	cmd := InitCmd(testMbm)
 	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -132,8 +139,11 @@ func TestStartStandAlone(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := InitCmd(testMbm, home)
-	cmd.SetArgs([]string{"appnode-test"})
+	cmd := InitCmd(testMbm)
+	cmd.SetArgs([]string{
+		"appnode-test",
+		fmt.Sprintf("--%s=%s", flags.FlagHome, home),
+	})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 

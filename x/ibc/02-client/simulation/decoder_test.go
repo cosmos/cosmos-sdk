@@ -22,11 +22,11 @@ func TestDecodeStore(t *testing.T) {
 
 	clientState := ibctmtypes.ClientState{
 		ID:           clientID,
-		FrozenHeight: 10,
+		FrozenHeight: exported.NewHeight(0, 10),
 	}
 
 	consState := ibctmtypes.ConsensusState{
-		Height:    10,
+		Height:    exported.NewHeight(0, 10),
 		Timestamp: time.Now().UTC(),
 	}
 
@@ -40,7 +40,7 @@ func TestDecodeStore(t *testing.T) {
 			Value: []byte(exported.Tendermint.String()),
 		},
 		tmkv.Pair{
-			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
+			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(exported.NewHeight(0, 10))),
 			Value: cdc.MustMarshalBinaryBare(consState),
 		},
 		tmkv.Pair{

@@ -65,11 +65,11 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createValidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testClientID, suite.header.Height+1, suite.header.Time.Add(time.Minute),
+		return ibctmtypes.CreateTestHeader(testClientID, exported.NewHeight(0, suite.header.Height.EpochHeight+1), suite.header.Time.Add(time.Minute),
 			suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	createInvalidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testClientID, suite.header.Height-3, suite.header.Time.Add(time.Minute),
+		return ibctmtypes.CreateTestHeader(testClientID, exported.NewHeight(0, suite.header.Height.EpochHeight-3), suite.header.Time.Add(time.Minute),
 			suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	var updateHeader ibctmtypes.Header
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return nil
 		}, false},
 		{"frozen client", func() error {
-			clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
+			clientState := ibctmtypes.ClientState{FrozenHeight: exported.NewHeight(0, 1), ID: testClientID, LastHeader: suite.header}
 			suite.keeper.SetClientState(suite.ctx, clientState)
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			updateHeader = createValidUpdateFn(suite)
@@ -186,7 +186,8 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)
 	suite.Require().NoError(err, err)
 	suite.Require().Equal(localhostClient.GetID(), updatedClientState.GetID())
-	suite.Require().Equal(localhostClient.GetLatestHeight()+1, updatedClientState.GetLatestHeight())
+	suite.Require().Equal(localhostClient.GetLatestHeight().EpochNumber, updatedClientState.GetLatestHeight().EpochNumber)
+	suite.Require().Equal(localhostClient.GetLatestHeight().EpochHeight+1, updatedClientState.GetLatestHeight().EpochHeight)
 }
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
@@ -242,8 +243,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"misbehavior at later height should pass",
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.ctx.BlockTime(), bothValSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.ctx.BlockTime(), bothValSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(testClientID, exported.NewHeight(0, testClientHeight.EpochHeight+5), suite.ctx.BlockTime(), bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(testClientID, exported.NewHeight(0, testClientHeight.EpochHeight+5), suite.ctx.BlockTime(), bothValSet, bothSigners),
 				ChainID:  testClientID,
 				ClientID: testClientID,
 			},
@@ -274,7 +275,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
+				clientState := ibctmtypes.ClientState{FrozenHeight: exported.NewHeight(0, 1), ID: testClientID, LastHeader: suite.header}
 				suite.keeper.SetClientState(suite.ctx, clientState)
 				return nil
 			},
@@ -289,7 +290,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
+				clientState := ibctmtypes.ClientState{FrozenHeight: exported.NewHeight(0, 1), ID: testClientID, LastHeader: suite.header}
 				suite.keeper.SetClientState(suite.ctx, clientState)
 				return nil
 			},

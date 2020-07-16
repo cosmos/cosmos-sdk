@@ -34,7 +34,7 @@ func TestValidateGenesis(t *testing.T) {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	header := ibctmtypes.CreateTestHeader("chainID", 10, now, valSet, []tmtypes.PrivValidator{privVal})
+	header := ibctmtypes.CreateTestHeader("chainID", exported.NewHeight(0, 10), now, valSet, []tmtypes.PrivValidator{privVal})
 
 	testCases := []struct {
 		name     string
@@ -91,7 +91,7 @@ func TestValidateGenesis(t *testing.T) {
 						"CLIENTID2",
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), exported.NewHeight(0, 0), header.ValidatorSet,
 							),
 						},
 					},
@@ -112,7 +112,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), exported.NewHeight(0, 0), header.ValidatorSet,
 							),
 						},
 					),

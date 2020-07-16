@@ -27,12 +27,12 @@ const (
 	testClientID2 = "ethbridge"
 	testClientID3 = "ethermint"
 
-	testClientHeight = 5
-
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 	maxClockDrift  time.Duration = time.Second * 10
 )
+
+var testClientHeight = exported.NewHeight(0, 5)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: int64(testClientHeight.EpochHeight), ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
 
@@ -155,7 +155,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 	for i, tc := range cases {
 		tc := tc
-		cs, found := suite.keeper.GetSelfConsensusState(suite.ctx, tc.height)
+		cs, found := suite.keeper.GetSelfConsensusState(suite.ctx, exported.NewHeight(0, tc.height))
 		if tc.expPass {
 			suite.Require().True(found, "Case %d should have passed: %s", i, tc.name)
 			suite.Require().NotNil(cs, "Case %d should have passed: %s", i, tc.name)
@@ -175,17 +175,19 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
 	nextState := ibctmtypes.ConsensusState{
-		Height:       testClientHeight + 5,
+		Height:       exported.NewHeight(0, testClientHeight.EpochHeight+5),
 		Timestamp:    suite.now,
 		Root:         commitmenttypes.NewMerkleRoot([]byte("next")),
 		ValidatorSet: suite.valSet,
 	}
 
-	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.header.Time.Add(time.Minute), suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	header := ibctmtypes.CreateTestHeader(
+		testClientID, exported.NewHeight(0, testClientHeight.EpochHeight+5), suite.header.Time.Add(time.Minute), suite.valSet, []tmtypes.PrivValidator{suite.privVal},
+	)
 
 	// mock update functionality
 	clientState.LastHeader = header
-	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+5, nextState)
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, exported.NewHeight(0, testClientHeight.EpochHeight+5), nextState)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)
@@ -195,11 +197,12 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	suite.Require().Equal(nextState, latest, "Latest client not returned correctly")
 
 	// Should return existing consensusState at latestClientHeight
-	lte, ok := suite.keeper.GetClientConsensusStateLTE(suite.ctx, testClientID, testClientHeight+3)
+	lte, ok := suite.keeper.GetClientConsensusStateLTE(suite.ctx, testClientID, exported.NewHeight(0, testClientHeight.EpochHeight+3))
 	// recalculate cached totalVotingPower for equality check
 	lte.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower()
 	suite.Require().True(ok)
-	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", testClientHeight+3)
+	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d",
+		exported.NewHeight(0, testClientHeight.EpochHeight+3))
 }
 
 func (suite KeeperTestSuite) TestGetAllConsensusStates() {
@@ -211,7 +214,8 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.consensusState.GetHeight(), &tmtypes.ValidatorSet{},
 				),
 				ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, &tmtypes.ValidatorSet{},
+					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")),
+					exported.NewHeight(0, suite.consensusState.GetHeight().EpochHeight+1), &tmtypes.ValidatorSet{},
 				),
 			},
 		),
@@ -219,7 +223,8 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 			testClientID2,
 			[]exported.ConsensusState{
 				ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, &tmtypes.ValidatorSet{},
+					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")),
+					exported.NewHeight(0, suite.consensusState.GetHeight().EpochHeight+2), &tmtypes.ValidatorSet{},
 				),
 			},
 		),

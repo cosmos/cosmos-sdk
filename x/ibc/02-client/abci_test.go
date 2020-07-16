@@ -39,7 +39,7 @@ func (suite *ClientTestSuite) TestBeginBlocker() {
 
 	localHostClient, found := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
 	suite.Require().True(found)
-	suite.Require().Equal(prevHeight, int64(localHostClient.GetLatestHeight()))
+	suite.Require().Equal(exported.NewHeight(0, uint64(prevHeight)), localHostClient.GetLatestHeight())
 
 	for i := 0; i < 10; i++ {
 		// increment height
@@ -51,7 +51,7 @@ func (suite *ClientTestSuite) TestBeginBlocker() {
 
 		localHostClient, found = suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
 		suite.Require().True(found)
-		suite.Require().Equal(prevHeight+1, int64(localHostClient.GetLatestHeight()))
-		prevHeight = int64(localHostClient.GetLatestHeight())
+		suite.Require().Equal(exported.NewHeight(0, uint64(prevHeight+1)), localHostClient.GetLatestHeight())
+		prevHeight = int64(localHostClient.GetLatestHeight().EpochHeight)
 	}
 }

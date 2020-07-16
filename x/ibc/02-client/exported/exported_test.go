@@ -83,16 +83,16 @@ func TestDecrement(t *testing.T) {
 	validDecrement := NewHeight(3, 3)
 	expected := NewHeight(3, 2)
 
-	actual, err := validDecrement.Decrement()
+	actual, success := validDecrement.Decrement()
 	require.Equal(t, expected, actual, "decrementing %s did not return expected height: %s. got %s",
 		validDecrement.String(), expected.String(), actual.String())
-	require.Nil(t, err, "decrement returned unexpected error: %v", err)
+	require.True(t, success, "decrement failed unexpectedly")
 
 	invalidDecrement := NewHeight(3, 1)
-	actual, err = invalidDecrement.Decrement()
+	actual, success = invalidDecrement.Decrement()
 
 	require.Equal(t, Height{}, actual, "invalid decrement returned non-zero height: %s", actual.String())
-	require.NotNil(t, err, "expected error on invalid decrement")
+	require.False(t, success, "invalid decrement passed")
 }
 
 func TestValid(t *testing.T) {

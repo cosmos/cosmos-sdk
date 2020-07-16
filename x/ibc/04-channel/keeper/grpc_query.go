@@ -213,8 +213,17 @@ func (q Keeper) PacketAcknowledgement(c context.Context, req *types.QueryPacketA
 	return types.NewQueryPacketAcknowledgementResponse(req.PortID, req.ChannelID, req.Sequence, acknowledgementBz, nil, ctx.BlockHeight()), nil
 }
 
-// UnrelayedPacketCommitments implements the Query/UnrelayedPackets gRPC method
-func (q Keeper) UnrelayedPacketCommitments(c context.Context, req *types.QueryUnrelayedPacketCommitmentsRequest) (*types.QueryUnrelayedPacketCommitmentsResponse, error) {
+// UnrelayedPackets implements the Query/UnrelayedPackets gRPC method. Given
+// a list of counterparty packet commitments, the querier checks if the packet
+// sequence has an acknowledgement stored. If req.Acknowledgements is true then
+// all unrelayed acknowledgements are returned (ack exists), otherwise all
+// unrelayed packet commitments are returned (ack does not exist).
+//
+// NOTE: The querier makes the assumption that the provided list of packet
+// commitments is correct and will not function properly if the list
+// is not up to date. Ideally the query height should equal the latest height
+// on the counterparty's client which represents this chain.
+func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPacketsRequest) (*types.QueryUnrelayedPacketsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -225,75 +234,23 @@ func (q Keeper) UnrelayedPacketCommitments(c context.Context, req *types.QueryUn
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var (
-		unrelayedCommitments = []uint64{}
-		res                  *query.PageResponse
-	)
+	var unrelayedSequences = []uint64{}
 
-	for i, seq := range req.Sequences {
+	for i, seq := range req.PacketCommitmentSequences {
 		if seq == 0 {
 			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
 		}
 
-		// TODO figure out how to paginate
-		if _, found := q.GetPacketAcknowledgement(ctx, req.PortID, req.ChannelID, seq); !found {
-			unrelayedCommitments = append(unrelayedCommitments, seq)
+		// if req.Acknowledgements is true append sequences with an existing acknowledgement
+		// otherwise append sequences without an existing acknowledgement.
+		if _, found := q.GetPacketAcknowledgement(ctx, req.PortID, req.ChannelID, seq); found == req.Acknowledgements {
+			unrelayedSequences = append(unrelayedSequences, seq)
 		}
 
 	}
-	return &types.QueryUnrelayedPacketCommitmentsResponse{
-		Packets: unrelayedCommitments,
-		Res:     res,
-		Height:  ctx.BlockHeight(),
-	}, nil
-}
-
-// UnrelayedPacketAcknowledgements implements the Query/UnrelayedPackets gRPC method
-func (q Keeper) UnrelayedPacketAcknowledgements(c context.Context, req *types.QueryUnrelayedPacketAcknowledgementsRequest) (*types.QueryUnrelayedPacketAcknowledgementsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
-		return nil, err
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	var (
-		unrelayedAcknowledgements = []uint64{}
-		res                       *query.PageResponse
-		err                       error
-	)
-
-	commReq := &types.QueryPacketCommitmentsRequest{
-		PortID:    req.PortID,
-		ChannelID: req.ChannelID,
-		Req:       req.Req,
-	}
-
-	commRes, err := q.PacketCommitments(c, commReq)
-	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "failed to query for packet commitments using the request %v", commReq)
-	}
-
-	for i, seq := range req.Sequences {
-		if seq == 0 {
-			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
-		}
-
-		for _, comm := range commRes.Commitments {
-			if seq == comm.Sequence {
-				unrelayedAcknowledgements = append(unrelayedAcknowledgements, seq)
-				break
-			}
-		}
-
-	}
-	return &types.QueryUnrelayedPacketAcknowledgementsResponse{
-		Packets: unrelayedAcknowledgements,
-		Res:     res,
-		Height:  ctx.BlockHeight(),
+	return &types.QueryUnrelayedPacketsResponse{
+		Sequences: unrelayedSequences,
+		Height:    ctx.BlockHeight(),
 	}, nil
 }
 

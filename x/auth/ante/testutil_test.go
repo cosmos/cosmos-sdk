@@ -44,8 +44,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	// set up the TxBuilder
 	encodingConfig := simappparams.MakeEncodingConfig()
 	suite.clientCtx = client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator).
-		WithJSONMarshaler(encodingConfig.Marshaler)
+		WithTxGenerator(encodingConfig.TxGenerator)
 }
 
 // CreateTestAccounts creates `numAccs` accounts, and return all relevant
@@ -73,7 +72,12 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
 	var sigsV2 []signing.SignatureV2
 	for i, priv := range privs {
-		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), priv, accNums[i], accSeqs[i], chainID, suite.clientCtx.TxGenerator, suite.txBuilder)
+		signerData := xauthsigning.SignerData{
+			ChainID:         chainID,
+			AccountNumber:   accNums[i],
+			AccountSequence: accSeqs[i],
+		}
+		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), signerData, suite.txBuilder, priv, suite.clientCtx.TxGenerator)
 		suite.Require().NoError(err)
 
 		sigsV2 = append(sigsV2, sigV2)
@@ -93,7 +97,7 @@ type TestCase struct {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums []uint64, accSeqs []uint64, chainID string, tc TestCase) {
+func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
 	suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 		suite.txBuilder.SetMsgs(msgs...)
 		suite.txBuilder.SetFeeAmount(feeAmount)
@@ -112,5 +116,4 @@ func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, 
 			suite.Require().True(errors.Is(err, tc.expErr))
 		}
 	})
-
 }

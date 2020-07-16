@@ -311,47 +311,16 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	return txf, nil
 }
 
-// Helper function get generate the sign bytes to be signed and signature data.
-// Used in SignWithPrivKey and in Sign functions.
-func getSignBytes(signMode signing.SignMode, pubKey crypto.PubKey, accNum uint64, seq uint64, chainID string, txGenerator client.TxGenerator, txBuilder client.TxBuilder) (*signing.SingleSignatureData, []byte, error) {
-	sigData := &signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
-	}
-	sig := signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   sigData,
-	}
-
-	// Here, we're first setting a SignatureV2 with nil as signature, this is
-	// to set the SignerInfos, used to generate the sign bytes below.
-	err := txBuilder.SetSignatures(sig)
-	if err != nil {
-		return sigData, nil, err
-	}
+// SignWithPrivKey signs a given tx with the given private key, and returns the
+// corresponding SignatureV2 if the signing is successful.
+func SignWithPrivKey(signMode signing.SignMode, signerData authsigning.SignerData, txBuilder client.TxBuilder, priv crypto.PrivKey, txGenerator client.TxGenerator) (signing.SignatureV2, error) {
+	var sigV2 signing.SignatureV2
 
 	signBytes, err := txGenerator.SignModeHandler().GetSignBytes(
 		signMode,
-		authsigning.SignerData{
-			ChainID:         chainID,
-			AccountNumber:   accNum,
-			AccountSequence: seq,
-		},
+		signerData,
 		txBuilder.GetTx(),
 	)
-	if err != nil {
-		return sigData, nil, err
-	}
-
-	return sigData, signBytes, nil
-}
-
-// SignWithPrivKey signs a given tx with the given private key, and returns the
-// corresponding SignatureV2 if the signing is successful.
-func SignWithPrivKey(signMode signing.SignMode, priv crypto.PrivKey, accNum uint64, seq uint64, chainID string, txGenerator client.TxGenerator, txBuilder client.TxBuilder) (signing.SignatureV2, error) {
-	var sigV2 signing.SignatureV2
-
-	sigData, signBytes, err := getSignBytes(signMode, priv.PubKey(), accNum, seq, chainID, txGenerator, txBuilder)
 	if err != nil {
 		return sigV2, err
 	}
@@ -361,10 +330,13 @@ func SignWithPrivKey(signMode signing.SignMode, priv crypto.PrivKey, accNum uint
 		return sigV2, err
 	}
 
-	sigData.Signature = sigBytes
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: sigBytes,
+	}
 	sigV2 = signing.SignatureV2{
 		PubKey: priv.PubKey(),
-		Data:   sigData,
+		Data:   &sigData,
 	}
 
 	return sigV2, nil
@@ -396,7 +368,16 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 
 	pubKey := key.GetPubKey()
 
-	sigData, signBytes, err := getSignBytes(signMode, pubKey, txf.accountNumber, txf.sequence, txf.chainID, txf.txGenerator, txBuilder)
+	signerData := authsigning.SignerData{
+		ChainID:         txf.chainID,
+		AccountNumber:   txf.accountNumber,
+		AccountSequence: txf.sequence,
+	}
+	signBytes, err := txf.txGenerator.SignModeHandler().GetSignBytes(
+		signMode,
+		signerData,
+		txBuilder.GetTx(),
+	)
 	if err != nil {
 		return err
 	}
@@ -407,10 +388,13 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		return err
 	}
 
-	sigData.Signature = sigBytes
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: sigBytes,
+	}
 	sig := signing.SignatureV2{
 		PubKey: pubKey,
-		Data:   sigData,
+		Data:   &sigData,
 	}
 
 	// And here the tx is populated with the correct signature in

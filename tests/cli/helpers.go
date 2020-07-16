@@ -182,7 +182,7 @@ func AddFlags(cmd string, flags []string) string {
 	return strings.TrimSpace(cmd)
 }
 
-func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx authtypes.StdTx) {
+func UnmarshalStdTx(t require.TestingT, c codec.JSONMarshaler, s string) (stdTx authtypes.StdTx) {
 	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
 	return
 }

@@ -119,8 +119,48 @@ func QueryChannelClientState(clientCtx client.Context, portID, channelID string)
 	var clientState clientexported.ClientState
 	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clientState)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)
+		return nil, 0, fmt.Errorf("failed to unmarshal client state: %w", err)
 	}
+	return clientState, height, nil
+}
+
+// QueryChannelConsensusState uses the channel Querier to return the ConsensusState
+// of a Channel.
+func QueryChannelConsensusState(clientCtx client.Context, portID, channelID string) (clientexported.ConsensusState, int64, error) {
+	params := types.NewQueryChannelConsensusStateRequest(portID, channelID)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
+	}
+
+	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryChannelConsensusState)
+	res, height, err := clientCtx.QueryWithData(route, bz)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var consensusState clientexported.ConsensusState
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &consensusState)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to unmarshal consensus state: %w", err)
+	}
+	return consensusState, height, nil
+}
+
+// QueryCounterpartyConsensusState uses the channel Querier to return the
+// counterparty ConsensusState given the source port ID and source channel ID.
+func QueryCounterpartyConsensusState(clientCtx client.Context, portID, channelID string) (clientexported.ConsensusState, int64, error) {
+	channelRes, err := QueryChannel(clientCtx, portID, channelID, false)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	counterparty := channelRes.Channel.Counterparty
+	clientState, height, err := QueryChannelConsensusState(clientCtx, counterparty.PortID, counterparty.ChannelID)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	return clientState, height, nil
 }
 

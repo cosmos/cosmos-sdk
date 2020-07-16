@@ -499,6 +499,9 @@ $ %s query gov tally 1
 				context.Background(),
 				&types.QueryTallyResultRequest{ProposalId: proposalID},
 			)
+			if err != nil {
+				return err
+			}
 
 			return clientCtx.PrintOutput(res.GetTally())
 		},

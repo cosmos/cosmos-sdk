@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -90,8 +89,8 @@ func ValidateAccountInGenesis(
 
 type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 
-// DeliverGenTxs iterates over all genesis txs, decodes each into a StdTx and
-// invokes the provided deliverTxfn with the decoded StdTx. It returns the result
+// DeliverGenTxs iterates over all genesis txs, decodes each into a Tx and
+// invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
 	ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
@@ -99,7 +98,7 @@ func DeliverGenTxs(
 ) []abci.ValidatorUpdate {
 
 	for _, genTx := range genTxs {
-		var tx authtypes.StdTx
+		var tx sdk.Tx
 		cdc.MustUnmarshalJSON(genTx, &tx)
 
 		bz := cdc.MustMarshalBinaryBare(tx)

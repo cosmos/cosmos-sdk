@@ -11,6 +11,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,14 +39,14 @@ func TestABCIMessageLog(t *testing.T) {
 
 func TestNewSearchTxsResult(t *testing.T) {
 	t.Parallel()
-	got := sdk.NewSearchTxsResult(150, 20, 2, 20, []sdk.TxResponse{})
+	got := sdk.NewSearchTxsResult(150, 20, 2, 20, []*sdk.TxResponse{})
 	require.Equal(t, sdk.SearchTxsResult{
 		TotalCount: 150,
 		Count:      20,
 		PageNumber: 2,
 		PageTotal:  8,
 		Limit:      20,
-		Txs:        []sdk.TxResponse{},
+		Txs:        []*sdk.TxResponse{},
 	}, got)
 }
 
@@ -91,7 +92,7 @@ func TestResponseResultTx(t *testing.T) {
 		Info:      "info",
 		GasWanted: 100,
 		GasUsed:   90,
-		Tx:        sdk.Tx(nil),
+		Tx:        &types.Any{},
 		Timestamp: "timestamp",
 	}
 

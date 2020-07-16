@@ -37,6 +37,10 @@ func NewQuerySubspaceParamsCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			queryClient := proposal.NewQueryClient(clientCtx)
 
 			params := proposal.NewQueryParametersRequest(args[0], args[1])

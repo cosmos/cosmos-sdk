@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"errors"
 	"testing"
 
@@ -128,29 +127,4 @@ func TestGenesisAccountValidate(t *testing.T) {
 			require.Equal(t, tt.expErr, err)
 		})
 	}
-}
-
-func TestBaseAccountJSON(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pubkey.Address())
-	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
-	baseAcc := NewBaseAccount(addr, coins, pubkey, 10, 50)
-
-	bz, err := json.Marshal(baseAcc)
-	require.NoError(t, err)
-
-	bz1, err := baseAcc.MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, string(bz1), string(bz))
-
-	var a BaseAccount
-	require.NoError(t, json.Unmarshal(bz, &a))
-	require.Equal(t, baseAcc.String(), a.String())
-
-	bz, err = ModuleCdc.MarshalJSON(baseAcc)
-	require.NoError(t, err)
-
-	var b BaseAccount
-	require.NoError(t, ModuleCdc.UnmarshalJSON(bz, &b))
-	require.Equal(t, baseAcc.String(), b.String())
 }

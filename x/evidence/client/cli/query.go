@@ -103,9 +103,14 @@ func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) erro
 	}
 
 	var evidences []exported.Evidence
-	err = clientCtx.InterfaceRegistry.UnpackAny(res.Evidence, &evidences)
-	if err != nil {
-		return err
+	for _, evidence := range res.Evidence {
+		var evi exported.Evidence
+		err = clientCtx.InterfaceRegistry.UnpackAny(evidence, &evi)
+		if err != nil {
+			return err
+		}
+
+		evidences = append(evidences, evi)
 	}
 
 	return clientCtx.PrintOutput(evidences)

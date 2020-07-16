@@ -15,7 +15,7 @@ import (
 
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	mfd := ante.NewMempoolFeeDecorator()
 	antehandler := sdk.ChainAnteDecorators(mfd)
@@ -66,7 +66,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 
 func (suite *AnteTestSuite) TestDeductFees() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()

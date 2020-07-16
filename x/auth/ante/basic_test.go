@@ -17,7 +17,7 @@ import (
 
 func (suite *AnteTestSuite) TestValidateBasic() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -56,7 +56,7 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 
 func (suite *AnteTestSuite) TestValidateMemo() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -90,7 +90,7 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 
 func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()

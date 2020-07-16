@@ -44,7 +44,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	// set up the TxBuilder
 	encodingConfig := simappparams.MakeEncodingConfig()
 	suite.clientCtx = client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator)
+		WithTxConfig(encodingConfig.TxConfig)
 }
 
 // CreateTestAccounts creates `numAccs` accounts, and return all relevant
@@ -77,7 +77,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 			AccountNumber:   accNums[i],
 			AccountSequence: accSeqs[i],
 		}
-		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxGenerator.SignModeHandler().DefaultMode(), signerData, suite.txBuilder, priv, suite.clientCtx.TxGenerator)
+		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData, suite.txBuilder, priv, suite.clientCtx.TxConfig)
 		suite.Require().NoError(err)
 
 		sigsV2 = append(sigsV2, sigV2)

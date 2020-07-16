@@ -23,7 +23,7 @@ import (
 
 func (suite *AnteTestSuite) TestSetPubKey() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, pub1, addr1 := types.KeyTestPubAddr()
@@ -117,7 +117,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 
 func (suite *AnteTestSuite) TestSigVerification() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// make block height non-zero to ensure account numbers part of signBytes
 	suite.ctx = suite.ctx.WithBlockHeight(1)
@@ -164,7 +164,7 @@ func (suite *AnteTestSuite) TestSigVerification() {
 	}
 	for i, tc := range testCases {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
-		suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder() // Create new txBuilder for each test
+		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
 		suite.txBuilder.SetMsgs(msgs...)
 		suite.txBuilder.SetFeeAmount(feeAmount)
@@ -199,7 +199,7 @@ func (suite *AnteTestSuite) TestSigIntegration() {
 
 func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs ...crypto.PrivKey) (sdk.Gas, error) {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// Make block-height non-zero to include accNum in SignBytes
 	suite.ctx = suite.ctx.WithBlockHeight(1)
@@ -242,7 +242,7 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 
 func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	priv, _, addr := types.KeyTestPubAddr()
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)

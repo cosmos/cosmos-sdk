@@ -16,7 +16,7 @@ import (
 
 func (suite *AnteTestSuite) TestSetup() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -50,7 +50,7 @@ func (suite *AnteTestSuite) TestSetup() {
 
 func (suite *AnteTestSuite) TestRecoverPanic() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()

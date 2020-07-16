@@ -21,5 +21,5 @@ func TestGenerator(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	pubKeyCodec := std.DefaultPublicKeyCodec{}
 	signModeHandler := DefaultSignModeHandler()
-	suite.Run(t, testutil.NewTxGeneratorTestSuite(NewTxGenerator(marshaler, pubKeyCodec, signModeHandler)))
+	suite.Run(t, testutil.NewTxConfigTestSuite(NewTxConfig(marshaler, pubKeyCodec, signModeHandler)))
 }

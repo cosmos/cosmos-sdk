@@ -34,7 +34,7 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 //
 // TODO: Remove in favor of GenerateOrBroadcastTxCLI
 func GenerateOrBroadcastTx(clientCtx client.Context, msgs ...sdk.Msg) error {
-	txf := NewFactoryFromDeprecated(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+	txf := NewFactoryFromDeprecated(clientCtx.Input).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
@@ -125,7 +125,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	txBytes, err := clientCtx.TxGenerator.TxEncoder()(tx.GetTx())
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(tx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxGenerator(ctx.TxGenerator)
+		WithTxConfig(ctx.TxConfig)
 
 	if br.Simulate || gasSetting.Simulate {
 		if gasAdj < 0 {
@@ -226,7 +226,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 		}
 	}
 
-	tx := txf.txGenerator.NewTxBuilder()
+	tx := txf.txConfig.NewTxBuilder()
 
 	if err := tx.SetMsgs(msgs...); err != nil {
 		return nil, err
@@ -255,7 +255,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return txf.txGenerator.TxEncoder()(tx.GetTx())
+	return txf.txConfig.TxEncoder()(tx.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
@@ -313,10 +313,10 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
-func SignWithPrivKey(signMode signing.SignMode, signerData authsigning.SignerData, txBuilder client.TxBuilder, priv crypto.PrivKey, txGenerator client.TxGenerator) (signing.SignatureV2, error) {
+func SignWithPrivKey(signMode signing.SignMode, signerData authsigning.SignerData, txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2
 
-	signBytes, err := txGenerator.SignModeHandler().GetSignBytes(
+	signBytes, err := txConfig.SignModeHandler().GetSignBytes(
 		signMode,
 		signerData,
 		txBuilder.GetTx(),
@@ -358,7 +358,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	signMode := txf.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode = txf.txGenerator.SignModeHandler().DefaultMode()
+		signMode = txf.txConfig.SignModeHandler().DefaultMode()
 	}
 
 	key, err := txf.keybase.Key(name)
@@ -373,7 +373,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		AccountNumber:   txf.accountNumber,
 		AccountSequence: txf.sequence,
 	}
-	signBytes, err := txf.txGenerator.SignModeHandler().GetSignBytes(
+	signBytes, err := txf.txConfig.SignModeHandler().GetSignBytes(
 		signMode,
 		signerData,
 		txBuilder.GetTx(),

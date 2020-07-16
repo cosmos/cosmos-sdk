@@ -31,7 +31,7 @@ func TestDirectModeHandler(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	pubKeyCdc := std.DefaultPublicKeyCodec{}
 
-	txGen := tx.NewTxGenerator(marshaler, pubKeyCdc, tx.DefaultSignModeHandler())
+	txGen := tx.NewTxConfig(marshaler, pubKeyCdc, tx.DefaultSignModeHandler())
 	txBuilder := txGen.NewTxBuilder()
 
 	memo := "sometestmemo"

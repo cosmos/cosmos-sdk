@@ -21,8 +21,8 @@ func testCodec() *codec.Codec {
 	return cdc
 }
 
-func TestStdTxGenerator(t *testing.T) {
+func TestStdTxConfig(t *testing.T) {
 	cdc := testCodec()
-	txGen := types.StdTxGenerator{Cdc: cdc}
-	suite.Run(t, testutil.NewTxGeneratorTestSuite(txGen))
+	txGen := types.StdTxConfig{Cdc: cdc}
+	suite.Run(t, testutil.NewTxConfigTestSuite(txGen))
 }

@@ -67,7 +67,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -148,7 +148,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -229,7 +229,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -313,7 +313,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -425,7 +425,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -502,7 +502,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -573,7 +573,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -646,7 +646,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -772,7 +772,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, chainID, tc)
@@ -860,7 +860,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -967,7 +967,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -1037,7 +1037,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
 			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
@@ -1049,7 +1049,7 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	suite.SetupTest(true) // setup
 	// Set recheck=true
 	suite.ctx = suite.ctx.WithIsReCheckTx(true)
-	suite.txBuilder = suite.clientCtx.TxGenerator.NewTxBuilder()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(1)

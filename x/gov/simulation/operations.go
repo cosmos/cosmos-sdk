@@ -142,7 +142,7 @@ func SimulateMsgSubmitProposal(
 			}
 		}
 
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -229,7 +229,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			}
 		}
 
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -291,7 +291,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
 		}
 
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},

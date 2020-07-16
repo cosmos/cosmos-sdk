@@ -49,6 +49,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and `Result` from the execution.
 
+### Client Breaking Changes
+
+* (x/auth) [\#6745](https://github.com/cosmos/cosmos-sdk/issues/6745) Remove BaseAccount's custom JSON {,un}marshalling.
+
 ### Bug Fixes
 
 * (store) [\#6475](https://github.com/cosmos/cosmos-sdk/pull/6475) Revert IAVL pruning functionality introduced in

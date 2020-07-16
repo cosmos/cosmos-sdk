@@ -594,7 +594,7 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can lower case alphanumeric strings that are 3 ~ 16 characters long
+	// Denominations can be lowercase alphanumeric strings that are 3 ~ 16 characters long
 	// OR
 	// a single Emoji from the list at http://unicode.org/Public/emoji/3.0/emoji-data.txt
 	reDnmString = `[a-z][a-z0-9]{2,15}|[

@@ -17,7 +17,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -166,10 +165,7 @@ func TestStartStandAlone(t *testing.T) {
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 	cmd := InitCmd(testMbm, home)
-	cmd.SetArgs([]string{
-		"appnode-test",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, home),
-	})
+	cmd.SetArgs([]string{"appnode-test"})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 

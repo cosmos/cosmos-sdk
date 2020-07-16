@@ -595,6 +595,7 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
+	// Emoji list from http://unicode.org/Public/emoji/3.0/emoji-data.txt
 	reDnmString = `[a-z][a-z0-9]{2,15}|\x{0023}|[
 \x{002A}|
 \x{0030}-\x{0039}|

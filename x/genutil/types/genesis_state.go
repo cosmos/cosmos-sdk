@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -101,7 +100,7 @@ func GenesisStateFromGenFile(cdc codec.JSONMarshaler, genFile string) (genesisSt
 // ValidateGenesis validates GenTx transactions
 func ValidateGenesis(genesisState GenesisState) error {
 	for i, genTx := range genesisState.GenTxs {
-		var tx authtypes.StdTx
+		var tx sdk.Tx
 		if err := ModuleCdc.UnmarshalJSON(genTx, &tx); err != nil {
 			return err
 		}
@@ -109,7 +108,7 @@ func ValidateGenesis(genesisState GenesisState) error {
 		msgs := tx.GetMsgs()
 		if len(msgs) != 1 {
 			return errors.New(
-				"must provide genesis StdTx with exactly 1 CreateValidator message")
+				"must provide genesis Tx with exactly 1 CreateValidator message")
 		}
 
 		// TODO: abstract back to staking

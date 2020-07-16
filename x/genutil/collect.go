@@ -103,27 +103,27 @@ func CollectTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
 			continue
 		}
 
-		// get the genStdTx
+		// get the genTx
 		var jsonRawTx []byte
 
 		if jsonRawTx, err = ioutil.ReadFile(filename); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 
-		var genStdTx sdk.Tx
-		if err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx); err != nil {
+		var genTx sdk.Tx
+		if err = cdc.UnmarshalJSON(jsonRawTx, &genTx); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 
-		appGenTxs = append(appGenTxs, genStdTx)
+		appGenTxs = append(appGenTxs, genTx)
 
 		// the memo flag is used to store
 		// the ip and node-id, for example this may be:
 		// "528fd3df22b31f4969b05652bfe8f0fe921321d5@192.168.2.37:26656"
 
-		memoTx, ok := genStdTx.(sdk.TxWithMemo)
+		memoTx, ok := genTx.(sdk.TxWithMemo)
 		if !ok {
-			return appGenTxs, persistentPeers, fmt.Errorf("expected TxWithMemo, got %T", genStdTx)
+			return appGenTxs, persistentPeers, fmt.Errorf("expected TxWithMemo, got %T", genTx)
 		}
 		nodeAddrIP := memoTx.GetMemo()
 		if len(nodeAddrIP) == 0 {
@@ -131,7 +131,7 @@ func CollectTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
 		}
 
 		// genesis transactions must be single-message
-		msgs := genStdTx.GetMsgs()
+		msgs := genTx.GetMsgs()
 		if len(msgs) != 1 {
 			return appGenTxs, persistentPeers, errors.New("each genesis transaction must provide a single genesis message")
 		}

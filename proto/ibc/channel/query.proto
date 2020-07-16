@@ -35,6 +35,7 @@ service Query {
 
   // TODO: blocked by client proto migration
   // rpc ChannelClientState(QueryChannelClientStateRequest) returns (QueryChannelClientStateRequest) {}
+  // rpc ChannelConsensusState(QueryChannelConsensusStateRequest) returns (QueryChannelConsensusStateRequest) {}  
 }
 
 // QueryChannelRequest is the request type for the Query/Channel RPC method
@@ -200,6 +201,14 @@ message QueryNextSequenceReceiveResponse {
 
 // QueryChannelClientStateRequest is the request type for the Query/ClientState RPC method
 message QueryChannelClientStateRequest {
+  // port unique identifier
+  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  // channel unique identifier
+  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+}
+
+// QueryChannelConsensusStateRequest is the request type for the Query/ConsensusState RPC method
+message QueryChannelConsensusStateRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   // channel unique identifier

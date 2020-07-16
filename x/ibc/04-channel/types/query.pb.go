@@ -1102,6 +1102,61 @@ func (m *QueryChannelClientStateRequest) GetChannelID() string {
 	return ""
 }
 
+// QueryChannelConsensusStateRequest is the request type for the Query/ConsensusState RPC method
+type QueryChannelConsensusStateRequest struct {
+	// port unique identifier
+	PortID string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	// channel unique identifier
+	ChannelID string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+}
+
+func (m *QueryChannelConsensusStateRequest) Reset()         { *m = QueryChannelConsensusStateRequest{} }
+func (m *QueryChannelConsensusStateRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryChannelConsensusStateRequest) ProtoMessage()    {}
+func (*QueryChannelConsensusStateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2150995751d4f15a, []int{15}
+}
+func (m *QueryChannelConsensusStateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryChannelConsensusStateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryChannelConsensusStateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryChannelConsensusStateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryChannelConsensusStateRequest.Merge(m, src)
+}
+func (m *QueryChannelConsensusStateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryChannelConsensusStateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryChannelConsensusStateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryChannelConsensusStateRequest proto.InternalMessageInfo
+
+func (m *QueryChannelConsensusStateRequest) GetPortID() string {
+	if m != nil {
+		return m.PortID
+	}
+	return ""
+}
+
+func (m *QueryChannelConsensusStateRequest) GetChannelID() string {
+	if m != nil {
+		return m.ChannelID
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*QueryChannelRequest)(nil), "ibc.channel.QueryChannelRequest")
 	proto.RegisterType((*QueryChannelResponse)(nil), "ibc.channel.QueryChannelResponse")
@@ -1120,6 +1175,7 @@ func init() {
 	proto.RegisterType((*QueryNextSequenceReceiveRequest)(nil), "ibc.channel.QueryNextSequenceReceiveRequest")
 	proto.RegisterType((*QueryNextSequenceReceiveResponse)(nil), "ibc.channel.QueryNextSequenceReceiveResponse")
 	proto.RegisterType((*QueryChannelClientStateRequest)(nil), "ibc.channel.QueryChannelClientStateRequest")
+	proto.RegisterType((*QueryChannelConsensusStateRequest)(nil), "ibc.channel.QueryChannelConsensusStateRequest")
 }
 
 func init() { proto.RegisterFile("ibc/channel/query.proto", fileDescriptor_2150995751d4f15a) }
@@ -2327,6 +2383,43 @@ func (m *QueryChannelClientStateRequest) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryChannelConsensusStateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryChannelConsensusStateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryChannelConsensusStateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ChannelID) > 0 {
+		i -= len(m.ChannelID)
+		copy(dAtA[i:], m.ChannelID)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ChannelID)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.PortID) > 0 {
+		i -= len(m.PortID)
+		copy(dAtA[i:], m.PortID)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.PortID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2671,6 +2764,23 @@ func (m *QueryNextSequenceReceiveResponse) Size() (n int) {
 }
 
 func (m *QueryChannelClientStateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.PortID)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ChannelID)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryChannelConsensusStateRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -5051,6 +5161,123 @@ func (m *QueryChannelClientStateRequest) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryChannelClientStateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PortID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChannelID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChannelID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryChannelConsensusStateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryChannelConsensusStateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryChannelConsensusStateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

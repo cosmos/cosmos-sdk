@@ -69,3 +69,11 @@ func NewQueryChannelClientStateRequest(portID, channelID string) *QueryChannelCl
 		ChannelID: channelID,
 	}
 }
+
+// NewQueryChannelConsensusStateRequest creates a new QueryChannelConsensusStateRequest instance.
+func NewQueryChannelConsensusStateRequest(portID, channelID string) *QueryChannelConsensusStateRequest {
+	return &QueryChannelConsensusStateRequest{
+		PortID:    portID,
+		ChannelID: channelID,
+	}
+}

@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
@@ -74,7 +75,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.store, suite.cdc, suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
+			suite.store, suite.cdc, suite.aminoCdc, nil, clientexported.NewHeight(0, height), "chainA", clientexported.NewHeight(0, 0), tc.prefix, tc.proof, nil,
 		)
 
 		if tc.expPass {
@@ -118,7 +119,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
+			suite.store, suite.cdc, clientexported.NewHeight(0, height), tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
 		)
 
 		if tc.expPass {
@@ -169,7 +170,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
+			suite.store, suite.cdc, clientexported.NewHeight(0, height), tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
 		)
 
 		if tc.expPass {
@@ -224,7 +225,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
+			suite.store, suite.cdc, clientexported.NewHeight(0, height), tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
 		)
 
 		if tc.expPass {
@@ -279,7 +280,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
+			suite.store, suite.cdc, clientexported.NewHeight(0, height), tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
 		)
 
 		if tc.expPass {
@@ -310,7 +311,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, clientexported.NewHeight(0, height), tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 
 		if tc.expPass {
@@ -360,7 +361,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, clientexported.NewHeight(0, height), tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 
 		if tc.expPass {

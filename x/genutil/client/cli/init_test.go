@@ -54,22 +54,11 @@ func TestInitCmd(t *testing.T) {
 			flags: func(dir string) []string {
 				return []string{
 					"appnode-test",
-					fmt.Sprintf("--%s=%s", flags.FlagHome, dir),
 				}
 			},
 			shouldErr: false,
 
 			err: nil,
-		},
-		{
-			name: "error: home required flag",
-			flags: func(dir string) []string {
-				return []string{
-					"appnode-test",
-				}
-			},
-			shouldErr: true,
-			err:       fmt.Errorf("required flag(s) \"home\" not set"),
 		},
 	}
 
@@ -90,7 +79,7 @@ func TestInitCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := InitCmd(testMbm)
+			cmd := InitCmd(testMbm, home)
 			cmd.SetArgs(
 				tt.flags(home),
 			)
@@ -129,7 +118,7 @@ func TestEmptyState(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := InitCmd(testMbm)
+	cmd := InitCmd(testMbm, home)
 	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -176,7 +165,7 @@ func TestStartStandAlone(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := InitCmd(testMbm)
+	cmd := InitCmd(testMbm, home)
 	cmd.SetArgs([]string{
 		"appnode-test",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, home),

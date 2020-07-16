@@ -58,7 +58,7 @@ func displayInfo(cdc codec.JSONMarshaler, info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(mbm module.BasicManager) *cobra.Command {
+func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -66,6 +66,8 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx.HomeDir, _ = cmd.Flags().GetString(flags.FlagHome)
+
 			cdc := clientCtx.JSONMarshaler
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
@@ -122,11 +124,9 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.HomeFlag, "", "node's home directory")
+	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-
-	cmd.MarkFlagRequired(cli.HomeFlag)
 
 	return cmd
 }

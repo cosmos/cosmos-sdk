@@ -49,7 +49,7 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "consensus state is not Tendermint")
 	}
 	if err := checkMisbehaviour(
-		tmClientState, tmConsensusState, tmEvidence, tmHeight, currentTimestamp, consensusParams,
+		tmClientState, tmConsensusState, tmEvidence, height, currentTimestamp, consensusParams,
 	); err != nil {
 		return nil, err
 	}
@@ -87,11 +87,11 @@ func checkMisbehaviour(
 		)
 	}
 
-	// check if provided height matches the headers' height
-	if cmp := height.Compare(evidence.GetIBCHeight()); cmp != 0 {
+	// check if height less than or equal to the headers' height
+	if cmp := height.Compare(evidence.GetIBCHeight()); cmp > 0 {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"height > evidence header height (%d > %d)", height, evidence.GetHeight(),
+			"height > evidence header height (%v > %v)", height, evidence.GetHeight(),
 		)
 	}
 

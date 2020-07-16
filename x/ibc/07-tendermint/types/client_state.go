@@ -120,7 +120,7 @@ func (cs ClientState) GetLatestTimestamp() time.Time {
 
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
-	return cs.FrozenHeight.IsZero()
+	return !cs.FrozenHeight.IsZero()
 }
 
 // Validate performs a basic validation of the client state fields.

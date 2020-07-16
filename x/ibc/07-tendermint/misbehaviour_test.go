@@ -48,7 +48,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		consensusState  clientexported.ConsensusState
 		evidence        clientexported.Misbehaviour
 		consensusParams *abci.ConsensusParams
-		height          uint64
+		height          clientexported.Height
 		timestamp       time.Time
 		expPass         bool
 	}{
@@ -70,7 +70,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		{
 			"valid misbehavior at height greater than last consensusState",
 			ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: clientexported.NewHeight(0, height.EpochHeight-1), Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
@@ -78,14 +78,14 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 				ClientID: chainID,
 			},
 			simapp.DefaultConsensusParams,
-			height - 1,
+			clientexported.NewHeight(0, height.EpochHeight-1),
 			suite.now,
 			true,
 		},
 		{
 			"consensus state's valset hash different from evidence should still pass",
 			ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: suite.valSet},
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: clientexported.NewHeight(0, height.EpochHeight-1), Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: suite.valSet},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
@@ -93,7 +93,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 				ClientID: chainID,
 			},
 			simapp.DefaultConsensusParams,
-			height - 1,
+			clientexported.NewHeight(0, height.EpochHeight-1),
 			suite.now,
 			true,
 		},
@@ -114,7 +114,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		},
 		{
 			"already frozen client state",
-			ibctmtypes.ClientState{FrozenHeight: 1},
+			ibctmtypes.ClientState{FrozenHeight: clientexported.NewHeight(0, 1)},
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
@@ -163,12 +163,12 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 				ClientID: chainID,
 			},
 			simapp.DefaultConsensusParams,
-			2*height + uint64(simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks),
+			clientexported.NewHeight(0, 2*height.EpochHeight+uint64(simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks)),
 			suite.now.Add(2 * time.Minute).Add(simapp.DefaultConsensusParams.Evidence.MaxAgeDuration),
 			false,
 		},
 		{
-			"provided height ≠ header height",
+			"provided height > header height",
 			ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
@@ -178,7 +178,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 				ClientID: chainID,
 			},
 			simapp.DefaultConsensusParams,
-			height + 10,
+			clientexported.NewHeight(0, height.EpochHeight+10),
 			suite.now,
 			false,
 		},

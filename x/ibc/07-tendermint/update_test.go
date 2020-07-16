@@ -7,6 +7,7 @@ import (
 	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -24,7 +25,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	altVal := tmtypes.NewValidator(altPubKey, height)
+	altVal := tmtypes.NewValidator(altPubKey, int64(height.EpochHeight))
 
 	// Create bothValSet with both suite validator and altVal. Would be valid update
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -55,7 +56,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "successful update with next height and same validator set",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+1), suite.headerTime, suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: true,
@@ -64,7 +65,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "successful update with future height and different validator set",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+5, suite.headerTime, bothValSet, bothSigners)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+5), suite.headerTime, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
 			expPass: true,
@@ -73,7 +74,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "unsuccessful update with next height: update header mismatches nextValSetHash",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, bothValSet, bothSigners)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+1), suite.headerTime, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -82,7 +83,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "unsuccessful update with future height: too much change in validator set",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+5, suite.headerTime, altValSet, altSigners)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+5), suite.headerTime, altValSet, altSigners)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -91,7 +92,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "unsuccessful update: trusting period has passed since last client timestamp",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+1), suite.headerTime, suite.valSet, signers)
 				// make current time pass trusting period from last timestamp on clientstate
 				currentTime = suite.now.Add(ubdPeriod)
 			},
@@ -101,7 +102,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "unsuccessful update: header timestamp is past current timestamp",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.now.Add(time.Minute), suite.valSet, signers)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+1), suite.now.Add(time.Minute), suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -110,7 +111,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "unsuccessful update: header timestamp is not past last client timestamp",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.clientTime, suite.valSet, signers)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+1), suite.clientTime, suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -119,9 +120,9 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "header basic validation failed",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+1), suite.headerTime, suite.valSet, signers)
 				// cause new header to fail validatebasic by changing commit height to mismatch header height
-				newHeader.SignedHeader.Commit.Height = height - 1
+				newHeader.SignedHeader.Commit.Height = int64(height.EpochHeight - 1)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -131,7 +132,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 				// Make new header at height less than latest client state
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height-1, suite.headerTime, suite.valSet, signers)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight-1), suite.headerTime, suite.valSet, signers)
 				currentTime = suite.now
 			},
 
@@ -145,7 +146,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		tc.setup()
 
 		expectedConsensus := ibctmtypes.ConsensusState{
-			Height:       uint64(newHeader.Height),
+			Height:       newHeader.Height,
 			Timestamp:    newHeader.Time,
 			Root:         commitmenttypes.NewMerkleRoot(newHeader.AppHash),
 			ValidatorSet: newHeader.ValidatorSet,

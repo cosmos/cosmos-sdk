@@ -3,7 +3,7 @@ package tx
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

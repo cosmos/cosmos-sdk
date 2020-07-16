@@ -230,7 +230,7 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	return nil
 }
 
-// GetClientState retreives the client state for the provided clientID. The client is
+// GetClientState retrieves the client state for the provided clientID. The client is
 // expected to exist otherwise testing will fail.
 func (chain *TestChain) GetClientState(clientID string) clientexported.ClientState {
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
@@ -239,7 +239,7 @@ func (chain *TestChain) GetClientState(clientID string) clientexported.ClientSta
 	return clientState
 }
 
-// GetConnection retreives an IBC Connection for the provided TestConnection. The
+// GetConnection retrieves an IBC Connection for the provided TestConnection. The
 // connection is expected to exist otherwise testing will fail.
 func (chain *TestChain) GetConnection(testConnection *TestConnection) connectiontypes.ConnectionEnd {
 	connection, found := chain.App.IBCKeeper.ConnectionKeeper.GetConnection(chain.GetContext(), testConnection.ID)
@@ -248,7 +248,7 @@ func (chain *TestChain) GetConnection(testConnection *TestConnection) connection
 	return connection
 }
 
-// GetChannel retreives an IBC Channel for the provided TestChannel. The channel
+// GetChannel retrieves an IBC Channel for the provided TestChannel. The channel
 // is expected to exist otherwise testing will fail.
 func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel {
 	channel, found := chain.App.IBCKeeper.ChannelKeeper.GetChannel(chain.GetContext(), testChannel.PortID, testChannel.ID)
@@ -257,7 +257,7 @@ func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel
 	return channel
 }
 
-// GetAcknowledgement retreives an acknowledgement for the provided packet. If the
+// GetAcknowledgement retrieves an acknowledgement for the provided packet. If the
 // acknowledgement does not exist then testing will fail.
 func (chain *TestChain) GetAcknowledgement(packet channelexported.PacketI) []byte {
 	ack, found := chain.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(chain.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())

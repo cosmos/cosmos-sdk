@@ -20,7 +20,7 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -59,7 +59,7 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -93,7 +93,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)

@@ -26,9 +26,9 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
-	priv1, pub1, addr1 := types.KeyTestPubAddr()
-	priv2, pub2, addr2 := types.KeyTestPubAddr()
-	priv3, pub3, addr3 := types.KeyTestPubAddr()
+	priv1, pub1, addr1 := testdata.KeyTestPubAddr()
+	priv2, pub2, addr2 := testdata.KeyTestPubAddr()
+	priv3, pub3, addr3 := testdata.KeyTestPubAddr()
 
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 	pubs := []crypto.PubKey{pub1, pub2, pub3}
@@ -123,9 +123,9 @@ func (suite *AnteTestSuite) TestSigVerification() {
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	priv2, _, addr2 := types.KeyTestPubAddr()
-	priv3, _, addr3 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
+	priv3, _, addr3 := testdata.KeyTestPubAddr()
 
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 
@@ -244,7 +244,7 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	priv, _, addr := types.KeyTestPubAddr()
+	priv, _, addr := testdata.KeyTestPubAddr()
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.Require().NoError(acc.SetAccountNumber(uint64(50)))
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)

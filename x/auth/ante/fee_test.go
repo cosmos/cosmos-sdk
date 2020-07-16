@@ -10,7 +10,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
@@ -21,7 +20,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -69,7 +68,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)

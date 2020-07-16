@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,7 +54,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	var accounts []TestAccount
 
 	for i := 0; i < numAccs; i++ {
-		priv, _, addr := types.KeyTestPubAddr()
+		priv, _, addr := testdata.KeyTestPubAddr()
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		err := acc.SetAccountNumber(uint64(i))
 		suite.Require().NoError(err)

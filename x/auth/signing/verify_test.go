@@ -19,8 +19,8 @@ import (
 )
 
 func TestVerifySignature(t *testing.T) {
-	priv, pubKey, addr := types.KeyTestPubAddr()
-	priv1, pubKey1, addr1 := types.KeyTestPubAddr()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	priv1, pubKey1, addr1 := testdata.KeyTestPubAddr()
 
 	const (
 		memo    = "testmemo"

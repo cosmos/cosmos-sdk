@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -63,8 +62,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMemo() {
 }
 
 func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
-	_, _, addr1 := authtypes.KeyTestPubAddr()
-	_, _, addr2 := authtypes.KeyTestPubAddr()
+	_, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
 	msg1 := testdata.NewTestMsg(addr1)
 	msg2 := testdata.NewTestMsg(addr2)
 	msgs := []sdk.Msg{msg1, msg2}
@@ -81,8 +80,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 }
 
 func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
-	privKey, pubkey, addr := authtypes.KeyTestPubAddr()
-	privKey2, pubkey2, _ := authtypes.KeyTestPubAddr()
+	privKey, pubkey, addr := testdata.KeyTestPubAddr()
+	privKey2, pubkey2, _ := testdata.KeyTestPubAddr()
 	multisigPk := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{pubkey, pubkey2})
 
 	txBuilder := s.TxConfig.NewTxBuilder()
@@ -228,7 +227,7 @@ func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
 }
 
 func (s *TxConfigTestSuite) TestTxEncodeDecode() {
-	_, pubkey, addr := authtypes.KeyTestPubAddr()
+	_, pubkey, addr := testdata.KeyTestPubAddr()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
 	gasLimit := uint64(50000)
 	memo := "foomemo"

@@ -95,8 +95,8 @@ func TestTxValidateBasic(t *testing.T) {
 	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
-	priv1, _, addr1 := KeyTestPubAddr()
-	priv2, _, addr2 := KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg1 := testdata.NewTestMsg(addr1, addr2)
@@ -173,7 +173,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 }
 
 func TestStdSignatureMarshalYAML(t *testing.T) {
-	_, pubKey, _ := KeyTestPubAddr()
+	_, pubKey, _ := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		sig    StdSignature
@@ -201,7 +201,7 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 }
 
 func TestSignatureV2Conversions(t *testing.T) {
-	_, pubKey, _ := KeyTestPubAddr()
+	_, pubKey, _ := testdata.KeyTestPubAddr()
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
@@ -221,7 +221,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 	require.Equal(t, dummy, sigBz)
 
 	// multisigs
-	_, pubKey2, _ := KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	multiPK := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{
 		pubKey, pubKey2,
 	})
@@ -256,7 +256,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 }
 
 func TestGetSignaturesV2(t *testing.T) {
-	_, pubKey, _ := KeyTestPubAddr()
+	_, pubKey, _ := testdata.KeyTestPubAddr()
 	dummy := []byte("dummySig")
 
 	cdc := codec.New()

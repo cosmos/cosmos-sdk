@@ -12,8 +12,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -21,7 +19,7 @@ import (
 )
 
 func TestTxBuilder(t *testing.T) {
-	_, pubkey, addr := authtypes.KeyTestPubAddr()
+	_, pubkey, addr := testdata.KeyTestPubAddr()
 
 	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
 	tx := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
@@ -116,8 +114,8 @@ func TestTxBuilder(t *testing.T) {
 
 func TestBuilderValidateBasic(t *testing.T) {
 	// keys and addresses
-	_, pubKey1, addr1 := authtypes.KeyTestPubAddr()
-	_, pubKey2, addr2 := authtypes.KeyTestPubAddr()
+	_, pubKey1, addr1 := testdata.KeyTestPubAddr()
+	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg1 := testdata.NewTestMsg(addr1, addr2)

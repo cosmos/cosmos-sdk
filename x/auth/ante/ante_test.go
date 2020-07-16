@@ -80,9 +80,9 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 	suite.SetupTest(true) // reset
 
 	// Same data for every test cases
-	priv0, _, addr0 := types.KeyTestPubAddr()
-	priv1, _, addr1 := types.KeyTestPubAddr()
-	priv2, _, addr2 := types.KeyTestPubAddr()
+	priv0, _, addr0 := testdata.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	msgs := []sdk.Msg{
 		testdata.NewTestMsg(addr0, addr1),
 		testdata.NewTestMsg(addr0, addr2),
@@ -438,7 +438,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 	suite.SetupTest(true) // setup
 
 	// Same data for every test cases
-	priv0, _, addr0 := types.KeyTestPubAddr()
+	priv0, _, addr0 := testdata.KeyTestPubAddr()
 
 	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)

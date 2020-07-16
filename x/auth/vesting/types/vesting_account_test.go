@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -23,7 +24,7 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	cva := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
@@ -49,7 +50,7 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	cva := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
@@ -71,7 +72,7 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -99,7 +100,7 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -138,7 +139,7 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -186,7 +187,7 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -204,7 +205,7 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -222,7 +223,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -259,7 +260,7 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -296,7 +297,7 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -349,7 +350,7 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
 	}
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
@@ -394,7 +395,7 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
 	}
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{
 		sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
@@ -434,7 +435,7 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
 	}
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{
 		sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
@@ -469,7 +470,7 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
 	}
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
@@ -527,7 +528,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
 	}
 
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 

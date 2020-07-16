@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *AnteTestSuite) TestSetup() {
@@ -19,7 +18,7 @@ func (suite *AnteTestSuite) TestSetup() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -53,7 +52,7 @@ func (suite *AnteTestSuite) TestRecoverPanic() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
-	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)

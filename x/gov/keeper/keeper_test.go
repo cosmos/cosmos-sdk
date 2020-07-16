@@ -87,6 +87,6 @@ func TestProposalQueues(t *testing.T) {
 	activeIterator.Close()
 }
 
-func TestGRPCTestSuite(t *testing.T) {
+func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

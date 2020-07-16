@@ -50,7 +50,8 @@ var (
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
 			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
-			WithBroadcastMode(flags.BroadcastBlock)
+			WithBroadcastMode(flags.BroadcastBlock).
+			WithHomeDir(simapp.DefaultNodeHome)
 )
 
 // Execute executes the root command.
@@ -73,7 +74,7 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
+		genutilcli.InitCmd(simapp.ModuleBasics),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}),
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),

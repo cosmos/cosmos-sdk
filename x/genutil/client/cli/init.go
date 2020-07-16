@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -58,7 +57,7 @@ func displayInfo(cdc codec.JSONMarshaler, info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
+func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -66,7 +65,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx.HomeDir, _ = cmd.Flags().GetString(flags.FlagHome)
+			//clientCtx.HomeDir, _ = cmd.Flags().GetString(flags.FlagHome)
+			fmt.Printf("THE HOME DIIIIRRRRR %s\n", clientCtx.HomeDir)
 
 			cdc := clientCtx.JSONMarshaler
 
@@ -124,7 +124,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 

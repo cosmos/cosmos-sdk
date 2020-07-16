@@ -6,6 +6,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 
 	"google.golang.org/grpc"
@@ -17,6 +21,7 @@ import (
 )
 
 func TestCliQueryConn(t *testing.T) {
+	// TODO use in process tests for this
 	t.Parallel()
 	f := cli.NewFixtures(t)
 
@@ -31,18 +36,33 @@ func TestCliQueryConn(t *testing.T) {
 	require.Equal(t, "hello", res.Message)
 }
 
-func TestGRPCProxy(t *testing.T) {
-	t.Parallel()
-	f := cli.NewFixtures(t)
+type IntegrationTestSuite struct {
+	suite.Suite
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	cfg     network.Config
+	network *network.Network
+}
 
-	conn, err := grpc.Dial("tcp://0.0.0.0:9090")
-	require.NoError(t, err)
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
+
+	s.network = network.New(s.T(), network.DefaultConfig())
+	s.Require().NotNil(s.network)
+
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) TestGRPC() {
+	val := s.network.Validators[0]
+	conn, err := grpc.Dial(val.AppConfig.GRPC.Address)
+	require.NoError(s.T(), err)
 	testClient := testdata.NewTestServiceClient(conn)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-	require.NoError(t, err)
-	require.Equal(t, "hello", res.Message)
+	require.NoError(s.T(), err)
+	require.Equal(s.T(), "hello", res.Message)
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, &IntegrationTestSuite{})
 }

@@ -54,6 +54,10 @@ func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 		}
 
 		clientCtx := client.GetClientContextFromCmd(cmd)
+		clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 
 		if hash := args[0]; hash != "" {
 			return queryEvidence(clientCtx, hash)

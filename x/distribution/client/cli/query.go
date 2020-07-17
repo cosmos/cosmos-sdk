@@ -191,9 +191,16 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 				return fmt.Errorf("end-height %s not a valid uint, please input a valid end-height", args[2])
 			}
 
+			pageReq := client.ReadPageRequest(cmd.Flags())
+
 			res, err := queryClient.ValidatorSlashes(
 				context.Background(),
-				&types.QueryValidatorSlashesRequest{ValidatorAddress: validatorAddr, StartingHeight: startHeight, EndingHeight: endHeight},
+				&types.QueryValidatorSlashesRequest{
+					ValidatorAddress: validatorAddr,
+					StartingHeight:   startHeight,
+					EndingHeight:     endHeight,
+					Req:              pageReq,
+				},
 			)
 			if err != nil {
 				return err
@@ -204,6 +211,7 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "validator slashes")
 	return cmd
 }
 

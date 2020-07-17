@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -137,13 +136,15 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
+			pageReq := client.ReadPageRequest(cmd.Flags())
+
 			res, err := queryClient.Proposals(
 				context.Background(),
 				&types.QueryProposalsRequest{
 					ProposalStatus: proposalStatus,
 					Voter:          voterAddr,
 					Depositor:      depositorAddr,
-					Req:            &query.PageRequest{},
+					Req:            pageReq,
 				},
 			)
 			if err != nil {
@@ -161,6 +162,7 @@ $ %s query gov proposals --page=2 --limit=100
 	cmd.Flags().String(flagDepositor, "", "(optional) filter by proposals deposited on by depositor")
 	cmd.Flags().String(flagVoter, "", "(optional) filter by proposals voted on by voted")
 	cmd.Flags().String(flagStatus, "", "(optional) filter proposals by proposal status, status: deposit_period/voting_period/passed/rejected")
+	flags.AddPaginationFlagsToCmd(cmd, "proposals")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -297,9 +299,11 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 			}
 
+			pageReq := client.ReadPageRequest(cmd.Flags())
+
 			res, err := queryClient.Votes(
 				context.Background(),
-				&types.QueryVotesRequest{ProposalId: proposalID, Req: &query.PageRequest{}},
+				&types.QueryVotesRequest{ProposalId: proposalID, Req: pageReq},
 			)
 			if err != nil {
 				return err
@@ -310,6 +314,10 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 		},
 	}
 
+	// Deprecated, remove line when removing FlagPage altogether.
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of proposals to to query for")
+
+	flags.AddPaginationFlagsToCmd(cmd, "votes")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -438,9 +446,11 @@ $ %s query gov deposits 1
 				return clientCtx.PrintOutput(dep)
 			}
 
+			pageReq := client.ReadPageRequest(cmd.Flags())
+
 			res, err := queryClient.Deposits(
 				context.Background(),
-				&types.QueryDepositsRequest{ProposalId: proposalID, Req: &query.PageRequest{}},
+				&types.QueryDepositsRequest{ProposalId: proposalID, Req: pageReq},
 			)
 			if err != nil {
 				return err
@@ -450,6 +460,7 @@ $ %s query gov deposits 1
 		},
 	}
 
+	flags.AddPaginationFlagsToCmd(cmd, "deposits")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -533,28 +544,38 @@ $ %s query gov params
 			if err != nil {
 				return err
 			}
+			queryClient := types.NewQueryClient(clientCtx)
 
-			tp, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/params/tallying", types.QuerierRoute), nil)
-			if err != nil {
-				return err
-			}
-			dp, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/params/deposit", types.QuerierRoute), nil)
-			if err != nil {
-				return err
-			}
-			vp, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/params/voting", types.QuerierRoute), nil)
+			// Query store for all 3 params
+			votingRes, err := queryClient.Params(
+				context.Background(),
+				&types.QueryParamsRequest{ParamsType: "voting"},
+			)
 			if err != nil {
 				return err
 			}
 
-			var tallyParams types.TallyParams
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(tp, &tallyParams)
-			var depositParams types.DepositParams
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(dp, &depositParams)
-			var votingParams types.VotingParams
-			clientCtx.JSONMarshaler.MustUnmarshalJSON(vp, &votingParams)
+			tallyRes, err := queryClient.Params(
+				context.Background(),
+				&types.QueryParamsRequest{ParamsType: "tallying"},
+			)
+			if err != nil {
+				return err
+			}
 
-			return clientCtx.PrintOutput(types.NewParams(votingParams, tallyParams, depositParams))
+			depositRes, err := queryClient.Params(
+				context.Background(),
+				&types.QueryParamsRequest{ParamsType: "deposit"},
+			)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(types.NewParams(
+				votingRes.GetVotingParams(),
+				tallyRes.GetTallyParams(),
+				depositRes.GetDepositParams(),
+			))
 		},
 	}
 

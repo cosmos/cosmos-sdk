@@ -41,8 +41,8 @@ func GetCurrentPlanCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := types.NewQueryCurrentPlanRequest()
-			res, err := queryClient.CurrentPlan(context.Background(), params)
+			params := types.QueryCurrentPlanRequest{}
+			res, err := queryClient.CurrentPlan(context.Background(), &params)
 			if err != nil {
 				return err
 			}
@@ -77,9 +77,8 @@ func GetAppliedPlanCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			name := args[0]
-			params := types.NewQueryAppliedPlanRequest(name)
-			res, err := queryClient.AppliedPlan(context.Background(), params)
+			params := types.QueryAppliedPlanRequest{Name: args[0]}
+			res, err := queryClient.AppliedPlan(context.Background(), &params)
 			if err != nil {
 				return err
 			}

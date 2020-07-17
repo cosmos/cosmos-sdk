@@ -63,20 +63,26 @@ func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { ret
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper types.AccountKeeper
-	stakingKeeper types.StakingKeeper
-	deliverTx     deliverTxfn
+	accountKeeper   types.AccountKeeper
+	stakingKeeper   types.StakingKeeper
+	deliverTx       deliverTxfn
+	txJSONDecoder   sdk.TxDecoder
+	txBinaryEncoder sdk.TxEncoder
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper types.AccountKeeper,
-	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
+	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	txJSONDecoder sdk.TxDecoder, txBinaryEncoder sdk.TxEncoder,
+) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
-		deliverTx:      deliverTx,
+		AppModuleBasic:  AppModuleBasic{},
+		accountKeeper:   accountKeeper,
+		stakingKeeper:   stakingKeeper,
+		deliverTx:       deliverTx,
+		txJSONDecoder:   txJSONDecoder,
+		txBinaryEncoder: txBinaryEncoder,
 	})
 }
 
@@ -85,7 +91,7 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, types.ModuleCdc, am.stakingKeeper, am.deliverTx, genesisState)
+	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txJSONDecoder, am.txBinaryEncoder)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil

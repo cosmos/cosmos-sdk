@@ -93,15 +93,21 @@ type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 // invokes the provided deliverTxfn with the decoded Tx. It returns the result
 // of the staking module's ApplyAndReturnValidatorSetUpdates.
 func DeliverGenTxs(
-	ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
+	ctx sdk.Context, genTxs []json.RawMessage,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	txJSONDecoder sdk.TxDecoder, txBinaryEncoder sdk.TxEncoder,
 ) []abci.ValidatorUpdate {
 
 	for _, genTx := range genTxs {
-		var tx sdk.Tx
-		cdc.MustUnmarshalJSON(genTx, &tx)
+		tx, err := txJSONDecoder(genTx)
+		if err != nil {
+			panic(err)
+		}
 
-		bz := cdc.MustMarshalBinaryBare(tx)
+		bz, err := txBinaryEncoder(tx)
+		if err != nil {
+			panic(err)
+		}
 
 		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
 		if !res.IsOK() {

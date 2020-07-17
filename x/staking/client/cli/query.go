@@ -416,8 +416,6 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of validator delegations to query for")
 	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in validator delegations to query for")
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of delegations to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of delegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

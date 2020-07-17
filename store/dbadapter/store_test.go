@@ -70,5 +70,4 @@ func TestAccessors(t *testing.T) {
 
 	mockDB.EXPECT().ReverseIterator(gomock.Eq(start), gomock.Eq(end)).Times(1).Return(nil, errFoo)
 	require.Panics(t, func() { store.ReverseIterator(start, end) })
-
 }

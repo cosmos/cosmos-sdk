@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -11,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {
@@ -268,9 +269,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {

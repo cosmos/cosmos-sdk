@@ -19,7 +19,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
-	pvm "github.com/tendermint/tendermint/privval"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -215,16 +214,6 @@ func TrapSignal(cleanupFunc func()) {
 		}
 		os.Exit(exitCode)
 	}()
-}
-
-// UpgradeOldPrivValFile converts old priv_validator.json file (prior to Tendermint 0.28)
-// to the new priv_validator_key.json and priv_validator_state.json files.
-func UpgradeOldPrivValFile(config *cfg.Config) {
-	if _, err := os.Stat(config.OldPrivValidatorFile()); !os.IsNotExist(err) {
-		if oldFilePV, err := pvm.LoadOldFilePV(config.OldPrivValidatorFile()); err == nil {
-			oldFilePV.Upgrade(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile())
-		}
-	}
 }
 
 func skipInterface(iface net.Interface) bool {

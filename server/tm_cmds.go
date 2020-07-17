@@ -42,12 +42,13 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's tendermint validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			cfg := ctx.Config
-			UpgradeOldPrivValFile(cfg)
-			privValidator := pvm.LoadOrGenFilePV(
-				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-			valPubKey := privValidator.GetPubKey()
+			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+
+			valPubKey, err := privValidator.GetPubKey()
+			if err != nil {
+				return err
+			}
 
 			if viper.GetString(cli.OutputFlag) == "json" {
 				return printlnJSON(valPubKey)
@@ -73,11 +74,8 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's tendermint validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			cfg := ctx.Config
-			UpgradeOldPrivValFile(cfg)
-			privValidator := pvm.LoadOrGenFilePV(
-				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 
 			if viper.GetString(cli.OutputFlag) == "json" {

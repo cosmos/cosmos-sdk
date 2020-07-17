@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteproxy "github.com/tendermint/tendermint/lite/proxy"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
 const (
@@ -43,7 +43,7 @@ func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
 	// create an RPC client based off of the RPC URI if no RPC client exists
 	client := ctx.Client
 	if client == nil {
-		client, err = rpcclient.NewHTTP(ctx.NodeURI, "/websocket")
+		client, err = rpchttp.New(ctx.NodeURI, "/websocket")
 		if err != nil {
 			return nil, err
 		}

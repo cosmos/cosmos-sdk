@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
-	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
+	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -52,12 +52,12 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	cfg := rpcserver.DefaultConfig()
+	cfg := tmrpcserver.DefaultConfig()
 	cfg.MaxOpenConnections = maxOpen
 	cfg.ReadTimeout = time.Duration(readTimeout) * time.Second
 	cfg.WriteTimeout = time.Duration(writeTimeout) * time.Second
 
-	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
+	rs.listener, err = tmrpcserver.Listen(listenAddr, cfg)
 	if err != nil {
 		return
 	}
@@ -68,7 +68,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 		),
 	)
 
-	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
+	return tmrpcserver.Serve(rs.listener, rs.Mux, rs.log, cfg)
 }
 
 // ServeCommand will start the application REST service as a blocking process. It

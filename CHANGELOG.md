@@ -35,7 +35,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.38.5] - 2020-07-02
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.33.6](https://github.com/tendermint/tendermint/releases/tag/v0.33.6).
 
 ## [v0.38.4] - 2020-05-21
 

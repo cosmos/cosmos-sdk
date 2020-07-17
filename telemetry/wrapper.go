@@ -20,10 +20,10 @@ func NewLabel(name, value string) metrics.Label {
 // ModuleMeasureSince provides a short hand method for emitting a time measure
 // metric for a module with a given set of keys. If any global labels are defined,
 // they will be added to the module label.
-func ModuleMeasureSince(module string, keys ...string) {
+func ModuleMeasureSince(now time.Time, module string, keys ...string) {
 	metrics.MeasureSinceWithLabels(
 		keys,
-		time.Now().UTC(),
+		now.UTC(),
 		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, globalLabels...),
 	)
 }
@@ -65,6 +65,6 @@ func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
 
 // MeasureSince provides a wrapper functionality for emitting a a time measure
 // metric with global labels (if any).
-func MeasureSince(keys ...string) {
-	metrics.MeasureSinceWithLabels(keys, time.Now().UTC(), globalLabels)
+func MeasureSince(now time.Time, keys ...string) {
+	metrics.MeasureSinceWithLabels(keys, now.UTC(), globalLabels)
 }

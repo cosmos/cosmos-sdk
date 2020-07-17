@@ -2,6 +2,7 @@ package evidence
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,7 @@ import (
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by Tendermint. Currently, only equivocation is handled.
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.MetricKeyBeginBlocker)
+	defer telemetry.ModuleMeasureSince(time.Now(), types.ModuleName, telemetry.MetricKeyBeginBlocker)
 
 	for _, tmEvidence := range req.ByzantineValidators {
 		switch tmEvidence.Type {

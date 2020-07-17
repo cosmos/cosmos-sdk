@@ -259,8 +259,11 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (r TxResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var tx Tx
-	return unpacker.UnpackAny(r.Tx, &tx)
+	if r.Tx != nil {
+		var tx Tx
+		return unpacker.UnpackAny(r.Tx, &tx)
+	}
+	return nil
 }
 
 // GetTx unpacks the Tx from within a TxResponse and returns it

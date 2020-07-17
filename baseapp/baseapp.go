@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strings"
 
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
-	"google.golang.org/grpc"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -173,8 +173,8 @@ func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
 	}
 }
 
-// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
-// multistore.
+// MountKVStores mounts all IAVL or DB stores to the provided keys in the
+// BaseApp multistore.
 func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
 	for _, key := range keys {
 		if !app.fauxMerkleMode {
@@ -187,8 +187,8 @@ func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
 	}
 }
 
-// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
-// multistore.
+// MountTransientStores mounts all IAVL or DB stores to the provided keys in
+// the BaseApp multistore.
 func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeTransient)
@@ -301,12 +301,12 @@ func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
-// RegisterGRPC registers gRPC services directly with the gRPC server
-func (app *BaseApp) RegisterGRPC(grpc.Server) {}
+// RegisterGRPC registers gRPC services directly with the gRPC server.
+func (app *BaseApp) RegisterGRPC(gogogrpc.Server) {}
 
 // RegisterGRPCProxy registers gRPC services against a proxy that is expected
-// to proxy requests to the ABCI query endpoint
-func (app *BaseApp) RegisterGRPCProxy(server grpc.Server) {
+// to proxy requests to the ABCI query endpoint.
+func (app *BaseApp) RegisterGRPCProxy(server gogogrpc.Server) {
 	app.grpcQueryRouter.RegisterProxyServer(server)
 }
 

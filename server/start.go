@@ -9,9 +9,8 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"google.golang.org/grpc/reflection"
-
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
@@ -245,8 +244,19 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 	var grpcSrv *grpc.Server
 	if config.GRPC.Enable {
-		grpcSrv = grpc.NewServer()
+		genDoc, err := genDocProvider()
+		if err != nil {
+			return err
+		}
 
+		clientCtx := client.Context{}.
+			WithHomeDir(home).
+			WithChainID(genDoc.ChainID).
+			WithJSONMarshaler(cdc).
+			WithClient(local.New(tmNode)).
+			WithTrustNode(true)
+
+		grpcSrv = grpc.NewServer()
 		app.RegisterGRPC(grpcSrv)
 
 		// proxy queries to the ABCI query endpoint

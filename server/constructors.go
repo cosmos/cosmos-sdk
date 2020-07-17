@@ -37,11 +37,11 @@ type (
 
 		RegisterAPIRoutes(*api.Server)
 
-		// RegisterGRPC registers gRPC services directly with the gRPC server
+		// RegisterGRPC registers gRPC services directly with the gRPC server.
 		RegisterGRPC(grpc.Server)
 
 		// RegisterGRPCProxy registers gRPC services against a proxy that is expected
-		// to proxy requests to the ABCI query endpoint
+		// to proxy requests to the ABCI query endpoint.
 		RegisterGRPCProxy(grpc.Server)
 	}
 

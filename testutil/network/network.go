@@ -75,7 +75,6 @@ type Config struct {
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableLogging    bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
-	GRPCEndpoint     string
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -205,9 +204,9 @@ func New(t *testing.T, cfg Config) *Network {
 			require.NoError(t, err)
 			tmCfg.RPC.ListenAddress = rpcAddr
 
-			grpcAddr, _, err := server.FreeTCPAddr()
+			_, grpcPort, err := server.FreeTCPAddr()
 			require.NoError(t, err)
-			appCfg.GRPC.Address = grpcAddr
+			appCfg.GRPC.Address = fmt.Sprintf(":%s", grpcPort)
 			appCfg.GRPC.Enable = true
 		}
 

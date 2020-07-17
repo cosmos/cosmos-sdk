@@ -75,6 +75,7 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+// GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {
 	// Enable defines if the gRPC server should be enabled.
 	Enable bool `mapstructure:"enable"`

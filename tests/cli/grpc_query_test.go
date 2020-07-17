@@ -1,5 +1,3 @@
-// +build cli_test
-
 package cli_test
 
 import (
@@ -55,14 +53,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 func (s *IntegrationTestSuite) TestGRPC() {
 	val := s.network.Validators[0]
-	conn, err := grpc.Dial(val.AppConfig.GRPC.Address)
-	require.NoError(s.T(), err)
+	conn, err := grpc.Dial(
+		val.AppConfig.GRPC.Address,
+		grpc.WithInsecure(), // Or else we get "no transport security set"
+	)
+	s.Require().NoError(err)
 	testClient := testdata.NewTestServiceClient(conn)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-	require.NoError(s.T(), err)
-	require.Equal(s.T(), "hello", res.Message)
+	s.Require().NoError(err)
+	s.Require().Equal("a", "b")
+	s.Require().Equal("hello", res.Message)
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
+func TestCLIIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, &IntegrationTestSuite{})
 }

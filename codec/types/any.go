@@ -83,6 +83,21 @@ func (any *Any) Pack(x proto.Message) error {
 	return nil
 }
 
+// UnsafePackAny packs the value x in the Any and instead of returning the error
+// in the case of a packing failure, keeps the cached value. This should only
+// be used in situations where compatibility is needed with amino. Amino-only
+// values can safely be packed using this method when they will only be
+// marshaled with amino and not protobuf
+func UnsafePackAny(x interface{}) *Any {
+	if msg, ok := x.(proto.Message); ok {
+		any, err := NewAnyWithValue(msg)
+		if err != nil {
+			return any
+		}
+	}
+	return &Any{cachedValue: x}
+}
+
 // GetCachedValue returns the cached value from the Any if present
 func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue

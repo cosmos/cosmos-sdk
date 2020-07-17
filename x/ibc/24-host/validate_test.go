@@ -111,31 +111,3 @@ func TestCustomPathValidator(t *testing.T) {
 		}
 	}
 }
-
-func TestConnectionVersionValidator(t *testing.T) {
-	testCases := []testCase{
-		{"valid connection version", "(my-test-version 1.0,[feature0, feature1])", true},
-		{"valid random character version, no commas", "(a!@!#$%^&34,[)(*&^),....,feature_2])", true},
-		{"valid: empty features", "(identifier,[])", true},
-		{"invalid: empty features with spacing", "(identifier, [     ])", false},
-		{"missing identifier", "(   , [feature_0])", false},
-		{"no features bracket", "(identifier, feature_0, feature_1)", false},
-		{"no tuple parentheses", "identifier, [feature$%#]", false},
-		{"string with only spaces", "       ", false},
-		{"empty string", "", false},
-		{"no comma", "(idenitifer [features])", false},
-		{"invalid comma usage in features", "(identifier, [feature_0,,feature_1])", false},
-		{"empty features with comma", "(identifier, [  ,  ])", false},
-	}
-
-	for _, tc := range testCases {
-
-		err := ConnectionVersionValidator(tc.id)
-
-		if tc.expPass {
-			require.NoError(t, err, tc.msg)
-		} else {
-			require.Error(t, err, tc.msg)
-		}
-	}
-}

@@ -4,18 +4,21 @@ order: 6
 
 # Events
 
-The IBC module emits the following events:
+The IBC module emits the following events. It can be expected that the type `message`,
+with an attirbute key of `action` will represent the first event for each message
+being processed with an exception to events emitted in the ante handler (see `UpdateClient`).
 
 ## ICS 02 - Client
 
 ### MsgCreateClient
 
-| Type          | Attribute Key | Attribute Value |
-|---------------|---------------|-----------------|
-| create_client | client_id     | {clientID}      |
-| message       | module        | ibc_client      |
-| message       | action        | create_client   |
-| message       | sender        | {signer}        |
+| Type          | Attribute Key    | Attribute Value   |
+|---------------|------------------|-------------------|
+| message       | action           | create_client     |
+| create_client | client_id        | {clientID}        |
+| create_client | client_type      | {clientType}      |
+| create_client | consensus_height | {consensusHeight} |
+| message       | module           | ibc_client        |
 
 ### MsgUpdateClient
 

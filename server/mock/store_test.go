@@ -30,4 +30,6 @@ func TestStore(t *testing.T) {
 	require.Equal(t, v, store.Get(k))
 	store.Delete(k)
 	require.False(t, store.Has(k))
+	require.Panics(t, func() { store.Set([]byte(""), v) }, "setting an empty key should panic")
+	require.Panics(t, func() { store.Set(nil, v) }, "setting an nil key should panic")
 }

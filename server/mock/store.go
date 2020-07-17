@@ -5,6 +5,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -131,6 +132,7 @@ func (kv kvStore) Has(key []byte) bool {
 }
 
 func (kv kvStore) Set(key, value []byte) {
+	types.AssertValidKey(key)
 	kv.store[string(key)] = value
 }
 

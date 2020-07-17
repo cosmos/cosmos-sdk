@@ -77,7 +77,7 @@ The following instructions assume that **pruning settings have not been modified
 #### Chain Hard Fork (also know as The Tested Upgrade Path)
 
 This strategy entails performing a hard fork of your chain.
-It takes time, coordination and a few technical steps that the validators of the network must follow.
+It takes time, coordination and a few technical steps that the validators of the network must follow. Note: a software upgrade guide for `gaia`, the application that powers the Cosmos Hub, is [available too](https://hub.cosmos.network/master/gaia-tutorials/upgrade-node.html). It contains detailed instructions on how to upgrade network nodes that apply to the vast majority of Cosmos SDK applications.
 
 In preparation of the upgrade, you need to export the current state. This operation should be be performed on one node:
 

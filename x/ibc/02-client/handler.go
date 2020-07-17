@@ -69,18 +69,6 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 	}, nil
 }
 
-// HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
-func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgUpdateClient) (*sdk.Result, error) {
-	_, err := k.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
-	if err != nil {
-		return nil, err
-	}
-
-	return &sdk.Result{
-		Events: ctx.EventManager().Events().ToABCIEvents(),
-	}, nil
-}
-
 // HandlerClientMisbehaviour defines the Evidence module handler for submitting a
 // light client misbehaviour.
 func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {

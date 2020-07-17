@@ -55,7 +55,8 @@ This message is expected to fail if:
 - the client is frozen due to misbehaviour and cannot be updated
 
 The message validates the header and updates the consensus state with the new
-height, commitment root and validator sets, which are then stored.
+height, commitment root and validator sets, which are then stored. State 
+changes occur in the ante handler, nothing is executed in the handler.
 
 ## ICS 03 - Connection
 

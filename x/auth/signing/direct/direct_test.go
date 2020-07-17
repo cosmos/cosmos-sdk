@@ -1,6 +1,7 @@
 package direct_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -136,4 +137,39 @@ func TestDirectModeHandler(t *testing.T) {
 	expectedSignBytes, err = signDoc.Marshal()
 	require.NoError(t, err)
 	require.NotEqual(t, expectedSignBytes, signBytes)
+}
+
+func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
+	invalidModes := []signingtypes.SignMode{
+		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
+		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		signingtypes.SignMode_SIGN_MODE_UNSPECIFIED,
+	}
+	for _, invalidMode := range invalidModes {
+		t.Run(invalidMode.String(), func(t *testing.T) {
+			var dh direct.ModeHandler
+			var signingData signing.SignerData
+			_, err := dh.GetSignBytes(invalidMode, signingData, nil)
+			require.Error(t, err)
+			wantErr := fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, invalidMode)
+			require.Equal(t, err, wantErr)
+		})
+	}
+}
+
+type nonProtoTx int
+
+func (npt *nonProtoTx) GetMsgs() []sdk.Msg   { return nil }
+func (npt *nonProtoTx) ValidateBasic() error { return nil }
+
+var _ sdk.Tx = (*nonProtoTx)(nil)
+
+func TestDirectModeHandler_nonProtoTx(t *testing.T) {
+	var dh direct.ModeHandler
+	var signingData signing.SignerData
+	tx := new(nonProtoTx)
+	_, err := dh.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	require.Error(t, err)
+	wantErr := fmt.Errorf("can only get direct sign bytes for a ProtoTx, got %T", tx)
+	require.Equal(t, err, wantErr)
 }

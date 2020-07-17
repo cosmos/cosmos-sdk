@@ -22,7 +22,7 @@ import (
 )
 
 // GetSignCommand returns the sign command
-func GetMultiSignCommand(clientCtx client.Context) *cobra.Command {
+func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
@@ -45,20 +45,21 @@ recommended to set such parameters manually.
 				version.AppName,
 			),
 		),
-		RunE: makeMultiSignCmd(clientCtx),
+		RunE: makeMultiSignCmd(),
 		Args: cobra.MinimumNArgs(3),
 	}
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 
 	return cmd
 }
 
-func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
+func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		clientCtx = clientCtx.Init()
+		clientCtx := client.GetClientContextFromCmd(cmd)
 		cdc := clientCtx.Codec
 		tx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		stdTx := tx.(types.StdTx)
@@ -67,10 +68,9 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 		}
 
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, inBuf)
+		kb, err := keyring.New(sdk.KeyringServiceName(), backend, clientCtx.HomeDir, inBuf)
 		if err != nil {
 			return
 		}
@@ -85,13 +85,13 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), homeDir)
+		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
 		if err != nil {
 			return errors.Wrap(err, "error creating tx builder from flags")
 		}
 
 		if !clientCtx.Offline {
-			accnum, seq, err := types.NewAccountRetriever(authclient.Codec).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := types.NewAccountRetriever(clientCtx.JSONMarshaler).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}
@@ -148,7 +148,7 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 		if outputDoc == "" {
-			fmt.Printf("%s\n", json)
+			cmd.Printf("%s\n", json)
 			return
 		}
 

@@ -57,7 +57,7 @@ func queryBonds(clientCtx client.Context, endpoint string) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQueryBondsParams(delegatorAddr, validatorAddr)
+		params := types.QueryDelegatorValidatorRequest{DelegatorAddr: delegatorAddr, ValidatorAddr: validatorAddr}
 
 		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {

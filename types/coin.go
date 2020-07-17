@@ -816,14 +816,17 @@ var (
 	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
-// ValidateDenom validates a denomination string returning an error if it is
-// invalid.
-func ValidateDenom(denom string) error {
+// DefaultValidateDenom is the default validation function for Coin.Denom.
+func DefaultValidateDenom(denom string) error {
 	if !reDnm.MatchString(denom) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil
 }
+
+// ValidateDenom validates a denomination string returning an error if it is
+// invalid.
+var ValidateDenom = DefaultValidateDenom
 
 func mustValidateDenom(denom string) {
 	if err := ValidateDenom(denom); err != nil {

@@ -17,6 +17,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -312,11 +313,12 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.C
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, cdc *codec.Codec, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
+	t *testing.T, txGen client.TxGenerator, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 
-	tx := helpers.GenTx(
+	tx, err := helpers.GenTx(
+		txGen,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 		helpers.DefaultGenTxGas,
@@ -325,8 +327,8 @@ func SignCheckDeliver(
 		seq,
 		priv...,
 	)
-
-	txBytes, err := cdc.MarshalBinaryBare(tx)
+	require.NoError(t, err)
+	txBytes, err := txGen.TxEncoder()(tx)
 	require.Nil(t, err)
 
 	// Must simulate now as CheckTx doesn't run Msgs anymore
@@ -361,10 +363,12 @@ func SignCheckDeliver(
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []authtypes.StdTx {
-	txs := make([]authtypes.StdTx, numToGenerate)
+func GenSequenceOfTxs(txGen client.TxGenerator, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) ([]sdk.Tx, error) {
+	txs := make([]sdk.Tx, numToGenerate)
+	var err error
 	for i := 0; i < numToGenerate; i++ {
-		txs[i] = helpers.GenTx(
+		txs[i], err = helpers.GenTx(
+			txGen,
 			msgs,
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 			helpers.DefaultGenTxGas,
@@ -373,10 +377,13 @@ func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, nu
 			initSeqNums,
 			priv...,
 		)
+		if err != nil {
+			break
+		}
 		incrementAllSequenceNumbers(initSeqNums)
 	}
 
-	return txs
+	return txs, err
 }
 
 func incrementAllSequenceNumbers(initSeqNums []uint64) {

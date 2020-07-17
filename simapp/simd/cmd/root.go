@@ -50,7 +50,8 @@ var (
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
 			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
-			WithBroadcastMode(flags.BroadcastBlock)
+			WithBroadcastMode(flags.BroadcastBlock).
+			WithHomeDir(simapp.DefaultNodeHome)
 )
 
 // Execute executes the root command.
@@ -74,9 +75,9 @@ func init() {
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
 		AddGenesisAccountCmd(),
 		cli.NewCompletionCmd(rootCmd, true),
@@ -129,14 +130,14 @@ func txCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetSignCommand(initClientCtx),
-		authcmd.GetSignBatchCommand(encodingConfig.Amino),
-		authcmd.GetMultiSignCommand(initClientCtx),
-		authcmd.GetValidateSignaturesCommand(initClientCtx),
+		authcmd.GetSignCommand(),
+		authcmd.GetSignBatchCommand(),
+		authcmd.GetMultiSignCommand(),
+		authcmd.GetValidateSignaturesCommand(),
 		flags.LineBreak,
-		authcmd.GetBroadcastCommand(initClientCtx),
-		authcmd.GetEncodeCommand(initClientCtx),
-		authcmd.GetDecodeCommand(initClientCtx),
+		authcmd.GetBroadcastCommand(),
+		authcmd.GetEncodeCommand(),
+		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
 	)
 

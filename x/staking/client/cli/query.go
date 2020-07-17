@@ -183,11 +183,8 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 		},
 	}
 
-	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of unbonding delegations to query for")
-	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of unbonding delegations to query for")
-	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
-	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in unbonding delegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "unbonding delegations")
 
 	return cmd
 }
@@ -241,12 +238,8 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		},
 	}
 
-	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of validator redelegations to query for")
-	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of validator redelegations to query for")
-	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of validator redelegations to query for")
-	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in validator redelegations to query for")
-
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "validator redelegations")
 
 	return cmd
 }
@@ -353,11 +346,8 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 		},
 	}
 
-	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of delegations to query for")
-	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of delegations to query for")
-	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of delegations to query for")
-	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in delegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "delegations")
 
 	return cmd
 }
@@ -411,12 +401,8 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 		},
 	}
 
-	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of validator delegations to query for")
-	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of validator delegations to query for")
-	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of validator delegations to query for")
-	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in validator delegations to query for")
-
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "validator delegations")
 
 	return cmd
 }
@@ -524,12 +510,8 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 		},
 	}
 
-	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of delegator unbonding delegations to query for")
-	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of delegator unbonding delegations to query for")
-	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of delegator unbonding delegations to query for")
-	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in delegator unbonding delegations to query for")
-
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "unbonding delegations")
 
 	return cmd
 }
@@ -642,11 +624,9 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			return clientCtx.PrintOutput(res.RedelegationResponses)
 		},
 	}
-	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of delegator redelegations to query for")
-	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of delegator redelegations to query for")
-	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of delegator redelegations to query for")
-	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in delegator redelegations to query for")
+
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "delegator redelegations")
 
 	return cmd
 }

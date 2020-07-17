@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -165,9 +164,14 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryValidatorUnbondingDelegationsRequest{
 				ValidatorAddr: valAddr,
-				Req:           &query.PageRequest{},
+				Req:           pageReq,
 			}
 
 			res, err := queryClient.ValidatorUnbondingDelegations(context.Background(), params)
@@ -179,8 +183,10 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 		},
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of unbonding delegations to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
+	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of unbonding delegations to query for")
+	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of unbonding delegations to query for")
+	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
+	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in unbonding delegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -216,9 +222,14 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryRedelegationsRequest{
 				SrcValidatorAddr: valSrcAddr,
-				Req:              &query.PageRequest{},
+				Req:              pageReq,
 			}
 
 			res, err := queryClient.Redelegations(context.Background(), params)
@@ -229,6 +240,11 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			return clientCtx.PrintOutput(res.RedelegationResponses)
 		},
 	}
+
+	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of validator redelegations to query for")
+	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of validator redelegations to query for")
+	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of validator redelegations to query for")
+	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in validator redelegations to query for")
 
 	flags.AddQueryFlagsToCmd(cmd)
 
@@ -318,9 +334,14 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryDelegatorDelegationsRequest{
 				DelegatorAddr: delAddr,
-				Req:           &query.PageRequest{},
+				Req:           pageReq,
 			}
 
 			res, err := queryClient.DelegatorDelegations(context.Background(), params)
@@ -332,6 +353,10 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 		},
 	}
 
+	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of delegations to query for")
+	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of delegations to query for")
+	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of delegations to query for")
+	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in delegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -367,9 +392,14 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryValidatorDelegationsRequest{
 				ValidatorAddr: valAddr,
-				Req:           &query.PageRequest{},
+				Req:           pageReq,
 			}
 
 			res, err := queryClient.ValidatorDelegations(context.Background(), params)
@@ -380,6 +410,11 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 			return clientCtx.PrintOutput(res.DelegationResponses)
 		},
 	}
+
+	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of validator delegations to query for")
+	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of validator delegations to query for")
+	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of validator delegations to query for")
+	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in validator delegations to query for")
 
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of delegations to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of delegations to query for")
@@ -472,9 +507,14 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryDelegatorUnbondingDelegationsRequest{
 				DelegatorAddr: delegatorAddr,
-				Req:           &query.PageRequest{},
+				Req:           pageReq,
 			}
 
 			res, err := queryClient.DelegatorUnbondingDelegations(context.Background(), params)
@@ -485,6 +525,11 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 			return clientCtx.PrintOutput(res.UnbondingResponses)
 		},
 	}
+
+	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of delegator unbonding delegations to query for")
+	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of delegator unbonding delegations to query for")
+	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of delegator unbonding delegations to query for")
+	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in delegator unbonding delegations to query for")
 
 	flags.AddQueryFlagsToCmd(cmd)
 
@@ -535,7 +580,6 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				DelegatorAddr:    delAddr,
 				DstValidatorAddr: valDstAddr,
 				SrcValidatorAddr: valSrcAddr,
-				Req:              &query.PageRequest{},
 			}
 
 			res, err := queryClient.Redelegations(context.Background(), params)
@@ -582,9 +626,14 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryRedelegationsRequest{
 				DelegatorAddr: delAddr,
-				Req:           &query.PageRequest{},
+				Req:           pageReq,
 			}
 
 			res, err := queryClient.Redelegations(context.Background(), params)
@@ -595,7 +644,10 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			return clientCtx.PrintOutput(res.RedelegationResponses)
 		},
 	}
-
+	cmd.Flags().String(flags.FlagPageKey, "", "pagination page-key of delegator redelegations to query for")
+	cmd.Flags().Uint64(flags.FlagOffset, 1, "pagination offset of delegator redelegations to query for")
+	cmd.Flags().Uint64(flags.FlagLimit, 100, "pagination limit of delegator redelegations to query for")
+	cmd.Flags().Bool(flags.FlagCountTotal, false, "total number of records in delegator redelegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

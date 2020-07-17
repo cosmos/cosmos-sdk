@@ -61,6 +61,9 @@ const (
 	FlagPage             = "page"
 	FlagLimit            = "limit"
 	FlagSignMode         = "sign-mode"
+	FlagPageKey          = "page-key"
+	FlagOffset           = "offset"
+	FlagCountTotal       = "count-total"
 )
 
 // LineBreak can be included in a command list to provide a blank line

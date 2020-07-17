@@ -139,8 +139,7 @@ func TestSimulateMsgWithdrawDelegatorReward(t *testing.T) {
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func TestSimulateMsgWithdrawValidatorCommission(t *testing.T) {
 	testSimulateMsgWithdrawValidatorCommission(t, "atoken")
-	// TODO: Fix following test: It is failing because of issue #6763
-	// testSimulateMsgWithdrawValidatorCommission(t, "tokenxxx")
+	testSimulateMsgWithdrawValidatorCommission(t, "tokenxxx")
 }
 
 func testSimulateMsgWithdrawValidatorCommission(t *testing.T, tokenName string) {
@@ -166,10 +165,10 @@ func testSimulateMsgWithdrawValidatorCommission(t *testing.T, tokenName string) 
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// set outstanding rewards
-	valCommission := sdk.DecCoins{
+	valCommission := sdk.NewDecCoins(
 		sdk.NewDecCoinFromDec(tokenName, sdk.NewDec(5).Quo(sdk.NewDec(2))),
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(1))),
-	}
+	)
 
 	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, validator0.OperatorAddress, types.ValidatorOutstandingRewards{Rewards: valCommission})
 

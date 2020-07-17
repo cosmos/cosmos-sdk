@@ -319,8 +319,6 @@ func getSignBytes(
 	pubKey crypto.PubKey,
 	txConfig client.TxConfig,
 ) ([]byte, error) {
-	// For SIGN_MODE_DIRECT, we need to set sigData and sig first, as they
-	// are needed to generate GetSignBytes.
 	sigData := signing.SingleSignatureData{
 		SignMode:  signMode,
 		Signature: nil,
@@ -329,6 +327,13 @@ func getSignBytes(
 		PubKey: pubKey,
 		Data:   &sigData,
 	}
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
+	// TxBuilder under the hood, and SignerInfos is needed to generated the
+	// sign bytes. This is the reason for setting SetSignatures here, with a
+	// nil signature.
+	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
+	// also doesn't affect its generated sign bytes, so for code's simplicity
+	// sake, we put it here, along with this comment.
 	err := txBuilder.SetSignatures(sig)
 	if err != nil {
 		return nil, err
@@ -358,6 +363,7 @@ func SignWithPrivKey(
 ) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2
 
+	// Generate the bytes to be signed
 	signBytes, err := getSignBytes(signMode, signerData, txBuilder, priv.PubKey(), txConfig)
 	if err != nil {
 		return sigV2, err
@@ -407,13 +413,13 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	}
 
 	pubKey := key.GetPubKey()
-
-	// Generate the bytes to be signed
 	signerData := authsigning.SignerData{
 		ChainID:         txf.chainID,
 		AccountNumber:   txf.accountNumber,
 		AccountSequence: txf.sequence,
 	}
+
+	// Generate the bytes to be signed
 	signBytes, err := getSignBytes(signMode, signerData, txBuilder, pubKey, txf.txConfig)
 	if err != nil {
 		return err

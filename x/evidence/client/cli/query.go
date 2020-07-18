@@ -103,7 +103,7 @@ func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) erro
 		return err
 	}
 
-	evidences := make([]exported.Evidence, len(res.Evidence))
+	evidences := make([]exported.Evidence, 0, len(res.Evidence))
 	for _, evidence := range res.Evidence {
 		var evi exported.Evidence
 		err = clientCtx.InterfaceRegistry.UnpackAny(evidence, &evi)

@@ -16,6 +16,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+type SimTestSuite struct {
+	suite.Suite
+
+	ctx sdk.Context
+	app *simapp.SimApp
+}
+
+func (suite *SimTestSuite) SetupTest() {
+	checkTx := false
+	app := simapp.Setup(checkTx)
+	suite.app = app
+	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{})
+}
+
 // TestWeightedOperations tests the weights of the operations.
 func (suite *SimTestSuite) TestWeightedOperations() {
 	cdc := suite.app.Codec()
@@ -51,7 +65,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 // TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgSend.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgSend() {
-
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -80,7 +93,6 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 // TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
-
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -107,20 +119,6 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	suite.Require().Equal(types.TypeMsgMultiSend, msg.Type())
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
-}
-
-type SimTestSuite struct {
-	suite.Suite
-
-	ctx sdk.Context
-	app *simapp.SimApp
-}
-
-func (suite *SimTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(checkTx)
-	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{})
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {

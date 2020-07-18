@@ -32,7 +32,7 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mbm module.BasicManager, genBalIterator types.GenesisBalancesIterator) *cobra.Command {
+func GenTxCmd(mbm module.BasicManager, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -191,7 +191,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "Write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.Flags().AddFlagSet(fsCreateValidator)

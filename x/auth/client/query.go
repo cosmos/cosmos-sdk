@@ -74,31 +74,31 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 
 // QueryTx queries for a single transaction by a hash string in hex format. An
 // error is returned if the transaction does not exist or cannot be queried.
-func QueryTx(clientCtx client.Context, hashHexStr string) (sdk.TxResponse, error) {
+func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
-		return sdk.TxResponse{}, err
+		return nil, err
 	}
 
 	node, err := clientCtx.GetNode()
 	if err != nil {
-		return sdk.TxResponse{}, err
+		return nil, err
 	}
 
 	resTx, err := node.Tx(hash, !clientCtx.TrustNode)
 	if err != nil {
-		return sdk.TxResponse{}, err
+		return nil, err
 	}
 
 	if !clientCtx.TrustNode {
 		if err = ValidateTxResult(clientCtx, resTx); err != nil {
-			return sdk.TxResponse{}, err
+			return nil, err
 		}
 	}
 
 	resBlocks, err := getBlocksForTxResults(clientCtx, []*ctypes.ResultTx{resTx})
 	if err != nil {
-		return sdk.TxResponse{}, err
+		return nil, err
 	}
 
 	out, err := formatTxResult(clientCtx.Codec, resTx, resBlocks[resTx.Height])
@@ -110,9 +110,9 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (sdk.TxResponse, error
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
-func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]sdk.TxResponse, error) {
+func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]*sdk.TxResponse, error) {
 	var err error
-	out := make([]sdk.TxResponse, len(resTxs))
+	out := make([]*sdk.TxResponse, len(resTxs))
 	for i := range resTxs {
 		out[i], err = formatTxResult(cdc, resTxs[i], resBlocks[resTxs[i].Height])
 		if err != nil {
@@ -160,10 +160,10 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) 
 	return resBlocks, nil
 }
 
-func formatTxResult(cdc *codec.Codec, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (sdk.TxResponse, error) {
+func formatTxResult(cdc *codec.Codec, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
 	tx, err := parseTx(cdc, resTx.Tx)
 	if err != nil {
-		return sdk.TxResponse{}, err
+		return nil, err
 	}
 
 	return sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339)), nil

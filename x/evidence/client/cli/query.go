@@ -38,9 +38,8 @@ $ %s query %s --page=2 --limit=50
 		RunE:                       QueryEvidenceCmd(),
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of evidence to to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of evidence to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "evidences")
 
 	return cmd
 }
@@ -63,9 +62,7 @@ func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 			return queryEvidence(clientCtx, hash)
 		}
 
-		pageReq := &query.PageRequest{}
-
-		return queryAllEvidence(clientCtx, pageReq)
+		return queryAllEvidence(clientCtx, client.ReadPageRequest(cmd.Flags()))
 	}
 }
 

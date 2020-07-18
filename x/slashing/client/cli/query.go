@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -94,7 +93,7 @@ $ <appcli> query slashing signing-infos
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QuerySigningInfosRequest{Req: &query.PageRequest{}}
+			params := &types.QuerySigningInfosRequest{Req: client.ReadPageRequest(cmd.Flags())}
 			res, err := queryClient.SigningInfos(context.Background(), params)
 			if err != nil {
 				return err
@@ -105,6 +104,7 @@ $ <appcli> query slashing signing-infos
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "signing infos")
 
 	return cmd
 }

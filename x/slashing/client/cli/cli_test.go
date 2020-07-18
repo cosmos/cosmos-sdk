@@ -66,8 +66,7 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
-			fmt.Sprintf(`{"address":"%s","index_offset":"1","jailed_until":"1970-01-01T00:00:00Z"}`,
-				sdk.ConsAddress(val.PubKey.Address())),
+			fmt.Sprintf(`{"address":"%s","jailed_until":"1970-01-01T00:00:00Z"}`, sdk.ConsAddress(val.PubKey.Address())),
 		},
 		{
 			"valid address (text output)",
@@ -77,8 +76,8 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
-			fmt.Sprintf(`{"address":"%s","index_offset":"1","jailed_until":"1970-01-01T00:00:00Z"}`,
-				sdk.ConsAddress(val.PubKey.Address())),
+			fmt.Sprintf(`address: %s
+jailed_until: "1970-01-01T00:00:00Z"`, sdk.ConsAddress(val.PubKey.Address())),
 		},
 	}
 

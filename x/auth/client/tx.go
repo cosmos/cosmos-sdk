@@ -10,10 +10,8 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,96 +37,10 @@ func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
 }
 
-// GenerateOrBroadcastMsgs creates a StdTx given a series of messages. If
-// the provided context has generate-only enabled, the tx will only be printed
-// to STDOUT in a fully offline manner. Otherwise, the tx will be signed and
-// broadcasted.
-func GenerateOrBroadcastMsgs(clientCtx client.Context, txBldr tx.Factory, msgs []sdk.Msg) error {
-	if clientCtx.GenerateOnly {
-		return PrintUnsignedStdTx(txBldr, clientCtx, msgs)
-	}
-
-	return CompleteAndBroadcastTxCLI(txBldr, clientCtx, msgs)
-}
-
-// CompleteAndBroadcastTxCLI implements a utility function that facilitates
-// sending a series of messages in a signed transaction given a TxBuilder and a
-// QueryContext. It ensures that the account exists, has a proper number and
-// sequence set. In addition, it builds and signs a transaction with the
-// supplied messages. Finally, it broadcasts the signed transaction to a node.
-func CompleteAndBroadcastTxCLI(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) error {
-	txBldr, err := PrepareTxBuilder(txBldr, clientCtx)
-	if err != nil {
-		return err
-	}
-
-	fromName := clientCtx.GetFromName()
-
-	if txBldr.SimulateAndExecute() || clientCtx.Simulate {
-		txBldr, err = EnrichWithGas(txBldr, clientCtx, msgs)
-		if err != nil {
-			return err
-		}
-
-		gasEst := GasEstimateResponse{GasEstimate: txBldr.Gas()}
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", gasEst.String())
-	}
-
-	if clientCtx.Simulate {
-		return nil
-	}
-
-	if !clientCtx.SkipConfirm {
-		stdSignMsg, err := txBldr.BuildSignMsg(msgs)
-		if err != nil {
-			return err
-		}
-
-		json, err := clientCtx.JSONMarshaler.MarshalJSON(stdSignMsg)
-		if err != nil {
-			return err
-		}
-
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
-
-		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
-		if err != nil || !ok {
-			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
-			return err
-		}
-	}
-
-	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(fromName, msgs)
-	if err != nil {
-		return err
-	}
-
-	// broadcast to a Tendermint node
-	res, err := clientCtx.BroadcastTx(txBytes)
-	if err != nil {
-		return err
-	}
-
-	return clientCtx.PrintOutput(res)
-}
-
 // EnrichWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichWithGas(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) (tx.Factory, error) {
+func EnrichWithGas(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (authtypes.TxBuilder, error) {
 	_, adjusted, err := simulateMsgs(txBldr, clientCtx, msgs)
-	if err != nil {
-		return txBldr, err
-	}
-
-	return txBldr.WithGas(adjusted), nil
-}
-
-// EnrichWithGas calculates the gas estimate that would be consumed by the
-// transaction and set the transaction's respective value accordingly.
-func OldEnrichWithGas(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (authtypes.TxBuilder, error) {
-	_, adjusted, err := oldSimulateMsgs(txBldr, clientCtx, msgs)
 	if err != nil {
 		return txBldr, err
 	}
@@ -161,18 +73,8 @@ func CalculateGas(
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) error {
-	stdTx, err := buildUnsignedStdTxOffline(txBldr, clientCtx, msgs)
-	if err != nil {
-		return err
-	}
-
-	json, err := clientCtx.JSONMarshaler.MarshalJSON(stdTx)
-	if err != nil {
-		return err
-	}
-
-	_, _ = fmt.Fprintf(clientCtx.Output, "%s\n", json)
-	return nil
+	err := tx.GenerateOrBroadcastTxWithFactory(clientCtx, txBldr, msgs...)
+	return err
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
@@ -185,11 +87,11 @@ func SignStdTx(txFactory tx.Factory, clientCtx client.Context, name string,
 		return err
 	}
 	addr := sdk.AccAddress(info.GetPubKey().Address())
-	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetTx().(authtypes.StdTx).GetSigners()) {
+	if !isTxSigner(addr, stdTx.GetTx().(authtypes.StdTx).GetSigners()) {
 		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 	if !offline {
-		txFactory, err = populateAccountFromState(txFactory, clientCtx, sdk.AccAddress(addr))
+		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
 		if err != nil {
 			return err
 		}
@@ -295,18 +197,7 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 
 // simulateMsgs simulates the transaction and returns the simulation response and
 // the adjusted gas value.
-func simulateMsgs(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
-	txBytes, err := txBldr.BuildTxForSim(msgs)
-	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
-	}
-
-	return CalculateGas(clientCtx.QueryWithData, clientCtx.Codec, txBytes, txBldr.GasAdjustment())
-}
-
-// simulateMsgs simulates the transaction and returns the simulation response and
-// the adjusted gas value.
-func oldSimulateMsgs(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
+func simulateMsgs(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
 	txBytes, err := txBldr.BuildTxForSim(msgs)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
@@ -354,28 +245,6 @@ func PrepareTxBuilder(txBldr tx.Factory, clientCtx client.Context) (tx.Factory, 
 	}
 
 	return txBldr, nil
-}
-
-func buildUnsignedStdTxOffline(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) (stdTx authtypes.StdTx, err error) {
-	if txBldr.SimulateAndExecute() {
-		if clientCtx.Offline {
-			return stdTx, errors.New("cannot estimate gas in offline mode")
-		}
-
-		txBldr, err = EnrichWithGas(txBldr, clientCtx, msgs)
-		if err != nil {
-			return stdTx, err
-		}
-
-		_, _ = fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas())
-	}
-
-	stdSignMsg, err := txBldr.BuildSignMsg(msgs)
-	if err != nil {
-		return stdTx, err
-	}
-
-	return authtypes.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
 }
 
 func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {

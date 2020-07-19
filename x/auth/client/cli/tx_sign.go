@@ -102,7 +102,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}
 		marhsaler := clientCtx.JSONMarshaler.(codec.Marshaler)
-		scanner := authclient.NewBatchScanner(marhsaler, infile, txGen)
+		scanner := authclient.NewBatchScanner(marhsaler, infile)
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
 			var stdTx types.StdTx

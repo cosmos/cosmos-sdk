@@ -152,7 +152,6 @@ func TestBatchScanner_Scan(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	encodingConfig := simappparams.MakeEncodingConfig()
-	txGen := encodingConfig.TxGenerator
 
 	batch1 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
 {"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
@@ -184,7 +183,7 @@ malformed
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			scanner, i := NewBatchScanner(cdc, strings.NewReader(tt.batch), txGen), 0
+			scanner, i := NewBatchScanner(encodingConfig.Marshaler, strings.NewReader(tt.batch)), 0
 			for scanner.Scan() {
 				_ = scanner.StdTx()
 				i++

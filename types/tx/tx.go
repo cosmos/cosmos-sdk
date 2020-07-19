@@ -6,8 +6,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func (tx *Tx) GetMsgs() []sdk.Msg {
-	anys := tx.Body.Messages
+func (m *Tx) GetMsgs() []sdk.Msg {
+	anys := m.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
 		msg := any.GetCachedValue().(sdk.Msg)
@@ -16,28 +16,28 @@ func (tx *Tx) GetMsgs() []sdk.Msg {
 	return res
 }
 
-func (tx *Tx) ValidateBasic() error {
-	sigs := tx.GetSignatures()
+func (m *Tx) ValidateBasic() error {
+	sigs := m.GetSignatures()
 
-	if tx.GetGas() > authtypes.MaxGasWanted {
+	if m.GetGas() > authtypes.MaxGasWanted {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", tx.GetGas(), authtypes.MaxGasWanted,
+			"invalid gas supplied; %d > %d", m.GetGas(), authtypes.MaxGasWanted,
 		)
 	}
-	if tx.GetFee().IsAnyNegative() {
+	if m.GetFee().IsAnyNegative() {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: %s", tx.GetFee(),
+			"invalid fee provided: %s", m.GetFee(),
 		)
 	}
 	if len(sigs) == 0 {
 		return sdkerrors.ErrNoSignatures
 	}
-	if len(sigs) != len(tx.GetSigners()) {
+	if len(sigs) != len(m.GetSigners()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", tx.GetSigners(), len(sigs),
+			"wrong number of signers; expected %d, got %d", m.GetSigners(), len(sigs),
 		)
 	}
 

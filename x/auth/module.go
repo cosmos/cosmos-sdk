@@ -66,13 +66,13 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // GetTxCmd returns the root tx command for the auth module.
-func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
+func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 	return cli.GetTxCmd()
 }
 
 // GetQueryCmd returns the root query command for the auth module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx.Codec)
+func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaceTypes registers interfaces and implementations of the auth module.

@@ -23,7 +23,7 @@ func NewLabel(name, value string) metrics.Label {
 func ModuleMeasureSince(module string, start time.Time, keys ...string) {
 	metrics.MeasureSinceWithLabels(
 		keys,
-		start,
+		start.UTC(),
 		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, globalLabels...),
 	)
 }
@@ -66,5 +66,5 @@ func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
 // MeasureSince provides a wrapper functionality for emitting a a time measure
 // metric with global labels (if any).
 func MeasureSince(start time.Time, keys ...string) {
-	metrics.MeasureSinceWithLabels(keys, start, globalLabels)
+	metrics.MeasureSinceWithLabels(keys, start.UTC(), globalLabels)
 }

@@ -179,7 +179,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func readAndUnmarshalStdSignature(clientCtx client.Context, filename string) (stdSig signingtypes.SignatureV2, err error) { //nolint:staticcheck
+func readAndUnmarshalStdSignature(clientCtx client.Context, filename string) (stdSig signingtypes.SignatureV2, err error) {
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return

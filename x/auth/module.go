@@ -118,7 +118,9 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(am.accountKeeper)
 }
 
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.accountKeeper)
+}
 
 // InitGenesis performs genesis initialization for the auth module. It returns
 // no validator updates.

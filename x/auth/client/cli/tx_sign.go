@@ -62,12 +62,15 @@ account key. It implies --signature-only.
 func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx := client.GetClientContextFromCmd(cmd)
+		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 		inBuf := bufio.NewReader(cmd.InOrStdin())
 		clientCtx = clientCtx.InitWithInput(inBuf)
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		txGen := clientCtx.TxGenerator
-		var err error
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
 		var (
@@ -98,8 +101,8 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
-
-		scanner := authclient.NewBatchScanner(clientCtx.JSONMarshaler, infile)
+		marhsaler := clientCtx.JSONMarshaler.(codec.Marshaler)
+		scanner := authclient.NewBatchScanner(marhsaler, infile, txGen)
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
 			var stdTx types.StdTx
@@ -132,7 +135,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			json, err := newGetSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, stdTx, generateSignatureOnly)
+			json, err := getSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, stdTx, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -214,6 +217,10 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx := client.GetClientContextFromCmd(cmd)
+		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
@@ -259,7 +266,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		json, err := newGetSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, newTx, generateSignatureOnly)
+		json, err := getSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, newTx, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -281,15 +288,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, generateSignatureOnly bool) ([]byte, error) {
-	if generateSignatureOnly {
-		return cdc.MarshalJSON(newTx.Signatures[0])
-	}
-
-	return cdc.MarshalJSON(newTx)
-}
-
-func newGetSignatureJSON(cdc codec.JSONMarshaler, txGen client.TxGenerator, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc codec.JSONMarshaler, txGen client.TxGenerator, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
 	if generateSignatureOnly {
 		return cdc.MarshalJSON(txBldr.GetTx().GetSignatures())
 	}

@@ -39,7 +39,7 @@ $ %s query %s --page=2 --limit=50
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "evidences")
+	flags.AddPaginationFlagsToCmd(cmd, "evidence")
 
 	return cmd
 }

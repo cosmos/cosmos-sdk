@@ -39,9 +39,9 @@ func (r Result) GetEvents() Events {
 // ABCIMessageLogs represents a slice of ABCIMessageLog.
 type ABCIMessageLogs []ABCIMessageLog
 
-func NewABCIMessageLog(i uint16, log string, events Events) ABCIMessageLog {
+func NewABCIMessageLog(i uint32, log string, events Events) ABCIMessageLog {
 	return ABCIMessageLog{
-		MsgIndex: uint32(i),
+		MsgIndex: i,
 		Log:      log,
 		Events:   StringifyEvents(events.ToABCIEvents()),
 	}

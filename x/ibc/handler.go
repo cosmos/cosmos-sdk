@@ -24,9 +24,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return client.HandleMsgCreateClient(ctx, k.ClientKeeper, msg)
 
 		case clientexported.MsgUpdateClient:
-			return &sdk.Result{}, nil
+			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
 
-		// IBC connection  msgs
+		// Client Misbehaviour is handled by the evidence module
+
+		// IBC connection msgs
 		case *connectiontypes.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)
 
@@ -171,6 +173,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
+			// Perform TAO verification
+			if err := k.ChannelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight); err != nil {
+				return nil, sdkerrors.Wrap(err, "receive packet verification failed")
+			}
+
 			// Perform application logic callback
 			res, ack, err := cbs.OnRecvPacket(ctx, msg.Packet)
 			if err != nil {
@@ -197,6 +204,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
+			// Perform TAO verification
+			if err := k.ChannelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight); err != nil {
+				return nil, sdkerrors.Wrap(err, "acknowledge packet verification failed")
+			}
+
 			// Perform application logic callback
 			res, err := cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement)
 			if err != nil {
@@ -221,6 +233,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
 				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+
+			// Perform TAO verification
+			if err := k.ChannelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
+				return nil, sdkerrors.Wrap(err, "timeout packet verification failed")
 			}
 
 			// Perform application logic callback

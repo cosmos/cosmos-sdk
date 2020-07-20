@@ -51,7 +51,7 @@ message QueryAllBalancesResponse {
   repeated cosmos.Coin balances = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method

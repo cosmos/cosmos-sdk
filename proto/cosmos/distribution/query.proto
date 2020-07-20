@@ -78,7 +78,7 @@ message QueryValidatorSlashesRequest {
 message QueryValidatorSlashesResponse {
   repeated ValidatorSlashEvent slashes = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryDelegationRewardsRequest is the request type for the Query/DelegationRewards RPC method

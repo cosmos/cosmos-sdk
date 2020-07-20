@@ -63,7 +63,7 @@ message QueryValidatorsRequest{
 message QueryValidatorsResponse {
   repeated cosmos.staking.Validator validators = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryValidatorRequest is response type for the Query/Validator RPC method
@@ -87,7 +87,7 @@ message QueryValidatorDelegationsRequest {
 message QueryValidatorDelegationsResponse {
   repeated DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "DelegationResponses"];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryValidatorUnbondingDelegationsRequest is required type for the Query/ValidatorUnbondingDelegations RPC method
@@ -101,7 +101,7 @@ message QueryValidatorUnbondingDelegationsRequest {
 message QueryValidatorUnbondingDelegationsResponse {
   repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryDelegationRequest is request type for the Query/Delegation RPC method
@@ -139,7 +139,7 @@ message QueryDelegatorDelegationsRequest {
 message QueryDelegatorDelegationsResponse {
   repeated DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method
@@ -152,7 +152,7 @@ message QueryDelegatorUnbondingDelegationsRequest {
 message QueryDelegatorUnbondingDelegationsResponse {
   repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryRedelegationsRequest is request type for the Query/Redelegations RPC method
@@ -170,7 +170,7 @@ message QueryRedelegationsRequest {
 message QueryRedelegationsResponse {
   repeated RedelegationResponse redelegation_responses = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method
@@ -184,7 +184,7 @@ message QueryDelegatorValidatorsRequest {
 message QueryDelegatorValidatorsResponse {
   repeated Validator validators = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method
@@ -224,5 +224,5 @@ message QueryParamsRequest { }
 message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }

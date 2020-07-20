@@ -52,7 +52,7 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	res, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
 		var result sdk.Coin
 		err := q.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
@@ -66,7 +66,7 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 		return &types.QueryAllBalancesResponse{}, err
 	}
 
-	return &types.QueryAllBalancesResponse{Balances: balances, Res: res}, nil
+	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method

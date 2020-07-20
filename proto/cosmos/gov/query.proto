@@ -63,7 +63,7 @@ message QueryProposalsRequest {
 message QueryProposalsResponse {
   repeated Proposal proposals = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryVoteRequest is the request type for the Query/Vote RPC method
@@ -92,7 +92,7 @@ message QueryVotesRequest {
 message QueryVotesResponse {
   repeated Vote votes = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method
@@ -133,7 +133,7 @@ message QueryDepositsRequest {
 message QueryDepositsResponse {
   repeated Deposit deposits = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryTallyResultRequest is the request type for the Query/Tally RPC method

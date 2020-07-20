@@ -177,7 +177,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(expChannels, res.Channels)
-				suite.Require().Equal(len(expChannels), int(res.Res.Total))
+				suite.Require().Equal(len(expChannels), int(res.Pagination.Total))
 			} else {
 				suite.Require().Error(err)
 			}

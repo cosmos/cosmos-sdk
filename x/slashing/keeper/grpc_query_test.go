@@ -101,8 +101,8 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfos() {
 	suite.NoError(err)
 	suite.Len(infoResp.Info, 1)
 	suite.Equal(signingInfos[0], infoResp.Info[0])
-	suite.NotNil(infoResp.Res.NextKey)
-	suite.Equal(uint64(2), infoResp.Res.Total)
+	suite.NotNil(infoResp.Pagination.NextKey)
+	suite.Equal(uint64(2), infoResp.Pagination.Total)
 }
 
 func TestSlashingTestSuite(t *testing.T) {

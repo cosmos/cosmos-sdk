@@ -35,5 +35,5 @@ message QueryAllEvidenceRequest {
 message QueryAllEvidenceResponse {
   repeated google.protobuf.Any evidence = 1;
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }

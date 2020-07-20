@@ -48,5 +48,5 @@ message QuerySigningInfosRequest{
 message QuerySigningInfosResponse{
 	// info is the signing info of all validators
 	repeated cosmos.slashing.ValidatorSigningInfo info = 1[(gogoproto.nullable)= false];
-	cosmos.query.PageResponse res =2;
+	cosmos.query.PageResponse pagination =2;
 }

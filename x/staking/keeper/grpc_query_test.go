@@ -55,8 +55,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 				suite.NoError(err)
 				suite.NotNil(valsResp)
 				suite.Equal(1, len(valsResp.Validators))
-				suite.NotNil(valsResp.Res.NextKey)
-				suite.Equal(uint64(len(vals)), valsResp.Res.Total)
+				suite.NotNil(valsResp.Pagination.NextKey)
+				suite.Equal(uint64(len(vals)), valsResp.Pagination.Total)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -138,8 +138,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 			if tc.expPass {
 				suite.NoError(err)
 				suite.Equal(1, len(res.Validators))
-				suite.NotNil(res.Res.NextKey)
-				suite.Equal(uint64(len(delValidators)), res.Res.Total)
+				suite.NotNil(res.Pagination.NextKey)
+				suite.Equal(uint64(len(delValidators)), res.Pagination.Total)
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 			tc.malleate()
 			res, err := queryClient.DelegatorDelegations(gocontext.Background(), req)
 			if tc.expPass {
-				suite.Equal(uint64(2), res.Res.Total)
+				suite.Equal(uint64(2), res.Pagination.Total)
 				suite.Len(res.DelegationResponses, 1)
 				suite.Equal(1, len(res.DelegationResponses))
 				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
@@ -352,8 +352,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 			if tc.expPass && !tc.expErr {
 				suite.NoError(err)
 				suite.Len(res.DelegationResponses, 1)
-				suite.NotNil(res.Res.NextKey)
-				suite.Equal(uint64(2), res.Res.Total)
+				suite.NotNil(res.Pagination.NextKey)
+				suite.Equal(uint64(2), res.Pagination.Total)
 				suite.Equal(addrVal1, res.DelegationResponses[0].Delegation.ValidatorAddress)
 				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
 			} else if !tc.expPass && !tc.expErr {
@@ -470,8 +470,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 			res, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), req)
 			if tc.expPass && !tc.expErr {
 				suite.NoError(err)
-				suite.NotNil(res.Res.NextKey)
-				suite.Equal(uint64(2), res.Res.Total)
+				suite.NotNil(res.Pagination.NextKey)
+				suite.Equal(uint64(2), res.Pagination.Total)
 				suite.Len(res.UnbondingResponses, 1)
 				suite.Equal(unbond, res.UnbondingResponses[0])
 			} else if !tc.expPass && !tc.expErr {
@@ -676,7 +676,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 			func() {
 				req = &types.QueryValidatorUnbondingDelegationsRequest{
 					ValidatorAddr: val1.GetOperator(),
-					Pagination:           &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 		},
@@ -688,7 +688,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 			res, err := queryClient.ValidatorUnbondingDelegations(gocontext.Background(), req)
 			if tc.expPass {
 				suite.NoError(err)
-				suite.Equal(uint64(1), res.Res.Total)
+				suite.Equal(uint64(1), res.Pagination.Total)
 				suite.Equal(1, len(res.UnbondingResponses))
 			} else {
 				suite.Error(err)

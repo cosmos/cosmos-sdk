@@ -38,7 +38,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
-	res, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		val, err := types.UnmarshalValidator(k.cdc, value)
 		if err != nil {
 			return false, err
@@ -58,7 +58,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryValidatorsResponse{Validators: validators, Res: res}, nil
+	return &types.QueryValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
 // Validator queries validator info for given validator addr
@@ -93,7 +93,7 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.DelegationKey)
-	res, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
 			return false, err
@@ -117,7 +117,7 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	}
 
 	return &types.QueryValidatorDelegationsResponse{
-		DelegationResponses: delResponses, Res: res}, nil
+		DelegationResponses: delResponses, Pagination: pageRes}, nil
 }
 
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator
@@ -134,7 +134,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 
 	store := ctx.KVStore(k.storeKey)
 	ubdStore := prefix.NewStore(store, types.GetUBDsByValIndexKey(req.ValidatorAddr))
-	res, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
 		ubd, err := types.UnmarshalUBD(k.cdc, value)
 		if err != nil {
 			return err
@@ -148,7 +148,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 
 	return &types.QueryValidatorUnbondingDelegationsResponse{
 		UnbondingResponses: ubds,
-		Res:                res,
+		Pagination:         pageRes,
 	}, nil
 }
 
@@ -221,7 +221,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 
 	store := ctx.KVStore(k.storeKey)
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(req.DelegatorAddr))
-	res, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
 			return err
@@ -243,7 +243,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Res: res}, nil
+	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Pagination: pageRes}, nil
 
 }
 
@@ -283,7 +283,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 
 	store := ctx.KVStore(k.storeKey)
 	unbStore := prefix.NewStore(store, types.GetUBDsKey(req.DelegatorAddr))
-	res, err := query.Paginate(unbStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(unbStore, req.Pagination, func(key []byte, value []byte) error {
 		unbond, err := types.UnmarshalUBD(k.cdc, value)
 		if err != nil {
 			return err
@@ -296,7 +296,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 	}
 
 	return &types.QueryDelegatorUnbondingDelegationsResponse{
-		UnbondingResponses: unbondingDelegations, Res: res}, nil
+		UnbondingResponses: unbondingDelegations, Pagination: pageRes}, nil
 }
 
 // HistoricalInfo queries the historical info for given height
@@ -323,7 +323,7 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 	}
 
 	var redels types.Redelegations
-	var res *query.PageResponse
+	var pageRes *query.PageResponse
 	var err error
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -332,9 +332,9 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 	case !req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && !req.DstValidatorAddr.Empty():
 		redels, err = queryRedelegation(ctx, k, req)
 	case req.DelegatorAddr.Empty() && !req.SrcValidatorAddr.Empty() && req.DstValidatorAddr.Empty():
-		redels, res, err = queryRedelegationsFromSrcValidator(store, k, req)
+		redels, pageRes, err = queryRedelegationsFromSrcValidator(store, k, req)
 	default:
-		redels, res, err = queryAllRedelegations(store, k, req)
+		redels, pageRes, err = queryAllRedelegations(store, k, req)
 	}
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -344,7 +344,7 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryRedelegationsResponse{RedelegationResponses: redelResponses, Res: res}, nil
+	return &types.QueryRedelegationsResponse{RedelegationResponses: redelResponses, Pagination: pageRes}, nil
 }
 
 func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
@@ -360,7 +360,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 
 	store := ctx.KVStore(k.storeKey)
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(req.DelegatorAddr))
-	res, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
 			return err
@@ -379,7 +379,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Res: res}, nil
+	return &types.QueryDelegatorValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
 // Pool queries the pool info

@@ -238,7 +238,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					StartingHeight:   10,
 					EndingHeight:     1,
 				}
-				expRes = &types.QueryValidatorSlashesResponse{Res: &query.PageResponse{}}
+				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
 			false,
 		},
@@ -250,7 +250,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					StartingHeight:   1,
 					EndingHeight:     10,
 				}
-				expRes = &types.QueryValidatorSlashesResponse{Res: &query.PageResponse{}}
+				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
 			true,
 		},

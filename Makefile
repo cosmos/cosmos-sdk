@@ -339,9 +339,9 @@ TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/maste
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 
-TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
-TM_KEY_TYPES     		= third_party/proto/tendermint/crypto/keys
-TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
+TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto
+TM_KEY_TYPES     		= third_party/proto/tendermint/crypto
+TM_ABCI_TYPES       = third_party/proto/tendermint/abci
 TM_TYPES     			  = third_party/proto/tendermint/types
 TM_VERSION 					= third_party/proto/tendermint/version
 TM_LIBS							= third_party/proto/tendermint/libs/bits
@@ -361,10 +361,10 @@ proto-update-deps:
 ## (which is the standard Buf.build FILE_LAYOUT)
 ## Issue link: https://github.com/tendermint/tendermint/issues/5021
 	@mkdir -p $(TM_ABCI_TYPES)
-	@curl -sSL $(TM_URL)/proto/tendermint/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
 
 	@mkdir -p $(TM_VERSION)
-	@curl -sSL $(TM_URL)/proto/tendermint/version/version.proto > $(TM_VERSION)/version.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/version/types.proto > $(TM_VERSION)/types.proto
 
 
 	@mkdir -p $(TM_TYPES)
@@ -373,10 +373,10 @@ proto-update-deps:
 	@curl -sSL $(TM_URL)/proto/tendermint/types/params.proto > $(TM_TYPES)/params.proto
 
 	@mkdir -p $(TM_MERKLE_TYPES)
-	@curl -sSL $(TM_URL)/proto/tendermint/crypto/merkle.proto > $(TM_MERKLE_TYPES)/types.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/crypto/proof.proto > $(TM_MERKLE_TYPES)/proof.proto
 
 	@mkdir -p $(TM_KEY_TYPES)
-	@curl -sSL $(TM_URL)/proto/tendermint/crypto/keys/types.proto > $(TM_KEY_TYPES)/types.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/crypto/keys.proto > $(TM_KEY_TYPES)/keys.proto
 
 	@mkdir -p $(TM_LIBS)
 	@curl -sSL $(TM_URL)/proto/tendermint/libs/bits/types.proto > $(TM_LIBS)/types.proto

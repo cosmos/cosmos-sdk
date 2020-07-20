@@ -1,9 +1,21 @@
 package cli_test
 
 import (
+	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type IntegrationTestSuite struct {
@@ -46,15 +58,131 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+	val := s.network.Validators[0]
 
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"default output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
+			`{"mint_denom":"stake","inflation_rate_change":"0.130000000000000000","inflation_max":"1.000000000000000000","inflation_min":"1.000000000000000000","goal_bonded":"0.670000000000000000","blocks_per_year":"6311520"}`,
+		},
+		{
+			"text output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`blocks_per_year: "6311520"
+goal_bonded: "0.670000000000000000"
+inflation_max: "1.000000000000000000"
+inflation_min: "1.000000000000000000"
+inflation_rate_change: "0.130000000000000000"
+mint_denom: stake`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParams()
+			_, out := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(cmd.ExecuteContext(ctx))
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
+	val := s.network.Validators[0]
 
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"default output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
+			`"1.000000000000000000"`,
+		},
+		{
+			"text output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`"1.000000000000000000"`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryInflation()
+			_, out := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(cmd.ExecuteContext(ctx))
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
+	val := s.network.Validators[0]
 
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"default output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
+			`"500000000.000000000000000000"`,
+		},
+		{
+			"text output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`"500000000.000000000000000000"`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryAnnualProvisions()
+			_, out := testutil.ApplyMockIO(cmd)
+
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(cmd.ExecuteContext(ctx))
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -116,10 +116,10 @@ func TestYAMLMarshalers(t *testing.T) {
 }
 
 func TestRandBech32AccAddrConsistency(t *testing.T) {
-	var pub ed25519.PubKey
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub[:])
+		rand.Read(pub)
 
 		acc := types.AccAddress(pub.Address())
 		res := types.AccAddress{}

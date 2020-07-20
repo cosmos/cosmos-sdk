@@ -87,7 +87,7 @@ func (any *Any) Pack(x proto.Message) error {
 // in the case of a packing failure, keeps the cached value. This should only
 // be used in situations where compatibility is needed with amino. Amino-only
 // values can safely be packed using this method when they will only be
-// marshaled with amino and not protobuf
+// marshaled with amino and not protobuf.
 func UnsafePackAny(x interface{}) *Any {
 	if msg, ok := x.(proto.Message); ok {
 		any, err := NewAnyWithValue(msg)

@@ -21,7 +21,6 @@ Integrating the IBC module to your SDK-based application is straighforward. The 
 - Add the modules to the module `Manager`
 - Add modules to `Begin/EndBlockers` and `InitGenesis`
 - Update the module `SimulationManager` to enable simulations
-- Add IBC `Keeper` to the `AnteHandler`
 
 ### Module `BasicManager` and `ModuleAccount` permissions
 
@@ -243,28 +242,6 @@ func NewApp(...args) *App {
 ::: warning
 **IMPORTANT**: The capability module **must** be declared first in `SetOrderInitGenesis`
 :::
-
-### IBC AnteHandler
-
-The IBC module defines `ProofVerificationDecorator` that handles messages that contains application
-specific packet types. This is mostly to perform stateful packet execution. For more context, please
-refer to [ADR 15 - IBC Packet Receiver](./../architecture/adr-015-ibc-packet-receiver.md).
-
-```go
-// app.go
-func NewApp(...args) *App {
-  // .. continuation from above
-
-  app.SetAnteHandler(
-    ante.NewAnteHandler(
-      app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer,
-    ),
-  )
-
-  // ...
-  return app
-}
-```
 
 That's it! You have now wired up the IBC module and are now able to send fungible tokens across
 different chains. If you want to have a broader view of the changes take a look into the SDK's

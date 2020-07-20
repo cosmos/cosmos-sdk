@@ -583,7 +583,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 		expPass  bool
 		expErr   bool
 	}{
-		{"request redelegations for non existant addr",
+		{"request redelegations for non existent addr",
 			func() {
 				req = &types.QueryRedelegationsRequest{DelegatorAddr: addrAcc}
 			},

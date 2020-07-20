@@ -2,8 +2,9 @@ package ante_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 

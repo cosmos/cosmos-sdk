@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) `CLIContext` additions:
   * Introduce `QueryABCI` that returns the full `abci.ResponseQuery` with inclusion Merkle proofs.
   * Added `prove` flag for Merkle proof verification.
+* (x/staking) [\#6791)](https://github.com/cosmos/cosmos-sdk/pull/6791) Close {UBDQueue,RedelegationQueu}Iterator once used.
 
 ### API Breaking Changes
 

@@ -189,7 +189,40 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 	}, nil
 }
 
-// UnrelayedPackets implements the Query/UnrelayedPackets gRPC method
+// PacketAcknowledgement implements the Query/PacketAcknowledgement gRPC method
+func (q Keeper) PacketAcknowledgement(c context.Context, req *types.QueryPacketAcknowledgementRequest) (*types.QueryPacketAcknowledgementResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
+	if req.Sequence == 0 {
+		return nil, status.Error(codes.InvalidArgument, "packet sequence cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	acknowledgementBz, found := q.GetPacketAcknowledgement(ctx, req.PortID, req.ChannelID, req.Sequence)
+	if !found || len(acknowledgementBz) == 0 {
+		return nil, status.Error(codes.NotFound, "packet acknowledgement hash not found")
+	}
+
+	return types.NewQueryPacketAcknowledgementResponse(req.PortID, req.ChannelID, req.Sequence, acknowledgementBz, nil, ctx.BlockHeight()), nil
+}
+
+// UnrelayedPackets implements the Query/UnrelayedPackets gRPC method. Given
+// a list of counterparty packet commitments, the querier checks if the packet
+// sequence has an acknowledgement stored. If req.Acknowledgements is true then
+// all unrelayed acknowledgements are returned (ack exists), otherwise all
+// unrelayed packet commitments are returned (ack does not exist).
+//
+// NOTE: The querier makes the assumption that the provided list of packet
+// commitments is correct and will not function properly if the list
+// is not up to date. Ideally the query height should equal the latest height
+// on the counterparty's client which represents this chain.
 func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPacketsRequest) (*types.QueryUnrelayedPacketsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -201,34 +234,23 @@ func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPac
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var (
-		unrelayedPackets = []uint64{}
-		store            sdk.KVStore
-		res              *query.PageResponse
-		err              error
-	)
+	var unrelayedSequences = []uint64{}
 
-	for i, seq := range req.Sequences {
+	for i, seq := range req.PacketCommitmentSequences {
 		if seq == 0 {
 			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
 		}
 
-		store = prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyPacketAcknowledgement(req.PortID, req.ChannelID, seq))
-		res, err = query.Paginate(store, req.Req, func(_, _ []byte) error {
-			return nil
-		})
-
-		if err != nil {
-			// ignore error and continue to the next sequence item
-			continue
+		// if req.Acknowledgements is true append sequences with an existing acknowledgement
+		// otherwise append sequences without an existing acknowledgement.
+		if _, found := q.GetPacketAcknowledgement(ctx, req.PortID, req.ChannelID, seq); found == req.Acknowledgements {
+			unrelayedSequences = append(unrelayedSequences, seq)
 		}
 
-		unrelayedPackets = append(unrelayedPackets, seq)
 	}
 	return &types.QueryUnrelayedPacketsResponse{
-		Packets: unrelayedPackets,
-		Res:     res,
-		Height:  ctx.BlockHeight(),
+		Sequences: unrelayedSequences,
+		Height:    ctx.BlockHeight(),
 	}, nil
 }
 

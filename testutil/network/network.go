@@ -59,7 +59,7 @@ func NewSimApp(val Validator) server.Application {
 // in-process local testing network.
 type Config struct {
 	Codec            codec.Marshaler
-	TxGenerator      client.TxGenerator
+	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
 	GenesisState     map[string]json.RawMessage // custom gensis state to provide
@@ -84,7 +84,7 @@ func DefaultConfig() Config {
 
 	return Config{
 		Codec:            encCfg.Marshaler,
-		TxGenerator:      encCfg.TxGenerator,
+		TxConfig:         encCfg.TxConfig,
 		AccountRetriever: authtypes.NewAccountRetriever(encCfg.Marshaler),
 		AppConstructor:   NewSimApp,
 		GenesisState:     simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
@@ -303,7 +303,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithJSONMarshaler(cfg.Codec).
-			WithTxGenerator(cfg.TxGenerator).
+			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)
 
 		network.Validators[i] = &Validator{

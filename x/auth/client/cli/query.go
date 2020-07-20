@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -24,7 +23,7 @@ const (
 )
 
 // GetQueryCmd returns the transaction commands for this module
-func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the auth module",
@@ -34,15 +33,15 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetAccountCmd(cdc),
-		QueryParamsCmd(cdc),
+		GetAccountCmd(),
+		QueryParamsCmd(),
 	)
 
 	return cmd
 }
 
 // QueryParamsCmd returns the command handler for evidence parameter querying.
-func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
+func QueryParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current auth parameters",
@@ -52,7 +51,11 @@ func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
 $ <appcli> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
 			res, _, err := clientCtx.QueryWithData(route, nil)
@@ -61,7 +64,7 @@ $ <appcli> query auth params
 			}
 
 			var params types.Params
-			if err := cdc.UnmarshalJSON(res, &params); err != nil {
+			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &params); err != nil {
 				return fmt.Errorf("failed to unmarshal params: %w", err)
 			}
 
@@ -76,21 +79,26 @@ $ <appcli> query auth params
 
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
-func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
+func GetAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account [address]",
 		Short: "Query for account by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
-			accGetter := types.NewAccountRetriever(authclient.Codec)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			accRetriever := types.NewAccountRetriever(clientCtx.JSONMarshaler)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			acc, err := accGetter.GetAccount(clientCtx, key)
+			acc, err := accRetriever.GetAccount(clientCtx, key)
 			if err != nil {
 				return err
 			}
@@ -105,7 +113,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
-func QueryTxsByEventsCmd(cdc *codec.Codec) *cobra.Command {
+func QueryTxsByEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
 		Short: "Query for paginated transactions that match a set of events",
@@ -121,6 +129,8 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 `, eventFormat, version.AppName, flagEvents),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
 			eventsRaw, _ := cmd.Flags().GetString(flagEvents)
 			eventsStr := strings.Trim(eventsRaw, "'")
 
@@ -153,13 +163,12 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			clientCtx := client.NewContext().WithCodec(cdc)
 			txs, err := authclient.QueryTxsByEvents(clientCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}
 
-			output, err := cdc.MarshalJSON(txs)
+			output, err := clientCtx.JSONMarshaler.MarshalJSON(txs)
 			if err != nil {
 				return err
 			}
@@ -181,13 +190,13 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 }
 
 // QueryTxCmd implements the default command for a tx query.
-func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
+func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Query for a transaction by hash in a committed block",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			output, err := authclient.QueryTx(clientCtx, args[0])
 			if err != nil {

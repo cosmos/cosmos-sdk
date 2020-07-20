@@ -52,7 +52,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 	var deposits []types.Deposit
 
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			if msg.Type() == types.TypeMsgDeposit {
 				depMsg := msg.(*types.MsgDeposit)
 
@@ -94,7 +94,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		}
 		nextTxPage++
 		for _, info := range searchResult.Txs {
-			for _, msg := range info.Tx.GetMsgs() {
+			for _, msg := range info.GetTx().GetMsgs() {
 				if msg.Type() == types.TypeMsgVote {
 					voteMsg := msg.(*types.MsgVote)
 
@@ -140,7 +140,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 		return nil, err
 	}
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single vote under the given conditions
 			if msg.Type() == types.TypeMsgVote {
 				voteMsg := msg.(*types.MsgVote)
@@ -181,7 +181,7 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 	}
 
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single deposit under the given conditions
 			if msg.Type() == types.TypeMsgDeposit {
 				depMsg := msg.(*types.MsgDeposit)
@@ -221,7 +221,7 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	}
 
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
 			if msg.Type() == types.TypeMsgSubmitProposal {
 				subMsg := msg.(*types.MsgSubmitProposal)

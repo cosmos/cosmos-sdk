@@ -17,7 +17,7 @@ import (
 // signing an application-specific transaction.
 type Factory struct {
 	keybase            keyring.Keyring
-	txGenerator        client.TxGenerator
+	txConfig           client.TxConfig
 	accountRetriever   client.AccountRetriever
 	accountNumber      uint64
 	sequence           uint64
@@ -56,7 +56,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	gasSetting, _ := flags.ParseGasSetting(gasStr)
 
 	f := Factory{
-		txGenerator:        clientCtx.TxGenerator,
+		txConfig:           clientCtx.TxConfig,
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
@@ -134,9 +134,9 @@ func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRe
 // using the gas from the simulation results
 func (f Factory) SimulateAndExecute() bool { return f.simulateAndExecute }
 
-// WithTxGenerator returns a copy of the Factory with an updated TxGenerator.
-func (f Factory) WithTxGenerator(g client.TxGenerator) Factory {
-	f.txGenerator = g
+// WithTxConfig returns a copy of the Factory with an updated TxConfig.
+func (f Factory) WithTxConfig(g client.TxConfig) Factory {
+	f.txConfig = g
 	return f
 }
 

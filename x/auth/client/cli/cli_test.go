@@ -624,7 +624,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
+	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
 
 	cmd := cli2.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
@@ -635,7 +635,7 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 
 func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
+	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)

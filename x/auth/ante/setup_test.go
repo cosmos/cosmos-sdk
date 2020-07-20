@@ -3,8 +3,9 @@ package ante_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/tendermint/tendermint/crypto"
 

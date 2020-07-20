@@ -65,7 +65,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		cdc := clientCtx.Codec
 		stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
 			return
@@ -100,13 +99,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
-		feeTx := stdTx.(sdk.FeeTx)
-		fee := types.StdFee{
-			Amount: feeTx.GetFee(),
-			Gas:    feeTx.GetGas(),
-		}
-		memoTx := stdTx.(sdk.TxWithMemo)
-
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
 			stdSig, err := readAndUnmarshalStdSignature(clientCtx, args[i])
@@ -128,18 +120,9 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
-
-		sigBz, err := types.SignatureDataToAminoSignature(cdc, multisigSig)
-		if err != nil {
-			return err
-		}
-
-		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                   // nolint:staticcheck
-		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo()) // nolint:staticcheck
-
 		var json []byte
 
-		txBuilder := clientCtx.TxConfig.NewTxBuilder()
+		txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(stdTx)
 		if err != nil {
 			return err
 		}
@@ -156,9 +139,9 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		if sigOnly {
-			json, err = cdc.MarshalJSON(newTx.Signatures[0])
+			json, err = clientCtx.JSONMarshaler.MarshalJSON(multisigSig.Signatures[0])
 		} else {
-			json, err = cdc.MarshalJSON(newTx)
+			json, err = clientCtx.JSONMarshaler.MarshalJSON(txBuilder.GetTx())
 		}
 
 		if err != nil {

@@ -73,10 +73,10 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	)
 	s.Require().NoError(err)
 
-	var tx types.StdTx
+	var tx sdk.Tx
 	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &tx)
 	s.Require().NoError(err)
-
+	s.T().Log(res.String())
 	// write  unsigned tx to file
 	unsignedTx, cleanup := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer cleanup()

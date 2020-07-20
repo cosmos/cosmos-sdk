@@ -206,42 +206,6 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
-// func TestPrepareTxBuilder(t *testing.T) {
-// 	encodingConfig := simappparams.MakeEncodingConfig()
-// 	sdk.RegisterCodec(encodingConfig.Amino)
-//
-// 	fromAddr := sdk.AccAddress("test-addr0000000000")
-// 	fromAddrStr := fromAddr.String()
-//
-// 	var accNum uint64 = 10
-// 	var accSeq uint64 = 17
-//
-// 	txGen := encodingConfig.TxConfig
-// 	clientCtx := client.Context{}
-// 	clientCtx = clientCtx.
-// 		WithTxConfig(txGen).
-// 		WithJSONMarshaler(encodingConfig.Marshaler).
-// 		WithAccountRetriever(client.TestAccountRetriever{Accounts: map[string]struct {
-// 			Address sdk.AccAddress
-// 			Num     uint64
-// 			Seq     uint64
-// 		}{
-// 			fromAddrStr: {
-// 				Address: fromAddr,
-// 				Num:     accNum,
-// 				Seq:     accSeq,
-// 			},
-// 		}}).
-// 		WithFromAddress(fromAddr)
-//
-// 	txFactory := tx.NewFactoryCLI(clientCtx, nil)
-//
-// 	bldr, err := PrepareTxBuilder(txFactory, clientCtx)
-// 	require.NoError(t, err)
-// 	require.Equal(t, accNum, bldr.AccountNumber())
-// 	require.Equal(t, accSeq, bldr.Sequence())
-// }
-
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)

@@ -225,34 +225,6 @@ func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	return simRes, nil
 }
 
-// PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
-func PrepareTxBuilder(txBldr tx.Factory, clientCtx client.Context) (tx.Factory, error) {
-	from := clientCtx.GetFromAddress()
-	accGetter := clientCtx.AccountRetriever
-	if err := accGetter.EnsureExists(clientCtx, from); err != nil {
-		return txBldr, err
-	}
-
-	txbldrAccNum, txbldrAccSeq := txBldr.AccountNumber(), txBldr.Sequence()
-	// TODO: (ref #1903) Allow for user supplied account number without
-	// automatically doing a manual lookup.
-	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
-		num, seq, err := accGetter.GetAccountNumberSequence(clientCtx, from)
-		if err != nil {
-			return txBldr, err
-		}
-
-		if txbldrAccNum == 0 {
-			txBldr = txBldr.WithAccountNumber(num)
-		}
-		if txbldrAccSeq == 0 {
-			txBldr = txBldr.WithSequence(seq)
-		}
-	}
-
-	return txBldr, nil
-}
-
 func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 	for _, s := range signers {
 		if bytes.Equal(user.Bytes(), s.Bytes()) {

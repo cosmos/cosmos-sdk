@@ -14,8 +14,12 @@ import (
 )
 
 func Test_runDeleteCmd(t *testing.T) {
+	// Now add a temporary keybase
+	kbHome, cleanUp := testutil.NewTestCaseDir(t)
+	t.Cleanup(cleanUp)
+
 	cmd := DeleteKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands(kbHome).PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
@@ -26,9 +30,6 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
-	// Now add a temporary keybase
-	kbHome, cleanUp := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
 
 	path := sdk.GetConfig().GetFullFundraiserPath()
 

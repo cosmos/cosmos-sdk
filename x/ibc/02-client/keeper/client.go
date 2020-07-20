@@ -100,7 +100,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))
 
-	// Emit events in keeper so antehandler emits them as well
+	// emitting events in the keeper emits for both begin block and handler client updates
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeUpdateClient,
@@ -109,16 +109,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
 		),
 	)
-
-	// localhost client is not updated though messages
-	if clientType != exported.Localhost {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			),
-		)
-	}
 
 	return clientState, nil
 }
@@ -153,15 +143,6 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 
 	k.SetClientState(ctx, clientState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.GetClientID()))
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSubmitMisbehaviour,
-			sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.GetClientID()),
-			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusState.GetHeight())),
-		),
-	)
 
 	return nil
 }

@@ -147,6 +147,7 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 // Implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "set")
+	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	st.tree.Set(key, value)
 }

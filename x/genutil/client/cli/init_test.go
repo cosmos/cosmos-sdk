@@ -126,7 +126,7 @@ func TestEmptyState(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = server.ExportCmd(nil)
+	cmd = server.ExportCmd(nil, home)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 

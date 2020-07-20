@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -176,11 +178,11 @@ func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExp
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(appCreator),
+		StartCmd(appCreator, simapp.DefaultNodeHome),
 		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(appExport),
+		ExportCmd(appExport, simapp.DefaultNodeHome),
 		flags.LineBreak,
 		version.NewVersionCommand(),
 	)

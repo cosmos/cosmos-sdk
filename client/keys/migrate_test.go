@@ -16,7 +16,7 @@ import (
 func Test_runMigrateCmd(t *testing.T) {
 	cmd := AddKeyCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
 	copy.Copy("testdata", kbHome)
@@ -32,7 +32,7 @@ func Test_runMigrateCmd(t *testing.T) {
 	assert.NoError(t, cmd.Execute())
 
 	cmd = MigrateCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{

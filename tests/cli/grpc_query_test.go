@@ -1,21 +1,19 @@
+// +build cli_test
+
 package cli_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-
-	"github.com/cosmos/cosmos-sdk/tests/cli"
-
-	"google.golang.org/grpc"
-
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/tests/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
 func TestCliQueryConn(t *testing.T) {

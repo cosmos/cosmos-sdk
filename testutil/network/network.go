@@ -206,7 +206,7 @@ func New(t *testing.T, cfg Config) *Network {
 
 			_, grpcPort, err := server.FreeTCPAddr()
 			require.NoError(t, err)
-			appCfg.GRPC.Address = fmt.Sprintf(":%s", grpcPort)
+			appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			appCfg.GRPC.Enable = true
 		}
 

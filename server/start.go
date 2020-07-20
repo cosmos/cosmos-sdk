@@ -311,7 +311,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		}
 
 		if grpcSrv != nil {
-			_ = grpcSrv.Stop
+			grpcSrv.Stop()
 		}
 
 		ctx.Logger.Info("exiting...")

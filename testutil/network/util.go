@@ -1,6 +1,7 @@
 package network
 
 import (
+	"net"
 	"path/filepath"
 	"time"
 
@@ -12,9 +13,12 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	grpcproxy "github.com/cosmos/cosmos-sdk/server/grpc"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -81,6 +85,30 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 
 		val.api = apiSrv
+	}
+
+	// TODO Factor code with server/start.go
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv := grpc.NewServer()
+		app.RegisterGRPC(grpcSrv)
+
+		// proxy queries to the ABCI query endpoint
+		proxyInterceptor := grpcproxy.ABCIQueryProxyInterceptor(val.ClientCtx)
+		proxySrv := grpcproxy.NewProxyServer(grpcSrv, proxyInterceptor)
+		app.RegisterGRPCProxy(proxySrv)
+
+		reflection.Register(grpcSrv)
+
+		listener, err := net.Listen("tcp", val.AppConfig.GRPC.Address)
+
+		if err != nil {
+			return err
+		}
+
+		err = grpcSrv.Serve(listener)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

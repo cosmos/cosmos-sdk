@@ -146,7 +146,7 @@ func DefaultConfig() *Config {
 		},
 		GRPC: GRPCConfig{
 			Enable:  false,
-			Address: "tcp://0.0.0.0:9090",
+			Address: "0.0.0.0:9090",
 		},
 	}
 }

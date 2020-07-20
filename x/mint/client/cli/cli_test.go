@@ -1,30 +1,62 @@
-// +build cli_test
-
 package cli_test
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/tests/cli"
-	"github.com/cosmos/cosmos-sdk/x/mint/client/testutil"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestCLIMintQueries(t *testing.T) {
-	t.SkipNow() // TODO: Bring back once viper is refactored.
-	t.Parallel()
-	f := cli.InitFixtures(t)
+type IntegrationTestSuite struct {
+	suite.Suite
 
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	cfg     testnet.Config
+	network *testnet.Network
+}
 
-	params := testutil.QueryMintingParams(f)
-	require.NotEmpty(t, params)
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
 
-	inflation := testutil.QueryInflation(f)
-	require.False(t, inflation.IsZero())
+	cfg := testnet.DefaultConfig()
+	genesisState := cfg.GenesisState
+	cfg.NumValidators = 1
 
-	annualProvisions := testutil.QueryAnnualProvisions(f)
-	require.False(t, annualProvisions.IsZero())
+	var mintData minttypes.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
+
+	inflation := sdk.MustNewDecFromStr("1.0")
+	mintData.Minter.Inflation = inflation
+	mintData.Params.InflationMin = inflation
+	mintData.Params.InflationMax = inflation
+
+	mintDataBz, err := cfg.Codec.MarshalJSON(mintData)
+	s.Require().NoError(err)
+	genesisState[minttypes.ModuleName] = mintDataBz
+	cfg.GenesisState = genesisState
+
+	s.cfg = cfg
+	s.network = testnet.New(s.T(), cfg)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
+
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
+
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

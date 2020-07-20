@@ -279,7 +279,7 @@ func GetCmdQueryUnrelayedPackets() *cobra.Command {
 If the '-acknowledgements' flag is false (default) then the return value represents:
 - Unrelayed packet commitments: no acknowledgement exists for the given packet commitment sequence.
 
-otherwise the return value represents:
+Otherwise, the return value represents:
 - Unrelayed packet acknowledgements: an acknowledgement exists for the given packet commitment sequence.`,
 		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id] --sequences=1,2,3 --acknowledgements=false", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(3),

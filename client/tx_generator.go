@@ -7,10 +7,10 @@ import (
 )
 
 type (
-	// TxGenerator defines an interface a client can utilize to generate an
+	// TxConfig defines an interface a client can utilize to generate an
 	// application-defined concrete transaction type. The type returned must
 	// implement TxBuilder.
-	TxGenerator interface {
+	TxConfig interface {
 		NewTxBuilder() TxBuilder
 		SignModeHandler() signing.SignModeHandler
 		WrapTxBuilder(sdk.Tx) (TxBuilder, error)

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 
@@ -127,9 +127,9 @@ func TestReadStdTxFromFile(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
+	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxGenerator(txGen)
+	clientCtx = clientCtx.WithTxConfig(txGen)
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
@@ -206,47 +206,47 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
-// func TestPrepareTxBuilder(t *testing.T) {
-// 	cdc := makeCodec()
-//
-// 	encodingConfig := simappparams.MakeEncodingConfig()
-// 	sdk.RegisterCodec(encodingConfig.Amino)
-//
-// 	fromAddr := sdk.AccAddress("test-addr0000000000")
-// 	fromAddrStr := fromAddr.String()
-//
-// 	var accNum uint64 = 10
-// 	var accSeq uint64 = 17
-//
-// 	txGen := encodingConfig.TxGenerator
-// 	clientCtx := client.Context{}
-// 	clientCtx = clientCtx.
-// 		WithTxGenerator(txGen).
-// 		WithJSONMarshaler(encodingConfig.Marshaler).
-// 		WithAccountRetriever(client.TestAccountRetriever{Accounts: map[string]struct {
-// 			Address sdk.AccAddress
-// 			Num     uint64
-// 			Seq     uint64
-// 		}{
-// 			fromAddrStr: {
-// 				Address: fromAddr,
-// 				Num:     accNum,
-// 				Seq:     accSeq,
-// 			},
-// 		}}).
-// 		WithFromAddress(fromAddr)
-//
-// 	bldr := tx.NewFactoryCLI(clientCtx, )
-// 		authtypes.DefaultTxEncoder(cdc), 0, 0,
-// 		200000, 1.1, false, "test-chain",
-// 		"test-builder", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
-// 		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))})
-//
-// 	bldr, err := PrepareTxBuilder(bldr, clientCtx)
-// 	require.NoError(t, err)
-// 	require.Equal(t, accNum, bldr.AccountNumber())
-// 	require.Equal(t, accSeq, bldr.Sequence())
-// }
+func TestPrepareTxBuilder(t *testing.T) {
+	cdc := makeCodec()
+
+	encodingConfig := simappparams.MakeEncodingConfig()
+	sdk.RegisterCodec(encodingConfig.Amino)
+
+	fromAddr := sdk.AccAddress("test-addr0000000000")
+	fromAddrStr := fromAddr.String()
+
+	var accNum uint64 = 10
+	var accSeq uint64 = 17
+
+	txGen := encodingConfig.TxConfig
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.
+		WithTxConfig(txGen).
+		WithJSONMarshaler(encodingConfig.Marshaler).
+		WithAccountRetriever(client.TestAccountRetriever{Accounts: map[string]struct {
+			Address sdk.AccAddress
+			Num     uint64
+			Seq     uint64
+		}{
+			fromAddrStr: {
+				Address: fromAddr,
+				Num:     accNum,
+				Seq:     accSeq,
+			},
+		}}).
+		WithFromAddress(fromAddr)
+
+	bldr := authtypes.NewTxBuilder(
+		authtypes.DefaultTxEncoder(cdc), 0, 0,
+		200000, 1.1, false, "test-chain",
+		"test-builder", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
+		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))})
+
+	bldr, err := PrepareTxBuilder(bldr, clientCtx)
+	require.NoError(t, err)
+	require.Equal(t, accNum, bldr.AccountNumber())
+	require.Equal(t, accSeq, bldr.Sequence())
+}
 
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()

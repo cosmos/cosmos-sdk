@@ -137,7 +137,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 		return
 	}
 
-	return ctx.TxGenerator.TxJSONDecoder()(bytes)
+	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.

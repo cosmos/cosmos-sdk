@@ -1,5 +1,3 @@
-// +build cli_test
-
 package cli
 
 import (
@@ -8,20 +6,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func TestCliQueryConn(t *testing.T) {
-	t.Parallel()
-	f := NewFixtures(t)
+func TestCLIQueryConn(t *testing.T) {
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 1
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	n := network.New(t, cfg)
+	defer n.Cleanup()
 
-	ctx := client.NewContext()
-	testClient := testdata.NewTestServiceClient(ctx)
+	testClient := testdata.NewTestServiceClient(n.Validators[0].ClientCtx)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	require.NoError(t, err)
 	require.Equal(t, "hello", res.Message)

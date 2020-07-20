@@ -273,6 +273,8 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (m
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	unbondingTimesliceIterator := k.UBDQueueIterator(ctx, ctx.BlockHeader().Time)
+	defer unbondingTimesliceIterator.Close()
+
 	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
 		timeslice := types.DVPairs{}
 		value := unbondingTimesliceIterator.Value()
@@ -474,6 +476,8 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)
+	defer redelegationTimesliceIterator.Close()
+
 	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
 		timeslice := types.DVVTriplets{}
 		value := redelegationTimesliceIterator.Value()

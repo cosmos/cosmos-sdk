@@ -3,12 +3,13 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -41,7 +42,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 	store := ctx.KVStore(q.storeKey)
 	proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
-	res, err := query.FilteredPaginate(proposalStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(proposalStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var p types.Proposal
 		if err := q.cdc.UnmarshalBinaryBare(value, &p); err != nil {
 			return false, status.Error(codes.Internal, err.Error())
@@ -79,7 +80,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryProposalsResponse{Proposals: filteredProposals, Res: res}, nil
+	return &types.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
 }
 
 // Vote returns Voted information based on proposalID, voterAddr
@@ -123,7 +124,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 	store := ctx.KVStore(q.storeKey)
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
 
-	res, err := query.Paginate(votesStore, req.Req, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key []byte, value []byte) error {
 		var vote types.Vote
 		if err := q.cdc.UnmarshalBinaryBare(value, &vote); err != nil {
 			return err
@@ -137,7 +138,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryVotesResponse{Votes: votes, Res: res}, nil
+	return &types.QueryVotesResponse{Votes: votes, Pagination: pageRes}, nil
 }
 
 // Params queries all params
@@ -208,7 +209,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 	store := ctx.KVStore(q.storeKey)
 	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
 
-	res, err := query.Paginate(depositStore, req.Req, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
 		var deposit types.Deposit
 		if err := q.cdc.UnmarshalBinaryBare(value, &deposit); err != nil {
 			return err
@@ -222,7 +223,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDepositsResponse{Deposits: deposits, Res: res}, nil
+	return &types.QueryDepositsResponse{Deposits: deposits, Pagination: pageRes}, nil
 }
 
 // TallyResult queries the tally of a proposal vote

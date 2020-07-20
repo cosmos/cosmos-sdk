@@ -1,24 +1,19 @@
 package client
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,133 +42,13 @@ type Context struct {
 	GenerateOnly      bool
 	Offline           bool
 	SkipConfirm       bool
-	TxGenerator       TxGenerator
+	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
 	Verifier          tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
-}
-
-// TODO: Remove all New* and Init* methods.
-
-// NewContextWithInputAndFrom returns a new initialized Context with parameters from the
-// command line using Viper. It takes a io.Reader and and key name or address and populates
-// the FromName and  FromAddress field accordingly. It will also create Tendermint verifier
-// using  the chain ID, home directory and RPC URI provided by the command line. If using
-// a Context in tests or any non CLI-based environment, the verifier will not be created
-// and will be set as nil because FlagTrustNode must be set.
-func NewContextWithInputAndFrom(input io.Reader, from string) Context {
-	ctx := Context{}
-	return ctx.InitWithInputAndFrom(input, from)
-}
-
-// NewContextWithFrom returns a new initialized Context with parameters from the
-// command line using Viper. It takes a key name or address and populates the FromName and
-// FromAddress field accordingly. It will also create Tendermint verifier using
-// the chain ID, home directory and RPC URI provided by the command line. If using
-// a Context in tests or any non CLI-based environment, the verifier will not
-// be created and will be set as nil because FlagTrustNode must be set.
-func NewContextWithFrom(from string) Context {
-	return NewContextWithInputAndFrom(os.Stdin, from)
-}
-
-// NewContext returns a new initialized Context with parameters from the
-// command line using Viper.
-func NewContext() Context { return NewContextWithFrom(viper.GetString(flags.FlagFrom)) }
-
-// InitWithInputAndFrom returns a new Context re-initialized from an existing
-// Context with a new io.Reader and from parameter
-func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
-	input = bufio.NewReader(input)
-
-	var (
-		nodeURI string
-		rpc     rpcclient.Client
-		err     error
-	)
-
-	offline := viper.GetBool(flags.FlagOffline)
-	if !offline {
-		nodeURI = viper.GetString(flags.FlagNode)
-		if nodeURI != "" {
-			rpc, err = rpchttp.New(nodeURI, "/websocket")
-			if err != nil {
-				fmt.Printf("failted to get client: %v\n", err)
-				os.Exit(1)
-			}
-		}
-	}
-
-	trustNode := viper.GetBool(flags.FlagTrustNode)
-
-	ctx.Client = rpc
-	ctx.ChainID = viper.GetString(flags.FlagChainID)
-	ctx.Input = input
-	ctx.Output = os.Stdout
-	ctx.NodeURI = nodeURI
-	ctx.From = viper.GetString(flags.FlagFrom)
-	ctx.OutputFormat = viper.GetString(cli.OutputFlag)
-	ctx.Height = viper.GetInt64(flags.FlagHeight)
-	ctx.TrustNode = trustNode
-	ctx.UseLedger = viper.GetBool(flags.FlagUseLedger)
-	ctx.BroadcastMode = viper.GetString(flags.FlagBroadcastMode)
-	ctx.Simulate = viper.GetBool(flags.FlagDryRun)
-	ctx.Offline = offline
-	ctx.SkipConfirm = viper.GetBool(flags.FlagSkipConfirmation)
-	ctx.HomeDir = viper.GetString(flags.FlagHome)
-	ctx.GenerateOnly = viper.GetBool(flags.FlagGenerateOnly)
-
-	backend := viper.GetString(flags.FlagKeyringBackend)
-	if len(backend) == 0 {
-		backend = keyring.BackendMemory
-	}
-
-	kr, err := newKeyringFromFlags(ctx, backend)
-	if err != nil {
-		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
-	}
-
-	fromAddress, fromName, err := GetFromFields(kr, from, ctx.GenerateOnly)
-	if err != nil {
-		fmt.Printf("failed to get from fields: %v\n", err)
-		os.Exit(1)
-	}
-
-	ctx.Keyring = kr
-	ctx.FromAddress = fromAddress
-	ctx.FromName = fromName
-
-	if offline {
-		return ctx
-	}
-
-	// create a verifier for the specific chain ID and RPC client
-	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && !trustNode {
-		fmt.Printf("failed to create verifier: %s\n", err)
-		os.Exit(1)
-	}
-
-	ctx.Verifier = verifier
-	return ctx
-}
-
-// InitWithFrom returns a new Context re-initialized from an existing
-// Context with a new from parameter
-func (ctx Context) InitWithFrom(from string) Context {
-	return ctx.InitWithInputAndFrom(os.Stdin, from)
-}
-
-// Init returns a new Context re-initialized from an existing
-// Context with parameters from the command line using Viper.
-func (ctx Context) Init() Context { return ctx.InitWithFrom(viper.GetString(flags.FlagFrom)) }
-
-// InitWithInput returns a new Context re-initialized from an existing
-// Context with a new io.Reader and from parameter
-func (ctx Context) InitWithInput(input io.Reader) Context {
-	return ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -319,9 +194,9 @@ func (ctx Context) WithSkipConfirmation(skip bool) Context {
 	return ctx
 }
 
-// WithTxGenerator returns the context with an updated TxGenerator
-func (ctx Context) WithTxGenerator(generator TxGenerator) Context {
-	ctx.TxGenerator = generator
+// WithTxConfig returns the context with an updated TxConfig
+func (ctx Context) WithTxConfig(generator TxConfig) Context {
+	ctx.TxConfig = generator
 	return ctx
 }
 

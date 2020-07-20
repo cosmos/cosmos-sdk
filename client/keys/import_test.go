@@ -16,7 +16,7 @@ import (
 
 func Test_runImportCmd(t *testing.T) {
 	cmd := ImportKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	// Now add a temporary keybase

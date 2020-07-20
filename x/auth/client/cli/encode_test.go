@@ -23,7 +23,7 @@ func TestGetCommandEncode(t *testing.T) {
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
+	txGen := encodingConfig.TxConfig
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
@@ -37,7 +37,7 @@ func TestGetCommandEncode(t *testing.T) {
 
 	ctx := context.Background()
 	clientCtx := client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator).
+		WithTxConfig(encodingConfig.TxConfig).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
@@ -50,7 +50,7 @@ func TestGetCommandDecode(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 
 	clientCtx := client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator).
+		WithTxConfig(encodingConfig.TxConfig).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetDecodeCommand()
@@ -58,15 +58,15 @@ func TestGetCommandDecode(t *testing.T) {
 
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
-	clientCtx = clientCtx.WithTxGenerator(txGen)
+	txGen := encodingConfig.TxConfig
+	clientCtx = clientCtx.WithTxConfig(txGen)
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
 
 	// Encode transaction
-	txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
 	require.NoError(t, err)
 
 	// Convert the transaction into base64 encoded string

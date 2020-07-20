@@ -167,7 +167,6 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   * [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client) subpackage
   * [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer) module
   * [ICS 023 - Vector Commitments](https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments) subpackage
-  * (ibc/ante) Implement IBC `AnteHandler` as per [ADR 15 - IBC Packet Receiver](https://github.com/cosmos/tree/master/docs/architecture/adr-015-ibc-packet-receiver.md).
   * (x/capability) [\#5828](https://github.com/cosmos/cosmos-sdk/pull/5828) Capability module integration as outlined in [ADR 3 - Dynamic Capability Store](https://github.com/cosmos/tree/master/docs/architecture/adr-003-dynamic-capability-store.md).
   * (x/params) [\#6005](https://github.com/cosmos/cosmos-sdk/pull/6005) Add new CLI command for querying raw x/params parameters by subspace and key.
   * (x/ibc) [\#5769](https://github.com/cosmos/cosmos-sdk/pull/5769) [ICS 009 - Loopback Client](https://github.com/cosmos/ics/tree/master/spec/ics-009-loopback-client) subpackage
@@ -314,6 +313,7 @@ pagination.
 * (types) [\#6195](https://github.com/cosmos/cosmos-sdk/pull/6195) Add codespace to broadcast(sync/async) response.
 * (baseapp) [\#6053](https://github.com/cosmos/cosmos-sdk/pull/6053) Customizable panic recovery handling added for `app.runTx()` method (as proposed in the [ADR 22](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-022-custom-panic-handling.md)). Adds ability for developers to register custom panic handlers extending standard ones.
 * (store) [\#6481](https://github.com/cosmos/cosmos-sdk/pull/6481) Move `SimpleProofsFromMap` from Tendermint into the SDK.
+* (store) [\#6719](https://github.com/cosmos/cosmos-sdk/6754) Add validity checks to stores for nil and empty keys.
 
 ## [v0.38.5] - 2020-07-02
 

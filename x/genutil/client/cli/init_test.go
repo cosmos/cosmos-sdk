@@ -95,8 +95,7 @@ func TestInitCmd(t *testing.T) {
 }
 
 func setupClientHome(t *testing.T) func() {
-	clientDir, cleanup := testutil.NewTestCaseDir(t)
-	viper.Set(cli.HomeFlag, clientDir)
+	_, cleanup := testutil.NewTestCaseDir(t)
 	return cleanup
 }
 
@@ -126,7 +125,7 @@ func TestEmptyState(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = server.ExportCmd(nil)
+	cmd = server.ExportCmd(nil, home)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 

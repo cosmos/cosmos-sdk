@@ -21,8 +21,8 @@ type generator struct {
 	jsonEncoder sdk.TxEncoder
 }
 
-// NewTxGenerator returns a new protobuf TxGenerator using the provided Marshaler, PublicKeyCodec and SignModeHandler.
-func NewTxGenerator(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxGenerator {
+// NewTxConfig returns a new protobuf TxConfig using the provided Marshaler, PublicKeyCodec and SignModeHandler.
+func NewTxConfig(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
 	return &generator{
 		marshaler:   marshaler,
 		pubkeyCodec: pubkeyCodec,

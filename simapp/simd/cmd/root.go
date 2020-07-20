@@ -46,7 +46,7 @@ var (
 	encodingConfig = simapp.MakeEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
-			WithTxGenerator(encodingConfig.TxGenerator).
+			WithTxConfig(encodingConfig.TxConfig).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
 			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
@@ -79,7 +79,7 @@ func init() {
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
-		AddGenesisAccountCmd(),
+		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		cli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -92,7 +92,7 @@ func init() {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(),
+		keys.Commands(simapp.DefaultNodeHome),
 	)
 }
 

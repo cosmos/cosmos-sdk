@@ -313,7 +313,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.C
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, txGen client.TxGenerator, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
+	t *testing.T, txGen client.TxConfig, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 
@@ -363,7 +363,7 @@ func SignCheckDeliver(
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
-func GenSequenceOfTxs(txGen client.TxGenerator, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) ([]sdk.Tx, error) {
+func GenSequenceOfTxs(txGen client.TxConfig, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) ([]sdk.Tx, error) {
 	txs := make([]sdk.Tx, numToGenerate)
 	var err error
 	for i := 0; i < numToGenerate; i++ {

@@ -144,7 +144,7 @@ $ %s query gov proposals --page=2 --limit=100
 					ProposalStatus: proposalStatus,
 					Voter:          voterAddr,
 					Depositor:      depositorAddr,
-					Req:            pageReq,
+					Pagination:     pageReq,
 				},
 			)
 			if err != nil {
@@ -303,7 +303,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 			res, err := queryClient.Votes(
 				context.Background(),
-				&types.QueryVotesRequest{ProposalId: proposalID, Req: pageReq},
+				&types.QueryVotesRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
 			if err != nil {
 				return err
@@ -450,7 +450,7 @@ $ %s query gov deposits 1
 
 			res, err := queryClient.Deposits(
 				context.Background(),
-				&types.QueryDepositsRequest{ProposalId: proposalID, Req: pageReq},
+				&types.QueryDepositsRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
 			if err != nil {
 				return err

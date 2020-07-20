@@ -76,7 +76,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	store := ctx.KVStore(k.storeKey)
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(req.ValidatorAddress))
 
-	res, err := query.FilteredPaginate(slashesStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.ValidatorSlashEvent
 		err := k.cdc.UnmarshalBinaryBare(value, &result)
 
@@ -98,7 +98,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 		return &types.QueryValidatorSlashesResponse{}, err
 	}
 
-	return &types.QueryValidatorSlashesResponse{Slashes: events, Res: res}, nil
+	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil
 }
 
 // DelegationRewards the total rewards accrued by a delegation

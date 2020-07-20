@@ -37,7 +37,7 @@ func Test_showKeysCmd(t *testing.T) {
 
 func Test_runShowCmd(t *testing.T) {
 	cmd := ShowKeysCmd()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{"invalid"})

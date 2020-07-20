@@ -35,6 +35,7 @@ update-swagger-docs: statik
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+	mockgen -source=types/handler.go -package mocks -destination tests/mocks/types_handler.go
 .PHONY: mocks
 
 $(MOCKS_DIR):

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func TestCliQueryConn(t *testing.T) {
+func TestCLIQueryConn(t *testing.T) {
 	t.Parallel()
 	f := NewFixtures(t)
 
@@ -20,7 +20,7 @@ func TestCliQueryConn(t *testing.T) {
 	proc := f.SDStart()
 	t.Cleanup(func() { proc.Stop(false) })
 
-	ctx := client.NewContext()
+	ctx := client.Context{}
 	testClient := testdata.NewTestServiceClient(ctx)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	require.NoError(t, err)

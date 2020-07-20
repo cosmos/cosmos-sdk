@@ -16,7 +16,7 @@ import (
 
 func Test_runListCmd(t *testing.T) {
 	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	kbHome1, cleanUp1 := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp1)

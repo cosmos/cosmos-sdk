@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestCliQueryConn(t *testing.T) {
@@ -59,7 +59,6 @@ func (s *IntegrationTestSuite) TestGRPC() {
 	testClient := testdata.NewTestServiceClient(conn)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
-	s.Require().Equal("a", "b")
 	s.Require().Equal("hello", res.Message)
 }
 

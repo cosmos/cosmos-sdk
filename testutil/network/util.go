@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"net"
 	"path/filepath"
 	"time"
@@ -105,7 +106,9 @@ func startInProcess(cfg Config, val *Validator) error {
 			return err
 		}
 
+		fmt.Println("GRPC server hangs here...")
 		err = grpcSrv.Serve(listener)
+		fmt.Println("never called")
 		if err != nil {
 			return err
 		}

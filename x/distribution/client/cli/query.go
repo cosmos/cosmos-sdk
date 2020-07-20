@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -49,19 +49,14 @@ func GetCmdQueryParams() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			queryClient := types.NewQueryClient(clientCtx)
 
-			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
-			res, _, err := clientCtx.QueryWithData(route, nil)
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}
 
-			var params types.Params
-			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &params); err != nil {
-				return fmt.Errorf("failed to unmarshal params: %w", err)
-			}
-
-			return clientCtx.PrintOutput(params)
+			return clientCtx.PrintOutput(res.GetParams())
 		},
 	}
 
@@ -91,32 +86,22 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 			if err != nil {
 				return err
 			}
+			queryClient := types.NewQueryClient(clientCtx)
 
-			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			params := types.NewQueryValidatorOutstandingRewardsParams(valAddr)
-			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-			if err != nil {
-				return err
-			}
-
-			resp, _, err := clientCtx.QueryWithData(
-				fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidatorOutstandingRewards),
-				bz,
+			res, err := queryClient.ValidatorOutstandingRewards(
+				context.Background(),
+				&types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: validatorAddr},
 			)
 			if err != nil {
 				return err
 			}
 
-			var outstandingRewards types.ValidatorOutstandingRewards
-			if err := clientCtx.JSONMarshaler.UnmarshalJSON(resp, &outstandingRewards); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(outstandingRewards)
+			return clientCtx.PrintOutput(res.GetRewards())
 		},
 	}
 
@@ -145,23 +130,22 @@ $ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 			if err != nil {
 				return err
 			}
+			queryClient := types.NewQueryClient(clientCtx)
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := common.QueryValidatorCommission(clientCtx, validatorAddr)
+			res, err := queryClient.ValidatorCommission(
+				context.Background(),
+				&types.QueryValidatorCommissionRequest{ValidatorAddress: validatorAddr},
+			)
 			if err != nil {
 				return err
 			}
 
-			var valCom types.ValidatorAccumulatedCommission
-			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &valCom); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(valCom)
+			return clientCtx.PrintOutput(res.GetCommission())
 		},
 	}
 
@@ -190,6 +174,7 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 			if err != nil {
 				return err
 			}
+			queryClient := types.NewQueryClient(clientCtx)
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -206,27 +191,27 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 				return fmt.Errorf("end-height %s not a valid uint, please input a valid end-height", args[2])
 			}
 
-			params := types.NewQueryValidatorSlashesParams(validatorAddr, startHeight, endHeight)
-			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+			pageReq := client.ReadPageRequest(cmd.Flags())
+
+			res, err := queryClient.ValidatorSlashes(
+				context.Background(),
+				&types.QueryValidatorSlashesRequest{
+					ValidatorAddress: validatorAddr,
+					StartingHeight:   startHeight,
+					EndingHeight:     endHeight,
+					Req:              pageReq,
+				},
+			)
 			if err != nil {
 				return err
 			}
 
-			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_slashes", types.QuerierRoute), bz)
-			if err != nil {
-				return err
-			}
-
-			var slashes []types.ValidatorSlashEvent
-			if err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &slashes); err != nil {
-				return fmt.Errorf("failed to unmarshal response: %w", err)
-			}
-
-			return clientCtx.PrintOutput(slashes)
+			return clientCtx.PrintOutput(res.GetSlashes())
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "validator slashes")
 	return cmd
 }
 
@@ -252,46 +237,40 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 			if err != nil {
 				return err
 			}
-
-			// query for rewards from a particular delegation
-			if len(args) == 2 {
-				resp, _, err := common.QueryDelegationRewards(clientCtx, args[0], args[1])
-				if err != nil {
-					return err
-				}
-
-				var result sdk.DecCoins
-				if err = clientCtx.JSONMarshaler.UnmarshalJSON(resp, &result); err != nil {
-					return fmt.Errorf("failed to unmarshal response: %w", err)
-				}
-
-				return clientCtx.PrintOutput(result)
-			}
+			queryClient := types.NewQueryClient(clientCtx)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			params := types.NewQueryDelegatorParams(delegatorAddr)
-			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-			if err != nil {
-				return fmt.Errorf("failed to marshal params: %w", err)
+			// query for rewards from a particular delegation
+			if len(args) == 2 {
+				validatorAddr, err := sdk.ValAddressFromBech32(args[1])
+				if err != nil {
+					return err
+				}
+
+				res, err := queryClient.DelegationRewards(
+					context.Background(),
+					&types.QueryDelegationRewardsRequest{DelegatorAddress: delegatorAddr, ValidatorAddress: validatorAddr},
+				)
+				if err != nil {
+					return err
+				}
+
+				return clientCtx.PrintOutput(res.GetRewards())
 			}
 
-			// query for delegator total rewards
-			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorTotalRewards)
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			res, err := queryClient.DelegationTotalRewards(
+				context.Background(),
+				&types.QueryDelegationTotalRewardsRequest{DelegatorAddress: delegatorAddr},
+			)
 			if err != nil {
 				return err
 			}
 
-			var result types.QueryDelegatorTotalRewardsResponse
-			if err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &result); err != nil {
-				return fmt.Errorf("failed to unmarshal response: %w", err)
-			}
-
-			return clientCtx.PrintOutput(result)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -299,7 +278,7 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 	return cmd
 }
 
-// GetCmdQueryCommunityPool returns the command for fetching community pool info
+// GetCmdQueryCommunityPool returns the command for fetching community pool info.
 func GetCmdQueryCommunityPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool",
@@ -320,18 +299,14 @@ $ %s query distribution community-pool
 			if err != nil {
 				return err
 			}
+			queryClient := types.NewQueryClient(clientCtx)
 
-			res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", types.QuerierRoute), nil)
+			res, err := queryClient.CommunityPool(context.Background(), &types.QueryCommunityPoolRequest{})
 			if err != nil {
 				return err
 			}
 
-			var result sdk.DecCoins
-			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &result); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(result)
+			return clientCtx.PrintOutput(res.GetPool())
 		},
 	}
 

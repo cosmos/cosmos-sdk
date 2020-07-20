@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
@@ -23,7 +22,7 @@ func TestParseSubmitProposalFlags(t *testing.T) {
 	badJSON, cleanup2 := testutil.WriteToNewTempFile(t, "bad json")
 	t.Cleanup(cleanup2)
 
-	fs := NewCmdSubmitProposal(client.Context{}).Flags()
+	fs := NewCmdSubmitProposal().Flags()
 
 	// nonexistent json
 	fs.Set(FlagProposal, "fileDoesNotExist")

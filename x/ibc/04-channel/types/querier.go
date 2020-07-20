@@ -9,14 +9,8 @@ import (
 
 // query routes supported by the IBC channel Querier
 const (
-	QueryAllChannels               = "channels"
-	QueryChannel                   = "channel"
-	QueryConnectionChannels        = "connection-channels"
-	QueryChannelClientState        = "channel-client-state"
-	QueryChannelConsensusState     = "channel-consensus-state"
-	QueryPacketCommitments         = "packet-commitments"
-	QueryUnrelayedAcknowledgements = "unrelayed-acknowledgements"
-	QueryUnrelayedPacketSends      = "unrelayed-packet-sends"
+	QueryChannelClientState    = "channel-client-state"
+	QueryChannelConsensusState = "channel-consensus-state"
 )
 
 // NewQueryChannelResponse creates a new QueryChannelResponse instance
@@ -40,6 +34,19 @@ func NewQueryPacketCommitmentResponse(
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
 		ProofHeight: uint64(height),
+	}
+}
+
+// NewQueryPacketAcknowledgementResponse creates a new QueryPacketAcknowledgementResponse instance
+func NewQueryPacketAcknowledgementResponse(
+	portID, channelID string, sequence uint64, acknowledgement []byte, proof []byte, height int64,
+) *QueryPacketAcknowledgementResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.PacketAcknowledgementPath(portID, channelID, sequence), "/"))
+	return &QueryPacketAcknowledgementResponse{
+		Acknowledgement: acknowledgement,
+		Proof:           proof,
+		ProofPath:       path.Pretty(),
+		ProofHeight:     uint64(height),
 	}
 }
 

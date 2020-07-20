@@ -55,7 +55,7 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx.WithInput(cmd.InOrStdin())
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			txf, msg, err := NewBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {

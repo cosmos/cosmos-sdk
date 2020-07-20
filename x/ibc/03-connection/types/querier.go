@@ -7,13 +7,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// query routes supported by the IBC connection Querier
-const (
-	QueryAllConnections       = "connections"
-	QueryClientConnections    = "client_connections"
-	QueryAllClientConnections = "all_client_connections"
-)
-
 // NewQueryConnectionResponse creates a new QueryConnectionResponse instance
 func NewQueryConnectionResponse(
 	connection ConnectionEnd, proof []byte, height int64,

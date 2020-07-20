@@ -104,6 +104,8 @@ func (AppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns the capability module's Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // RegisterInvariants registers the capability module's invariants.

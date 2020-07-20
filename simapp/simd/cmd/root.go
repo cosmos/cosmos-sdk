@@ -46,7 +46,7 @@ var (
 	encodingConfig = simapp.MakeEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
-			WithTxGenerator(encodingConfig.TxGenerator).
+			WithTxConfig(encodingConfig.TxConfig).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
 			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
@@ -107,11 +107,11 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(encodingConfig.Amino),
-		rpc.ValidatorCommand(encodingConfig.Amino),
+		authcmd.GetAccountCmd(),
+		rpc.ValidatorCommand(),
 		rpc.BlockCommand(),
-		authcmd.QueryTxsByEventsCmd(encodingConfig.Amino),
-		authcmd.QueryTxCmd(encodingConfig.Amino),
+		authcmd.QueryTxsByEventsCmd(),
+		authcmd.QueryTxCmd(),
 	)
 
 	simapp.ModuleBasics.AddQueryCommands(cmd, initClientCtx)

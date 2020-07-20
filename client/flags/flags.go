@@ -126,7 +126,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	viper.BindPFlag(FlagKeyringBackend, cmd.Flags().Lookup(FlagKeyringBackend))
 }
 
-// AddPaginationFlagsToCmd adds common paginations flags to command
+// AddPaginationFlagsToCmd adds common pagination flags to cmd
 func AddPaginationFlagsToCmd(cmd *cobra.Command, query string) {
 	cmd.Flags().String(FlagPageKey, "", fmt.Sprintf("pagination page-key of %s to query for", query))
 	cmd.Flags().Uint64(FlagOffset, 0, fmt.Sprintf("pagination offset of %s to query for", query))

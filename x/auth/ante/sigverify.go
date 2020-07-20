@@ -230,7 +230,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrUnauthorized,
-					"signature verification failed; verify correct account sequence (%d) and chain-id (%s)", signerAccs[i].GetSequence(), ctx.ChainID())
+					"signature verification failed; verify correct account number (%d), account sequence (%d), and chain-id (%s)", signerAccs[i].GetAccountNumber(), signerAccs[i].GetSequence(), ctx.ChainID())
 			}
 		}
 	}

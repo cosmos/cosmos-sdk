@@ -118,6 +118,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return nil
 }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the ibc transfer module. It returns
@@ -195,7 +197,7 @@ func (am AppModule) OnChanOpenInit(
 	}
 
 	if version != types.Version {
-		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got: %s, expected %s", version, types.Version)
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
 	}
 
 	// Claim channel capability passed back by IBC module

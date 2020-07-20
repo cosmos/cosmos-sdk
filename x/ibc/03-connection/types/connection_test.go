@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 var (
@@ -24,17 +25,17 @@ func TestConnectionValidateBasic(t *testing.T) {
 	}{
 		{
 			"valid connection",
-			types.ConnectionEnd{connectionID, clientID, []string{types.DefaultIBCVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{connectionID, clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			true,
 		},
 		{
 			"invalid connection id",
-			types.ConnectionEnd{"(connectionIDONE)", clientID, []string{types.DefaultIBCVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{"(connectionIDONE)", clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid client id",
-			types.ConnectionEnd{connectionID, "(clientID1)", []string{types.DefaultIBCVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{connectionID, "(clientID1)", []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
@@ -49,7 +50,7 @@ func TestConnectionValidateBasic(t *testing.T) {
 		},
 		{
 			"invalid counterparty",
-			types.ConnectionEnd{connectionID, clientID, []string{types.DefaultIBCVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, emptyPrefix}},
+			types.ConnectionEnd{connectionID, clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, emptyPrefix}},
 			false,
 		},
 	}

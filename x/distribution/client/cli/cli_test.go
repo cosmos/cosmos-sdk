@@ -445,7 +445,7 @@ total:
 func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 	val := s.network.Validators[0]
 
-	_, err := s.network.WaitForHeight(3)
+	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
 
 	testCases := []struct {

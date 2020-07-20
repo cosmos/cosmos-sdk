@@ -74,7 +74,7 @@ func TestCLICreateValidator(t *testing.T) {
 	// Query delegations to the validator
 	validatorDelegations := testutil.QueryStakingDelegationsTo(f, barVal)
 	require.Len(t, validatorDelegations, 1)
-	require.NotZero(t, validatorDelegations[0].Shares)
+	require.NotNil(t, validatorDelegations[0].Shares)
 
 	// Edit validator
 	// params to be changed in edit validator (NOTE: a validator can only change its commission once per day)

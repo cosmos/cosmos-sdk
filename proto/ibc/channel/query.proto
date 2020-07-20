@@ -24,6 +24,9 @@ service Query {
   // PacketCommitments returns the all the packet commitments hashes associated with a channel.
   rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {}
 
+  // PacketAcknowledgement queries a stored packet acknowledgement hash.
+  rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {}
+
   // UnrelayedPackets returns all the unrelayed IBC packets associated with a channel and sequences.
   rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {}
 
@@ -32,6 +35,7 @@ service Query {
 
   // TODO: blocked by client proto migration
   // rpc ChannelClientState(QueryChannelClientStateRequest) returns (QueryChannelClientStateRequest) {}
+  // rpc ChannelConsensusState(QueryChannelConsensusStateRequest) returns (QueryChannelConsensusStateRequest) {}  
 }
 
 // QueryChannelRequest is the request type for the Query/Channel RPC method
@@ -132,26 +136,47 @@ message QueryPacketCommitmentsResponse {
   int64 height = 3;
 }
 
-// QueryUnrelayedPacketsRequest is the request type for the Query/QueryConnectionChannels RPC method
+// QueryPacketAcknowledgementRequest is the request type for the Query/PacketAcknowledgement RPC method
+message QueryPacketAcknowledgementRequest {
+  // port unique identifier
+  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  // channel unique identifier
+  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  // packet sequence
+  uint64 sequence = 3;
+}
+
+// QueryPacketAcknowledgementResponse defines the client query response for a packet which also
+// includes a proof, its path and the height form which the proof was retrieved
+message QueryPacketAcknowledgementResponse {
+  // packet associated with the request fields
+  bytes acknowledgement = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
+}
+
+// QueryUnrelayedPacketsRequest is the request type for the Query/UnrelayedPackets RPC method
 message QueryUnrelayedPacketsRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   // channel unique identifier
   string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
   // list of packet sequences
-  repeated uint64 sequences = 3;
-  // pagination request
-  cosmos.query.PageRequest req = 4;
+  repeated uint64 packet_commitment_sequences = 3 [(gogoproto.customname) = "PacketCommitmentSequences"];
+  // flag indicating if the return value is packet commitments or acknowledgements
+  bool acknowledgements = 4;
 }
 
-// QueryUnrelayedPacketsResponse is the request type for the Query/QueryConnectionChannels RPC method
+// QueryUnrelayedPacketsResponse is the request type for the Query/UnrelayedPacketCommitments RPC method
 message QueryUnrelayedPacketsResponse {
-  // list of unrelayed packets sequences
-  repeated uint64 packets = 1;
-  // pagination response
-  cosmos.query.PageResponse res = 2;
+  // list of unrelayed packet sequences
+  repeated uint64 sequences = 1;
   // query block height
-  int64 height = 3;
+  int64 height = 2;
 }
 
 // QueryNextSequenceReceiveRequest is the request type for the Query/QueryNextSequenceReceiveRequest RPC method
@@ -176,6 +201,14 @@ message QueryNextSequenceReceiveResponse {
 
 // QueryChannelClientStateRequest is the request type for the Query/ClientState RPC method
 message QueryChannelClientStateRequest {
+  // port unique identifier
+  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  // channel unique identifier
+  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+}
+
+// QueryChannelConsensusStateRequest is the request type for the Query/ConsensusState RPC method
+message QueryChannelConsensusStateRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   // channel unique identifier

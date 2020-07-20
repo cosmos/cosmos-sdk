@@ -649,7 +649,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		events = events.AppendEvents(msgEvents)
 
 		txData.Data = append(txData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), msgResult.Log, msgEvents))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
 	data, err := proto.Marshal(txData)

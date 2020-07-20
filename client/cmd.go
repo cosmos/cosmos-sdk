@@ -100,20 +100,24 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithTrustNode(trustNode)
 	}
 
-	if flagSet.Changed(flags.FlagKeyringBackend) {
+	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
-		kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
-		if err != nil {
-			return clientCtx, err
-		}
+		if keyringBackend != "" {
+			kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+			if err != nil {
+				return clientCtx, err
+			}
 
-		clientCtx = clientCtx.WithKeyring(kr)
+			clientCtx = clientCtx.WithKeyring(kr)
+		}
 	}
 
-	if flagSet.Changed(flags.FlagNode) {
+	if clientCtx.Client == nil || flagSet.Changed(flags.FlagNode) {
 		rpcURI, _ := flagSet.GetString(flags.FlagNode)
-		clientCtx = clientCtx.WithNodeURI(rpcURI)
+		if rpcURI != "" {
+			clientCtx = clientCtx.WithNodeURI(rpcURI)
+		}
 	}
 
 	return clientCtx, nil

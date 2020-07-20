@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -105,7 +106,7 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	defer telemetry.MeasureSince("abci", "begin_block")
+	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
 
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
@@ -150,7 +151,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	defer telemetry.MeasureSince("abci", "end_block")
+	defer telemetry.MeasureSince(time.Now(), "abci", "end_block")
 
 	if app.deliverState.ms.TracingEnabled() {
 		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
@@ -170,7 +171,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // will contain releveant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-	defer telemetry.MeasureSince("abci", "check_tx")
+	defer telemetry.MeasureSince(time.Now(), "abci", "check_tx")
 
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
@@ -210,7 +211,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	defer telemetry.MeasureSince("abci", "deliver_tx")
+	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
 
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
@@ -250,7 +251,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
-	defer telemetry.MeasureSince("abci", "commit")
+	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
 	header := app.deliverState.ctx.BlockHeader()
 
@@ -318,7 +319,7 @@ func (app *BaseApp) halt() {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
-	defer telemetry.MeasureSince("abci", "query")
+	defer telemetry.MeasureSince(time.Now(), "abci", "query")
 
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths

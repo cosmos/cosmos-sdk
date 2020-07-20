@@ -374,3 +374,51 @@ message Params {
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   string bond_denom         = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
 }
+
+// DelegationResponse is equivalent to Delegation except that it contains a balance
+// in addition to shares which is more suitable for client responses.
+message DelegationResponse {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  Delegation delegation = 1 [(gogoproto.nullable) = false];
+
+  cosmos.Coin balance = 2 [(gogoproto.nullable) = false];
+}
+
+// RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
+// contains a balance in addition to shares which is more suitable for client
+// responses.
+message RedelegationEntryResponse {
+  option (gogoproto.equal) = true;
+
+  RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
+  string balance = 4 [
+                     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+                     (gogoproto.nullable)   = false
+                     ];
+}
+
+// RedelegationResponse is equivalent to a Redelegation except that its entries
+// contain a balance in addition to shares which is more suitable for client
+// responses.
+message RedelegationResponse {
+  option (gogoproto.equal) = true;
+
+  Redelegation redelegation = 1 [(gogoproto.nullable) = false];
+  repeated RedelegationEntryResponse entries = 2 [(gogoproto.nullable) = false];
+}
+
+// Pool - tracking bonded and not-bonded token supply of the bond denomination
+message Pool {
+  option (gogoproto.description) = true;
+  option (gogoproto.equal) = true;
+  string not_bonded_tokens = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+                                (gogoproto.jsontag)    = "not_bonded_tokens",
+                                (gogoproto.nullable)   = false];
+  string bonded_tokens = 2 [(gogoproto.jsontag)    = "bonded_tokens",
+                            (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+                            (gogoproto.nullable)   = false,
+                            (gogoproto.moretags)   = "yaml:\"bonded_tokens\""];
+}
+

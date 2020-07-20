@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// GetQueryCmd returns the parent command for all x/upgrade CLi query commands
+// GetQueryCmd returns the parent command for all x/upgrade CLi query commands.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   types.ModuleName,
@@ -26,7 +26,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCurrentPlanCmd returns the query upgrade plan command
+// GetCurrentPlanCmd returns the query upgrade plan command.
 func GetCurrentPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plan",
@@ -35,10 +35,14 @@ func GetCurrentPlanCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := types.NewQueryCurrentPlanRequest()
-			res, err := queryClient.CurrentPlan(context.Background(), params)
+			params := types.QueryCurrentPlanRequest{}
+			res, err := queryClient.CurrentPlan(context.Background(), &params)
 			if err != nil {
 				return err
 			}
@@ -47,10 +51,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 				return fmt.Errorf("no upgrade scheduled")
 			}
 
-			if err != nil {
-				return err
-			}
-			return clientCtx.PrintOutput(res.Plan)
+			return clientCtx.PrintOutput(res.GetPlan())
 		},
 	}
 
@@ -60,7 +61,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 }
 
 // GetAppliedPlanCmd returns information about the block at which a completed
-// upgrade was applied
+// upgrade was applied.
 func GetAppliedPlanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "applied [upgrade-name]",
@@ -70,11 +71,14 @@ func GetAppliedPlanCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			name := args[0]
-			params := types.NewQueryAppliedPlanRequest(name)
-			res, err := queryClient.AppliedPlan(context.Background(), params)
+			params := types.QueryAppliedPlanRequest{Name: args[0]}
+			res, err := queryClient.AppliedPlan(context.Background(), &params)
 			if err != nil {
 				return err
 			}

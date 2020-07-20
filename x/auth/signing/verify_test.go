@@ -12,6 +12,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -19,8 +20,8 @@ import (
 )
 
 func TestVerifySignature(t *testing.T) {
-	priv, pubKey, addr := types.KeyTestPubAddr()
-	priv1, pubKey1, addr1 := types.KeyTestPubAddr()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	priv1, pubKey1, addr1 := testdata.KeyTestPubAddr()
 
 	const (
 		memo    = "testmemo"

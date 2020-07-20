@@ -64,7 +64,8 @@ func TestSlashingMsgs(t *testing.T) {
 	)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
+	txGen := simapp.MakeEncodingConfig().TxConfig
+	_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
@@ -81,7 +82,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	// unjail should fail with unknown validator
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, res, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
+	_, res, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))

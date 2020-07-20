@@ -100,7 +100,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -152,7 +152,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -207,7 +207,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -262,7 +262,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
-		txGen := simappparams.MakeEncodingConfig().TxGenerator
+		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},

@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -21,17 +21,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestDirectModeHandler(t *testing.T) {
-	privKey, pubkey, addr := authtypes.KeyTestPubAddr()
+	privKey, pubkey, addr := testdata.KeyTestPubAddr()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	pubKeyCdc := std.DefaultPublicKeyCodec{}
 
-	txGen := tx.NewTxGenerator(marshaler, pubKeyCdc, tx.DefaultSignModeHandler())
+	txGen := tx.NewTxConfig(marshaler, pubKeyCdc, tx.DefaultSignModeHandler())
 	txBuilder := txGen.NewTxBuilder()
 
 	memo := "sometestmemo"

@@ -47,7 +47,7 @@ type Context struct {
 	GenerateOnly      bool
 	Offline           bool
 	SkipConfirm       bool
-	TxGenerator       TxGenerator
+	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
 	Verifier          tmlite.Verifier
@@ -319,9 +319,9 @@ func (ctx Context) WithSkipConfirmation(skip bool) Context {
 	return ctx
 }
 
-// WithTxGenerator returns the context with an updated TxGenerator
-func (ctx Context) WithTxGenerator(generator TxGenerator) Context {
-	ctx.TxGenerator = generator
+// WithTxConfig returns the context with an updated TxConfig
+func (ctx Context) WithTxConfig(generator TxConfig) Context {
+	ctx.TxConfig = generator
 	return ctx
 }
 

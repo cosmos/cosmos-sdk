@@ -89,7 +89,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		clientCtx = clientCtx.InitWithInput(inBuf)
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		if !clientCtx.Offline {
@@ -120,7 +119,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 				AccountNumber:   txFactory.AccountNumber(),
 				AccountSequence: txFactory.Sequence(),
 			}
-			err = signing.VerifySignature(stdSig.PubKey, signingData, stdSig.Data, clientCtx.TxGenerator.SignModeHandler(), stdTx)
+			err = signing.VerifySignature(stdSig.PubKey, signingData, stdSig.Data, clientCtx.TxConfig.SignModeHandler(), stdTx)
 			if err != nil {
 				return fmt.Errorf("couldn't verify signature")
 			}
@@ -135,12 +134,12 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                   //nolint:staticcheck
-		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo()) //nolint:staticcheck
+		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                   // nolint:staticcheck
+		newTx := types.NewStdTx(stdTx.GetMsgs(), fee, []types.StdSignature{newStdSig}, memoTx.GetMemo()) // nolint:staticcheck
 
 		var json []byte
 
-		txBuilder := clientCtx.TxGenerator.NewTxBuilder()
+		txBuilder := clientCtx.TxConfig.NewTxBuilder()
 		if err != nil {
 			return err
 		}

@@ -139,7 +139,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "error creating tx builder")
 			}
 
-			txGen := clientCtx.TxGenerator
+			txGen := clientCtx.TxConfig
 			txBuilder := txGen.NewTxBuilder()
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
 

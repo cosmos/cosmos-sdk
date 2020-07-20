@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -66,11 +64,9 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		inBuf := bufio.NewReader(cmd.InOrStdin())
-		clientCtx = clientCtx.InitWithInput(inBuf)
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
-		txGen := clientCtx.TxGenerator
+		txGen := clientCtx.TxConfig
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
 		var (
@@ -105,11 +101,9 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		scanner := authclient.NewBatchScanner(marhsaler, infile)
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
-			var stdTx types.StdTx
-
 			unsignedStdTx := scanner.StdTx()
 			txFactory = txFactory.WithSequence(sequence)
-			txBuilder, err := clientCtx.TxGenerator.WrapTxBuilder(unsignedStdTx)
+			txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(unsignedStdTx)
 			if err != nil {
 				return err
 			}
@@ -135,7 +129,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			json, err := getSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, stdTx, generateSignatureOnly)
+			json, err := getSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, unsignedStdTx, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -226,8 +220,8 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		txGen := clientCtx.TxGenerator
-		txBuilder, err := clientCtx.TxGenerator.WrapTxBuilder(newTx)
+		txGen := clientCtx.TxConfig
+		txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(newTx)
 		if err != nil {
 			return err
 		}
@@ -288,7 +282,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func getSignatureJSON(cdc codec.JSONMarshaler, txGen client.TxGenerator, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc codec.JSONMarshaler, txGen client.TxConfig, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
 	if generateSignatureOnly {
 		return cdc.MarshalJSON(txBldr.GetTx().GetSignatures())
 	}

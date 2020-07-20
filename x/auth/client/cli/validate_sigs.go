@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -65,7 +64,7 @@ func printAndValidateSigs(
 	cmd *cobra.Command, clientCtx client.Context, chainID string, tx sdk.Tx, offline bool,
 ) bool {
 	sigTx := tx.(authsigning.SigVerifiableTx)
-	signModeHandler := clientCtx.TxGenerator.SignModeHandler()
+	signModeHandler := clientCtx.TxConfig.SignModeHandler()
 
 	cmd.Println("Signers:")
 	signers := sigTx.GetSigners()
@@ -132,8 +131,6 @@ func readTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filenam
 		return clientCtx, tx.Factory{}, nil, err
 	}
 
-	inBuf := bufio.NewReader(cmd.InOrStdin())
-	clientCtx = clientCtx.InitWithInput(inBuf)
 	txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 	return clientCtx, txFactory, stdTx, nil

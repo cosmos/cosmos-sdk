@@ -201,7 +201,7 @@ func TestTestTraceKVStoreIterator(t *testing.T) {
 
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Nil(t, iterator.Close)
+	require.NoError(t, iterator.Close())
 }
 
 func TestTestTraceKVStoreReverseIterator(t *testing.T) {
@@ -257,7 +257,7 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Nil(t, iterator.Close)
+	require.NoError(t, iterator.Close())
 }
 
 func TestTraceKVStorePrefix(t *testing.T) {

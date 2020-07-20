@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -17,7 +17,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp authtypes.StdTx
+	DecodeResp sdk.Tx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -42,13 +42,12 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		var stdTx authtypes.StdTx
-		err = clientCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
+		tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		response := DecodeResp(stdTx)
+		response := DecodeResp(tx)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
 }

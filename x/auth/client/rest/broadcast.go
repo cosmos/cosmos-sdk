@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // BroadcastReq defines a tx broadcasting request.
 type BroadcastReq struct {
-	Tx   types.StdTx `json:"tx" yaml:"tx"`
-	Mode string      `json:"mode" yaml:"mode"`
+	Tx   sdk.Tx `json:"tx" yaml:"tx"`
+	Mode string `json:"mode" yaml:"mode"`
 }
 
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible
@@ -31,7 +31,7 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		txBytes, err := clientCtx.Codec.MarshalBinaryBare(req.Tx)
+		txBytes, err := clientCtx.TxConfig.TxEncoder()(req.Tx)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

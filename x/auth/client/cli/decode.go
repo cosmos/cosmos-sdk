@@ -32,7 +32,7 @@ func GetDecodeCommand() *cobra.Command {
 				return err
 			}
 
-			tx, err := clientCtx.TxGenerator.TxDecoder()(txBytes)
+			tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
 			if err != nil {
 				return err
 			}

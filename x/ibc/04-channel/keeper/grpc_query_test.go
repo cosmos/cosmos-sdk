@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				expChannels = []*types.IdentifiedChannel{&idCh0, &idCh1}
 
 				req = &types.QueryChannelsRequest{
-					Req: &query.PageRequest{
+					Pagination: &query.PageRequest{
 						Key:        nil,
 						Limit:      2,
 						CountTotal: true,
@@ -245,7 +245,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 				req = &types.QueryConnectionChannelsRequest{
 					Connection: connB0.ID,
-					Req: &query.PageRequest{
+					Pagination: &query.PageRequest{
 						Key:        nil,
 						Limit:      2,
 						CountTotal: true,
@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				expChannels = []*types.IdentifiedChannel{}
 				req = &types.QueryConnectionChannelsRequest{
 					Connection: "externalConnID",
-					Req: &query.PageRequest{
+					Pagination: &query.PageRequest{
 						Key:        nil,
 						Limit:      2,
 						CountTotal: false,
@@ -425,7 +425,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 				req = &types.QueryPacketCommitmentsRequest{
 					PortID:    "test-port-id",
 					ChannelID: "test-channel-id",
-					Req: &query.PageRequest{
+					Pagination: &query.PageRequest{
 						Key:        nil,
 						Limit:      2,
 						CountTotal: true,
@@ -450,7 +450,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 				req = &types.QueryPacketCommitmentsRequest{
 					PortID:    channelA.PortID,
 					ChannelID: channelA.ID,
-					Req: &query.PageRequest{
+					Pagination: &query.PageRequest{
 						Key:        nil,
 						Limit:      11,
 						CountTotal: true,

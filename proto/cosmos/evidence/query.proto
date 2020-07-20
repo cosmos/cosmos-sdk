@@ -28,7 +28,7 @@ message QueryEvidenceResponse {
 
 // QueryEvidenceRequest is the request type for the Query/AllEvidence RPC method
 message QueryAllEvidenceRequest {
-  cosmos.query.PageRequest req = 1;
+  cosmos.query.PageRequest pagination = 1;
 }
 
 // QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method

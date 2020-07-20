@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 		{"valid request",
 			func() {
 				req = &types.QueryValidatorsRequest{Status: sdk.Bonded.String(),
-					Req: &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 		},
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 			func() {
 				req = &types.QueryDelegatorValidatorsRequest{
 					DelegatorAddr: addrs[0],
-					Req:           &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 		},
@@ -281,7 +281,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 		{"valid request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc,
-					Req: &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 		},
@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		{"valid request",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1,
-					Req: &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 			false,
@@ -457,7 +457,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 		{"valid request",
 			func() {
 				req = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc,
-					Req: &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 			false,
@@ -602,7 +602,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					DelegatorAddr: addrAcc1, SrcValidatorAddr: val1.OperatorAddress,
-					DstValidatorAddr: val2.OperatorAddress, Req: &query.PageRequest{}}
+					DstValidatorAddr: val2.OperatorAddress, Pagination: &query.PageRequest{}}
 			},
 			true,
 			false,
@@ -611,7 +611,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					DelegatorAddr: addrAcc1, SrcValidatorAddr: val1.OperatorAddress,
-					Req: &query.PageRequest{}}
+					Pagination: &query.PageRequest{}}
 			},
 			true,
 			false,
@@ -620,7 +620,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					SrcValidatorAddr: val1.GetOperator(),
-					Req:              &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination:       &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 			false,
@@ -676,7 +676,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 			func() {
 				req = &types.QueryValidatorUnbondingDelegationsRequest{
 					ValidatorAddr: val1.GetOperator(),
-					Req:           &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination:           &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
 		},

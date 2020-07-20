@@ -266,7 +266,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					ValidatorAddress: valAddrs[0],
 					StartingHeight:   1,
 					EndingHeight:     10,
-					Req:              pageReq,
+					Pagination:       pageReq,
 				}
 
 				expRes = &types.QueryValidatorSlashesResponse{
@@ -287,7 +287,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					ValidatorAddress: valAddrs[0],
 					StartingHeight:   1,
 					EndingHeight:     10,
-					Req:              pageReq,
+					Pagination:       pageReq,
 				}
 
 				expRes = &types.QueryValidatorSlashesResponse{
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					ValidatorAddress: valAddrs[0],
 					StartingHeight:   1,
 					EndingHeight:     10,
-					Req:              pageReq,
+					Pagination:       pageReq,
 				}
 
 				expRes = &types.QueryValidatorSlashesResponse{

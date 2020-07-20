@@ -41,7 +41,7 @@ message QuerySigningInfoResponse{
 
 // QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC method
 message QuerySigningInfosRequest{
-	cosmos.query.PageRequest req = 1;
+	cosmos.query.PageRequest pagination = 1;
 }
 
 // QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method

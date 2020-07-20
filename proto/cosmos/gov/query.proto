@@ -56,7 +56,7 @@ message QueryProposalsRequest {
   // Deposit addresses from the proposals.
   bytes depositor = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
-  cosmos.query.PageRequest req = 4;
+  cosmos.query.PageRequest pagination = 4;
 }
 
 // QueryProposalsResponse is the response type for the Query/Proposals RPC method
@@ -85,7 +85,7 @@ message QueryVotesRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
 
-  cosmos.query.PageRequest req = 2;
+  cosmos.query.PageRequest pagination = 2;
 }
 
 // QueryVotesResponse is the response type for the Query/Votes RPC method
@@ -126,7 +126,7 @@ message QueryDepositsRequest {
   // unique id of the proposal
   uint64 proposal_id = 1;
 
-  cosmos.query.PageRequest req = 2;
+  cosmos.query.PageRequest pagination = 2;
 }
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method

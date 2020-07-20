@@ -52,7 +52,7 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	res, err := query.Paginate(accountStore, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
 		var result sdk.Coin
 		err := q.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {

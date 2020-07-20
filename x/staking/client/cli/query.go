@@ -171,7 +171,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 
 			params := &types.QueryValidatorUnbondingDelegationsRequest{
 				ValidatorAddr: valAddr,
-				Req:           pageReq,
+				Pagination:    pageReq,
 			}
 
 			res, err := queryClient.ValidatorUnbondingDelegations(context.Background(), params)
@@ -226,7 +226,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 
 			params := &types.QueryRedelegationsRequest{
 				SrcValidatorAddr: valSrcAddr,
-				Req:              pageReq,
+				Pagination:       pageReq,
 			}
 
 			res, err := queryClient.Redelegations(context.Background(), params)
@@ -334,7 +334,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 
 			params := &types.QueryDelegatorDelegationsRequest{
 				DelegatorAddr: delAddr,
-				Req:           pageReq,
+				Pagination:    pageReq,
 			}
 
 			res, err := queryClient.DelegatorDelegations(context.Background(), params)
@@ -389,7 +389,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 
 			params := &types.QueryValidatorDelegationsRequest{
 				ValidatorAddr: valAddr,
-				Req:           pageReq,
+				Pagination:    pageReq,
 			}
 
 			res, err := queryClient.ValidatorDelegations(context.Background(), params)
@@ -498,7 +498,7 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 
 			params := &types.QueryDelegatorUnbondingDelegationsRequest{
 				DelegatorAddr: delegatorAddr,
-				Req:           pageReq,
+				Pagination:    pageReq,
 			}
 
 			res, err := queryClient.DelegatorUnbondingDelegations(context.Background(), params)
@@ -613,7 +613,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 
 			params := &types.QueryRedelegationsRequest{
 				DelegatorAddr: delAddr,
-				Req:           pageReq,
+				Pagination:    pageReq,
 			}
 
 			res, err := queryClient.Redelegations(context.Background(), params)

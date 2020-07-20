@@ -42,7 +42,7 @@ message QueryAllBalancesRequest {
   // address is the address to query balances for
   bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
-  cosmos.query.PageRequest req = 2;
+  cosmos.query.PageRequest pagination = 2;
 }
 
 // QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method

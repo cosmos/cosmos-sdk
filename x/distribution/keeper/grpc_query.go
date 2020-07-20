@@ -75,7 +75,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	store := ctx.KVStore(k.storeKey)
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(req.ValidatorAddress))
 
-	res, err := query.FilteredPaginate(slashesStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	res, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.ValidatorSlashEvent
 		err := k.cdc.UnmarshalBinaryBare(value, &result)
 

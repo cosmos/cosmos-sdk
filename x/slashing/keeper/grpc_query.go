@@ -53,7 +53,7 @@ func (k Keeper) SigningInfos(c context.Context, req *types.QuerySigningInfosRequ
 	var signInfos []types.ValidatorSigningInfo
 
 	sigInfoStore := prefix.NewStore(store, types.ValidatorSigningInfoKeyPrefix)
-	res, err := query.Paginate(sigInfoStore, req.Req, func(key []byte, value []byte) error {
+	res, err := query.Paginate(sigInfoStore, req.Pagination, func(key []byte, value []byte) error {
 		var info types.ValidatorSigningInfo
 		err := k.cdc.UnmarshalBinaryBare(value, &info)
 		if err != nil {

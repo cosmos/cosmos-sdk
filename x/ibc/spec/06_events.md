@@ -163,3 +163,67 @@ also emit its module name in the format 'ibc_sub-modulename'.
 | message               | action                  | channel_close_confirm            |
 | message               | module                  | ibc_channel                      |
 
+### SendPacket (application module call)
+
+| Type        | Attribute Key            | Attribute Value                  |
+|-------------|--------------------------|----------------------------------|
+| send_packet | packet_data              | {data}                           |
+| send_packet | packet_timeout_height    | {timeoutHeight}                  |
+| send_packet | packet_timeout_timestamp | {timeoutTimestamp}               |
+| send_packet | packet_sequence          | {sequence}                       |
+| send_packet | packet_src_port          | {sourcePort}                     |
+| send_packet | packet_src_channel       | {sourceChannel}                  |
+| send_packet | packet_dst_port          | {destinationPort}                |
+| send_packet | packet_dst_channel       | {destinationChannel}             |
+| send_packet | packet_channel_ordering  | {channel.Ordering}               |
+| message     | action                   | application-module-defined-field |
+| message     | module                   | ibc-channel                      |
+
+### RecvPacket 
+
+| Type        | Attribute Key            | Attribute Value      |
+|-------------|--------------------------|----------------------|
+| recv_packet | packet_data              | {data}               |
+| recv_packet | packet_ack               | {acknowledgement}    |
+| recv_packet | packet_timeout_height    | {timeoutHeight}      |
+| recv_packet | packet_timeout_timestamp | {timeoutTimestamp}   |
+| recv_packet | packet_sequence          | {sequence}           |
+| recv_packet | packet_src_port          | {sourcePort}         |
+| recv_packet | packet_src_channel       | {sourceChannel}      |
+| recv_packet | packet_dst_port          | {destinationPort}    |
+| recv_packet | packet_dst_channel       | {destinationChannel} |
+| recv_packet | packet_channel_ordering  | {channel.Ordering}   |
+| message     | action                   | ics04/recv           |
+| message     | module                   | ibc-channel          |
+
+### AcknowledgePacket 
+
+| Type               | Attribute Key            | Attribute Value      |
+|--------------------|--------------------------|----------------------|
+| acknowledge_packet | packet_timeout_height    | {timeoutHeight}      |
+| acknowledge_packet | packet_timeout_timestamp | {timeoutTimestamp}   |
+| acknowledge_packet | packet_sequence          | {sequence}           |
+| acknowledge_packet | packet_src_port          | {sourcePort}         |
+| acknowledge_packet | packet_src_channel       | {sourceChannel}      |
+| acknowledge_packet | packet_dst_port          | {destinationPort}    |
+| acknowledge_packet | packet_dst_channel       | {destinationChannel} |
+| acknowledge_packet | packet_channel_ordering  | {channel.Ordering}   |
+| message            | action                   | ics04/acknowledge    |
+| message            | module                   | ibc-channel          |
+
+### TimeoutPacket & TimeoutOnClose 
+
+| Type           | Attribute Key            | Attribute Value      |
+|----------------|--------------------------|----------------------|
+| timeout_packet | packet_timeout_height    | {timeoutHeight}      |
+| timeout_packet | packet_timeout_timestamp | {timeoutTimestamp}   |
+| timeout_packet | packet_sequence          | {sequence}           |
+| timeout_packet | packet_src_port          | {sourcePort}         |
+| timeout_packet | packet_src_channel       | {sourceChannel}      |
+| timeout_packet | packet_dst_port          | {destinationPort}    |
+| timeout_packet | packet_dst_channel       | {destinationChannel} |
+| timeout_packet | packet_channel_ordering  | {channel.Ordering}   |
+| message        | action                   | ics04/timeout        |
+| message        | module                   | ibc-channel          |
+
+

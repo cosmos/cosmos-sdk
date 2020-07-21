@@ -1,6 +1,6 @@
 <!--
 order: 0
-title: IBC Overview
+title: IBC Fungible Token Transfer
 parent:
   title: "ibc-transfer"
 -->
@@ -19,4 +19,3 @@ For the general specification please refer to the [ICS20 Specification](https://
 2. **[State](02_state.md)**
 3. **[Messages](04_messages.md)**
 4. **[Events](06_events.md)**
-

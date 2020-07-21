@@ -334,9 +334,10 @@ proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking-ci
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.5
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.6
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+CONFIO_URL = https://raw.githubusercontent.com/confio/ics23/master
 
 TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
 TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
@@ -344,6 +345,7 @@ TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
 TM_PROTO						= third_party/proto/tendermint/proto
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
+CONFIO_TYPES = third_party/proto/confio
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -399,6 +401,8 @@ proto-update-deps:
 	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
 	@sed -i '' '7 s|third_party/proto/||g' $(TM_MERKLE_TYPES)/merkle.proto
 
+	@mkdir -p $(CONFIO_TYPES)
+	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps
 

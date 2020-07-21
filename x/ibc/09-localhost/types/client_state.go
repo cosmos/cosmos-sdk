@@ -84,7 +84,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	_ string,
 	_ uint64,
 	_ commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	_ clientexported.ConsensusState,
 ) error {
 	return sdkerrors.Wrap(

@@ -5,7 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "gogoproto/gogo.proto";
 import "third_party/proto/tendermint/proto/types/types.proto";
-import "third_party/proto/tendermint/proto/types/validator.proto";
+import "third_party/proto/confio/proofs.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "ibc/commitment/commitment.proto";
@@ -110,6 +110,9 @@ message ClientState {
   Header last_header = 7 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"last_header\""
+  ];
+  repeated ics23.ProofSpec proof_specs = 8 [
+    (gogoproto.moretags) = "yaml:\"proof_specs\""
   ];
 }
 

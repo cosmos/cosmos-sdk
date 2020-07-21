@@ -41,8 +41,8 @@ func NewQuerySubspaceParamsCmd() *cobra.Command {
 			}
 			queryClient := proposal.NewQueryClient(clientCtx)
 
-			params := proposal.NewQueryParametersRequest(args[0], args[1])
-			res, err := queryClient.Parameters(context.Background(), params)
+			params := proposal.QueryParamsRequest{Subspace: args[0], Key: args[1]}
+			res, err := queryClient.Params(context.Background(), &params)
 			if err != nil {
 				return err
 			}

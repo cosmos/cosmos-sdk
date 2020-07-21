@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -61,11 +60,6 @@ Example:
 				return err
 			}
 
-			denom, err := cmd.Flags().GetString(FlagDenom)
-			if err != nil {
-				return err
-			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
@@ -73,7 +67,8 @@ Example:
 				return err
 			}
 
-			pageReq := &query.PageRequest{}
+			pageReq := client.ReadPageRequest(cmd.Flags())
+			denom := string(pageReq.Key)
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
 
@@ -94,8 +89,8 @@ Example:
 		},
 	}
 
-	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all balances")
 
 	return cmd
 }

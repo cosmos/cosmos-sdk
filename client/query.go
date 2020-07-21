@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
@@ -100,10 +99,6 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 		return result.Response, nil
 	}
 
-	if err = ctx.verifyProof(req.Path, result.Response); err != nil {
-		return abci.ResponseQuery{}, err
-	}
-
 	return result.Response, nil
 }
 
@@ -120,61 +115,6 @@ func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, erro
 	}
 
 	return resp.Value, resp.Height, nil
-}
-
-// // Verify verifies the consensus proof at given height.
-// func (ctx Context) Verify(height int64) (tmtypes.SignedHeader, error) {
-
-// 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
-
-// 	switch {
-// 	case tmliteErr.IsErrCommitNotFound(err):
-// 		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
-// 	case err != nil:
-// 		return tmtypes.SignedHeader{}, err
-// 	}
-
-// 	return check, nil
-// }
-
-// verifyProof perform response proof verification.
-func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error {
-	// if ctx.Verifier == nil {
-	// 	return fmt.Errorf("missing valid certifier to verify data from distrusted node")
-	// }
-
-	// // the AppHash for height H is in header H+1
-	// commit, err := ctx.Verify(resp.Height + 1)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// TODO: Instead of reconstructing, stash on Context field?
-	// prt := rootmulti.DefaultProofRuntime()
-
-	// TODO: Better convention for path?
-	storeName, err := parseQueryStorePath(queryPath)
-	if err != nil {
-		return err
-	}
-
-	kp := merkle.KeyPath{}
-	kp = kp.AppendKey([]byte(storeName), merkle.KeyEncodingURL)
-	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
-
-	// if resp.Value == nil {
-	// 	err = prt.VerifyAbsence(resp.Proof, commit.Header.AppHash, kp.String())
-	// 	if err != nil {
-	// 		return errors.Wrap(err, "failed to prove merkle proof")
-	// 	}
-	// 	return nil
-	// }
-
-	// if err := prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value); err != nil {
-	// 	return errors.Wrap(err, "failed to prove merkle proof")
-	// }
-
-	return nil
 }
 
 // queryStore performs a query to a Tendermint node with the provided a store
@@ -204,24 +144,4 @@ func isQueryStoreWithProof(path string) bool {
 	}
 
 	return false
-}
-
-// parseQueryStorePath expects a format like /store/<storeName>/key.
-func parseQueryStorePath(path string) (storeName string, err error) {
-	if !strings.HasPrefix(path, "/") {
-		return "", errors.New("expected path to start with /")
-	}
-
-	paths := strings.SplitN(path[1:], "/", 3)
-
-	switch {
-	case len(paths) != 3:
-		return "", errors.New("expected format like /store/<storeName>/key")
-	case paths[0] != "store":
-		return "", errors.New("expected format like /store/<storeName>/key")
-	case paths[2] != "key":
-		return "", errors.New("expected format like /store/<storeName>/key")
-	}
-
-	return paths[1], nil
 }

@@ -127,7 +127,7 @@ which accepts a path for the resulting pprof file.
 
 func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	addr := ctx.Viper.GetString(flagAddress)
-	transport := viper.GetString(flagTransport)
+	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
 
 	db, err := openDB(home)

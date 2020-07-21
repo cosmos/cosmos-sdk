@@ -9,6 +9,10 @@ with an attirbute key of `action` will represent the first event for each messag
 being processed as emitted by the SDK's baseapp. Each IBC TAO message will
 also emit its module name in the format 'ibc_sub-modulename'.
 
+All the events for the Channel handshakes, `SendPacket`, `RecvPacket`, `AcknowledgePacket`, 
+`TimeoutPacket` and `TimeoutOnClose` will emit additional events not specified here due to
+callbacks to IBC applications.
+
 ## ICS 02 - Client
 
 ### MsgCreateClient

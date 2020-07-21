@@ -21,6 +21,10 @@ attribute key `action`, and an attribute value representing the type of message 
 (`channel_open_init` would be the attribute value for `MsgChannelOpenInit`). If a relayer queries 
 for transaction events, it can split message events using this event Type/Attribute Key pair.
 
+The Event Type `message` with the Attribute Key `module` may be emitted multiple times for a single
+message due to application callbacks. It can be assumed that any TAO logic executed will result in 
+a module event emission with the attribute value `ibc_<submodulename>` (02-client emits `ibc_client`).
+
 #### Subscribing with Tendermint 
 
 Calling the Tendermint RPC method `Subscribe` via Tendermint's Websocket will return events using

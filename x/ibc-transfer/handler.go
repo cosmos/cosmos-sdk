@@ -33,10 +33,13 @@ func handleMsgTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgTransfer)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			types.EventTypeTransfer,
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 			sdk.NewAttribute(types.AttributeKeyReceiver, msg.Receiver),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
 

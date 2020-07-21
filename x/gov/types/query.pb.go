@@ -953,7 +953,7 @@ type QueryClient interface {
 	Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal
 	Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error)
-	// Params queries all params
+	// Params queries all parameters of the gov module
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Deposit queries single deposit information based proposalID, depositAddr
 	Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error)
@@ -1053,7 +1053,7 @@ type QueryServer interface {
 	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal
 	Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
-	// Params queries all params
+	// Params queries all parameters of the gov module
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Deposit queries single deposit information based proposalID, depositAddr
 	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)

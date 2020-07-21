@@ -55,7 +55,7 @@ func TestParseSubmitProposalFlags(t *testing.T) {
 	fs.Set(FlagProposal, "")
 	fs.Set(FlagTitle, proposal1.Title)
 	fs.Set(FlagDescription, proposal1.Description)
-	fs.Set(flagProposalType, proposal1.Type)
+	fs.Set(FlagProposalType, proposal1.Type)
 	fs.Set(FlagDeposit, proposal1.Deposit)
 	proposal2, err := parseSubmitProposalFlags(fs)
 

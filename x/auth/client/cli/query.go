@@ -98,7 +98,13 @@ func GetAccountCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Account)
+			var account types.AccountI
+			err = clientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(account)
 		},
 	}
 

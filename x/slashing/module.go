@@ -70,12 +70,12 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // GetTxCmd returns the root tx command for the slashing module.
-func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the slashing module.
-func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 

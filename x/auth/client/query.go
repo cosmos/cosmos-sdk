@@ -41,9 +41,8 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 		return nil, err
 	}
 
-	prove := !clientCtx.TrustNode
-
-	resTxs, err := node.TxSearch(query, prove, page, limit, orderBy)
+	// TODO: this may not always need to be proven
+	resTxs, err := node.TxSearch(query, true, page, limit, orderBy)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +75,8 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	resTx, err := node.Tx(hash, !clientCtx.TrustNode)
+	//TODO: this may not always need to be proven
+	resTx, err := node.Tx(hash, true)
 	if err != nil {
 		return nil, err
 	}

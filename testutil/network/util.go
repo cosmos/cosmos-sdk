@@ -106,12 +106,11 @@ func startInProcess(cfg Config, val *Validator) error {
 			return err
 		}
 
-		fmt.Println("GRPC server hangs here...")
-		err = grpcSrv.Serve(listener)
-		fmt.Println("never called")
-		if err != nil {
-			return err
-		}
+		go func() {
+			if err := grpcSrv.Serve(listener); err != nil {
+				fmt.Printf("failed to serve: %v\n", err)
+			}
+		}()
 	}
 
 	return nil

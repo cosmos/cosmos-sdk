@@ -197,7 +197,7 @@ callbacks to IBC applications.
 | recv_packet | packet_dst_port          | {destinationPort}    |
 | recv_packet | packet_dst_channel       | {destinationChannel} |
 | recv_packet | packet_channel_ordering  | {channel.Ordering}   |
-| message     | action                   | ics04/recv           |
+| message     | action                   | recv_packet          |
 | message     | module                   | ibc-channel          |
 
 ### AcknowledgePacket 
@@ -212,7 +212,7 @@ callbacks to IBC applications.
 | acknowledge_packet | packet_dst_port          | {destinationPort}    |
 | acknowledge_packet | packet_dst_channel       | {destinationChannel} |
 | acknowledge_packet | packet_channel_ordering  | {channel.Ordering}   |
-| message            | action                   | ics04/acknowledge    |
+| message            | action                   | acknowledge_packet   |
 | message            | module                   | ibc-channel          |
 
 ### TimeoutPacket & TimeoutOnClose 
@@ -227,7 +227,7 @@ callbacks to IBC applications.
 | timeout_packet | packet_dst_port          | {destinationPort}    |
 | timeout_packet | packet_dst_channel       | {destinationChannel} |
 | timeout_packet | packet_channel_ordering  | {channel.Ordering}   |
-| message        | action                   | ics04/timeout        |
+| message        | action                   | timeout_packet       |
 | message        | module                   | ibc-channel          |
 
 

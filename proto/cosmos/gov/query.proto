@@ -21,7 +21,7 @@ service Query {
   // Votes queries votes of a given proposal
   rpc Votes (QueryVotesRequest) returns (QueryVotesResponse) {}
 
-  // Params queries all params
+  // Params queries all parameters of the gov module
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {}
 
   // Deposit queries single deposit information based proposalID, depositAddr

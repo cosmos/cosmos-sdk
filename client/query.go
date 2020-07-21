@@ -83,7 +83,7 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
-		Prove:  req.Prove || !ctx.TrustNode,
+		Prove:  req.Prove,
 	}
 
 	result, err := node.ABCIQueryWithOptions(req.Path, req.Data, opts)
@@ -109,9 +109,7 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 
 // query performs a query to a Tendermint node with the provided store name
 // and path. It returns the result and height of the query upon success
-// or an error if the query fails. In addition, it will verify the returned
-// proof if TrustNode is disabled. If proof verification fails or the query
-// height is invalid, an error will be returned.
+// or an error if the query fails.
 func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
 		Path: path,

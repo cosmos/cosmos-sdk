@@ -48,15 +48,6 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 		return nil, err
 	}
 
-	if prove {
-		for _, tx := range resTxs.Txs {
-			err := ValidateTxResult(clientCtx, tx)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
 	resBlocks, err := getBlocksForTxResults(clientCtx, resTxs.Txs)
 	if err != nil {
 		return nil, err
@@ -90,12 +81,6 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	if !clientCtx.TrustNode {
-		if err = ValidateTxResult(clientCtx, resTx); err != nil {
-			return nil, err
-		}
-	}
-
 	resBlocks, err := getBlocksForTxResults(clientCtx, []*ctypes.ResultTx{resTx})
 	if err != nil {
 		return nil, err
@@ -121,21 +106,6 @@ func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[
 	}
 
 	return out, nil
-}
-
-// ValidateTxResult performs transaction verification.
-func ValidateTxResult(clientCtx client.Context, resTx *ctypes.ResultTx) error {
-	if !clientCtx.TrustNode {
-		check, err := clientCtx.Verify(resTx.Height)
-		if err != nil {
-			return err
-		}
-		err = resTx.Proof.Validate(check.Header.DataHash)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) (map[int64]*ctypes.ResultBlock, error) {

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 
@@ -26,19 +27,19 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }
 
-// nolint: unused
-func queryProof(chain *TestChain, key []byte) ([]byte, uint64) {
-	res := chain.App.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", storeKey),
-		Height: chain.App.LastBlockHeight(),
-		Data:   key,
-		Prove:  true,
-	})
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
-	merkleProof := commitmenttypes.MerkleProof{
-		_, existed == suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID),
-		suite.Require().True(existed),
-	}
+func (suite *KeeperTestSuite) TestSetAndGetConnection() {
+	clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
+	_, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
+	suite.Require().False(existed)
+
+	suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
+	_, existed = suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
+	suite.Require().True(existed)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {

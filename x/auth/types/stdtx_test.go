@@ -12,6 +12,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -44,7 +45,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 			panic(err)
 		}
 
-		sigs[i] = StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
+		sigs[i] = StdSignature{PubKey: legacy.Cdc.MustMarshalBinaryBare(priv.PubKey()), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, "")

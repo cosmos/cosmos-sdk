@@ -3,19 +3,17 @@ package tx
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func TestTxBuilder(t *testing.T) {
@@ -50,7 +48,7 @@ func TestTxBuilder(t *testing.T) {
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubkey.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey),
 		},
 	}
 
@@ -133,7 +131,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 		PubKey: pubKey1,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubKey1.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey1),
 		},
 	}
 
@@ -141,7 +139,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 		PubKey: pubKey2,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubKey2.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey2),
 		},
 	}
 

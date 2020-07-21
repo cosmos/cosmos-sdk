@@ -6,6 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -215,7 +216,7 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
-		strKey := string(val.GetConsPubKey().Bytes())
+		strKey := string(legacy.Cdc.MustMarshalBinaryBare(val.GetConsPubKey()))
 
 		if _, ok := addrMap[strKey]; ok {
 			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.GetConsAddr())

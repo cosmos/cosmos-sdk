@@ -194,7 +194,7 @@ func TestValAddr(t *testing.T) {
 }
 
 func TestConsAddress(t *testing.T) {
-	var pub ed25519.PubKey
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])
@@ -243,7 +243,7 @@ func RandString(n int) string {
 }
 
 func TestConfiguredPrefix(t *testing.T) {
-	var pub ed25519.PubKey
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 	for length := 1; length < 10; length++ {
 		for times := 1; times < 20; times++ {
 			rand.Read(pub[:])
@@ -298,7 +298,7 @@ func TestConfiguredPrefix(t *testing.T) {
 }
 
 func TestAddressInterface(t *testing.T) {
-	var pub ed25519.PubKey
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 	rand.Read(pub[:])
 
 	addrs := []types.Address{

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -300,7 +301,7 @@ func MakeSignature(kr keyring.Keyring, name string, msg StdSignMsg) (sig StdSign
 	}
 
 	return StdSignature{
-		PubKey:    pubkey.Bytes(),
+		PubKey:    legacy.Cdc.MustMarshalBinaryBare(pubkey),
 		Signature: sigBytes,
 	}, nil
 }

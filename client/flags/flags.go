@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -81,11 +80,6 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 
 	cmd.SetErr(cmd.ErrOrStderr())
 	cmd.SetOut(cmd.OutOrStdout())
-
-	// TODO: REMOVE VIPER CALLS!
-	viper.BindPFlag(FlagUseLedger, cmd.Flags().Lookup(FlagUseLedger))
-	viper.BindPFlag(FlagNode, cmd.Flags().Lookup(FlagNode))
-	viper.BindPFlag(FlagKeyringBackend, cmd.Flags().Lookup(FlagKeyringBackend))
 }
 
 // AddTxFlagsToCmd adds common flags to a module tx command.
@@ -114,11 +108,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 
 	cmd.SetErr(cmd.ErrOrStderr())
 	cmd.SetOut(cmd.OutOrStdout())
-
-	// TODO: REMOVE VIPER CALLS!
-	viper.BindPFlag(FlagUseLedger, cmd.Flags().Lookup(FlagUseLedger))
-	viper.BindPFlag(FlagNode, cmd.Flags().Lookup(FlagNode))
-	viper.BindPFlag(FlagKeyringBackend, cmd.Flags().Lookup(FlagKeyringBackend))
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

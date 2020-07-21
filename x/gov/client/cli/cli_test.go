@@ -54,7 +54,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
   "title": "",
 	"description": "Where is the title!?",
 	"type": "Text",
-  "deposit": -324foocoin
+  "deposit": "-324foocoin"
 }`
 
 	_, err = invalidPropFile.WriteString(invalidProp)

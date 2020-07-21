@@ -7,7 +7,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,14 +20,36 @@ func BlockCommand() *cobra.Command {
 		Use:   "block [height]",
 		Short: "Get verified data for a the block at given height",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  printBlock,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			var height *int64
+
+			// optional height
+			if len(args) > 0 {
+				h, err := strconv.Atoi(args[0])
+				if err != nil {
+					return err
+				}
+				if h > 0 {
+					tmp := int64(h)
+					height = &tmp
+				}
+			}
+
+			output, err := getBlock(clientCtx, height)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+			return nil
+		},
 	}
+
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
 	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
-	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
+
 	return cmd
 }
 
@@ -65,33 +86,6 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 	height := status.SyncInfo.LatestBlockHeight
 	return height, nil
 }
-
-// CMD
-
-func printBlock(cmd *cobra.Command, args []string) error {
-	var height *int64
-	// optional height
-	if len(args) > 0 {
-		h, err := strconv.Atoi(args[0])
-		if err != nil {
-			return err
-		}
-		if h > 0 {
-			tmp := int64(h)
-			height = &tmp
-		}
-	}
-
-	output, err := getBlock(client.NewContext(), height)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(output))
-	return nil
-}
-
-// REST
 
 // REST handler to get a block
 func BlockRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {

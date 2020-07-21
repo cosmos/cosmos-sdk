@@ -91,6 +91,16 @@ func TestTraceKVStoreSet(t *testing.T) {
 			value:       kvPairs[0].Value,
 			expectedOut: "{\"operation\":\"write\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"dmFsdWUwMDAwMDAwMQ==\",\"metadata\":{\"blockHeight\":64}}\n",
 		},
+		{
+			key:         kvPairs[1].Key,
+			value:       kvPairs[1].Value,
+			expectedOut: "{\"operation\":\"write\",\"key\":\"a2V5MDAwMDAwMDI=\",\"value\":\"dmFsdWUwMDAwMDAwMg==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
+		{
+			key:         kvPairs[2].Key,
+			value:       kvPairs[2].Value,
+			expectedOut: "{\"operation\":\"write\",\"key\":\"a2V5MDAwMDAwMDM=\",\"value\":\"dmFsdWUwMDAwMDAwMw==\",\"metadata\":{\"blockHeight\":64}}\n",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -102,6 +112,12 @@ func TestTraceKVStoreSet(t *testing.T) {
 
 		require.Equal(t, tc.expectedOut, buf.String())
 	}
+
+	var buf bytes.Buffer
+	store := newEmptyTraceKVStore(&buf)
+	require.Panics(t, func() { store.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
+	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "setting a nil key should panic")
+
 }
 
 func TestTraceKVStoreDelete(t *testing.T) {

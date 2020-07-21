@@ -589,6 +589,14 @@ func (chain *TestChain) ChanCloseInit(
 	return chain.SendMsg(msg)
 }
 
+// GetPacketData returns a ibc-transfer marshalled packet to be used for
+// callback testing
+func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
+	packet := ibctransfertypes.NewFungibleTokenPacketData(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))), chain.SenderAccount.GetAddress().String(), counterparty.SenderAccount.GetAddress().String())
+
+	return packet.GetBytes()
+}
+
 // SendPacket simulates sending a packet through the channel keeper. No message needs to be
 // passed since this call is made from a module.
 func (chain *TestChain) SendPacket(

@@ -143,6 +143,8 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		}
 	}
 
+	conf.SetRoot(rootDir)
+
 	appConfigFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
 		appConf, err := config.ParseConfig(ctx.Viper)

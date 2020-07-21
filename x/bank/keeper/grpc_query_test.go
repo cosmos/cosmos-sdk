@@ -78,18 +78,18 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Equal(res.Balances.Len(), 1)
-	suite.NotNil(res.Res.NextKey)
+	suite.NotNil(res.Pagination.NextKey)
 
 	suite.T().Log("query second page with nextkey")
 	pageReq = &query.PageRequest{
-		Key:        res.Res.NextKey,
+		Key:        res.Pagination.NextKey,
 		Limit:      1,
 		CountTotal: true,
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Equal(res.Balances.Len(), 1)
-	suite.Nil(res.Res.NextKey)
+	suite.Nil(res.Pagination.NextKey)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {

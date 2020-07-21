@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
@@ -27,6 +28,9 @@ func newMerkleMap() *merkleMap {
 // to creating a kv.Pair. The created kv.Pair is appended to the MerkleMap's slice
 // of kv.Pairs. Whenever called, the MerkleMap must be resorted.
 func (sm *merkleMap) set(key string, value []byte) {
+	byteKey := []byte(key)
+	types.AssertValidKey(byteKey)
+
 	sm.sorted = false
 
 	// The value is hashed, so you can check for equality with a cached value (say)
@@ -34,7 +38,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	vhash := tmhash.Sum(value)
 
 	sm.kvs = append(sm.kvs, kv.Pair{
-		Key:   []byte(key),
+		Key:   byteKey,
 		Value: vhash,
 	})
 }
@@ -85,6 +89,8 @@ func newSimpleMap() *simpleMap {
 // Set creates a kv pair of the key and the hash of the value,
 // and then appends it to SimpleMap's kv pairs.
 func (sm *simpleMap) Set(key string, value []byte) {
+	byteKey := []byte(key)
+	types.AssertValidKey(byteKey)
 	sm.sorted = false
 
 	// The value is hashed, so you can
@@ -93,7 +99,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	vhash := tmhash.Sum(value)
 
 	sm.Kvs = append(sm.Kvs, kv.Pair{
-		Key:   []byte(key),
+		Key:   byteKey,
 		Value: vhash,
 	})
 }

@@ -45,7 +45,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 

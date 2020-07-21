@@ -2,7 +2,7 @@
 order: 0
 title: IBC Overview
 parent:
-  title: "ibc"
+  title: "ibc-transfer"
 -->
 
 # `ibc-transfer`

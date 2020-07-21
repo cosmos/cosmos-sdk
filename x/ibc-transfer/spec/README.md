@@ -17,6 +17,7 @@ For the general specification please refer to the [ICS20 Specification](https://
 
 1. **[Concepts](01_concepts.md)**
 2. **[State](02_state.md)**
-3. **[Messages](04_messages.md)**
-4. **[Events](06_events.md)**
+3. **[State Transitions](03_state_transitions.md)**
+4. **[Messages](04_messages.md)**
+5. **[Events](05_events.md)**
 

@@ -51,17 +51,17 @@ of prefixes, as shown on the format example above. This poses a problem because,
 and channel identifiers don't have a cap on the maximum lenght, the SDK `Coin` type only accepts
 denoms up to 64 characters.
 
-This can result undesired behaviours such as tokens not being abled to be transfered to multiple
-sink chains if the denomination exceeds the lenght or unexpected `panics` due to denomination
+This can result in undesired behaviors such as tokens not being abled to be transferred to multiple
+sink chains if the denomination exceeds the length or unexpected `panics` due to denomination
 validation on the receiving chain.
 
-2. The existence of special characters and upercase letters on the denomination:
+2. The existence of special characters and uppercase letters on the denomination:
 
-In the SDK everytime a `Coin` is initialized trhough the constructor function `NewCoin`, a validation
+In the SDK every time a `Coin` is initialized through the constructor function `NewCoin`, a validation
 of a coin's denom is performed according to a
 [Regex](https://github.com/cosmos/cosmos-sdk/blob/a940214a4923a3bf9a9161cd14bd3072299cd0c9/types/coin.go#L583),
 where only lowercase alphanumeric characters are accepted. While this is desirable for native denoms
-to keep a clean UX, it supposes a challenge for IBC as ports and channels might be randomly
+to keep a clean UX, it presents a challenge for IBC as ports and channels might be randomly
 generated with special carracters and uppercases as per the [ICS 024 - Host
 Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements#paths-identifiers-separators)
 specification.

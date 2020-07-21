@@ -42,7 +42,7 @@ func GetCmdQueryChannels() *cobra.Command {
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			req := &types.QueryChannelsRequest{
-				Req: &query.PageRequest{
+				Pagination: &query.PageRequest{
 					Offset: uint64(offset),
 					Limit:  uint64(limit),
 				},
@@ -124,7 +124,7 @@ func GetCmdQueryConnectionChannels() *cobra.Command {
 
 			req := &types.QueryConnectionChannelsRequest{
 				Connection: args[0],
-				Req: &query.PageRequest{
+				Pagination: &query.PageRequest{
 					Offset: uint64(offset),
 					Limit:  uint64(limit),
 				},
@@ -203,7 +203,7 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 			req := &types.QueryPacketCommitmentsRequest{
 				PortID:    args[0],
 				ChannelID: args[1],
-				Req: &query.PageRequest{
+				Pagination: &query.PageRequest{
 					Offset: uint64(offset),
 					Limit:  uint64(limit),
 				},

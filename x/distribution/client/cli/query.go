@@ -199,7 +199,7 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 					ValidatorAddress: validatorAddr,
 					StartingHeight:   startHeight,
 					EndingHeight:     endHeight,
-					Req:              pageReq,
+					Pagination:       pageReq,
 				},
 			)
 			if err != nil {

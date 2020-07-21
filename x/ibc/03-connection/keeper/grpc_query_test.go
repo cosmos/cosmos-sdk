@@ -126,7 +126,7 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 				expConnections = []*types.ConnectionEnd{&conn1, &conn2, &conn3}
 
 				req = &types.QueryConnectionsRequest{
-					Req: &query.PageRequest{
+					Pagination: &query.PageRequest{
 						Limit:      3,
 						CountTotal: true,
 					},

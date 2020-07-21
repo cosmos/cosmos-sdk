@@ -71,14 +71,14 @@ message QueryValidatorSlashesRequest {
   bytes validator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
   uint64 starting_height = 2;
   uint64 ending_height = 3;
-  cosmos.query.PageRequest req = 4;
+  cosmos.query.PageRequest pagination = 4;
 }
 
 // QueryValidatorSlashesResponse is the response type for the Query/ValidatorSlashes RPC method
 message QueryValidatorSlashesResponse {
   repeated ValidatorSlashEvent slashes = 1 [(gogoproto.nullable) = false];
 
-  cosmos.query.PageResponse res = 2;
+  cosmos.query.PageResponse pagination = 2;
 }
 
 // QueryDelegationRewardsRequest is the request type for the Query/DelegationRewards RPC method

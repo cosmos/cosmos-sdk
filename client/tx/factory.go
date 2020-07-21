@@ -1,10 +1,7 @@
 package tx
 
 import (
-	"io"
-
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -74,47 +71,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
-
-	return f
-}
-
-// TODO: Remove in favor of NewFactoryCLI
-func NewFactoryFromDeprecated(input io.Reader) Factory {
-	kb, err := keyring.New(
-		sdk.KeyringServiceName(),
-		viper.GetString(flags.FlagKeyringBackend),
-		viper.GetString(flags.FlagHome),
-		input,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	signModeStr := viper.GetString(flags.FlagSignMode)
-	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
-	switch signModeStr {
-	case signModeDirect:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT
-	case signModeAminoJSON:
-		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	}
-
-	gasSetting, _ := flags.ParseGasSetting(viper.GetString(flags.FlagGas))
-
-	f := Factory{
-		keybase:            kb,
-		chainID:            viper.GetString(flags.FlagChainID),
-		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
-		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                gasSetting.Gas,
-		simulateAndExecute: gasSetting.Simulate,
-		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		memo:               viper.GetString(flags.FlagMemo),
-		signMode:           signMode,
-	}
-
-	f = f.WithFees(viper.GetString(flags.FlagFees))
-	f = f.WithGasPrices(viper.GetString(flags.FlagGasPrices))
 
 	return f
 }

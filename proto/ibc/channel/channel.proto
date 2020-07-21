@@ -22,7 +22,7 @@ message MsgChannelOpenTry {
   Channel channel              = 3 [(gogoproto.nullable) = false];
   string  counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
   bytes   proof_init           = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  uint64  proof_epoch = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64  proof_epoch          = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
   uint64  proof_height         = 7 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes   signer               = 8 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
@@ -35,7 +35,7 @@ message MsgChannelOpenAck {
   string counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
   bytes  proof_try            = 4 [(gogoproto.moretags) = "yaml:\"proof_try\""];
   uint64 proof_height         = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  uint64  proof_epoch = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_epoch          = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
   bytes  signer               = 7 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -82,7 +82,7 @@ message MsgPacket {
 message MsgTimeout {
   Packet packet             = 1 [(gogoproto.nullable) = false];
   bytes  proof              = 2;
-  uint64  proof_epoch = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_epoch        = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
   uint64 proof_height       = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   uint64 next_sequence_recv = 5 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
   bytes  signer             = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -93,7 +93,7 @@ message MsgAcknowledgement {
   Packet packet          = 1 [(gogoproto.nullable) = false];
   bytes  acknowledgement = 2;
   bytes  proof           = 3;
-  uint64  proof_epoch = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_epoch     = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
   uint64 proof_height    = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer          = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

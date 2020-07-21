@@ -24,8 +24,8 @@ message MsgConnectionOpenTry {
   repeated string counterparty_versions = 4 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`
   bytes  proof_init   = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  uint64 proof_epoch = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
-  uint64 proof_height = 7;
+  uint64 proof_epoch  = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_height = 7 [(gogoproto.moretags) = "yaml:\"proof_height\""];;
   // proof of client consensus state
   bytes proof_consensus = 8
       [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
@@ -59,7 +59,7 @@ message MsgConnectionOpenConfirm {
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
   bytes proof_ack = 2
       [(gogoproto.moretags) = "yaml:\"proof_ack\""];
-  uint64 proof_epoch = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
+  uint64 proof_epoch  = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
   uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

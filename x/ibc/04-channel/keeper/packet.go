@@ -192,7 +192,7 @@ func (k Keeper) RecvPacket(
 	// support current height with epoch-0 for now
 	blockHeight := clientexported.NewHeight(0, uint64(ctx.BlockHeight()))
 	timeoutHeight := clientexported.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutHeight())
-	if packet.GetTimeoutHeight() != 0 && blockHeight.Compare(timeoutHeight) != -1 {
+	if packet.GetTimeoutHeight() != 0 && blockHeight.Compare(timeoutHeight) >= 0 {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
 			"block height >= packet timeout height (%v >= %v)", blockHeight, timeoutHeight,

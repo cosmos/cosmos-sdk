@@ -244,10 +244,12 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			channelKey := host.KeyChannel(counterparty.PortID, counterparty.ChannelID)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
+			// increment proofHeight by heightDiff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+heightDiff)
 			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
 				channelB.PortID, channelB.ID, portCap, counterparty, ibctesting.ChannelVersion, ibctesting.ChannelVersion,
-				proof, proofHeight+heightDiff,
+				proof, proofHeight,
 			)
 
 			if tc.expPass {
@@ -372,9 +374,11 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
 			proof, proofHeight := suite.chainB.QueryProof(channelKey)
 
+			// increment proofHeight by heightDiff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+heightDiff)
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
 				suite.chainA.GetContext(), channelA.PortID, channelA.ID, channelCap, ibctesting.ChannelVersion,
-				proof, proofHeight+heightDiff,
+				proof, proofHeight,
 			)
 
 			if tc.expPass {
@@ -500,9 +504,11 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			channelKey := host.KeyChannel(channelA.PortID, channelA.ID)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
+			// increment proofHeight by heightDiff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+heightDiff)
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 				suite.chainB.GetContext(), channelB.PortID, channelB.ID,
-				channelCap, proof, proofHeight+heightDiff,
+				channelCap, proof, proofHeight,
 			)
 
 			if tc.expPass {
@@ -701,9 +707,11 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			channelKey := host.KeyChannel(channelA.PortID, channelA.ID)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
+			// increment proofHeight by heightDiff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+heightDiff)
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 				suite.chainB.GetContext(), channelB.PortID, channelB.ID, channelCap,
-				proof, proofHeight+heightDiff,
+				proof, proofHeight,
 			)
 
 			if tc.expPass {

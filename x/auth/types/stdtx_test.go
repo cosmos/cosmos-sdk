@@ -12,7 +12,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -207,8 +206,10 @@ func TestSignatureV2Conversions(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
+	cryptoamino.RegisterCrypto(cdc)
+
 	dummy := []byte("dummySig")
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: dummy}
 
 	sigV2, err := StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, err)
@@ -264,16 +265,17 @@ func TestGetSignaturesV2(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
+	cryptoamino.RegisterCrypto(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: dummy}
 	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
 
 	sigs, err := stdTx.GetSignaturesV2()
 	require.Nil(t, err)
 	require.Equal(t, len(sigs), 1)
 
-	require.Equal(t, sigs[0].PubKey.Bytes(), sig.GetPubKey().Bytes())
+	require.Equal(t, cdc.Amino.MustMarshalBinaryBare(sigs[0].PubKey), cdc.Amino.MustMarshalBinaryBare(sig.GetPubKey()))
 	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
 		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: sig.GetSignature(),

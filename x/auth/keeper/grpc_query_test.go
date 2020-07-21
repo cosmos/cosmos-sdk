@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 	var (
-		req       *types.QueryParametersRequest
+		req       *types.QueryParamsRequest
 		expParams types.Params
 	)
 
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 		{
 			"success",
 			func() {
-				req = &types.QueryParametersRequest{}
+				req = &types.QueryParamsRequest{}
 				expParams = suite.app.AccountKeeper.GetParams(suite.ctx)
 			},
 			true,
@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.Parameters(ctx, req)
+			res, err := suite.queryClient.Params(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

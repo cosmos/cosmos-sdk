@@ -40,15 +40,15 @@ func (k AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest
 	return &types.QueryAccountResponse{Account: acc}, nil
 }
 
-// Parameters returns parameters of auth module
-func (k AccountKeeper) Parameters(c context.Context, req *types.QueryParametersRequest) (*types.QueryParametersResponse, error) {
+// Params returns parameters of auth module
+func (k AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
-	return &types.QueryParametersResponse{Params: params}, nil
+	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // ConvertAccount converts AccountI to Any type

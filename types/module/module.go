@@ -54,8 +54,8 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
-	GetTxCmd(clientCtx client.Context) *cobra.Command
-	GetQueryCmd(clientCtx client.Context) *cobra.Command
+	GetTxCmd() *cobra.Command
+	GetQueryCmd() *cobra.Command
 }
 
 // BasicManager is a collection of AppModuleBasic
@@ -109,9 +109,9 @@ func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rou
 //
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
-func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx client.Context) {
+func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 	for _, b := range bm {
-		if cmd := b.GetTxCmd(ctx); cmd != nil {
+		if cmd := b.GetTxCmd(); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
 		}
 	}
@@ -121,9 +121,9 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx client.Contex
 //
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
-func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, clientCtx client.Context) {
+func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	for _, b := range bm {
-		if cmd := b.GetQueryCmd(clientCtx); cmd != nil {
+		if cmd := b.GetQueryCmd(); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
 	}

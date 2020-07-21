@@ -86,7 +86,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 }
 
 // GetTxCmd returns the evidence module's root tx command.
-func (a AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
@@ -97,7 +97,7 @@ func (a AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
 }
 
 // GetQueryCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 

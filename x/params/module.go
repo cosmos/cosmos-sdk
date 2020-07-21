@@ -54,10 +54,10 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ json.RawMessage) 
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // GetTxCmd returns no root tx command for the params module.
-func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
 // GetQueryCmd returns no root query command for the params module.
-func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.NewQueryCmd()
 }
 
@@ -102,8 +102,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 
-// RegisterQueryService registers a GRPC query service to respond to the
-// module-specific GRPC queries.
+// RegisterQueryService registers a gRPC query service to respond to the
+// module-specific gRPC queries.
 func (am AppModule) RegisterQueryService(server grpc.Server) {
 	proposal.RegisterQueryServer(server, am.keeper)
 }

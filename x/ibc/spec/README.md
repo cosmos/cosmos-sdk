@@ -55,8 +55,6 @@ which call each ICS submodule's handlers (i.e `x/ibc/{XX-ICS}/handler.go`).
 
 The following ADR provide the design and architecture decision of IBC-related components.
 
-* [ADR 10 - Modular AnteHandler](../../../docs/architecture/adr-010-modular-antehandler.md): Introduces a decorator pattern for the [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler), making it modular.  
-* [ADR 15 - IBC Packet Receiver](../../../docs/architecture/adr-015-ibc-packet-receiver.md): replaces the ICS26 routing module with [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler) logic within IBC. This is implemented using the `AnteDecorators` defined in [ADR10]((../../../docs/architecture/adr-010-modular-antehandler.md))
 * [ADR 17 - Historical Header Module](../../../docs/architecture/adr-017-historical-header-module.md): Introduces the ability to introspect past
 consensus states in order to verify their membership in the counterparty clients.
 * [ADR 19 - Protobuf State Encoding](../../../docs/architecture/adr-019-protobuf-state-encoding.md): Migration from Amino to Protobuf for state encoding.
@@ -91,8 +89,6 @@ x/
 │  ├── 09-localhost/
 │  ├── 23-commitment/
 │  ├── 24-host/
-│  ├── ante
-│  │   └── ante.go
 │  ├── client
 │  │   ├── cli
 │  │   │   └── cli.go

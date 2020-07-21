@@ -75,7 +75,7 @@ func checkMisbehaviour(
 	//
 	// NOTE: The first condition is a safety check as the consensus params cannot
 	// be nil since the previous param values will be used in case they can't be
-	// retreived. If they are not set during initialization, Tendermint will always
+	// retrieved. If they are not set during initialization, Tendermint will always
 	// use the default values.
 	if consensusParams != nil &&
 		consensusParams.Evidence != nil &&

@@ -46,11 +46,12 @@ var (
 	encodingConfig = simapp.MakeEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
-			WithTxGenerator(encodingConfig.TxGenerator).
+			WithTxConfig(encodingConfig.TxConfig).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
 			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
-			WithBroadcastMode(flags.BroadcastBlock)
+			WithBroadcastMode(flags.BroadcastBlock).
+			WithHomeDir(simapp.DefaultNodeHome)
 )
 
 // Execute executes the root command.
@@ -74,11 +75,11 @@ func init() {
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
-		AddGenesisAccountCmd(),
+		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		cli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -91,7 +92,7 @@ func init() {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(),
+		keys.Commands(simapp.DefaultNodeHome),
 	)
 }
 
@@ -106,11 +107,11 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(encodingConfig.Amino),
-		rpc.ValidatorCommand(encodingConfig.Amino),
+		authcmd.GetAccountCmd(),
+		rpc.ValidatorCommand(),
 		rpc.BlockCommand(),
-		authcmd.QueryTxsByEventsCmd(encodingConfig.Amino),
-		authcmd.QueryTxCmd(encodingConfig.Amino),
+		authcmd.QueryTxsByEventsCmd(),
+		authcmd.QueryTxCmd(),
 	)
 
 	simapp.ModuleBasics.AddQueryCommands(cmd, initClientCtx)
@@ -129,14 +130,14 @@ func txCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetSignCommand(initClientCtx),
-		authcmd.GetSignBatchCommand(encodingConfig.Amino),
-		authcmd.GetMultiSignCommand(initClientCtx),
-		authcmd.GetValidateSignaturesCommand(initClientCtx),
+		authcmd.GetSignCommand(),
+		authcmd.GetSignBatchCommand(),
+		authcmd.GetMultiSignCommand(),
+		authcmd.GetValidateSignaturesCommand(),
 		flags.LineBreak,
-		authcmd.GetBroadcastCommand(initClientCtx),
-		authcmd.GetEncodeCommand(initClientCtx),
-		authcmd.GetDecodeCommand(initClientCtx),
+		authcmd.GetBroadcastCommand(),
+		authcmd.GetEncodeCommand(),
+		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
 	)
 

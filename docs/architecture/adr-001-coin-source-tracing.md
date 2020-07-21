@@ -33,7 +33,7 @@ prefix + denom = {destPortN}/{destChannelN}/.../{destPort0}/{destChannel0}/denom
 ```
 
 Example: transfering `100 uatom` from port `HubPort` and channel `HubChannel` on the Hub to
-Ethermint's port `EthermintPort` and channel `EthermintChannel` results in `10
+Ethermint's port `EthermintPort` and channel `EthermintChannel` results in `100
 EthermintPort/EthermintChannel/uatom`, where `EthermintPort/EthermintChannel/uatom` is the new
 denomination on the receiving chain.
 

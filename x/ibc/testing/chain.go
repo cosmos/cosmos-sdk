@@ -141,8 +141,8 @@ func (chain *TestChain) GetContext() sdk.Context {
 }
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
-// for the query and the height at which the proof will succeed on a tendermint verifier.
-func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
+// for the query and the Height at which the proof will succeed on a tendermint verifier.
+func (chain *TestChain) QueryProof(key []byte) ([]byte, clientexported.Height) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight() - 1,
@@ -160,7 +160,8 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, uint64(res.Height) + 1
+	// The epoch is always 0 on current chain for now
+	return proof, clientexported.NewHeight(0, uint64(res.Height)+1)
 }
 
 // QueryConsensusStateProof performs an abci query for a consensus state
@@ -365,6 +366,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 	return ibctmtypes.Header{
 		SignedHeader: signedHeader,
 		ValidatorSet: chain.Vals,
+		Height:       clientexported.NewHeight(0, uint64(signedHeader.Header.Height)),
 	}
 }
 
@@ -411,7 +413,8 @@ func (chain *TestChain) ConnectionOpenTry(
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterparty.GetPrefix(), []string{ConnectionVersion},
 		proofInit, proofConsensus,
-		0, proofHeight, consensusHeight.EpochNumber, consensusHeight.EpochHeight,
+		proofHeight.EpochNumber, proofHeight.EpochHeight,
+		consensusHeight.EpochNumber, consensusHeight.EpochHeight,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -433,7 +436,8 @@ func (chain *TestChain) ConnectionOpenAck(
 	msg := connectiontypes.NewMsgConnectionOpenAck(
 		connection.ID,
 		proofTry, proofConsensus,
-		0, proofHeight, consensusHeight.EpochNumber, consensusHeight.EpochHeight,
+		proofHeight.EpochNumber, proofHeight.EpochHeight,
+		consensusHeight.EpochNumber, consensusHeight.EpochHeight,
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -450,7 +454,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 
 	msg := connectiontypes.NewMsgConnectionOpenConfirm(
 		connection.ID,
-		proof, 0, height,
+		proof, height.EpochNumber, height.EpochHeight,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -538,7 +542,7 @@ func (chain *TestChain) ChanOpenTry(
 		ChannelVersion, order, []string{connectionID},
 		counterpartyCh.PortID, counterpartyCh.ID,
 		ChannelVersion,
-		proof, 0, height,
+		proof, height.EpochNumber, height.EpochHeight,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -554,7 +558,7 @@ func (chain *TestChain) ChanOpenAck(
 	msg := channeltypes.NewMsgChannelOpenAck(
 		ch.PortID, ch.ID,
 		ChannelVersion,
-		proof, 0, height,
+		proof, height.EpochNumber, height.EpochHeight,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
@@ -569,7 +573,7 @@ func (chain *TestChain) ChanOpenConfirm(
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
 		ch.PortID, ch.ID,
-		proof, 0, height,
+		proof, height.EpochNumber, height.EpochHeight,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)

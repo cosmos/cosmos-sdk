@@ -268,7 +268,7 @@ func (h Height) Valid() bool {
 }
 
 func (h Height) String() string {
-	return fmt.Sprintf("epoch:%d-height:%d", h.EpochNumber, h.EpochHeight)
+	return fmt.Sprintf("epoch-%d_height-%d", h.EpochNumber, h.EpochHeight)
 }
 
 // IsZero returns true if height epoch and epoch-height are both 0

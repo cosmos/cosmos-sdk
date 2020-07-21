@@ -79,7 +79,7 @@ func (k Keeper) SendPacket(
 	// check if packet timeouted on the receiving chain
 	latestHeight := clientState.GetLatestHeight()
 	timeoutHeight := clientexported.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutHeight())
-	if packet.GetTimeoutHeight() != 0 && latestHeight.Compare(timeoutHeight) != -1 {
+	if packet.GetTimeoutHeight() != 0 && latestHeight.Compare(timeoutHeight) >= 0 {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
 			"receiving chain block height >= packet timeout height (%v >= %v)", latestHeight, timeoutHeight,

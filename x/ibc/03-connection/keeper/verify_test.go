@@ -74,13 +74,16 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			}
 
 			proof, consensusHeight := suite.chainB.QueryConsensusStateProof(connB.ClientID)
-			proofHeight := uint64(suite.chainA.GetContext().BlockHeight() - 1)
+			proofHeight := clientexported.NewHeight(0, uint64(suite.chainA.GetContext().BlockHeight()-1))
 			consensusState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetSelfConsensusState(suite.chainA.GetContext(), consensusHeight)
 			suite.Require().True(found)
 
+			// increment EpochHeight with testcase height diff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+heightDiff)
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
 				suite.chainA.GetContext(), connection,
-				proofHeight+heightDiff, consensusHeight, proof, consensusState,
+				proofHeight, consensusHeight,
+				proof, consensusState,
 			)
 
 			if tc.expPass {
@@ -129,9 +132,11 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 				expectedConnection.State = types.TRYOPEN
 			}
 
+			// increment EpochHeight with testcase height diff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+tc.heightDiff)
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.chainA.GetContext(), connection,
-				proofHeight+tc.heightDiff, proof, connB.ID, expectedConnection,
+				proofHeight, proof, connB.ID, expectedConnection,
 			)
 
 			if tc.expPass {
@@ -179,8 +184,10 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 				channel.State = channeltypes.TRYOPEN
 			}
 
+			// increment EpochHeight with testcase height diff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+tc.heightDiff)
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyChannelState(
-				suite.chainA.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				suite.chainA.GetContext(), connection, proofHeight, proof,
 				channelB.PortID, channelB.ID, channel,
 			)
 
@@ -222,7 +229,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 				connection.ClientID = ibctesting.InvalidID
 			}
 
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 0, 100000, 0)
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
@@ -233,8 +240,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 				packet.Data = []byte(ibctesting.InvalidID)
 			}
 
+			// increment EpochHeight with testcase height diff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+tc.heightDiff)
 			err = suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
-				suite.chainB.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				suite.chainB.GetContext(), connection, proofHeight, proof,
 				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), channeltypes.CommitPacket(packet),
 			)
 
@@ -277,7 +286,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			}
 
 			// send and receive packet
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 0, 100000, 0)
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
@@ -292,8 +301,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 				ack = []byte(ibctesting.InvalidID)
 			}
 
+			// increment EpochHeight with testcase height diff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+tc.heightDiff)
 			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
-				suite.chainA.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				suite.chainA.GetContext(), connection, proofHeight, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack,
 			)
 
@@ -336,7 +347,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			}
 
 			// send, only receive if specified
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 0, 100000, 0)
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
@@ -352,8 +363,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
 
+			// increment EpochHeight with testcase height diff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+tc.heightDiff)
 			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
-				suite.chainA.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				suite.chainA.GetContext(), connection, proofHeight, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)
 
@@ -396,7 +409,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			}
 
 			// send and receive packet
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 0, 100000, 0)
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
@@ -406,8 +419,10 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 			proof, proofHeight := suite.chainB.QueryProof(nextSeqRecvKey)
 
+			// increment EpochHeight with testcase height diff
+			proofHeight = clientexported.NewHeight(proofHeight.EpochNumber, proofHeight.EpochHeight+tc.heightDiff)
 			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
-				suite.chainA.GetContext(), connection, proofHeight+tc.heightDiff, proof,
+				suite.chainA.GetContext(), connection, proofHeight, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()+tc.offsetSeq,
 			)
 

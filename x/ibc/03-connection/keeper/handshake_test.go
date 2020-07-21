@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		clientA         string
 		clientB         string
 		versions        []string
-		consensusHeight uint64
+		consensusHeight clientexported.Height
 	)
 
 	testCases := []struct {
@@ -81,14 +81,14 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			consensusHeight = uint64(suite.chainB.GetContext().BlockHeight())
+			consensusHeight = clientexported.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()))
 		}, false},
 		{"self consensus state not found", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			consensusHeight = 1
+			consensusHeight = clientexported.NewHeight(0, 1)
 		}, false},
 		{"counterparty versions is empty", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -140,9 +140,9 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		tc := tc
 
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                        // reset
-			consensusHeight = 0                      // must be explicitly changed in malleate
-			versions = types.GetCompatibleVersions() // must be explicitly changed in malleate
+			suite.SetupTest()                                // reset
+			consensusHeight = clientexported.NewHeight(0, 0) // must be explicitly changed in malleate
+			versions = types.GetCompatibleVersions()         // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -157,7 +157,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			consState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), clientA)
 			suite.Require().True(found)
 
-			if consensusHeight == 0 {
+			if !consensusHeight.Valid() {
 				consensusHeight = consState.GetHeight()
 			}
 			consensusKey := host.FullKeyClientPath(clientA, host.KeyConsensusState(consensusHeight))
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	var (
 		clientA         string
 		clientB         string
-		consensusHeight uint64
+		consensusHeight clientexported.Height
 		version         string
 	)
 
@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			consensusHeight = uint64(suite.chainA.GetContext().BlockHeight())
+			consensusHeight = clientexported.NewHeight(0, uint64(suite.chainA.GetContext().BlockHeight()))
 		}, false},
 		{"connection not found", func() {
 			// connections are never created
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			consensusHeight = 1
+			consensusHeight = clientexported.NewHeight(0, 1)
 		}, false},
 		{"connection state verification failed", func() {
 			// chainB connection is not in INIT
@@ -305,9 +305,9 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                          // reset
-			version = types.GetCompatibleVersions()[0] // must be explicitly changed in malleate
-			consensusHeight = 0                        // must be explicitly changed in malleate
+			suite.SetupTest()                                // reset
+			version = types.GetCompatibleVersions()[0]       // must be explicitly changed in malleate
+			consensusHeight = clientexported.NewHeight(0, 0) // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -321,7 +321,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			consState, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainB.GetContext(), clientB)
 			suite.Require().True(found)
 
-			if consensusHeight == 0 {
+			if !consensusHeight.Valid() {
 				consensusHeight = consState.GetHeight()
 			}
 			consensusKey := host.FullKeyClientPath(clientB, host.KeyConsensusState(consensusHeight))

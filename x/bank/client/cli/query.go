@@ -60,6 +60,11 @@ Example:
 				return err
 			}
 
+			denom, err := cmd.Flags().GetString(FlagDenom)
+			if err != nil {
+				return err
+			}
+
 			queryClient := types.NewQueryClient(clientCtx)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
@@ -68,7 +73,6 @@ Example:
 			}
 
 			pageReq := client.ReadPageRequest(cmd.Flags())
-			denom := string(pageReq.Key)
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
 
@@ -89,6 +93,7 @@ Example:
 		},
 	}
 
+	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
 

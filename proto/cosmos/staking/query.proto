@@ -217,10 +217,10 @@ message QueryPoolResponse {
   Pool pool = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryParamsRequest is request type for the Query/Parameters RPC method
+// QueryParamsRequest is request type for the Query/Params RPC method
 message QueryParamsRequest { }
 
-// QueryParamsResponse is response type for the Query/Parameters RPC method
+// QueryParamsResponse is response type for the Query/Params RPC method
 message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 

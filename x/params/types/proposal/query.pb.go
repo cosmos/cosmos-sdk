@@ -28,7 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParamsRequest is request type for the Query/Parameters RPC method
+// QueryParamsRequest is request type for the Query/Params RPC method
 type QueryParamsRequest struct {
 	Subspace string `protobuf:"bytes,1,opt,name=subspace,proto3" json:"subspace,omitempty"`
 	Key      string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -81,7 +81,7 @@ func (m *QueryParamsRequest) GetKey() string {
 	return ""
 }
 
-// QueryParamsResponse is response type for the Query/Parameters RPC method
+// QueryParamsResponse is response type for the Query/Params RPC method
 type QueryParamsResponse struct {
 	Params ParamChange `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }

@@ -12,14 +12,14 @@ service Query{
     rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {}
 }
 
-// QueryParamsRequest is request type for the Query/Parameters RPC method
+// QueryParamsRequest is request type for the Query/Params RPC method
 message QueryParamsRequest{
     string subspace = 1;
 
     string key = 2;
 }
 
-// QueryParamsResponse is response type for the Query/Parameters RPC method
+// QueryParamsResponse is response type for the Query/Params RPC method
 message QueryParamsResponse{
     cosmos.params.ParamChange params = 1 [(gogoproto.nullable) = false];
 } 

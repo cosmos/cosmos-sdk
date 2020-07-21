@@ -121,7 +121,7 @@ func (m *QueryAccountResponse) GetAccount() *types.Any {
 	return nil
 }
 
-// QueryParamsRequest is request type for the Query/Parameters RPC method
+// QueryParamsRequest is request type for the Query/Params RPC method
 type QueryParamsRequest struct {
 }
 
@@ -158,7 +158,7 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParamsResponse is response type for the Query/Parameters RPC method
+// QueryParamsResponse is response type for the Query/Params RPC method
 type QueryParamsResponse struct {
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }

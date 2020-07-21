@@ -489,5 +489,5 @@ func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 
 // Type implements sdk.Msg
 func (msg MsgAcknowledgement) Type() string {
-	return "acknowledgement_packet"
+	return "acknowledge_packet"
 }

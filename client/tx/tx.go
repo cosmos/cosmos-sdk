@@ -29,15 +29,6 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
-// GenerateOrBroadcastTx will either generate and print and unsigned transaction
-// or sign it and broadcast it returning an error upon failure.
-//
-// TODO: Remove in favor of GenerateOrBroadcastTxCLI
-func GenerateOrBroadcastTx(clientCtx client.Context, msgs ...sdk.Msg) error {
-	txf := NewFactoryFromDeprecated(clientCtx.Input).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
-}
-
 // GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {

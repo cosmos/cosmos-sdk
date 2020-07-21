@@ -59,7 +59,7 @@ $ <appcli> query auth params
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Parameters(context.Background(), types.NewQueryParametersRequest())
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}
@@ -93,7 +93,7 @@ func GetAccountCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Account(context.Background(), types.NewQueryAccountRequest(key))
+			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key})
 			if err != nil {
 				return err
 			}

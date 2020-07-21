@@ -303,7 +303,7 @@ pagination.
 * (store) [\#6481](https://github.com/cosmos/cosmos-sdk/pull/6481) Move `SimpleProofsFromMap` from Tendermint into the SDK.
 * (store) [\#6719](https://github.com/cosmos/cosmos-sdk/6754) Add validity checks to stores for nil and empty keys.
 
-## [v0.39.0]
+## [v0.39.0] - 2020-07-20
 
 ### Improvements
 

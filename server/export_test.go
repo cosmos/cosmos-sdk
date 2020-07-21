@@ -59,7 +59,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	cmd := ExportCmd(
 		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, b bool, strings []string) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error) {
 			return app.ExportAppStateAndValidators(true, []string{})
-		})
+		}, tempDir)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)

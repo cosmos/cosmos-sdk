@@ -19,10 +19,10 @@ service Query {
 	rpc SigningInfos (QuerySigningInfosRequest) returns (QuerySigningInfosResponse) {}
 }
 
-// QueryParamsRequest is the request type for the Query/Parameters RPC method
+// QueryParamsRequest is the request type for the Query/Params RPC method
 message QueryParamsRequest{}
 
-// QueryParamsResponse is the response type for the Query/Parameters RPC method
+// QueryParamsResponse is the response type for the Query/Params RPC method
 message QueryParamsResponse{
 	cosmos.slashing.Params params = 1[(gogoproto.nullable) = false];
 }
@@ -41,12 +41,12 @@ message QuerySigningInfoResponse{
 
 // QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC method
 message QuerySigningInfosRequest{
-	cosmos.query.PageRequest req = 1;
+	cosmos.query.PageRequest pagination = 1;
 }
 
 // QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method
 message QuerySigningInfosResponse{
 	// info is the signing info of all validators
 	repeated cosmos.slashing.ValidatorSigningInfo info = 1[(gogoproto.nullable)= false];
-	cosmos.query.PageResponse res =2;
+	cosmos.query.PageResponse pagination =2;
 }

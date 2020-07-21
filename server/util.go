@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -142,6 +144,8 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		}
 	}
 
+	conf.SetRoot(rootDir)
+
 	appConfigFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
 		appConf, err := config.ParseConfig(ctx.Viper)
@@ -177,11 +181,11 @@ func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExp
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(appCreator),
+		StartCmd(appCreator, simapp.DefaultNodeHome),
 		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(appExport),
+		ExportCmd(appExport, simapp.DefaultNodeHome),
 		flags.LineBreak,
 		version.NewVersionCommand(),
 	)

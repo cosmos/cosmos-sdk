@@ -37,7 +37,7 @@ func GetCmdQueryConnections() *cobra.Command {
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
 			req := &types.QueryConnectionsRequest{
-				Req: &query.PageRequest{
+				Pagination: &query.PageRequest{
 					Offset: uint64(offset),
 					Limit:  uint64(limit),
 				},

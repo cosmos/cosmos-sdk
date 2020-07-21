@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -15,18 +14,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codec2 "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cli2 "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -176,7 +176,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	normalGeneratedStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, normalGeneratedTx.String())
+	normalGeneratedStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, normalGeneratedTx.String())
 	s.Require().Equal(normalGeneratedStdTx.Fee.Gas, uint64(flags.DefaultGasLimit))
 	s.Require().Equal(len(normalGeneratedStdTx.Msgs), 1)
 	s.Require().Equal(0, len(normalGeneratedStdTx.GetSignatures()))
@@ -197,7 +197,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	limitedGasStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, limitedGasGeneratedTx.String())
+	limitedGasStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, limitedGasGeneratedTx.String())
 	s.Require().Equal(limitedGasStdTx.Fee.Gas, uint64(100))
 	s.Require().Equal(len(limitedGasStdTx.Msgs), 1)
 	s.Require().Equal(0, len(limitedGasStdTx.GetSignatures()))
@@ -218,7 +218,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	finalStdTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, finalGeneratedTx.String())
+	finalStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, finalGeneratedTx.String())
 	s.Require().Equal(uint64(flags.DefaultGasLimit), finalStdTx.Fee.Gas)
 	s.Require().Equal(len(finalStdTx.Msgs), 1)
 
@@ -246,7 +246,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
 	s.Require().NoError(err)
 
-	signedFinalTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, signedTx.String())
+	signedFinalTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, signedTx.String())
 	s.Require().Equal(len(signedFinalTx.Msgs), 1)
 	s.Require().Equal(1, len(signedFinalTx.GetSignatures()))
 	s.Require().Equal(val1.Address.String(), signedFinalTx.GetSigners()[0].String())
@@ -268,7 +268,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	var coins sdk.Coins
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(startTokens, coins.AmountOf(cli.Denom))
+	s.Require().Equal(startTokens, coins.AmountOf(s.cfg.BondDenom))
 
 	// Test broadcast
 
@@ -276,16 +276,14 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "cannot broadcast tx during offline mode")
 
-	err = waitForNextBlock(s.network)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Broadcast correct transaction.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(s.network)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, account.GetAddress())
@@ -293,7 +291,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens, coins.AmountOf(cli.Denom))
+	s.Require().Equal(sendTokens, coins.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
@@ -301,7 +299,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt(389999990), coins.AmountOf(cli.Denom))
+	s.Require().Equal(sdk.NewInt(389999990), coins.AmountOf(s.cfg.BondDenom))
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
@@ -330,7 +328,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 		val1.Address,
 		multisigInfo.GetAddress(),
 		sdk.NewCoins(
-			sdk.NewInt64Coin(cli.Denom, 10),
+			sdk.NewInt64Coin(s.cfg.BondDenom, 10),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -339,8 +337,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	)
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(s.network)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -348,7 +345,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 		multisigInfo.GetAddress(),
 		val1.Address,
 		sdk.NewCoins(
-			sdk.NewInt64Coin(cli.Denom, 5),
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -415,7 +412,7 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 	decodedTx, err := authtest.TxDecodeExec(val1.ClientCtx, trimmedBase64)
 	s.Require().NoError(err)
 
-	theTx := cli.UnmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, decodedTx.String())
+	theTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, decodedTx.String())
 	s.Require().Equal("deadbeef", theTx.Memo)
 }
 
@@ -440,7 +437,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
-	sendTokens := sdk.NewInt64Coin(cli.Denom, 10)
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
@@ -455,8 +452,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	)
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(s.network)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
@@ -464,7 +460,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	var coins sdk.Coins
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, coins.AmountOf(cli.Denom))
+	s.Require().Equal(sendTokens.Amount, coins.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -472,7 +468,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 		multisigInfo.GetAddress(),
 		val1.Address,
 		sdk.NewCoins(
-			sdk.NewInt64Coin(cli.Denom, 5),
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -514,8 +510,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(s.network)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
@@ -539,7 +534,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
-	sendTokens := sdk.NewInt64Coin(cli.Denom, 10)
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
@@ -553,8 +548,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 
-	err = waitForNextBlock(s.network)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
@@ -562,7 +556,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	var coins sdk.Coins
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, coins.AmountOf(cli.Denom))
+	s.Require().Equal(sendTokens.Amount, coins.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -570,7 +564,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		multisigInfo.GetAddress(),
 		val1.Address,
 		sdk.NewCoins(
-			sdk.NewInt64Coin(cli.Denom, 5),
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -618,15 +612,14 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	err = waitForNextBlock(s.network)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
+	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
 
-	cmd := cli2.GetBroadcastCommand()
+	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
 
@@ -635,12 +628,12 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 
 func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxGenerator(simappparams.MakeEncodingConfig().TxGenerator)
+	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	cmd := cli2.GetBroadcastCommand()
+	cmd := authcli.GetBroadcastCommand()
 
 	testDir, cleanFunc := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanFunc)
@@ -662,16 +655,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func waitForNextBlock(network *network.Network) error {
-	lastBlock, err := network.LatestHeight()
-	if err != nil {
-		return err
-	}
-
-	_, err = network.WaitForHeightWithTimeout(lastBlock+1, 10*time.Second)
-	if err != nil {
-		return err
-	}
-
-	return err
+func unmarshalStdTx(t require.TestingT, c codec.JSONMarshaler, s string) (stdTx authtypes.StdTx) {
+	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
+	return stdTx
 }

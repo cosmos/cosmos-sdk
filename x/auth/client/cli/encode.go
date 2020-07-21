@@ -36,7 +36,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 			}
 
 			// re-encode it
-			txBytes, err := clientCtx.TxGenerator.TxEncoder()(tx)
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(tx)
 			if err != nil {
 				return err
 			}

@@ -1,10 +1,7 @@
 package tx
 
 import (
-	"io"
-
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,7 +14,7 @@ import (
 // signing an application-specific transaction.
 type Factory struct {
 	keybase            keyring.Keyring
-	txGenerator        client.TxGenerator
+	txConfig           client.TxConfig
 	accountRetriever   client.AccountRetriever
 	accountNumber      uint64
 	sequence           uint64
@@ -56,7 +53,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	gasSetting, _ := flags.ParseGasSetting(gasStr)
 
 	f := Factory{
-		txGenerator:        clientCtx.TxGenerator,
+		txConfig:           clientCtx.TxConfig,
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
@@ -78,47 +75,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	return f
 }
 
-// TODO: Remove in favor of NewFactoryCLI
-func NewFactoryFromDeprecated(input io.Reader) Factory {
-	kb, err := keyring.New(
-		sdk.KeyringServiceName(),
-		viper.GetString(flags.FlagKeyringBackend),
-		viper.GetString(flags.FlagHome),
-		input,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	signModeStr := viper.GetString(flags.FlagSignMode)
-	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
-	switch signModeStr {
-	case signModeDirect:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT
-	case signModeAminoJSON:
-		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	}
-
-	gasSetting, _ := flags.ParseGasSetting(viper.GetString(flags.FlagGas))
-
-	f := Factory{
-		keybase:            kb,
-		chainID:            viper.GetString(flags.FlagChainID),
-		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
-		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                gasSetting.Gas,
-		simulateAndExecute: gasSetting.Simulate,
-		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		memo:               viper.GetString(flags.FlagMemo),
-		signMode:           signMode,
-	}
-
-	f = f.WithFees(viper.GetString(flags.FlagFees))
-	f = f.WithGasPrices(viper.GetString(flags.FlagGasPrices))
-
-	return f
-}
-
 func (f Factory) AccountNumber() uint64                     { return f.accountNumber }
 func (f Factory) Sequence() uint64                          { return f.sequence }
 func (f Factory) Gas() uint64                               { return f.gas }
@@ -134,9 +90,9 @@ func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRe
 // using the gas from the simulation results
 func (f Factory) SimulateAndExecute() bool { return f.simulateAndExecute }
 
-// WithTxGenerator returns a copy of the Factory with an updated TxGenerator.
-func (f Factory) WithTxGenerator(g client.TxGenerator) Factory {
-	f.txGenerator = g
+// WithTxConfig returns a copy of the Factory with an updated TxConfig.
+func (f Factory) WithTxConfig(g client.TxConfig) Factory {
+	f.txConfig = g
 	return f
 }
 

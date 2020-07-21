@@ -51,7 +51,7 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 	channels := []*types.IdentifiedChannel{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
 
-	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
+	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		var result types.Channel
 		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
 			return err
@@ -72,9 +72,9 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 	}
 
 	return &types.QueryChannelsResponse{
-		Channels: channels,
-		Res:      res,
-		Height:   ctx.BlockHeight(),
+		Channels:   channels,
+		Pagination: pageRes,
+		Height:     ctx.BlockHeight(),
 	}, nil
 }
 
@@ -93,7 +93,7 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 	channels := []*types.IdentifiedChannel{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
 
-	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
+	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		var result types.Channel
 		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
 			return err
@@ -120,9 +120,9 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 	}
 
 	return &types.QueryConnectionChannelsResponse{
-		Channels: channels,
-		Res:      res,
-		Height:   ctx.BlockHeight(),
+		Channels:   channels,
+		Pagination: pageRes,
+		Height:     ctx.BlockHeight(),
 	}, nil
 }
 
@@ -165,7 +165,7 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 	commitments := []*types.PacketAckCommitment{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.PacketCommitmentPrefixPath(req.PortID, req.ChannelID)))
 
-	res, err := query.Paginate(store, req.Req, func(key, value []byte) error {
+	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		keySplit := strings.Split(string(key), "/")
 
 		sequence, err := strconv.ParseUint(keySplit[len(keySplit)-1], 10, 64)
@@ -184,7 +184,7 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 
 	return &types.QueryPacketCommitmentsResponse{
 		Commitments: commitments,
-		Res:         res,
+		Pagination:  pageRes,
 		Height:      ctx.BlockHeight(),
 	}, nil
 }

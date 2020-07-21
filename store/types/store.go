@@ -320,6 +320,9 @@ type KVStoreKey struct {
 // NewKVStoreKey returns a new pointer to a KVStoreKey.
 // Use a pointer so keys don't collide.
 func NewKVStoreKey(name string) *KVStoreKey {
+	if name == "" {
+		panic("empty key name not allowed")
+	}
 	return &KVStoreKey{
 		name: name,
 	}

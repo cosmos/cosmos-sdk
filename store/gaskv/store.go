@@ -51,6 +51,7 @@ func (gs *Store) Get(key []byte) (value []byte) {
 func (gs *Store) Set(key []byte, value []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "gaskv", "set")
 
+	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?

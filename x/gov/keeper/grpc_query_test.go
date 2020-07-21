@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				}
 
 				req = &types.QueryProposalsRequest{
-					Req: &query.PageRequest{Limit: 3},
+					Pagination: &query.PageRequest{Limit: 3},
 				}
 
 				expRes = &types.QueryProposalsResponse{
@@ -126,7 +126,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			"request 2nd page with limit 4",
 			func() {
 				req = &types.QueryProposalsRequest{
-					Req: &query.PageRequest{Offset: 3, Limit: 3},
+					Pagination: &query.PageRequest{Offset: 3, Limit: 3},
 				}
 
 				expRes = &types.QueryProposalsResponse{
@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			"request with limit 2 and count true",
 			func() {
 				req = &types.QueryProposalsRequest{
-					Req: &query.PageRequest{Limit: 2, CountTotal: true},
+					Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
 				}
 
 				expRes = &types.QueryProposalsResponse{

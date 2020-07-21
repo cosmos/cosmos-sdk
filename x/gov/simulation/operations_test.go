@@ -157,8 +157,6 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	var msg types.MsgDeposit
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	fmt.Println(operationMsg)
-
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalID)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor.String())

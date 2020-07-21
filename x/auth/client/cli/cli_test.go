@@ -276,14 +276,14 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "cannot broadcast tx during offline mode")
 
-	s.Require().NoError(waitForNextBlock(s.network))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Broadcast correct transaction.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
 	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	s.Require().NoError(waitForNextBlock(s.network))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, account.GetAddress())
@@ -337,7 +337,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	)
 	s.Require().NoError(err)
 
-	s.Require().NoError(waitForNextBlock(s.network))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -452,7 +452,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	)
 	s.Require().NoError(err)
 
-	s.Require().NoError(waitForNextBlock(s.network))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
@@ -510,7 +510,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	s.Require().NoError(waitForNextBlock(s.network))
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
@@ -548,7 +548,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 
-	s.Require().NoError(waitForNextBlock(s.network))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
@@ -612,7 +612,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	s.Require().NoError(waitForNextBlock(s.network))
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
@@ -653,20 +653,6 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func waitForNextBlock(network *network.Network) error {
-	lastBlock, err := network.LatestHeight()
-	if err != nil {
-		return err
-	}
-
-	_, err = network.WaitForHeight(lastBlock + 1)
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 func unmarshalStdTx(t require.TestingT, c codec.JSONMarshaler, s string) (stdTx authtypes.StdTx) {

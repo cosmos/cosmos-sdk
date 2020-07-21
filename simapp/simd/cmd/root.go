@@ -39,6 +39,7 @@ var (
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
+
 			return server.InterceptConfigsPreRunHandler(cmd)
 		},
 	}
@@ -114,7 +115,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	simapp.ModuleBasics.AddQueryCommands(cmd, initClientCtx)
+	simapp.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -141,7 +142,7 @@ func txCommand() *cobra.Command {
 		flags.LineBreak,
 	)
 
-	simapp.ModuleBasics.AddTxCommands(cmd, initClientCtx)
+	simapp.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd

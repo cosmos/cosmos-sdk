@@ -19,10 +19,10 @@ service Query {
 	rpc SigningInfos (QuerySigningInfosRequest) returns (QuerySigningInfosResponse) {}
 }
 
-// QueryParamsRequest is the request type for the Query/Parameters RPC method
+// QueryParamsRequest is the request type for the Query/Params RPC method
 message QueryParamsRequest{}
 
-// QueryParamsResponse is the response type for the Query/Parameters RPC method
+// QueryParamsResponse is the response type for the Query/Params RPC method
 message QueryParamsResponse{
 	cosmos.slashing.Params params = 1[(gogoproto.nullable) = false];
 }

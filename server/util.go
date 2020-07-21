@@ -128,7 +128,6 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		conf.ProfListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
-		conf.TxIndex.IndexAllKeys = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		tmcfg.WriteConfigFile(configFile, conf)
 	} else {

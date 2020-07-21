@@ -6,18 +6,15 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -76,7 +73,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
-		stdSig := types.StdSignature{PubKey: pkSet1[i].Bytes(), Signature: sigSet1[i]}
+		stdSig := types.StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pkSet1[i]), Signature: sigSet1[i]}
 		sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
 		suite.Require().NoError(err)
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)

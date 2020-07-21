@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 
-	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
@@ -45,7 +44,6 @@ type Context struct {
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
-	Verifier          tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
@@ -128,12 +126,6 @@ func (ctx Context) WithClient(client rpcclient.Client) Context {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
-	return ctx
-}
-
-// WithVerifier returns a copy of the context with an updated Verifier.
-func (ctx Context) WithVerifier(verifier tmlite.Verifier) Context {
-	ctx.Verifier = verifier
 	return ctx
 }
 

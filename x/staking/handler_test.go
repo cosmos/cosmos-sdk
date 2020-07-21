@@ -13,6 +13,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -196,7 +197,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 1000)
 	handler := staking.NewHandler(app.StakingKeeper)
 	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
-		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}},
+		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}},
 	})
 
 	addr := valAddrs[0]
@@ -209,7 +210,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	require.Nil(t, res)
 
 	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
-		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeSecp256k1}},
+		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{"secp256k1"}},
 	})
 
 	res, err = handler(ctx, msgCreateValidator)
@@ -1441,7 +1442,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := staking.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), testdata.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, strings.Contains(err.Error(), "unrecognized staking message type"))

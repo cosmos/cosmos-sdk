@@ -16,10 +16,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
+	cryptocdc "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -196,7 +196,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(CryptoCdc.Amino.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -238,7 +238,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) 
 			return nil, err
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		priv, err = cryptocdc.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
 		}
@@ -287,7 +287,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	pubKey, err := cryptoamino.PubKeyFromBytes(pubBytes)
+	pubKey, err := cryptocdc.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
 			return nil, nil, fmt.Errorf("private key not available")
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		priv, err = cryptocdc.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -685,8 +685,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
-
-	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
+	info := newLocalInfo(name, pub, string(CryptoCdc.Amino.MustMarshalBinaryBare(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}

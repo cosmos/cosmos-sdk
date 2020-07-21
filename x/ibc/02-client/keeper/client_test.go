@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	lite "github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"

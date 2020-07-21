@@ -58,10 +58,10 @@ func TestEmptyAddresses(t *testing.T) {
 }
 
 func TestRandBech32PubkeyConsistency(t *testing.T) {
-	var pub ed25519.PubKeyEd25519
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub[:])
+		rand.Read(pub)
 
 		mustBech32AccPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
 		bech32AccPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
@@ -116,10 +116,10 @@ func TestYAMLMarshalers(t *testing.T) {
 }
 
 func TestRandBech32AccAddrConsistency(t *testing.T) {
-	var pub ed25519.PubKeyEd25519
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub[:])
+		rand.Read(pub)
 
 		acc := types.AccAddress(pub.Address())
 		res := types.AccAddress{}
@@ -154,7 +154,7 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 }
 
 func TestValAddr(t *testing.T) {
-	var pub ed25519.PubKeyEd25519
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])
@@ -194,7 +194,7 @@ func TestValAddr(t *testing.T) {
 }
 
 func TestConsAddress(t *testing.T) {
-	var pub ed25519.PubKeyEd25519
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])
@@ -243,7 +243,7 @@ func RandString(n int) string {
 }
 
 func TestConfiguredPrefix(t *testing.T) {
-	var pub ed25519.PubKeyEd25519
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 	for length := 1; length < 10; length++ {
 		for times := 1; times < 20; times++ {
 			rand.Read(pub[:])
@@ -298,7 +298,7 @@ func TestConfiguredPrefix(t *testing.T) {
 }
 
 func TestAddressInterface(t *testing.T) {
-	var pub ed25519.PubKeyEd25519
+	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 	rand.Read(pub[:])
 
 	addrs := []types.Address{

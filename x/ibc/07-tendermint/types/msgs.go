@@ -5,7 +5,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	lite "github.com/tendermint/tendermint/lite2"
+	lite "github.com/tendermint/tendermint/light"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,18 +28,6 @@ var (
 	_ clientexported.MsgUpdateClient     = (*MsgUpdateClient)(nil)
 	_ evidenceexported.MsgSubmitEvidence = (*MsgSubmitClientMisbehaviour)(nil)
 )
-
-// // MsgCreateClient defines a message to create an IBC client
-// type MsgCreateClient struct {
-// 	ClientID        string             `json:"client_id" yaml:"client_id"`
-// 	Header          Header             `json:"header" yaml:"header"`
-// 	TrustLevel      tmmath.Fraction    `json:"trust_level" yaml:"trust_level"`
-// 	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
-// 	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
-// 	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
-// 	ProofSpecs      []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
-// 	Signer          sdk.AccAddress     `json:"address" yaml:"address"`
-// }
 
 // this is a constant to satisfy the linter
 const TODO = "TODO"

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
@@ -33,11 +34,11 @@ func TestValidateEvidenceParams(t *testing.T) {
 		expectErr bool
 	}{
 		{nil, true},
-		{&abci.EvidenceParams{}, true},
-		{abci.EvidenceParams{}, true},
-		{abci.EvidenceParams{MaxAgeNumBlocks: -1, MaxAgeDuration: 18004000}, true},
-		{abci.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: -1}, true},
-		{abci.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: 18004000}, false},
+		{&tmproto.EvidenceParams{}, true},
+		{tmproto.EvidenceParams{}, true},
+		{tmproto.EvidenceParams{MaxAgeNumBlocks: -1, MaxAgeDuration: 18004000}, true},
+		{tmproto.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: -1}, true},
+		{tmproto.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: 18004000}, false},
 	}
 
 	for _, tc := range testCases {
@@ -51,10 +52,10 @@ func TestValidateValidatorParams(t *testing.T) {
 		expectErr bool
 	}{
 		{nil, true},
-		{&abci.ValidatorParams{}, true},
-		{abci.ValidatorParams{}, true},
-		{abci.ValidatorParams{PubKeyTypes: []string{}}, true},
-		{abci.ValidatorParams{PubKeyTypes: []string{"secp256k1"}}, false},
+		{&tmproto.ValidatorParams{}, true},
+		{tmproto.ValidatorParams{}, true},
+		{tmproto.ValidatorParams{PubKeyTypes: []string{}}, true},
+		{tmproto.ValidatorParams{PubKeyTypes: []string{"secp256k1"}}, false},
 	}
 
 	for _, tc := range testCases {

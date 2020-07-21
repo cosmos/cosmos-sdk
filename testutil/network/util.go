@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -32,8 +33,8 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	app := cfg.AppConstructor(*val)
-
 	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+
 	tmNode, err := node.NewNode(
 		tmCfg,
 		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
@@ -45,10 +46,12 @@ func startInProcess(cfg Config, val *Validator) error {
 		logger.With("module", val.Moniker),
 	)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	if err := tmNode.Start(); err != nil {
+		fmt.Println(err)
 		return err
 	}
 

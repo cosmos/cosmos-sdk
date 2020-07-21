@@ -91,7 +91,12 @@ func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 			err = fmt.Errorf("couldn't create db: %v", r)
 		}
 	}()
-	return dbm.NewDB(name, backend, dir), err
+
+	if err != nil {
+		return nil, err
+	}
+
+	return dbm.NewDB(name, backend, dir)
 }
 
 // copy bytes

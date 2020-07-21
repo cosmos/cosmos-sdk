@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Wait for N tendermint blocks to pass using the Tendermint RPC
@@ -113,8 +112,8 @@ func WaitForStart(url string) {
 
 var cdc = codec.New()
 
-func init() {
-	ctypes.RegisterAmino(cdc.Amino)
-}
+// func init() {
+// 	ctypes.RegisterAmino(cdc.Amino)
+// }
 
 //DONTCOVER

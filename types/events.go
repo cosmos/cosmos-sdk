@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 )
 
 // ----------------------------------------------------------------------------
@@ -79,8 +78,8 @@ func (a Attribute) String() string {
 }
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
-func (a Attribute) ToKVPair() tmkv.Pair {
-	return tmkv.Pair{Key: toBytes(a.Key), Value: toBytes(a.Value)}
+func (a Attribute) ToKVPair() abci.EventAttribute {
+	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value), Index: true}
 }
 
 // AppendAttributes adds one or more attributes to an Event.

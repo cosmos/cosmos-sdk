@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	tmproto "github.com/tendermint/tendermint/proto/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"

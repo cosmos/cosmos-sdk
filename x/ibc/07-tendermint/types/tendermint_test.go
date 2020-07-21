@@ -6,8 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -50,7 +49,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.valSet, err = tmtypes.NewValidatorSet([]*tmtypes.Validator{val}).ToProto()
 	suite.Require().NoError(err)
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1, Time: suite.now})
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1, Time: suite.now})
 }
 
 func TestTendermintTestSuite(t *testing.T) {

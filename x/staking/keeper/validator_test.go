@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,7 +55,11 @@ func TestSetValidator(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validator.ABCIValidatorUpdate(), updates[0])
+
+	vUpdate, err := validator.ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, vUpdate, updates[0])
 
 	// after the save the validator should be bonded
 	require.Equal(t, sdk.Bonded, validator.Status)
@@ -699,8 +703,14 @@ func TestApplyAndReturnValidatorSetUpdatesAllNone(t *testing.T) {
 	assert.Equal(t, 2, len(updates))
 	validators[0], _ = app.StakingKeeper.GetValidator(ctx, validators[0].OperatorAddress)
 	validators[1], _ = app.StakingKeeper.GetValidator(ctx, validators[1].OperatorAddress)
-	assert.Equal(t, validators[0].ABCIValidatorUpdate(), updates[1])
-	assert.Equal(t, validators[1].ABCIValidatorUpdate(), updates[0])
+
+	v0Update, err := validators[0].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	v1Update, err := validators[1].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	assert.Equal(t, v0Update, updates[1])
+	assert.Equal(t, v1Update, updates[0])
 }
 
 func TestApplyAndReturnValidatorSetUpdatesIdentical(t *testing.T) {
@@ -752,7 +762,11 @@ func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
 	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[0].ABCIValidatorUpdate(), updates[0])
+
+	v0Update, err := validators[0].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, v0Update, updates[0])
 }
 
 func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
@@ -783,8 +797,14 @@ func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
 
 	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 2, len(updates))
-	require.Equal(t, validators[0].ABCIValidatorUpdate(), updates[0])
-	require.Equal(t, validators[1].ABCIValidatorUpdate(), updates[1])
+
+	v0Update, err := validators[0].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	v1Update, err := validators[1].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, v0Update, updates[0])
+	require.Equal(t, v1Update, updates[1])
 }
 
 func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
@@ -812,7 +832,10 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	validators[2], _ = app.StakingKeeper.GetValidator(ctx, validators[2].OperatorAddress)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[2].ABCIValidatorUpdate(), updates[0])
+
+	v2Update, err := validators[2].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	require.Equal(t, v2Update, updates[0])
 
 	// test validtor added at the beginning
 	//  tendermintUpdate set: {} -> {c0}
@@ -821,7 +844,10 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	validators[3], _ = app.StakingKeeper.GetValidator(ctx, validators[3].OperatorAddress)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[3].ABCIValidatorUpdate(), updates[0])
+
+	v3Update, err := validators[3].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	require.Equal(t, v3Update, updates[0])
 
 	// test validtor added at the end
 	//  tendermintUpdate set: {} -> {c0}
@@ -830,7 +856,10 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	validators[4], _ = app.StakingKeeper.GetValidator(ctx, validators[4].OperatorAddress)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[4].ABCIValidatorUpdate(), updates[0])
+
+	v4Update, err := validators[4].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	require.Equal(t, v4Update, updates[0])
 }
 
 func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
@@ -870,8 +899,14 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	validators[2], _ = app.StakingKeeper.GetValidator(ctx, validators[2].OperatorAddress)
 	require.Equal(t, 2, len(updates), "%v", updates)
-	require.Equal(t, validators[0].ABCIValidatorUpdateZero(), updates[1])
-	require.Equal(t, validators[2].ABCIValidatorUpdate(), updates[0])
+
+	v0Update, err := validators[0].ABCIValidatorUpdateZero()
+	require.NoError(t, err)
+	v2Update, err := validators[2].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, v0Update, updates[1])
+	require.Equal(t, v2Update, updates[0])
 }
 
 func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
@@ -911,8 +946,14 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	// Tendermint updates should reflect power change
 	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 2, len(updates))
-	require.Equal(t, validators[0].ABCIValidatorUpdate(), updates[0])
-	require.Equal(t, validators[1].ABCIValidatorUpdate(), updates[1])
+
+	v0Update, err := validators[0].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	v1Update, err := validators[1].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, v0Update, updates[0])
+	require.Equal(t, v1Update, updates[1])
 }
 
 func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
@@ -944,8 +985,14 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	require.Equal(t, len(validators), len(updates))
 	validators[0], _ = app.StakingKeeper.GetValidator(ctx, validators[0].OperatorAddress)
 	validators[1], _ = app.StakingKeeper.GetValidator(ctx, validators[1].OperatorAddress)
-	require.Equal(t, validators[0].ABCIValidatorUpdate(), updates[0])
-	require.Equal(t, validators[1].ABCIValidatorUpdate(), updates[1])
+
+	v0Update, err := validators[0].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	v1Update, err := validators[1].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, v0Update, updates[0])
+	require.Equal(t, v1Update, updates[1])
 
 	require.Equal(t, 0, len(app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)))
 
@@ -991,9 +1038,17 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	validators[0], _ = app.StakingKeeper.GetValidator(ctx, validators[0].OperatorAddress)
 	validators[1], _ = app.StakingKeeper.GetValidator(ctx, validators[1].OperatorAddress)
 	require.Equal(t, len(validators)+1, len(updates))
-	require.Equal(t, validator.ABCIValidatorUpdate(), updates[0])
-	require.Equal(t, validators[0].ABCIValidatorUpdate(), updates[1])
-	require.Equal(t, validators[1].ABCIValidatorUpdate(), updates[2])
+
+	vUpdate, err := validator.ABCIValidatorUpdate()
+	require.NoError(t, err)
+	v0Update, err = validators[0].ABCIValidatorUpdate()
+	require.NoError(t, err)
+	v1Update, err = validators[1].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, vUpdate, updates[0])
+	require.Equal(t, v0Update, updates[1])
+	require.Equal(t, v1Update, updates[2])
 }
 
 func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
@@ -1024,8 +1079,15 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	require.Equal(t, 2, len(updates))
 	validators[2], _ = app.StakingKeeper.GetValidator(ctx, validators[2].OperatorAddress)
 	validators[1], _ = app.StakingKeeper.GetValidator(ctx, validators[1].OperatorAddress)
-	require.Equal(t, validators[2].ABCIValidatorUpdate(), updates[0])
-	require.Equal(t, validators[1].ABCIValidatorUpdate(), updates[1])
+
+	v2Update, err := validators[2].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	v1Update, err := validators[1].ABCIValidatorUpdate()
+	require.NoError(t, err)
+
+	require.Equal(t, v2Update, updates[0])
+	require.Equal(t, v1Update, updates[1])
 
 	require.Equal(t, 0, len(app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)))
 
@@ -1065,17 +1127,19 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, validators[1])
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[1])
 
+	v1Update, err = validators[1].ABCIValidatorUpdate()
+	require.NoError(t, err)
 	// verify initial Tendermint updates are correct
 	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[1].ABCIValidatorUpdate(), updates[0])
+	require.Equal(t, v1Update, updates[0])
 
 	require.Equal(t, 0, len(app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)))
 }
 
 func TestUpdateValidatorCommission(t *testing.T) {
 	app, ctx, _, addrVals := bootstrapValidatorTest(t, 1000, 20)
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Now().UTC()})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Now().UTC()})
 
 	commission1 := types.NewCommissionWithTime(
 		sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1),

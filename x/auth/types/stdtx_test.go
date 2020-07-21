@@ -4,23 +4,22 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 var (
@@ -46,7 +45,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 			panic(err)
 		}
 
-		sigs[i] = StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
+		sigs[i] = StdSignature{PubKey: legacy.Cdc.MustMarshalBinaryBare(priv.PubKey()), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
@@ -92,7 +91,7 @@ func TestStdSignBytes(t *testing.T) {
 }
 
 func TestTxValidateBasic(t *testing.T) {
-	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, tmproto.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -174,6 +173,9 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 func TestStdSignatureMarshalYAML(t *testing.T) {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
+	cdc := codec.New()
+	RegisterCodec(cdc)
+	cryptoamino.RegisterCrypto(cdc)
 
 	testCases := []struct {
 		sig    StdSignature
@@ -184,11 +186,11 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 			"|\n  pubkey: \"\"\n  signature: \"\"\n",
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: []byte("dummySig")},
+			StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: []byte("dummySig")},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: 64756D6D79536967\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: nil},
+			StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: nil},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 	}
@@ -205,8 +207,10 @@ func TestSignatureV2Conversions(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
+	cryptoamino.RegisterCrypto(cdc)
+
 	dummy := []byte("dummySig")
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: dummy}
 
 	sigV2, err := StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, err)
@@ -262,16 +266,17 @@ func TestGetSignaturesV2(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
+	cryptoamino.RegisterCrypto(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: cdc.Amino.MustMarshalBinaryBare(pubKey), Signature: dummy}
 	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
 
 	sigs, err := stdTx.GetSignaturesV2()
 	require.Nil(t, err)
 	require.Equal(t, len(sigs), 1)
 
-	require.Equal(t, sigs[0].PubKey.Bytes(), sig.GetPubKey().Bytes())
+	require.Equal(t, cdc.Amino.MustMarshalBinaryBare(sigs[0].PubKey), cdc.Amino.MustMarshalBinaryBare(sig.GetPubKey()))
 	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
 		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: sig.GetSignature(),

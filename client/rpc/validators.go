@@ -121,7 +121,7 @@ func GetValidators(clientCtx client.Context, height *int64, page, limit int) (Re
 		return ResultValidatorsOutput{}, err
 	}
 
-	validatorsRes, err := node.Validators(height, page, limit)
+	validatorsRes, err := node.Validators(height, &page, &limit)
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}

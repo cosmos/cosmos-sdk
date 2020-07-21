@@ -6,6 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -139,7 +140,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.SignedHeader.Header.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.SignedHeader.Header.Height, 1, tmproto.PrecommitType, altValSet)
 				var err error
 				ev.Header1.Commit, err = tmtypes.MakeCommit(ev.Header1.Commit.BlockID, ev.Header2.Height, ev.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err
@@ -156,7 +157,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmproto.PrecommitType, altValSet)
 				var err error
 				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err

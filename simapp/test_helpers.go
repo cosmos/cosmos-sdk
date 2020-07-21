@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -33,14 +34,13 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &abci.EvidenceParams{
+	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  1814400,
 	},
-	Validator: &abci.ValidatorParams{
+	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
-			tmtypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
 }
@@ -136,7 +136,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// commit genesis changes
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	return app
 }
@@ -175,7 +175,7 @@ func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...ba
 	)
 
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 
 	return app
 }
@@ -304,7 +304,7 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 
 // CheckBalance checks the balance of an account.
 func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
-	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
+	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
 
@@ -313,7 +313,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.C
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, txGen client.TxConfig, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
+	t *testing.T, txGen client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 
@@ -415,7 +415,7 @@ func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
-	var pkEd ed25519.PubKeyEd25519
-	copy(pkEd[:], pkBytes)
+	pkEd := make(ed25519.PubKey, ed25519.PubKeySize)
+	copy(pkEd, pkBytes)
 	return pkEd
 }

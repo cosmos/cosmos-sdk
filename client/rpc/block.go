@@ -12,8 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -68,21 +66,6 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 	res, err := node.Block(height)
 	if err != nil {
 		return nil, err
-	}
-
-	if !clientCtx.TrustNode {
-		check, err := clientCtx.Verify(res.Block.Height)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := tmliteProxy.ValidateHeader(&res.Block.Header, check); err != nil {
-			return nil, err
-		}
-
-		if err = tmliteProxy.ValidateBlock(res.Block, check); err != nil {
-			return nil, err
-		}
 	}
 
 	return legacy.Cdc.MarshalJSON(res)

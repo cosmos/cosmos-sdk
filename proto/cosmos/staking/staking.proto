@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos.staking;
 
 import "gogoproto/gogo.proto";
-import "tendermint/abci/types/types.proto";
+import "tendermint/types/types.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/cosmos.proto";
@@ -28,7 +28,7 @@ message MsgCreateValidator {
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
-  string             pubkey = 6;
+  string      pubkey = 6;
   cosmos.Coin value  = 7 [(gogoproto.nullable) = false];
 }
 
@@ -112,10 +112,8 @@ message MsgUndelegate {
 // HistoricalInfo contains the historical information that gets stored at
 // each height.
 message HistoricalInfo {
-  option (gogoproto.equal) = true;
-
-  tendermint.abci.types.Header header = 1 [(gogoproto.nullable) = false];
-  repeated Validator           valset = 2 [(gogoproto.nullable) = false];
+  tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
+  repeated Validator      valset = 2 [(gogoproto.nullable) = false];
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -145,8 +143,8 @@ message Commission {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  CommissionRates commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp update_time = 2 [
+  CommissionRates           commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp update_time      = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime)  = true,
     (gogoproto.moretags) = "yaml:\"update_time\""
@@ -183,8 +181,8 @@ message Validator {
   ];
   string consensus_pubkey = 2 [(gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
   bool   jailed           = 3;
-  int32  status = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.BondStatus"];
-  string tokens = 5 [
+  int32  status           = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.BondStatus"];
+  string tokens           = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
@@ -193,9 +191,9 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  Description description                  = 7 [(gogoproto.nullable) = false];
-  int64       unbonding_height             = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
-  google.protobuf.Timestamp unbonding_time = 9 [
+  Description               description      = 7 [(gogoproto.nullable) = false];
+  int64                     unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
+  google.protobuf.Timestamp unbonding_time   = 9 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime)  = true,
     (gogoproto.moretags) = "yaml:\"unbonding_time\""

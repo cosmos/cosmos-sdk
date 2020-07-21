@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +23,7 @@ import (
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
@@ -55,7 +55,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
@@ -94,7 +94,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 func TestJailedValidatorDelegations(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Time: time.Unix(0, 0)})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Unix(0, 0)})
 
 	pks := simapp.CreateTestPubKeys(3)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(20))
@@ -164,7 +164,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := slashing.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), testdata.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, strings.Contains(err.Error(), "unrecognized slashing message type"))
@@ -175,7 +175,7 @@ func TestInvalidMsg(t *testing.T) {
 func TestHandleAbsentValidator(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Time: time.Unix(0, 0)})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Unix(0, 0)})
 
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
@@ -278,7 +278,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Nil(t, res)
 
 	// unrevocation should succeed after jail expiration
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(app.SlashingKeeper.DowntimeJailDuration(ctx))})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(1, 0).Add(app.SlashingKeeper.DowntimeJailDuration(ctx))})
 	res, err = slh(ctx, types.NewMsgUnjail(addr))
 	require.NoError(t, err)
 	require.NotNil(t, res)

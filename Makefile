@@ -334,15 +334,19 @@ proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking-ci
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.6
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/master
+
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 CONFIO_URL = https://raw.githubusercontent.com/confio/ics23/master
 
-TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
-TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
-TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
-TM_PROTO						= third_party/proto/tendermint/proto
+TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto
+TM_KEY_TYPES     		= third_party/proto/tendermint/crypto
+TM_ABCI_TYPES       = third_party/proto/tendermint/abci
+TM_TYPES     			  = third_party/proto/tendermint/types
+TM_VERSION 					= third_party/proto/tendermint/version
+TM_LIBS							= third_party/proto/tendermint/libs/bits
+
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
 CONFIO_TYPES = third_party/proto/confio
@@ -359,47 +363,25 @@ proto-update-deps:
 ## (which is the standard Buf.build FILE_LAYOUT)
 ## Issue link: https://github.com/tendermint/tendermint/issues/5021
 	@mkdir -p $(TM_ABCI_TYPES)
-	@curl -sSL $(TM_URL)/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '7 s|third_party/proto/||g' $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '8 s|crypto/merkle/merkle.proto|tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '9 s|libs/kv/types.proto|tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
 
-	@mkdir -p $(TM_PROTO)/types
-	@curl -sSL $(TM_URL)/proto/types/params.proto > $(TM_PROTO)/types/params.proto
-	@curl -sSL $(TM_URL)/proto/types/types.proto > $(TM_PROTO)/types/types.proto
-	@sed -i '' '8 s|proto/libs/bits/types.proto|third_party/proto/tendermint/proto/libs/bits/types.proto|g' $(TM_PROTO)/types/types.proto
-	@sed -i '' '9 s|proto/crypto/merkle/types.proto|third_party/proto/tendermint/proto/crypto/merkle/types.proto|g' $(TM_PROTO)/types/types.proto
-	@sed -i '' '10 s|proto/version/version.proto|third_party/proto/tendermint/proto/version/version.proto|g' $(TM_PROTO)/types/types.proto
+	@mkdir -p $(TM_VERSION)
+	@curl -sSL $(TM_URL)/proto/tendermint/version/types.proto > $(TM_VERSION)/types.proto
 
-	@curl -sSL $(TM_URL)/proto/types/evidence.proto > $(TM_PROTO)/types/evidence.proto
-	@sed -i '' '7 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_PROTO)/types/evidence.proto
-	@sed -i '' '9 s|proto/crypto/keys/types.proto|third_party/proto/tendermint/proto/crypto/keys/types.proto|g' $(TM_PROTO)/types/evidence.proto
 
-	@curl -sSL $(TM_URL)/proto/types/block.proto > $(TM_PROTO)/types/block.proto
-	@sed -i '' '7 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_PROTO)/types/block.proto
-	@sed -i '' '8 s|proto/types/evidence.proto|third_party/proto/tendermint/proto/types/evidence.proto|g' $(TM_PROTO)/types/block.proto
-	
-	@curl -sSL $(TM_URL)/proto/types/validator.proto > $(TM_PROTO)/types/validator.proto
-	@sed -i '' '7 s|proto/crypto/keys/types.proto|third_party/proto/tendermint/proto/crypto/keys/types.proto|g' $(TM_PROTO)/types/validator.proto
-	
-	@mkdir -p $(TM_PROTO)/libs/bits
-	@curl -sSL $(TM_URL)/proto/libs/bits/types.proto > $(TM_PROTO)/libs/bits/types.proto
-
-	@mkdir -p $(TM_PROTO)/crypto/merkle
-	@mkdir -p $(TM_PROTO)/crypto/keys
-	@curl -sSL $(TM_URL)/proto/crypto/merkle/types.proto > $(TM_PROTO)/crypto/merkle/types.proto
-	@curl -sSL $(TM_URL)/proto/crypto/keys/types.proto > $(TM_PROTO)/crypto/keys/types.proto
-
-	@mkdir -p $(TM_PROTO)/version
-	@curl -sSL $(TM_URL)/proto/version/version.proto > $(TM_PROTO)/version/version.proto
-
-	@mkdir -p $(TM_KV_TYPES)
-	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto
-	@sed -i '' '5 s|third_party/proto/||g' $(TM_KV_TYPES)/types.proto
+	@mkdir -p $(TM_TYPES)
+	@curl -sSL $(TM_URL)/proto/tendermint/types/types.proto > $(TM_TYPES)/types.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/types/evidence.proto > $(TM_TYPES)/evidence.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/types/params.proto > $(TM_TYPES)/params.proto
 
 	@mkdir -p $(TM_MERKLE_TYPES)
-	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
-	@sed -i '' '7 s|third_party/proto/||g' $(TM_MERKLE_TYPES)/merkle.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/crypto/proof.proto > $(TM_MERKLE_TYPES)/proof.proto
+
+	@mkdir -p $(TM_KEY_TYPES)
+	@curl -sSL $(TM_URL)/proto/tendermint/crypto/keys.proto > $(TM_KEY_TYPES)/keys.proto
+
+	@mkdir -p $(TM_LIBS)
+	@curl -sSL $(TM_URL)/proto/tendermint/libs/bits/types.proto > $(TM_LIBS)/types.proto
 
 	@mkdir -p $(CONFIO_TYPES)
 	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto

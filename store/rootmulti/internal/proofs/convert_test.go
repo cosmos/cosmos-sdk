@@ -31,8 +31,8 @@ func TestLeafOp(t *testing.T) {
 
 func TestBuildPath(t *testing.T) {
 	cases := map[string]struct {
-		idx      int
-		total    int
+		idx      int64
+		total    int64
 		expected []bool
 	}{
 		"pair left": {

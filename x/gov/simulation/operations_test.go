@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -104,7 +105,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgSubmitProposal(app.AccountKeeper, app.BankKeeper, app.GovKeeper, MockWeightedProposalContent{3}.ContentSimulatorFn())
@@ -147,7 +148,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeposit(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
@@ -189,7 +190,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
 	op := simulation.SimulateMsgVote(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
@@ -212,7 +213,7 @@ func TestSimulateMsgVote(t *testing.T) {
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 
-	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
 	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 

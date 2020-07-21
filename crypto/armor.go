@@ -151,7 +151,7 @@ func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte
 	}
 
 	key = crypto.Sha256(key) // get 32 bytes
-	privKeyBytes := privKey.Bytes()
+	privKeyBytes := cdc.Amino.MustMarshalBinaryBare(privKey)
 
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }

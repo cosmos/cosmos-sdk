@@ -9,8 +9,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -128,29 +126,14 @@ func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, erro
 }
 
 // Verify verifies the consensus proof at given height.
+//todo see what to do here
 func (ctx Context) Verify(height int64) (tmtypes.SignedHeader, error) {
-	if ctx.Verifier == nil {
-		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
-	}
 
-	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
-
-	switch {
-	case tmliteErr.IsErrCommitNotFound(err):
-		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
-	case err != nil:
-		return tmtypes.SignedHeader{}, err
-	}
-
-	return check, nil
+	return tmtypes.SignedHeader{}, nil
 }
 
 // verifyProof perform response proof verification.
 func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error {
-	if ctx.Verifier == nil {
-		return fmt.Errorf("missing valid certifier to verify data from distrusted node")
-	}
-
 	// the AppHash for height H is in header H+1
 	commit, err := ctx.Verify(resp.Height + 1)
 	if err != nil {
@@ -171,14 +154,14 @@ func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error 
 	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
 
 	if resp.Value == nil {
-		err = prt.VerifyAbsence(resp.Proof, commit.Header.AppHash, kp.String())
+		err = prt.VerifyAbsence(resp.ProofOps, commit.Header.AppHash, kp.String())
 		if err != nil {
 			return errors.Wrap(err, "failed to prove merkle proof")
 		}
 		return nil
 	}
 
-	if err := prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value); err != nil {
+	if err := prt.VerifyValue(resp.ProofOps, commit.Header.AppHash, kp.String(), resp.Value); err != nil {
 		return errors.Wrap(err, "failed to prove merkle proof")
 	}
 

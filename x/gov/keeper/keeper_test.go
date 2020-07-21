@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -24,7 +24,7 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.GovKeeper)
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func TestIncrementProposalNumber(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tp := TestProposal
 	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -59,7 +59,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 
 func TestProposalQueues(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// create test proposals
 	tp := TestProposal

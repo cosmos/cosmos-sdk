@@ -6,12 +6,10 @@ import (
 	"sync"
 	"time"
 
-	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/iavl"
+	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -20,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -267,7 +266,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 
 		// get proof from tree and convert to merkle.Proof before adding to result
-		res.Proof = getProofFromTree(mtree, req.Data, res.Value != nil)
+		res.ProofOps = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
 		var KVs []types.KVPair
@@ -293,7 +292,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmmerkle.ProofOps {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -301,14 +300,14 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 
 	if exists {
 		// value was found
-		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
+		commitmentProof, err = tree.ImmutableTree.GetMembershipProof(key)
 		if err != nil {
 			// sanity check: If value was found, membership proof must be creatable
 			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
 		}
 	} else {
 		// value wasn't found
-		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
+		commitmentProof, err = tree.ImmutableTree.GetNonMembershipProof(key)
 		if err != nil {
 			// sanity check: If value wasn't found, nonmembership proof must be creatable
 			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
@@ -316,7 +315,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 	}
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
+	return &tmmerkle.ProofOps{Ops: []tmmerkle.ProofOp{op.ProofOp()}}
 }
 
 //----------------------------------------
@@ -333,7 +332,7 @@ type iavlIterator struct {
 	tree *iavl.ImmutableTree
 
 	// Channel to push iteration values.
-	iterCh chan tmkv.Pair
+	iterCh chan kv.Pair
 
 	// Close this to release goroutine.
 	quitCh chan struct{}
@@ -359,7 +358,7 @@ func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool
 		start:     sdk.CopyBytes(start),
 		end:       sdk.CopyBytes(end),
 		ascending: ascending,
-		iterCh:    make(chan tmkv.Pair), // Set capacity > 0?
+		iterCh:    make(chan kv.Pair), // Set capacity > 0?
 		quitCh:    make(chan struct{}),
 		initCh:    make(chan struct{}),
 	}
@@ -376,7 +375,7 @@ func (iter *iavlIterator) iterateRoutine() {
 			select {
 			case <-iter.quitCh:
 				return true // done with iteration.
-			case iter.iterCh <- tmkv.Pair{Key: key, Value: value}:
+			case iter.iterCh <- kv.Pair{Key: key, Value: value}:
 				return false // yay.
 			}
 		},
@@ -439,11 +438,13 @@ func (iter *iavlIterator) Value() []byte {
 
 // Close closes the IAVL iterator by closing the quit channel and waiting for
 // the iterCh to finish/close.
-func (iter *iavlIterator) Close() {
+func (iter *iavlIterator) Close() error {
 	close(iter.quitCh)
 	// wait iterCh to close
 	for range iter.iterCh {
 	}
+
+	return nil
 }
 
 // Error performs a no-op.

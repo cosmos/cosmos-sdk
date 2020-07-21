@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/kv"
 
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -66,7 +66,7 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 		kvsH[i] = KVPair(kvp).Bytes()
 	}
 
-	return merkle.SimpleHashFromByteSlices(kvsH)
+	return merkle.HashFromByteSlices(kvsH)
 }
 
 // ---------------------------------------------
@@ -180,7 +180,7 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 // SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
 // in the underlying key-value pairs.
 // The keys are sorted before the proofs are computed.
-func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.SimpleProof, []string) {
+func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.Proof, []string) {
 	sm := newSimpleMap()
 	for k, v := range m {
 		sm.Set(k, v)
@@ -193,8 +193,8 @@ func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.Simple
 		kvsBytes[i] = KVPair(kvp).Bytes()
 	}
 
-	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
-	proofs := make(map[string]*merkle.SimpleProof)
+	rootHash, proofList := merkle.ProofsFromByteSlices(kvsBytes)
+	proofs := make(map[string]*merkle.Proof)
 	keys := make([]string, len(proofList))
 	for i, kvp := range kvs {
 		proofs[string(kvp.Key)] = proofList[i]

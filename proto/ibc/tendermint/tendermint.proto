@@ -4,7 +4,7 @@ package ibc.tendermint;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "gogoproto/gogo.proto";
-import "third_party/proto/tendermint/proto/types/types.proto";
+import "third_party/proto/tendermint/proto/tendermint/types/types.proto";
 import "third_party/proto/confio/proofs.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -42,6 +42,9 @@ message MsgCreateClient {
   ];
   bytes signer = 7 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+  ];
+  repeated ics23.ProofSpec proof_specs = 8 [
+    (gogoproto.moretags) = "yaml:\"proof_specs\""
   ];
 }
 

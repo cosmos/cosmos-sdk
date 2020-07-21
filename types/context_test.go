@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -51,7 +52,7 @@ func defaultContext(t *testing.T, key types.StoreKey) types.Context {
 	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
 	err := cms.LoadLatestVersion()
 	require.NoError(t, err)
-	ctx := types.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
+	ctx := types.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 	return ctx
 }
 
@@ -104,7 +105,7 @@ func TestContextWithCustom(t *testing.T) {
 	var ctx types.Context
 	require.True(t, ctx.IsZero())
 
-	header := abci.Header{}
+	header := tmproto.Header{}
 	height := int64(1)
 	chainid := "chainid"
 	ischeck := true
@@ -164,7 +165,7 @@ func TestContextHeader(t *testing.T) {
 	addr := secp256k1.GenPrivKey().PubKey().Address()
 	proposer := types.ConsAddress(addr)
 
-	ctx = types.NewContext(nil, abci.Header{}, false, nil)
+	ctx = types.NewContext(nil, tmproto.Header{}, false, nil)
 
 	ctx = ctx.
 		WithBlockHeight(height).
@@ -178,35 +179,35 @@ func TestContextHeader(t *testing.T) {
 
 func TestContextHeaderClone(t *testing.T) {
 	cases := map[string]struct {
-		h abci.Header
+		h tmproto.Header
 	}{
 		"empty": {
-			h: abci.Header{},
+			h: tmproto.Header{},
 		},
 		"height": {
-			h: abci.Header{
+			h: tmproto.Header{
 				Height: 77,
 			},
 		},
 		"time": {
-			h: abci.Header{
+			h: tmproto.Header{
 				Time: time.Unix(12345677, 12345),
 			},
 		},
 		"zero time": {
-			h: abci.Header{
+			h: tmproto.Header{
 				Time: time.Unix(0, 0),
 			},
 		},
 		"many items": {
-			h: abci.Header{
+			h: tmproto.Header{
 				Height:  823,
 				Time:    time.Unix(9999999999, 0),
 				ChainID: "silly-demo",
 			},
 		},
 		"many items with hash": {
-			h: abci.Header{
+			h: tmproto.Header{
 				Height:        823,
 				Time:          time.Unix(9999999999, 0),
 				ChainID:       "silly-demo",
@@ -233,7 +234,7 @@ func TestContextHeaderClone(t *testing.T) {
 }
 
 func TestUnwrapSDKContext(t *testing.T) {
-	sdkCtx := types.NewContext(nil, abci.Header{}, false, nil)
+	sdkCtx := types.NewContext(nil, tmproto.Header{}, false, nil)
 	ctx := types.WrapSDKContext(sdkCtx)
 	sdkCtx2 := types.UnwrapSDKContext(ctx)
 	require.Equal(t, sdkCtx, sdkCtx2)

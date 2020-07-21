@@ -145,13 +145,13 @@ The default implementation of `KVStore` and `CommitKVStore` used in `baseapp` is
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/store/iavl/store.go#L32-L47
 
- `iavl` stores are based around an [IAVL Tree](https://github.com/tendermint/iavl), a self-balancing binary tree which guarantees that:
+ `iavl` stores are based around an [IAVL Tree](https://github.com/cosmos/iavl), a self-balancing binary tree which guarantees that:
 
 - `Get` and `Set` operations are O(log n), where n is the number of elements in the tree.
 - Iteration efficiently returns the sorted elements within the range.
-- Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings). 
+- Each tree version is immutable and can be retrieved even after a commit (depending on the pruning settings).
 
-The documentation on the IAVL Tree is located [here](https://github.com/tendermint/iavl/blob/f9d4b446a226948ed19286354f0d433a887cc4a3/docs/overview.md).
+The documentation on the IAVL Tree is located [here](https://github.com/cosmos/iavl/blob/f9d4b446a226948ed19286354f0d433a887cc4a3/docs/overview.md).
 
 ### `DbAdapter` Store
 

@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	lite "github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"

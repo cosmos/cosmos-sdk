@@ -151,9 +151,11 @@ func (iter *cacheMergeIterator) Value() []byte {
 }
 
 // Close implements Iterator
-func (iter *cacheMergeIterator) Close() {
+func (iter *cacheMergeIterator) Close() error {
 	iter.parent.Close()
 	iter.cache.Close()
+
+	return nil
 }
 
 // Error returns an error if the cacheMergeIterator is invalid defined by the

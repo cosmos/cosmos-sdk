@@ -13,7 +13,7 @@ import (
 //
 // This is the simplest case of the range proof and we will focus on
 // demoing compatibility here
-func ConvertExistenceProof(p *merkle.SimpleProof, key, value []byte) (*ics23.ExistenceProof, error) {
+func ConvertExistenceProof(p *merkle.Proof, key, value []byte) (*ics23.ExistenceProof, error) {
 	path, err := convertInnerOps(p)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func convertLeafOp() *ics23.LeafOp {
 	}
 }
 
-func convertInnerOps(p *merkle.SimpleProof) ([]*ics23.InnerOp, error) {
+func convertInnerOps(p *merkle.Proof) ([]*ics23.InnerOp, error) {
 	inners := make([]*ics23.InnerOp, 0, len(p.Aunts))
 	path := buildPath(p.Index, p.Total)
 
@@ -69,7 +69,7 @@ func convertInnerOps(p *merkle.SimpleProof) ([]*ics23.InnerOp, error) {
 // buildPath returns a list of steps from leaf to root
 // in each step, true means index is left side, false index is right side
 // code adapted from merkle/simple_proof.go:computeHashFromAunts
-func buildPath(idx int, total int) []bool {
+func buildPath(idx int64, total int64) []bool {
 	if total < 2 {
 		return nil
 	}
@@ -84,13 +84,13 @@ func buildPath(idx int, total int) []bool {
 	return append(buildPath(idx-numLeft, total-numLeft), goLeft)
 }
 
-func getSplitPoint(length int) int {
+func getSplitPoint(length int64) int64 {
 	if length < 1 {
 		panic("Trying to split a tree with size < 1")
 	}
 	uLength := uint(length)
 	bitlen := bits.Len(uLength)
-	k := 1 << uint(bitlen-1)
+	k := int64(1 << uint(bitlen-1))
 	if k == length {
 		k >>= 1
 	}

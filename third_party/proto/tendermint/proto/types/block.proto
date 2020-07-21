@@ -1,11 +1,11 @@
 syntax = "proto3";
 package tendermint.proto.types;
 
-option go_package = "github.com/tendermint/tendermint/proto/types";
+option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
-import "third_party/proto/tendermint/proto/types/types.proto";
-import "third_party/proto/tendermint/proto/types/evidence.proto";
+import "third_party/proto/tendermint/proto/tendermint/types/types.proto";
+import "third_party/proto/tendermint/proto/tendermint/types/evidence.proto";
 
 message Block {
   Header                              header      = 1 [(gogoproto.nullable) = false];

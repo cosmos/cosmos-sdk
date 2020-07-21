@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -179,7 +179,7 @@ func TestShouldExecute(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
-			ctx := sdk.NewContext(nil, abci.Header{Height: tc.ctxHeight, Time: tc.ctxTime}, false, log.NewNopLogger())
+			ctx := sdk.NewContext(nil, tmproto.Header{Height: tc.ctxHeight, Time: tc.ctxTime}, false, log.NewNopLogger())
 			should := tc.p.ShouldExecute(ctx)
 			assert.Equal(t, tc.expected, should)
 		})

@@ -8,8 +8,8 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 
+	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tm-db"
 )
 

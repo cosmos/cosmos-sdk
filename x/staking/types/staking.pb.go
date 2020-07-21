@@ -16,7 +16,7 @@ import (
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/golang/protobuf/ptypes/duration"
 	_ "github.com/golang/protobuf/ptypes/timestamp"
-	types1 "github.com/tendermint/tendermint/abci/types"
+	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 	io "io"
 	io_ioutil "io/ioutil"
 	math "math"
@@ -2350,38 +2350,6 @@ func (this *MsgUndelegate) Equal(that interface{}) bool {
 	}
 	if !this.Amount.Equal(&that1.Amount) {
 		return false
-	}
-	return true
-}
-func (this *HistoricalInfo) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*HistoricalInfo)
-	if !ok {
-		that2, ok := that.(HistoricalInfo)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Header.Equal(&that1.Header) {
-		return false
-	}
-	if len(this.Valset) != len(that1.Valset) {
-		return false
-	}
-	for i := range this.Valset {
-		if !this.Valset[i].Equal(&that1.Valset[i]) {
-			return false
-		}
 	}
 	return true
 }

@@ -50,11 +50,12 @@ func TestTraceKVStoreGet(t *testing.T) {
 		expectedValue []byte
 		expectedOut   string
 	}{
-		{
-			key:           []byte{},
-			expectedValue: nil,
-			expectedOut:   "{\"operation\":\"read\",\"key\":\"\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-		},
+		// TODO: key types can not me empty
+		// {
+		// 	key:           []byte{},
+		// 	expectedValue: nil,
+		// 	expectedOut:   "{\"operation\":\"read\",\"key\":\"\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
+		// },
 		{
 			key:           kvPairs[0].Key,
 			expectedValue: kvPairs[0].Value,
@@ -125,10 +126,6 @@ func TestTraceKVStoreDelete(t *testing.T) {
 		expectedOut string
 	}{
 		{
-			key:         []byte{},
-			expectedOut: "{\"operation\":\"delete\",\"key\":\"\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
-		},
-		{
 			key:         kvPairs[0].Key,
 			expectedOut: "{\"operation\":\"delete\",\"key\":\"a2V5MDAwMDAwMDE=\",\"value\":\"\",\"metadata\":{\"blockHeight\":64}}\n",
 		},
@@ -150,10 +147,6 @@ func TestTraceKVStoreHas(t *testing.T) {
 		key      []byte
 		expected bool
 	}{
-		{
-			key:      []byte{},
-			expected: false,
-		},
 		{
 			key:      kvPairs[0].Key,
 			expected: true,
@@ -224,7 +217,7 @@ func TestTestTraceKVStoreIterator(t *testing.T) {
 
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.NotPanics(t, iterator.Close)
+	require.NoError(t, iterator.Close())
 }
 
 func TestTestTraceKVStoreReverseIterator(t *testing.T) {
@@ -280,7 +273,7 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.NotPanics(t, iterator.Close)
+	require.NoError(t, iterator.Close())
 }
 
 func TestTraceKVStorePrefix(t *testing.T) {

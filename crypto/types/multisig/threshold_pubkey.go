@@ -134,7 +134,7 @@ func (pk PubKeyMultisigThreshold) Bytes() []byte {
 
 // Address returns tmhash(PubKeyMultisigThreshold.Bytes())
 func (pk PubKeyMultisigThreshold) Address() crypto.Address {
-	return crypto.AddressHash(pk.Bytes())
+	return crypto.AddressHash(Cdc.MustMarshalBinaryBare(pk))
 }
 
 // Equals returns true iff pk and other both have the same number of keys, and
@@ -154,3 +154,5 @@ func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
 	}
 	return true
 }
+
+func (pk PubKeyMultisigThreshold) Type() string { return " PubKeyMultisigThreshold" }

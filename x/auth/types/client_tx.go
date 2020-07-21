@@ -37,7 +37,7 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 		pubKey := sig.PubKey
 		var pubKeyBz []byte
 		if pubKey != nil {
-			pubKeyBz = pubKey.Bytes()
+			pubKeyBz = legacy.Cdc.MustMarshalBinaryBare(pubKey)
 		}
 
 		var sigBz []byte

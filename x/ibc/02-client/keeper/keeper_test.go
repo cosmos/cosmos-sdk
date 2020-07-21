@@ -7,8 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -54,7 +53,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.AppCodec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
 

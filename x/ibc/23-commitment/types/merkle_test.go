@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 func (suite *MerkleTestSuite) TestVerifyMembership() {
@@ -21,10 +21,10 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 		Data:  []byte("MYKEY"),
 		Prove: true,
 	})
-	require.NotNil(suite.T(), res.Proof)
+	require.NotNil(suite.T(), res.ProofOps)
 
 	proof := types.MerkleProof{
-		Proof: res.Proof,
+		Proof: res.ProofOps,
 	}
 	suite.Require().NoError(proof.ValidateBasic())
 	suite.Require().Error(types.MerkleProof{}.ValidateBasic())
@@ -49,8 +49,8 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), func() {}, false},           // invalid proof with nil root
 		{"proof is wrong length", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), func() {
 			proof = types.MerkleProof{
-				Proof: &merkle.Proof{
-					Ops: res.Proof.Ops[1:],
+				Proof: &tmmerkle.ProofOps{
+					Ops: res.ProofOps.Ops[1:],
 				},
 			}
 		}, false}, // invalid proof with wrong length
@@ -89,10 +89,10 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 		Data:  []byte("MYABSENTKEY"),
 		Prove: true,
 	})
-	require.NotNil(suite.T(), res.Proof)
+	require.NotNil(suite.T(), res.ProofOps)
 
 	proof := types.MerkleProof{
-		Proof: res.Proof,
+		Proof: res.ProofOps,
 	}
 	suite.Require().NoError(proof.ValidateBasic())
 
@@ -114,8 +114,8 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYABSENTKEY"}, func() {}, false},           // invalid proof with nil root
 		{"proof is wrong length", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, func() {
 			proof = types.MerkleProof{
-				Proof: &merkle.Proof{
-					Ops: res.Proof.Ops[1:],
+				Proof: &tmmerkle.ProofOps{
+					Ops: res.ProofOps.Ops[1:],
 				},
 			}
 		}, false}, // invalid proof with wrong length

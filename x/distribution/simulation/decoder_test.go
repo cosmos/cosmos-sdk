@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,17 +36,17 @@ func TestDecodeDistributionStore(t *testing.T) {
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 5)
 	slashEvent := types.NewValidatorSlashEvent(10, sdk.OneDec())
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryBare(&feePool)},
-		tmkv.Pair{Key: types.ProposerKey, Value: consAddr1.Bytes()},
-		tmkv.Pair{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&outstanding)},
-		tmkv.Pair{Key: types.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
-		tmkv.Pair{Key: types.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryBare(&info)},
-		tmkv.Pair{Key: types.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryBare(&historicalRewards)},
-		tmkv.Pair{Key: types.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&currentRewards)},
-		tmkv.Pair{Key: types.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&commission)},
-		tmkv.Pair{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryBare(&slashEvent)},
-		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		kv.Pair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryBare(&feePool)},
+		kv.Pair{Key: types.ProposerKey, Value: consAddr1.Bytes()},
+		kv.Pair{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&outstanding)},
+		kv.Pair{Key: types.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
+		kv.Pair{Key: types.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryBare(&info)},
+		kv.Pair{Key: types.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryBare(&historicalRewards)},
+		kv.Pair{Key: types.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&currentRewards)},
+		kv.Pair{Key: types.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&commission)},
+		kv.Pair{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryBare(&slashEvent)},
+		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

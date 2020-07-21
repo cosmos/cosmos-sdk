@@ -6,7 +6,6 @@ import (
 	"github.com/armon/go-metrics"
 	gogotypes "github.com/gogo/protobuf/types"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,12 +69,16 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 
 	cp := ctx.ConsensusParams()
 	if cp != nil && cp.Validator != nil {
-		tmPubKey := tmtypes.TM2PB.PubKey(pk)
+		// tmPubKey, err := cryptoenc.PubKeyToProto(pk)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		if !tmstrings.StringInSlice(tmPubKey.Type, cp.Validator.PubKeyTypes) {
+		// todo check if we need PubkeyName or type
+		if !tmstrings.StringInSlice(pk.Type(), cp.Validator.PubKeyTypes) {
 			return nil, sdkerrors.Wrapf(
 				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", tmPubKey.Type, cp.Validator.PubKeyTypes,
+				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
 			)
 		}
 	}

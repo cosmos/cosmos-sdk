@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tiavl "github.com/tendermint/iavl"
+	tiavl "github.com/cosmos/iavl"
 	dbm "github.com/tendermint/tm-db"
 )
 

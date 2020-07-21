@@ -1,21 +1,20 @@
 package types
 
 import (
+	"math"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmproto "github.com/tendermint/tendermint/proto/types"
-	"github.com/tendermint/tendermint/proto/version"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-const maxInt = int64(^uint(0) >> 1)
-
-// MakeBlockID copied unimported test functions from tmtypes to use them here
-func MakeBlockID(hash []byte, partSetSize int64, partSetHash []byte) tmproto.BlockID {
-	return tmproto.BlockID{
+// MakeBlockID unimported test functions from tmtypes to use them here
+func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
+	return tmtypes.BlockID{
 		Hash: hash,
-		PartsHeader: tmproto.PartSetHeader{
+		PartSetHeader: tmtypes.PartSetHeader{
 			Total: partSetSize,
 			Hash:  partSetHash,
 		},
@@ -23,20 +22,14 @@ func MakeBlockID(hash []byte, partSetSize int64, partSetHash []byte) tmproto.Blo
 }
 
 // CreateTestHeader creates a mock header for testing only.
-func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet *tmproto.ValidatorSet, signers []tmtypes.PrivValidator) Header {
-	tmValSet, err := tmtypes.ValidatorSetFromProto(valSet)
-	if err != nil {
-		panic(err)
-	}
-
-	vsetHash := tmValSet.Hash()
-
-	header := &tmproto.Header{
-		Version:            version.Consensus{Block: 2, App: 2},
+func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+	vsetHash := valSet.Hash()
+	tmHeader := tmtypes.Header{
+		Version:            tmversion.Consensus{Block: 2, App: 2},
 		ChainID:            chainID,
 		Height:             height,
 		Time:               timestamp,
-		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), maxInt, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), math.MaxUint32, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,
@@ -47,20 +40,10 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 		ProposerAddress:    valSet.Proposer.Address,
 	}
-
-	tmHeader, err := tmtypes.HeaderFromProto(header)
-	if err != nil {
-		panic(err)
-	}
-
-	blockID := MakeBlockID(tmHeader.Hash(), 3, tmhash.Sum([]byte("part_set")))
-	tmBlockID, err := tmtypes.BlockIDFromProto(&blockID)
-	if err != nil {
-		panic(err)
-	}
-
-	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, tmValSet)
-	commit, err := tmtypes.MakeCommit(*tmBlockID, height, 1, voteSet, signers, timestamp)
+	hhash := tmHeader.Hash()
+	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
+	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)
+	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}

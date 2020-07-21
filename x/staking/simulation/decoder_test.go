@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -43,14 +43,14 @@ func TestDecodeStore(t *testing.T) {
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryBare(&sdk.IntProto{Int: sdk.OneInt()})},
-		tmkv.Pair{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&val)},
-		tmkv.Pair{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-		tmkv.Pair{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&del)},
-		tmkv.Pair{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&ubd)},
-		tmkv.Pair{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&red)},
-		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		kv.Pair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryBare(&sdk.IntProto{Int: sdk.OneInt()})},
+		kv.Pair{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&val)},
+		kv.Pair{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
+		kv.Pair{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&del)},
+		kv.Pair{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&ubd)},
+		kv.Pair{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&red)},
+		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

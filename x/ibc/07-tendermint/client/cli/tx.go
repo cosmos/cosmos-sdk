@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	ics23 "github.com/confio/ics23/go"
+
+	lite "github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

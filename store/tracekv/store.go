@@ -54,6 +54,7 @@ func (tkv *Store) Get(key []byte) []byte {
 	value := tkv.parent.Get(key)
 
 	writeOperation(tkv.writer, readOp, tkv.context, key, value)
+
 	return value
 }
 
@@ -146,8 +147,10 @@ func (ti *traceIterator) Value() []byte {
 }
 
 // Close implements the Iterator interface.
-func (ti *traceIterator) Close() {
+func (ti *traceIterator) Close() error {
 	ti.parent.Close()
+
+	return nil
 }
 
 // Error delegates the Error call to the parent iterator.

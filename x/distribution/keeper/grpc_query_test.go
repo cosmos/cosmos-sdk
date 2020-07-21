@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,7 +31,7 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)

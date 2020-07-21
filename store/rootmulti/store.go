@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	ics23 "github.com/confio/ics23/go"
+	iavltree "github.com/cosmos/iavl"
 	"github.com/pkg/errors"
-	iavltree "github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -484,7 +484,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return res
 	}
 
-	if res.Proof == nil || len(res.Proof.Ops) == 0 {
+	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"))
 	}
 
@@ -503,7 +503,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	// Restore origin path and append proof op.
-	res.Proof.Ops = append(res.Proof.Ops, commitInfo.ProofOp(storeName))
+	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
 
 	return res
 }
@@ -618,7 +618,7 @@ func (ci commitInfo) Hash() []byte {
 	return rootHash
 }
 
-func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
+func (ci commitInfo) ProofOp(storeName string) tmmerkle.ProofOp {
 	cmap := ci.toMap()
 	_, proofs, _ := sdkmaps.SimpleProofsFromMap(cmap)
 	proof := proofs[storeName]

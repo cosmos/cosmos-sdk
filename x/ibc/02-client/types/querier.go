@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -41,7 +41,7 @@ type StateResponse struct {
 
 // NewClientStateResponse creates a new StateResponse instance.
 func NewClientStateResponse(
-	clientID string, clientState exported.ClientState, proof *merkle.Proof, height int64,
+	clientID string, clientState exported.ClientState, proof *tmmerkle.ProofOps, height int64,
 ) StateResponse {
 	return StateResponse{
 		ClientState: clientState,
@@ -62,7 +62,7 @@ type ConsensusStateResponse struct {
 
 // NewConsensusStateResponse creates a new ConsensusStateResponse instance.
 func NewConsensusStateResponse(
-	clientID string, cs exported.ConsensusState, proof *merkle.Proof, height int64,
+	clientID string, cs exported.ConsensusState, proof *tmmerkle.ProofOps, height int64,
 ) ConsensusStateResponse {
 	return ConsensusStateResponse{
 		ConsensusState: cs,

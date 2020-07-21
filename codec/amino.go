@@ -8,7 +8,6 @@ import (
 	"io"
 
 	amino "github.com/tendermint/go-amino"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -27,12 +26,6 @@ func (cdc *Codec) Seal() {
 
 func New() *Codec {
 	return &Codec{amino.NewCodec()}
-}
-
-// RegisterEvidences registers Tendermint evidence types with the provided Amino
-// codec.
-func RegisterEvidences(cdc *Codec) {
-	tmtypes.RegisterEvidences(cdc.Amino)
 }
 
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object

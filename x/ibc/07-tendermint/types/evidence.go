@@ -8,7 +8,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmproto "github.com/tendermint/tendermint/proto/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

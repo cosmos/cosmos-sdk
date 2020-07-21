@@ -48,6 +48,8 @@ type (
 	}
 )
 
+var _ tmcrypto.PrivKey = PrivKeyLedgerSecp256k1{}
+
 // NewPrivKeyLedgerSecp256k1Unsafe will generate a new key and store the public key for later use.
 //
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
@@ -115,7 +117,7 @@ func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 		return err
 	}
 
-	if pubKey != expectedPubKey {
+	if !pubKey.Equals(expectedPubKey) {
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
@@ -124,7 +126,7 @@ func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 		return err
 	}
 
-	if pubKey2 != expectedPubKey {
+	if !pubKey2.Equals(expectedPubKey) {
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
@@ -151,6 +153,8 @@ func (pkl *PrivKeyLedgerSecp256k1) AssertIsPrivKeyInner() {}
 func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
 	return cdc.MustMarshalBinaryBare(pkl)
 }
+
+func (pkl PrivKeyLedgerSecp256k1) Type() string { return "PrivKeyLedgerSecp256k1" }
 
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
@@ -244,8 +248,8 @@ func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubK
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return compressedPublicKey, nil
 }
@@ -268,8 +272,8 @@ func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string) 
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return compressedPublicKey, addr, nil
 }

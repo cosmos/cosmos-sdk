@@ -153,19 +153,19 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, i1.GetPubKey(), pub1)
 
 	s12, pub1, err := kb.Sign(n1, d2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, i1.GetPubKey(), pub1)
 
 	s21, pub2, err := kb.Sign(n2, d1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, i2.GetPubKey(), pub2)
 
 	s22, pub2, err := kb.Sign(n2, d2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, i2.GetPubKey(), pub2)
 
 	// let's try to validate and make sure it only works when everything is proper

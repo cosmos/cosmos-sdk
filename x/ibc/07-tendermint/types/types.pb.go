@@ -12,7 +12,7 @@ import (
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/golang/protobuf/ptypes/duration"
 	_ "github.com/golang/protobuf/ptypes/timestamp"
-	types1 "github.com/tendermint/tendermint/proto/types"
+	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"

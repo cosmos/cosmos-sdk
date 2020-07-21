@@ -15,7 +15,7 @@ func parseSubmitProposalFlags(fs *pflag.FlagSet) (*proposal, error) {
 	proposalFile, _ := fs.GetString(FlagProposal)
 
 	if proposalFile == "" {
-		proposalType, _ := fs.GetString(flagProposalType)
+		proposalType, _ := fs.GetString(FlagProposalType)
 
 		proposal.Title, _ = fs.GetString(FlagTitle)
 		proposal.Description, _ = fs.GetString(FlagDescription)

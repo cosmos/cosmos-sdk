@@ -17,6 +17,7 @@ type proxyServer struct {
 	interceptor grpc.UnaryServerInterceptor
 }
 
+// NewProxyServer creates a new proxy server with an interceptor.
 func NewProxyServer(server *grpc.Server, interceptor grpc.UnaryServerInterceptor) gogogrpc.Server {
 	return &proxyServer{server: server, interceptor: interceptor}
 }
@@ -25,6 +26,7 @@ func (proxy *proxyServer) RegisterService(desc *grpc.ServiceDesc, handler interf
 	newMethods := make([]grpc.MethodDesc, len(desc.Methods))
 
 	for i, method := range desc.Methods {
+		method := method // Fix scopelint: Using the variable on range scope `method` in function literal
 		newMethods[i] = grpc.MethodDesc{
 			MethodName: method.MethodName,
 			Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, _ grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -44,6 +46,8 @@ func (proxy *proxyServer) RegisterService(desc *grpc.ServiceDesc, handler interf
 	proxy.server.RegisterService(newDesc, handler)
 }
 
+// ABCIQueryProxyInterceptor implements a query interceptor that intercepts
+// queries and sends them to the ABCI.
 func ABCIQueryProxyInterceptor(clientCtx client.Context) grpc.UnaryServerInterceptor {
 	return func(_ context.Context, req interface{}, info *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (resp interface{}, err error) {
 		msg, ok := req.(proto.Message)
@@ -62,7 +66,6 @@ func ABCIQueryProxyInterceptor(clientCtx client.Context) grpc.UnaryServerInterce
 		}
 
 		abciRes, err := clientCtx.QueryABCI(abciReq)
-
 		if err != nil {
 			return nil, err
 		}

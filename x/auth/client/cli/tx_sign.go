@@ -107,7 +107,6 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-
 			if multisigAddr.Empty() {
 				homeDir, _ := cmd.Flags().GetString(flags.FlagFrom)
 				err = authclient.SignStdTx(txFactory, clientCtx, homeDir, txBuilder, false, true)
@@ -215,6 +214,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
@@ -225,7 +225,6 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		// if --signature-only is on, then override --append
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)

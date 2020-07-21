@@ -2,20 +2,21 @@ package v039
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
 	v039bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_39"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-func Migrate(appState genutil.AppMap) genutil.AppMap {
+func Migrate(appState types.AppMap) types.AppMap {
 	v038Codec := codec.New()
-	codec.RegisterCrypto(v038Codec)
+	cryptocodec.RegisterCrypto(v038Codec)
 	v038auth.RegisterCodec(v038Codec)
 
 	v039Codec := codec.New()
-	codec.RegisterCrypto(v039Codec)
+	cryptocodec.RegisterCrypto(v039Codec)
 	v038auth.RegisterCodec(v039Codec)
 
 	// remove balances from existing accounts

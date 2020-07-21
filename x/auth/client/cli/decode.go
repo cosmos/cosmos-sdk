@@ -5,50 +5,44 @@ import (
 	"encoding/hex"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const flagHex = "hex"
 
-// GetDecodeCommand returns the decode command to take Amino-serialized bytes
-// and turn it into a JSONified transaction.
-func GetDecodeCommand(codec *codec.Codec) *cobra.Command {
+// GetDecodeCommand returns the decode command to take serialized bytes and turn
+// it into a JSON-encoded transaction.
+func GetDecodeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decode [amino-byte-string]",
-		Short: "Decode an amino-encoded transaction string.",
+		Short: "Decode an binary encoded transaction string.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  runDecodeTxString(codec),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			var txBytes []byte
+
+			if useHex, _ := cmd.Flags().GetBool(flagHex); useHex {
+				txBytes, err = hex.DecodeString(args[0])
+			} else {
+				txBytes, err = base64.StdEncoding.DecodeString(args[0])
+			}
+			if err != nil {
+				return err
+			}
+
+			tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(tx)
+		},
 	}
 
 	cmd.Flags().BoolP(flagHex, "x", false, "Treat input as hexadecimal instead of base64")
-	return flags.PostCommands(cmd)[0]
-}
+	flags.AddTxFlagsToCmd(cmd)
 
-func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []string) (err error) {
-	return func(cmd *cobra.Command, args []string) (err error) {
-		cliCtx := context.NewCLIContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
-		var txBytes []byte
-
-		if viper.GetBool(flagHex) {
-			txBytes, err = hex.DecodeString(args[0])
-		} else {
-			txBytes, err = base64.StdEncoding.DecodeString(args[0])
-		}
-		if err != nil {
-			return err
-		}
-
-		var stdTx authtypes.StdTx
-		err = cliCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
-		if err != nil {
-			return err
-		}
-
-		return cliCtx.PrintOutput(stdTx)
-	}
+	return cmd
 }

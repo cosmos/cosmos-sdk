@@ -3,27 +3,29 @@ package upgrade
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
-	types "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // module codec
 var moduleCdc = codec.New()
 
 func init() {
-	RegisterCodec(moduleCdc)
+	types.RegisterCodec(moduleCdc)
 }
 
 var (
@@ -37,44 +39,27 @@ type AppModuleBasic struct{}
 
 // Name returns the ModuleName
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterCodec registers the upgrade types on the amino codec
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // RegisterRESTRoutes registers all REST query handlers
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, r *mux.Router) {
-	rest.RegisterRoutes(ctx, r)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router) {
+	rest.RegisterRoutes(clientCtx, r)
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	queryCmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: "Querying commands for the upgrade module",
-	}
-	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetPlanCmd(StoreKey, cdc),
-		cli.GetAppliedHeightCmd(StoreKey, cdc),
-	)...)
-
-	return queryCmd
+func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: "Upgrade transaction subcommands",
-	}
-	txCmd.AddCommand(flags.PostCommands(
-		cli.NewCmdSubmitUpgradeProposal(ctx),
-		cli.NewCmdSubmitCancelUpgradeProposal(ctx),
-	)...)
-	return txCmd
+func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
+	return cli.GetTxCmd()
 }
 
 func (b AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
@@ -84,11 +69,11 @@ func (b AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegi
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -99,17 +84,20 @@ func NewAppModule(keeper Keeper) AppModule {
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route is empty, as we do not handle Messages (just proposals)
-func (AppModule) Route() string { return "" }
-
-// NewHandler is empty, as we do not handle Messages (just proposals)
-func (am AppModule) NewHandler() sdk.Handler { return nil }
+func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return QuerierKey }
+func (AppModule) QuerierRoute() string { return types.QuerierKey }
 
 // NewQuerierHandler registers a query handler to respond to the module-specific queries
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+	return keeper.NewQuerier(am.keeper)
+}
+
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades

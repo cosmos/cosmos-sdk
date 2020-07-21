@@ -1,144 +1,128 @@
 package cli
 
 import (
+	"context"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // GetCmdQueryConnections defines the command to query all the connection ends
 // that this chain mantains.
-func GetCmdQueryConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryConnections() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "connections",
-		Short: "Query all available light clients",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all available connections
-
-Example:
-$ %s query ibc connection connections
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
+		Use:     "connections",
+		Short:   "Query all connections",
+		Long:    "Query all connections ends from a chain",
+		Example: fmt.Sprintf("%s query %s %s connections", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
-
-			connections, height, err := utils.QueryAllConnections(cliCtx, page, limit)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(connections)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+
+			req := &types.QueryConnectionsRequest{
+				Pagination: &query.PageRequest{
+					Offset: uint64(offset),
+					Limit:  uint64(limit),
+				},
+			}
+
+			res, err := queryClient.Connections(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
 		},
 	}
+
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // GetCmdQueryConnection defines the command to query a connection end
-func GetCmdQueryConnection(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryConnection() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "end [connection-id]",
-		Short: "Query stored connection end",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query stored connection end
-		
-Example:
-$ %s query ibc connection end [connection-id]
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
+		Use:     "end [connection-id]",
+		Short:   "Query stored connection end",
+		Long:    "Query stored connection end",
+		Example: fmt.Sprintf("%s query %s %s end [connection-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			connectionID := args[0]
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
-			connRes, err := utils.QueryConnection(cliCtx, connectionID, prove)
+			connRes, err := utils.QueryConnection(clientCtx, connectionID, prove)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(connRes.ProofHeight))
-			return cliCtx.PrintOutput(connRes)
+			clientCtx = clientCtx.WithHeight(int64(connRes.ProofHeight))
+			return clientCtx.PrintOutput(connRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
-
-	return cmd
-}
-
-// GetCmdQueryAllClientConnections defines the command to query a all the client connection paths.
-func GetCmdQueryAllClientConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "paths",
-		Short: "Query all stored client connection paths",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query all stored client connection paths
-		
-Example:
-$ %s query ibc connection paths
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
-
-			connectionPaths, height, err := utils.QueryAllClientConnectionPaths(cliCtx, page, limit)
-			if err != nil {
-				return err
-			}
-
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(connectionPaths)
-		},
-	}
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // GetCmdQueryClientConnections defines the command to query a client connections
-func GetCmdQueryClientConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "path [client-id]",
-		Short: "Query stored client connection paths",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query stored client connection paths
-		
-Example:
-$ %s query ibc connection path [client-id]
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
+func GetCmdQueryClientConnections() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "path [client-id]",
+		Short:   "Query stored client connection paths",
+		Long:    "Query stored client connection paths",
+		Example: fmt.Sprintf("%s query  %s %s path [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			clientID := args[0]
-			prove := viper.GetBool(flags.FlagProve)
-
-			connPathsRes, err := utils.QueryClientConnections(cliCtx, clientID, prove)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(connPathsRes.ProofHeight))
-			return cliCtx.PrintOutput(connPathsRes)
+			clientID := args[0]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
+
+			connPathsRes, err := utils.QueryClientConnections(clientCtx, clientID, prove)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(int64(connPathsRes.ProofHeight))
+			return clientCtx.PrintOutput(connPathsRes)
 		},
 	}
+
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

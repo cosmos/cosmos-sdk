@@ -10,7 +10,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -23,6 +23,9 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
+
+	InitGenesis(sdk.Context, types.GenesisState)
+	ExportGenesis(sdk.Context) types.GenesisState
 
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
@@ -41,6 +44,8 @@ type Keeper interface {
 	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
 	MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error)
 	UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error)
+
+	types.QueryServer
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.
@@ -55,7 +60,7 @@ type BaseKeeper struct {
 
 func NewBaseKeeper(
 	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
-	blacklistedAddrs map[string]bool,
+	blockedAddrs map[string]bool,
 ) BaseKeeper {
 
 	// set KeyTable if it has not already been set
@@ -64,7 +69,7 @@ func NewBaseKeeper(
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blacklistedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
 		ak:             ak,
 		cdc:            cdc,
 		storeKey:       storeKey,
@@ -234,7 +239,7 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
-	if !recipientAcc.HasPermission(auth.Staking) {
+	if !recipientAcc.HasPermission(authtypes.Staking) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to receive delegated coins", recipientModule))
 	}
 
@@ -253,7 +258,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
-	if !acc.HasPermission(auth.Staking) {
+	if !acc.HasPermission(authtypes.Staking) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
@@ -268,7 +273,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
-	if !acc.HasPermission(auth.Minter) {
+	if !acc.HasPermission(authtypes.Minter) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
@@ -297,7 +302,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
-	if !acc.HasPermission(auth.Burner) {
+	if !acc.HasPermission(authtypes.Burner) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 

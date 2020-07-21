@@ -7,20 +7,23 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-// Multisignature is used to represent the signature object used in the multisigs.
+// AminoMultisignature is used to represent amino multi-signatures for StdTx's.
+// It is assumed that all signatures were made with SIGN_MODE_LEGACY_AMINO_JSON.
 // Sigs is a list of signatures, sorted by corresponding index.
-type Multisignature struct {
+type AminoMultisignature struct {
 	BitArray *types.CompactBitArray
 	Sigs     [][]byte
 }
 
-// NewMultisig returns a new Multisignature of size n.
-func NewMultisig(n int) *Multisignature {
-	// Default the signature list to have a capacity of two, since we can
-	// expect that most multisigs will require multiple signers.
-	return &Multisignature{types.NewCompactBitArray(n), make([][]byte, 0, 2)}
+// NewMultisig returns a new MultiSignatureData
+func NewMultisig(n int) *signing.MultiSignatureData {
+	return &signing.MultiSignatureData{
+		BitArray:   types.NewCompactBitArray(n),
+		Signatures: make([]signing.SignatureData, 0, n),
+	}
 }
 
 // GetIndex returns the index of pk in keys. Returns -1 if not found
@@ -35,29 +38,39 @@ func getIndex(pk crypto.PubKey, keys []crypto.PubKey) int {
 
 // AddSignature adds a signature to the multisig, at the corresponding index.
 // If the signature already exists, replace it.
-func (mSig *Multisignature) AddSignature(sig []byte, index int) {
+func AddSignature(mSig *signing.MultiSignatureData, sig signing.SignatureData, index int) {
 	newSigIndex := mSig.BitArray.NumTrueBitsBefore(index)
 	// Signature already exists, just replace the value there
 	if mSig.BitArray.GetIndex(index) {
-		mSig.Sigs[newSigIndex] = sig
+		mSig.Signatures[newSigIndex] = sig
 		return
 	}
 	mSig.BitArray.SetIndex(index, true)
 	// Optimization if the index is the greatest index
-	if newSigIndex == len(mSig.Sigs) {
-		mSig.Sigs = append(mSig.Sigs, sig)
+	if newSigIndex == len(mSig.Signatures) {
+		mSig.Signatures = append(mSig.Signatures, sig)
 		return
 	}
 	// Expand slice by one with a dummy element, move all elements after i
 	// over by one, then place the new signature in that gap.
-	mSig.Sigs = append(mSig.Sigs, make([]byte, 0))
-	copy(mSig.Sigs[newSigIndex+1:], mSig.Sigs[newSigIndex:])
-	mSig.Sigs[newSigIndex] = sig
+	mSig.Signatures = append(mSig.Signatures, &signing.SingleSignatureData{})
+	copy(mSig.Signatures[newSigIndex+1:], mSig.Signatures[newSigIndex:])
+	mSig.Signatures[newSigIndex] = sig
 }
 
 // AddSignatureFromPubKey adds a signature to the multisig, at the index in
 // keys corresponding to the provided pubkey.
-func (mSig *Multisignature) AddSignatureFromPubKey(sig []byte, pubkey crypto.PubKey, keys []crypto.PubKey) error {
+func AddSignatureFromPubKey(mSig *signing.MultiSignatureData, sig signing.SignatureData, pubkey crypto.PubKey, keys []crypto.PubKey) error {
+	if mSig == nil {
+		return fmt.Errorf("value of mSig is nil %v", mSig)
+	}
+	if sig == nil {
+		return fmt.Errorf("value of sig is nil %v", sig)
+	}
+
+	if pubkey == nil || keys == nil {
+		return fmt.Errorf("pubkey or keys can't be nil %v %v", pubkey, keys)
+	}
 	index := getIndex(pubkey, keys)
 	if index == -1 {
 		keysStr := make([]string, len(keys))
@@ -68,11 +81,10 @@ func (mSig *Multisignature) AddSignatureFromPubKey(sig []byte, pubkey crypto.Pub
 		return fmt.Errorf("provided key %X doesn't exist in pubkeys: \n%s", pubkey.Bytes(), strings.Join(keysStr, "\n"))
 	}
 
-	mSig.AddSignature(sig, index)
+	AddSignature(mSig, sig, index)
 	return nil
 }
 
-// Marshal the multisignature with amino
-func (mSig *Multisignature) Marshal() []byte {
-	return cdc.MustMarshalBinaryBare(mSig)
+func AddSignatureV2(mSig *signing.MultiSignatureData, sig signing.SignatureV2, keys []crypto.PubKey) error {
+	return AddSignatureFromPubKey(mSig, sig.Data, sig.PubKey, keys)
 }

@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -53,17 +51,17 @@ func (c ConnectionEnd) GetVersions() []string {
 // counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(c.ID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid connection ID: %s", c.ID)
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if len(c.Versions) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing connection versions")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty connection versions")
 	}
 	for _, version := range c.Versions {
-		if strings.TrimSpace(version) == "" {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
+		if err := ValidateVersion(version); err != nil {
+			return err
 		}
 	}
 	return c.Counterparty.ValidateBasic()
@@ -103,7 +101,7 @@ func (c Counterparty) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
-	if c.Prefix.IsEmpty() {
+	if c.Prefix.Empty() {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty prefix cannot be empty")
 	}
 	return nil

@@ -1,0 +1,71 @@
+version: '3'
+
+services:
+  simdnode0:
+    container_name: simdnode0
+    image: "cosmos-sdk/simappnode"
+    ports:
+      - "26656-26657:26656-26657"
+      - "1317:1317"
+    environment:
+      - ID=0
+      - LOG=${LOG:-simd.log}
+    volumes:
+      - ./build:/simd:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.2
+
+  simdnode1:
+    container_name: simdnode1
+    image: "cosmos-sdk/simappnode"
+    ports:
+      - "26659-26660:26656-26657"
+      - "1318:1317"
+    environment:
+      - ID=1
+      - LOG=${LOG:-simd.log}
+    volumes:
+      - ./build:/simd:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.3
+
+  simdnode2:
+    container_name: simdnode2
+    image: "cosmos-sdk/simappnode"
+    environment:
+      - ID=2
+      - LOG=${LOG:-simd.log}
+    ports:
+      - "26661-26662:26656-26657"
+      - "1319:1317"
+    volumes:
+      - ./build:/simd:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.4
+
+  simdnode3:
+    container_name: simdnode3
+    image: "cosmos-sdk/simappnode"
+    environment:
+      - ID=3
+      - LOG=${LOG:-simd.log}
+    ports:
+      - "26663-26664:26656-26657"
+      - "1320:1317"
+    volumes:
+      - ./build:/simd:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.5
+
+networks:
+  localnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 192.168.10.0/16

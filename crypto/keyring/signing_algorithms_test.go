@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -30,13 +29,15 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			"notsupportedalgo",
 			false,
 			nil,
-			fmt.Errorf("provided algorithm `notsupportedalgo` is not supported"),
+			fmt.Errorf("provided algorithm \"notsupportedalgo\" is not supported"),
 		},
 	}
+
+	list := SigningAlgoList{hd.Secp256k1}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			algorithm, err := NewSigningAlgoFromString(tt.algoStr)
+			algorithm, err := NewSigningAlgoFromString(tt.algoStr, list)
 			if tt.isSupported {
 				require.Equal(t, hd.Secp256k1, algorithm)
 			} else {
@@ -47,12 +48,15 @@ func TestNewSigningAlgoByString(t *testing.T) {
 }
 
 func TestAltSigningAlgoList_Contains(t *testing.T) {
-	list := SigningAlgoList{
-		hd.Secp256k1,
-	}
+	list := SigningAlgoList{hd.Secp256k1}
 
-	assert.True(t, list.Contains(hd.Secp256k1))
-	assert.False(t, list.Contains(notSupportedAlgo{}))
+	require.True(t, list.Contains(hd.Secp256k1))
+	require.False(t, list.Contains(notSupportedAlgo{}))
+}
+
+func TestAltSigningAlgoList_String(t *testing.T) {
+	list := SigningAlgoList{hd.Secp256k1, notSupportedAlgo{}}
+	require.Equal(t, fmt.Sprintf("%s,notSupported", string(hd.Secp256k1Type)), list.String())
 }
 
 type notSupportedAlgo struct {

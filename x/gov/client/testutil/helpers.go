@@ -10,17 +10,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 //___________________________________________________________________________________
 // simcli query gov
 
 // QueryGovParamDeposit is simcli query gov param deposit
-func QueryGovParamDeposit(f *cli.Fixtures) gov.DepositParams {
-	cmd := fmt.Sprintf("%s query gov param deposit %s", f.SimcliBinary, f.Flags())
+func QueryGovParamDeposit(f *cli.Fixtures) types.DepositParams {
+	cmd := fmt.Sprintf("%s query gov param deposit %s", f.SimdBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var depositParam gov.DepositParams
+	var depositParam types.DepositParams
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &depositParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -28,10 +28,10 @@ func QueryGovParamDeposit(f *cli.Fixtures) gov.DepositParams {
 }
 
 // QueryGovParamVoting is simcli query gov param voting
-func QueryGovParamVoting(f *cli.Fixtures) gov.VotingParams {
-	cmd := fmt.Sprintf("%s query gov param voting %s", f.SimcliBinary, f.Flags())
+func QueryGovParamVoting(f *cli.Fixtures) types.VotingParams {
+	cmd := fmt.Sprintf("%s query gov param voting %s", f.SimdBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var votingParam gov.VotingParams
+	var votingParam types.VotingParams
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &votingParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -39,10 +39,10 @@ func QueryGovParamVoting(f *cli.Fixtures) gov.VotingParams {
 }
 
 // QueryGovParamTallying is simcli query gov param tallying
-func QueryGovParamTallying(f *cli.Fixtures) gov.TallyParams {
-	cmd := fmt.Sprintf("%s query gov param tallying %s", f.SimcliBinary, f.Flags())
+func QueryGovParamTallying(f *cli.Fixtures) types.TallyParams {
+	cmd := fmt.Sprintf("%s query gov param tallying %s", f.SimdBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var tallyingParam gov.TallyParams
+	var tallyingParam types.TallyParams
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &tallyingParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -50,10 +50,10 @@ func QueryGovParamTallying(f *cli.Fixtures) gov.TallyParams {
 }
 
 // QueryGovProposal is simcli query gov proposal
-func QueryGovProposal(f *cli.Fixtures, proposalID int, flags ...string) gov.Proposal {
-	cmd := fmt.Sprintf("%s query gov proposal %d %v", f.SimcliBinary, proposalID, f.Flags())
+func QueryGovProposal(f *cli.Fixtures, proposalID int, flags ...string) types.Proposal {
+	cmd := fmt.Sprintf("%s query gov proposal %d %v", f.SimdBinary, proposalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
-	var proposal gov.Proposal
+	var proposal types.Proposal
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &proposal)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -61,14 +61,14 @@ func QueryGovProposal(f *cli.Fixtures, proposalID int, flags ...string) gov.Prop
 }
 
 // QueryGovProposals is simcli query gov proposals
-func QueryGovProposals(f *cli.Fixtures, flags ...string) gov.Proposals {
-	cmd := fmt.Sprintf("%s query gov proposals %v", f.SimcliBinary, f.Flags())
+func QueryGovProposals(f *cli.Fixtures, flags ...string) types.Proposals {
+	cmd := fmt.Sprintf("%s query gov proposals %v", f.SimdBinary, f.Flags())
 	stdout, stderr := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	if strings.Contains(stderr, "no matching proposals found") {
-		return gov.Proposals{}
+		return types.Proposals{}
 	}
 	require.Empty(f.T, stderr)
-	var out gov.Proposals
+	var out types.Proposals
 
 	err := f.Cdc.UnmarshalJSON([]byte(stdout), &out)
 	require.NoError(f.T, err)
@@ -76,10 +76,10 @@ func QueryGovProposals(f *cli.Fixtures, flags ...string) gov.Proposals {
 }
 
 // QueryGovVote is simcli query gov vote
-func QueryGovVote(f *cli.Fixtures, proposalID int, voter sdk.AccAddress, flags ...string) gov.Vote {
-	cmd := fmt.Sprintf("%s query gov vote %d %s %v", f.SimcliBinary, proposalID, voter, f.Flags())
+func QueryGovVote(f *cli.Fixtures, proposalID int, voter sdk.AccAddress, flags ...string) types.Vote {
+	cmd := fmt.Sprintf("%s query gov vote %d %s %v", f.SimdBinary, proposalID, voter, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
-	var vote gov.Vote
+	var vote types.Vote
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &vote)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -87,10 +87,10 @@ func QueryGovVote(f *cli.Fixtures, proposalID int, voter sdk.AccAddress, flags .
 }
 
 // QueryGovVotes is simcli query gov votes
-func QueryGovVotes(f *cli.Fixtures, proposalID int, flags ...string) []gov.Vote {
-	cmd := fmt.Sprintf("%s query gov votes %d %v", f.SimcliBinary, proposalID, f.Flags())
+func QueryGovVotes(f *cli.Fixtures, proposalID int, flags ...string) []types.Vote {
+	cmd := fmt.Sprintf("%s query gov votes %d %v", f.SimdBinary, proposalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
-	var votes []gov.Vote
+	var votes []types.Vote
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &votes)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -98,10 +98,10 @@ func QueryGovVotes(f *cli.Fixtures, proposalID int, flags ...string) []gov.Vote 
 }
 
 // QueryGovDeposit is simcli query gov deposit
-func QueryGovDeposit(f *cli.Fixtures, proposalID int, depositor sdk.AccAddress, flags ...string) gov.Deposit {
-	cmd := fmt.Sprintf("%s query gov deposit %d %s %v", f.SimcliBinary, proposalID, depositor, f.Flags())
+func QueryGovDeposit(f *cli.Fixtures, proposalID int, depositor sdk.AccAddress, flags ...string) types.Deposit {
+	cmd := fmt.Sprintf("%s query gov deposit %d %s %v", f.SimdBinary, proposalID, depositor, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
-	var deposit gov.Deposit
+	var deposit types.Deposit
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &deposit)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -109,10 +109,10 @@ func QueryGovDeposit(f *cli.Fixtures, proposalID int, depositor sdk.AccAddress, 
 }
 
 // QueryGovDeposits is simcli query gov deposits
-func QueryGovDeposits(f *cli.Fixtures, propsalID int, flags ...string) []gov.Deposit {
-	cmd := fmt.Sprintf("%s query gov deposits %d %v", f.SimcliBinary, propsalID, f.Flags())
+func QueryGovDeposits(f *cli.Fixtures, propsalID int, flags ...string) []types.Deposit {
+	cmd := fmt.Sprintf("%s query gov deposits %d %v", f.SimdBinary, propsalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
-	var deposits []gov.Deposit
+	var deposits []types.Deposit
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &deposits)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -125,7 +125,7 @@ func QueryGovDeposits(f *cli.Fixtures, propsalID int, flags ...string) []gov.Dep
 // TxGovSubmitProposal is simcli tx gov submit-proposal
 func TxGovSubmitProposal(f *cli.Fixtures, from, typ, title, description string, deposit sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov submit-proposal %v --keyring-backend=test --from=%s --type=%s",
-		f.SimcliBinary, f.Flags(), from, typ)
+		f.SimdBinary, f.Flags(), from, typ)
 	cmd += fmt.Sprintf(" --title=%s --description=%s --deposit=%s", title, description, deposit)
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
@@ -133,14 +133,14 @@ func TxGovSubmitProposal(f *cli.Fixtures, from, typ, title, description string, 
 // TxGovDeposit is simcli tx gov deposit
 func TxGovDeposit(f *cli.Fixtures, proposalID int, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov deposit %d %s --keyring-backend=test --from=%s %v",
-		f.SimcliBinary, proposalID, amount, from, f.Flags())
+		f.SimdBinary, proposalID, amount, from, f.Flags())
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
 // TxGovVote is simcli tx gov vote
-func TxGovVote(f *cli.Fixtures, proposalID int, option gov.VoteOption, from string, flags ...string) (bool, string, string) {
+func TxGovVote(f *cli.Fixtures, proposalID int, option types.VoteOption, from string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov vote %d %s --keyring-backend=test --from=%s %v",
-		f.SimcliBinary, proposalID, option, from, f.Flags())
+		f.SimdBinary, proposalID, option, from, f.Flags())
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
@@ -152,7 +152,7 @@ func TxGovSubmitParamChangeProposal(f *cli.Fixtures,
 
 	cmd := fmt.Sprintf(
 		"%s tx gov submit-proposal param-change %s --keyring-backend=test --from=%s %v",
-		f.SimcliBinary, proposalPath, from, f.Flags(),
+		f.SimdBinary, proposalPath, from, f.Flags(),
 	)
 
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
@@ -166,7 +166,7 @@ func TxGovSubmitCommunityPoolSpendProposal(f *cli.Fixtures,
 
 	cmd := fmt.Sprintf(
 		"%s tx gov submit-proposal community-pool-spend %s --keyring-backend=test --from=%s %v",
-		f.SimcliBinary, proposalPath, from, f.Flags(),
+		f.SimdBinary, proposalPath, from, f.Flags(),
 	)
 
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)

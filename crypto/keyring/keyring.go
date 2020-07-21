@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -25,6 +25,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Backend options for Keyring
 const (
 	BackendFile    = "file"
 	BackendOS      = "os"
@@ -49,6 +50,9 @@ var (
 type Keyring interface {
 	// List all keys.
 	List() ([]Info, error)
+
+	// Supported signing algorithms for Keyring and Ledger respectively.
+	SupportedAlgorithms() (SigningAlgoList, SigningAlgoList)
 
 	// Key and KeyByAddress return keys by uid and address respectively.
 	Key(uid string) (Info, error)
@@ -113,9 +117,11 @@ type Exporter interface {
 // Option overrides keyring configuration options.
 type Option func(options *Options)
 
-//Options define the options of the Keyring
+// Options define the options of the Keyring.
 type Options struct {
-	SupportedAlgos       SigningAlgoList
+	// supported signing algorithms for keyring
+	SupportedAlgos SigningAlgoList
+	// supported signing algorithms for Ledger
 	SupportedAlgosLedger SigningAlgoList
 }
 
@@ -126,7 +132,7 @@ func NewInMemory(opts ...Option) Keyring {
 	return newKeystore(keyring.NewArrayKeyring(nil), opts...)
 }
 
-// NewKeyring creates a new instance of a keyring.
+// New creates a new instance of a keyring.
 // Keyring ptions can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
 func New(
@@ -232,7 +238,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) 
 			return nil, err
 		}
 
-		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		priv, err = cryptoamino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
 		}
@@ -281,7 +287,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	pubKey, err := cryptoAmino.PubKeyFromBytes(pubBytes)
+	pubKey, err := cryptoamino.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err
 	}
@@ -308,7 +314,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
 			return nil, nil, fmt.Errorf("private key not available")
 		}
 
-		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		priv, err = cryptoamino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -517,6 +523,12 @@ func (ks keystore) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
+// SupportedAlgorithms returns the keystore Options' supported signing algorithm.
+// for the keyring and Ledger.
+func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
+	return ks.options.SupportedAlgos, ks.options.SupportedAlgosLedger
+}
+
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
@@ -689,7 +701,7 @@ func (ks keystore) writeInfo(info Info) error {
 
 	exists, err := ks.existsInDb(info)
 	if exists {
-		return fmt.Errorf("public key already exist in keybase")
+		return errors.New("public key already exist in keybase")
 	}
 
 	if err != nil {

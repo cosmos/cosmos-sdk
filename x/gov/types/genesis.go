@@ -48,8 +48,8 @@ func (data GenesisState) Equal(other GenesisState) bool {
 		data.VotingParams.Equal(other.VotingParams)
 }
 
-// IsEmpty returns true if a GenesisState is empty
-func (data GenesisState) IsEmpty() bool {
+// Empty returns true if a GenesisState is empty
+func (data GenesisState) Empty() bool {
 	return data.Equal(GenesisState{})
 }
 

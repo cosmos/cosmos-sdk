@@ -1,8 +1,8 @@
 package types_test
 
 import (
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -52,7 +52,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 		name        string
 		clientState types.ClientState
 		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
+		proof       []byte
 		expPass     bool
 	}{
 		{
@@ -65,7 +65,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 			name:        "proof verification failed",
 			clientState: types.NewClientState("chainID", 10),
 			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       commitmenttypes.MerkleProof{},
+			proof:       []byte{},
 			expPass:     false,
 		},
 	}
@@ -74,7 +74,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.store, suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
+			suite.store, suite.cdc, suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
 		)
 
 		if tc.expPass {
@@ -86,15 +86,15 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
-	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connection.NewConnectionEnd(connection.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name        string
 		clientState types.ClientState
-		connection  connection.End
+		connection  connectiontypes.ConnectionEnd
 		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
+		proof       []byte
 		expPass     bool
 	}{
 		{
@@ -109,7 +109,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			clientState: types.NewClientState("chainID", 10),
 			connection:  conn,
 			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       commitmenttypes.MerkleProof{},
+			proof:       []byte{},
 			expPass:     false,
 		},
 	}
@@ -130,15 +130,15 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyChannelState() {
-	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(channel.OPEN, channel.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
+	ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name        string
 		clientState types.ClientState
-		channel     channel.Channel
+		channel     channeltypes.Channel
 		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
+		proof       []byte
 		expPass     bool
 	}{
 		{
@@ -160,7 +160,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			clientState: types.NewClientState("chainID", 10),
 			channel:     ch,
 			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       commitmenttypes.MerkleProof{},
+			proof:       []byte{},
 			expPass:     false,
 		},
 	}
@@ -186,7 +186,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		clientState types.ClientState
 		commitment  []byte
 		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
+		proof       []byte
 		expPass     bool
 	}{
 		{
@@ -215,7 +215,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			clientState: types.NewClientState("chainID", 10),
 			commitment:  []byte{},
 			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       commitmenttypes.MerkleProof{},
+			proof:       []byte{},
 			expPass:     false,
 		},
 	}
@@ -224,7 +224,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
 		)
 
 		if tc.expPass {
@@ -241,7 +241,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		clientState types.ClientState
 		ack         []byte
 		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
+		proof       []byte
 		expPass     bool
 	}{
 		{
@@ -270,7 +270,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: types.NewClientState("chainID", 10),
 			ack:         []byte{},
 			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       commitmenttypes.MerkleProof{},
+			proof:       []byte{},
 			expPass:     false,
 		},
 	}
@@ -279,7 +279,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
 		)
 
 		if tc.expPass {
@@ -295,7 +295,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		name        string
 		clientState types.ClientState
 		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
+		proof       []byte
 		expPass     bool
 	}{
 		{
@@ -310,7 +310,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 
 		if tc.expPass {
@@ -326,7 +326,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		name        string
 		clientState types.ClientState
 		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
+		proof       []byte
 		expPass     bool
 	}{
 		{
@@ -351,7 +351,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			name:        "proof verification failed",
 			clientState: types.NewClientState("chainID", 10),
 			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       commitmenttypes.MerkleProof{},
+			proof:       []byte{},
 			expPass:     false,
 		},
 	}
@@ -360,7 +360,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 
 		if tc.expPass {

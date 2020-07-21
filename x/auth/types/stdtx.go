@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -49,7 +52,7 @@ func (fee StdFee) Bytes() []byte {
 		fee.Amount = sdk.NewCoins()
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(fee)
+	bz, err := legacy.Cdc.MarshalJSON(fee)
 	if err != nil {
 		panic(err)
 	}
@@ -142,7 +145,8 @@ func CountSubKeys(pub crypto.PubKey) int {
 
 var _ sdk.Tx = (*StdTx)(nil)
 
-// StdTx is a standard way to wrap a Msg with Fee and Signatures.
+// StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
+// It only works with Amino, please prefer the new protobuf Tx in types/tx.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`
@@ -151,6 +155,7 @@ type StdTx struct {
 	Memo       string         `json:"memo" yaml:"memo"`
 }
 
+// Deprecated
 func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
 		Msgs:       msgs,
@@ -232,6 +237,21 @@ func (tx StdTx) GetSignatures() [][]byte {
 	return sigs
 }
 
+// GetSignaturesV2 implements SigVerifiableTx.GetSignaturesV2
+func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
+	res := make([]signing.SignatureV2, len(tx.Signatures))
+
+	for i, sig := range tx.Signatures {
+		var err error
+		res[i], err = StdSignatureToSignatureV2(legacy.Cdc, sig)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "Unable to convert signature %v to V2", sig)
+		}
+	}
+
+	return res, nil
+}
+
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() []crypto.PubKey {
@@ -242,20 +262,6 @@ func (tx StdTx) GetPubKeys() []crypto.PubKey {
 	}
 
 	return pks
-}
-
-// GetSignBytes returns the signBytes of the tx for a given signer
-func (tx StdTx) GetSignBytes(ctx sdk.Context, acc AccountI) []byte {
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
-	var accNum uint64
-	if !genesis {
-		accNum = acc.GetAccountNumber()
-	}
-
-	return StdSignBytes(
-		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo,
-	)
 }
 
 // GetGas returns the Gas in StdFee
@@ -295,7 +301,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
 
-	bz, err := codec.Cdc.MarshalJSON(StdSignDoc{
+	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),
@@ -337,6 +343,25 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
+func DefaultJSONTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		var tx = StdTx{}
+
+		if len(txBytes) == 0 {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+		}
+
+		// StdTx.Msg is an interface. The concrete types
+		// are registered by MakeTxCodec
+		err := cdc.UnmarshalJSON(txBytes, &tx)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		return tx, nil
+	}
+}
+
 // DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
@@ -354,4 +379,97 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2
+func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.SignatureV2, error) {
+	pk := sig.GetPubKey()
+	data, err := pubKeySigToSigData(cdc, pk, sig.Signature)
+	if err != nil {
+		return signing.SignatureV2{}, err
+	}
+
+	return signing.SignatureV2{
+		PubKey: pk,
+		Data:   data,
+	}, nil
+}
+
+func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
+	multiPK, ok := key.(multisig.PubKey)
+	if !ok {
+		return &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+			Signature: sig,
+		}, nil
+	}
+	var multiSig multisig.AminoMultisignature
+	err := cdc.UnmarshalBinaryBare(sig, &multiSig)
+	if err != nil {
+		return nil, err
+	}
+
+	sigs := multiSig.Sigs
+	sigDatas := make([]signing.SignatureData, len(sigs))
+	pubKeys := multiPK.GetPubKeys()
+	bitArray := multiSig.BitArray
+	n := multiSig.BitArray.Count()
+	signatures := multisig.NewMultisig(n)
+	sigIdx := 0
+	for i := 0; i < n; i++ {
+		if bitArray.GetIndex(i) {
+			data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
+			if err != nil {
+				return nil, sdkerrors.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
+			}
+
+			sigDatas[sigIdx] = data
+			multisig.AddSignature(signatures, data, sigIdx)
+			sigIdx++
+		}
+	}
+
+	return signatures, nil
+}
+
+// MultiSignatureDataToAminoMultisignature converts a MultiSignatureData to an AminoMultisignature.
+// Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
+func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.MultiSignatureData) (multisig.AminoMultisignature, error) {
+	n := len(mSig.Signatures)
+	sigs := make([][]byte, n)
+
+	for i := 0; i < n; i++ {
+		var err error
+		sigs[i], err = SignatureDataToAminoSignature(cdc, mSig.Signatures[i])
+		if err != nil {
+			return multisig.AminoMultisignature{}, sdkerrors.Wrapf(err, "Unable to convert Signature Data to signature %d", i)
+		}
+	}
+
+	return multisig.AminoMultisignature{
+		BitArray: mSig.BitArray,
+		Sigs:     sigs,
+	}, nil
+}
+
+// SignatureDataToAminoSignature converts a SignatureData to amino-encoded signature bytes.
+// Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
+func SignatureDataToAminoSignature(cdc *codec.Codec, data signing.SignatureData) ([]byte, error) {
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		if data.SignMode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+			return nil, fmt.Errorf("expected %s, got %s", signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, data.SignMode)
+		}
+
+		return data.Signature, nil
+	case *signing.MultiSignatureData:
+		aminoMSig, err := MultiSignatureDataToAminoMultisignature(cdc, data)
+		if err != nil {
+			return nil, err
+		}
+
+		return cdc.MarshalBinaryBare(aminoMSig)
+	default:
+		return nil, fmt.Errorf("unexpected signature data %T", data)
+	}
 }

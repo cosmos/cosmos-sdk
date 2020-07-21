@@ -2,6 +2,8 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -9,149 +11,185 @@ import (
 	"syscall"
 	"time"
 
-	"errors"
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
+	tmcfg "github.com/tendermint/tendermint/config"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
+// DONTCOVER
+
+// ServerContextKey defines the context key used to retrieve a server.Context from
+// a command's Context.
+const ServerContextKey = sdk.ContextKey("server.context")
+
 // server context
 type Context struct {
-	Config *cfg.Config
+	Viper  *viper.Viper
+	Config *tmcfg.Config
 	Logger log.Logger
 }
 
 func NewDefaultContext() *Context {
-	return NewContext(
-		cfg.DefaultConfig(),
-		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
-	)
+	return NewContext(viper.New(), tmcfg.DefaultConfig(), log.NewTMLogger(log.NewSyncWriter(os.Stdout)))
 }
 
-func NewContext(config *cfg.Config, logger log.Logger) *Context {
-	return &Context{config, logger}
+func NewContext(v *viper.Viper, config *tmcfg.Config, logger log.Logger) *Context {
+	return &Context{v, config, logger}
 }
 
-//___________________________________________________________________________________
+// InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
+// application command. It will create a Viper literal and a default server
+// Context. The server Tendermint configuration will either be read and parsed
+// or created and saved to disk, where the server Context is updated to reflect
+// the Tendermint configuration. The Viper literal is used to read and parse
+// the application configuration. Command handlers can fetch the server Context
+// to get the Tendermint configuration or to get access to Viper.
+func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
+	rootViper := viper.New()
+	rootViper.BindPFlags(cmd.Flags())
+	rootViper.BindPFlags(cmd.PersistentFlags())
 
-// PersistentPreRunEFn returns a PersistentPreRunE function for cobra
-// that initailizes the passed in context with a properly configured
-// logger and config object.
-func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		if cmd.Name() == version.Cmd.Name() {
-			return nil
-		}
-
-		config, err := interceptLoadConfig()
-		if err != nil {
-			return err
-		}
-
-		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
-		if err != nil {
-			return err
-		}
-
-		if viper.GetBool(cli.TraceFlag) {
-			logger = log.NewTracingLogger(logger)
-		}
-
-		logger = logger.With("module", "main")
-		context.Config = config
-		context.Logger = logger
-
-		return nil
-	}
-}
-
-// If a new config is created, change some of the default tendermint settings
-func interceptLoadConfig() (conf *cfg.Config, err error) {
-	tmpConf := cfg.DefaultConfig()
-	err = viper.Unmarshal(tmpConf)
+	serverCtx := NewDefaultContext()
+	config, err := interceptConfigs(serverCtx, rootViper)
 	if err != nil {
-		// TODO: Handle with #870
-		panic(err)
+		return err
 	}
-	rootDir := tmpConf.RootDir
-	configFilePath := filepath.Join(rootDir, "config/config.toml")
-	// Intercept only if the file doesn't already exist
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		// the following parse config is needed to create directories
-		conf, _ = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
+	if err != nil {
+		return err
+	}
+
+	if rootViper.GetBool(tmcli.TraceFlag) {
+		logger = log.NewTracingLogger(logger)
+	}
+
+	serverCtx.Config = config
+	serverCtx.Logger = logger.With("module", "main")
+
+	return SetCmdServerContext(cmd, serverCtx)
+}
+
+// GetServerContextFromCmd returns a Context from a command or an empty Context
+// if it has not been set.
+func GetServerContextFromCmd(cmd *cobra.Command) *Context {
+	if v := cmd.Context().Value(ServerContextKey); v != nil {
+		serverCtxPtr := v.(*Context)
+		return serverCtxPtr
+	}
+
+	return NewDefaultContext()
+}
+
+// SetCmdServerContext sets a command's Context value to the provided argument.
+func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
+	v := cmd.Context().Value(ServerContextKey)
+	if v == nil {
+		return errors.New("server context not set")
+	}
+
+	serverCtxPtr := v.(*Context)
+	*serverCtxPtr = *serverCtx
+
+	return nil
+}
+
+// interceptConfigs parses and updates a Tendermint configuration file or
+// creates a new one and saves it. It also parses and saves the application
+// configuration file. The Tendermint configuration file is parsed given a root
+// Viper object, whereas the application is parsed with the private package-aware
+// viperCfg object.
+func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, error) {
+	rootDir := rootViper.GetString(flags.FlagHome)
+	configPath := filepath.Join(rootDir, "config")
+	configFile := filepath.Join(configPath, "config.toml")
+
+	conf := tmcfg.DefaultConfig()
+
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		tmcfg.EnsureRoot(rootDir)
+
+		if err = conf.ValidateBasic(); err != nil {
+			return nil, fmt.Errorf("error in config file: %v", err)
+		}
+
 		conf.ProfListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.TxIndex.IndexAllKeys = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
-		cfg.WriteConfigFile(configFilePath, conf)
-		// Fall through, just so that its parsed into memory.
-	}
+		tmcfg.WriteConfigFile(configFile, conf)
+	} else {
+		rootViper.SetConfigType("toml")
+		rootViper.SetConfigName("config")
+		rootViper.AddConfigPath(configPath)
+		if err := rootViper.ReadInConfig(); err != nil {
+			return nil, fmt.Errorf("failed to read in app.toml: %w", err)
+		}
 
-	if conf == nil {
-		conf, err = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
-		if err != nil {
-			panic(err)
+		if err := rootViper.Unmarshal(conf); err != nil {
+			return nil, err
 		}
 	}
 
-	appConfigFilePath := filepath.Join(rootDir, "config/app.toml")
+	conf.SetRoot(rootDir)
+
+	appConfigFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
-		appConf, _ := config.ParseConfig()
+		appConf, err := config.ParseConfig(ctx.Viper)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse app.toml: %w", err)
+		}
+
 		config.WriteConfigFile(appConfigFilePath, appConf)
 	}
 
-	viper.SetConfigName("app")
-	err = viper.MergeInConfig()
+	ctx.Viper.SetConfigType("toml")
+	ctx.Viper.SetConfigName("app")
+	ctx.Viper.AddConfigPath(configPath)
+	if err := ctx.Viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read in app.toml: %w", err)
+	}
 
-	return conf, err
+	return conf, nil
 }
 
 // add server commands
-func AddCommands(
-	ctx *Context, cdc codec.JSONMarshaler,
-	rootCmd *cobra.Command,
-	appCreator AppCreator, appExport AppExporter) {
-
-	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
-
+func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExporter) {
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
 		Short: "Tendermint subcommands",
 	}
 
 	tendermintCmd.AddCommand(
-		ShowNodeIDCmd(ctx),
-		ShowValidatorCmd(ctx),
-		ShowAddressCmd(ctx),
-		VersionCmd(ctx),
+		ShowNodeIDCmd(),
+		ShowValidatorCmd(),
+		ShowAddressCmd(),
+		VersionCmd(),
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(ctx, appCreator),
-		UnsafeResetAllCmd(ctx),
+		StartCmd(appCreator, simapp.DefaultNodeHome),
+		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(ctx, cdc, appExport),
+		ExportCmd(appExport, simapp.DefaultNodeHome),
 		flags.LineBreak,
-		version.Cmd,
+		version.NewVersionCommand(),
 	)
 }
-
-//___________________________________________________________________________________
 
 // InsertKeyJSON inserts a new JSON field/key with a given value to an existing
 // JSON message. An error is returned if any serialization operation fails.
@@ -250,5 +288,3 @@ func addrToIP(addr net.Addr) net.IP {
 	}
 	return ip
 }
-
-// DONTCOVER

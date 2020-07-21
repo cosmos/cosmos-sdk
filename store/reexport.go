@@ -29,9 +29,3 @@ type (
 	GasMeter         = types.GasMeter
 	GasConfig        = types.GasConfig
 )
-
-var (
-	PruneNothing    = types.PruneNothing
-	PruneEverything = types.PruneEverything
-	PruneSyncable   = types.PruneSyncable
-)

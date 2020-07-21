@@ -1,8 +1,24 @@
 package types
 
 import (
+	"strings"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+var (
+	// DefaultRelativePacketTimeoutHeight is the default packet timeout height (in blocks) relative
+	// to the current block height of the counterparty chain provided by the client state. The
+	// timeout is disabled when set to 0.
+	DefaultRelativePacketTimeoutHeight = uint64(1000)
+
+	// DefaultRelativePacketTimeoutTimestamp is the default packet timeout timestamp (in nanoseconds)
+	// relative to the current block timestamp of the counterparty chain provided by the client
+	// state. The timeout is disabled when set to 0. The default is currently set to a 10 minute
+	// timeout.
+	DefaultRelativePacketTimeoutTimestamp = uint64((time.Duration(10) * time.Minute).Nanoseconds())
 )
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
@@ -18,16 +34,16 @@ func NewFungibleTokenPacketData(
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if !ftpd.Amount.IsAllPositive() {
-		return sdkerrors.ErrInsufficientFunds
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
 	}
 	if !ftpd.Amount.IsValid() {
-		return sdkerrors.ErrInvalidCoins
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Amount.String())
 	}
-	if ftpd.Sender == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+	if strings.TrimSpace(ftpd.Sender) == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
 	}
-	if ftpd.Receiver == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing receiver address")
+	if strings.TrimSpace(ftpd.Receiver) == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "receiver address cannot be blank")
 	}
 	return nil
 }

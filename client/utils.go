@@ -1,5 +1,12 @@
 package client
 
+import (
+	"github.com/spf13/pflag"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/types/query"
+)
+
 // Paginate returns the correct starting and ending index for a paginated query,
 // given that client provides a desired page and limit of objects and the handler
 // provides the total number of objects. The start page is assumed to be 1-indexed.
@@ -34,4 +41,19 @@ func Paginate(numObjs, page, limit, defLimit int) (start, end int) {
 	}
 
 	return start, end
+}
+
+// ReadPageRequest reads and builds the necessary page request flags for pagination.
+func ReadPageRequest(flagSet *pflag.FlagSet) *query.PageRequest {
+	pageKey, _ := flagSet.GetString(flags.FlagPageKey)
+	offset, _ := flagSet.GetUint64(flags.FlagOffset)
+	limit, _ := flagSet.GetUint64(flags.FlagLimit)
+	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)
+
+	return &query.PageRequest{
+		Key:        []byte(pageKey),
+		Offset:     offset,
+		Limit:      limit,
+		CountTotal: countTotal,
+	}
 }

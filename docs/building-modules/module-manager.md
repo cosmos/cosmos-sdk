@@ -37,7 +37,7 @@ Let us go through the methods:
 - `RegisterCodec(*codec.Codec)`: Registers the `codec` for the module, which is used to marhsal and unmarshal structs to/from `[]byte` in order to persist them in the moduel's `KVStore`.
 - `DefaultGenesis()`: Returns a default [`GenesisState`](./genesis.md#genesisstate) for the module, marshalled to `json.RawMessage`. The default `GenesisState` need to be defined by the module developer and is primarily used for testing. 
 - `ValidateGenesis(json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./genesis.md#validategenesis) function defined by the module developer. 
-- `RegisterRESTRoutes(context.CLIContext, *mux.Router)`: Registers the REST routes for the module. These routes will be used to map REST request to the module in order to process them. See [../interfaces/rest.md] for more.
+- `RegisterRESTRoutes(client.Context, *mux.Router)`: Registers the REST routes for the module. These routes will be used to map REST request to the module in order to process them. See [../interfaces/rest.md] for more.
 - `GetTxCmd(*codec.Codec)`: Returns the root [`Tx` command](./module-interfaces.md#tx) for the module. The subcommands of this root command are used by end-users to generate new transactions containing [`message`s](./messages-and-queries.md#queries) defined in the module. 
 - `GetQueryCmd(*codec.Codec)`: Return the root [`query` command](./module-interfaces.md#query) for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module. 
 
@@ -67,8 +67,7 @@ The `AppModule` interface defines the inter-dependent methods modules need to im
 Let us go through the methods of `AppModule`:
 
 - `RegisterInvariants(sdk.InvariantRegistry)`: Registers the [`invariants`](./invariants.md) of the module. If the invariants deviates from its predicted value, the [`InvariantRegistry`](./invariants.md#registry) triggers appropriate logic (most often the chain will be halted). 
-- `Route()`: Returns the name of the module's route, for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`baseapp`](../core/baseapp.md#message-routing).
-- `NewHandler()`: Returns a [`handler`](./handler.md) given the `Type()` of the `message`, in order to process the `message`. 
+- `Route()`: Returns the route for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`baseapp`](../core/baseapp.md#message-routing).
 - `QuerierRoute()`: Returns the name of the module's query route, for [`queries`](./messages-and-queries.md#queries) to be routes to the module by [`baseapp`](../core/baseapp.md#query-routing). 
 - `NewQuerierHandler()`: Returns a [`querier`](./querier.md) given the query `path`, in order to process the `query`. 
 - `BeginBlock(sdk.Context, abci.RequestBeginBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block. Implement empty if no logic needs to be triggered at the beginning of each block for this module. 
@@ -78,7 +77,7 @@ Let us go through the methods of `AppModule`:
 
 Typically, the various application module interfaces are implemented in a file called `module.go`, located in the module's folder (e.g. `./x/module/module.go`). 
 
-Almost every module need to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `NewHandler()`  function often calls a `NewHandler(k keeper)` function defined in [`handler.go`](./handler.md) and therefore needs to pass the module's [`keeper`](./keeper.md) as parameter. 
+Almost every module need to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()`  function often calls a `NewHandler(k keeper)` function defined in [`handler.go`](./handler.md) and therefore needs to pass the module's [`keeper`](./keeper.md) as parameter. 
 
 ```go
 // example
@@ -112,7 +111,7 @@ It implements the following methods:
 - `RegisterCodec(cdc *codec.Codec)`: Registers the [`codec`s](../core/encoding.md) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../basics/app-anatomy.md#constructor).
 - `DefaultGenesis()`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis()`](./genesis.md#defaultgenesis) function of each module. It is used to construct a default genesis file for the application.
 - `ValidateGenesis(genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis()`](./genesis.md#validategenesis) function of each module.
-- `RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router)`: Registers REST routes for modules by calling the [`RegisterRESTRoutes`](./module-interfaces.md#register-routes) function of each module. This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).
+- `RegisterRESTRoutes(ctx client.Context, rtr *mux.Router)`: Registers REST routes for modules by calling the [`RegisterRESTRoutes`](./module-interfaces.md#register-routes) function of each module. This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).
 - `AddTxCommands(rootTxCmd *cobra.Command, cdc *codec.Codec)`: Adds modules' transaction commands to the application's [`rootTxCommand`](../interfaces/cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).
 - `AddQueryCommands(rootQueryCmd *cobra.Command, cdc *codec.Codec)`: Adds modules' query commands to the application's [`rootQueryCommand`](../interfaces/cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).
 

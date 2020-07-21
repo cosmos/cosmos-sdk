@@ -17,8 +17,8 @@ const (
 // Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}
 
-func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdrawAddress {
-	return MsgSetWithdrawAddress{
+func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
+	return &MsgSetWithdrawAddress{
 		DelegatorAddress: delAddr,
 		WithdrawAddress:  withdrawAddr,
 	}
@@ -50,8 +50,8 @@ func (msg MsgSetWithdrawAddress) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegatorReward {
-	return MsgWithdrawDelegatorReward{
+func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgWithdrawDelegatorReward {
+	return &MsgWithdrawDelegatorReward{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
 	}
@@ -82,8 +82,8 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) MsgWithdrawValidatorCommission {
-	return MsgWithdrawValidatorCommission{
+func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValidatorCommission {
+	return &MsgWithdrawValidatorCommission{
 		ValidatorAddress: valAddr,
 	}
 }
@@ -112,8 +112,8 @@ func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
 
 // NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
 // a funding amount.
-func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) MsgFundCommunityPool {
-	return MsgFundCommunityPool{
+func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFundCommunityPool {
+	return &MsgFundCommunityPool{
 		Amount:    amount,
 		Depositor: depositor,
 	}

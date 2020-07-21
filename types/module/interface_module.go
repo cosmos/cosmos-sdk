@@ -1,6 +1,8 @@
 package module
 
-import "github.com/cosmos/cosmos-sdk/codec/types"
+import (
+	"github.com/cosmos/cosmos-sdk/codec/types"
+)
 
 // InterfaceModule is an interface that modules can implement in order to
 // register their interfaces and implementations in an InterfaceRegistry
@@ -16,6 +18,7 @@ func (bm BasicManager) RegisterInterfaceModules(registry types.InterfaceRegistry
 		if !ok {
 			continue
 		}
+
 		im.RegisterInterfaceTypes(registry)
 	}
 }

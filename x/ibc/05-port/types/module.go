@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -16,7 +16,7 @@ type IBCModule interface {
 		connectionHops []string,
 		portID string,
 		channelID string,
-		channelCap *capability.Capability,
+		channelCap *capabilitytypes.Capability,
 		counterParty channeltypes.Counterparty,
 		version string,
 	) error
@@ -27,7 +27,7 @@ type IBCModule interface {
 		connectionHops []string,
 		portID,
 		channelID string,
-		channelCap *capability.Capability,
+		channelCap *capabilitytypes.Capability,
 		counterparty channeltypes.Counterparty,
 		version,
 		counterpartyVersion string,
@@ -58,10 +58,11 @@ type IBCModule interface {
 		channelID string,
 	) error
 
+	// OnRecvPacket must return the acknowledgement bytes
 	OnRecvPacket(
 		ctx sdk.Context,
 		packet channeltypes.Packet,
-	) (*sdk.Result, error)
+	) (*sdk.Result, []byte, error)
 
 	OnAcknowledgementPacket(
 		ctx sdk.Context,

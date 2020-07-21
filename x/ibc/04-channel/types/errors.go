@@ -21,4 +21,5 @@ var (
 	ErrPacketTimeout             = sdkerrors.Register(SubModuleName, 14, "packet timeout")
 	ErrTooManyConnectionHops     = sdkerrors.Register(SubModuleName, 15, "too many connection hops")
 	ErrAcknowledgementTooLong    = sdkerrors.Register(SubModuleName, 16, "acknowledgement too long")
+	ErrInvalidAcknowledgement    = sdkerrors.Register(SubModuleName, 17, "invalid acknowledgement")
 )

@@ -3,7 +3,7 @@ package proposal
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type Codec struct {
@@ -35,7 +35,7 @@ func RegisterCodec(cdc *codec.Codec) {
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
-		(*gov.Content)(nil),
+		(*govtypes.Content)(nil),
 		&ParameterChangeProposal{},
 	)
 }

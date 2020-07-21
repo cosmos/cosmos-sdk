@@ -3,27 +3,15 @@ package codec
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 
 	amino "github.com/tendermint/go-amino"
-	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
-
-// Cdc defines a global generic sealed Amino codec to be used throughout sdk. It
-// has all Tendermint crypto and evidence types registered.
-//
-// TODO: Consider removing this global.
-var Cdc *Codec
-
-func init() {
-	Cdc = New()
-	RegisterCrypto(Cdc)
-	RegisterEvidences(Cdc)
-	Cdc.Seal()
-}
 
 // deprecated: Codec defines a wrapper for an Amino codec that properly handles protobuf
 // types with Any's
@@ -39,12 +27,6 @@ func (cdc *Codec) Seal() {
 
 func New() *Codec {
 	return &Codec{amino.NewCodec()}
-}
-
-// RegisterCrypto registers all crypto dependency types with the provided Amino
-// codec.
-func RegisterCrypto(cdc *Codec) {
-	cryptoamino.RegisterAmino(cdc.Amino)
 }
 
 // RegisterEvidences registers Tendermint evidence types with the provided Amino
@@ -190,7 +172,7 @@ func (cdc *Codec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 }
 
 func (*Codec) UnpackAny(*types.Any, interface{}) error {
-	return fmt.Errorf("AminoCodec can't handle unpack protobuf Any's")
+	return errors.New("AminoCodec can't handle unpack protobuf Any's")
 }
 
 func (cdc *Codec) RegisterInterface(ptr interface{}, iopts *amino.InterfaceOptions) {
@@ -207,4 +189,8 @@ func (cdc *Codec) MarshalJSONIndent(o interface{}, prefix, indent string) ([]byt
 		panic(err)
 	}
 	return cdc.Amino.MarshalJSONIndent(o, prefix, indent)
+}
+
+func (cdc *Codec) PrintTypes(out io.Writer) error {
+	return cdc.Amino.PrintTypes(out)
 }

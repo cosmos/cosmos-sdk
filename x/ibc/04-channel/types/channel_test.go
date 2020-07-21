@@ -1,20 +1,22 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 func TestCounterpartyValidateBasic(t *testing.T) {
 	testCases := []struct {
 		name         string
-		counterparty Counterparty
+		counterparty types.Counterparty
 		expPass      bool
 	}{
-		{"valid counterparty", Counterparty{"portidone", "channelidone"}, true},
-		{"invalid port id", Counterparty{"(InvalidPort)", "channelidone"}, false},
-		{"invalid channel id", Counterparty{"portidone", "(InvalidChannel)"}, false},
+		{"valid counterparty", types.Counterparty{"portidone", "channelidone"}, true},
+		{"invalid port id", types.Counterparty{"(InvalidPort)", "channelidone"}, false},
+		{"invalid channel id", types.Counterparty{"portidone", "(InvalidChannel)"}, false},
 	}
 
 	for i, tc := range testCases {

@@ -1,19 +1,19 @@
 package crypto
 
 import (
-	amino "github.com/tendermint/go-amino"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
-var cdc = amino.NewCodec()
+var cdc = codec.New()
 
 func init() {
 	RegisterAmino(cdc)
-	cryptoAmino.RegisterAmino(cdc)
+	cryptoAmino.RegisterCrypto(cdc)
 }
 
 // RegisterAmino registers all go-crypto related types in the given (amino) codec.
-func RegisterAmino(cdc *amino.Codec) {
+func RegisterAmino(cdc *codec.Codec) {
 	cdc.RegisterConcrete(PrivKeyLedgerSecp256k1{},
 		"tendermint/PrivKeyLedgerSecp256k1", nil)
 }

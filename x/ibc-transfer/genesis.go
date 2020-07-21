@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
 // InitGenesis binds to portid from genesis state
-func InitGenesis(ctx sdk.Context, keeper Keeper, state types.GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, state types.GenesisState) {
 	keeper.SetPort(ctx, state.PortID)
 
 	// Only try to bind to port if it is not already bound, since we may already own
@@ -25,12 +26,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, state types.GenesisState) {
 	// check if the module account exists
 	moduleAcc := keeper.GetTransferAccount(ctx)
 	if moduleAcc == nil {
-		panic(fmt.Sprintf("%s module account has not been set", ModuleName))
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 }
 
 // ExportGenesis exports transfer module's portID into its geneis state
-func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
 		PortID: keeper.GetPort(ctx),
 	}

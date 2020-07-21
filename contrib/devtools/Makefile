@@ -60,7 +60,7 @@ tools-stamp: proto-tools statik runsim
 # Install the runsim binary with a temporary workaround of entering an outside
 # directory as the "go get" command ignores the -mod option and will polute the
 # go.{mod, sum} files.
-# 
+#
 # ref: https://github.com/golang/go/issues/30515
 statik: $(STATIK)
 $(STATIK):
@@ -70,7 +70,7 @@ $(STATIK):
 # Install the runsim binary with a temporary workaround of entering an outside
 # directory as the "go get" command ignores the -mod option and will polute the
 # go.{mod, sum} files.
-# 
+#
 # ref: https://github.com/golang/go/issues/30515
 runsim: $(RUNSIM)
 $(RUNSIM):
@@ -85,7 +85,8 @@ ifeq ($(UNAME_S),Darwin)
   PROTOC_ZIP ?= protoc-3.11.2-osx-x86_64.zip
 endif
 
-proto-tools: proto-tools-stamp
+proto-tools: proto-tools-stamp buf
+
 proto-tools-stamp:
 	@echo "Installing protoc compiler..."
 	@(cd /tmp; \
@@ -94,12 +95,14 @@ proto-tools-stamp:
 	unzip -o ${PROTOC_ZIP} -d $(PREFIX) 'include/*'; \
 	rm -f ${PROTOC_ZIP})
 
-	@echo "Installing protoc-gen-buf-check-breaking..."
-	@curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-breaking-${UNAME_S}-${UNAME_M}" \
-    -o "${BIN}/protoc-gen-buf-check-breaking" && \
-	chmod +x "${BIN}/protoc-gen-buf-check-breaking"
+	@echo "Installing protoc-gen-gocosmos..."
+	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 
+	touch $@
+
+buf: buf-stamp
+
+buf-stamp:
 	@echo "Installing buf..."
 	@curl -sSL \
     "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" \
@@ -108,13 +111,8 @@ proto-tools-stamp:
 
 	touch $@
 
-protoc-gen-gocosmos:
-	@echo "Installing protoc-gen-gocosmos..."
-	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
-
 tools-clean:
 	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
-	rm -f tools-stamp proto-tools-stamp
+	rm -f tools-stamp proto-tools-stamp buf-stamp
 
-.PHONY: tools-clean statik runsim \
-	protoc-gen-gocosmos
+.PHONY: tools-clean statik runsim

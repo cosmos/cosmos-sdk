@@ -10,7 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -18,19 +19,22 @@ import (
 
 // Keeper defines the IBC channel keeper
 type Keeper struct {
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
 	storeKey         sdk.StoreKey
 	cdc              codec.Marshaler
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
 	portKeeper       types.PortKeeper
-	scopedKeeper     capability.ScopedKeeper
+	scopedKeeper     capabilitykeeper.ScopedKeeper
 }
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
-	portKeeper types.PortKeeper, scopedKeeper capability.ScopedKeeper,
+	portKeeper types.PortKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:         key,
@@ -128,6 +132,12 @@ func (k Keeper) GetPacketCommitment(ctx sdk.Context, portID, channelID string, s
 	return bz
 }
 
+// HasPacketCommitment returns true if the packet commitment exists
+func (k Keeper) HasPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(host.KeyPacketCommitment(portID, channelID, sequence))
+}
+
 // SetPacketCommitment sets the packet commitment hash to the store
 func (k Keeper) SetPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64, commitmentHash []byte) {
 	store := ctx.KVStore(k.storeKey)
@@ -212,7 +222,7 @@ func (k Keeper) GetAllPacketAckSeqs(ctx sdk.Context) (seqs []types.PacketSequenc
 }
 
 // IteratePacketCommitment provides an iterator over all PacketCommitment objects. For each
-// aknowledgement, cb will be called. If the cb returns true, the iterator will close
+// packet commitment, cb will be called. If the cb returns true, the iterator will close
 // and stop.
 func (k Keeper) IteratePacketCommitment(ctx sdk.Context, cb func(portID, channelID string, sequence uint64, hash []byte) bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -223,6 +233,26 @@ func (k Keeper) IteratePacketCommitment(ctx sdk.Context, cb func(portID, channel
 // GetAllPacketCommitments returns all stored PacketCommitments objects.
 func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) (commitments []types.PacketAckCommitment) {
 	k.IteratePacketCommitment(ctx, func(portID, channelID string, sequence uint64, hash []byte) bool {
+		pc := types.NewPacketAckCommitment(portID, channelID, sequence, hash)
+		commitments = append(commitments, pc)
+		return false
+	})
+	return commitments
+}
+
+// IteratePacketCommitmentAtChannel provides an iterator over all PacketCommmitment objects
+// at a specified channel. For each packet commitment, cb will be called. If the cb returns
+// true, the iterator will close and stop.
+func (k Keeper) IteratePacketCommitmentAtChannel(ctx sdk.Context, portID, channelID string, cb func(_, _ string, sequence uint64, hash []byte) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.PacketCommitmentPrefixPath(portID, channelID)))
+	k.iterateHashes(ctx, iterator, cb)
+}
+
+// GetAllPacketCommitmentsAtChannel returns all stored PacketCommitments objects for a specified
+// port ID and channel ID.
+func (k Keeper) GetAllPacketCommitmentsAtChannel(ctx sdk.Context, portID, channelID string) (commitments []types.PacketAckCommitment) {
+	k.IteratePacketCommitmentAtChannel(ctx, portID, channelID, func(_, _ string, sequence uint64, hash []byte) bool {
 		pc := types.NewPacketAckCommitment(portID, channelID, sequence, hash)
 		commitments = append(commitments, pc)
 		return false
@@ -279,7 +309,7 @@ func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.IdentifiedChan
 }
 
 // LookupModuleByChannel will return the IBCModule along with the capability associated with a given channel defined by its portID and channelID
-func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capability.Capability, error) {
+func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capabilitytypes.Capability, error) {
 	modules, cap, err := k.scopedKeeper.LookupModules(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return "", nil, err
@@ -288,7 +318,7 @@ func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string)
 	return porttypes.GetModuleOwner(modules), cap, nil
 }
 
-// common functionality for IteratePacketCommitment and IteratePacketAcknowledgemen
+// common functionality for IteratePacketCommitment and IteratePacketAcknowledgement
 func (k Keeper) iterateHashes(_ sdk.Context, iterator db.Iterator, cb func(portID, channelID string, sequence uint64, hash []byte) bool) {
 	defer iterator.Close()
 

@@ -32,7 +32,7 @@ Note that if `trust-node` is set to `false`, the REST server will verify the que
 A REST Server is used to receive and route HTTP Requests, obtain the results from the application, and return a response to the user. The REST Server defined by the SDK `rest` package contains the following:
 
 - **Router:** A router for HTTP requests. A new router can be instantiated for an application and used to match routes based on path, request method, headers, etc. The SDK uses the [Gorilla Mux Router](https://github.com/gorilla/mux).
-- **CLIContext:** A [`CLIContext`](./query-lifecycle.md#clicontext) created for a user interaction.
+- **Context:** A [`Context`](./query-lifecycle.md#context) created for a user interaction.
 - **Keybase:** A [Keybase](../basics/accounts.md#keybase) is a key manager.
 - **Logger:** A logger from Tendermint `Log`, a log package structured around key-value pairs that allows logging level to be set differently for different keys. The logger takes `Debug()`, `Info()`, and `Error()`s.
 - **Listener:** A [listener](https://golang.org/pkg/net/#Listener) from the net package.
@@ -49,8 +49,8 @@ At the bare minimum, a `RegisterRoutes()` function should use the SDK client pac
 
 ```go
 func registerRoutes(rs *rest.RestServer) {
-	client.RegisterRoutes(rs.CliCtx, rs.Mux)
-	app.ModuleBasics.RegisterRESTRoutes(rs.CliCtx, rs.Mux)
+	rpc.RegisterRoutes(rs.ClientCtx, rs.Mux)
+	app.ModuleBasics.RegisterRESTRoutes(rs.ClientCtx, rs.Mux)
 }
 ```
 

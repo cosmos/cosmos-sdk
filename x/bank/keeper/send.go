@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -23,10 +24,13 @@ type SendKeeper interface {
 	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
 	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
 
-	GetSendEnabled(ctx sdk.Context) bool
-	SetSendEnabled(ctx sdk.Context, enabled bool)
+	GetParams(ctx sdk.Context) types.Params
+	SetParams(ctx sdk.Context, params types.Params)
 
-	BlacklistedAddr(addr sdk.AccAddress) bool
+	SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
+	SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -42,21 +46,32 @@ type BaseSendKeeper struct {
 	paramSpace paramtypes.Subspace
 
 	// list of addresses that are restricted from receiving transactions
-	blacklistedAddrs map[string]bool
+	blockedAddrs map[string]bool
 }
 
 func NewBaseSendKeeper(
-	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
-		BaseViewKeeper:   NewBaseViewKeeper(cdc, storeKey, ak),
-		cdc:              cdc,
-		ak:               ak,
-		storeKey:         storeKey,
-		paramSpace:       paramSpace,
-		blacklistedAddrs: blacklistedAddrs,
+		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
+		cdc:            cdc,
+		ak:             ak,
+		storeKey:       storeKey,
+		paramSpace:     paramSpace,
+		blockedAddrs:   blockedAddrs,
 	}
+}
+
+// GetParams returns the total set of bank parameters.
+func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
+	k.paramSpace.GetParamSet(ctx, &params)
+	return params
+}
+
+// SetParams sets the total set of bank parameters.
+func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
 }
 
 // InputOutputCoins performs multi-send functionality. It accepts a series of
@@ -96,6 +111,16 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
+
+		// Create account if recipient does not exist.
+		//
+		// NOTE: This should ultimately be removed in favor a more flexible approach
+		// such as delegated fee messages.
+		acc := k.ak.GetAccount(ctx, out.Address)
+		if acc == nil {
+			defer telemetry.IncrCounter(1, "new", "account")
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, out.Address))
+		}
 	}
 
 	return nil
@@ -108,6 +133,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
 		sdk.NewEvent(
@@ -132,6 +158,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	// such as delegated fee messages.
 	acc := k.ak.GetAccount(ctx, toAddr)
 	if acc == nil {
+		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 
@@ -243,20 +270,25 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	return nil
 }
 
-// GetSendEnabled returns the current SendEnabled
-func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
-	var enabled bool
-	k.paramSpace.Get(ctx, types.ParamStoreKeySendEnabled, &enabled)
-	return enabled
+// SendEnabledCoins checks the coins provide and returns an ErrSendDisabled if
+// any of the coins are not configured for sending.  Returns nil if sending is enabled
+// for all provided coin
+func (k BaseSendKeeper) SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
+	for _, coin := range coins {
+		if !k.SendEnabledCoin(ctx, coin) {
+			return sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", coin.Denom)
+		}
+	}
+	return nil
 }
 
-// SetSendEnabled sets the send enabled
-func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
-	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
+// SendEnabledCoin returns the current SendEnabled status of the provided coin's denom
+func (k BaseSendKeeper) SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
+	return k.GetParams(ctx).SendEnabledDenom(coin.Denom)
 }
 
-// BlacklistedAddr checks if a given address is blacklisted (i.e restricted from
-// receiving funds)
-func (k BaseSendKeeper) BlacklistedAddr(addr sdk.AccAddress) bool {
-	return k.blacklistedAddrs[addr.String()]
+// BlockedAddr checks if a given address is restricted from
+// receiving funds.
+func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
+	return k.blockedAddrs[addr.String()]
 }

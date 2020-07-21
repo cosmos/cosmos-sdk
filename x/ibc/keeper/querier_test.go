@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -15,7 +15,6 @@ import (
 // TestNewQuerier tests that the querier paths are correct.
 // NOTE: the actuall testing functionality are located on each ICS querier test.
 func (suite *KeeperTestSuite) TestNewQuerier() {
-
 	query := abci.RequestQuery{
 		Path: "",
 		Data: []byte{},
@@ -27,75 +26,34 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 		expectsDefaultErr bool
 		errMsg            string
 	}{
-		{"client - QuerierClientState",
-			[]string{client.SubModuleName, client.QueryClientState},
-			false,
-			"",
-		},
 		{"client - QuerierClients",
-			[]string{client.SubModuleName, client.QueryAllClients},
-			false,
-			"",
-		},
-		{
-			"client - QuerierConsensusState",
-			[]string{client.SubModuleName, client.QueryConsensusState},
+			[]string{clienttypes.SubModuleName, clienttypes.QueryAllClients},
 			false,
 			"",
 		},
 		{
 			"client - invalid query",
-			[]string{client.SubModuleName, "foo"},
+			[]string{clienttypes.SubModuleName, "foo"},
 			true,
-			fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName),
-		},
-		{
-			"connection - QuerierConnections",
-			[]string{connection.SubModuleName, connection.QueryAllConnections},
-			false,
-			"",
-		},
-		{
-			"connection - QuerierAllClientConnections",
-			[]string{connection.SubModuleName, connection.QueryAllClientConnections},
-			false,
-			"",
-		},
-		{
-			"connection - QuerierClientConnections",
-			[]string{connection.SubModuleName, connection.QueryClientConnections},
-			false,
-			"",
+			fmt.Sprintf("unknown IBC %s query endpoint", clienttypes.SubModuleName),
 		},
 		{
 			"connection - invalid query",
-			[]string{connection.SubModuleName, "foo"},
+			[]string{connectiontypes.SubModuleName, "foo"},
 			true,
-			fmt.Sprintf("unknown IBC %s query endpoint", connection.SubModuleName),
+			fmt.Sprintf("unknown IBC %s query endpoint", connectiontypes.SubModuleName),
 		},
 		{
-			"channel - QuerierChannel",
-			[]string{channel.SubModuleName, channel.QueryChannel},
-			false,
-			"",
-		},
-		{
-			"channel - QuerierChannels",
-			[]string{channel.SubModuleName, channel.QueryAllChannels},
-			false,
-			"",
-		},
-		{
-			"channel - QuerierConnectionChannels",
-			[]string{channel.SubModuleName, channel.QueryConnectionChannels},
+			"channel - QuerierChannelClientState",
+			[]string{channeltypes.SubModuleName, channeltypes.QueryChannelClientState},
 			false,
 			"",
 		},
 		{
 			"channel - invalid query",
-			[]string{channel.SubModuleName, "foo"},
+			[]string{channeltypes.SubModuleName, "foo"},
 			true,
-			fmt.Sprintf("unknown IBC %s query endpoint", channel.SubModuleName),
+			fmt.Sprintf("unknown IBC %s query endpoint", channeltypes.SubModuleName),
 		},
 		{
 			"invalid query",

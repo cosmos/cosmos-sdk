@@ -49,7 +49,7 @@ type Any struct {
 
 	cachedValue interface{}
 
-	aminoCompat *aminoCompat
+	compat *anyCompat
 }
 
 // NewAnyWithValue constructs a new Any packed with the value provided or
@@ -81,6 +81,21 @@ func (any *Any) Pack(x proto.Message) error {
 	any.cachedValue = x
 
 	return nil
+}
+
+// UnsafePackAny packs the value x in the Any and instead of returning the error
+// in the case of a packing failure, keeps the cached value. This should only
+// be used in situations where compatibility is needed with amino. Amino-only
+// values can safely be packed using this method when they will only be
+// marshaled with amino and not protobuf.
+func UnsafePackAny(x interface{}) *Any {
+	if msg, ok := x.(proto.Message); ok {
+		any, err := NewAnyWithValue(msg)
+		if err != nil {
+			return any
+		}
+	}
+	return &Any{cachedValue: x}
 }
 
 // GetCachedValue returns the cached value from the Any if present

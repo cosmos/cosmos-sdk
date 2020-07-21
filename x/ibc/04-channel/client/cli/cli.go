@@ -3,40 +3,53 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // GetQueryCmd returns the query commands for IBC channels
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ics04ChannelQueryCmd := &cobra.Command{
-		Use:                "channel",
-		Short:              "IBC channel query subcommands",
-		DisableFlagParsing: true,
+func GetQueryCmd() *cobra.Command {
+	queryCmd := &cobra.Command{
+		Use:                        types.SubModuleName,
+		Short:                      "IBC channel query subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
 	}
 
-	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
-		GetCmdQueryChannel(storeKey, cdc),
-	)...)
+	queryCmd.AddCommand(
+		GetCmdQueryChannels(),
+		GetCmdQueryChannel(),
+		GetCmdQueryConnectionChannels(),
+		GetCmdQueryChannelClientState(),
+		GetCmdQueryPacketCommitment(),
+		GetCmdQueryPacketCommitments(),
+		GetCmdQueryUnrelayedPackets(),
+		GetCmdQueryNextSequenceReceive(),
+		// TODO: next sequence Send ?
+	)
 
-	return ics04ChannelQueryCmd
+	return queryCmd
 }
 
-// GetTxCmd returns the transaction commands for IBC channels
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ics04ChannelTxCmd := &cobra.Command{
-		Use:   "channel",
-		Short: "IBC channel transaction subcommands",
+// NewTxCmd returns a CLI command handler for all x/ibc channel transaction commands.
+func NewTxCmd() *cobra.Command {
+	txCmd := &cobra.Command{
+		Use:                        types.SubModuleName,
+		Short:                      "IBC channel transaction subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
 	}
 
-	ics04ChannelTxCmd.AddCommand(flags.PostCommands(
-		GetMsgChannelOpenInitCmd(storeKey, cdc),
-		GetMsgChannelOpenTryCmd(storeKey, cdc),
-		GetMsgChannelOpenAckCmd(storeKey, cdc),
-		GetMsgChannelOpenConfirmCmd(storeKey, cdc),
-		GetMsgChannelCloseInitCmd(storeKey, cdc),
-		GetMsgChannelCloseConfirmCmd(storeKey, cdc),
-	)...)
+	txCmd.AddCommand(
+		NewChannelOpenInitCmd(),
+		NewChannelOpenTryCmd(),
+		NewChannelOpenAckCmd(),
+		NewChannelOpenConfirmCmd(),
+		NewChannelCloseInitCmd(),
+		NewChannelCloseConfirmCmd(),
+	)
 
-	return ics04ChannelTxCmd
+	return txCmd
 }

@@ -5,9 +5,11 @@ import (
 	"io"
 	"strings"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
+	iavltree "github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/mem"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
+	sdkproofs "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/proofs"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -23,6 +27,7 @@ import (
 
 const (
 	latestVersionKey = "s/latest"
+	pruneHeightsKey  = "s/pruneheights"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
@@ -39,6 +44,7 @@ type Store struct {
 	stores         map[types.StoreKey]types.CommitKVStore
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
+	pruneHeights   []int64
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -46,8 +52,10 @@ type Store struct {
 	interBlockCache types.MultiStorePersistentCache
 }
 
-var _ types.CommitMultiStore = (*Store)(nil)
-var _ types.Queryable = (*Store)(nil)
+var (
+	_ types.CommitMultiStore = (*Store)(nil)
+	_ types.Queryable        = (*Store)(nil)
+)
 
 // NewStore returns a reference to a new Store object with the provided DB. The
 // store will be created with a PruneNothing pruning strategy by default. After
@@ -60,20 +68,15 @@ func NewStore(db dbm.DB) *Store {
 		storesParams: make(map[types.StoreKey]storeParams),
 		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
+		pruneHeights: make([]int64, 0),
 	}
 }
 
 // SetPruning sets the pruning strategy on the root store and all the sub-stores.
 // Note, calling SetPruning on the root store prior to LoadVersion or
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
-//
-// TODO: Consider removing this API altogether on sub-stores as a pruning
-// strategy should only be provided on initialization.
 func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 	rs.pruningOpts = pruningOpts
-	for _, substore := range rs.stores {
-		substore.SetPruning(pruningOpts)
-	}
 }
 
 // SetLazyLoading sets if the iavl store should be loaded lazily or not
@@ -205,6 +208,12 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	rs.lastCommitInfo = cInfo
 	rs.stores = newStores
 
+	// load any pruned heights we missed from disk to be pruned on the next run
+	ph, err := getPruningHeights(rs.db)
+	if err == nil && len(ph) > 0 {
+		rs.pruneHeights = ph
+	}
+
 	return nil
 }
 
@@ -291,22 +300,59 @@ func (rs *Store) LastCommitID() types.CommitID {
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
-
-	// Commit stores.
-	version := rs.lastCommitInfo.Version + 1
+	previousHeight := rs.lastCommitInfo.Version
+	version := previousHeight + 1
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 
-	// write CommitInfo to disk only if this version was flushed to disk
-	if rs.pruningOpts.FlushVersion(version) {
-		flushCommitInfo(rs.db, version, rs.lastCommitInfo)
+	// Determine if pruneHeight height needs to be added to the list of heights to
+	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
+	if int64(rs.pruningOpts.KeepRecent) < previousHeight {
+		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
+		// We consider this height to be pruned iff:
+		//
+		// - KeepEvery is zero as that means that all heights should be pruned.
+		// - KeepEvery % (height - KeepRecent) != 0 as that means the height is not
+		// a 'snapshot' height.
+		if rs.pruningOpts.KeepEvery == 0 || pruneHeight%int64(rs.pruningOpts.KeepEvery) != 0 {
+			rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
+		}
 	}
 
-	// Prepare for next version.
-	commitID := types.CommitID{
+	// batch prune if the current height is a pruning interval height
+	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
+		rs.pruneStores()
+	}
+
+	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
+
+	return types.CommitID{
 		Version: version,
 		Hash:    rs.lastCommitInfo.Hash(),
 	}
-	return commitID
+}
+
+// pruneStores will batch delete a list of heights from each mounted sub-store.
+// Afterwards, pruneHeights is reset.
+func (rs *Store) pruneStores() {
+	if len(rs.pruneHeights) == 0 {
+		return
+	}
+
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+
+			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
+				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
+					panic(err)
+				}
+			}
+		}
+	}
+
+	rs.pruneHeights = make([]int64, 0)
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -457,13 +503,8 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	// Restore origin path and append proof op.
-	res.Proof.Ops = append(res.Proof.Ops, NewMultiStoreProofOp(
-		[]byte(storeName),
-		NewMultiStoreProof(commitInfo.StoreInfos),
-	).ProofOp())
+	res.Proof.Ops = append(res.Proof.Ops, commitInfo.ProofOp(storeName))
 
-	// TODO: handle in another TM v0.26 update PR
-	// res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
 	return res
 }
 
@@ -485,8 +526,6 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 	return storeName, subpath, nil
 }
 
-//----------------------------------------
-// Note: why do we use key and params.key in different places. Seems like there should be only one key used.
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
 	var db dbm.DB
 
@@ -502,7 +541,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		store, err := iavl.LoadStore(db, id, rs.pruningOpts, rs.lazyLoading)
+		store, err := iavl.LoadStore(db, id, rs.lazyLoading)
 		if err != nil {
 			return nil, err
 		}
@@ -561,15 +600,43 @@ type commitInfo struct {
 	StoreInfos []storeInfo
 }
 
-// Hash returns the simple merkle root hash of the stores sorted by name.
-func (ci commitInfo) Hash() []byte {
-	// TODO: cache to ci.hash []byte
+func (ci commitInfo) toMap() map[string][]byte {
 	m := make(map[string][]byte, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
-		m[storeInfo.Name] = storeInfo.Hash()
+		m[storeInfo.Name] = storeInfo.GetHash()
+	}
+	return m
+}
+
+// Hash returns the simple merkle root hash of the stores sorted by name.
+func (ci commitInfo) Hash() []byte {
+	// we need a special case for empty set, as SimpleProofsFromMap requires at least one entry
+	if len(ci.StoreInfos) == 0 {
+		return nil
+	}
+	rootHash, _, _ := sdkmaps.SimpleProofsFromMap(ci.toMap())
+	return rootHash
+}
+
+func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
+	cmap := ci.toMap()
+	_, proofs, _ := sdkmaps.SimpleProofsFromMap(cmap)
+	proof := proofs[storeName]
+	if proof == nil {
+		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))
+	}
+	// convert merkle.SimpleProof to CommitmentProof
+	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
+	if err != nil {
+		panic(fmt.Errorf("could not convert simple proof to existence proof: %w", err))
+	}
+	commitmentProof := &ics23.CommitmentProof{
+		Proof: &ics23.CommitmentProof_Exist{
+			Exist: existProof,
+		},
 	}
 
-	return SimpleHashFromMap(m)
+	return types.NewSimpleMerkleCommitmentOp([]byte(storeName), commitmentProof).ProofOp()
 }
 
 func (ci commitInfo) CommitID() types.CommitID {
@@ -596,20 +663,15 @@ type storeCore struct {
 	// ... maybe add more state
 }
 
-// Implements merkle.Hasher.
-func (si storeInfo) Hash() []byte {
-	// Doesn't write Name, since SimpleHashFromMap() will
-	// include them via the keys.
-	bz := si.Core.CommitID.Hash
-	hasher := tmhash.New()
-
-	_, err := hasher.Write(bz)
-	if err != nil {
-		// TODO: Handle with #870
-		panic(err)
-	}
-
-	return hasher.Sum(nil)
+// GetHash returns the GetHash from the CommitID.
+// This is used in CommitInfo.Hash()
+//
+// When we commit to this in a merkle proof, we create a map of storeInfo.Name -> storeInfo.GetHash()
+// and build a merkle proof from that.
+// This is then chained with the substore proof, so we prove the root hash from the substore before this
+// and need to pass that (unmodified) as the leaf value of the multistore proof.
+func (si storeInfo) GetHash() []byte {
+	return si.Core.CommitID.Hash
 }
 
 //----------------------------------------
@@ -630,12 +692,6 @@ func getLatestVersion(db dbm.DB) int64 {
 	}
 
 	return latest
-}
-
-// Set the latest version.
-func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes, _ := cdc.MarshalBinaryBare(version)
-	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 
 // Commits each store and returns a new commitInfo.
@@ -663,9 +719,8 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 
 // Gets commitInfo from disk.
 func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
-
-	// Get from DB.
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
+
 	cInfoBytes, err := db.Get([]byte(cInfoKey))
 	if err != nil {
 		return commitInfo{}, errors.Wrap(err, "failed to get commit info")
@@ -683,34 +738,48 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 	return cInfo, nil
 }
 
-// Set a commitInfo for given version.
 func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
 	cInfoBytes := cdc.MustMarshalBinaryBare(cInfo)
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
 	batch.Set([]byte(cInfoKey), cInfoBytes)
 }
 
-// flushCommitInfo flushes a commitInfo for given version to the DB. Note, this
-// needs to happen atomically.
-func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
+func setLatestVersion(batch dbm.Batch, version int64) {
+	latestBytes := cdc.MustMarshalBinaryBare(version)
+	batch.Set([]byte(latestVersionKey), latestBytes)
+}
+
+func setPruningHeights(batch dbm.Batch, pruneHeights []int64) {
+	bz := cdc.MustMarshalBinaryBare(pruneHeights)
+	batch.Set([]byte(pruneHeightsKey), bz)
+}
+
+func getPruningHeights(db dbm.DB) ([]int64, error) {
+	bz, err := db.Get([]byte(pruneHeightsKey))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pruned heights: %w", err)
+	}
+	if len(bz) == 0 {
+		return nil, errors.New("no pruned heights found")
+	}
+
+	var prunedHeights []int64
+	if err := cdc.UnmarshalBinaryBare(bz, &prunedHeights); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal pruned heights: %w", err)
+	}
+
+	return prunedHeights, nil
+}
+
+func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []int64) {
 	batch := db.NewBatch()
 	defer batch.Close()
 
 	setCommitInfo(batch, version, cInfo)
 	setLatestVersion(batch, version)
-	err := batch.Write()
-	if err != nil {
+	setPruningHeights(batch, pruneHeights)
+
+	if err := batch.Write(); err != nil {
 		panic(fmt.Errorf("error on batch write %w", err))
 	}
-}
-
-// SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
-// root.
-func SimpleHashFromMap(m map[string][]byte) []byte {
-	mm := newMerkleMap()
-	for k, v := range m {
-		mm.set(k, v)
-	}
-
-	return mm.hash()
 }

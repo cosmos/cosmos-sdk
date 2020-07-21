@@ -6,7 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -16,21 +16,21 @@ import (
 
 // QueryAllClientStates returns all the light client states. It _does not_ return
 // any merkle proof.
-func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]exported.ClientState, int64, error) {
+func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported.ClientState, int64, error) {
 	params := types.NewQueryAllClientsParams(page, limit)
-	bz, err := cliCtx.Codec.MarshalJSON(params)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}
 
 	route := fmt.Sprintf("custom/%s/%s/%s", "ibc", types.QuerierRoute, types.QueryAllClients)
-	res, height, err := cliCtx.QueryWithData(route, bz)
+	res, height, err := clientCtx.QueryWithData(route, bz)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	var clients []exported.ClientState
-	err = cliCtx.Codec.UnmarshalJSON(res, &clients)
+	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clients)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
 	}
@@ -40,21 +40,21 @@ func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]exporte
 // QueryClientState queries the store to get the light client state and a merkle
 // proof.
 func QueryClientState(
-	cliCtx context.CLIContext, clientID string, prove bool,
+	clientCtx client.Context, clientID string, prove bool,
 ) (types.StateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  prefixClientKey(clientID, host.KeyClientState()),
+		Data:  host.FullKeyClientPath(clientID, host.KeyClientState()),
 		Prove: prove,
 	}
 
-	res, err := cliCtx.QueryABCI(req)
+	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
 		return types.StateResponse{}, err
 	}
 
 	var clientState exported.ClientState
-	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
+	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
 
@@ -66,23 +66,23 @@ func QueryClientState(
 // QueryConsensusState queries the store to get the consensus state and a merkle
 // proof.
 func QueryConsensusState(
-	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
+	clientCtx client.Context, clientID string, height uint64, prove bool,
 ) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  prefixClientKey(clientID, host.KeyConsensusState(height)),
+		Data:  host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
 		Prove: prove,
 	}
 
-	res, err := cliCtx.QueryABCI(req)
+	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
 		return conStateRes, err
 	}
 
 	var cs exported.ConsensusState
-	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &cs); err != nil {
+	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
 
@@ -91,8 +91,8 @@ func QueryConsensusState(
 
 // QueryTendermintHeader takes a client context and returns the appropriate
 // tendermint header
-func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64, error) {
-	node, err := cliCtx.GetNode()
+func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, error) {
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
@@ -124,8 +124,8 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64,
 
 // QueryNodeConsensusState takes a client context and returns the appropriate
 // tendermint consensus state
-func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusState, int64, error) {
-	node, err := cliCtx.GetNode()
+func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusState, int64, error) {
+	node, err := clientCtx.GetNode()
 	if err != nil {
 		return ibctmtypes.ConsensusState{}, 0, err
 	}
@@ -154,8 +154,4 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusSta
 	}
 
 	return state, height, nil
-}
-
-func prefixClientKey(clientID string, key []byte) []byte {
-	return append([]byte(fmt.Sprintf("clients/%s/", clientID)), key...)
 }

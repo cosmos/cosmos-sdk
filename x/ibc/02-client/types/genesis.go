@@ -53,17 +53,17 @@ func DefaultGenesisState() GenesisState {
 func (gs GenesisState) Validate() error {
 	for i, client := range gs.Clients {
 		if err := client.Validate(); err != nil {
-			return fmt.Errorf("invalid client %d: %w", i, err)
+			return fmt.Errorf("invalid client %v index %d: %w", client, i, err)
 		}
 	}
 
 	for i, cs := range gs.ClientsConsensus {
 		if err := host.ClientIdentifierValidator(cs.ClientID); err != nil {
-			return fmt.Errorf("invalid client consensus state %d: %w", i, err)
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cs.ClientID, i, err)
 		}
 		for _, consensusState := range cs.ConsensusStates {
 			if err := consensusState.ValidateBasic(); err != nil {
-				return fmt.Errorf("invalid client consensus state %d: %w", i, err)
+				return fmt.Errorf("invalid client consensus state %v index %d: %w", consensusState, i, err)
 			}
 		}
 	}

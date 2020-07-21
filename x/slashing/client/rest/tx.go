@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func registerTxHandlers(ctx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/slashing/validators/{validatorAddr}/unjail", NewUnjailRequestHandlerFn(ctx)).Methods("POST")
+func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/slashing/validators/{validatorAddr}/unjail", NewUnjailRequestHandlerFn(clientCtx)).Methods("POST")
 }
 
 // Unjail TX body
@@ -25,13 +25,13 @@ type UnjailReq struct {
 
 // NewUnjailRequestHandlerFn returns an HTTP REST handler for creating a MsgUnjail
 // transaction.
-func NewUnjailRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
+func NewUnjailRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32Validator := vars["validatorAddr"]
 
 		var req UnjailReq
-		if !rest.ReadRESTReq(w, r, ctx.JSONMarshaler, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.JSONMarshaler, &req) {
 			return
 		}
 
@@ -59,7 +59,7 @@ func NewUnjailRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
-		tx.WriteGeneratedTxResponse(ctx, w, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -69,21 +69,21 @@ func NewUnjailRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ---------------------------------------------------------------------------
 // ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorAddr}/unjail",
-		unjailRequestHandlerFn(cliCtx),
+		unjailRequestHandlerFn(clientCtx),
 	).Methods("POST")
 }
 
-func unjailRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func unjailRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
 		bech32validator := vars["validatorAddr"]
 
 		var req UnjailReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -112,6 +112,6 @@ func unjailRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

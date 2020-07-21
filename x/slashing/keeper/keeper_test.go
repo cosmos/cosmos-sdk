@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestUnJailNotBonded(t *testing.T) {
@@ -56,7 +57,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	require.Equal(t, sdk.BondStatusUnbonded, validator.GetStatus().String())
 
 	// unbond below minimum self-delegation
-	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
+	msgUnbond := stakingtypes.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
 	res, err = sh(ctx, msgUnbond)
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -76,7 +77,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// bond to meet minimum self-delegation
-	msgBond := staking.NewMsgDelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
+	msgBond := stakingtypes.NewMsgDelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
 	res, err = sh(ctx, msgBond)
 	require.NoError(t, err)
 	require.NotNil(t, res)

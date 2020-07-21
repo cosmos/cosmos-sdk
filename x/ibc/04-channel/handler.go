@@ -1,8 +1,6 @@
 package channel
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -27,7 +25,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -56,7 +54,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -85,9 +83,9 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 			types.EventTypeChannelOpenAck,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -114,9 +112,9 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 			types.EventTypeChannelOpenConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -143,9 +141,9 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 			types.EventTypeChannelCloseInit,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -172,9 +170,9 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 			types.EventTypeChannelCloseConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

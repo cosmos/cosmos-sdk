@@ -386,7 +386,7 @@ func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 
 // Type implements sdk.Msg
 func (msg MsgPacket) Type() string {
-	return "ics04/opaque"
+	return "recv_packet"
 }
 
 var _ sdk.Msg = &MsgTimeout{}
@@ -437,7 +437,7 @@ func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
 
 // Type implements sdk.Msg
 func (msg MsgTimeout) Type() string {
-	return "ics04/timeout"
+	return "timeout_packet"
 }
 
 var _ sdk.Msg = &MsgAcknowledgement{}
@@ -489,5 +489,5 @@ func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 
 // Type implements sdk.Msg
 func (msg MsgAcknowledgement) Type() string {
-	return "ics04/opaque"
+	return "acknowledge_packet"
 }

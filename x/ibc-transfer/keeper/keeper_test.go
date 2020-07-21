@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -121,7 +122,8 @@ func NewTestChain(clientID string) *TestChain {
 	signers := []tmtypes.PrivValidator{privVal}
 	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
+	height := clientexported.NewHeight(0, 1)
+	header := ibctmtypes.CreateTestHeader(clientID, height, now, valSet, signers)
 
 	return &TestChain{
 		ClientID: clientID,
@@ -280,6 +282,7 @@ func (chain *TestChain) createChannel(
 }
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
-	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, chain.Header.SignedHeader.Header.Height+1,
+	height := clientexported.NewHeight(0, uint64(chain.Header.SignedHeader.Header.Height+1))
+	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, height,
 		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }

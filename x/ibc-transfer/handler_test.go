@@ -17,6 +17,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -79,7 +80,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Nil(err, "transfer module could not claim capability")
 
 	ctx := suite.chainA.GetContext()
-	msg := types.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2.String(), 110, 0)
+	msg := types.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2.String(), 3, 110, 0)
 	res, err := handler(ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // channel does not exist
@@ -105,14 +106,14 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().NotNil(res, "%+v", res) // successfully executed
 
 	// test when the source is false
-	msg = types.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2.String(), 110, 0)
+	msg = types.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2.String(), 3, 110, 0)
 	_ = suite.chainA.App.BankKeeper.SetBalances(ctx, testAddr1, testPrefixedCoins2)
 
 	res, err = handler(ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // incorrect denom prefix
 
-	msg = types.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2.String(), 110, 0)
+	msg = types.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2.String(), 3, 110, 0)
 	suite.chainA.App.BankKeeper.SetSupply(ctx, banktypes.NewSupply(testPrefixedCoins1))
 	_ = suite.chainA.App.BankKeeper.SetBalances(ctx, testAddr1, testPrefixedCoins1)
 
@@ -146,7 +147,8 @@ func NewTestChain(clientID string) *TestChain {
 	signers := []tmtypes.PrivValidator{privVal}
 	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
+	height := clientexported.NewHeight(0, 1)
+	header := ibctmtypes.CreateTestHeader(clientID, height, now, valSet, signers)
 
 	return &TestChain{
 		ClientID: clientID,
@@ -248,15 +250,16 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	}
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.Height, histInfo)
 
+	height := clientexported.NewHeight(0, uint64(client.Header.SignedHeader.Header.Height))
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       uint64(client.Header.SignedHeader.Header.Height),
+		Height:       height,
 		Timestamp:    client.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, client.ClientID, uint64(client.Header.SignedHeader.Header.Height), consensusState,
+		ctxTarget, client.ClientID, height, consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
 		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs()),
@@ -306,6 +309,7 @@ func (chain *TestChain) createChannel(
 }
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
-	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, chain.Header.SignedHeader.Header.Height+1,
+	height := clientexported.NewHeight(0, uint64(chain.Header.SignedHeader.Header.Height+1))
+	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, height,
 		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }

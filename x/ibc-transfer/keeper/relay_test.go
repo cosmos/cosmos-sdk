@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			tc.malleate()
 
 			err = suite.chainA.App.TransferKeeper.SendTransfer(
-				suite.chainA.GetContext(), testPort1, testChannel1, tc.amount, testAddr1, testAddr2.String(), 110, 0,
+				suite.chainA.GetContext(), testPort1, testChannel1, tc.amount, testAddr1, testAddr2.String(), 3, 110, 0,
 			)
 
 			if tc.expPass {
@@ -140,7 +140,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 			}, true},
 	}
 
-	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100, 0)
+	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3, 100, 0)
 
 	for i, tc := range testCases {
 		tc := tc
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			}, false, false},
 	}
 
-	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100, 0)
+	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3, 100, 0)
 
 	for i, tc := range testCases {
 		tc := tc
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			}, true, false},
 	}
 
-	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100, 0)
+	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3, 100, 0)
 
 	for i, tc := range testCases {
 		tc := tc

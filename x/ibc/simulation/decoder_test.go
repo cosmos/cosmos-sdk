@@ -8,6 +8,7 @@ import (
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -28,7 +29,7 @@ func TestDecodeStore(t *testing.T) {
 
 	clientState := ibctmtypes.ClientState{
 		ID:           clientID,
-		FrozenHeight: 10,
+		FrozenHeight: clientexported.NewHeight(0, 10),
 	}
 	connection := connectiontypes.ConnectionEnd{
 		ID:       clientID,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -29,6 +30,9 @@ type Keeper interface {
 
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
+
+	GetDenomMetaData(ctx sdk.Context) []types.Metadata
+	SetDenomMetaData(ctx sdk.Context, denomMetaData []types.Metadata)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
@@ -178,6 +182,49 @@ func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 	}
 
 	store.Set(types.SupplyKey, bz)
+}
+
+// GetDenomMetaData retrieves the denominations metadata
+func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context) []types.Metadata {
+	denomMetaData := make([]types.Metadata, 0)
+	k.IterateDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		denomMetaData = append(denomMetaData, metadata)
+		return false
+	})
+
+	return denomMetaData
+}
+
+// IterateDenomMetaData iterates over the denominations metadata and
+// provides the metadata to a callback. If true is returned from the
+// callback, iteration is halted.
+func (k BaseKeeper) IterateDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool) {
+	store := ctx.KVStore(k.storeKey)
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetaDataKey)
+
+	iterator := denomMetaDataStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var metadata types.Metadata
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &metadata)
+
+		if cb(metadata) {
+			break
+		}
+	}
+}
+
+// SetDenomMetaData sets the denominations metadata
+func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData []types.Metadata) {
+	store := ctx.KVStore(k.storeKey)
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetaDataKey)
+
+	for _, metadata := range denomMetaData {
+		m := k.cdc.MustMarshalBinaryBare(&metadata)
+		denomMetaDataStore.Set([]byte(metadata.Base), m)
+	}
+
 }
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.

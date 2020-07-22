@@ -56,5 +56,5 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
 		})
 	}
 
-	return types.NewGenesisState(k.GetParams(ctx), balances, k.GetSupply(ctx).GetTotal())
+	return types.NewGenesisState(k.GetParams(ctx), balances, k.GetSupply(ctx).GetTotal(), k.GetDenomMetaData(ctx))
 }

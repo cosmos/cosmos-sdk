@@ -22,8 +22,9 @@ const (
 
 // KVStore keys
 var (
-	BalancesPrefix = []byte("balances")
-	SupplyKey      = []byte{0x00}
+	BalancesPrefix   = []byte("balances")
+	SupplyKey        = []byte{0x00}
+	DenomMetaDataKey = []byte("denomMetadata")
 )
 
 // AddressFromBalancesStore returns an account address from a balances prefix

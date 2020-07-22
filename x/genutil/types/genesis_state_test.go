@@ -8,8 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -58,4 +60,25 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	err := ValidateGenesis(genesisState)
 	require.Error(t, err)
+}
+
+func TestGenesisStateFromGenFile(t *testing.T) {
+	cdc := codec.New()
+
+	genFile := "../../../tests/fixtures/adr-024-coin-metadata_genesis.json"
+	genesisState, _, err := GenesisStateFromGenFile(cdc, genFile)
+	require.NoError(t, err)
+
+	var bankGenesis banktypes.GenesisState
+	cdc.MustUnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis)
+
+	require.True(t, bankGenesis.Params.DefaultSendEnabled)
+	require.Equal(t, "1000nametoken,100000000stake", bankGenesis.Balances[0].GetCoins().String())
+	require.Equal(t, "cosmos106vrzv5xkheqhjm023pxcxlqmcjvuhtfyachz4", bankGenesis.Balances[0].GetAddress().String())
+	require.Equal(t, "The native staking token of the Cosmos Hub.", bankGenesis.DenomMetadata[0].GetDescription())
+	require.Equal(t, "uatom", bankGenesis.DenomMetadata[0].GetBase())
+	require.Equal(t, "matom", bankGenesis.DenomMetadata[0].GetDenomUnits()[1].GetDenom())
+	require.Equal(t, []string{"milliatom"}, bankGenesis.DenomMetadata[0].GetDenomUnits()[1].GetAliases())
+	require.Equal(t, uint32(3), bankGenesis.DenomMetadata[0].GetDenomUnits()[1].GetExponent())
+
 }

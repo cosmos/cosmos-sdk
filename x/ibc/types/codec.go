@@ -16,7 +16,6 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	clienttypes.RegisterCodec(cdc)
 	connectiontypes.RegisterCodec(cdc)
-	channeltypes.RegisterCodec(cdc)
 	ibctmtypes.RegisterCodec(cdc)
 	localhosttypes.RegisterCodec(cdc)
 	commitmenttypes.RegisterCodec(cdc)

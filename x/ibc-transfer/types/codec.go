@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -34,7 +33,6 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	channeltypes.RegisterCodec(amino)
 	commitmenttypes.RegisterCodec(amino)
 	amino.Seal()
 }

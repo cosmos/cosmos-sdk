@@ -46,12 +46,12 @@ The problem of adding additional information to the coin denomination is twofold
 
 1. The ever increasing length if tokens are transfered to zones other than the source:
 
-If a token is transfered `n` times via IBC to a sink chain, the token denom will contain `n` pairs
+If a token is transferred `n` times via IBC to a sink chain, the token denom will contain `n` pairs
 of prefixes, as shown on the format example above. This poses a problem because, while port
-and channel identifiers have a maximim length of 64 each, the SDK `Coin` type only accepts
+and channel identifiers have a maximum length of 64 each, the SDK `Coin` type only accepts
 denoms up to 64 characters. Thus, a single cross-chain token, which again, is composed by the port and channels identifiers plus the base denomination, can exceed the length validation for the SDK `Coins`.
 
-This can result in undesired behaviors such as tokens not being abled to be transferred to multiple
+This can result in undesired behaviours such as tokens not being able to be transferred to multiple
 sink chains if the denomination exceeds the length or unexpected `panics` due to denomination
 validation failing on the receiving chain.
 

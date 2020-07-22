@@ -182,9 +182,9 @@ var checks = [...]map[descriptor.FieldDescriptorProto_Type]bool{
 
 	// "2	Length-delimited: string, bytes, embedded messages, packed repeated fields"
 	2: {
-		descriptor.FieldDescriptorProto_TYPE_FIXED32:  true,
-		descriptor.FieldDescriptorProto_TYPE_SFIXED32: true,
-		descriptor.FieldDescriptorProto_TYPE_FLOAT:    true,
+		descriptor.FieldDescriptorProto_TYPE_STRING:  true,
+		descriptor.FieldDescriptorProto_TYPE_BYTES:   true,
+		descriptor.FieldDescriptorProto_TYPE_MESSAGE: true,
 	},
 
 	// "3	Start group:	groups (deprecated)"
@@ -199,9 +199,9 @@ var checks = [...]map[descriptor.FieldDescriptorProto_Type]bool{
 
 	// "5	32-bit:	fixed32, sfixed32, float"
 	5: {
-		descriptor.FieldDescriptorProto_TYPE_STRING:  true,
-		descriptor.FieldDescriptorProto_TYPE_BYTES:   true,
-		descriptor.FieldDescriptorProto_TYPE_MESSAGE: true,
+		descriptor.FieldDescriptorProto_TYPE_FIXED32:  true,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED32: true,
+		descriptor.FieldDescriptorProto_TYPE_FLOAT:    true,
 	},
 }
 

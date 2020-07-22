@@ -19,134 +19,32 @@ func TestCheckExtraneousFieldsRepeated(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "TestVersion3 from TestVersionFD1",
-			in: &testdata.TestVersion2{
-				X: 5,
-				Sum: &testdata.TestVersion2_E{
-					E: 100,
-				},
+			name: "TestVersionFD1 vs TestVersion3 -- full equivalence",
+			in: &testdata.TestVersionFD1{
 				H: []*testdata.TestVersion1{
-					{X: 999},
-					{X: -55},
 					{
-						X: 102,
-						Sum: &testdata.TestVersion1_F{
-							F: &testdata.TestVersion1{
-								X: 4,
-							},
-						},
-					},
-				},
-				Customer1: &testdata.Customer1{
-					Id:              45,
-					Name:            "customer1",
-					SubscriptionFee: 99,
-				},
-			},
-			recv: new(testdata.TestVersionFD1),
-			wantErr: &enforceproto.UnexpectedField{
-				Type:     "*testdata.TestVersionFD1",
-				TagNum:   12,
-				WireType: 2,
-			},
-		},
-		{
-			name: "Nested2B vs Nested3B",
-			in: &testdata.Nested2B{
-				Id:  5,
-				Fee: 88.91,
-				Nested: &testdata.Nested3B{
-					Id:   15,
-					Age:  47,
-					Name: "Crowley",
-					B4: []*testdata.Nested4B{
-						{
-							Id: 34, Age: 55, Name: "Trivia",
-						},
-						{
-							Id: 55, Age: 78, Name: "Incredible",
-						},
-					},
-				},
-			},
-			recv: new(testdata.TestVersion3),
-			wantErr: &enforceproto.ErrMismatchedWireType{
-				Type:         "*testdata.TestVersion3",
-				TagNum:       2,
-				GotWireType:  1,
-				WantWireType: 2,
-			},
-		},
-		{
-			name: "Alternating oneofs",
-			in: &testdata.TestVersion3{
-				Sum: &testdata.TestVersion3_E{
-					E: 99,
-				},
-			},
-			recv:    new(testdata.TestVersion3LoneOneOfValue),
-			wantErr: nil,
-		},
-		{
-			name: "Alternating oneofs mismatched field",
-			in: &testdata.TestVersion3{
-				Sum: &testdata.TestVersion3_F{
-					F: &testdata.TestVersion3{
-						X: 99,
-					},
-				},
-			},
-			recv: new(testdata.TestVersion3LoneOneOfValue),
-			wantErr: &enforceproto.UnexpectedField{
-				Type:     "*testdata.TestVersion3LoneOneOfValue",
-				TagNum:   7,
-				WireType: 2,
-			},
-		},
-		{
-			name: "Discrepancy in a deeply nested one of field",
-			in: &testdata.TestVersion3{
-				Sum: &testdata.TestVersion3_F{
-					F: &testdata.TestVersion3{
-						Sum: &testdata.TestVersion3_F{
-							F: &testdata.TestVersion3{
-								X: 19,
-								Sum: &testdata.TestVersion3_E{
-									E: 99,
+						H: []*testdata.TestVersion1{
+							{
+								Sum: &testdata.TestVersion1_F{
+									F: &testdata.TestVersion1{
+										A: &testdata.TestVersion1{
+											B: &testdata.TestVersion1{
+												H: []*testdata.TestVersion1{
+													{
+														X: 0x01,
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			recv: new(testdata.TestVersion3LoneNesting),
-			wantErr: &enforceproto.UnexpectedField{
-				Type:     "*testdata.TestVersion3LoneNesting",
-				TagNum:   6,
-				WireType: 0,
-			},
-		},
-		{
-			name: "types.Any in G",
-			in: &testdata.TestVersionFD1{
-				X: 10,
-				A: &testdata.TestVersion1{},
-				G: mustAny(&testdata.TestVersion1{
-					X: 102,
-					Sum: &testdata.TestVersion1_F{
-						F: &testdata.TestVersion1{
-							X: 4,
-						},
-					},
-				}),
-			},
-			recv: new(testdata.TestVersion3LoneNesting),
-			wantErr: &enforceproto.ErrMismatchedWireType{
-				Type:         "*testdata.TestVersion1",
-				TagNum:       1,
-				GotWireType:  2,
-				WantWireType: 0,
-			},
+			recv:    new(testdata.TestVersion3),
+			wantErr: nil,
 		},
 	}
 
@@ -159,7 +57,7 @@ func TestCheckExtraneousFieldsRepeated(t *testing.T) {
 			}
 			gotErr := enforceproto.CheckMismatchedProtoFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
-				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
+				t.Fatalf("Error mismatch\nGot:\n%v\n\nWant:\n%v", gotErr, tt.wantErr)
 			}
 		})
 	}

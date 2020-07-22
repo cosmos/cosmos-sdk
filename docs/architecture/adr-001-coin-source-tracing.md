@@ -74,7 +74,9 @@ Instead of adding the identifiers on the coin denomination directly, the propose
 ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + coin denomination
 ```
 
-In order to 
+### `x/ibc-transfer` Changes
+
+In order to retreive the trace information from an IBC denomination, a lookup table needs to be added to the `ibc-transfer` module. These values need to also be persisted between upgrades, meaning that a new `[]Trace` `GenesisState` field state needs to be added to the module:
 
 ```golang
 // GetDenom retreives the full identifiers trace from the store.
@@ -100,9 +102,14 @@ func (k Keeper) SetTrace(ctx Context, traceHash []byte, trace string) {
 }
 ```
 
+When a fungible token with a is send to a sink chain, the trace information needs to be updated with the new port and channel identifiers:
+
 ```golang
-func (k Keeper) UpdateTrace(ctx Context, portID, channelID, denom string) string {
-  // Get each component
+func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string {
+  // Get each component of the denom. The resulting slice will be:
+  //
+  // - [ "ibc" , traceHash, baseDenom], if the denom is dirty (contains trace metadata).
+  // - [ baseDenom ], if the denom has never been sent from the origin chain.
   denomSplit := strings.Split(denom, "/")
 
   var (
@@ -111,7 +118,7 @@ func (k Keeper) UpdateTrace(ctx Context, portID, channelID, denom string) string
     traceHash tmbytes.HexBytes
   )
 
-  // return if denomination doesn't have separators
+  // check if the denomination is clean or if it contains the trace info
   if denomSplit[0] == denom {
     baseDenom = denom
     trace = portID + "/" + channelID +"/"
@@ -119,15 +126,16 @@ func (k Keeper) UpdateTrace(ctx Context, portID, channelID, denom string) string
     baseDenom = denomSplit[2]
     traceHash = tmbytes.HexBytes(denomSplit[1])
     // Get the value from the map trace hash -> denom identifiers prefix
-    trace = k.GetTrace(ctx, prefixHash)
+    trace = k.GetTrace(ctx, traceHash)
     // prefix the identifiers to create the new trace
     trace = portID + "/" + channelID +"/" + trace + "/"
   }
   
   traceHash = tmbytes.HexBytes(tmhash.Sum(trace))
 
-  if !k.HasTrace(traceHash) {
-    k.SetTrace(traceHash)
+  // set the value to the lookup table if not stored already
+  if !k.HasTrace(ctx, traceHash) {
+    k.SetTrace(ctx, traceHash)
   }
 
   denom = "ibc/"+ traceHash.String() + baseDenom
@@ -135,7 +143,54 @@ func (k Keeper) UpdateTrace(ctx Context, portID, channelID, denom string) string
 }
 ```
 
-<!-- TODO: updates to ICS20 -->
+The denomination also needs to be updated when token is received on the source chain:
+
+```golang
+func (k Keeper) UnprefixDenom(ctx Context, denom string) (string, error) {
+  denomSplit := strings.Split(denom, "/")
+  if denomSplit[0] == denom {
+    return denom, fmt.Errorf("denomination %s doesn't contain a prefix", denom)
+  }
+
+  baseDenom := denomSplit[2]
+  traceHash := tmbytes.HexBytes(denomSplit[1])
+  // Get the value from the map trace hash -> denom identifiers prefix
+  trace = k.GetTrace(ctx, traceHash)
+  if trace == "" {
+    return "", fmt.Errorf("trace info not found for denom %s", denom)
+  }
+
+  traceSplit := strings.Split(trace, "/")
+  if len(traceSplit) == 3 {
+    // the trace has only one portID/channelID pair
+    return baseDenom
+  }
+
+  // remove a single identifiers pair to create the new trace
+  trace = strings.Join(trace[2:], "/")
+  traceHash = tmbytes.HexBytes(tmhash.Sum(trace))
+
+  // set the value to the lookup table if not stored already
+  if !k.HasTrace(ctx, traceHash) {
+    k.SetTrace(ctx, traceHash)
+  }
+
+  denom = "ibc/"+ traceHash.String() + baseDenom
+  return denom
+}
+```
+
+<!-- TODO: updates to ICS20 SendTransfer and OnRecvPacket -->
+
+### Coin Validation Changes
+
+The coin denomination validation will need to be updated to reflect these changes:
+
+- Clean denoms that don't have separators will maintain the original validation logic
+- Denominations with separators will need to have exactly the 3 components mentioned on the IBC denomination format above:
+  - The first element of the denom must be `"ibc"`.
+  - The second element, the trace hash, needs to be a valid SHA256 hash.
+  - The third element must be a valid base denomination.
 
 ### Positive
 
@@ -143,16 +198,18 @@ func (k Keeper) UpdateTrace(ctx Context, portID, channelID, denom string) string
   `Coin` denomination
 - Consistent validation of `Coin` fields
 - Cleaner `Coin` denominations for IBC
+- No additional fields to SDK `Coin`
 
 ### Negative
 
 - Store each set of tracing denomination identifiers on the `ibc-transfer` module store.
 - Additional genesis fields.
-- Slightly increases the gas usage on cross-chain transfers (1 read + 1 write).
+- Slightly increases the gas usage on cross-chain transfers due to access to the store.
 
 ### Neutral
 
 - Slight difference with the ICS20 spec
+- Additional validation logic for IBC coins
 
 ## References
 

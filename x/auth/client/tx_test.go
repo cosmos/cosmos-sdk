@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 
@@ -127,9 +127,9 @@ func TestReadStdTxFromFile(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
+	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxGenerator(txGen)
+	clientCtx = clientCtx.WithTxConfig(txGen)
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
@@ -218,10 +218,10 @@ func TestPrepareTxBuilder(t *testing.T) {
 	var accNum uint64 = 10
 	var accSeq uint64 = 17
 
-	txGen := encodingConfig.TxGenerator
+	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.
-		WithTxGenerator(txGen).
+		WithTxConfig(txGen).
 		WithJSONMarshaler(encodingConfig.Marshaler).
 		WithAccountRetriever(client.TestAccountRetriever{Accounts: map[string]struct {
 			Address sdk.AccAddress

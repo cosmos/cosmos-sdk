@@ -34,9 +34,8 @@ message MsgConnectionOpenTry {
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  repeated string counterparty_versions = 4 [
-    (gogoproto.moretags) = "yaml:\"counterparty_versions\""
-  ];
+  repeated string counterparty_versions = 4
+      [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
   bytes proof_init = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
@@ -90,6 +89,24 @@ message MsgConnectionOpenConfirm {
 // separate one. NOTE: there must only be 2 defined ConnectionEnds to establish
 // a connection between two chains.
 message ConnectionEnd {
+  option (gogoproto.goproto_getters) = false;
+  // client associated with this connection.
+  string client_id = 1 [
+    (gogoproto.customname) = "ClientID",
+    (gogoproto.moretags) = "yaml:\"client_id\""
+  ];
+  // IBC version which can be utilised to determine encodings or protocols for
+  // channels or packets utilising this connection
+  repeated string versions = 2;
+  // current state of the connection end.
+  State state = 3;
+  // counterparty chain associated with this connection.
+  Counterparty counterparty = 4 [(gogoproto.nullable) = false];
+}
+
+// IdentifiedConnection defines a connection with additional connection
+// identifier field.
+message IdentifiedConnection {
   option (gogoproto.goproto_getters) = false;
   // connection identifier.
   string id = 1

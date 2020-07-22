@@ -20,7 +20,7 @@ import (
 const (
 	FlagTitle        = "title"
 	FlagDescription  = "description"
-	flagProposalType = "type"
+	FlagProposalType = "type"
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
@@ -41,7 +41,7 @@ type proposal struct {
 var ProposalFlags = []string{
 	FlagTitle,
 	FlagDescription,
-	flagProposalType,
+	FlagProposalType,
 	FlagDeposit,
 }
 
@@ -50,7 +50,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(ctx client.Context, propCmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -59,14 +59,14 @@ func NewTxCmd(ctx client.Context, propCmds []*cobra.Command) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal(ctx)
+	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, propCmd := range propCmds {
 		cmdSubmitProp.AddCommand(propCmd)
 	}
 
 	govTxCmd.AddCommand(
-		NewCmdDeposit(ctx),
-		NewCmdVote(ctx),
+		NewCmdDeposit(),
+		NewCmdVote(),
 		cmdSubmitProp,
 	)
 
@@ -74,7 +74,7 @@ func NewTxCmd(ctx client.Context, propCmds []*cobra.Command) *cobra.Command {
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
-func NewCmdSubmitProposal(clientCtx client.Context) *cobra.Command {
+func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -102,11 +102,15 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			proposal, err := parseSubmitProposalFlags(cmd.Flags())
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
 
 			amount, err := sdk.ParseCoins(proposal.Deposit)
@@ -116,31 +120,31 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.FromAddress)
+			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid message: %w", err)
 			}
 
 			if err = msg.ValidateBasic(); err != nil {
-				return err
+				return fmt.Errorf("message validation failed: %w", err)
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
-	cmd.Flags().String(FlagTitle, "", "title of proposal")
-	cmd.Flags().String(FlagDescription, "", "description of proposal")
-	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
-	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagTitle, "", "The proposal title")
+	cmd.Flags().String(FlagDescription, "", "The proposal description")
+	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
+	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
-func NewCmdDeposit(clientCtx client.Context) *cobra.Command {
+func NewCmdDeposit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
@@ -156,7 +160,11 @@ $ %s tx gov deposit 1 10stake --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -179,7 +187,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -189,7 +197,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 }
 
 // NewCmdVote implements creating a new vote command.
-func NewCmdVote(clientCtx client.Context) *cobra.Command {
+func NewCmdVote() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
@@ -206,7 +214,11 @@ $ %s tx gov vote 1 yes --from mykey
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// Get voting address
 			from := clientCtx.GetFromAddress()
@@ -230,7 +242,7 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

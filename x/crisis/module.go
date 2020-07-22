@@ -57,12 +57,12 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
-func (b AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
+func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the crisis module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
 // RegisterInterfaceTypes registers interfaces and implementations of the crisis
 // module.
@@ -109,6 +109,8 @@ func (AppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns no sdk.Querier.
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the crisis module. It returns

@@ -17,7 +17,7 @@ func MakeEncodingConfig() EncodingConfig {
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         marshaler,
-		TxGenerator:       authtypes.StdTxGenerator{Cdc: cdc},
+		TxConfig:          authtypes.StdTxConfig{Cdc: cdc},
 		Amino:             cdc,
 	}
 }

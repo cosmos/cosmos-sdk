@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type KeeperTestSuite struct {
@@ -238,7 +239,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					StartingHeight:   10,
 					EndingHeight:     1,
 				}
-				expRes = &types.QueryValidatorSlashesResponse{Res: &query.PageResponse{}}
+				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
 			false,
 		},
@@ -250,7 +251,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					StartingHeight:   1,
 					EndingHeight:     10,
 				}
-				expRes = &types.QueryValidatorSlashesResponse{Res: &query.PageResponse{}}
+				expRes = &types.QueryValidatorSlashesResponse{Pagination: &query.PageResponse{}}
 			},
 			true,
 		},
@@ -266,7 +267,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					ValidatorAddress: valAddrs[0],
 					StartingHeight:   1,
 					EndingHeight:     10,
-					Req:              pageReq,
+					Pagination:       pageReq,
 				}
 
 				expRes = &types.QueryValidatorSlashesResponse{
@@ -287,7 +288,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					ValidatorAddress: valAddrs[0],
 					StartingHeight:   1,
 					EndingHeight:     10,
-					Req:              pageReq,
+					Pagination:       pageReq,
 				}
 
 				expRes = &types.QueryValidatorSlashesResponse{
@@ -308,7 +309,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 					ValidatorAddress: valAddrs[0],
 					StartingHeight:   1,
 					EndingHeight:     10,
-					Req:              pageReq,
+					Pagination:       pageReq,
 				}
 
 				expRes = &types.QueryValidatorSlashesResponse{

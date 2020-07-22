@@ -211,7 +211,8 @@ func InitTestnet(
 		if err != nil {
 			return fmt.Errorf("error creating tx: %w", err)
 		}
-		txBldr.WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
+
+		txBldr = txBldr.WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
 
 		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
 		if err != nil {

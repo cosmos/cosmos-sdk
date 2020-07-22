@@ -10,6 +10,7 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/spf13/pflag"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,15 +26,6 @@ import (
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
 	txf := NewFactoryCLI(clientCtx, flagSet)
-	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
-}
-
-// GenerateOrBroadcastTx will either generate and print and unsigned transaction
-// or sign it and broadcast it returning an error upon failure.
-//
-// TODO: Remove in favor of GenerateOrBroadcastTxCLI
-func GenerateOrBroadcastTx(clientCtx client.Context, msgs ...sdk.Msg) error {
-	txf := NewFactoryFromDeprecated(clientCtx.Input).WithTxGenerator(clientCtx.TxGenerator).WithAccountRetriever(clientCtx.AccountRetriever)
 	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 }
 
@@ -124,7 +116,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	txBytes, err := clientCtx.TxGenerator.TxEncoder()(tx.GetTx())
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(tx.GetTx())
 	if err != nil {
 		return err
 	}
@@ -162,7 +154,7 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxGenerator(ctx.TxGenerator)
+		WithTxConfig(ctx.TxConfig)
 
 	if br.Simulate || gasSetting.Simulate {
 		if gasAdj < 0 {
@@ -225,11 +217,12 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 		}
 	}
 
-	tx := txf.txGenerator.NewTxBuilder()
+	tx := txf.txConfig.NewTxBuilder()
 
 	if err := tx.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
+
 	tx.SetMemo(txf.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(txf.gas)
@@ -254,7 +247,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return txf.txGenerator.TxEncoder()(tx.GetTx())
+	return txf.txConfig.TxEncoder()(tx.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
@@ -310,15 +303,81 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	return txf, nil
 }
 
-// Sign signs a given tx with the provided name and passphrase. If the Factory's
-// Keybase is not set, a new one will be created based on the client's backend.
-// The bytes signed over are canconical. The resulting signature will be set on
-// the transaction. Finally, the marshaled transaction is returned. An error is
-// returned upon failure.
-//
-// Note, It is assumed the Factory has the necessary fields set that are required
-// by the CanonicalSignBytes call.
-func Sign(txf Factory, name string, tx client.TxBuilder) error {
+// Helper function to retrieve sign bytes.
+func getSignBytes(
+	signMode signing.SignMode, signerData authsigning.SignerData,
+	txBuilder client.TxBuilder, pubKey crypto.PubKey, txConfig client.TxConfig,
+) ([]byte, error) {
+
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: nil,
+	}
+	sig := signing.SignatureV2{
+		PubKey: pubKey,
+		Data:   &sigData,
+	}
+
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
+	// TxBuilder under the hood, and SignerInfos is needed to generated the
+	// sign bytes. This is the reason for setting SetSignatures here, with a
+	// nil signature.
+	//
+	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
+	// also doesn't affect its generated sign bytes, so for code's simplicity
+	// sake, we put it here.
+	if err := txBuilder.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+
+	// generate the bytes to be signed
+	signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	return signBytes, nil
+}
+
+// SignWithPrivKey signs a given tx with the given private key, and returns the
+// corresponding SignatureV2 if the signing is successful.
+func SignWithPrivKey(
+	signMode signing.SignMode, signerData authsigning.SignerData,
+	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
+) (signing.SignatureV2, error) {
+
+	var sigV2 signing.SignatureV2
+
+	// Generate the bytes to be signed
+	signBytes, err := getSignBytes(signMode, signerData, txBuilder, priv.PubKey(), txConfig)
+	if err != nil {
+		return sigV2, err
+	}
+
+	// Sign those bytes
+	signature, err := priv.Sign(signBytes)
+	if err != nil {
+		return sigV2, err
+	}
+
+	// Construct the SignatureV2 struct
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: signature,
+	}
+
+	sigV2 = signing.SignatureV2{
+		PubKey: priv.PubKey(),
+		Data:   &sigData,
+	}
+
+	return sigV2, nil
+}
+
+// Sign signs a given tx with the provided name and passphrase. The bytes signed
+// over are canconical. The resulting signature will be set on the transaction.
+// An error is returned upon failure.
+func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -326,7 +385,7 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 	signMode := txf.signMode
 	if signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		// use the SignModeHandler's default mode if unspecified
-		signMode = txf.txGenerator.SignModeHandler().DefaultMode()
+		signMode = txf.txConfig.SignModeHandler().DefaultMode()
 	}
 
 	key, err := txf.keybase.Key(name)
@@ -335,43 +394,36 @@ func Sign(txf Factory, name string, tx client.TxBuilder) error {
 	}
 
 	pubKey := key.GetPubKey()
-	sigData := &signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
+	signerData := authsigning.SignerData{
+		ChainID:         txf.chainID,
+		AccountNumber:   txf.accountNumber,
+		AccountSequence: txf.sequence,
 	}
-	sig := signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   sigData,
-	}
-	err = tx.SetSignatures(sig)
+
+	// Generate the bytes to be signed
+	signBytes, err := getSignBytes(signMode, signerData, txBuilder, pubKey, txf.txConfig)
 	if err != nil {
 		return err
 	}
 
-	signBytes, err := txf.txGenerator.SignModeHandler().GetSignBytes(
-		signMode,
-		authsigning.SignerData{
-			ChainID:         txf.chainID,
-			AccountNumber:   txf.accountNumber,
-			AccountSequence: txf.sequence,
-		}, tx.GetTx(),
-	)
-	if err != nil {
-		return err
-	}
-
+	// Sign those bytes
 	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
 	if err != nil {
 		return err
 	}
 
-	sigData.Signature = sigBytes
-	sig = signing.SignatureV2{
+	// Construct the SignatureV2 struct
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: sigBytes,
+	}
+	sig := signing.SignatureV2{
 		PubKey: pubKey,
-		Data:   sigData,
+		Data:   &sigData,
 	}
 
-	return tx.SetSignatures(sig)
+	// And here the tx is populated with the signature
+	return txBuilder.SetSignatures(sig)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

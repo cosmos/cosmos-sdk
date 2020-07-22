@@ -69,7 +69,7 @@ type TestChain struct {
 	CurrentHeader abci.Header       // header for current block height
 	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
 	QueryServer   types.QueryServer
-	TxGenerator   client.TxGenerator
+	TxConfig      client.TxConfig
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -117,7 +117,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Time:   globalStartTime,
 	}
 
-	txGenerator := simapp.MakeEncodingConfig().TxGenerator
+	txConfig := simapp.MakeEncodingConfig().TxConfig
 
 	// create an account to send transactions from
 	chain := &TestChain{
@@ -127,7 +127,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		CurrentHeader: header,
 		Querier:       keeper.NewQuerier(*app.IBCKeeper),
 		QueryServer:   app.IBCKeeper,
-		TxGenerator:   txGenerator,
+		TxConfig:      txConfig,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -209,7 +209,7 @@ func (chain *TestChain) NextBlock() {
 func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,
-		chain.TxGenerator,
+		chain.TxConfig,
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		[]sdk.Msg{msg},
@@ -587,6 +587,14 @@ func (chain *TestChain) ChanCloseInit(
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
+}
+
+// GetPacketData returns a ibc-transfer marshalled packet to be used for
+// callback testing
+func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
+	packet := ibctransfertypes.NewFungibleTokenPacketData(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))), chain.SenderAccount.GetAddress().String(), counterparty.SenderAccount.GetAddress().String())
+
+	return packet.GetBytes()
 }
 
 // SendPacket simulates sending a packet through the channel keeper. No message needs to be

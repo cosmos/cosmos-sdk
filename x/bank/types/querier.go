@@ -20,10 +20,10 @@ func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequ
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
 func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QueryAllBalancesRequest {
-	return &QueryAllBalancesRequest{Address: addr, Req: req}
+	return &QueryAllBalancesRequest{Address: addr, Pagination: req}
 }
 
-// QueryTotalSupply defines the params for the following queries:
+// QueryTotalSupplyParams defines the params for the following queries:
 //
 // - 'custom/bank/totalSupply'
 type QueryTotalSupplyParams struct {

@@ -18,7 +18,7 @@ import (
 const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
-func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator) *cobra.Command {
+func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
@@ -61,7 +61,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flagGenTxDir, "", "override default \"gentx\" directory from which collect and execute genesis transactions; default [--home]/config/gentx/")
 
 	return cmd

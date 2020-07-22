@@ -13,8 +13,8 @@ service Query{
     // Account returns account details based on address
     rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {}
 
-    // Parameters queries all params
-    rpc Parameters (QueryParametersRequest) returns (QueryParametersResponse) {}
+    // Params queries all parameters
+    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {}
 }
 
 // QueryAccountRequest is request type for the Query/Account RPC method
@@ -27,10 +27,10 @@ message QueryAccountResponse{
   google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
 }
 
-// QueryParametersRequest is request type for the Query/Parameters RPC method
-message QueryParametersRequest{ }
+// QueryParamsRequest is request type for the Query/Params RPC method
+message QueryParamsRequest{ }
 
-// QueryParametersResponse is response type for the Query/Parameters RPC method
-message QueryParametersResponse{
+// QueryParamsResponse is response type for the Query/Params RPC method
+message QueryParamsResponse{
   cosmos.auth.Params params = 1 [(gogoproto.nullable) = false];
 } 

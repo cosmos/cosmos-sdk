@@ -12,7 +12,7 @@ import (
 // modules, under a sub-command. This allows external modules to implement custom
 // Evidence types and Handlers while having the ability to create and sign txs
 // containing them all from a single root command.
-func GetTxCmd(clientCtx client.Context, childCmds []*cobra.Command) *cobra.Command {
+func GetTxCmd(childCmds []*cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Evidence transaction subcommands",
@@ -21,7 +21,7 @@ func GetTxCmd(clientCtx client.Context, childCmds []*cobra.Command) *cobra.Comma
 		RunE:                       client.ValidateCmd,
 	}
 
-	submitEvidenceCmd := SubmitEvidenceCmd(clientCtx)
+	submitEvidenceCmd := SubmitEvidenceCmd()
 	for _, childCmd := range childCmds {
 		submitEvidenceCmd.AddCommand(childCmd)
 	}
@@ -34,7 +34,7 @@ func GetTxCmd(clientCtx client.Context, childCmds []*cobra.Command) *cobra.Comma
 // SubmitEvidenceCmd returns the top-level evidence submission command handler.
 // All concrete evidence submission child command handlers should be registered
 // under this command.
-func SubmitEvidenceCmd(_ client.Context) *cobra.Command {
+func SubmitEvidenceCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit",
 		Short: "Submit arbitrary evidence of misbehavior",

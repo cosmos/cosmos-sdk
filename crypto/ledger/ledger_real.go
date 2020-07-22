@@ -1,6 +1,6 @@
 // +build cgo,ledger,!test_ledger_mock
 
-package crypto
+package ledger
 
 import ledger "github.com/cosmos/ledger-cosmos-go"
 

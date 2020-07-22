@@ -1,6 +1,6 @@
 // +build ledger,test_ledger_mock
 
-package crypto
+package ledger
 
 import (
 	"fmt"

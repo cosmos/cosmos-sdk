@@ -1,4 +1,4 @@
-package crypto
+package ledger
 
 import (
 	"fmt"
@@ -48,13 +48,13 @@ type (
 	}
 )
 
-// NewPrivKeyLedgerSecp256k1Unsafe will generate a new key and store the public key for later use.
+// NewPrivKeySecp256k1Unsafe will generate a new key and store the public key for later use.
 //
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
-// please refer to NewPrivKeyLedgerSecp256k1
-func NewPrivKeyLedgerSecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
-	device, err := getLedgerDevice()
+// please refer to NewPrivKeySecp256k1
+func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
+	device, err := getDevice()
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +68,10 @@ func NewPrivKeyLedgerSecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, err
 	return PrivKeyLedgerSecp256k1{pubKey, path}, nil
 }
 
-// NewPrivKeyLedgerSecp256k1 will generate a new key and store the public key for later use.
+// NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKey, string, error) {
-	device, err := getLedgerDevice()
+func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKey, string, error) {
+	device, err := getDevice()
 	if err != nil {
 		return nil, "", err
 	}
@@ -92,7 +92,7 @@ func (pkl PrivKeyLedgerSecp256k1) PubKey() tmcrypto.PubKey {
 
 // Sign returns a secp256k1 signature for the corresponding message
 func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
-	device, err := getLedgerDevice()
+	device, err := getDevice()
 	if err != nil {
 		return nil, err
 	}
@@ -101,10 +101,10 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 	return sign(device, pkl, message)
 }
 
-// LedgerShowAddress triggers a ledger device to show the corresponding address.
-func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
+// ShowAddress triggers a ledger device to show the corresponding address.
+func ShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 	accountAddressPrefix string) error {
-	device, err := getLedgerDevice()
+	device, err := getDevice()
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 // ValidateKey allows us to verify the sanity of a public key after loading it
 // from disk.
 func (pkl PrivKeyLedgerSecp256k1) ValidateKey() error {
-	device, err := getLedgerDevice()
+	device, err := getDevice()
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	return sigBER.Serialize(), nil
 }
 
-func getLedgerDevice() (LedgerSECP256K1, error) {
+func getDevice() (LedgerSECP256K1, error) {
 	if discoverLedger == nil {
 		return nil, errors.New("no Ledger discovery function defined")
 	}

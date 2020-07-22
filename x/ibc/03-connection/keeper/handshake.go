@@ -26,7 +26,7 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, connectionID, clientID, counterparty, types.GetCompatibleEncodedVersions())
+	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.GetCompatibleEncodedVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
@@ -70,7 +70,7 @@ func (k Keeper) ConnOpenTry(
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ConnectionID, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
+	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
@@ -80,7 +80,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(types.UNINITIALIZED, connectionID, clientID, counterparty, []string{version})
+	connection := types.NewConnectionEnd(types.UNINITIALIZED, clientID, counterparty, []string{version})
 
 	// Check that ChainA committed expectedConnectionEnd to its state
 	if err := k.VerifyConnectionState(
@@ -183,7 +183,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{encodedVersion})
+	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{encodedVersion})
 
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
 	if err := k.VerifyConnectionState(
@@ -235,7 +235,7 @@ func (k Keeper) ConnOpenConfirm(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
+	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	// Check that connection on ChainA is open
 	if err := k.VerifyConnectionState(

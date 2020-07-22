@@ -64,7 +64,7 @@ func CheckMismatchedProtoFields(b []byte, msg gogoproto.Message) error {
 		case ok:
 			// Assert that the wireTypes match.
 			if !canEncodeType(wireType, fieldDescProto.GetType()) {
-				return &MismatchedWireType{
+				return &ErrMismatchedWireType{
 					Type:         reflect.ValueOf(msg).Type().String(),
 					TagNum:       tagNum,
 					GotWireType:  wireType,
@@ -193,32 +193,25 @@ func canEncodeType(wireType protowire.Type, descType descriptor.FieldDescriptorP
 	}
 }
 
-type MismatchedWireType struct {
+// ErrMismatchedWireType describes a mismatch between
+// expected and got wireTypes for a specific tag number.
+type ErrMismatchedWireType struct {
 	Type         string
 	GotWireType  protowire.Type
 	WantWireType protowire.Type
 	TagNum       protowire.Number
 }
 
-func (mwt *MismatchedWireType) String() string {
+func (mwt *ErrMismatchedWireType) String() string {
 	return fmt.Sprintf("Mismatched %q: {TagNum: %d, GotWireType: %q != WantWireType: %q}",
 		mwt.Type, mwt.TagNum, wireTypeToString(mwt.GotWireType), wireTypeToString(mwt.WantWireType))
 }
 
-func (mwt *MismatchedWireType) Error() string {
+func (mwt *ErrMismatchedWireType) Error() string {
 	return mwt.String()
 }
 
-var _ error = (*MismatchedWireType)(nil)
-
-var wireTypeStrToWireType = map[string]protowire.Type{
-	"varint":      0,
-	"fixed64":     1,
-	"bytes":       2,
-	"start_group": 3,
-	"end_group":   4,
-	"fixed32":     5,
-}
+var _ error = (*ErrMismatchedWireType)(nil)
 
 func wireTypeToString(wt protowire.Type) string {
 	switch wt {

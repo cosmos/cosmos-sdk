@@ -123,6 +123,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 
 	cmd.Flags().Bool(FlagCommission, false, "Withdraw the validator's commission in addition to the rewards")
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -167,6 +168,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 
 	cmd.Flags().Int(FlagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -207,6 +209,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -247,6 +250,7 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -315,5 +319,6 @@ Where proposal.json contains:
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }

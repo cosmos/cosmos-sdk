@@ -86,19 +86,19 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 }
 
 // GetTxCmd returns the evidence module's root tx command.
-func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(clientCtx)
+		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler()
 	}
 
-	return cli.GetTxCmd(clientCtx, evidenceCLIHandlers)
+	return cli.GetTxCmd(evidenceCLIHandlers)
 }
 
-// GetTxCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey, clientCtx.Codec)
+// GetQueryCmd returns the evidence module's root query command.
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
@@ -143,6 +143,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // RegisterInvariants registers the evidence module's invariants.

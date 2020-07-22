@@ -53,7 +53,7 @@ func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
 			[]string{
 				"staking", "MaxValidators",
 			},
-			`{"Subspace":"staking","Key":"MaxValidators","Value":"100"}`,
+			`{"subspace":"staking","key":"MaxValidators","value":"100"}`,
 		},
 		{
 			"text output",
@@ -61,9 +61,9 @@ func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
 				"staking", "MaxValidators",
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
 			},
-			`Key: MaxValidators
-Subspace: staking
-Value: "100"`,
+			`key: MaxValidators
+subspace: staking
+value: "100"`,
 		},
 	}
 

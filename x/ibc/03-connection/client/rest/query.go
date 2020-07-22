@@ -31,7 +31,7 @@ func queryConnectionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		queryClient := types.NewQueryClient(clientCtx)
 
 		req := &types.QueryConnectionsRequest{
-			Req: &query.PageRequest{},
+			Pagination: &query.PageRequest{},
 		}
 
 		res, err := queryClient.Connections(context.Background(), req)

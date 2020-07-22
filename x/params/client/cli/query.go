@@ -1,13 +1,14 @@
 package cli
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // NewQueryCmd returns a root CLI command handler for all x/params query commands.
@@ -38,26 +39,15 @@ func NewQuerySubspaceParamsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			queryClient := proposal.NewQueryClient(clientCtx)
 
-			params := types.NewQuerySubspaceParams(args[0], args[1])
-			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
-
-			bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-			if err != nil {
-				return fmt.Errorf("failed to marshal params: %w", err)
-			}
-
-			bz, _, err = clientCtx.QueryWithData(route, bz)
+			params := proposal.QueryParamsRequest{Subspace: args[0], Key: args[1]}
+			res, err := queryClient.Params(context.Background(), &params)
 			if err != nil {
 				return err
 			}
 
-			var resp types.SubspaceParamsResponse
-			if err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.GetParams())
 		},
 	}
 

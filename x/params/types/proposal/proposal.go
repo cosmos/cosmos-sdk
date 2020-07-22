@@ -100,11 +100,3 @@ func ValidateChanges(changes []ParamChange) error {
 
 	return nil
 }
-
-// NewQueryParametersRequest returns the new instance of QueryParametersRequest
-func NewQueryParametersRequest(ss, key string) *QueryParametersRequest {
-	return &QueryParametersRequest{
-		Subspace: ss,
-		Key:      key,
-	}
-}

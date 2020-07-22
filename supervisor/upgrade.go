@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	getter "github.com/hashicorp/go-getter"
+	"github.com/hashicorp/go-getter"
 	"github.com/pkg/errors"
 )
 

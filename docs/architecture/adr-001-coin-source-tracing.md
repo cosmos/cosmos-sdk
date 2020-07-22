@@ -48,12 +48,12 @@ The problem of adding additional information to the coin denomination is twofold
 
 If a token is transfered `n` times via IBC to a sink chain, the token denom will contain `n` pairs
 of prefixes, as shown on the format example above. This poses a problem because, while port
-and channel identifiers don't have a cap on the maximum lenght, the SDK `Coin` type only accepts
-denoms up to 64 characters.
+and channel identifiers have a maximim length of 64 each, the SDK `Coin` type only accepts
+denoms up to 64 characters. Thus, a single cross-chain token, which again, is composed by the port and channels identifiers plus the base denomination, can exceed the length validation for the SDK `Coins`.
 
 This can result in undesired behaviors such as tokens not being abled to be transferred to multiple
 sink chains if the denomination exceeds the length or unexpected `panics` due to denomination
-validation on the receiving chain.
+validation failing on the receiving chain.
 
 2. The existence of special characters and uppercase letters on the denomination:
 
@@ -68,88 +68,71 @@ specification.
 
 ## Decision
 
-Introduce a new `Trace` field to the SDK's `Coin` type so that the two problems are mitigated.
+Instead of adding the identifiers on the coin denomination directly, the proposed solution hashes the denomination prefix in order to get a consistent lenght for all the cross-chain fungible tokens. The new format will be the following:
 
-<!-- TODO: change field to metadata -->
+```golang
+ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + coin denomination
+```
 
-```protobuf
-// Coin defines a token with a denomination and an amount.
-//
-// NOTE: The amount field is an Int which implements the custom method
-// signatures required by gogoproto.
-message Coin {
-  option (gogoproto.equal) = true;
+In order to 
 
-  string denom  = 1;
-  string amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
-  // trace the origin of the token. Every time a Coin is transferred to a chain that's not the souce
-  // of the token, a new item is inserted to the first position.
-  repeated Trace trace = 3;
+```golang
+// GetDenom retreives the full identifiers trace from the store.
+func (k Keeper) GetTrace(ctx Context, traceHash []byte) string {
+  store := ctx.KVStore(k.storeKey)
+  bz := store.Get(types.KeyTrace(traceHash))
+  if len(bz) == 0 {
+    return ""
+  }
+  return string(bz)
 }
 
-// Trace defines a origin tracing logic for fungible token cross-chain token transfers through
-// IBC (as specified per ICS20).
-message Trace {
-  // destination chain port identifier
-  string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
-  // destination chain channel identifier
-  string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+// HasTrace checks if a the key with the given trace hash exists on the store.
+func (k Keeper) HasTrace(ctx Context, traceHash []byte)  bool {
+  store := ctx.KVStore(k.storeKey)
+  return store.Has(types.KeyTrace(traceHash))
+}
+
+// SetTrace sets a new {trace hash -> trace} pair to the store.
+func (k Keeper) SetTrace(ctx Context, traceHash []byte, trace string) {
+  store := ctx.KVStore(k.storeKey)
+  store.Set(types.KeyTrace(traceHash), []byte(trace))
 }
 ```
 
-To prevent breaking the `NewCoin` constructor, a separate `NewCoinWithTrace` function will be
-created.
+```golang
+func (k Keeper) UpdateTrace(ctx Context, portID, channelID, denom string) string {
+  // Get each component
+  denomSplit := strings.Split(denom, "/")
 
-```go
+  var (
+    baseDenom string
+    trace     string
+    traceHash tmbytes.HexBytes
+  )
 
-// NewCoinWithTrace creates a new coin with .
-func NewCoinWithTrace(denom string, amount Int, traces ...Trace) Coin {
-  coin := NewCoin(denom, amount)
+  // return if denomination doesn't have separators
+  if denomSplit[0] == denom {
+    baseDenom = denom
+    trace = portID + "/" + channelID +"/"
+  } else {
+    baseDenom = denomSplit[2]
+    traceHash = tmbytes.HexBytes(denomSplit[1])
+    // Get the value from the map trace hash -> denom identifiers prefix
+    trace = k.GetTrace(ctx, prefixHash)
+    // prefix the identifiers to create the new trace
+    trace = portID + "/" + channelID +"/" + trace + "/"
+  }
+  
+  traceHash = tmbytes.HexBytes(tmhash.Sum(trace))
 
-  for _, trace := range traces {
-    if err := validateTrace(trace); err != nil {
-      panic(err)
-    }
+  if !k.HasTrace(traceHash) {
+    k.SetTrace(traceHash)
   }
 
-  coin.Trace = traces
-  return coin
-  }
-```
-
-To transfer tokens to a sink chain via IBC, `InsertTrace` can be used:
-
-```go
-// InsertTrace validates the destination port and channel identifiers and inserts a Trace
-// insance to the first position of the list.
-func (coin *Coin) InsertTrace(portID, channelID string) error {
-  if err := validatePortID(portID); err != nil {
-    return err
-  }
-
-  if err := validateChannelID(channelID); err != nil {
-    return err
-  }
-
-  coin.Trace = append([]Trace{NewTrace(portID, channelID)}, coin.Trace...)
-  return nil
-  }
-```
-
-To delete a trace instance, the `PopTrace` utity function can be used:
-
-```go
-// PopTrace removes and returns the first trace item from the list. If the list is empty
-// an error is returned instead.
-func (coin *Coin) PopTrace() (Trace, error) {
-  if len(coin.Trace) == 0 {
-    return Trace{}, errors.New("trace list is empty")
-  }
-
-  trace := coin.Trace[0]
-  coin.Trace = coin.Trace[1:]
-  return trace, nil
-  }
+  denom = "ibc/"+ traceHash.String() + baseDenom
+  return denom
+}
 ```
 
 <!-- TODO: updates to ICS20 -->
@@ -159,17 +142,16 @@ func (coin *Coin) PopTrace() (Trace, error) {
 - Clearer separation of the origin tracing behaviour of the token (transfer prefix) from the original
   `Coin` denomination
 - Consistent validation of `Coin` fields
-- Prevents clients from having to strip the denomination
-- Cleaner `Coin` denominations for IBC instead of prefixed ones
+- Cleaner `Coin` denominations for IBC
 
 ### Negative
 
-- `Coin` metadata size is not bounded, which might result in a significant increase of the size per
-  `Coin` compared with the current implementation.
+- Store each set of tracing denomination identifiers on the `ibc-transfer` module store.
+- Additional genesis fields.
+- Slightly increases the gas usage on cross-chain transfers (1 read + 1 write).
 
 ### Neutral
 
-- Additional field to the `Coin` type
 - Slight difference with the ICS20 spec
 
 ## References

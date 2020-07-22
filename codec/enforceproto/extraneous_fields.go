@@ -161,6 +161,7 @@ func protoMessageForTypeName(protoMessageName string) (gogoproto.Message, error)
 // it is implemented this way so as to have constant time lookups and avoid the overhead
 // from O(n) walking of switch. The change to using this mapping boosts throughput by about 200%.
 var checks = [...]map[descriptor.FieldDescriptorProto_Type]bool{
+	// "0	Varint: int32, int64, uint32, uint64, sint32, sint64, bool, enum"
 	0: {
 		descriptor.FieldDescriptorProto_TYPE_INT32:  true,
 		descriptor.FieldDescriptorProto_TYPE_INT64:  true,
@@ -172,24 +173,31 @@ var checks = [...]map[descriptor.FieldDescriptorProto_Type]bool{
 		descriptor.FieldDescriptorProto_TYPE_ENUM:   true,
 	},
 
+	// "1	64-bit:	fixed64, sfixed64, double"
 	1: {
 		descriptor.FieldDescriptorProto_TYPE_FIXED64:  true,
 		descriptor.FieldDescriptorProto_TYPE_SFIXED64: true,
 		descriptor.FieldDescriptorProto_TYPE_DOUBLE:   true,
 	},
 
+	// "2	Length-delimited: string, bytes, embedded messages, packed repeated fields"
 	2: {
 		descriptor.FieldDescriptorProto_TYPE_FIXED32:  true,
 		descriptor.FieldDescriptorProto_TYPE_SFIXED32: true,
 		descriptor.FieldDescriptorProto_TYPE_FLOAT:    true,
 	},
+
+	// "3	Start group:	groups (deprecated)"
 	3: {
 		descriptor.FieldDescriptorProto_TYPE_GROUP: true,
 	},
+
+	// "4	End group:	groups (deprecated)"
 	4: {
 		descriptor.FieldDescriptorProto_TYPE_GROUP: true,
 	},
 
+	// "5	32-bit:	fixed32, sfixed32, float"
 	5: {
 		descriptor.FieldDescriptorProto_TYPE_STRING:  true,
 		descriptor.FieldDescriptorProto_TYPE_BYTES:   true,

@@ -17,7 +17,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgChannelOpenConfirm{},
 		&MsgChannelCloseInit{},
 		&MsgChannelCloseConfirm{},
-		&MsgPacket{},
+		&MsgRecvPacket{},
 		&MsgAcknowledgement{},
 		&MsgTimeout{},
 	)

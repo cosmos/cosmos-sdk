@@ -9,9 +9,9 @@ import (
 
 // NewQueryConnectionResponse creates a new QueryConnectionResponse instance
 func NewQueryConnectionResponse(
-	connection ConnectionEnd, proof []byte, height int64,
+	connectionID string, connection ConnectionEnd, proof []byte, height int64,
 ) *QueryConnectionResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connection.ID), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connectionID), "/"))
 	return &QueryConnectionResponse{
 		Connection:  &connection,
 		Proof:       proof,

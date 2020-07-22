@@ -332,14 +332,14 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = &MsgPacket{}
+var _ sdk.Msg = &MsgRecvPacket{}
 
-// NewMsgPacket constructs new MsgPacket
-func NewMsgPacket(
+// NewMsgRecvPacket constructs new MsgRecvPacket
+func NewMsgRecvPacket(
 	packet Packet, proof []byte, proofHeight uint64,
 	signer sdk.AccAddress,
-) *MsgPacket {
-	return &MsgPacket{
+) *MsgRecvPacket {
+	return &MsgRecvPacket{
 		Packet:      packet,
 		Proof:       proof,
 		ProofHeight: proofHeight,
@@ -348,12 +348,12 @@ func NewMsgPacket(
 }
 
 // Route implements sdk.Msg
-func (msg MsgPacket) Route() string {
+func (msg MsgRecvPacket) Route() string {
 	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgPacket) ValidateBasic() error {
+func (msg MsgRecvPacket) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
@@ -368,24 +368,24 @@ func (msg MsgPacket) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgPacket) GetSignBytes() []byte {
+func (msg MsgRecvPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetDataSignBytes returns the base64-encoded bytes used for the
 // data field when signing the packet.
-func (msg MsgPacket) GetDataSignBytes() []byte {
+func (msg MsgRecvPacket) GetDataSignBytes() []byte {
 	s := "\"" + base64.StdEncoding.EncodeToString(msg.Packet.Data) + "\""
 	return []byte(s)
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
 // Type implements sdk.Msg
-func (msg MsgPacket) Type() string {
+func (msg MsgRecvPacket) Type() string {
 	return "recv_packet"
 }
 

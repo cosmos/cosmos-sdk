@@ -93,7 +93,7 @@ func ClientConnectionsPath(clientID string) string {
 
 // ConnectionPath defines the path under which connection paths are stored
 func ConnectionPath(connectionID string) string {
-	return fmt.Sprintf("connections/%s", connectionID)
+	return fmt.Sprintf("%s/%s", KeyConnectionPrefix, connectionID)
 }
 
 // KeyClientConnections returns the store key for the connectios of a given client

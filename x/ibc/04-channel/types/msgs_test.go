@@ -23,15 +23,15 @@ import (
 const (
 	invalidPort      = "(invalidport1)"
 	invalidShortPort = "p"
-	invalidLongPort  = "invalidlongportinvalidlongport"
+	invalidLongPort  = "invalidlongportinvalidlongportinvalidlongportidinvalidlongportidinvalid"
 
 	invalidChannel      = "(invalidchannel1)"
 	invalidShortChannel = "invalidch"
-	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
+	invalidLongChannel  = "invalidlongchannelinvalidlongchannelinvalidlongchannelinvalidlongchannel"
 
 	invalidConnection      = "(invalidconnection1)"
 	invalidShortConnection = "invalidcn"
-	invalidLongConnection  = "invalidlongconnection"
+	invalidLongConnection  = "invalidlongconnectioninvalidlongconnectioninvalidlongconnectioninvalid"
 )
 
 // define variables used for testing

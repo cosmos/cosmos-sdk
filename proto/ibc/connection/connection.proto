@@ -91,17 +91,17 @@ message MsgConnectionOpenConfirm {
 message ConnectionEnd {
   option (gogoproto.goproto_getters) = false;
   // client associated with this connection.
-  string client_id = 2 [
+  string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   // IBC version which can be utilised to determine encodings or protocols for
   // channels or packets utilising this connection
-  repeated string versions = 3;
+  repeated string versions = 2;
   // current state of the connection end.
-  State state = 4;
+  State state = 3;
   // counterparty chain associated with this connection.
-  Counterparty counterparty = 5 [(gogoproto.nullable) = false];
+  Counterparty counterparty = 4 [(gogoproto.nullable) = false];
 }
 
 // IdentifiedConnection defines a connection with additional connection

@@ -375,7 +375,7 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 func (suite *MsgTestSuite) TestMsgPacketType() {
 	msg := types.NewMsgPacket(packet, suite.proof, 1, addr1)
 
-	suite.Equal("ics04/opaque", msg.Type())
+	suite.Equal("recv_packet", msg.Type())
 }
 
 // TestMsgPacketValidation tests ValidateBasic for MsgPacket

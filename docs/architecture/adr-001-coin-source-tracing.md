@@ -71,7 +71,7 @@ specification.
 Instead of adding the identifiers on the coin denomination directly, the proposed solution hashes the denomination prefix in order to get a consistent lenght for all the cross-chain fungible tokens. The new format will be the following:
 
 ```golang
-ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + coin denomination
+ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + base coin denomination
 ```
 
 ### `x/ibc-transfer` Changes
@@ -108,7 +108,7 @@ When a fungible token with a is send to a sink chain, the trace information need
 func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string {
   // Get each component of the denom. The resulting slice will be:
   //
-  // - [ "ibc" , traceHash, baseDenom], if the denom is dirty (contains trace metadata).
+  // - [ "ibc", traceHash, baseDenom], if the denom is dirty (contains trace metadata).
   // - [ baseDenom ], if the denom has never been sent from the origin chain.
   denomSplit := strings.Split(denom, "/")
 
@@ -146,7 +146,7 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
 The denomination also needs to be updated when token is received on the source chain:
 
 ```golang
-func (k Keeper) UnprefixDenom(ctx Context, denom string) (string, error) {
+func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, err error) {
   denomSplit := strings.Split(denom, "/")
   if denomSplit[0] == denom {
     return denom, fmt.Errorf("denomination %s doesn't contain a prefix", denom)
@@ -157,7 +157,7 @@ func (k Keeper) UnprefixDenom(ctx Context, denom string) (string, error) {
   // Get the value from the map trace hash -> denom identifiers prefix
   trace = k.GetTrace(ctx, traceHash)
   if trace == "" {
-    return "", fmt.Errorf("trace info not found for denom %s", denom)
+    return "", Wrapf(ErrTraceNotFound, "denom: %s", denom)
   }
 
   traceSplit := strings.Split(trace, "/")
@@ -180,9 +180,29 @@ func (k Keeper) UnprefixDenom(ctx Context, denom string) (string, error) {
 }
 ```
 
-<!-- TODO: updates to ICS20 SendTransfer and OnRecvPacket -->
+```golang
+// GetTraceFromDenom 
+func (k Keeper) GetTraceFromDenom(ctx Context, denom string) (string, error) {
+  denomSplit := strings.Split(denom, "/")
+  if denomSplit[0] == denom {
+    return "", nil
+  }
 
-### Coin Validation Changes
+  traceHash := tmbytes.HexBytes(denomSplit[1])
+  // Get the value from the map trace hash -> denom identifiers prefix
+  trace := k.GetTrace(ctx, traceHash)
+  if trace == "" {
+    return "", Wrapf(ErrTraceNotFound, "denom: %s", denom)
+  }
+
+  return trace
+}
+
+```
+
+Additionally, the `SendTransfer`'s `createOutgoingPacket` call and the `OnRecvPacket` need to be updated to be retreive the trace info (using `GetTraceFromDenom`) prior to checking the correctness of the prefix.
+
+### Coin Changes
 
 The coin denomination validation will need to be updated to reflect these changes:
 
@@ -191,6 +211,14 @@ The coin denomination validation will need to be updated to reflect these change
   - The first element of the denom must be `"ibc"`.
   - The second element, the trace hash, needs to be a valid SHA256 hash.
   - The third element must be a valid base denomination.
+
+The base coin denomination max length will be reverted to the original value from the v0.39.0
+release, 16 characters. This means that an IBC denomination will contain at most:
+
+```golang
+maxLen = 4 + 32 + 1 + 16 // "ibc/" + SHA256 hash + "/" + base denom
+maxLen = 53
+```
 
 ### Positive
 

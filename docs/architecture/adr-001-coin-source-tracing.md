@@ -125,7 +125,8 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
     baseDenom = denom
     trace = portID + "/" + channelID +"/"
   } else {
-    baseDenom = denomSplit[2]
+    // concatenate if base denom already contains a separator
+    baseDenom = strings.Join(denomSplit[2], "/")
     traceHash = tmbytes.HexBytes(denomSplit[1])
     // Get the value from the map trace hash -> denom identifiers prefix
     trace = k.GetTrace(ctx, traceHash)
@@ -157,7 +158,8 @@ func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, e
     return denom, fmt.Errorf("denomination %s doesn't contain a prefix", denom)
   }
 
-  baseDenom := denomSplit[2]
+  // concatenate if base denom already contains a separator
+  baseDenom = strings.Join(denomSplit[2], "/")
   traceHash := tmbytes.HexBytes(denomSplit[1])
   // Get the value from the map trace hash -> denom identifiers prefix
   trace = k.GetTrace(ctx, traceHash)

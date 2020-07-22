@@ -23,6 +23,7 @@ require (
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/hashicorp/go-version v1.2.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/homedepot/flop v0.1.5
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/otiai10/copy v1.2.0

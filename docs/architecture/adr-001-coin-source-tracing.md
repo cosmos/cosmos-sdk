@@ -102,9 +102,11 @@ func (k Keeper) SetTrace(ctx Context, traceHash []byte, trace string) {
 }
 ```
 
-When a fungible token with a is send to a sink chain, the trace information needs to be updated with the new port and channel identifiers:
+When a fungible token is send to a sink chain, the trace information needs to be updated with the new port and channel identifiers:
 
 ```golang
+// PrefixDenom adds the given port and channel identifiers prefix to the denomination and sets the
+// new {trace hash -> trace} pair to the store.
 func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string {
   // Get each component of the denom. The resulting slice will be:
   //
@@ -138,7 +140,7 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
     k.SetTrace(ctx, traceHash)
   }
 
-  denom = "ibc/"+ traceHash.String() + baseDenom
+  denom = "ibc/"+ traceHash.String()  "/" + baseDenom
   return denom
 }
 ```
@@ -146,6 +148,9 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
 The denomination also needs to be updated when token is received on the source chain:
 
 ```golang
+// UnprefixDenom removes the first portID/channelID pair from a given denomination trace info and returns the
+// denomination with the updated trace hash and the new trace info.
+// An error is returned if the trace cannot be found on the store from the denom's trace hash.
 func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, err error) {
   denomSplit := strings.Split(denom, "/")
   if denomSplit[0] == denom {
@@ -175,13 +180,13 @@ func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, e
     k.SetTrace(ctx, traceHash)
   }
 
-  denom = "ibc/"+ traceHash.String() + baseDenom
+  denom = "ibc/"+ traceHash.String() + "/" + baseDenom
   return denom
 }
 ```
 
 ```golang
-// GetTraceFromDenom 
+// GetTraceFromDenom returns the token source tracing info from the trace hash of the given denomination
 func (k Keeper) GetTraceFromDenom(ctx Context, denom string) (string, error) {
   denomSplit := strings.Split(denom, "/")
   if denomSplit[0] == denom {
@@ -204,40 +209,35 @@ Additionally, the `SendTransfer`'s `createOutgoingPacket` call and the `OnRecvPa
 
 ### Coin Changes
 
-The coin denomination validation will need to be updated to reflect these changes:
+The coin denomination validation will need to be updated to reflect these changes. In particular, the denomination validation
+function will now accept slash separators (`"/"`) and will bump the maximum character length to 64.
 
-- Clean denoms that don't have separators will maintain the original validation logic
-- Denominations with separators will need to have exactly the 3 components mentioned on the IBC denomination format above:
-  - The first element of the denom must be `"ibc"`.
-  - The second element, the trace hash, needs to be a valid SHA256 hash.
-  - The third element must be a valid base denomination.
-
-The base coin denomination max length will be reverted to the original value from the v0.39.0
-release, 16 characters. This means that an IBC denomination will contain at most:
+For the specific case of cross-chain fungible token transfers, an IBC denomination will contain at most:
 
 ```golang
 maxLen = 4 + 32 + 1 + 16 // "ibc/" + SHA256 hash + "/" + base denom
-maxLen = 53
+maxLen = 53 // valid length as 53 < 64
 ```
 
 ### Positive
 
-- Clearer separation of the origin tracing behaviour of the token (transfer prefix) from the original
+- Clearer separation of the source tracing behaviour of the token (transfer prefix) from the original
   `Coin` denomination
-- Consistent validation of `Coin` fields
-- Cleaner `Coin` denominations for IBC
+- Consistent validation of `Coin` fields (i.e no special characters, fixed max length)
+- Cleaner `Coin` and standard denominations for IBC
 - No additional fields to SDK `Coin`
 
 ### Negative
 
 - Store each set of tracing denomination identifiers on the `ibc-transfer` module store.
-- Additional genesis fields.
-- Slightly increases the gas usage on cross-chain transfers due to access to the store.
 
 ### Neutral
 
 - Slight difference with the ICS20 spec
 - Additional validation logic for IBC coins
+- Additional genesis fields.
+- Slightly increases the gas usage on cross-chain transfers due to access to the store. This should
+  be inter-block cached if transfers are frequent
 
 ## References
 

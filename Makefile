@@ -182,7 +182,9 @@ test-ledger-mock:
 test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
-test-unit:
+test-unit: test-unit-proto
+
+test-unit-proto:
 	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-unit-amino:

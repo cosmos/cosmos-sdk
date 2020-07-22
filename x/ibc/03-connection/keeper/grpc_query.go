@@ -49,16 +49,22 @@ func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsReques
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	connections := []*types.ConnectionEnd{}
+	connections := []*types.IdentifiedConnection{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyConnectionPrefix)
 
-	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
+	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		var result types.ConnectionEnd
 		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
 			return err
 		}
 
-		connections = append(connections, &result)
+		connectionID, err := host.ParseConnectionPath(string(key))
+		if err != nil {
+			return err
+		}
+
+		identifiedConnection := types.NewIdentifiedConnection(connectionID, result)
+		connections = append(connections, &identifiedConnection)
 		return nil
 	})
 

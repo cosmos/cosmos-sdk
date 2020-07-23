@@ -12,14 +12,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 var (
@@ -55,7 +56,7 @@ func (suite *GenTxTestSuite) SetupTest() {
 	suite.encodingConfig = simapp.MakeEncodingConfig()
 }
 
-func (suite *GenTxTestSuite) setAccountBalance(cdc *codec.Codec, addr sdk.AccAddress, amount int64) json.RawMessage {
+func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64) json.RawMessage {
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
@@ -65,7 +66,7 @@ func (suite *GenTxTestSuite) setAccountBalance(cdc *codec.Codec, addr sdk.AccAdd
 	suite.Require().NoError(err)
 
 	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
-	bankGenesis, err := cdc.MarshalJSON(bankGenesisState)
+	bankGenesis, err := suite.encodingConfig.Amino.MarshalJSON(bankGenesisState) // TODO switch this to use Marshaler
 	suite.Require().NoError(err)
 
 	return bankGenesis
@@ -162,7 +163,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			"account without balance in the genesis state",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(cdc, addr2, 50)
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr2, 50)
 			},
 			false,
 		},
@@ -170,7 +171,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			"account without enough funds of default bond denom",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(cdc, addr1, 25)
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
 			},
 			false,
 		},
@@ -178,7 +179,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			"account with enough funds of default bond denom",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(cdc, addr1, 25)
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
 			},
 			true,
 		},
@@ -186,12 +187,12 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc = suite.app.Codec()
+			cdc = suite.encodingConfig.Amino
 
 			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
 			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)
 			suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
-			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState)
+			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)
 			appGenesisState[stakingtypes.ModuleName] = stakingGenesis
 
@@ -214,7 +215,6 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	var (
 		genTxs    []json.RawMessage
-		cdc       *codec.Codec
 		txBuilder = suite.encodingConfig.TxConfig.NewTxBuilder()
 	)
 
@@ -230,23 +230,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 
 				genTxs = make([]json.RawMessage, 1)
-				tx, err := cdc.MarshalJSON(txBuilder.GetTx())
-				suite.Require().NoError(err)
-				genTxs[0] = tx
-			},
-			false,
-		},
-		{
-			"unregistered message",
-			func() {
-				cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
-				msg := testdata.NewTestMsg(sdk.AccAddress("some-address"))
-
-				err := txBuilder.SetMsgs(msg)
-				suite.Require().NoError(err)
-
-				genTxs = make([]json.RawMessage, 1)
-				tx, err := cdc.MarshalJSON(txBuilder.GetTx())
+				tx, err := suite.encodingConfig.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
 				suite.Require().NoError(err)
 				genTxs[0] = tx
 			},
@@ -255,8 +239,8 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 		{
 			"success",
 			func() {
-				_ = suite.setAccountBalance(cdc, addr1, 50)
-				_ = suite.setAccountBalance(cdc, addr2, 0)
+				_ = suite.setAccountBalance(addr1, 50)
+				_ = suite.setAccountBalance(addr2, 0)
 
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
 				tx, err := helpers.GenTx(
@@ -272,7 +256,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 
 				genTxs = make([]json.RawMessage, 1)
-				genTx, err := cdc.MarshalJSON(tx)
+				genTx, err := suite.encodingConfig.TxConfig.TxJSONEncoder()(tx)
 				suite.Require().NoError(err)
 				genTxs[0] = genTx
 			},
@@ -283,7 +267,6 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc = suite.app.Codec()
 
 			tc.malleate()
 
@@ -291,14 +274,14 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NotPanics(func() {
 					genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
-						simapp.AminoJSONTxDecoder(suite.encodingConfig), suite.encodingConfig.TxConfig.TxEncoder(),
+						suite.encodingConfig.TxConfig.TxJSONDecoder(), suite.encodingConfig.TxConfig.TxEncoder(),
 					)
 				})
 			} else {
 				suite.Require().Panics(func() {
 					genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
-						simapp.AminoJSONTxDecoder(suite.encodingConfig), suite.encodingConfig.TxConfig.TxEncoder(),
+						suite.encodingConfig.TxConfig.TxJSONDecoder(), suite.encodingConfig.TxConfig.TxEncoder(),
 					)
 				})
 			}

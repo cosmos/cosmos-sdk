@@ -291,7 +291,7 @@ func NewSimApp(
 	app.mm = module.NewManager(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			AminoJSONTxDecoder(encodingConfig), encodingConfig.TxConfig.TxEncoder(),
+			encodingConfig.TxConfig.TxJSONDecoder(), encodingConfig.TxConfig.TxEncoder(),
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),

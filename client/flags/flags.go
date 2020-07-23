@@ -112,6 +112,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd
 func AddPaginationFlagsToCmd(cmd *cobra.Command, query string) {
+	cmd.Flags().Uint64(FlagPage, 0, fmt.Sprintf("pagination page of %s to query for", query))
 	cmd.Flags().String(FlagPageKey, "", fmt.Sprintf("pagination page-key of %s to query for", query))
 	cmd.Flags().Uint64(FlagOffset, 0, fmt.Sprintf("pagination offset of %s to query for", query))
 	cmd.Flags().Uint64(FlagLimit, 100, fmt.Sprintf("pagination limit of %s to query for", query))

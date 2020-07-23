@@ -256,12 +256,19 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			return err
 		}
 
+		errCh := make(chan error)
 		go func() {
 			err = grpcSrv.Serve(listener)
 			if err != nil {
-				fmt.Printf("failed to serve: %v\n", err)
+				errCh <- fmt.Errorf("failed to serve: %v", err)
 			}
 		}()
+
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
+		}
 	}
 
 	var cpuProfileCleanup func()

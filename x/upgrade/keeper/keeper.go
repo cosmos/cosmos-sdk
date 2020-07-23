@@ -9,8 +9,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
@@ -19,6 +17,7 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeInfoFileName file to store upgrade information
@@ -179,23 +178,31 @@ func (k Keeper) getHomeDir() string {
 	return k.homePath
 }
 
-// ReadUpgradeInfoFromDisk returns the name and height of the upgrade
-// which is written to disk by the old binary when panic'ing
-// if there's an error in reading the info,
-// it assumes that the upgrade info is not available
-func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeInfo store.UpgradeInfo) {
+// ReadUpgradeInfoFromDisk returns the name and height of the upgrade which is
+// written to disk by the old binary when panicking. An error is returned if
+// the upgrade path directory cannot be created or if the file exists and
+// cannot be read or if the upgrade info fails to unmarshal.
+func (k Keeper) ReadUpgradeInfoFromDisk() (store.UpgradeInfo, error) {
+	var upgradeInfo store.UpgradeInfo
+
 	upgradeInfoPath, err := k.GetUpgradeInfoPath()
-	// if error in reading the path, assume there are no upgrades
 	if err != nil {
-		return upgradeInfo
+		return upgradeInfo, err
 	}
 
 	data, err := ioutil.ReadFile(upgradeInfoPath)
-	// if error in reading the file, assume there are no upgrades
 	if err != nil {
-		return upgradeInfo
+		// if file does not exist, assume there are no upgrades
+		if os.IsNotExist(err) {
+			return upgradeInfo, nil
+		}
+
+		return upgradeInfo, err
 	}
 
-	json.Unmarshal(data, &upgradeInfo)
-	return
+	if err := json.Unmarshal(data, &upgradeInfo); err != nil {
+		return upgradeInfo, err
+	}
+
+	return upgradeInfo, nil
 }

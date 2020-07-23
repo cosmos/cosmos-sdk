@@ -47,9 +47,10 @@ The problem of adding additional information to the coin denomination is twofold
 1. The ever increasing length if tokens are transfered to zones other than the source:
 
 If a token is transferred `n` times via IBC to a sink chain, the token denom will contain `n` pairs
-of prefixes, as shown on the format example above. This poses a problem because, while port
-and channel identifiers have a maximum length of 64 each, the SDK `Coin` type only accepts
-denoms up to 64 characters. Thus, a single cross-chain token, which again, is composed by the port and channels identifiers plus the base denomination, can exceed the length validation for the SDK `Coins`.
+of prefixes, as shown on the format example above. This poses a problem because, while port and
+channel identifiers have a maximum length of 64 each, the SDK `Coin` type only accepts denoms up to
+64 characters. Thus, a single cross-chain token, which again, is composed by the port and channels
+identifiers plus the base denomination, can exceed the length validation for the SDK `Coins`.
 
 This can result in undesired behaviours such as tokens not being able to be transferred to multiple
 sink chains if the denomination exceeds the length or unexpected `panics` due to denomination
@@ -68,7 +69,9 @@ specification.
 
 ## Decision
 
-Instead of adding the identifiers on the coin denomination directly, the proposed solution hashes the denomination prefix in order to get a consistent length for all the cross-chain fungible tokens. The new format will be the following:
+Instead of adding the identifiers on the coin denomination directly, the proposed solution hashes
+the denomination prefix in order to get a consistent length for all the cross-chain fungible tokens.
+The new format will be the following:
 
 ```golang
 ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + base coin denomination
@@ -76,7 +79,9 @@ ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + base coi
 
 ### `x/ibc-transfer` Changes
 
-In order to retreive the trace information from an IBC denomination, a lookup table needs to be added to the `ibc-transfer` module. These values need to also be persisted between upgrades, meaning that a new `[]Trace` `GenesisState` field state needs to be added to the module:
+In order to retreive the trace information from an IBC denomination, a lookup table needs to be
+added to the `ibc-transfer` module. These values need to also be persisted between upgrades, meaning
+that a new `[]Trace` `GenesisState` field state needs to be added to the module:
 
 ```golang
 // GetDenom retreives the full identifiers trace from the store.
@@ -102,7 +107,8 @@ func (k Keeper) SetTrace(ctx Context, traceHash []byte, trace string) {
 }
 ```
 
-When a fungible token is send to a sink chain, the trace information needs to be updated with the new port and channel identifiers:
+When a fungible token is send to a sink chain, the trace information needs to be updated with the
+new port and channel identifiers:
 
 ```golang
 // PrefixDenom adds the given port and channel identifiers prefix to the denomination and sets the
@@ -110,8 +116,8 @@ When a fungible token is send to a sink chain, the trace information needs to be
 func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string {
   // Get each component of the denom. The resulting slice will be:
   //
-  // - [ "ibc", traceHash, baseDenom], if the denom is dirty (contains trace metadata).
-  // - [ baseDenom ], if the denom has never been sent from the origin chain.
+  // - ["ibc", traceHash, baseDenom], if the denom is dirty (contains trace metadata).
+  // - [baseDenom], if the denom has never been sent from the origin chain.
   denomSplit := strings.SplitN(denom, "/", 3)
 
   var (
@@ -156,7 +162,7 @@ func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, e
 
   switch {
     case denomSplit[0] == denom:
-      return "", Wrapf(ErrInvalidDenomForTransfer, "denomination %s should be prefixed with the format 'ibc/{traceHash}/%s'", denom)
+      return "", Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{traceHash}/%s'", denom)
     case denomSplit[0] != "ibc":
       return "", Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
   }
@@ -209,18 +215,21 @@ func (k Keeper) GetTraceFromDenom(ctx Context, denom string) (string, error) {
 
 ```
 
-Additionally, the `SendTransfer`'s `createOutgoingPacket` call and the `OnRecvPacket` need to be updated to be retreive the trace info (using `GetTraceFromDenom`) prior to checking the correctness of the prefix.
+Additionally, the `SendTransfer`'s `createOutgoingPacket` call and the `OnRecvPacket` need to be
+updated to be retreive the trace info (using `GetTraceFromDenom`) prior to checking the correctness
+of the prefix.
 
 ### Coin Changes
 
 The coin denomination validation will need to be updated to reflect these changes. In particular, the denomination validation
 function will now accept slash separators (`"/"`) and will bump the maximum character length to 64.
 
-For the specific case of cross-chain fungible token transfers, an IBC denomination will contain at most:
+In the specific case of cross-chain fungible token transfers, an IBC denomination will allow at
+most 27 characters for base denominations:
 
 ```golang
-maxLen = 4 + 32 + 1 + 16 // "ibc/" + SHA256 hash + "/" + base denom
-maxLen = 53 // valid length as 53 < 64
+maxBaseDenomLen = 64 - 4 - 32 - 1  // max len - "ibc/" - SHA256 hash - "/"
+maxBaseDenomLen = 27
 ```
 
 ### Positive
@@ -234,6 +243,8 @@ maxLen = 53 // valid length as 53 < 64
 ### Negative
 
 - Store each set of tracing denomination identifiers on the `ibc-transfer` module store.
+- ICS20 won't be able to support tokens greater than 27 characters for base denomination. This can be mitigated with
+[custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755).
 
 ### Neutral
 
@@ -245,5 +256,5 @@ maxLen = 53 // valid length as 53 < 64
 
 ## References
 
-- [ICS 20 - Fungible token
-  transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer)
+- [ICS 20 - Fungible token transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer)
+- [Custom Coin Denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755)

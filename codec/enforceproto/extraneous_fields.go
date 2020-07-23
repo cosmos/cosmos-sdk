@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sync"
 
-	gogoproto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"google.golang.org/protobuf/encoding/protowire"
 
@@ -22,23 +22,10 @@ type descriptorIface interface {
 	Descriptor() ([]byte, []int)
 }
 
-type protoMessageWithDescriptor struct {
-	descriptorIface
-	gogoproto.Message
-}
-
-var _ descriptor.Message = (*protoMessageWithDescriptor)(nil)
-
-type descriptorMatch struct {
-	cache map[int32]*descriptor.FieldDescriptorProto
-	desc  *descriptor.DescriptorProto
-}
-
 // CheckMismatchedProtoFields walks through the protobuf serialized bytes in b, and tries to
 // compare field numbers and wireTypes against what msg expects. The error returned if non-nil will contain
-// the listing of the extraneous fields by tagNumber and wireType, as well as mismatched
-// wireTypes.
-func CheckMismatchedProtoFields(b []byte, msg gogoproto.Message) error {
+// the listing of the extraneous fields by tagNumber and wireType, or mismatched wireTypes.
+func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 	if len(b) == 0 {
 		return nil
 	}
@@ -48,7 +35,7 @@ func CheckMismatchedProtoFields(b []byte, msg gogoproto.Message) error {
 		return fmt.Errorf("%T does not have a Descriptor() method", msg)
 	}
 
-	fieldDescProtoFromTagNum, _, err := descProtoCache(desc, msg)
+	fieldDescProtoFromTagNum, _, err := fieldNumToFieldDesc(desc, msg)
 	if err != nil {
 		return err
 	}
@@ -64,7 +51,7 @@ func CheckMismatchedProtoFields(b []byte, msg gogoproto.Message) error {
 		case ok:
 			// Assert that the wireTypes match.
 			if !canEncodeType(wireType, fieldDescProto.GetType()) {
-				return &ErrMismatchedWireType{
+				return &errMismatchedWireType{
 					Type:         reflect.ValueOf(msg).Type().String(),
 					TagNum:       tagNum,
 					GotWireType:  wireType,
@@ -75,7 +62,7 @@ func CheckMismatchedProtoFields(b []byte, msg gogoproto.Message) error {
 		default:
 			if tagNum&bit11NonCritical == 0 {
 				// The tag is non-critical, so report it.
-				return &UnexpectedField{
+				return &errExtraneousField{
 					Type:     reflect.ValueOf(msg).Type().String(),
 					TagNum:   tagNum,
 					WireType: wireType,
@@ -107,7 +94,7 @@ func CheckMismatchedProtoFields(b []byte, msg gogoproto.Message) error {
 		if protoMessageName == ".google.protobuf.Any" {
 			// We'll need to extract the TypeURL which will contain the protoMessageName.
 			any := new(types.Any)
-			if err := gogoproto.Unmarshal(fieldBytes, any); err != nil {
+			if err := proto.Unmarshal(fieldBytes, any); err != nil {
 				return err
 			}
 			protoMessageName = any.TypeUrl
@@ -126,11 +113,11 @@ func CheckMismatchedProtoFields(b []byte, msg gogoproto.Message) error {
 }
 
 var protoMessageForTypeNameMu sync.RWMutex
-var protoMessageForTypeNameCache = make(map[string]gogoproto.Message)
+var protoMessageForTypeNameCache = make(map[string]proto.Message)
 
 // protoMessageForTypeName takes in a fully qualified name e.g. testdata.TestVersionFD1
 // and returns a corresponding empty protobuf message that serves the prototype for typechecking.
-func protoMessageForTypeName(protoMessageName string) (gogoproto.Message, error) {
+func protoMessageForTypeName(protoMessageName string) (proto.Message, error) {
 	protoMessageForTypeNameMu.RLock()
 	msg, ok := protoMessageForTypeNameCache[protoMessageName]
 	protoMessageForTypeNameMu.RUnlock()
@@ -138,13 +125,13 @@ func protoMessageForTypeName(protoMessageName string) (gogoproto.Message, error)
 		return msg, nil
 	}
 
-	concreteGoType := gogoproto.MessageType(protoMessageName)
+	concreteGoType := proto.MessageType(protoMessageName)
 	if concreteGoType == nil {
 		return nil, fmt.Errorf("failed to retrieve the message of type %q", protoMessageName)
 	}
 
 	value := reflect.New(concreteGoType).Elem()
-	msg, ok = value.Interface().(gogoproto.Message)
+	msg, ok = value.Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("%q does not implement proto.Message", protoMessageName)
 	}
@@ -214,25 +201,27 @@ func canEncodeType(wireType protowire.Type, descType descriptor.FieldDescriptorP
 	return checks[wireType][descType]
 }
 
-// ErrMismatchedWireType describes a mismatch between
+// errMismatchedWireType describes a mismatch between
 // expected and got wireTypes for a specific tag number.
-type ErrMismatchedWireType struct {
+type errMismatchedWireType struct {
 	Type         string
 	GotWireType  protowire.Type
 	WantWireType protowire.Type
 	TagNum       protowire.Number
 }
 
-func (mwt *ErrMismatchedWireType) String() string {
+// String implements fmt.Stringer.
+func (mwt *errMismatchedWireType) String() string {
 	return fmt.Sprintf("Mismatched %q: {TagNum: %d, GotWireType: %q != WantWireType: %q}",
 		mwt.Type, mwt.TagNum, wireTypeToString(mwt.GotWireType), wireTypeToString(mwt.WantWireType))
 }
 
-func (mwt *ErrMismatchedWireType) Error() string {
+// Error implements the error interface.
+func (mwt *errMismatchedWireType) Error() string {
 	return mwt.String()
 }
 
-var _ error = (*ErrMismatchedWireType)(nil)
+var _ error = (*errMismatchedWireType)(nil)
 
 func wireTypeToString(wt protowire.Type) string {
 	switch wt {
@@ -253,30 +242,34 @@ func wireTypeToString(wt protowire.Type) string {
 	}
 }
 
-type UnexpectedField struct {
+// errExtraneousField represents an error indicating that we encountered
+// a field that isn't available in the target proto.Message.
+type errExtraneousField struct {
 	Type     string
 	TagNum   protowire.Number
 	WireType protowire.Type
 }
 
-func (twt *UnexpectedField) String() string {
-	return fmt.Sprintf("UnexpectedField %q: {TagNum: %d, WireType:%q}",
+// String implements fmt.Stringer.
+func (twt *errExtraneousField) String() string {
+	return fmt.Sprintf("errExtraneousField %q: {TagNum: %d, WireType:%q}",
 		twt.Type, twt.TagNum, wireTypeToString(twt.WireType))
 }
 
-func (twt *UnexpectedField) Error() string {
+// Error implements the error interface.
+func (twt *errExtraneousField) Error() string {
 	return twt.String()
 }
 
-var _ error = (*UnexpectedField)(nil)
+var _ error = (*errExtraneousField)(nil)
 
 var (
 	protoFileToDesc   = make(map[string]*descriptor.FileDescriptorProto)
 	protoFileToDescMu sync.RWMutex
 )
 
-// Invoking descriptor.ForMessage(gogoproto.Message.(Descriptor).Descriptor()) is incredibly slow
-// for every single message, thus the need for a hand-rolled custom version that's performant and caches.
+// Invoking descriptor.ForMessage(proto.Message.(Descriptor).Descriptor()) is incredibly slow
+// for every single message, thus the need for a hand-rolled custom version that's performant and cacheable.
 func extractFileDesMessageDesc(desc descriptorIface) (*descriptor.FileDescriptorProto, *descriptor.DescriptorProto, error) {
 	gzippedPb, indices := desc.Descriptor()
 
@@ -303,7 +296,7 @@ func extractFileDesMessageDesc(desc descriptorIface) (*descriptor.FileDescriptor
 	}
 
 	fdesc := new(descriptor.FileDescriptorProto)
-	if err := gogoproto.Unmarshal(protoBlob, fdesc); err != nil {
+	if err := proto.Unmarshal(protoBlob, fdesc); err != nil {
 		return nil, nil, err
 	}
 
@@ -320,10 +313,16 @@ func extractFileDesMessageDesc(desc descriptorIface) (*descriptor.FileDescriptor
 	return fdesc, mdesc, nil
 }
 
+type descriptorMatch struct {
+	cache map[int32]*descriptor.FieldDescriptorProto
+	desc  *descriptor.DescriptorProto
+}
+
 var descprotoCacheMu sync.RWMutex
 var descprotoCache = make(map[reflect.Type]*descriptorMatch)
 
-func descProtoCache(desc descriptorIface, msg gogoproto.Message) (map[int32]*descriptor.FieldDescriptorProto, *descriptor.DescriptorProto, error) {
+// fieldNumToFieldDesc retrieves the mapping of field numbers to their respective field descriptors.
+func fieldNumToFieldDesc(desc descriptorIface, msg proto.Message) (map[int32]*descriptor.FieldDescriptorProto, *descriptor.DescriptorProto, error) {
 	key := reflect.ValueOf(msg).Type()
 
 	descprotoCacheMu.RLock()

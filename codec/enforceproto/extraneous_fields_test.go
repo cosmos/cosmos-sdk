@@ -1,4 +1,4 @@
-package enforceproto_test
+package enforceproto
 
 import (
 	"reflect"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/enforceproto"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -55,7 +54,7 @@ func TestCheckExtraneousFieldsRepeated(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotErr := enforceproto.CheckMismatchedProtoFields(protoBlob, tt.recv)
+			gotErr := CheckMismatchedProtoFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%v\n\nWant:\n%v", gotErr, tt.wantErr)
 			}
@@ -96,7 +95,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersionFD1),
-			wantErr: &enforceproto.UnexpectedField{
+			wantErr: &errExtraneousField{
 				Type:     "*testdata.TestVersionFD1",
 				TagNum:   12,
 				WireType: 2,
@@ -122,7 +121,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersion3),
-			wantErr: &enforceproto.ErrMismatchedWireType{
+			wantErr: &errMismatchedWireType{
 				Type:         "*testdata.TestVersion3",
 				TagNum:       2,
 				GotWireType:  1,
@@ -149,7 +148,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersion3LoneOneOfValue),
-			wantErr: &enforceproto.UnexpectedField{
+			wantErr: &errExtraneousField{
 				Type:     "*testdata.TestVersion3LoneOneOfValue",
 				TagNum:   7,
 				WireType: 2,
@@ -172,7 +171,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersion3LoneNesting),
-			wantErr: &enforceproto.UnexpectedField{
+			wantErr: &errExtraneousField{
 				Type:     "*testdata.TestVersion3LoneNesting",
 				TagNum:   6,
 				WireType: 0,
@@ -193,7 +192,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				}),
 			},
 			recv: new(testdata.TestVersion3LoneNesting),
-			wantErr: &enforceproto.ErrMismatchedWireType{
+			wantErr: &errMismatchedWireType{
 				Type:         "*testdata.TestVersion1",
 				TagNum:       1,
 				GotWireType:  2,
@@ -209,7 +208,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotErr := enforceproto.CheckMismatchedProtoFields(protoBlob, tt.recv)
+			gotErr := CheckMismatchedProtoFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -251,7 +250,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 					ChequeNo: "123XXXXXXX881",
 				},
 			},
-			wantErr: &enforceproto.UnexpectedField{
+			wantErr: &errExtraneousField{
 				Type:   "*testdata.Customer1",
 				TagNum: 8, WireType: 2,
 			},
@@ -261,7 +260,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 			in: &testdata.Customer2{
 				Miscellaneous: &types.Any{},
 			},
-			wantErr: &enforceproto.UnexpectedField{
+			wantErr: &errExtraneousField{
 				Type:     "*testdata.Customer1",
 				TagNum:   10,
 				WireType: 2,
@@ -275,7 +274,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 					Id: 991,
 				},
 			},
-			wantErr: &enforceproto.UnexpectedField{
+			wantErr: &errExtraneousField{
 				Type:     "*testdata.Customer1",
 				TagNum:   9,
 				WireType: 2,
@@ -289,7 +288,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 				Industry: 5299,
 				Fewer:    199.9,
 			},
-			wantErr: &enforceproto.ErrMismatchedWireType{
+			wantErr: &errMismatchedWireType{
 				Type:   "*testdata.Customer1",
 				TagNum: 2, GotWireType: 0, WantWireType: 2,
 			},
@@ -308,7 +307,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 				Id:   289,
 				Name: "Customer1",
 			},
-			wantErr: &enforceproto.ErrMismatchedWireType{
+			wantErr: &errMismatchedWireType{
 				Type:   "*testdata.Customer1",
 				TagNum: 3, GotWireType: 2, WantWireType: 5,
 			},
@@ -322,7 +321,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 				Fewer:    199.9,
 				Reserved: 819,
 			},
-			wantErr: &enforceproto.ErrMismatchedWireType{
+			wantErr: &errMismatchedWireType{
 				Type:   "*testdata.Customer1",
 				TagNum: 2, GotWireType: 0, WantWireType: 2,
 			},
@@ -335,7 +334,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 				Industry: 5299,
 				City:     testdata.Customer2_PaloAlto,
 			},
-			wantErr: &enforceproto.ErrMismatchedWireType{
+			wantErr: &errMismatchedWireType{
 				Type:        "*testdata.Customer1",
 				TagNum:      2,
 				GotWireType: 0, WantWireType: 2,
@@ -350,7 +349,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 				City:     testdata.Customer2_PaloAlto,
 				Fewer:    45,
 			},
-			wantErr: &enforceproto.ErrMismatchedWireType{
+			wantErr: &errMismatchedWireType{
 				TagNum: 2, GotWireType: 0, WantWireType: 2,
 				Type: "*testdata.Customer1",
 			},
@@ -366,7 +365,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 			}
 
 			c1 := new(testdata.Customer1)
-			gotErr := enforceproto.CheckMismatchedProtoFields(blob, c1)
+			gotErr := CheckMismatchedProtoFields(blob, c1)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}

@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 		{"connection is UNINITIALIZED", func() {
 			// set connection as UNINITIALIZED
 			counterparty := connectiontypes.NewCounterparty(clientIDB, connIDA, suite.chainB.GetPrefix())
-			connection := connectiontypes.NewConnectionEnd(connectiontypes.UNINITIALIZED, clientIDA, connIDA, counterparty, []string{ibctesting.ConnectionVersion})
+			connection := connectiontypes.NewConnectionEnd(connectiontypes.UNINITIALIZED, clientIDA, counterparty, []string{ibctesting.ConnectionVersion})
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connIDA, connection)
 
 			channelA := ibctesting.TestChannel{PortID: portID, ID: channelIDA}

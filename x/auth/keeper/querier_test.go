@@ -8,6 +8,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	keep "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -36,13 +37,13 @@ func TestQueryAccount(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountParams([]byte("")))
+	req.Data = cdc.MustMarshalJSON(types.QueryAccountRequest{Address: []byte("")})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	_, _, addr := types.KeyTestPubAddr()
-	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
+	_, _, addr := testdata.KeyTestPubAddr()
+	req.Data = cdc.MustMarshalJSON(types.QueryAccountRequest{Address: addr})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)

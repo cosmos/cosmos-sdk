@@ -51,7 +51,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	// check that the header consensus matches the client one
 	// NOTE: not checked for localhost client
 	if header != nil && clientType != exported.Localhost && header.ClientType() != clientType {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(types.ErrInvalidHeader, "header client type (%s) does not match expected client type (%s) for client with ID %s", header.ClientType(), clientType, clientID)
 	}
 
 	clientState, found := k.GetClientState(ctx, clientID)
@@ -59,7 +59,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
-	// addittion to spec: prevent update if the client is frozen
+	// addition to spec: prevent update if the client is frozen
 	if clientState.IsFrozen() {
 		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
@@ -100,7 +100,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))
 
-	// Emit events in keeper so antehandler emits them as well
+	// emitting events in the keeper emits for both begin block and handler client updates
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeUpdateClient,
@@ -110,16 +110,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		),
 	)
 
-	// localhost client is not updated though messages
-	if clientType != exported.Localhost {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			),
-		)
-	}
-
 	return clientState, nil
 }
 
@@ -128,12 +118,12 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour exported.Misbehaviour) error {
 	clientState, found := k.GetClientState(ctx, misbehaviour.GetClientID())
 	if !found {
-		return sdkerrors.Wrap(types.ErrClientNotFound, misbehaviour.GetClientID())
+		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
 
 	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), misbehaviour.GetIBCHeight())
 	if !found {
-		return sdkerrors.Wrap(types.ErrConsensusStateNotFound, misbehaviour.GetClientID())
+		return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
 
 	var err error
@@ -153,15 +143,6 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 
 	k.SetClientState(ctx, clientState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.GetClientID()))
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSubmitMisbehaviour,
-			sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.GetClientID()),
-			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusState.GetHeight())),
-		),
-	)
 
 	return nil
 }

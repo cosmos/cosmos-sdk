@@ -165,7 +165,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name           string

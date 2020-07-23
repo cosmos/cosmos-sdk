@@ -2,6 +2,7 @@ package connection
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -12,7 +13,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 	if err := k.ConnOpenInit(
 		ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty,
 	); err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "connection handshake open init failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -44,7 +45,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
 		proofHeight, consensusHeight,
 	); err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "connection handshake open try failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -75,7 +76,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
 		proofHeight, consensusHeight,
 	); err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "connection handshake open ack failed")
 	}
 
 	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)
@@ -106,7 +107,7 @@ func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg *types
 	if err := k.ConnOpenConfirm(
 		ctx, msg.ConnectionID, msg.ProofAck, proofHeight,
 	); err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "connection handshake open confirm failed")
 	}
 
 	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)

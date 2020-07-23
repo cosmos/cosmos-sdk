@@ -369,7 +369,7 @@ func recvPacketHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgPacket(
+		msg := types.NewMsgRecvPacket(
 			req.Packet,
 			req.Proofs,
 			req.Epoch,

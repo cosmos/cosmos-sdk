@@ -69,8 +69,8 @@ message MsgChannelCloseConfirm {
   bytes  signer       = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
-// MsgPacket receives incoming IBC packet
-message MsgPacket {
+// MsgRecvPacket receives incoming IBC packet
+message MsgRecvPacket {
   Packet packet       = 1 [(gogoproto.nullable) = false];
   bytes  proof        = 2;
   uint64  proof_epoch = 3 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];

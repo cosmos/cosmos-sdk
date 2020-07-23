@@ -92,7 +92,7 @@ func (ev Evidence) GetTime() time.Time {
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+		return sdkerrors.Wrap(err, "evidence client ID is invalid")
 	}
 
 	// ValidateBasic on both validators

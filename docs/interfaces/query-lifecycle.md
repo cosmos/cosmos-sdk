@@ -141,7 +141,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://tendermint.com/docs/spec/abci/abci.html#messages) type. The `Context` `Query()` routine receives the response and, if `--trust-node` is toggled to `false` and a proof needs to be verified, the response is verified with the `Context` `verifyProof()` function before the response is returned.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://tendermint.com/docs/spec/abci/abci.html#messages) type. The `Context` `Query()` routine receives the response and.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/context/query.go#L127-L165
 

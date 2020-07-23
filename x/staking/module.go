@@ -68,13 +68,13 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // GetTxCmd returns the root tx command for the staking module.
-func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
-	return cli.NewTxCmd(clientCtx)
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the staking module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey, clientCtx.Codec)
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // AppModule implements an application module for the staking module.
@@ -121,6 +121,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the staking module. It returns

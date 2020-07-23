@@ -102,7 +102,9 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			versions = []string{"(version won't match,[])"}
+			version, err := types.NewVersion("0.0", nil).Encode()
+			suite.Require().NoError(err)
+			versions = []string{version}
 		}, false},
 		{"connection state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -142,7 +144,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()                                // reset
 			consensusHeight = clientexported.NewHeight(0, 0) // must be explicitly changed in malleate
-			versions = types.GetCompatibleVersions()         // must be explicitly changed in malleate
+			versions = types.GetCompatibleEncodedVersions()  // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -266,6 +268,17 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 			version = ""
 		}, false},
+		{"feature set verification failed - unsupported feature", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+			suite.Require().NoError(err)
+
+			version, err = types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED", "ORDER_DAG"}).Encode()
+			suite.Require().NoError(err)
+		}, false},
 		{"self consensus state not found", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
@@ -305,9 +318,9 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                                // reset
-			version = types.GetCompatibleVersions()[0]       // must be explicitly changed in malleate
-			consensusHeight = clientexported.NewHeight(0, 0) // must be explicitly changed in malleate
+			suite.SetupTest()                                 // reset
+			consensusHeight = clientexported.NewHeight(0, 0)  // must be explicitly changed in malleate
+			version = types.GetCompatibleEncodedVersions()[0] // must be explicitly changed in malleate
 
 			tc.malleate()
 

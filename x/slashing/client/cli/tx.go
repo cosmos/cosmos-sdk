@@ -11,7 +11,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Slashing transaction subcommands",
@@ -20,11 +20,11 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	slashingTxCmd.AddCommand(NewUnjailTxCmd(clientCtx))
+	slashingTxCmd.AddCommand(NewUnjailTxCmd())
 	return slashingTxCmd
 }
 
-func NewUnjailTxCmd(clientCtx client.Context) *cobra.Command {
+func NewUnjailTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
@@ -34,16 +34,24 @@ func NewUnjailTxCmd(clientCtx client.Context) *cobra.Command {
 $ <appcli> tx slashing unjail --from mykey
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			valAddr := clientCtx.GetFromAddress()
+
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	return flags.PostCommands(cmd)[0]
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

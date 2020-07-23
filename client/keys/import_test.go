@@ -10,17 +10,17 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runImportCmd(t *testing.T) {
 	cmd := ImportKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	// Now add a temporary keybase
-	kbHome, cleanUp := tests.NewTestCaseDir(t)
+	kbHome, cleanUp := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanUp)
 
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)

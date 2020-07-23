@@ -5,15 +5,15 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	app, ctx := suite.app, suite.ctx
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryBalance),
 		Data: []byte{},
@@ -49,7 +49,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	app, ctx := suite.app, suite.ctx
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryAllBalances),
 		Data: []byte{},

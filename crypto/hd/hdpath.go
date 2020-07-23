@@ -156,10 +156,10 @@ func (p BIP44Params) String() string {
 		p.AddressIndex)
 }
 
-// ComputeMastersFromSeed returns the master public key, master secret, and chain code in hex.
+// ComputeMastersFromSeed returns the master secret key's, and chain code.
 func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
-	masterSecret := []byte("Bitcoin seed")
-	secret, chainCode = i64(masterSecret, seed)
+	curveIdentifier := []byte("Bitcoin seed")
+	secret, chainCode = i64(curveIdentifier, seed)
 
 	return
 }

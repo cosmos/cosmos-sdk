@@ -31,14 +31,17 @@ func handleMsgTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgTransfer)
 
 	k.Logger(ctx).Info("IBC transfer: %s from %s to %s", msg.Amount, msg.Sender, msg.Receiver)
 
-	ctx.EventManager().EmitEvent(
+	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			types.EventTypeTransfer,
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 			sdk.NewAttribute(types.AttributeKeyReceiver, msg.Receiver),
 		),
-	)
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	})
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),

@@ -1,9 +1,8 @@
 package channel
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
@@ -17,7 +16,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 		portCap, msg.Channel.Counterparty, msg.Channel.Version,
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrap(err, "channel handshake open init failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -27,7 +26,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -48,7 +47,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, proofHeight,
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrap(err, "channel handshake open try failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -58,7 +57,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -79,7 +78,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 		ctx, msg.PortID, msg.ChannelID, channelCap, msg.CounterpartyVersion, msg.ProofTry, proofHeight,
 	)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake open ack failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
@@ -89,9 +88,9 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 			types.EventTypeChannelOpenAck,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -110,7 +109,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 	proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
 	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofAck, proofHeight)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake open confirm failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
@@ -120,9 +119,9 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 			types.EventTypeChannelOpenConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -139,7 +138,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelCloseInit) (*sdk.Result, error) {
 	err := k.ChanCloseInit(ctx, msg.PortID, msg.ChannelID, channelCap)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake close init failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
@@ -149,9 +148,9 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 			types.EventTypeChannelCloseInit,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -170,7 +169,7 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 	proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
 	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, channelCap, msg.ProofInit, proofHeight)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "channel handshake close confirm failed")
 	}
 
 	channel, _ := k.GetChannel(ctx, msg.PortID, msg.ChannelID)
@@ -180,9 +179,9 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 			types.EventTypeChannelCloseConfirm,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, strings.Join(channel.ConnectionHops, ", ")),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

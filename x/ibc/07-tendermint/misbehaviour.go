@@ -28,12 +28,12 @@ func CheckMisbehaviourAndUpdateState(
 	// cast the interface to specific types before checking for misbehaviour
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "client state type is not Tendermint")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState)
 	}
 
 	tmEvidence, ok := misbehaviour.(types.Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, types.Evidence{})
 	}
 
 	tmHeight := tmEvidence.GetIBCHeight()
@@ -46,8 +46,9 @@ func CheckMisbehaviourAndUpdateState(
 
 	tmConsensusState, ok := consensusState.(types.ConsensusState)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "consensus state is not Tendermint")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", consensusState, types.ConsensusState{})
 	}
+
 	if err := checkMisbehaviour(
 		tmClientState, tmConsensusState, tmEvidence, height, currentTimestamp, consensusParams,
 	); err != nil {
@@ -75,7 +76,7 @@ func checkMisbehaviour(
 	//
 	// NOTE: The first condition is a safety check as the consensus params cannot
 	// be nil since the previous param values will be used in case they can't be
-	// retreived. If they are not set during initialization, Tendermint will always
+	// retrieved. If they are not set during initialization, Tendermint will always
 	// use the default values.
 	if consensusParams != nil &&
 		consensusParams.Evidence != nil &&

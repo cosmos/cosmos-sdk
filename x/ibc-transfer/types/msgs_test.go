@@ -14,12 +14,12 @@ const (
 	validPort        = "testportid"
 	invalidPort      = "(invalidport1)"
 	invalidShortPort = "p"
-	invalidLongPort  = "invalidlongportinvalidlongport"
+	invalidLongPort  = "invalidlongportinvalidlongportinvalidlongportinvalidlongportinvalid"
 
 	validChannel        = "testchannel"
 	invalidChannel      = "(invalidchannel1)"
 	invalidShortChannel = "invalidch"
-	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
+	invalidLongChannel  = "invalidlongchannelinvalidlongchannelinvalidlongchannelinvalidlongchannel"
 )
 
 var (

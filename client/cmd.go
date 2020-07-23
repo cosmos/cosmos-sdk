@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,6 +80,11 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // flags that do not necessarily change with context. These must be checked if
 // the caller explicitly changed the values.
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	if flagSet.Changed(cli.OutputFlag) {
+		output, _ := flagSet.GetString(cli.OutputFlag)
+		clientCtx = clientCtx.WithOutputFormat(output)
+	}
+
 	if flagSet.Changed(flags.FlagHome) {
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)
@@ -89,25 +95,24 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithChainID(chainID)
 	}
 
-	if flagSet.Changed(flags.FlagTrustNode) {
-		trustNode, _ := flagSet.GetBool(flags.FlagTrustNode)
-		clientCtx = clientCtx.WithTrustNode(trustNode)
-	}
-
-	if flagSet.Changed(flags.FlagKeyringBackend) {
+	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
-		kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
-		if err != nil {
-			return clientCtx, err
-		}
+		if keyringBackend != "" {
+			kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+			if err != nil {
+				return clientCtx, err
+			}
 
-		clientCtx = clientCtx.WithKeyring(kr)
+			clientCtx = clientCtx.WithKeyring(kr)
+		}
 	}
 
-	if flagSet.Changed(flags.FlagNode) {
+	if clientCtx.Client == nil || flagSet.Changed(flags.FlagNode) {
 		rpcURI, _ := flagSet.GetString(flags.FlagNode)
-		clientCtx = clientCtx.WithNodeURI(rpcURI)
+		if rpcURI != "" {
+			clientCtx = clientCtx.WithNodeURI(rpcURI)
+		}
 	}
 
 	return clientCtx, nil

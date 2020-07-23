@@ -67,10 +67,10 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 func (a AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // GetTxCmd returns the capability module's root tx command.
-func (a AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
+func (a AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
 // GetQueryCmd returns the capability module's root query command.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
 // ----------------------------------------------------------------------------
 // AppModule
@@ -104,6 +104,8 @@ func (AppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns the capability module's Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // RegisterInvariants registers the capability module's invariants.

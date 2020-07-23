@@ -107,31 +107,31 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterRESTRoutes(arg0, arg1 interfac
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
+func (m *MockAppModuleBasic) GetTxCmd() *cobra.Command {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd", clientCtx)
+	ret := m.ctrl.Call(m, "GetTxCmd")
 	ret0, _ := ret[0].(*cobra.Command)
 	return ret0
 }
 
 // GetTxCmd indicates an expected call of GetTxCmd
-func (mr *MockAppModuleBasicMockRecorder) GetTxCmd(clientCtx interface{}) *gomock.Call {
+func (mr *MockAppModuleBasicMockRecorder) GetTxCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleBasic)(nil).GetTxCmd), clientCtx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleBasic)(nil).GetTxCmd))
 }
 
 // GetQueryCmd mocks base method
-func (m *MockAppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func (m *MockAppModuleBasic) GetQueryCmd() *cobra.Command {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd", clientCtx)
+	ret := m.ctrl.Call(m, "GetQueryCmd")
 	ret0, _ := ret[0].(*cobra.Command)
 	return ret0
 }
 
 // GetQueryCmd indicates an expected call of GetQueryCmd
-func (mr *MockAppModuleBasicMockRecorder) GetQueryCmd(clientCtx interface{}) *gomock.Call {
+func (mr *MockAppModuleBasicMockRecorder) GetQueryCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleBasic)(nil).GetQueryCmd), clientCtx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleBasic)(nil).GetQueryCmd))
 }
 
 // MockAppModuleGenesis is a mock of AppModuleGenesis interface
@@ -224,31 +224,31 @@ func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interf
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModuleGenesis) GetTxCmd(clientCtx client.Context) *cobra.Command {
+func (m *MockAppModuleGenesis) GetTxCmd() *cobra.Command {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd", clientCtx)
+	ret := m.ctrl.Call(m, "GetTxCmd")
 	ret0, _ := ret[0].(*cobra.Command)
 	return ret0
 }
 
 // GetTxCmd indicates an expected call of GetTxCmd
-func (mr *MockAppModuleGenesisMockRecorder) GetTxCmd(clientCtx interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) GetTxCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleGenesis)(nil).GetTxCmd), clientCtx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModuleGenesis)(nil).GetTxCmd))
 }
 
 // GetQueryCmd mocks base method
-func (m *MockAppModuleGenesis) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func (m *MockAppModuleGenesis) GetQueryCmd() *cobra.Command {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd", clientCtx)
+	ret := m.ctrl.Call(m, "GetQueryCmd")
 	ret0, _ := ret[0].(*cobra.Command)
 	return ret0
 }
 
 // GetQueryCmd indicates an expected call of GetQueryCmd
-func (mr *MockAppModuleGenesisMockRecorder) GetQueryCmd(clientCtx interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisMockRecorder) GetQueryCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleGenesis)(nil).GetQueryCmd), clientCtx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModuleGenesis)(nil).GetQueryCmd))
 }
 
 // InitGenesis mocks base method
@@ -369,31 +369,31 @@ func (mr *MockAppModuleMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) 
 }
 
 // GetTxCmd mocks base method
-func (m *MockAppModule) GetTxCmd(clientCtx client.Context) *cobra.Command {
+func (m *MockAppModule) GetTxCmd() *cobra.Command {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd", clientCtx)
+	ret := m.ctrl.Call(m, "GetTxCmd")
 	ret0, _ := ret[0].(*cobra.Command)
 	return ret0
 }
 
 // GetTxCmd indicates an expected call of GetTxCmd
-func (mr *MockAppModuleMockRecorder) GetTxCmd(clientCtx interface{}) *gomock.Call {
+func (mr *MockAppModuleMockRecorder) GetTxCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModule)(nil).GetTxCmd), clientCtx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockAppModule)(nil).GetTxCmd))
 }
 
 // GetQueryCmd mocks base method
-func (m *MockAppModule) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func (m *MockAppModule) GetQueryCmd() *cobra.Command {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd", clientCtx)
+	ret := m.ctrl.Call(m, "GetQueryCmd")
 	ret0, _ := ret[0].(*cobra.Command)
 	return ret0
 }
 
 // GetQueryCmd indicates an expected call of GetQueryCmd
-func (mr *MockAppModuleMockRecorder) GetQueryCmd(clientCtx interface{}) *gomock.Call {
+func (mr *MockAppModuleMockRecorder) GetQueryCmd() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModule)(nil).GetQueryCmd), clientCtx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockAppModule)(nil).GetQueryCmd))
 }
 
 // InitGenesis mocks base method

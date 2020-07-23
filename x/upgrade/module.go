@@ -11,7 +11,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,27 +53,13 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	queryCmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: "Querying commands for the upgrade module",
-	}
-	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetPlanCmd(types.StoreKey, clientCtx.Codec),
-		cli.GetAppliedHeightCmd(types.StoreKey, clientCtx.Codec),
-	)...)
-
-	return queryCmd
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: "Upgrade transaction subcommands",
-	}
-	txCmd.AddCommand(flags.PostCommands()...)
-	return txCmd
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd()
 }
 
 func (b AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
@@ -109,7 +94,11 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
+}
 
 // InitGenesis is ignored, no sense in serializing future upgrades
 func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {

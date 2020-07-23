@@ -11,6 +11,7 @@ import (
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -46,8 +47,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					true,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
-					[]connectiontypes.ConnectionEnd{
-						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{connectiontypes.DefaultIBCVersion}),
+					[]connectiontypes.IdentifiedConnection{
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion})),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
@@ -101,8 +102,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: types.GenesisState{
 				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
-					[]connectiontypes.ConnectionEnd{
-						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+					[]connectiontypes.IdentifiedConnection{
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"})),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),

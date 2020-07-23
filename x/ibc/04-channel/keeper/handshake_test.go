@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 			// set connection as UNINITIALIZED
 			counterparty := connectiontypes.NewCounterparty(clientIDB, connIDA, suite.chainB.GetPrefix())
-			connection := connectiontypes.NewConnectionEnd(connectiontypes.UNINITIALIZED, clientIDA, connIDA, counterparty, []string{ibctesting.ConnectionVersion})
+			connection := connectiontypes.NewConnectionEnd(connectiontypes.UNINITIALIZED, clientIDA, counterparty, []string{ibctesting.ConnectionVersion})
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connection)
 
 			portCap = nil
@@ -66,7 +66,11 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 			// modify connA versions
 			conn := suite.chainA.GetConnection(connA)
-			conn.Versions = append(conn.Versions, connectiontypes.CreateVersionString("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}))
+
+			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = append(conn.Versions, version)
+
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
 				suite.chainA.GetContext(),
 				connA.ID, conn,
@@ -80,7 +84,11 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 			// modify connA versions to only support UNORDERED channels
 			conn := suite.chainA.GetConnection(connA)
-			conn.Versions = []string{connectiontypes.CreateVersionString("1", []string{"ORDER_UNORDERED"})}
+
+			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = []string{version}
+
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
 				suite.chainA.GetContext(),
 				connA.ID, conn,
@@ -207,7 +215,11 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 			// modify connB versions
 			conn := suite.chainB.GetConnection(connB)
-			conn.Versions = append(conn.Versions, connectiontypes.CreateVersionString("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}))
+
+			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = append(conn.Versions, version)
+
 			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(
 				suite.chainB.GetContext(),
 				connB.ID, conn,
@@ -221,7 +233,11 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 			// modify connA versions to only support UNORDERED channels
 			conn := suite.chainA.GetConnection(connA)
-			conn.Versions = []string{connectiontypes.CreateVersionString("1", []string{"ORDER_UNORDERED"})}
+
+			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
+			suite.Require().NoError(err)
+			conn.Versions = []string{version}
+
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
 				suite.chainA.GetContext(),
 				connA.ID, conn,
@@ -366,6 +382,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			heightDiff = 0    // must be explicitly changed
+
 			tc.malleate()
 
 			channelA := connA.FirstOrNextTestChannel()

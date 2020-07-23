@@ -12,7 +12,7 @@ Proposed
 
 The specification for IBC cross-chain fungible token transfers
 ([ICS20](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer)), needs to
-be aware of the origin any token denomination in order to relay a `Packet` which contains the sender
+be aware of the origin of any token denomination in order to relay a `Packet` which contains the sender
 and recipient addressed in the
 [`FungibleTokenPacketData`](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures).
 
@@ -68,7 +68,7 @@ specification.
 
 ## Decision
 
-Instead of adding the identifiers on the coin denomination directly, the proposed solution hashes the denomination prefix in order to get a consistent lenght for all the cross-chain fungible tokens. The new format will be the following:
+Instead of adding the identifiers on the coin denomination directly, the proposed solution hashes the denomination prefix in order to get a consistent length for all the cross-chain fungible tokens. The new format will be the following:
 
 ```golang
 ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + base coin denomination

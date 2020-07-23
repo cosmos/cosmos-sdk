@@ -80,7 +80,7 @@ Example:
 				if err != nil {
 					return err
 				}
-				return clientCtx.PrintOutput(res.Balances)
+				return clientCtx.PrintOutput(res)
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)

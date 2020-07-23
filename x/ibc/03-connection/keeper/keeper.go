@@ -113,13 +113,13 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 // no paths are stored.
 func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) []types.ConnectionPaths {
 	var allConnectionPaths []types.ConnectionPaths
-	k.clientKeeper.IterateClients(ctx, func(cs clientexported.ClientState) bool {
-		paths, found := k.GetClientConnectionPaths(ctx, cs.GetID())
+	k.clientKeeper.IterateClients(ctx, func(clientID string, cs clientexported.ClientState) bool {
+		paths, found := k.GetClientConnectionPaths(ctx, clientID)
 		if !found {
 			// continue when connection handshake is not initialized
 			return false
 		}
-		connPaths := types.NewConnectionPaths(cs.GetID(), paths)
+		connPaths := types.NewConnectionPaths(clientID, paths)
 		allConnectionPaths = append(allConnectionPaths, connPaths)
 		return false
 	})

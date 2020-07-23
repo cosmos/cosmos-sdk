@@ -314,9 +314,6 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 		},
 	}
 
-	// Deprecated, remove line when removing FlagPage altogether.
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of proposals to query for")
-
 	flags.AddPaginationFlagsToCmd(cmd, "votes")
 	flags.AddQueryFlagsToCmd(cmd)
 

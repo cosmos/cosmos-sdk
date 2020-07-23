@@ -130,7 +130,7 @@ func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) []types.ConnectionP
 // IterateConnections provides an iterator over all ConnectionEnd objects.
 // For each ConnectionEnd, cb will be called. If the cb returns true, the
 // iterator will close and stop.
-func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd) bool) {
+func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.IdentifiedConnection) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, host.KeyConnectionPrefix)
 
@@ -139,15 +139,17 @@ func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd)
 		var connection types.ConnectionEnd
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &connection)
 
-		if cb(connection) {
+		connectionID := host.MustParseConnectionPath(string(iterator.Key()))
+		identifiedConnection := types.NewIdentifiedConnection(connectionID, connection)
+		if cb(identifiedConnection) {
 			break
 		}
 	}
 }
 
 // GetAllConnections returns all stored ConnectionEnd objects.
-func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.ConnectionEnd) {
-	k.IterateConnections(ctx, func(connection types.ConnectionEnd) bool {
+func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.IdentifiedConnection) {
+	k.IterateConnections(ctx, func(connection types.IdentifiedConnection) bool {
 		connections = append(connections, connection)
 		return false
 	})

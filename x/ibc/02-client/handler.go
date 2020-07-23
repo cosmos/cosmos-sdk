@@ -27,7 +27,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 	case exported.Tendermint:
 		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
 		if !ok {
-			return nil, sdkerrors.Wrap(types.ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
+			return nil, sdkerrors.Wrapf(types.ErrInvalidClientType, "got %T, expected %T", msg, ibctmtypes.MsgCreateClient{})
 		}
 		var err error
 
@@ -41,7 +41,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
-		return nil, sdkerrors.Wrap(types.ErrInvalidClientType, msg.GetClientType())
+		return nil, sdkerrors.Wrapf(types.ErrInvalidClientType, "unsupported client type (%s)", msg.GetClientType())
 	}
 
 	_, err := k.CreateClient(
@@ -76,6 +76,13 @@ func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgUpd
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
@@ -92,6 +99,18 @@ func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {
 			)
 		}
 
-		return k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)
+		if err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour); err != nil {
+			return sdkerrors.Wrap(err, "failed to process misbehaviour for IBC client")
+		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeSubmitMisbehaviour,
+				sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.GetClientID()),
+				sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
+				sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", uint64(misbehaviour.GetHeight()))),
+			),
+		)
+		return nil
 	}
 }

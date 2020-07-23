@@ -56,7 +56,7 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 		return nil, err
 	}
 
-	return types.NewQueryConnectionResponse(connection, proofBz, res.Height), nil
+	return types.NewQueryConnectionResponse(connectionID, connection, proofBz, res.Height), nil
 }
 
 // QueryClientConnections queries the connection paths registered for a particular client.

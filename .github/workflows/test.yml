@@ -73,10 +73,9 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-2:
@@ -111,10 +110,9 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-3:
@@ -149,10 +147,9 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
 
   test-coverage-run-4:
@@ -187,29 +184,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.7
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true
-        if: "env.GIT_DIFF != ''"
-
-  integration-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
-        id: git_diff
-        with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum
-      - name: build-simd
-        run: |
-          make build-simd
-        if: "env.GIT_DIFF != ''"
-      - name: cli-test
-        run: |
-          make test-integration
         if: "env.GIT_DIFF != ''"

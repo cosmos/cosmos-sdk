@@ -23,19 +23,15 @@ message ValidatorSigningInfo {
   option (gogoproto.goproto_stringer) = false;
 
   bytes address = 1 [
-    (gogoproto.casttype) =
-        "github.com/cosmos/cosmos-sdk/types.ConsAddress"  // validator consensus address
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress"  // validator consensus address
   ];
   // height at which validator was first a candidate OR was unjailed
   int64 start_height = 2 [(gogoproto.moretags) = "yaml:\"start_height\""];
   // index offset into signed block bit array
   int64 index_offset = 3 [(gogoproto.moretags) = "yaml:\"index_offset\""];
   // timestamp validator cannot be unjailed until
-  google.protobuf.Timestamp jailed_until = 4 [
-    (gogoproto.moretags) = "yaml:\"jailed_until\"",
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false
-  ];
+  google.protobuf.Timestamp jailed_until = 4
+      [(gogoproto.moretags) = "yaml:\"jailed_until\"", (gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // whether or not a validator has been tombstoned (killed out of validator set)
   bool tombstoned = 5;
   // missed blocks counter (to avoid scanning the array every time)
@@ -43,23 +39,26 @@ message ValidatorSigningInfo {
 }
 
 // Params - used for initializing default parameter for slashing at genesis
-message Params{
-  int64 signed_blocks_window = 1 [(gogoproto.jsontag) = "json:\"signed_blocks_window\"",
-                                 (gogoproto.moretags) = "yaml:\"signed_blocks_window\""];
-  bytes min_signed_per_window = 2 [(gogoproto.jsontag) = "json:\"min_signed_per_window\"",
-                                  (gogoproto.moretags) = "yaml:\"min_signed_per_window\"",
-                                  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-                                  (gogoproto.nullable)   = false];
-  google.protobuf.Duration downtime_jail_duration = 3 [(gogoproto.nullable)    = false,
-                                                       (gogoproto.stdduration) = true,
-                                                      (gogoproto.jsontag) = "json:\"downtime_jail_duration\"",
-                                                       (gogoproto.moretags)    = "yaml:\"downtime_jail_duration\""];
-  bytes slash_fraction_double_sign = 4 [(gogoproto.jsontag) = "json:\"slash_fraction_double_sign\"",
-                                       (gogoproto.moretags) = "yaml:\"slash_fraction_double_sign\"",
-                                       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-                                       (gogoproto.nullable)   = false];
-  bytes slash_fraction_downtime = 5 [(gogoproto.jsontag) = "json:\"slash_fraction_downtime\"",
-                                    (gogoproto.moretags) = "yaml:\"slash_fraction_downtime\"",
-                                    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-                                    (gogoproto.nullable) = false];
+message Params {
+  int64 signed_blocks_window  = 1 [(gogoproto.moretags) = "yaml:\"signed_blocks_window\""];
+  bytes min_signed_per_window = 2 [
+    (gogoproto.moretags)   = "yaml:\"min_signed_per_window\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  google.protobuf.Duration downtime_jail_duration = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"downtime_jail_duration\""
+  ];
+  bytes slash_fraction_double_sign = 4 [
+    (gogoproto.moretags)   = "yaml:\"slash_fraction_double_sign\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  bytes slash_fraction_downtime = 5 [
+    (gogoproto.moretags)   = "yaml:\"slash_fraction_downtime\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

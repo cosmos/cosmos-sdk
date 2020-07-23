@@ -11,17 +11,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
-	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
+	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)
 	t.Cleanup(kbCleanUp)
 

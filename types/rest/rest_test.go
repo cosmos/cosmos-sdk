@@ -188,7 +188,7 @@ func TestProcessPostResponse(t *testing.T) {
 
 	// setup
 	viper.Set(flags.FlagOffline, true)
-	ctx := client.NewContext()
+	ctx := client.Context{}
 	height := int64(194423)
 
 	privKey := secp256k1.GenPrivKey()

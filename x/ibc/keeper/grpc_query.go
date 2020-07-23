@@ -47,6 +47,11 @@ func (q Keeper) PacketCommitments(c context.Context, req *channeltypes.QueryPack
 	return q.ChannelKeeper.PacketCommitments(c, req)
 }
 
+// PacketAcknowledgement implements the IBC QueryServer interface
+func (q Keeper) PacketAcknowledgement(c context.Context, req *channeltypes.QueryPacketAcknowledgementRequest) (*channeltypes.QueryPacketAcknowledgementResponse, error) {
+	return q.ChannelKeeper.PacketAcknowledgement(c, req)
+}
+
 // UnrelayedPackets implements the IBC QueryServer interface
 func (q Keeper) UnrelayedPackets(c context.Context, req *channeltypes.QueryUnrelayedPacketsRequest) (*channeltypes.QueryUnrelayedPacketsResponse, error) {
 	return q.ChannelKeeper.UnrelayedPackets(c, req)

@@ -10,7 +10,7 @@ import (
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	clientCtx := client.Context{}.WithJSONMarshaler(types.ModuleCdc).WithTrustNode(true)
+	clientCtx := client.Context{}.WithJSONMarshaler(types.ModuleCdc)
 
 	type args struct {
 		delAddr string
@@ -32,7 +32,7 @@ func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := QueryDelegationRewards(clientCtx, "", tt.args.delAddr, tt.args.valAddr)
+			_, _, err := QueryDelegationRewards(clientCtx, tt.args.delAddr, tt.args.valAddr)
 			require.True(t, err != nil, tt.wantErr)
 		})
 	}

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -9,8 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // create a decimal from a decimal string (ex. "1234.5678")
@@ -270,8 +269,6 @@ func TestTruncate(t *testing.T) {
 	}
 }
 
-var cdc = codec.New()
-
 func TestDecMarshalJSON(t *testing.T) {
 	decimal := func(i int64) Dec {
 		d := NewDec(0)
@@ -526,5 +523,37 @@ func TestDecEncoding(t *testing.T) {
 		bz, err = yaml.Marshal(tc.input)
 		require.NoError(t, err)
 		require.Equal(t, tc.yamlStr, string(bz))
+	}
+}
+
+func BenchmarkMarshalTo(b *testing.B) {
+	bis := []struct {
+		in   Dec
+		want []byte
+	}{
+		{
+			NewDec(1e8), []byte{
+				0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+			},
+		},
+		{NewDec(0), []byte{0x30}},
+	}
+	data := make([]byte, 100)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		for _, bi := range bis {
+			if n, err := bi.in.MarshalTo(data); err != nil {
+				b.Fatal(err)
+			} else {
+				if !bytes.Equal(data[:n], bi.want) {
+					b.Fatalf("Mismatch\nGot:  % x\nWant: % x\n", data[:n], bi.want)
+				}
+			}
+		}
 	}
 }

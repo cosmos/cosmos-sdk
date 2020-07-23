@@ -2,27 +2,24 @@ package keys
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func Test_RunMnemonicCmdNormal(t *testing.T) {
 	cmd := MnemonicKeyCommand()
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{})
 	require.NoError(t, cmd.Execute())
 }
 
 func Test_RunMnemonicCmdUser(t *testing.T) {
 	cmd := MnemonicKeyCommand()
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=1", flagUserEntropy)})
 	err := cmd.Execute()
@@ -30,7 +27,7 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	require.Equal(t, "EOF", err.Error())
 
 	// Try again
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	mockIn.Reset("Hi!\n")
 	err = cmd.Execute()
 	require.Error(t, err)

@@ -207,7 +207,12 @@ func InitTestnet(
 		)
 
 		tx := authtypes.NewStdTx([]sdk.Msg{msg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
-		txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
+		txBldr, err := authtypes.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientDir)
+		if err != nil {
+			return fmt.Errorf("error creating tx: %w", err)
+		}
+
+		txBldr = txBldr.WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
 
 		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
 		if err != nil {

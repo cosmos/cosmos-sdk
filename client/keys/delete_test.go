@@ -9,14 +9,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
+	// Now add a temporary keybase
+	kbHome, cleanUp := testutil.NewTestCaseDir(t)
+	t.Cleanup(cleanUp)
+
 	cmd := DeleteKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	cmd.Flags().AddFlagSet(Commands(kbHome).PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
 	forceF, _ := cmd.Flags().GetBool(flagForce)
@@ -26,16 +30,13 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
-	// Now add a temporary keybase
-	kbHome, cleanUp := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
 
 	path := sdk.GetConfig().GetFullFundraiserPath()
 
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 
-	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, hd.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)

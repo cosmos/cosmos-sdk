@@ -8,7 +8,9 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -51,8 +53,10 @@ func NewChannelOpenInitCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
-	cmd.Flags().String(FlagIBCVersion, types.DefaultChannelVersion, "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -102,8 +106,10 @@ func NewChannelOpenTryCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
-	cmd.Flags().String(FlagIBCVersion, types.DefaultChannelVersion, "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -147,14 +153,15 @@ func NewChannelOpenAckCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(FlagIBCVersion, types.DefaultChannelVersion, "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewChannelOpenConfirmCmd returns the command to create a MsgChannelOpenConfirm transaction
 func NewChannelOpenConfirmCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof_ack.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenConfirm message",
 		Args:  cobra.ExactArgs(4),
@@ -188,11 +195,15 @@ func NewChannelOpenConfirmCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewChannelCloseInitCmd returns the command to create a MsgChannelCloseInit transaction
 func NewChannelCloseInitCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "close-init [port-id] [channel-id]",
 		Short: "Creates and sends a ChannelCloseInit message",
 		Args:  cobra.ExactArgs(2),
@@ -214,11 +225,15 @@ func NewChannelCloseInitCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewChannelCloseConfirmCmd returns the command to create a MsgChannelCloseConfirm transaction
 func NewChannelCloseConfirmCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof_init.json] [proof-height]",
 		Short: "Creates and sends a ChannelCloseConfirm message",
 		Args:  cobra.ExactArgs(4),
@@ -252,6 +267,10 @@ func NewChannelCloseConfirmCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 func channelOrder(fs *pflag.FlagSet) types.Order {

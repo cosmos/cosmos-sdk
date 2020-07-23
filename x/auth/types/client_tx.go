@@ -33,15 +33,20 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 // SetSignatures implements TxBuilder.SetSignatures
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
+
 	for i, sig := range signatures {
-		pubKey := sig.PubKey
 		var pubKeyBz []byte
+
+		pubKey := sig.PubKey
 		if pubKey != nil {
 			pubKeyBz = pubKey.Bytes()
 		}
 
-		var sigBz []byte
-		var err error
+		var (
+			sigBz []byte
+			err   error
+		)
+
 		if sig.Data != nil {
 			sigBz, err = SignatureDataToAminoSignature(legacy.Cdc, sig.Data)
 			if err != nil {
@@ -54,6 +59,7 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 			Signature: sigBz,
 		}
 	}
+
 	s.Signatures = sigs
 	return nil
 }
@@ -71,40 +77,40 @@ func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
 }
 
-// StdTxGenerator is a context.TxGenerator for StdTx
-type StdTxGenerator struct {
+// StdTxConfig is a context.TxConfig for StdTx
+type StdTxConfig struct {
 	Cdc *codec.Codec
 }
 
-var _ client.TxGenerator = StdTxGenerator{}
+var _ client.TxConfig = StdTxConfig{}
 
-// NewTxBuilder implements TxGenerator.NewTxBuilder
-func (s StdTxGenerator) NewTxBuilder() client.TxBuilder {
+// NewTxBuilder implements TxConfig.NewTxBuilder
+func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 	return &StdTxBuilder{
 		StdTx: StdTx{},
 		cdc:   s.Cdc,
 	}
 }
 
-// MarshalTx implements TxGenerator.MarshalTx
-func (s StdTxGenerator) TxEncoder() sdk.TxEncoder {
+// MarshalTx implements TxConfig.MarshalTx
+func (s StdTxConfig) TxEncoder() sdk.TxEncoder {
 	return DefaultTxEncoder(s.Cdc)
 }
 
-func (s StdTxGenerator) TxDecoder() sdk.TxDecoder {
+func (s StdTxConfig) TxDecoder() sdk.TxDecoder {
 	return DefaultTxDecoder(s.Cdc)
 }
 
-func (s StdTxGenerator) TxJSONEncoder() sdk.TxEncoder {
+func (s StdTxConfig) TxJSONEncoder() sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return s.Cdc.MarshalJSON(tx)
 	}
 }
 
-func (s StdTxGenerator) TxJSONDecoder() sdk.TxDecoder {
+func (s StdTxConfig) TxJSONDecoder() sdk.TxDecoder {
 	return DefaultJSONTxDecoder(s.Cdc)
 }
 
-func (s StdTxGenerator) SignModeHandler() authsigning.SignModeHandler {
+func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
 	return LegacyAminoJSONHandler{}
 }

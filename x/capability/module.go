@@ -106,9 +106,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, am.keeper)
-}
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // RegisterInvariants registers the capability module's invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}

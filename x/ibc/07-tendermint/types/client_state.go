@@ -85,7 +85,6 @@ func NewClientState(
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
 		LastHeader:      header,
-		FrozenHeight:    clientexported.Height{0, 0},
 		ProofSpecs:      specs,
 	}
 }

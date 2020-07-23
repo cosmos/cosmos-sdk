@@ -43,7 +43,7 @@ type ChannelOpenTryReq struct {
 	CounterpartyChannelID string       `json:"counterparty_channel_id" yaml:"counterparty_channel_id"`
 	CounterpartyVersion   string       `json:"counterparty_version" yaml:"counterparty_version"`
 	ProofInit             []byte       `json:"proof_init" yaml:"proof_init"`
-	ProofEpoch            uint64       `json:"proof_height" yaml:"proof_height"`
+	ProofEpoch            uint64       `json:"proof_epoch" yaml:"proof_epoch"`
 	ProofHeight           uint64       `json:"proof_height" yaml:"proof_height"`
 }
 
@@ -52,7 +52,7 @@ type ChannelOpenAckReq struct {
 	BaseReq             rest.BaseReq `json:"base_req" yaml:"base_req"`
 	CounterpartyVersion string       `json:"counterparty_version" yaml:"counterparty_version"`
 	ProofTry            []byte       `json:"proof_try" yaml:"proof_try"`
-	ProofEpoch          uint64       `json:"proof_height" yaml:"proof_height"`
+	ProofEpoch          uint64       `json:"proof_epoch" yaml:"proof_epoch"`
 	ProofHeight         uint64       `json:"proof_height" yaml:"proof_height"`
 }
 
@@ -60,7 +60,7 @@ type ChannelOpenAckReq struct {
 type ChannelOpenConfirmReq struct {
 	BaseReq     rest.BaseReq `json:"base_req" yaml:"base_req"`
 	ProofAck    []byte       `json:"proof_ack" yaml:"proof_ack"`
-	ProofEpoch  uint64       `json:"proof_height" yaml:"proof_height"`
+	ProofEpoch  uint64       `json:"proof_epoch" yaml:"proof_epoch"`
 	ProofHeight uint64       `json:"proof_height" yaml:"proof_height"`
 }
 
@@ -73,7 +73,7 @@ type ChannelCloseInitReq struct {
 type ChannelCloseConfirmReq struct {
 	BaseReq     rest.BaseReq `json:"base_req" yaml:"base_req"`
 	ProofInit   []byte       `json:"proof_init" yaml:"proof_init"`
-	ProofEpoch  uint64       `json:"proof_height" yaml:"proof_height"`
+	ProofEpoch  uint64       `json:"proof_epoch" yaml:"proof_epoch"`
 	ProofHeight uint64       `json:"proof_height" yaml:"proof_height"`
 }
 

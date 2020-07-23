@@ -97,13 +97,6 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 	})
 }
 
-// RegisterProxyServer registers a gRPC proxy server.
-func (qrt GRPCQueryRouter) RegisterProxyServer(server gogogrpc.Server) {
-	for _, data := range qrt.serviceData {
-		server.RegisterService(data.serviceDesc, data.handler)
-	}
-}
-
 // AnyUnpacker returns the AnyUnpacker for the router
 func (qrt *GRPCQueryRouter) AnyUnpacker() types.AnyUnpacker {
 	return qrt.anyUnpacker

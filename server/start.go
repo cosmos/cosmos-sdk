@@ -9,9 +9,6 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -21,6 +18,8 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -255,10 +254,12 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			return err
 		}
 
-		err = grpcSrv.Serve(listener)
-		if err != nil {
-			return err
-		}
+		go func() {
+			err = grpcSrv.Serve(listener)
+			if err != nil {
+				fmt.Printf("failed to serve: %v\n", err)
+			}
+		}()
 	}
 
 	var cpuProfileCleanup func()

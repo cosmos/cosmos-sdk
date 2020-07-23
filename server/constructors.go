@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/gogo/protobuf/grpc"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"

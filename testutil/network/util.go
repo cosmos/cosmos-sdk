@@ -86,7 +86,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.api = apiSrv
 	}
 
-	// TODO Factor code with server/start.go
 	if val.AppConfig.GRPC.Enable {
 		grpcSrv := grpc.NewServer()
 		app.RegisterGRPC(grpcSrv)

@@ -8,7 +8,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/query";
 //
 //  message SomeRequest {
 //          Foo some_parameter = 1;
-//          PageRequest page = 2;
+//          PageRequest pagination = 2;
 //  }
 message PageRequest {
     // key is a value returned in PageResponse.next_key to begin

@@ -10,7 +10,8 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, connection := range gs.Connections {
-		k.SetConnection(ctx, connection.ID, connection)
+		conn := types.NewConnectionEnd(connection.State, connection.ClientID, connection.Counterparty, connection.Versions)
+		k.SetConnection(ctx, connection.ID, conn)
 	}
 	for _, connPaths := range gs.ClientConnectionPaths {
 		k.SetClientConnectionPaths(ctx, connPaths.ClientID, connPaths.Paths)

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,14 +10,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	stakingQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the staking module",
@@ -24,28 +24,29 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
+
 	stakingQueryCmd.AddCommand(
-		GetCmdQueryDelegation(queryRoute, cdc),
-		GetCmdQueryDelegations(queryRoute, cdc),
-		GetCmdQueryUnbondingDelegation(queryRoute, cdc),
-		GetCmdQueryUnbondingDelegations(queryRoute, cdc),
-		GetCmdQueryRedelegation(queryRoute, cdc),
-		GetCmdQueryRedelegations(queryRoute, cdc),
-		GetCmdQueryValidator(queryRoute, cdc),
-		GetCmdQueryValidators(queryRoute, cdc),
-		GetCmdQueryValidatorDelegations(queryRoute, cdc),
-		GetCmdQueryValidatorUnbondingDelegations(queryRoute, cdc),
-		GetCmdQueryValidatorRedelegations(queryRoute, cdc),
-		GetCmdQueryHistoricalInfo(queryRoute, cdc),
-		GetCmdQueryParams(queryRoute, cdc),
-		GetCmdQueryPool(queryRoute, cdc),
+		GetCmdQueryDelegation(),
+		GetCmdQueryDelegations(),
+		GetCmdQueryUnbondingDelegation(),
+		GetCmdQueryUnbondingDelegations(),
+		GetCmdQueryRedelegation(),
+		GetCmdQueryRedelegations(),
+		GetCmdQueryValidator(),
+		GetCmdQueryValidators(),
+		GetCmdQueryValidatorDelegations(),
+		GetCmdQueryValidatorUnbondingDelegations(),
+		GetCmdQueryValidatorRedelegations(),
+		GetCmdQueryHistoricalInfo(),
+		GetCmdQueryParams(),
+		GetCmdQueryPool(),
 	)
 
 	return stakingQueryCmd
 }
 
 // GetCmdQueryValidator implements the validator query command.
-func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validator [validator-addr]",
 		Short: "Query a validator",
@@ -60,28 +61,26 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			addr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, _, err := clientCtx.QueryStore(types.GetValidatorKey(addr), storeName)
+			params := &types.QueryValidatorRequest{ValidatorAddr: addr}
+			res, err := queryClient.Validator(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
 
-			if len(res) == 0 {
-				return fmt.Errorf("no validator found with address %s", addr)
-			}
-
-			validator, err := types.UnmarshalValidator(types.ModuleCdc, res)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(validator)
+			return clientCtx.PrintOutput(res.Validator)
 		},
 	}
 
@@ -91,7 +90,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 }
 
 // GetCmdQueryValidators implements the query all validators command.
-func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidators() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validators",
 		Short: "Query for all validators",
@@ -106,9 +105,13 @@ $ %s query staking validators
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
-			resKVs, _, err := clientCtx.QuerySubspace(types.ValidatorsKey, storeName)
+			resKVs, _, err := clientCtx.QuerySubspace(types.ValidatorsKey, types.StoreKey)
 			if err != nil {
 				return err
 			}
@@ -133,7 +136,7 @@ $ %s query staking validators
 }
 
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
-func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorUnbondingDelegations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations-from [validator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
@@ -148,42 +151,47 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			page, _ := cmd.Flags().GetInt(flags.FlagPage)
-			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, page, limit))
+			pageReq := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorUnbondingDelegations)
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			params := &types.QueryValidatorUnbondingDelegationsRequest{
+				ValidatorAddr: valAddr,
+				Pagination:    pageReq,
+			}
+
+			res, err := queryClient.ValidatorUnbondingDelegations(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			var ubds types.UnbondingDelegations
-			cdc.MustUnmarshalJSON(res, &ubds)
-			return clientCtx.PrintOutput(ubds)
+			return clientCtx.PrintOutput(res.UnbondingResponses)
 		},
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of unbonding delegations to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "unbonding delegations")
 
 	return cmd
 }
 
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations
 // from a validator command.
-func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorRedelegations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegations-from [validator-addr]",
 		Short: "Query all outgoing redelegatations from a validator",
@@ -198,40 +206,46 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.QueryRedelegationParams{SrcValidatorAddr: valSrcAddr})
+			pageReq := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			params := &types.QueryRedelegationsRequest{
+				SrcValidatorAddr: valSrcAddr,
+				Pagination:       pageReq,
+			}
+
+			res, err := queryClient.Redelegations(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			var resp types.RedelegationResponses
-			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.RedelegationResponses)
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "validator redelegations")
 
 	return cmd
 }
 
 // GetCmdQueryDelegation the query delegation command.
-func GetCmdQueryDelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegation [delegator-addr] [validator-addr]",
 		Short: "Query a delegation based on address and validator address",
@@ -246,7 +260,13 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -258,23 +278,17 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryBondsParams(delAddr, valAddr))
+			params := &types.QueryDelegationRequest{
+				DelegatorAddr: delAddr,
+				ValidatorAddr: valAddr,
+			}
+
+			res, err := queryClient.Delegation(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegation)
-			res, _, err := clientCtx.QueryWithData(route, bz)
-			if err != nil {
-				return err
-			}
-
-			var resp types.DelegationResponse
-			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.DelegationResponse)
 		},
 	}
 
@@ -285,7 +299,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 
 // GetCmdQueryDelegations implements the command to query all the delegations
 // made from one delegator.
-func GetCmdQueryDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made by one delegator",
@@ -300,41 +314,47 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryDelegatorParams(delAddr))
+			pageReq := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorDelegations)
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			params := &types.QueryDelegatorDelegationsRequest{
+				DelegatorAddr: delAddr,
+				Pagination:    pageReq,
+			}
+
+			res, err := queryClient.DelegatorDelegations(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			var resp types.DelegationResponses
-			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.DelegationResponses)
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "delegations")
 
 	return cmd
 }
 
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
-func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorDelegations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
@@ -349,45 +369,47 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			page, _ := cmd.Flags().GetInt(flags.FlagPage)
-			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, page, limit))
+			pageReq := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorDelegations)
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			params := &types.QueryValidatorDelegationsRequest{
+				ValidatorAddr: valAddr,
+				Pagination:    pageReq,
+			}
+
+			res, err := queryClient.ValidatorDelegations(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			var resp types.DelegationResponses
-			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.DelegationResponses)
 		},
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of delegations to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of delegations to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "validator delegations")
 
 	return cmd
 }
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single
 // unbonding-delegation record.
-func GetCmdQueryUnbondingDelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegation [delegator-addr] [validator-addr]",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
@@ -402,7 +424,13 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
@@ -414,23 +442,17 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryBondsParams(delAddr, valAddr))
+			params := &types.QueryUnbondingDelegationRequest{
+				DelegatorAddr: delAddr,
+				ValidatorAddr: valAddr,
+			}
+
+			res, err := queryClient.UnbondingDelegation(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryUnbondingDelegation)
-			res, _, err := clientCtx.QueryWithData(route, bz)
-			if err != nil {
-				return err
-			}
-
-			var ubd types.UnbondingDelegation
-			if err = cdc.UnmarshalJSON(res, &ubd); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(ubd)
+			return clientCtx.PrintOutput(res.Unbond)
 		},
 	}
 
@@ -441,7 +463,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 
 // GetCmdQueryUnbondingDelegations implements the command to query all the
 // unbonding-delegation records for a delegator.
-func GetCmdQueryUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
@@ -456,41 +478,47 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryDelegatorParams(delegatorAddr))
+			pageReq := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorUnbondingDelegations)
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			params := &types.QueryDelegatorUnbondingDelegationsRequest{
+				DelegatorAddr: delegatorAddr,
+				Pagination:    pageReq,
+			}
+
+			res, err := queryClient.DelegatorUnbondingDelegations(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			var ubds types.UnbondingDelegations
-			if err = cdc.UnmarshalJSON(res, &ubds); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(ubds)
+			return clientCtx.PrintOutput(res.UnbondingResponses)
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "unbonding delegations")
 
 	return cmd
 }
 
 // GetCmdQueryRedelegation implements the command to query a single
 // redelegation record.
-func GetCmdQueryRedelegation(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr]",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
@@ -505,7 +533,13 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -522,23 +556,18 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryRedelegationParams(delAddr, valSrcAddr, valDstAddr))
+			params := &types.QueryRedelegationsRequest{
+				DelegatorAddr:    delAddr,
+				DstValidatorAddr: valDstAddr,
+				SrcValidatorAddr: valSrcAddr,
+			}
+
+			res, err := queryClient.Redelegations(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, _, err := clientCtx.QueryWithData(route, bz)
-			if err != nil {
-				return err
-			}
-
-			var resp types.RedelegationResponses
-			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.RedelegationResponses)
 		},
 	}
 
@@ -549,7 +578,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 
 // GetCmdQueryRedelegations implements the command to query all the
 // redelegation records for a delegator.
-func GetCmdQueryRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegations [delegator-addr]",
 		Args:  cobra.ExactArgs(1),
@@ -564,40 +593,46 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.QueryRedelegationParams{DelegatorAddr: delAddr})
+			pageReq := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryRedelegations)
-			res, _, err := clientCtx.QueryWithData(route, bz)
+			params := &types.QueryRedelegationsRequest{
+				DelegatorAddr: delAddr,
+				Pagination:    pageReq,
+			}
+
+			res, err := queryClient.Redelegations(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			var resp types.RedelegationResponses
-			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.RedelegationResponses)
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "delegator redelegations")
 
 	return cmd
 }
 
 // GetCmdQueryHistoricalInfo implements the historical info query command
-func GetCmdQueryHistoricalInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryHistoricalInfo() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "historical-info [height]",
 		Args:  cobra.ExactArgs(1),
@@ -612,30 +647,27 @@ $ %s query staking historical-info 5
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
 
 			height, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil || height < 0 {
 				return fmt.Errorf("height argument provided must be a non-negative-integer: %v", err)
 			}
 
-			bz, err := cdc.MarshalJSON(types.QueryHistoricalInfoParams{Height: height})
+			params := &types.QueryHistoricalInfoRequest{Height: height}
+			res, err := queryClient.HistoricalInfo(context.Background(), params)
+
 			if err != nil {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryHistoricalInfo)
-			res, _, err := clientCtx.QueryWithData(route, bz)
-			if err != nil {
-				return err
-			}
-
-			var resp types.HistoricalInfo
-			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(resp)
+			return clientCtx.PrintOutput(res.Hist)
 		},
 	}
 
@@ -645,7 +677,7 @@ $ %s query staking historical-info 5
 }
 
 // GetCmdQueryPool implements the pool query command.
-func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool",
 		Args:  cobra.NoArgs,
@@ -660,19 +692,20 @@ $ %s query staking pool
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
-
-			bz, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/pool", storeName), nil)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			var pool types.Pool
-			if err := cdc.UnmarshalJSON(bz, &pool); err != nil {
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.Pool(context.Background(), &types.QueryPoolRequest{})
+			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(pool)
+			return clientCtx.PrintOutput(res.Pool)
 		},
 	}
 
@@ -682,7 +715,7 @@ $ %s query staking pool
 }
 
 // GetCmdQueryParams implements the params query command.
-func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
 		Args:  cobra.NoArgs,
@@ -697,17 +730,20 @@ $ %s query staking params
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
-
-			route := fmt.Sprintf("custom/%s/%s", storeName, types.QueryParameters)
-			bz, _, err := clientCtx.QueryWithData(route, nil)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			var params types.Params
-			cdc.MustUnmarshalJSON(bz, &params)
-			return clientCtx.PrintOutput(params)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res.Params)
 		},
 	}
 

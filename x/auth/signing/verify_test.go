@@ -3,7 +3,7 @@ package signing_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -19,8 +19,8 @@ import (
 )
 
 func TestVerifySignature(t *testing.T) {
-	priv, pubKey, addr := types.KeyTestPubAddr()
-	priv1, pubKey1, addr1 := types.KeyTestPubAddr()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	priv1, pubKey1, addr1 := testdata.KeyTestPubAddr()
 
 	const (
 		memo    = "testmemo"

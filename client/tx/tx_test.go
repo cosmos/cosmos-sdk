@@ -21,9 +21,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func NewTestTxGenerator() client.TxGenerator {
+func NewTestTxConfig() client.TxConfig {
 	_, cdc := simapp.MakeCodecs()
-	return types.StdTxGenerator{Cdc: cdc}
+	return types.StdTxConfig{Cdc: cdc}
 }
 
 func TestCalculateGas(t *testing.T) {
@@ -65,7 +65,7 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		stc := tc
-		txf := tx.Factory{}.WithChainID("test-chain").WithTxGenerator(NewTestTxGenerator())
+		txf := tx.Factory{}.WithChainID("test-chain").WithTxConfig(NewTestTxConfig())
 
 		t.Run(stc.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)
@@ -85,7 +85,7 @@ func TestCalculateGas(t *testing.T) {
 
 func TestBuildSimTx(t *testing.T) {
 	txf := tx.Factory{}.
-		WithTxGenerator(NewTestTxGenerator()).
+		WithTxConfig(NewTestTxConfig()).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
@@ -100,7 +100,7 @@ func TestBuildSimTx(t *testing.T) {
 
 func TestBuildUnsignedTx(t *testing.T) {
 	txf := tx.Factory{}.
-		WithTxGenerator(NewTestTxGenerator()).
+		WithTxConfig(NewTestTxConfig()).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
@@ -132,7 +132,7 @@ func TestSign(t *testing.T) {
 	require.NoError(t, err)
 
 	txf := tx.Factory{}.
-		WithTxGenerator(NewTestTxGenerator()).
+		WithTxConfig(NewTestTxConfig()).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
@@ -149,7 +149,7 @@ func TestSign(t *testing.T) {
 
 	txf = tx.Factory{}.
 		WithKeybase(kr).
-		WithTxGenerator(NewTestTxGenerator()).
+		WithTxConfig(NewTestTxConfig()).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").

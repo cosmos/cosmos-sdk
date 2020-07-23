@@ -99,7 +99,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		go func() {
 			err = grpcSrv.Serve(listener)
 			if err != nil {
-				errCh <- fmt.Errorf("failed to serve: %v", err)
+				errCh <- fmt.Errorf("failed to serve: %w", err)
 			}
 		}()
 

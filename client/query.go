@@ -7,10 +7,8 @@ import (
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -84,7 +82,7 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
-		Prove:  req.Prove || !ctx.TrustNode,
+		Prove:  req.Prove,
 	}
 
 	result, err := node.ABCIQueryWithOptions(req.Path, req.Data, opts)
@@ -101,18 +99,12 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 		return result.Response, nil
 	}
 
-	if err = ctx.verifyProof(req.Path, result.Response); err != nil {
-		return abci.ResponseQuery{}, err
-	}
-
 	return result.Response, nil
 }
 
 // query performs a query to a Tendermint node with the provided store name
 // and path. It returns the result and height of the query upon success
-// or an error if the query fails. In addition, it will verify the returned
-// proof if TrustNode is disabled. If proof verification fails or the query
-// height is invalid, an error will be returned.
+// or an error if the query fails.
 func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
 		Path: path,
@@ -123,49 +115,6 @@ func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, erro
 	}
 
 	return resp.Value, resp.Height, nil
-}
-
-// Verify verifies the consensus proof at given height.
-//todo see what to do here
-func (ctx Context) Verify(height int64) (tmtypes.SignedHeader, error) {
-
-	return tmtypes.SignedHeader{}, nil
-}
-
-// verifyProof perform response proof verification.
-func (ctx Context) verifyProof(queryPath string, resp abci.ResponseQuery) error {
-	// the AppHash for height H is in header H+1
-	commit, err := ctx.Verify(resp.Height + 1)
-	if err != nil {
-		return err
-	}
-
-	// TODO: Instead of reconstructing, stash on Context field?
-	prt := rootmulti.DefaultProofRuntime()
-
-	// TODO: Better convention for path?
-	storeName, err := parseQueryStorePath(queryPath)
-	if err != nil {
-		return err
-	}
-
-	kp := merkle.KeyPath{}
-	kp = kp.AppendKey([]byte(storeName), merkle.KeyEncodingURL)
-	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
-
-	if resp.Value == nil {
-		err = prt.VerifyAbsence(resp.ProofOps, commit.Header.AppHash, kp.String())
-		if err != nil {
-			return errors.Wrap(err, "failed to prove merkle proof")
-		}
-		return nil
-	}
-
-	if err := prt.VerifyValue(resp.ProofOps, commit.Header.AppHash, kp.String(), resp.Value); err != nil {
-		return errors.Wrap(err, "failed to prove merkle proof")
-	}
-
-	return nil
 }
 
 // queryStore performs a query to a Tendermint node with the provided a store
@@ -195,24 +144,4 @@ func isQueryStoreWithProof(path string) bool {
 	}
 
 	return false
-}
-
-// parseQueryStorePath expects a format like /store/<storeName>/key.
-func parseQueryStorePath(path string) (storeName string, err error) {
-	if !strings.HasPrefix(path, "/") {
-		return "", errors.New("expected path to start with /")
-	}
-
-	paths := strings.SplitN(path[1:], "/", 3)
-
-	switch {
-	case len(paths) != 3:
-		return "", errors.New("expected format like /store/<storeName>/key")
-	case paths[0] != "store":
-		return "", errors.New("expected format like /store/<storeName>/key")
-	case paths[2] != "key":
-		return "", errors.New("expected format like /store/<storeName>/key")
-	}
-
-	return paths[1], nil
 }

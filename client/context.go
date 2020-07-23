@@ -33,7 +33,6 @@ type Context struct {
 	From              string
 	BroadcastMode     string
 	FromName          string
-	TrustNode         bool
 	UseLedger         bool
 	Simulate          bool
 	GenerateOnly      bool
@@ -81,12 +80,6 @@ func (ctx Context) WithOutput(w io.Writer) Context {
 // WithFrom returns a copy of the context with an updated from address or name.
 func (ctx Context) WithFrom(from string) Context {
 	ctx.From = from
-	return ctx
-}
-
-// WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx Context) WithTrustNode(trustNode bool) Context {
-	ctx.TrustNode = trustNode
 	return ctx
 }
 

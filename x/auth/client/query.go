@@ -41,20 +41,11 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 		return nil, err
 	}
 
-	prove := !clientCtx.TrustNode
-
-	resTxs, err := node.TxSearch(query, prove, &page, &limit, orderBy)
+	// TODO: this may not always need to be proven
+	// https://github.com/cosmos/cosmos-sdk/issues/6807
+	resTxs, err := node.TxSearch(query, true, page, limit, orderBy)
 	if err != nil {
 		return nil, err
-	}
-
-	if prove {
-		for _, tx := range resTxs.Txs {
-			err := ValidateTxResult(clientCtx, tx)
-			if err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	resBlocks, err := getBlocksForTxResults(clientCtx, resTxs.Txs)
@@ -85,15 +76,11 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	resTx, err := node.Tx(hash, !clientCtx.TrustNode)
+	//TODO: this may not always need to be proven
+	// https://github.com/cosmos/cosmos-sdk/issues/6807
+	resTx, err := node.Tx(hash, true)
 	if err != nil {
 		return nil, err
-	}
-
-	if !clientCtx.TrustNode {
-		if err = ValidateTxResult(clientCtx, resTx); err != nil {
-			return nil, err
-		}
 	}
 
 	resBlocks, err := getBlocksForTxResults(clientCtx, []*ctypes.ResultTx{resTx})
@@ -121,21 +108,6 @@ func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[
 	}
 
 	return out, nil
-}
-
-// ValidateTxResult performs transaction verification.
-func ValidateTxResult(clientCtx client.Context, resTx *ctypes.ResultTx) error {
-	if !clientCtx.TrustNode {
-		check, err := clientCtx.Verify(resTx.Height)
-		if err != nil {
-			return err
-		}
-		err = resTx.Proof.Validate(check.Header.DataHash)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) (map[int64]*ctypes.ResultBlock, error) {

@@ -4,9 +4,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
-	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_40"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
-	v039bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_39"
+	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_40"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -30,7 +30,7 @@ func Migrate(appState types.AppMap) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v039auth.ModuleName] = v039Codec.MustMarshalJSON(v039auth.Migrate(authGenState))
+		appState[v040auth.ModuleName] = v039Codec.MustMarshalJSON(v040auth.Migrate(authGenState))
 	}
 
 	if appState[v038bank.ModuleName] != nil {
@@ -47,8 +47,8 @@ func Migrate(appState types.AppMap) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v039bank.ModuleName] = v039Codec.MustMarshalJSON(
-			v039bank.Migrate(bankGenState, authGenState),
+		appState[v040bank.ModuleName] = v039Codec.MustMarshalJSON(
+			v040bank.Migrate(bankGenState, authGenState),
 		)
 	}
 

@@ -7,7 +7,7 @@ import (
 )
 
 // Migrate accepts exported x/auth genesis state from v0.38 and migrates it to
-// v0.39 x/auth genesis state. The migration includes:
+// v0.40 x/auth genesis state. The migration includes:
 //
 // - Removing coins from account encoding.
 func Migrate(authGenState v038auth.GenesisState) v038auth.GenesisState {

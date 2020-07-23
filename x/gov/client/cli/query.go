@@ -152,10 +152,10 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 
 			if len(res.GetProposals()) == 0 {
-				return fmt.Errorf("no matching proposals found")
+				return fmt.Errorf("no proposals found")
 			}
 
-			return clientCtx.PrintOutput(res.GetProposals())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -305,11 +305,12 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				context.Background(),
 				&types.QueryVotesRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
+
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetVotes())
+			return clientCtx.PrintOutput(res)
 
 		},
 	}
@@ -452,11 +453,12 @@ $ %s query gov deposits 1
 				context.Background(),
 				&types.QueryDepositsRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
+
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetDeposits())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 

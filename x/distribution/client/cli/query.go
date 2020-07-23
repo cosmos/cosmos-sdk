@@ -206,7 +206,7 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetSlashes())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 

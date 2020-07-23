@@ -123,7 +123,9 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
+}
 
 // InitGenesis performs genesis initialization for the staking module. It returns
 // no validator updates.

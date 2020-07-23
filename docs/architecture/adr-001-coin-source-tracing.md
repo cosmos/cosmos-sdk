@@ -112,7 +112,7 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
   //
   // - [ "ibc", traceHash, baseDenom], if the denom is dirty (contains trace metadata).
   // - [ baseDenom ], if the denom has never been sent from the origin chain.
-  denomSplit := strings.Split(denom, "/")
+  denomSplit := strings.SplitN(denom, "/", 3)
 
   var (
     baseDenom string
@@ -125,10 +125,9 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
     baseDenom = denom
     trace = portID + "/" + channelID +"/"
   } else {
-    // concatenate if base denom already contains a separator
-    baseDenom = strings.Join(denomSplit[2], "/")
+    baseDenom = denomSplit[2]
     traceHash = tmbytes.HexBytes(denomSplit[1])
-    // Get the value from the map trace hash -> denom identifiers prefix
+    // Get the value from the map trace hash -> trace info prefix
     trace = k.GetTrace(ctx, traceHash)
     // prefix the identifiers to create the new trace
     trace = portID + "/" + channelID +"/" + trace + "/"
@@ -153,28 +152,31 @@ The denomination also needs to be updated when token is received on the source c
 // denomination with the updated trace hash and the new trace info.
 // An error is returned if the trace cannot be found on the store from the denom's trace hash.
 func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, err error) {
-  denomSplit := strings.Split(denom, "/")
-  if denomSplit[0] == denom {
-    return denom, fmt.Errorf("denomination %s doesn't contain a prefix", denom)
+  denomSplit := strings.SplitN(denom, "/", 3)
+
+  switch {
+    case denomSplit[0] == denom:
+      return "", Wrapf(ErrInvalidDenomForTransfer, "denomination %s should be prefixed with the format 'ibc/{traceHash}/%s'", denom)
+    case denomSplit[0] != "ibc":
+      return "", Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
   }
 
-  // concatenate if base denom already contains a separator
-  baseDenom = strings.Join(denomSplit[2], "/")
+  baseDenom = denomSplit[2]
   traceHash := tmbytes.HexBytes(denomSplit[1])
-  // Get the value from the map trace hash -> denom identifiers prefix
+  // Get the value from the map trace hash -> trace info prefix
   trace = k.GetTrace(ctx, traceHash)
   if trace == "" {
     return "", Wrapf(ErrTraceNotFound, "denom: %s", denom)
   }
 
-  traceSplit := strings.Split(trace, "/")
+  traceSplit := strings.SplitN(denom, "/", 3)
   if len(traceSplit) == 3 {
     // the trace has only one portID/channelID pair
     return baseDenom
   }
 
   // remove a single identifiers pair to create the new trace
-  trace = strings.Join(trace[2:], "/")
+  trace = trace[2]
   traceHash = tmbytes.HexBytes(tmhash.Sum(trace))
 
   // set the value to the lookup table if not stored already
@@ -196,7 +198,7 @@ func (k Keeper) GetTraceFromDenom(ctx Context, denom string) (string, error) {
   }
 
   traceHash := tmbytes.HexBytes(denomSplit[1])
-  // Get the value from the map trace hash -> denom identifiers prefix
+  // Get the value from the map trace hash -> trace info prefix
   trace := k.GetTrace(ctx, traceHash)
   if trace == "" {
     return "", Wrapf(ErrTraceNotFound, "denom: %s", denom)

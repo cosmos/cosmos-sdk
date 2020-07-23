@@ -43,7 +43,7 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 
 	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
-	resTxs, err := node.TxSearch(query, true, page, limit, orderBy)
+	resTxs, err := node.TxSearch(query, true, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
 	}

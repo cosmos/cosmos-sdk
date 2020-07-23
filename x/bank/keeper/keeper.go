@@ -220,9 +220,9 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData []types.Meta
 	store := ctx.KVStore(k.storeKey)
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetaDataKey)
 
-	for _, metadata := range denomMetaData {
-		m := k.cdc.MustMarshalBinaryBare(&metadata)
-		denomMetaDataStore.Set([]byte(metadata.Base), m)
+	for i := range denomMetaData {
+		m := k.cdc.MustMarshalBinaryBare(&denomMetaData[i])
+		denomMetaDataStore.Set([]byte(denomMetaData[i].Base), m)
 	}
 
 }

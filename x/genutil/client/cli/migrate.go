@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
+	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
 	v040 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_40"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )

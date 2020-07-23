@@ -35,15 +35,12 @@ func NewTxConfig(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec, si
 }
 
 func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	stdTx, ok := newTx.(*tx.Tx)
+	newBuilder, ok := newTx.(client.TxBuilder)
 	if !ok {
 		return nil, fmt.Errorf("expected %T, got %T", &tx.Tx{}, newTx)
 	}
-	return &builder{
-		tx:          stdTx,
-		marshaler:   g.marshaler,
-		pubkeyCodec: g.pubkeyCodec,
-	}, nil
+
+	return newBuilder, nil
 }
 
 func (g generator) NewTxBuilder() client.TxBuilder {

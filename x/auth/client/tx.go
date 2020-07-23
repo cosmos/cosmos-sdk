@@ -89,7 +89,7 @@ func SignStdTx(txFactory tx.Factory, clientCtx client.Context, name string,
 		return err
 	}
 	addr := sdk.AccAddress(info.GetPubKey().Address())
-	if !isTxSigner(addr, stdTx.GetTx().(authtypes.StdTx).GetSigners()) {
+	if !isTxSigner(addr, stdTx.GetTx().GetSigners()) {
 		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 	if !offline {

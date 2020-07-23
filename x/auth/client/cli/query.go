@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -57,18 +58,13 @@ $ <appcli> query auth params
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
-			res, _, err := clientCtx.QueryWithData(route, nil)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}
 
-			var params types.Params
-			if err := clientCtx.JSONMarshaler.UnmarshalJSON(res, &params); err != nil {
-				return fmt.Errorf("failed to unmarshal params: %w", err)
-			}
-
-			return clientCtx.PrintOutput(params)
+			return clientCtx.PrintOutput(res.Params)
 		},
 	}
 
@@ -91,19 +87,24 @@ func GetAccountCmd() *cobra.Command {
 				return err
 			}
 
-			accRetriever := types.NewAccountRetriever(clientCtx.JSONMarshaler)
-
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			acc, err := accRetriever.GetAccount(clientCtx, key)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key})
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(acc)
+			var account types.AccountI
+			err = clientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(account)
 		},
 	}
 
@@ -130,6 +131,10 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			eventsRaw, _ := cmd.Flags().GetString(flagEvents)
 			eventsStr := strings.Trim(eventsRaw, "'")
@@ -196,6 +201,10 @@ func QueryTxCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			output, err := authclient.QueryTx(clientCtx, args[0])
 			if err != nil {

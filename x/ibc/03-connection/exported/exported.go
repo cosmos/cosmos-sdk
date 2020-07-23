@@ -6,7 +6,6 @@ import (
 
 // ConnectionI describes the required methods for a connection.
 type ConnectionI interface {
-	GetID() string
 	GetClientID() string
 	GetState() int32
 	GetCounterparty() CounterpartyI

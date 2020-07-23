@@ -65,10 +65,10 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // GetTxCmd returns no root tx command for the mint module.
-func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
 // GetQueryCmd returns the root query command for the mint module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 

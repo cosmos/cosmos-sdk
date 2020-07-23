@@ -53,12 +53,12 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }
 

@@ -5,15 +5,13 @@ import (
 	"io"
 	"os"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
-
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

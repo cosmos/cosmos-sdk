@@ -7,6 +7,15 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// DefaultMaxCharacterLength defines the default maximum character length used
+// in validation of identifiers including the client, connection, port and
+// channel identifiers.
+//
+// NOTE: this restriction is specific to this golang implementation of IBC. If
+// your use case demands a higher limit, please open an issue and we will consider
+// adjusting this restriction.
+const DefaultMaxCharacterLength = 64
+
 // IsValidID defines regular expression to check if the string consist of
 // characters in one of the following categories only:
 // - Alphanumeric
@@ -31,7 +40,7 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 	if strings.Contains(id, "/") {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s cannot contain separator '/'", id)
 	}
-	// valid id must be between 9 and 20 characters
+	// valid id must fit the length requirements
 	if len(id) < min || len(id) > max {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s has invalid length: %d, must be between %d-%d characters", id, len(id), min, max)
 	}
@@ -50,28 +59,28 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 // A valid Identifier must be between 9-20 characters and only contain lowercase
 // alphabetic characters,
 func ClientIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 9, 20)
+	return defaultIdentifierValidator(id, 9, DefaultMaxCharacterLength)
 }
 
 // ConnectionIdentifierValidator is the default validator function for Connection identifiers.
 // A valid Identifier must be between 10-20 characters and only contain lowercase
 // alphabetic characters,
 func ConnectionIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 10, 20)
+	return defaultIdentifierValidator(id, 10, DefaultMaxCharacterLength)
 }
 
 // ChannelIdentifierValidator is the default validator function for Channel identifiers.
 // A valid Identifier must be between 10-20 characters and only contain lowercase
 // alphabetic characters,
 func ChannelIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 10, 20)
+	return defaultIdentifierValidator(id, 10, DefaultMaxCharacterLength)
 }
 
 // PortIdentifierValidator is the default validator function for Port identifiers.
 // A valid Identifier must be between 2-20 characters and only contain lowercase
 // alphabetic characters,
 func PortIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 2, 20)
+	return defaultIdentifierValidator(id, 2, DefaultMaxCharacterLength)
 }
 
 // NewPathValidator takes in a Identifier Validator function and returns
@@ -94,7 +103,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 				return err
 			}
 			// Each path element must either be a valid identifier or constant number
-			if err := defaultIdentifierValidator(p, 1, 20); err != nil {
+			if err := defaultIdentifierValidator(p, 1, DefaultMaxCharacterLength); err != nil {
 				return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 			}
 		}
@@ -118,7 +127,7 @@ func PathValidator(path string) error {
 		}
 
 		// Each path element must be a valid identifier or constant number
-		if err := defaultIdentifierValidator(p, 1, 20); err != nil {
+		if err := defaultIdentifierValidator(p, 1, DefaultMaxCharacterLength); err != nil {
 			return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 		}
 	}

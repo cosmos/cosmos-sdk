@@ -158,6 +158,11 @@ func (k Keeper) TimeoutExecuted(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -276,6 +281,11 @@ func (k Keeper) TimeoutOnClose(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 

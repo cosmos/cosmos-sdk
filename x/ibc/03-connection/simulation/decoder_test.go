@@ -17,14 +17,15 @@ func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
 	cdc := app.AppCodec()
 
+	connectionID := "connectionidone"
+
 	connection := types.ConnectionEnd{
-		ID:       "connectionidone",
 		ClientID: "clientidone",
 		Versions: []string{"1.0"},
 	}
 
 	paths := types.ClientPaths{
-		Paths: []string{connection.ID},
+		Paths: []string{connectionID},
 	}
 
 	kvPairs := kv.Pairs{
@@ -33,7 +34,7 @@ func TestDecodeStore(t *testing.T) {
 			Value: cdc.MustMarshalBinaryBare(&paths),
 		},
 		kv.Pair{
-			Key:   host.KeyConnection(connection.ID),
+			Key:   host.KeyConnection(connectionID),
 			Value: cdc.MustMarshalBinaryBare(&connection),
 		},
 		kv.Pair{

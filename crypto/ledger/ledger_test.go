@@ -1,4 +1,4 @@
-package crypto
+package ledger
 
 import (
 	"fmt"
@@ -14,17 +14,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestLedgerErrorHandling(t *testing.T) {
+func TestErrorHandling(t *testing.T) {
 	// first, try to generate a key, must return an error
 	// (no panic)
 	path := *hd.NewParams(44, 555, 0, false, 0)
-	_, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
+	_, err := NewPrivKeySecp256k1Unsafe(path)
 	require.Error(t, err)
 }
 
 func TestPublicKeyUnsafe(t *testing.T) {
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
+	priv, err := NewPrivKeySecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
 
@@ -65,7 +65,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		path := *hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
-		priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
+		priv, err := NewPrivKeySecp256k1Unsafe(path)
 		require.Nil(t, err, "%s", err)
 		require.NotNil(t, priv)
 
@@ -100,12 +100,12 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 func TestPublicKeySafe(t *testing.T) {
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	priv, addr, err := NewPrivKeyLedgerSecp256k1(path, "cosmos")
+	priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")
 
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
 
-	require.Nil(t, LedgerShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
+	require.Nil(t, ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
 
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
@@ -159,7 +159,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		path := *hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
-		priv, addr, err := NewPrivKeyLedgerSecp256k1(path, "cosmos")
+		priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")
 		require.Nil(t, err, "%s", err)
 		require.NotNil(t, addr)
 		require.NotNil(t, priv)
@@ -213,7 +213,7 @@ func TestSignaturesHD(t *testing.T) {
 		path := *hd.NewFundraiserParams(account, sdk.CoinType, account/5)
 		fmt.Printf("Checking signature at %v    ---   PLEASE REVIEW AND ACCEPT IN THE DEVICE\n", path)
 
-		priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
+		priv, err := NewPrivKeySecp256k1Unsafe(path)
 		require.Nil(t, err, "%s", err)
 
 		pub := priv.PubKey()
@@ -225,10 +225,10 @@ func TestSignaturesHD(t *testing.T) {
 	}
 }
 
-func TestRealLedgerSecp256k1(t *testing.T) {
+func TestRealDeviceSecp256k1(t *testing.T) {
 	msg := getFakeTx(50)
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
+	priv, err := NewPrivKeySecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 
 	pub := priv.PubKey()

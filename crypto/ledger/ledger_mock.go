@@ -1,6 +1,6 @@
 // +build ledger,test_ledger_mock
 
-package crypto
+package ledger
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ import (
 // set the discoverLedger function which is responsible for loading the Ledger
 // device at runtime or returning an error.
 func init() {
-	discoverLedger = func() (LedgerSECP256K1, error) {
+	discoverLedger = func() (SECP256K1, error) {
 		return LedgerSECP256K1Mock{}, nil
 	}
 }

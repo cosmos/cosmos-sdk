@@ -35,8 +35,8 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
-	mockAppModuleBasic1.EXPECT().GetTxCmd(clientCtx).Times(1).Return(nil)
-	mockAppModuleBasic1.EXPECT().GetQueryCmd(clientCtx).Times(1).Return(nil)
+	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
+	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
 	mm := module.NewBasicManager(mockAppModuleBasic1)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
@@ -53,9 +53,9 @@ func TestBasicManager(t *testing.T) {
 	mm.RegisterRESTRoutes(client.Context{}, &mux.Router{})
 
 	mockCmd := &cobra.Command{Use: "root"}
-	mm.AddTxCommands(mockCmd, clientCtx)
+	mm.AddTxCommands(mockCmd)
 
-	mm.AddQueryCommands(mockCmd, clientCtx)
+	mm.AddQueryCommands(mockCmd)
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, wantDefaultGenesis))

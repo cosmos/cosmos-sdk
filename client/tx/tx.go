@@ -222,6 +222,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	if err := tx.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
+
 	tx.SetMemo(txf.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(txf.gas)
@@ -304,12 +305,10 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 
 // Helper function to retrieve sign bytes.
 func getSignBytes(
-	signMode signing.SignMode,
-	signerData authsigning.SignerData,
-	txBuilder client.TxBuilder,
-	pubKey crypto.PubKey,
-	txConfig client.TxConfig,
+	signMode signing.SignMode, signerData authsigning.SignerData,
+	txBuilder client.TxBuilder, pubKey crypto.PubKey, txConfig client.TxConfig,
 ) ([]byte, error) {
+
 	sigData := signing.SingleSignatureData{
 		SignMode:  signMode,
 		Signature: nil,
@@ -318,24 +317,21 @@ func getSignBytes(
 		PubKey: pubKey,
 		Data:   &sigData,
 	}
+
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
 	// TxBuilder under the hood, and SignerInfos is needed to generated the
 	// sign bytes. This is the reason for setting SetSignatures here, with a
 	// nil signature.
+	//
 	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
 	// also doesn't affect its generated sign bytes, so for code's simplicity
-	// sake, we put it here, along with this comment.
-	err := txBuilder.SetSignatures(sig)
-	if err != nil {
+	// sake, we put it here.
+	if err := txBuilder.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
-	// Generate the bytes to be signed
-	signBytes, err := txConfig.SignModeHandler().GetSignBytes(
-		signMode,
-		signerData,
-		txBuilder.GetTx(),
-	)
+	// generate the bytes to be signed
+	signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return nil, err
 	}
@@ -346,12 +342,10 @@ func getSignBytes(
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
-	signMode signing.SignMode,
-	signerData authsigning.SignerData,
-	txBuilder client.TxBuilder,
-	priv crypto.PrivKey,
-	txConfig client.TxConfig,
+	signMode signing.SignMode, signerData authsigning.SignerData,
+	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
 ) (signing.SignatureV2, error) {
+
 	var sigV2 signing.SignatureV2
 
 	// Generate the bytes to be signed
@@ -371,6 +365,7 @@ func SignWithPrivKey(
 		SignMode:  signMode,
 		Signature: signature,
 	}
+
 	sigV2 = signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data:   &sigData,
@@ -379,14 +374,9 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
-// Sign signs a given tx with the provided name and passphrase. If the Factory's
-// Keybase is not set, a new one will be created based on the client's backend.
-// The bytes signed over are canconical. The resulting signature will be set on
-// the transaction. Finally, the marshaled transaction is returned. An error is
-// returned upon failure.
-//
-// Note, It is assumed the Factory has the necessary fields set that are required
-// by the CanonicalSignBytes call.
+// Sign signs a given tx with the provided name and passphrase. The bytes signed
+// over are canconical. The resulting signature will be set on the transaction.
+// An error is returned upon failure.
 func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")

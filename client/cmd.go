@@ -95,11 +95,6 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithChainID(chainID)
 	}
 
-	if flagSet.Changed(flags.FlagTrustNode) {
-		trustNode, _ := flagSet.GetBool(flags.FlagTrustNode)
-		clientCtx = clientCtx.WithTrustNode(trustNode)
-	}
-
 	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 

@@ -5,16 +5,13 @@ import (
 	"io"
 	"os"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
-
-	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -36,7 +33,6 @@ type Context struct {
 	From              string
 	BroadcastMode     string
 	FromName          string
-	TrustNode         bool
 	UseLedger         bool
 	Simulate          bool
 	GenerateOnly      bool
@@ -45,7 +41,6 @@ type Context struct {
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
-	Verifier          tmlite.Verifier
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
@@ -88,12 +83,6 @@ func (ctx Context) WithFrom(from string) Context {
 	return ctx
 }
 
-// WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx Context) WithTrustNode(trustNode bool) Context {
-	ctx.TrustNode = trustNode
-	return ctx
-}
-
 // WithOutputFormat returns a copy of the context with an updated OutputFormat field.
 func (ctx Context) WithOutputFormat(format string) Context {
 	ctx.OutputFormat = format
@@ -128,12 +117,6 @@ func (ctx Context) WithClient(client rpcclient.Client) Context {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
-	return ctx
-}
-
-// WithVerifier returns a copy of the context with an updated Verifier.
-func (ctx Context) WithVerifier(verifier tmlite.Verifier) Context {
-	ctx.Verifier = verifier
 	return ctx
 }
 

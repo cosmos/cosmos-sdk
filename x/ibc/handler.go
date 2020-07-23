@@ -167,7 +167,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, cap, msg)
 
 		// IBC packet msgs get routed to the appropriate module callback
-		case *channeltypes.MsgPacket:
+		case *channeltypes.MsgRecvPacket:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
 			if err != nil {

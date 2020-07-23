@@ -12,7 +12,8 @@ import (
 func MakeEncodingConfig() EncodingConfig {
 	cdc := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewAminoCodec(cdc)
+	// TODO: switch to using AminoCodec here once amino compatibility is fixed
+	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,

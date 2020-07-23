@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -44,14 +45,18 @@ func Paginate(numObjs, page, limit, defLimit int) (start, end int) {
 }
 
 // ReadPageRequest reads and builds the necessary page request flags for pagination.
-func ReadPageRequest(flagSet *pflag.FlagSet) *query.PageRequest {
+func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	pageKey, _ := flagSet.GetString(flags.FlagPageKey)
 	offset, _ := flagSet.GetUint64(flags.FlagOffset)
 	limit, _ := flagSet.GetUint64(flags.FlagLimit)
 	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)
 
 	page, _ := flagSet.GetUint64(flags.FlagPage)
-	if page > 1 && offset == 0 {
+	if page > 1 && offset > 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "page and offset cannot be used together")
+	}
+
+	if page > 1 {
 		offset = (page - 1) * limit
 	}
 
@@ -60,5 +65,5 @@ func ReadPageRequest(flagSet *pflag.FlagSet) *query.PageRequest {
 		Offset:     offset,
 		Limit:      limit,
 		CountTotal: countTotal,
-	}
+	}, nil
 }

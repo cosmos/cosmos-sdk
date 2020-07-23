@@ -136,7 +136,7 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 
 			res, err := queryClient.Proposals(
 				context.Background(),
@@ -299,7 +299,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 			}
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 
 			res, err := queryClient.Votes(
 				context.Background(),
@@ -443,7 +443,7 @@ $ %s query gov deposits 1
 				return clientCtx.PrintOutput(dep)
 			}
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 
 			res, err := queryClient.Deposits(
 				context.Background(),

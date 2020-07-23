@@ -95,11 +95,19 @@ func startInProcess(cfg Config, val *Validator) error {
 			return err
 		}
 
+		errCh := make(chan error)
 		go func() {
-			if err := grpcSrv.Serve(listener); err != nil {
-				fmt.Printf("failed to serve: %v\n", err)
+			err = grpcSrv.Serve(listener)
+			if err != nil {
+				errCh <- fmt.Errorf("failed to serve: %v", err)
 			}
 		}()
+
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
+		}
 	}
 
 	return nil

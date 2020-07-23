@@ -37,15 +37,20 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 // SetSignatures implements TxBuilder.SetSignatures
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
+
 	for i, sig := range signatures {
-		pubKey := sig.PubKey
 		var pubKeyBz []byte
+
+		pubKey := sig.PubKey
 		if pubKey != nil {
 			pubKeyBz = pubKey.Bytes()
 		}
 
-		var sigBz []byte
-		var err error
+		var (
+			sigBz []byte
+			err   error
+		)
+
 		if sig.Data != nil {
 			sigBz, err = SignatureDataToAminoSignature(legacy.Cdc, sig.Data)
 			if err != nil {
@@ -58,6 +63,7 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 			Signature: sigBz,
 		}
 	}
+
 	s.Signatures = sigs
 	return nil
 }

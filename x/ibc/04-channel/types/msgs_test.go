@@ -23,15 +23,15 @@ import (
 const (
 	invalidPort      = "(invalidport1)"
 	invalidShortPort = "p"
-	invalidLongPort  = "invalidlongportinvalidlongport"
+	invalidLongPort  = "invalidlongportinvalidlongportinvalidlongportidinvalidlongportidinvalid"
 
 	invalidChannel      = "(invalidchannel1)"
 	invalidShortChannel = "invalidch"
-	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
+	invalidLongChannel  = "invalidlongchannelinvalidlongchannelinvalidlongchannelinvalidlongchannel"
 
 	invalidConnection      = "(invalidconnection1)"
 	invalidShortConnection = "invalidcn"
-	invalidLongConnection  = "invalidlongconnection"
+	invalidLongConnection  = "invalidlongconnectioninvalidlongconnectioninvalidlongconnectioninvalid"
 )
 
 // define variables used for testing
@@ -371,25 +371,25 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 	}
 }
 
-// TestMsgPacketType tests Type for MsgPacket.
-func (suite *MsgTestSuite) TestMsgPacketType() {
-	msg := types.NewMsgPacket(packet, suite.proof, 1, addr1)
+// TestMsgRecvPacketType tests Type for MsgRecvPacket.
+func (suite *MsgTestSuite) TestMsgRecvPacketType() {
+	msg := types.NewMsgRecvPacket(packet, suite.proof, 1, addr1)
 
 	suite.Equal("recv_packet", msg.Type())
 }
 
-// TestMsgPacketValidation tests ValidateBasic for MsgPacket
-func (suite *MsgTestSuite) TestMsgPacketValidation() {
-	testMsgs := []*types.MsgPacket{
-		types.NewMsgPacket(packet, suite.proof, 1, addr1),        // valid msg
-		types.NewMsgPacket(packet, suite.proof, 0, addr1),        // proof height is zero
-		types.NewMsgPacket(packet, emptyProof, 1, addr1),         // empty proof
-		types.NewMsgPacket(packet, suite.proof, 1, emptyAddr),    // missing signer address
-		types.NewMsgPacket(unknownPacket, suite.proof, 1, addr1), // unknown packet
+// TestMsgRecvPacketValidation tests ValidateBasic for MsgRecvPacket
+func (suite *MsgTestSuite) TestMsgRecvPacketValidation() {
+	testMsgs := []*types.MsgRecvPacket{
+		types.NewMsgRecvPacket(packet, suite.proof, 1, addr1),        // valid msg
+		types.NewMsgRecvPacket(packet, suite.proof, 0, addr1),        // proof height is zero
+		types.NewMsgRecvPacket(packet, emptyProof, 1, addr1),         // empty proof
+		types.NewMsgRecvPacket(packet, suite.proof, 1, emptyAddr),    // missing signer address
+		types.NewMsgRecvPacket(unknownPacket, suite.proof, 1, addr1), // unknown packet
 	}
 
 	testCases := []struct {
-		msg     *types.MsgPacket
+		msg     *types.MsgRecvPacket
 		expPass bool
 		errMsg  string
 	}{
@@ -410,21 +410,21 @@ func (suite *MsgTestSuite) TestMsgPacketValidation() {
 	}
 }
 
-// TestMsgPacketGetSignBytes tests GetSignBytes for MsgPacket
-func (suite *MsgTestSuite) TestMsgPacketGetSignBytes() {
-	msg := types.NewMsgPacket(packet, suite.proof, 1, addr1)
+// TestMsgRecvPacketGetSignBytes tests GetSignBytes for MsgRecvPacket
+func (suite *MsgTestSuite) TestMsgRecvPacketGetSignBytes() {
+	msg := types.NewMsgRecvPacket(packet, suite.proof, 1, addr1)
 	res := msg.GetSignBytes()
 
 	expected := fmt.Sprintf(
-		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100","timeout_timestamp":"100"},"proof":"Co0BCi4KCmljczIzOmlhdmwSA0tFWRobChkKA0tFWRIFVkFMVUUaCwgBGAEgASoDAAICClsKDGljczIzOnNpbXBsZRIMaWF2bFN0b3JlS2V5Gj0KOwoMaWF2bFN0b3JlS2V5EiAcIiDXSHQRSvh/Wa07MYpTK0B4XtbaXtzxBED76xk0WhoJCAEYASABKgEA","proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
+		`{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100","timeout_timestamp":"100"},"proof":"Co0BCi4KCmljczIzOmlhdmwSA0tFWRobChkKA0tFWRIFVkFMVUUaCwgBGAEgASoDAAICClsKDGljczIzOnNpbXBsZRIMaWF2bFN0b3JlS2V5Gj0KOwoMaWF2bFN0b3JlS2V5EiAcIiDXSHQRSvh/Wa07MYpTK0B4XtbaXtzxBED76xk0WhoJCAEYASABKgEA","proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`,
 		string(msg.GetDataSignBytes()),
 	)
 	suite.Equal(expected, string(res))
 }
 
-// TestMsgPacketGetSigners tests GetSigners for MsgPacket
-func (suite *MsgTestSuite) TestMsgPacketGetSigners() {
-	msg := types.NewMsgPacket(packet, suite.proof, 1, addr1)
+// TestMsgRecvPacketGetSigners tests GetSigners for MsgRecvPacket
+func (suite *MsgTestSuite) TestMsgRecvPacketGetSigners() {
+	msg := types.NewMsgRecvPacket(packet, suite.proof, 1, addr1)
 	res := msg.GetSigners()
 
 	expected := "[746573746164647231]"

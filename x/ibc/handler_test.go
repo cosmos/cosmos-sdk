@@ -137,7 +137,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainA.QueryProof(packetKey)
 
-			msg := channeltypes.NewMsgPacket(packet, proof, proofHeight, suite.chainB.SenderAccount.GetAddress())
+			msg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainB.SenderAccount.GetAddress())
 
 			// ante-handle RecvPacket
 			_, err := handler(suite.chainB.GetContext(), msg)

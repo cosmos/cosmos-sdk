@@ -398,8 +398,7 @@ type TxCreateValidatorConfig struct {
 	CommissionMaxChangeRate string
 	MinSelfDelegation       string
 
-	TrustNode bool
-	PubKey    string
+	PubKey string
 
 	IP              string
 	Website         string
@@ -471,7 +470,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	}
 
 	c.NodeID = nodeID
-	c.TrustNode = true
 	c.PubKey = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
 	c.Website = website
 	c.SecurityContact = securityContact

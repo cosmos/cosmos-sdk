@@ -30,6 +30,7 @@ import (
 const (
 	flagWithTendermint     = "with-tendermint"
 	flagAddress            = "address"
+	flagTransport          = "transport"
 	flagTraceStore         = "trace-store"
 	flagCPUProfile         = "cpu-profile"
 	FlagMinGasPrices       = "minimum-gas-prices"
@@ -104,6 +105,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
+	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
 	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
@@ -125,6 +127,7 @@ which accepts a path for the resulting pprof file.
 
 func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	addr := ctx.Viper.GetString(flagAddress)
+	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
 
 	db, err := openDB(home)
@@ -140,7 +143,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	svr, err := server.NewServer(addr, "socket", app)
+	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
@@ -216,8 +219,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
 			WithJSONMarshaler(cdc).
-			WithClient(local.New(tmNode)).
-			WithTrustNode(true)
+			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)

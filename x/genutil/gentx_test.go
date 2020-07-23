@@ -53,7 +53,6 @@ func (suite *GenTxTestSuite) SetupTest() {
 	suite.app = app
 
 	suite.encodingConfig = simapp.MakeEncodingConfig()
-	// sdk.RegisterCodec(suite.encodingConfig.Amino)
 }
 
 func (suite *GenTxTestSuite) setAccountBalance(cdc *codec.Codec, addr sdk.AccAddress, amount int64) json.RawMessage {

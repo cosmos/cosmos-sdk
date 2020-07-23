@@ -80,12 +80,16 @@ message Supply {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
+// DenomUnits represents represents a struct that describes different 
+// denominations units of the basic token
 message DenomUnits {
   string denom    = 1;
   uint32 exponent = 2;  
   repeated string aliases = 3;
 }
 
+// Metada represents a struct that describes 
+// a basic token
 message Metadata {
   string description = 1;
   repeated DenomUnits denom_units = 2;

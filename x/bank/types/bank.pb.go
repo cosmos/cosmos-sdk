@@ -389,6 +389,8 @@ func (m *Supply) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Supply proto.InternalMessageInfo
 
+// DenomUnits represents represents a struct that describes different
+// denominations units of the basic token
 type DenomUnits struct {
 	Denom    string   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Exponent uint32   `protobuf:"varint,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
@@ -449,6 +451,8 @@ func (m *DenomUnits) GetAliases() []string {
 	return nil
 }
 
+// Metada represents a struct that describes
+// a basic token
 type Metadata struct {
 	Description string        `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
 	DenomUnits  []*DenomUnits `protobuf:"bytes,2,rep,name=denom_units,json=denomUnits,proto3" json:"denom_units,omitempty"`

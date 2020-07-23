@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -264,6 +265,26 @@ func (coord *Coordinator) IncrementTime() {
 		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(timeIncrement)
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 	}
+}
+
+// SendMsgs delivers the provided messages to the chain. The counterparty
+// client is updated with the new source consensus state.
+func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterpartyClientID string, msgs []sdk.Msg) error {
+	if err := source.SendMsgs(msgs); err != nil {
+		return err
+	}
+
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, clientexported.Tendermint,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetChain returns the TestChain using the given chainID and returns an error if it does

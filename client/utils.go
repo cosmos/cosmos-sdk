@@ -50,7 +50,6 @@ func ReadPageRequest(flagSet *pflag.FlagSet) *query.PageRequest {
 	limit, _ := flagSet.GetUint64(flags.FlagLimit)
 	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)
 
-	// FlagPage is deprecated, provided for backwards compatibility
 	page, _ := flagSet.GetUint64(flags.FlagPage)
 	if page > 1 && offset == 0 {
 		offset = (page - 1) * limit

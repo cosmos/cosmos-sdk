@@ -72,6 +72,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		return ibctmtypes.CreateTestHeader(testClientID, exported.NewHeight(0, suite.header.Height.EpochHeight-3), suite.header.Time.Add(time.Minute),
 			suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
+	createNextEpochHeaderFn := func(s *KeeperTestSuite, height exported.Height) ibctmtypes.Header {
+		return ibctmtypes.CreateTestHeader(testClientID, height, suite.header.Time.Add(time.Minute), suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	}
 	var updateHeader ibctmtypes.Header
 
 	cases := []struct {
@@ -110,6 +113,17 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			suite.keeper.SetClientState(suite.ctx, clientState)
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			updateHeader = createValidUpdateFn(suite)
+
+			return nil
+		}, false},
+		{"height of earlier epoch froze", func() error {
+			currentHeight := exported.NewHeight(3, 4)
+			frozenHeight := exported.NewHeight(2, 5)
+			updateHeight := exported.NewHeight(3, 8)
+			clientState := ibctmtypes.ClientState{FrozenHeight: frozenHeight, ID: testClientID, LastHeader: createNextEpochHeaderFn(suite, currentHeight)}
+			suite.keeper.SetClientState(suite.ctx, clientState)
+			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+			updateHeader = createNextEpochHeaderFn(suite, updateHeight)
 
 			return nil
 		}, false},

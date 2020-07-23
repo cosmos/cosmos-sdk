@@ -80,17 +80,6 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			expPass: false,
 		},
 		{
-			name: "unsuccessful update: frozen height less than update height",
-			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
-				// freeze at height < updateHeight
-				clientState.FrozenHeight = clientexported.NewHeight(0, height.EpochHeight+3)
-				newHeader = ibctmtypes.CreateTestHeader(chainID, clientexported.NewHeight(0, height.EpochHeight+5), suite.headerTime, bothValSet, bothSigners)
-				currentTime = suite.now
-			},
-			expPass: false,
-		},
-		{
 			name: "unsuccessful update with next height: update header mismatches nextValSetHash",
 			setup: func() {
 				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())

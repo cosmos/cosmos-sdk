@@ -260,7 +260,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		go func() {
 			err = grpcSrv.Serve(listener)
 			if err != nil {
-				errCh <- fmt.Errorf("failed to serve: %v", err)
+				errCh <- fmt.Errorf("failed to serve: %w", err)
 			}
 		}()
 

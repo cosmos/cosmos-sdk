@@ -39,10 +39,6 @@ type (
 
 		// RegisterGRPC registers gRPC services directly with the gRPC server.
 		RegisterGRPC(grpc.Server)
-
-		// RegisterGRPCProxy registers gRPC services against a proxy that is expected
-		// to proxy requests to the ABCI query endpoint.
-		RegisterGRPCProxy(grpc.Server)
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

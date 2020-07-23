@@ -23,6 +23,7 @@ type GRPCQueryRouter struct {
 	serviceData []serviceData
 }
 
+// serviceData represents a gRPC service, along with its handler.
 type serviceData struct {
 	serviceDesc *grpc.ServiceDesc
 	handler     interface{}

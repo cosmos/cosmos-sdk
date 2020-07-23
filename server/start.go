@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	grpcproxy "github.com/cosmos/cosmos-sdk/server/grpc"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -244,26 +243,11 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 	var grpcSrv *grpc.Server
 	if config.GRPC.Enable {
-		genDoc, err := genDocProvider()
-		if err != nil {
-			return err
-		}
-
-		clientCtx := client.Context{}.
-			WithHomeDir(home).
-			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(cdc).
-			WithClient(local.New(tmNode)).
-			WithTrustNode(true)
-
 		grpcSrv = grpc.NewServer()
 		app.RegisterGRPC(grpcSrv)
 
-		// proxy queries to the ABCI query endpoint
-		proxyInterceptor := grpcproxy.ABCIQueryProxyInterceptor(clientCtx)
-		proxySrv := grpcproxy.NewProxyServer(grpcSrv, proxyInterceptor)
-		app.RegisterGRPCProxy(proxySrv)
-
+		// Reflection allows external clients to see what services and methods
+		// the gRPC server exposes.
 		reflection.Register(grpcSrv)
 
 		listener, err := net.Listen("tcp", config.GRPC.Address)

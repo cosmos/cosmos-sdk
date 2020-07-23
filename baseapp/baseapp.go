@@ -302,12 +302,10 @@ func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // RegisterGRPC registers gRPC services directly with the gRPC server.
-func (app *BaseApp) RegisterGRPC(gogogrpc.Server) {}
-
-// RegisterGRPCProxy registers gRPC services against a proxy that is expected
-// to proxy requests to the ABCI query endpoint.
-func (app *BaseApp) RegisterGRPCProxy(server gogogrpc.Server) {
-	app.grpcQueryRouter.RegisterProxyServer(server)
+func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
+	for _, data := range app.GRPCQueryRouter().serviceData {
+		server.RegisterService(data.serviceDesc, data.handler)
+	}
 }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.

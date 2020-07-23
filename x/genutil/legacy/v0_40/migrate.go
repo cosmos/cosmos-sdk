@@ -47,9 +47,7 @@ func Migrate(appState types.AppMap) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v040bank.ModuleName] = v039Codec.MustMarshalJSON(
-			v040bank.Migrate(bankGenState, authGenState),
-		)
+		appState[v040bank.ModuleName] = v039Codec.MustMarshalJSON(v040bank.Migrate(bankGenState, authGenState))
 	}
 
 	return appState

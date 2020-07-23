@@ -192,6 +192,9 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			res, err := queryClient.ValidatorSlashes(
 				context.Background(),

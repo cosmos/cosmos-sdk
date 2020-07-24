@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -27,6 +29,9 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
+
+	// GRPCBlockHeightHeader is the gRPC header for block height
+	GRPCBlockHeightHeader = "sdk-block-height"
 )
 
 var (
@@ -309,7 +314,7 @@ func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRou
 func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
-	interceptor := func(_ context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	interceptor := func(grpcCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		// To create the correct sdk.Context, we first need to transform the
 		// req into an abci.RequestQuery
 		msg, ok := req.(proto.Message)
@@ -333,10 +338,20 @@ func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
 			return nil, err
 		}
 
-		ctx := sdk.WrapSDKContext(sdkCtx)
+		// Wrap the sdk.Context into a new context.Context
+		newCtx := sdk.WrapSDKContext(sdkCtx)
 
-		// Run the handler, with our wrapped sdk.Context
-		return handler(ctx, req)
+		// Attach the original stream from the gRPC context into the new
+		// context.Context
+		stream := grpc.ServerTransportStreamFromContext(grpcCtx)
+		newCtx = grpc.NewContextWithServerTransportStream(newCtx, stream)
+
+		// Add gRPC headers
+		md := metadata.Pairs(GRPCBlockHeightHeader, strconv.FormatInt(sdkCtx.BlockHeight(), 10))
+		grpc.SetHeader(newCtx, md)
+
+		// Run the handler, with our new context.Context
+		return handler(newCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register
@@ -346,7 +361,7 @@ func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
 		newMethods := make([]grpc.MethodDesc, len(desc.Methods))
 
 		for i, method := range desc.Methods {
-			methodHandler := method.Handler // Fix scopelint: Using the variable on range scope `method` in function literal
+			methodHandler := method.Handler
 			newMethods[i] = grpc.MethodDesc{
 				MethodName: method.MethodName,
 				Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, _ grpc.UnaryServerInterceptor) (interface{}, error) {

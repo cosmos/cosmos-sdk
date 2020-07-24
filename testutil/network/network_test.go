@@ -2,14 +2,19 @@ package network_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -39,16 +44,38 @@ func (s *IntegrationTestSuite) TestNetwork_Liveness() {
 }
 
 func (s *IntegrationTestSuite) TestGRPC() {
-	val := s.network.Validators[0]
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	val0 := s.network.Validators[0]
 	conn, err := grpc.Dial(
-		val.AppConfig.GRPC.Address,
+		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), // Or else we get "no transport security set"
 	)
 	s.Require().NoError(err)
+
+	// gRPC query with test service should work
 	testClient := testdata.NewTestServiceClient(conn)
-	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
+	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
-	s.Require().Equal("hello", res.Message)
+	s.Require().Equal("hello", testRes.Message)
+
+	// gRPC query with bank service should work
+	denom := fmt.Sprintf("%stoken", val0.Moniker)
+	bankClient := banktypes.NewQueryClient(conn)
+	var header metadata.MD
+	bankRes, err := bankClient.Balance(
+		context.Background(),
+		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},
+		grpc.Header(&header), // Also fetch grpc header
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(
+		sdk.NewCoin(denom, s.network.Config.AccountTokens),
+		*bankRes.GetBalance(),
+	)
+	blockHeight := header.Get(baseapp.GRPCBlockHeightHeader)
+	s.Require().Equal([]string{"1"}, blockHeight)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

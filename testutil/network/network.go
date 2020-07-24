@@ -118,7 +118,7 @@ type (
 		BaseDir    string
 		Validators []*Validator
 
-		config Config
+		Config Config
 	}
 
 	// Validator defines an in-process Tendermint validator node. Through this object,
@@ -157,7 +157,7 @@ func New(t *testing.T, cfg Config) *Network {
 		T:          t,
 		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),
-		config:     cfg,
+		Config:     cfg,
 	}
 
 	t.Log("preparing test network...")
@@ -429,7 +429,7 @@ func (n *Network) Cleanup() {
 		}
 	}
 
-	if n.config.CleanupDir {
+	if n.Config.CleanupDir {
 		_ = os.RemoveAll(n.BaseDir)
 	}
 

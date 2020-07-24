@@ -23,13 +23,13 @@ import (
 )
 
 // GenAppStateFromConfig gets the genesis app state from the config
-func GenAppStateFromConfig(cdc codec.JSONMarshaler, config *cfg.Config,
+func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, config *cfg.Config,
 	initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
-		cdc, config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
+		cdc, txJsonDecoder, config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
 	)
 	if err != nil {
 		return appState, err
@@ -67,7 +67,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, config *cfg.Config,
 
 // CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
-func CollectTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
+func CollectTxs(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 
@@ -111,7 +111,7 @@ func CollectTxs(cdc codec.JSONMarshaler, moniker, genTxsDir string,
 		}
 
 		var genTx sdk.Tx
-		if err = cdc.UnmarshalJSON(jsonRawTx, &genTx); err != nil {
+		if genTx, err = txJsonDecoder(jsonRawTx); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 

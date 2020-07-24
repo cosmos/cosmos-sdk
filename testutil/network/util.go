@@ -105,7 +105,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 			return err
 		}
 
-		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
+		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig.TxJSONDecoder(), tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
 		if err != nil {
 			return err
 		}

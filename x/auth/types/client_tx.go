@@ -94,6 +94,7 @@ func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 	}
 }
 
+// WrapTxBuilder returns a StdTxBuilder from provided transaction
 func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	stdTx, ok := newTx.(StdTx)
 	if !ok {

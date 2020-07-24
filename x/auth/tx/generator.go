@@ -37,6 +37,7 @@ func (g generator) NewTxBuilder() client.TxBuilder {
 	return newBuilder(g.marshaler, g.pubkeyCodec)
 }
 
+// WrapTxBuilder returns a builder from provided transaction
 func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	newBuilder, ok := newTx.(*builder)
 	if !ok {

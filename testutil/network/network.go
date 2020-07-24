@@ -281,9 +281,9 @@ func New(t *testing.T, cfg Config) *Network {
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
 		txBuilder := cfg.TxConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(createValMsg)
-		require.NoError(t, err)
+		require.NoError(t, txBuilder.SetMsgs(createValMsg))
 		txBuilder.SetMemo(memo)
+		
 		txFactory := tx.Factory{}
 		txFactory = txFactory.
 			WithChainID(cfg.ChainID).

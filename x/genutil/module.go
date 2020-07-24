@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
@@ -13,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"

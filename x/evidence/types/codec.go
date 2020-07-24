@@ -21,9 +21,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"cosmos_sdk.evidence.v1.Evidence",
 		(*exported.Evidence)(nil),
-	)
-	registry.RegisterImplementations(
-		(*exported.Evidence)(nil),
 		&Equivocation{},
 	)
 }

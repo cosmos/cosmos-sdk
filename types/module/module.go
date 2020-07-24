@@ -31,8 +31,6 @@ package module
 import (
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
@@ -41,6 +39,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -50,7 +49,7 @@ import (
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
-	RegisterInterfaces(registry types.InterfaceRegistry)
+	RegisterInterfaces(registry codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
 	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
@@ -81,7 +80,7 @@ func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (bm BasicManager) RegisterInterfaces(registry types.InterfaceRegistry) {
+func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	for _, m := range bm {
 		m.RegisterInterfaces(registry)
 	}

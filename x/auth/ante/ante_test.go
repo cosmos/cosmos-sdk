@@ -825,10 +825,9 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 
 				// Manually create tx, and remove signature
 				tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-				sigs, err := tx.GetSignaturesV2()
-				suite.Require().NoError(err)
+				sigs := tx.(types.StdTx).Signatures
 				sigs[0].PubKey = nil
-				_, err = suite.anteHandler(suite.ctx, tx, false)
+				_, err := suite.anteHandler(suite.ctx, tx, false)
 				suite.Require().Error(err)
 				suite.Require().Equal(err.Error(), "wrong number of signers; expected 0, got 1: unauthorized")
 				suite.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))

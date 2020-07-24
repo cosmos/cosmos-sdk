@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -15,7 +17,7 @@ import (
 
 func TestQueryAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
-	cdc := app.Codec()
+	jsonCdc := codec.NewAminoCodec(app.Codec())
 
 	req := abci.RequestQuery{
 		Path: "",
@@ -23,7 +25,7 @@ func TestQueryAccount(t *testing.T) {
 	}
 
 	path := []string{types.QueryAccount}
-	querier := keep.NewQuerier(app.AccountKeeper, nil)
+	querier := keep.NewQuerier(app.AccountKeeper, jsonCdc)
 
 	bz, err := querier(ctx, []string{"other"}, req)
 	require.Error(t, err)
@@ -37,13 +39,13 @@ func TestQueryAccount(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	req.Data = cdc.MustMarshalJSON(types.QueryAccountRequest{Address: []byte("")})
+	req.Data = jsonCdc.MustMarshalJSON(types.QueryAccountRequest{Address: []byte("")})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	_, _, addr := testdata.KeyTestPubAddr()
-	req.Data = cdc.MustMarshalJSON(types.QueryAccountRequest{Address: addr})
+	req.Data = jsonCdc.MustMarshalJSON(types.QueryAccountRequest{Address: addr})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
@@ -58,6 +60,6 @@ func TestQueryAccount(t *testing.T) {
 	require.NotNil(t, res)
 
 	var account types.AccountI
-	err2 := cdc.UnmarshalJSON(res, &account)
+	err2 := jsonCdc.UnmarshalJSON(res, &account)
 	require.Nil(t, err2)
 }

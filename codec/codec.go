@@ -20,7 +20,6 @@ type (
 	Marshaler interface {
 		BinaryMarshaler
 		JSONMarshaler
-		types.AnyUnpacker
 	}
 
 	BinaryMarshaler interface {
@@ -35,6 +34,8 @@ type (
 
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
+
+		types.AnyUnpacker
 	}
 
 	JSONMarshaler interface {

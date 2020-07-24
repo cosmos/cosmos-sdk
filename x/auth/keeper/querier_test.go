@@ -17,7 +17,7 @@ import (
 
 func TestQueryAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
-	jsonCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	req := abci.RequestQuery{
 		Path: "",
@@ -25,7 +25,7 @@ func TestQueryAccount(t *testing.T) {
 	}
 
 	path := []string{types.QueryAccount}
-	querier := keep.NewQuerier(app.AccountKeeper, jsonCdc)
+	querier := keep.NewQuerier(app.AccountKeeper, legacyQuerierCdc)
 
 	bz, err := querier(ctx, []string{"other"}, req)
 	require.Error(t, err)

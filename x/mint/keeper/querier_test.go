@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/stretchr/testify/require"
 

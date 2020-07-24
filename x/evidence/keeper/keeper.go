@@ -20,7 +20,7 @@ import (
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {
-	cdc            codec.Marshaler
+	cdc            codec.BinaryMarshaler
 	storeKey       sdk.StoreKey
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
@@ -28,7 +28,7 @@ type Keeper struct {
 }
 
 func NewKeeper(
-	cdc codec.Marshaler, storeKey sdk.StoreKey, stakingKeeper types.StakingKeeper,
+	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 
@@ -201,13 +201,13 @@ func (k Keeper) MarshalEvidenceJSON(evidence exported.Evidence) ([]byte, error) 
 		return nil, err
 	}
 
-	return k.cdc.MarshalJSON(any)
+	return k.cdc.MarshalBinaryBare(any)
 }
 
 // UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
 func (k Keeper) UnmarshalEvidenceJSON(bz []byte) (exported.Evidence, error) {
 	var any codectypes.Any
-	if err := k.cdc.UnmarshalJSON(bz, &any); err != nil {
+	if err := k.cdc.UnmarshalBinaryBare(bz, &any); err != nil {
 		return nil, err
 	}
 

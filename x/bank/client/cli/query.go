@@ -72,7 +72,11 @@ Example:
 				return err
 			}
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
 

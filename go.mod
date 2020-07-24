@@ -7,11 +7,11 @@ require (
 	github.com/armon/go-metrics v0.3.3
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
+	github.com/btcsuite/btcutil v1.0.2
 	github.com/confio/ics23-iavl v0.6.0
 	github.com/confio/ics23/go v0.0.0-20200604202538-6e2c36a74465
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/ledger-cosmos-go v0.11.1
-	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gibson042/canonicaljson-go v1.0.3
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.3
@@ -40,6 +40,7 @@ require (
 	github.com/tendermint/iavl v0.14.0
 	github.com/tendermint/tendermint v0.33.6
 	github.com/tendermint/tm-db v0.5.1
+	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	google.golang.org/grpc v1.30.0
 	gopkg.in/yaml.v2 v2.3.0
 )

@@ -12,20 +12,6 @@ import (
 
 var _ exported.GenesisBalance = (*Balance)(nil)
 
-// GenesisState defines the bank module's genesis state.
-type GenesisState struct {
-	Params   Params    `json:"params" yaml:"params"`
-	Balances []Balance `json:"balances" yaml:"balances"`
-	Supply   sdk.Coins `json:"supply" yaml:"supply"`
-}
-
-// Balance defines an account address and balance pair used in the bank module's
-// genesis state.
-type Balance struct {
-	Address sdk.AccAddress `json:"address" yaml:"address"`
-	Coins   sdk.Coins      `json:"coins" yaml:"coins"`
-}
-
 // GetAddress returns the account address of the Balance object.
 func (b Balance) GetAddress() sdk.AccAddress {
 	return b.Address

@@ -49,7 +49,7 @@ import (
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
-	RegisterInterfaces(registry codectypes.InterfaceRegistry)
+	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
 	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error

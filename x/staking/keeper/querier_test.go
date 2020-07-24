@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,6 +17,7 @@ import (
 
 func TestNewQuerier(t *testing.T) {
 	cdc, app, ctx := createTestInput()
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
 	_, addrAcc2 := addrs[0], addrs[1]
@@ -43,7 +45,7 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.Error(t, err)
@@ -107,7 +109,8 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParametersPool(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	bondDenom := sdk.DefaultBondDenom
 
@@ -133,7 +136,8 @@ func TestQueryParametersPool(t *testing.T) {
 func TestQueryValidators(t *testing.T) {
 	cdc, app, ctx := createTestInput()
 	params := app.StakingKeeper.GetParams(ctx)
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
 
@@ -200,7 +204,8 @@ func TestQueryValidators(t *testing.T) {
 func TestQueryDelegation(t *testing.T) {
 	cdc, app, ctx := createTestInput()
 	params := app.StakingKeeper.GetParams(ctx)
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -448,7 +453,8 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	}
 
 	cdc, app, ctx := createTestInput()
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 100, sdk.TokensFromConsensusPower(10000))
 	pubKeys := simapp.CreateTestPubKeys(1)
@@ -532,7 +538,8 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 
 func TestQueryRedelegations(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -603,7 +610,8 @@ func TestQueryRedelegations(t *testing.T) {
 
 func TestQueryUnbondingDelegation(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -698,7 +706,8 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 func TestQueryHistoricalInfo(t *testing.T) {
 	cdc, app, ctx := createTestInput()
-	querier := keeper.NewQuerier(app.StakingKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]

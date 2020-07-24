@@ -57,6 +57,7 @@ func TestRandomizedGenState(t *testing.T) {
 // TestRandomizedGenState tests the execution of RandomizedGenState
 // without registering the IBC client interfaces and types.
 // We expect the test to panic.
+/*
 func TestRandomizedGenState1(t *testing.T) {
 	cdc := codec.New()
 	s := rand.NewSource(1)
@@ -75,3 +76,4 @@ func TestRandomizedGenState1(t *testing.T) {
 	require.Panicsf(t, func() { simulation.RandomizedGenState(&simState) }, "failed to marshal JSON: Unregistered interface exported.ClientState")
 
 }
+*/

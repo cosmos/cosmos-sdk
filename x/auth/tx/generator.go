@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -22,15 +23,14 @@ type generator struct {
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided Marshaler, PublicKeyCodec and SignModeHandler.
-func NewTxConfig(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
+func NewTxConfig(anyUnpacker codectypes.AnyUnpacker, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
 	return &generator{
-		marshaler:   marshaler,
 		pubkeyCodec: pubkeyCodec,
 		handler:     signModeHandler,
-		decoder:     DefaultTxDecoder(marshaler, pubkeyCodec),
-		encoder:     DefaultTxEncoder(marshaler),
-		jsonDecoder: DefaultJSONTxDecoder(marshaler, pubkeyCodec),
-		jsonEncoder: DefaultJSONTxEncoder(marshaler),
+		decoder:     DefaultTxDecoder(anyUnpacker, pubkeyCodec),
+		encoder:     DefaultTxEncoder(),
+		jsonDecoder: DefaultJSONTxDecoder(anyUnpacker, pubkeyCodec),
+		jsonEncoder: DefaultJSONTxEncoder(),
 	}
 }
 
@@ -44,7 +44,7 @@ func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 }
 
 func (g generator) NewTxBuilder() client.TxBuilder {
-	return newBuilder(g.marshaler, g.pubkeyCodec)
+	return newBuilder(g.pubkeyCodec)
 }
 
 func (g generator) SignModeHandler() signing.SignModeHandler {

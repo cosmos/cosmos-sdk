@@ -5,91 +5,135 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-// func (suite *KeeperTestSuite) TestSendTransfer() {
-// 	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
-// 	capName := host.ChannelCapabilityPath(testPort1, testChannel1)
+// test sending from chainA to chainB using both coins that orignate on this
+// chain and that came from chainB
+func (suite *KeeperTestSuite) TestSendTransfer() {
+	var (
+		amount             sdk.Coins
+		channelA, channelB ibctesting.TestChannel
+		err                error
+	)
 
-// 	testCases := []struct {
-// 		msg           string
-// 		amount        sdk.Coins
-// 		malleate      func()
-// 		isSourceChain bool
-// 		expPass       bool
-// 	}{
-// 		{"successful transfer from source chain", testCoins2,
-// 			func() {
-// 				_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-// 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
-// 			}, true, true},
-// 		{"successful transfer from external chain", prefixCoins,
-// 			func() {
-// 				suite.chainA.App.BankKeeper.SetSupply(suite.chainA.GetContext(), banktypes.NewSupply(prefixCoins))
-// 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, prefixCoins)
-// 				suite.Require().NoError(err)
-// 				suite.chainA.CreateClient(suite.chainB)
-// 				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectiontypes.OPEN)
-// 				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
-// 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
-// 			}, false, true},
-// 		{"source channel not found", testCoins,
-// 			func() {}, true, false},
-// 		{"next seq send not found", testCoins,
-// 			func() {
-// 				suite.coordinator.Setup(suite.chainA, suite.chainB)
-// 			}, true, false},
-// 		// createOutgoingPacket tests
-// 		// - source chain
-// 		{"send coins failed", testCoins,
-// 			func() {
-// 				_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-// 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
-// 			}, true, false},
-// 		// - receiving chain
-// 		{"send from module account failed", testCoins,
-// 			func() {
-// 				_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-// 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
-// 			}, false, false},
-// 		{"channel capability not found", testCoins,
-// 			func() {
-// 				_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-// 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
-// 				// Release channel capability
-// 				cap, _ := suite.chainA.App.ScopedTransferKeeper.GetCapability(suite.chainA.GetContext(), capName)
-// 				suite.chainA.App.ScopedTransferKeeper.ReleaseCapability(suite.chainA.GetContext(), cap)
-// 			}, true, false},
-// 	}
+	testCases := []struct {
+		msg           string
+		malleate      func()
+		isSourceChain bool
+		expPass       bool
+	}{
+		{"successful transfer from source chain",
+			func() {
+				_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				amount = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
+			}, true, true},
+		{"successful transfer with coins from counterparty chain",
+			func() {
+				// send coins from chainA back to chainB
+				_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				amount = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
+			}, false, true},
+		{"source channel not found",
+			func() {
+				// channel references wrong ID
+				_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				channelA.ID = ibctesting.InvalidID
+				amount = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
+			}, true, false},
+		{"next seq send not found",
+			func() {
+				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				channelA = connA.NextTestChannel()
+				channelB = connB.NextTestChannel()
+				// manually create channel so next seq send is never set
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
+					suite.chainA.GetContext(),
+					channelA.PortID, channelA.ID,
+					channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, channeltypes.NewCounterparty(channelB.PortID, channelB.ID), []string{connA.ID}, ibctesting.ChannelVersion),
+				)
+				suite.chainA.CreateChannelCapability(channelA.PortID, channelA.ID)
+				amount = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
+			}, true, false},
 
-// 	for i, tc := range testCases {
-// 		tc := tc
-// 		i := i
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+		// createOutgoingPacket tests
+		// - source chain
+		{"send coins failed",
+			func() {
+				_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				amount = ibctesting.NewTransferCoins(channelB, "randomdenom", 100)
+			}, true, false},
+		// - receiving chain
+		{"send from module account failed",
+			func() {
+				_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				amount = ibctesting.NewTransferCoins(channelA, "randomdenom", 100)
+			}, false, false},
+		{"channel capability not found",
+			func() {
+				_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+				cap := suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 
-// 			// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
-// 			cap, err := suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), capName)
-// 			suite.Require().Nil(err, "could not create capability")
-// 			err = suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), cap, capName)
-// 			suite.Require().Nil(err, "transfer module could not claim capability")
+				// Release channel capability
+				suite.chainA.App.ScopedTransferKeeper.ReleaseCapability(suite.chainA.GetContext(), cap)
+			}, true, false},
+	}
 
-// 			tc.malleate()
+	for _, tc := range testCases {
+		tc := tc
 
-// 			err = suite.chainA.App.TransferKeeper.SendTransfer(
-// 				suite.chainA.GetContext(), testPort1, testChannel1, tc.amount, testAddr1, testAddr2.String(), 110, 0,
-// 			)
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
+			tc.malleate()
 
+			if tc.isSourceChain {
+				// use channelA for source
+				err = suite.chainA.App.TransferKeeper.SendTransfer(
+					suite.chainA.GetContext(), channelA.PortID, channelA.ID, amount,
+					suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0,
+				)
+			} else {
+				// send coins from chainB to chainA
+				coinFromBToA := ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
+				transferMsg := types.NewMsgTransfer(channelB.PortID, channelB.ID, coinFromBToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
+				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, []sdk.Msg{transferMsg})
+				suite.Require().NoError(err) // message committed
+
+				// TODO: retreive packet sequence from the resulting events in the commit above
+
+				// receive coins on chainA from chainB
+				fungibleTokenPacket := types.NewFungibleTokenPacketData(coinFromBToA, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
+				packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
+
+				// get proof of packet commitment from chainB
+				packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+				proof, proofHeight := suite.chainB.QueryProof(packetKey)
+
+				recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
+				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, []sdk.Msg{recvMsg})
+				suite.Require().NoError(err) // message committed
+
+				// use channelB for source
+				err = suite.chainA.App.TransferKeeper.SendTransfer(
+					suite.chainA.GetContext(), channelA.PortID, channelA.ID, amount,
+					suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0,
+				)
+			}
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+/*
 func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
@@ -316,3 +360,4 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 // 		})
 // 	}
 // }
+*/

@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -31,6 +32,9 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec registers the genutil module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
+
+// RegisterInterfaces registers the module's interface types
+func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the genutil
 // module.

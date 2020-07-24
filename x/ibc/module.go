@@ -78,8 +78,8 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaceTypes registers module concrete types into protobuf Any.
-func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+// RegisterInterfaces registers module concrete types into protobuf Any.
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

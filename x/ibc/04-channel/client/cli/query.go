@@ -37,8 +37,13 @@ func GetCmdQueryChannels() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			req := &types.QueryChannelsRequest{
-				Pagination: client.ReadPageRequest(cmd.Flags()),
+				Pagination: pageReq,
 			}
 
 			res, err := queryClient.Channels(context.Background(), req)
@@ -110,10 +115,14 @@ func GetCmdQueryConnectionChannels() *cobra.Command {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			req := &types.QueryConnectionChannelsRequest{
 				Connection: args[0],
-				Pagination: client.ReadPageRequest(cmd.Flags()),
+				Pagination: pageReq,
 			}
 
 			res, err := queryClient.ConnectionChannels(context.Background(), req)
@@ -181,11 +190,15 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			req := &types.QueryPacketCommitmentsRequest{
 				PortID:     args[0],
 				ChannelID:  args[1],
-				Pagination: client.ReadPageRequest(cmd.Flags()),
+				Pagination: pageReq,
 			}
 
 			res, err := queryClient.PacketCommitments(context.Background(), req)

@@ -120,10 +120,12 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	return operAddr
 }
 
-// gets the prefix for all unbonding delegations from a delegator
-func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
-	bz := sdk.FormatTimeBytes(timestamp)
-	return append(ValidatorQueueKey, bz...)
+// GetValidatorQueueKey returns the prefix key used for getting a set of unbonding
+// validators whose unbonding completion occurs at the given time and height.
+func GetValidatorQueueKey(timestamp time.Time, height int64) []byte {
+	heightBz := sdk.Uint64ToBigEndian(uint64(height))
+	timeBz := sdk.FormatTimeBytes(timestamp)
+	return append(ValidatorQueueKey, append(heightBz, timeBz...)...)
 }
 
 //______________________________________________________________________________

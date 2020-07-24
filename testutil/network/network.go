@@ -283,7 +283,7 @@ func New(t *testing.T, cfg Config) *Network {
 		txBuilder := cfg.TxConfig.NewTxBuilder()
 		require.NoError(t, txBuilder.SetMsgs(createValMsg))
 		txBuilder.SetMemo(memo)
-		
+
 		txFactory := tx.Factory{}
 		txFactory = txFactory.
 			WithChainID(cfg.ChainID).

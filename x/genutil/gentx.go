@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
@@ -93,16 +94,16 @@ type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 func DeliverGenTxs(
 	ctx sdk.Context, genTxs []json.RawMessage,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
-	txJSONDecoder sdk.TxDecoder, txBinaryEncoder sdk.TxEncoder,
+	txEncodingConfig client.TxEncodingConfig,
 ) []abci.ValidatorUpdate {
 
 	for _, genTx := range genTxs {
-		tx, err := txJSONDecoder(genTx)
+		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
 		if err != nil {
 			panic(err)
 		}
 
-		bz, err := txBinaryEncoder(tx)
+		bz, err := txEncodingConfig.TxEncoder()(tx)
 		if err != nil {
 			panic(err)
 		}

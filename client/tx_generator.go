@@ -7,17 +7,23 @@ import (
 )
 
 type (
-	// TxConfig defines an interface a client can utilize to generate an
-	// application-defined concrete transaction type. The type returned must
-	// implement TxBuilder.
-	TxConfig interface {
-		NewTxBuilder() TxBuilder
-		SignModeHandler() signing.SignModeHandler
-
+	// TxEncodingConfig defines an interface that contains transaction
+	// encoders and decoders
+	TxEncodingConfig interface {
 		TxEncoder() sdk.TxEncoder
 		TxDecoder() sdk.TxDecoder
 		TxJSONEncoder() sdk.TxEncoder
 		TxJSONDecoder() sdk.TxDecoder
+	}
+
+	// TxConfig defines an interface a client can utilize to generate an
+	// application-defined concrete transaction type. The type returned must
+	// implement TxBuilder.
+	TxConfig interface {
+		TxEncodingConfig
+
+		NewTxBuilder() TxBuilder
+		SignModeHandler() signing.SignModeHandler
 	}
 
 	// TxBuilder defines an interface which an application-defined concrete transaction

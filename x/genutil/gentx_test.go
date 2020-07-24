@@ -260,14 +260,14 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NotPanics(func() {
 					genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
-						suite.encodingConfig.TxConfig.TxJSONDecoder(), suite.encodingConfig.TxConfig.TxEncoder(),
+						suite.encodingConfig.TxConfig,
 					)
 				})
 			} else {
 				suite.Require().Panics(func() {
 					genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
-						suite.encodingConfig.TxConfig.TxJSONDecoder(), suite.encodingConfig.TxConfig.TxEncoder(),
+						suite.encodingConfig.TxConfig,
 					)
 				})
 			}

@@ -98,10 +98,11 @@ func GenesisStateFromGenFile(cdc codec.JSONMarshaler, genFile string) (genesisSt
 }
 
 // ValidateGenesis validates GenTx transactions
-func ValidateGenesis(genesisState GenesisState) error {
+func ValidateGenesis(genesisState GenesisState, txJSONDecoder sdk.TxDecoder) error {
 	for i, genTx := range genesisState.GenTxs {
 		var tx sdk.Tx
-		if err := ModuleCdc.UnmarshalJSON(genTx, &tx); err != nil {
+		tx, err := txJSONDecoder(genTx)
+		if err != nil {
 			return err
 		}
 

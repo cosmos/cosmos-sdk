@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"encoding/json"
@@ -8,8 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -19,10 +21,10 @@ var (
 )
 
 func TestNetGenesisState(t *testing.T) {
-	gen := NewGenesisState(nil)
+	gen := types.NewGenesisState(nil)
 	assert.NotNil(t, gen.GenTxs) // https://github.com/cosmos/cosmos-sdk/issues/5086
 
-	gen = NewGenesisState(
+	gen = types.NewGenesisState(
 		[]json.RawMessage{
 			[]byte(`{"foo":"bar"}`),
 		},
@@ -46,9 +48,9 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	require.NoError(t, err)
 
 	tx := txBuilder.GetTx()
-	genesisState := NewGenesisStateFromTx([]sdk.Tx{tx})
+	genesisState := types.NewGenesisStateFromTx([]sdk.Tx{tx})
 
-	err = ValidateGenesis(genesisState)
+	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)
 }
 
@@ -63,8 +65,8 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 	require.NoError(t, err)
 
 	tx := txBuilder.GetTx()
-	genesisState := NewGenesisStateFromTx([]sdk.Tx{tx})
+	genesisState := types.NewGenesisStateFromTx([]sdk.Tx{tx})
 
-	err = ValidateGenesis(genesisState)
+	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)
 }

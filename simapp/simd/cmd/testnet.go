@@ -73,8 +73,10 @@ Example:
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 
+			txJsonDecoder := clientCtx.TxConfig.TxJSONDecoder()
+
 			return InitTestnet(
-				cmd, config, cdc, clientCtx.TxConfig.TxJSONDecoder(), mbm, genBalIterator, outputDir, chainID, minGasPrices,
+				cmd, config, cdc, txJsonDecoder, mbm, genBalIterator, outputDir, chainID, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, keyringBackend, numValidators,
 			)
 		},

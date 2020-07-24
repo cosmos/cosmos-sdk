@@ -27,7 +27,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -72,8 +71,8 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaceTypes registers interfaces and implementations of the bank module.
-func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+// RegisterInterfaces registers interfaces and implementations of the bank module.
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

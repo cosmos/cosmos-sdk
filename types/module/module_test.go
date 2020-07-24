@@ -76,7 +76,7 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 
 	require.True(t, goam.Route().Empty())
 	require.Empty(t, goam.QuerierRoute())
-	require.Nil(t, goam.LegacyQueryHandler(nil))
+	require.Nil(t, goam.LegacyQuerierHandler(nil))
 
 	// no-op
 	goam.RegisterInvariants(mockInvariantRegistry)

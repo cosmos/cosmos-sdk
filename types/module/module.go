@@ -160,7 +160,7 @@ type AppModule interface {
 	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
 	// Deprecated: use RegisterQueryService
-	LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier
+	LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier
 	// RegisterQueryService allows a module to register a gRPC query service
 	RegisterQueryService(grpc.Server)
 
@@ -192,8 +192,8 @@ func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
-// LegacyQueryHandler returns an empty module querier
-func (gam GenesisOnlyAppModule) LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier { return nil }
+// LegacyQuerierHandler returns an empty module querier
+func (gam GenesisOnlyAppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
@@ -270,7 +270,7 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter,
 			router.AddRoute(module.Route())
 		}
 		if module.QuerierRoute() != "" {
-			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQueryHandler(legacyQuerierCdc))
+			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQuerierHandler(legacyQuerierCdc))
 		}
 	}
 }

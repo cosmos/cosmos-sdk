@@ -128,8 +128,8 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// LegacyQueryHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQueryHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
+// LegacyQuerierHandler returns the distribution module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, jsonCdc)
 }
 

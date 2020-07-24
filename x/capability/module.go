@@ -106,8 +106,8 @@ func (AppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return "" }
 
-// LegacyQueryHandler returns the capability module's Querier.
-func (am AppModule) LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier { return nil }
+// LegacyQuerierHandler returns the capability module's Querier.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.

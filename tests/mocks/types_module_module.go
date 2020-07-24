@@ -502,18 +502,18 @@ func (mr *MockAppModuleMockRecorder) QuerierRoute() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerierRoute", reflect.TypeOf((*MockAppModule)(nil).QuerierRoute))
 }
 
-// LegacyQueryHandler mocks base method
-func (m *MockAppModule) LegacyQueryHandler(codec.JSONMarshaler) types0.Querier {
+// LegacyQuerierHandler mocks base method
+func (m *MockAppModule) LegacyQuerierHandler(codec.JSONMarshaler) types0.Querier {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LegacyQueryHandler")
+	ret := m.ctrl.Call(m, "LegacyQuerierHandler")
 	ret0, _ := ret[0].(types0.Querier)
 	return ret0
 }
 
-// LegacyQueryHandler indicates an expected call of LegacyQueryHandler
+// LegacyQuerierHandler indicates an expected call of LegacyQuerierHandler
 func (mr *MockAppModuleMockRecorder) NewQuerierHandler() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LegacyQueryHandler", reflect.TypeOf((*MockAppModule)(nil).LegacyQueryHandler))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LegacyQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).LegacyQuerierHandler))
 }
 
 // RegisterQueryService mocks base method

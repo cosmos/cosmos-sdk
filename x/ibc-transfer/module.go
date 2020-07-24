@@ -113,8 +113,8 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// LegacyQueryHandler implements the AppModule interface
-func (am AppModule) LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier {
+// LegacyQuerierHandler implements the AppModule interface
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return nil
 }
 

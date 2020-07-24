@@ -117,8 +117,8 @@ func (am AppModule) Route() sdk.Route {
 // QuerierRoute returns the bank module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// LegacyQueryHandler returns the bank module sdk.Querier.
-func (am AppModule) LegacyQueryHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
+// LegacyQuerierHandler returns the bank module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, jsonCdc)
 }
 

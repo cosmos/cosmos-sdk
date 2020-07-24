@@ -137,8 +137,8 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// LegacyQueryHandler returns the evidence module's Querier.
-func (am AppModule) LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier {
+// LegacyQuerierHandler returns the evidence module's Querier.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 

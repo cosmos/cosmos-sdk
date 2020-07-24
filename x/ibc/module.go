@@ -119,8 +119,8 @@ func (AppModule) QuerierRoute() string {
 	return host.QuerierRoute
 }
 
-// LegacyQueryHandler returns the ibc module sdk.Querier.
-func (am AppModule) LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier {
+// LegacyQuerierHandler returns the ibc module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(*am.keeper)
 }
 

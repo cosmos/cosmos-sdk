@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -39,9 +38,9 @@ func (g generator) NewTxBuilder() client.TxBuilder {
 }
 
 func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	newBuilder, ok := newTx.(client.TxBuilder)
+	newBuilder, ok := newTx.(*builder)
 	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", &tx.Tx{}, newTx)
+		return nil, fmt.Errorf("expected %T, got %T", &builder{}, newTx)
 	}
 
 	return newBuilder, nil

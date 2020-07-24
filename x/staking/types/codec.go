@@ -19,7 +19,7 @@ func RegisterCodec(cdc *codec.Codec) {
 
 // RegisterInterfaces registers the x/staking interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations((sdk.Msg)(nil),
+	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateValidator{},
 		&MsgEditValidator{},
 		&MsgDelegate{},

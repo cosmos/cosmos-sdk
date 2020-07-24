@@ -340,6 +340,8 @@ func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
 		return handler(ctx, req)
 	}
 
+	// Loop through all services and methods, add the interceptor, and register
+	// the service
 	for _, data := range app.GRPCQueryRouter().serviceData {
 		desc := data.serviceDesc
 		newMethods := make([]grpc.MethodDesc, len(desc.Methods))

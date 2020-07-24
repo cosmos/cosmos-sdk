@@ -160,7 +160,7 @@ type AppModule interface {
 	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
 	// Deprecated: use RegisterQueryService
-	NewQuerierHandler() sdk.Querier
+	LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier
 	// RegisterQueryService allows a module to register a gRPC query service
 	RegisterQueryService(grpc.Server)
 
@@ -192,8 +192,8 @@ func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler returns an empty module querier
-func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
+// LegacyQueryHandler returns an empty module querier
+func (gam GenesisOnlyAppModule) LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
@@ -264,13 +264,13 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterRoutes registers all module routes and module querier routes
-func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
+func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc codec.JSONMarshaler) {
 	for _, module := range m.Modules {
 		if !module.Route().Empty() {
 			router.AddRoute(module.Route())
 		}
 		if module.QuerierRoute() != "" {
-			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
+			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQueryHandler(legacyQuerierCdc))
 		}
 	}
 }

@@ -121,7 +121,7 @@ func TestQueries(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 	valOpAddr1 := valAddrs[0]
 
-	querier := keeper.NewQuerier(app.DistrKeeper)
+	querier := keeper.NewQuerier(app.DistrKeeper, nil)
 
 	// test param queries
 	params := types.Params{

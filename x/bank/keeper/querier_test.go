@@ -19,7 +19,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, nil)
 
 	res, err := querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NotNil(err)
@@ -55,7 +55,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, nil)
 
 	res, err := querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NotNil(err)
@@ -93,7 +93,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, nil)
 
 	res, err := querier(ctx, []string{types.QueryTotalSupply}, req)
 	suite.Require().NotNil(err)
@@ -122,7 +122,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, nil)
 
 	res, err := querier(ctx, []string{types.QuerySupplyOf}, req)
 	suite.Require().NotNil(err)
@@ -145,7 +145,7 @@ func (suite *IntegrationTestSuite) TestQuerierRouteNotFound() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, nil)
 	_, err := querier(ctx, []string{"invalid"}, req)
 	suite.Error(err)
 }

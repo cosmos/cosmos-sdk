@@ -6,6 +6,8 @@ package mocks
 
 import (
 	json "encoding/json"
+	reflect "reflect"
+
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,7 +17,6 @@ import (
 	mux "github.com/gorilla/mux"
 	cobra "github.com/spf13/cobra"
 	types1 "github.com/tendermint/tendermint/abci/types"
-	reflect "reflect"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface
@@ -501,18 +502,18 @@ func (mr *MockAppModuleMockRecorder) QuerierRoute() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerierRoute", reflect.TypeOf((*MockAppModule)(nil).QuerierRoute))
 }
 
-// NewQuerierHandler mocks base method
-func (m *MockAppModule) NewQuerierHandler() types0.Querier {
+// LegacyQueryHandler mocks base method
+func (m *MockAppModule) LegacyQueryHandler(codec.JSONMarshaler) types0.Querier {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewQuerierHandler")
+	ret := m.ctrl.Call(m, "LegacyQueryHandler")
 	ret0, _ := ret[0].(types0.Querier)
 	return ret0
 }
 
-// NewQuerierHandler indicates an expected call of NewQuerierHandler
+// LegacyQueryHandler indicates an expected call of LegacyQueryHandler
 func (mr *MockAppModuleMockRecorder) NewQuerierHandler() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).NewQuerierHandler))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LegacyQueryHandler", reflect.TypeOf((*MockAppModule)(nil).LegacyQueryHandler))
 }
 
 // RegisterQueryService mocks base method

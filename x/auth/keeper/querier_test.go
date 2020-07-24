@@ -23,7 +23,7 @@ func TestQueryAccount(t *testing.T) {
 	}
 
 	path := []string{types.QueryAccount}
-	querier := keep.NewQuerier(app.AccountKeeper)
+	querier := keep.NewQuerier(app.AccountKeeper, nil)
 
 	bz, err := querier(ctx, []string{"other"}, req)
 	require.Error(t, err)

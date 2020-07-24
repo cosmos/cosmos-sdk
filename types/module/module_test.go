@@ -76,7 +76,7 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 
 	require.True(t, goam.Route().Empty())
 	require.Empty(t, goam.QuerierRoute())
-	require.Nil(t, goam.NewQuerierHandler())
+	require.Nil(t, goam.LegacyQueryHandler(nil))
 
 	// no-op
 	goam.RegisterInvariants(mockInvariantRegistry)
@@ -163,7 +163,9 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	mockAppModule1.EXPECT().NewQuerierHandler().Times(1).Return(handler3)
 	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
 
-	mm.RegisterRoutes(router, queryRouter)
+	amino := codec.New()
+	jsonCdc := codec.NewAminoCodec(amino)
+	mm.RegisterRoutes(router, queryRouter, jsonCdc)
 }
 
 func TestManager_RegisterQueryServices(t *testing.T) {

@@ -88,8 +88,8 @@ func (AppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns the route we respond to for abci queries
 func (AppModule) QuerierRoute() string { return types.QuerierKey }
 
-// NewQuerierHandler registers a query handler to respond to the module-specific queries
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQueryHandler registers a query handler to respond to the module-specific queries
+func (am AppModule) LegacyQueryHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 

@@ -128,9 +128,9 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
+// LegacyQueryHandler returns the distribution module sdk.Querier.
+func (am AppModule) LegacyQueryHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, jsonCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the

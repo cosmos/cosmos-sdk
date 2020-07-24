@@ -134,6 +134,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
 
 	// simulation must not underestimate gas of this decorator even with nil signatures
+	txBuilder2 := suite.clientCtx.TxConfig
 	sigTx := tx.(types.StdTx)
 	sigTx.Signatures = []types.StdSignature{{}}
 

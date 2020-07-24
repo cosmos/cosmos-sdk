@@ -29,9 +29,8 @@ func init() {
 }
 
 var (
-	_ module.AppModule       = AppModule{}
-	_ module.AppModuleBasic  = AppModuleBasic{}
-	_ module.InterfaceModule = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
@@ -62,7 +61,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }
 
-func (b AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

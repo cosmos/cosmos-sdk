@@ -90,7 +90,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		app.RegisterGRPC(grpcSrv)
 
 		listener, err := net.Listen("tcp", val.AppConfig.GRPC.Address)
-
 		if err != nil {
 			return err
 		}

@@ -1,13 +1,18 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	"github.com/tendermint/tendermint/abci/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -303,8 +308,61 @@ func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRou
 
 // RegisterGRPC registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
+	// Define an interceptor for all gRPC queries: this interceptor will create
+	// a new sdk.Context, and pass it into the query handler.
+	interceptor := func(_ context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		// To create the correct sdk.Context, we first need to transform the
+		// req into an abci.RequestQuery
+		msg, ok := req.(proto.Message)
+		if !ok {
+			return nil, status.Errorf(codes.Internal, "unable to proto marshal")
+		}
+
+		msgBz, err := proto.Marshal(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		abciReq := types.RequestQuery{
+			Data: msgBz,
+			Path: info.FullMethod,
+		}
+
+		// Create the sdk.Context
+		sdkCtx, err := app.createQueryContext(abciReq)
+		if err != nil {
+			return nil, err
+		}
+
+		ctx := sdk.WrapSDKContext(sdkCtx)
+
+		// Run the handler, with our wrapped sdk.Context
+		return handler(ctx, req)
+	}
+
 	for _, data := range app.GRPCQueryRouter().serviceData {
-		server.RegisterService(data.serviceDesc, data.handler)
+		desc := data.serviceDesc
+		newMethods := make([]grpc.MethodDesc, len(desc.Methods))
+
+		for i, method := range desc.Methods {
+			methodHandler := method.Handler // Fix scopelint: Using the variable on range scope `method` in function literal
+			newMethods[i] = grpc.MethodDesc{
+				MethodName: method.MethodName,
+				Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, _ grpc.UnaryServerInterceptor) (interface{}, error) {
+					return methodHandler(srv, ctx, dec, interceptor)
+				},
+			}
+		}
+
+		newDesc := &grpc.ServiceDesc{
+			ServiceName: desc.ServiceName,
+			HandlerType: desc.HandlerType,
+			Methods:     newMethods,
+			Streams:     desc.Streams,
+			Metadata:    desc.Metadata,
+		}
+
+		server.RegisterService(newDesc, data.handler)
 	}
 }
 

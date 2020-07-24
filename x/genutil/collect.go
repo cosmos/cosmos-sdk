@@ -15,6 +15,7 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
@@ -23,13 +24,13 @@ import (
 )
 
 // GenAppStateFromConfig gets the genesis app state from the config
-func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder,
+func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig,
 	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
-		cdc, txJSONDecoder, config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
+		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
 	)
 	if err != nil {
 		return appState, err
@@ -49,7 +50,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder,
 		return appState, err
 	}
 
-	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, txJSONEncoder, appGenesisState, appGenTxs)
+	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, txEncodingConfig.TxJSONEncoder(), appGenesisState, appGenTxs)
 	if err != nil {
 		return appState, err
 	}

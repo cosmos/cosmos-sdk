@@ -73,11 +73,8 @@ Example:
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 
-			txJSONDecoder := clientCtx.TxConfig.TxJSONDecoder()
-			txJSONEncoder := clientCtx.TxConfig.TxJSONEncoder()
-
 			return InitTestnet(
-				cmd, config, cdc, txJSONDecoder, txJSONEncoder, mbm, genBalIterator, outputDir, chainID, minGasPrices,
+				cmd, config, cdc, clientCtx.TxConfig, mbm, genBalIterator, outputDir, chainID, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, keyringBackend, numValidators,
 			)
 		},
@@ -101,7 +98,7 @@ const nodeDirPerm = 0755
 // Initialize the testnet
 func InitTestnet(
 	cmd *cobra.Command, config *tmconfig.Config, cdc codec.JSONMarshaler,
-	txJSONDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder,
+	txEncodingConfig client.TxEncodingConfig,
 	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
 	nodeCLIHome, startingIPAddress, keyringBackend string, numValidators int,
@@ -244,7 +241,7 @@ func InitTestnet(
 	}
 
 	err := collectGenFiles(
-		cdc, txJSONDecoder, txJSONEncoder, config, chainID, nodeIDs, valPubKeys, numValidators,
+		cdc, txEncodingConfig, config, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -298,7 +295,7 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder,
+	cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig,
 	config *tmconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
@@ -324,7 +321,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, txJSONDecoder, txJSONEncoder, config, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, txEncodingConfig, config, initCfg, *genDoc, genBalIterator)
 		if err != nil {
 			return err
 		}

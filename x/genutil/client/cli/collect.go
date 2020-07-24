@@ -51,7 +51,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 			initCfg := types.NewInitConfig(genDoc.ChainID, genTxsDir, nodeID, valPubKey)
 
 			appMessage, err := genutil.GenAppStateFromConfig(cdc,
-				clientCtx.TxConfig.TxJSONDecoder(), clientCtx.TxConfig.TxJSONEncoder(),
+				clientCtx.TxConfig,
 				config, initCfg, *genDoc, genBalIterator)
 			if err != nil {
 				return errors.Wrap(err, "failed to get genesis app state from config")

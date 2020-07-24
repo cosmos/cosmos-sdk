@@ -74,7 +74,7 @@ Example:
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 
 			return InitTestnet(
-				cmd, config, cdc, mbm, genBalIterator, outputDir, chainID, minGasPrices,
+				cmd, config, cdc, clientCtx.TxConfig.TxJSONDecoder(), mbm, genBalIterator, outputDir, chainID, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, keyringBackend, numValidators,
 			)
 		},
@@ -98,6 +98,7 @@ const nodeDirPerm = 0755
 // Initialize the testnet
 func InitTestnet(
 	cmd *cobra.Command, config *tmconfig.Config, cdc codec.JSONMarshaler,
+	txJsonDecoder sdk.TxDecoder,
 	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
 	nodeCLIHome, startingIPAddress, keyringBackend string, numValidators int,
@@ -240,7 +241,7 @@ func InitTestnet(
 	}
 
 	err := collectGenFiles(
-		cdc, config, chainID, nodeIDs, valPubKeys, numValidators,
+		cdc, txJsonDecoder, config, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -294,7 +295,7 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	cdc codec.JSONMarshaler, config *tmconfig.Config, chainID string,
+	cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, config *tmconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
 	genBalIterator banktypes.GenesisBalancesIterator,
@@ -319,7 +320,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, txJsonDecoder, config, initCfg, *genDoc, genBalIterator)
 		if err != nil {
 			return err
 		}

@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/tendermint/tendermint/crypto"
 	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/libs/bech32"
+	"github.com/enigmampc/btcutil/bech32"
 )
 
 const (
@@ -234,7 +235,7 @@ func (aa AccAddress) String() string {
 
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
 
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa.Bytes())
+	bech32Addr, err := ConvertAndEncode(bech32PrefixAccAddr, aa.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -389,7 +390,7 @@ func (va ValAddress) String() string {
 
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
 
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
+	bech32Addr, err := ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -549,7 +550,7 @@ func (ca ConsAddress) String() string {
 
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
 
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixConsAddr, ca.Bytes())
+	bech32Addr, err := ConvertAndEncode(bech32PrefixConsAddr, ca.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -601,7 +602,7 @@ func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error)
 
 	}
 
-	return bech32.ConvertAndEncode(bech32Prefix, pubkey.Bytes())
+	return ConvertAndEncode(bech32Prefix, pubkey.Bytes())
 }
 
 // MustBech32ifyPubKey calls Bech32ifyPubKey except it panics on error.
@@ -660,7 +661,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 		return nil, errors.New("decoding Bech32 address failed: must provide an address")
 	}
 
-	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
+	hrp, bz, err := DecodeAndConvert(bech32str)
 	if err != nil {
 		return nil, err
 	}
@@ -670,4 +671,29 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	return bz, nil
+}
+
+// ConvertAndEncode converts from a base64 egncoded byte string to base32 encoded byte string and then to bech32
+func ConvertAndEncode(hrp string, data []byte) (string, error) {
+	converted, err := bech32.ConvertBits(data, 8, 5, true)
+	if err != nil {
+		return "", errors.Wrap(err, "encoding bech32 failed")
+	}
+
+	return bech32.Encode(hrp, converted)
+}
+
+// DecodeAndConvert decodes a bech32 encoded string and converts to base64 encoded bytes
+func DecodeAndConvert(bech string) (string, []byte, error) {
+	hrp, data, err := bech32.Decode(bech, 1023)
+	if err != nil {
+		return "", nil, errors.Wrap(err, "decoding bech32 failed")
+	}
+
+	converted, err := bech32.ConvertBits(data, 5, 8, false)
+	if err != nil {
+		return "", nil, errors.Wrap(err, "decoding bech32 failed")
+	}
+
+	return hrp, converted, nil
 }

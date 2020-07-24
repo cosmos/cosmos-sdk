@@ -9,6 +9,7 @@ require (
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/ledger-cosmos-go v0.11.1
+	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/gorilla/mux v1.7.3

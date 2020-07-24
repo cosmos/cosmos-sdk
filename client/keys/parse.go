@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/libs/bech32"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -52,7 +51,7 @@ func newBech32Output(config *sdk.Config, bs []byte) bech32Output {
 	out := bech32Output{Formats: make([]string, len(bech32Prefixes))}
 
 	for i, prefix := range bech32Prefixes {
-		bech32Addr, err := bech32.ConvertAndEncode(prefix, bs)
+		bech32Addr, err := sdk.ConvertAndEncode(prefix, bs)
 		if err != nil {
 			panic(err)
 		}
@@ -112,7 +111,7 @@ func doParseKey(cmd *cobra.Command, config *sdk.Config, args []string) error {
 
 // print info from bech32
 func runFromBech32(w io.Writer, bech32str string) bool {
-	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
+	hrp, bz, err := sdk.DecodeAndConvert(bech32str)
 	if err != nil {
 		return false
 	}

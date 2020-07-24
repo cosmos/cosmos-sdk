@@ -14,50 +14,50 @@ import (
 )
 
 // creates a querier for staking REST endpoints
-func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryValidators:
-			return queryValidators(ctx, req, k, legacyQuerierCdc)
+			return queryValidators(ctx, req, k)
 
 		case types.QueryValidator:
-			return queryValidator(ctx, req, k, legacyQuerierCdc)
+			return queryValidator(ctx, req, k)
 
 		case types.QueryValidatorDelegations:
-			return queryValidatorDelegations(ctx, req, k, legacyQuerierCdc)
+			return queryValidatorDelegations(ctx, req, k)
 
 		case types.QueryValidatorUnbondingDelegations:
-			return queryValidatorUnbondingDelegations(ctx, req, k, legacyQuerierCdc)
+			return queryValidatorUnbondingDelegations(ctx, req, k)
 
 		case types.QueryDelegation:
-			return queryDelegation(ctx, req, k, legacyQuerierCdc)
+			return queryDelegation(ctx, req, k)
 
 		case types.QueryUnbondingDelegation:
-			return queryUnbondingDelegation(ctx, req, k, legacyQuerierCdc)
+			return queryUnbondingDelegation(ctx, req, k)
 
 		case types.QueryDelegatorDelegations:
-			return queryDelegatorDelegations(ctx, req, k, legacyQuerierCdc)
+			return queryDelegatorDelegations(ctx, req, k)
 
 		case types.QueryDelegatorUnbondingDelegations:
-			return queryDelegatorUnbondingDelegations(ctx, req, k, legacyQuerierCdc)
+			return queryDelegatorUnbondingDelegations(ctx, req, k)
 
 		case types.QueryRedelegations:
-			return queryRedelegations(ctx, req, k, legacyQuerierCdc)
+			return queryRedelegations(ctx, req, k)
 
 		case types.QueryDelegatorValidators:
-			return queryDelegatorValidators(ctx, req, k, legacyQuerierCdc)
+			return queryDelegatorValidators(ctx, req, k)
 
 		case types.QueryDelegatorValidator:
-			return queryDelegatorValidator(ctx, req, k, legacyQuerierCdc)
+			return queryDelegatorValidator(ctx, req, k)
 
 		case types.QueryHistoricalInfo:
-			return queryHistoricalInfo(ctx, req, k, legacyQuerierCdc)
+			return queryHistoricalInfo(ctx, req, k)
 
 		case types.QueryPool:
-			return queryPool(ctx, k, legacyQuerierCdc)
+			return queryPool(ctx, k)
 
 		case types.QueryParameters:
-			return queryParameters(ctx, k, legacyQuerierCdc)
+			return queryParameters(ctx, k)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
@@ -65,10 +65,10 @@ func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	}
 }
 
-func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryValidatorsParams
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -89,7 +89,7 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		filteredVals = filteredVals[start:end]
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, filteredVals)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, filteredVals)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -97,10 +97,10 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 	return res, nil
 }
 
-func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryValidatorParams
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -110,7 +110,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuer
 		return nil, types.ErrNoValidatorFound
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, validator)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validator)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -118,10 +118,10 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuer
 	return res, nil
 }
 
-func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryValidatorParams
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -144,7 +144,7 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 		delegationResps = types.DelegationResponses{}
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, delegationResps)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -152,10 +152,10 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 	return res, nil
 }
 
-func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryValidatorParams
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -172,7 +172,7 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 		unbonds = unbonds[start:end]
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, unbonds)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbonds)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -180,10 +180,10 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 	return res, nil
 }
 
-func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryDelegatorParams
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -199,7 +199,7 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 		delegationResps = types.DelegationResponses{}
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, delegationResps)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -207,10 +207,10 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 	return res, nil
 }
 
-func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryDelegatorParams
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -220,7 +220,7 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 		unbondingDelegations = types.UnbondingDelegations{}
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, unbondingDelegations)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbondingDelegations)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -228,12 +228,12 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 	return res, nil
 }
 
-func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryDelegatorParams
 
 	stakingParams := k.GetParams(ctx)
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -243,7 +243,7 @@ func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, 
 		validators = types.Validators{}
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, validators)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validators)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -251,10 +251,10 @@ func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper, 
 	return res, nil
 }
 
-func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryDelegatorValidatorRequest
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -264,7 +264,7 @@ func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, l
 		return nil, err
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, validator)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validator)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -272,10 +272,10 @@ func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, l
 	return res, nil
 }
 
-func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryDelegatorValidatorRequest
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -290,7 +290,7 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, err
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, delegationResp)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegationResp)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -298,10 +298,10 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 	return res, nil
 }
 
-func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryDelegatorValidatorRequest
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -311,7 +311,7 @@ func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, 
 		return nil, types.ErrNoUnbondingDelegation
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, unbond)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbond)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -319,10 +319,10 @@ func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, 
 	return res, nil
 }
 
-func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryRedelegationParams
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -352,7 +352,7 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacy
 		redelResponses = types.RedelegationResponses{}
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, redelResponses)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, redelResponses)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -360,10 +360,10 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacy
 	return res, nil
 }
 
-func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryHistoricalInfoRequest
 
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -373,7 +373,7 @@ func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legac
 		return nil, types.ErrNoHistoricalInfo
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, hi)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, hi)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -381,7 +381,7 @@ func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legac
 	return res, nil
 }
 
-func queryPool(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryPool(ctx sdk.Context, k Keeper) ([]byte, error) {
 	bondDenom := k.BondDenom(ctx)
 	bondedPool := k.GetBondedPool(ctx)
 	notBondedPool := k.GetNotBondedPool(ctx)
@@ -395,7 +395,7 @@ func queryPool(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) 
 		k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount,
 	)
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, pool)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, pool)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -403,10 +403,10 @@ func queryPool(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) 
 	return res, nil
 }
 
-func queryParameters(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryParameters(ctx sdk.Context, k Keeper) ([]byte, error) {
 	params := k.GetParams(ctx)
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

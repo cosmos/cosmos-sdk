@@ -58,7 +58,7 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 
 	balances := k.GetAllBalances(ctx, params.Address)
 
-	bz, err := codec.MarshalJSONIndent(types.ModulelegacyQuerierCdc, balances)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, balances)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

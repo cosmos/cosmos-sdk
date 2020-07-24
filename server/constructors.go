@@ -36,8 +36,9 @@ type (
 
 		RegisterAPIRoutes(*api.Server)
 
-		// RegisterGRPC registers gRPC services directly with the gRPC server.
-		RegisterGRPC(grpc.Server)
+		// RegisterGRPCServer registers gRPC services directly with the gRPC
+		// server.
+		RegisterGRPCServer(grpc.Server)
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

@@ -245,7 +245,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 	var grpcSrv *grpc.Server
 	if config.GRPC.Enable {
 		grpcSrv = grpc.NewServer()
-		app.RegisterGRPC(grpcSrv)
+		app.RegisterGRPCServer(grpcSrv)
 
 		// Reflection allows external clients to see what services and methods
 		// the gRPC server exposes.

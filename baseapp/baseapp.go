@@ -310,8 +310,8 @@ func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
-// RegisterGRPC registers gRPC services directly with the gRPC server.
-func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
+// RegisterGRPCServer registers gRPC services directly with the gRPC server.
+func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
 	interceptor := func(grpcCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -338,20 +338,15 @@ func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
 			return nil, err
 		}
 
-		// Wrap the sdk.Context into a new context.Context
-		newCtx := sdk.WrapSDKContext(sdkCtx)
-
-		// Attach the original stream from the gRPC context into the new
-		// context.Context
-		stream := grpc.ServerTransportStreamFromContext(grpcCtx)
-		newCtx = grpc.NewContextWithServerTransportStream(newCtx, stream)
+		// Attach the sdk.Context into the gRPC's context.Context
+		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
 
 		// Add gRPC headers
 		md := metadata.Pairs(GRPCBlockHeightHeader, strconv.FormatInt(sdkCtx.BlockHeight(), 10))
-		grpc.SetHeader(newCtx, md)
+		grpc.SetHeader(grpcCtx, md)
 
 		// Run the handler, with our new context.Context
-		return handler(newCtx, req)
+		return handler(grpcCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

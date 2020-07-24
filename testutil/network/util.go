@@ -87,7 +87,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	if val.AppConfig.GRPC.Enable {
 		grpcSrv := grpc.NewServer()
-		app.RegisterGRPC(grpcSrv)
+		app.RegisterGRPCServer(grpcSrv)
 
 		listener, err := net.Listen("tcp", val.AppConfig.GRPC.Address)
 		if err != nil {

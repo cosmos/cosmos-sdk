@@ -54,13 +54,13 @@ func (s *IntegrationTestSuite) TestGRPC() {
 	)
 	s.Require().NoError(err)
 
-	// gRPC query with test service should work
+	// gRPC query to test service should work
 	testClient := testdata.NewTestServiceClient(conn)
 	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
 
-	// gRPC query with bank service should work
+	// gRPC query to bank service should work
 	denom := fmt.Sprintf("%stoken", val0.Moniker)
 	bankClient := banktypes.NewQueryClient(conn)
 	var header metadata.MD

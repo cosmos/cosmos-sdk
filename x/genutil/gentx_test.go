@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/suite"
@@ -82,17 +81,6 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 		malleate func()
 		expPass  bool
 	}{
-		{
-			"unregistered message",
-			func() {
-				msg := testdata.NewTestMsg(sdk.AccAddress("some-address"))
-				err := txBuilder.SetMsgs(msg)
-				suite.Require().NoError(err)
-				tx := txBuilder.GetTx()
-				genTxs = []sdk.Tx{tx}
-			},
-			false,
-		},
 		{
 			"one genesis transaction",
 			func() {

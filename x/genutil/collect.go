@@ -23,13 +23,13 @@ import (
 )
 
 // GenAppStateFromConfig gets the genesis app state from the config
-func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, txJsonEncoder sdk.TxEncoder,
+func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, txJSONEncoder sdk.TxEncoder,
 	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
-		cdc, txJsonDecoder, config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
+		cdc, txJSONDecoder, config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
 	)
 	if err != nil {
 		return appState, err
@@ -49,7 +49,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder,
 		return appState, err
 	}
 
-	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, txJsonEncoder, appGenesisState, appGenTxs)
+	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, txJSONEncoder, appGenesisState, appGenTxs)
 	if err != nil {
 		return appState, err
 	}
@@ -67,7 +67,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder,
 
 // CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
-func CollectTxs(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, moniker, genTxsDir string,
+func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 
@@ -111,7 +111,7 @@ func CollectTxs(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, moniker, g
 		}
 
 		var genTx sdk.Tx
-		if genTx, err = txJsonDecoder(jsonRawTx); err != nil {
+		if genTx, err = txJSONDecoder(jsonRawTx); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 

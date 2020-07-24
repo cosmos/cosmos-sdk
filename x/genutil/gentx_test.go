@@ -107,10 +107,10 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 			cdc := suite.encodingConfig.Marshaler
-			txJsonEncoder := suite.encodingConfig.TxConfig.TxJSONEncoder()
+			txJSONEncoder := suite.encodingConfig.TxConfig.TxJSONEncoder()
 
 			tc.malleate()
-			appGenesisState, err := genutil.SetGenTxsInAppGenesisState(cdc, txJsonEncoder, make(map[string]json.RawMessage), genTxs)
+			appGenesisState, err := genutil.SetGenTxsInAppGenesisState(cdc, txJSONEncoder, make(map[string]json.RawMessage), genTxs)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

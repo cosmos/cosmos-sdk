@@ -15,14 +15,14 @@ import (
 
 // SetGenTxsInAppGenesisState - sets the genesis transactions in the app genesis state
 func SetGenTxsInAppGenesisState(
-	cdc codec.JSONMarshaler, txJsonEncoder sdk.TxEncoder, appGenesisState map[string]json.RawMessage, genTxs []sdk.Tx,
+	cdc codec.JSONMarshaler, txJSONEncoder sdk.TxEncoder, appGenesisState map[string]json.RawMessage, genTxs []sdk.Tx,
 ) (map[string]json.RawMessage, error) {
 
 	genesisState := types.GetGenesisStateFromAppState(cdc, appGenesisState)
 	genTxsBz := make([]json.RawMessage, 0, len(genTxs))
 
 	for _, genTx := range genTxs {
-		txBz, err := txJsonEncoder(genTx)
+		txBz, err := txJSONEncoder(genTx)
 		if err != nil {
 			return appGenesisState, err
 		}

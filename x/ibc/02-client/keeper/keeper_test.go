@@ -143,6 +143,34 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	suite.Require().Equal(expClients, clients)
 }
 
+func (suite KeeperTestSuite) TestGetAllGenesisClients() {
+	clientIDs := []string{
+		testClientID2, testClientID3, testClientID,
+	}
+	expClients := []exported.ClientState{
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+	}
+
+	expGenClients := make([]types.GenesisClientState, len(expClients))
+
+	for i := range expClients {
+		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
+		expGenClients[i] = types.NewGenesisClientState(clientIDs[i], expClients[i])
+	}
+
+	// add localhost client
+	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	expClients = append(expClients, localHostClient)
+	expGenClients = append(expGenClients, types.NewGenesisClientState(exported.ClientTypeLocalHost, localHostClient))
+
+	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
+
+	suite.Require().Equal(expGenClients, genClients)
+}
+
 func (suite KeeperTestSuite) TestGetConsensusState() {
 	suite.ctx = suite.ctx.WithBlockHeight(10)
 	cases := []struct {

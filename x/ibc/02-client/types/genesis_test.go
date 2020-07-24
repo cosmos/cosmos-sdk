@@ -72,6 +72,32 @@ func TestValidateGenesis(t *testing.T) {
 			expPass: true,
 		},
 		{
+			name: "invalid clientid",
+			genState: types.NewGenesisState(
+				[]types.GenesisClientState{
+					types.NewGenesisClientState(
+						"/~@$*", ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
+					),
+					types.NewGenesisClientState(
+						clientID, localhosttypes.NewClientState("chainID", 10),
+					),
+				},
+				[]types.ClientConsensusStates{
+					{
+						clientID,
+						[]exported.ConsensusState{
+							ibctmtypes.NewConsensusState(
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet,
+							),
+						},
+					},
+				},
+				true,
+			),
+			expPass: false,
+		},
+
+		{
 			name: "invalid client",
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{

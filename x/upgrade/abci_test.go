@@ -55,7 +55,7 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 	s.ctx = app.BaseApp.NewContext(false, abci.Header{Height: height, Time: time.Now()})
 
 	s.module = upgrade.NewAppModule(s.keeper)
-	s.querier = s.module.LegacyQuerierHandler(nil)
+	s.querier = s.module.LegacyQuerierHandler(codec.NewAminoCodec(app.Codec()))
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 	return s
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	priv1 = secp256k1.GenPrivKey()
+	priv1 = ed25519.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 )
 

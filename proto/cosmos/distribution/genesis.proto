@@ -172,10 +172,10 @@ message GenesisState {
     (gogoproto.moretags) = "yaml:\"validator_current_rewards\""
   ];
 
-  repeated DelegatorStartingInfoRecord Delegator_starting_infos = 9 [
+  repeated DelegatorStartingInfoRecord delegator_starting_infos = 9 [
     (gogoproto.casttype) = "DelegatorStartingInfoRecord",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"Delegator_starting_infos\""
+    (gogoproto.moretags) = "yaml:\"delegator_starting_infos\""
   ];
 
   repeated ValidatorSlashEventRecord validator_slash_events = 10 [

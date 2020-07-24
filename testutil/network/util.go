@@ -1,8 +1,6 @@
 package network
 
 import (
-	"fmt"
-	"net"
 	"path/filepath"
 	"time"
 
@@ -14,10 +12,10 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
-	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -86,27 +84,12 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.AppConfig.GRPC.Enable {
-		grpcSrv := grpc.NewServer()
-		app.RegisterGRPCServer(grpcSrv)
-
-		listener, err := net.Listen("tcp", val.AppConfig.GRPC.Address)
+		grpcSrv, err := servergrpc.StartGRPCServer(app, val.AppConfig.GRPC.Address)
 		if err != nil {
 			return err
 		}
 
-		errCh := make(chan error)
-		go func() {
-			err = grpcSrv.Serve(listener)
-			if err != nil {
-				errCh <- fmt.Errorf("failed to serve: %w", err)
-			}
-		}()
-
-		select {
-		case err := <-errCh:
-			return err
-		case <-time.After(5 * time.Second): // assume server started successfully
-		}
+		val.grpc = grpcSrv
 	}
 
 	return nil

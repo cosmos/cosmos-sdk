@@ -19,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,9 +30,6 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
-
-	// GRPCBlockHeightHeader is the gRPC header for block height
-	GRPCBlockHeightHeader = "sdk-block-height"
 )
 
 var (
@@ -342,10 +340,9 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
 
 		// Add gRPC headers
-		md := metadata.Pairs(GRPCBlockHeightHeader, strconv.FormatInt(sdkCtx.BlockHeight(), 10))
+		md := metadata.Pairs(servergrpc.GRPCBlockHeightHeader, strconv.FormatInt(sdkCtx.BlockHeight(), 10))
 		grpc.SetHeader(grpcCtx, md)
 
-		// Run the handler, with our new context.Context
 		return handler(grpcCtx, req)
 	}
 

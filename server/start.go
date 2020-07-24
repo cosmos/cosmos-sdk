@@ -4,7 +4,6 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -19,13 +18,14 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -52,7 +52,7 @@ const (
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(appCreator AppCreator, defaultNodeHome string) *cobra.Command {
+func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -128,7 +128,7 @@ which accepts a path for the resulting pprof file.
 	return cmd
 }
 
-func startStandAlone(ctx *Context, appCreator AppCreator) error {
+func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	addr := ctx.Viper.GetString(flagAddress)
 	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
@@ -168,7 +168,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) error {
+func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -244,30 +244,9 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 	var grpcSrv *grpc.Server
 	if config.GRPC.Enable {
-		grpcSrv = grpc.NewServer()
-		app.RegisterGRPCServer(grpcSrv)
-
-		// Reflection allows external clients to see what services and methods
-		// the gRPC server exposes.
-		reflection.Register(grpcSrv)
-
-		listener, err := net.Listen("tcp", config.GRPC.Address)
+		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
 		if err != nil {
 			return err
-		}
-
-		errCh := make(chan error)
-		go func() {
-			err = grpcSrv.Serve(listener)
-			if err != nil {
-				errCh <- fmt.Errorf("failed to serve: %w", err)
-			}
-		}()
-
-		select {
-		case err := <-errCh:
-			return err
-		case <-time.After(5 * time.Second): // assume server started successfully
 		}
 	}
 

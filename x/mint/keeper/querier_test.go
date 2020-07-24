@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,8 @@ import (
 
 func TestNewQuerier(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -36,7 +38,8 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParams(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	var params types.Params
 
@@ -51,7 +54,8 @@ func TestQueryParams(t *testing.T) {
 
 func TestQueryInflation(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	var inflation sdk.Dec
 
@@ -66,7 +70,8 @@ func TestQueryInflation(t *testing.T) {
 
 func TestQueryAnnualProvisions(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	var annualProvisions sdk.Dec
 

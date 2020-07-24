@@ -95,11 +95,11 @@ func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 }
 
 func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
-	builder, ok := newTx.(client.TxBuilder)
+	stdTx, ok := newTx.(StdTx)
 	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", &TxBuilder{}, newTx)
+		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, newTx)
 	}
-	return builder, nil
+	return &StdTxBuilder{StdTx: stdTx}, nil
 }
 
 // MarshalTx implements TxConfig.MarshalTx

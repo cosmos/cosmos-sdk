@@ -24,6 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
 	Params               Params                                 `protobuf:"bytes,1,opt,name=params,proto3,casttype=Params" json:"params"`
 	LastTotalPower       github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=last_total_power,json=lastTotalPower,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"last_total_power" yaml:"last_total_power"`
@@ -117,6 +118,7 @@ func (m *GenesisState) GetExported() bool {
 	return false
 }
 
+// LastValidatorPower required for validator set update logic
 type LastValidatorPower struct {
 	Address github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"address,omitempty"`
 	Power   int64                                         `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`

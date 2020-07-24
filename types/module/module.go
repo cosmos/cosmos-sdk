@@ -39,6 +39,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,6 +49,7 @@ import (
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
+	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
 	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
@@ -74,6 +76,13 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 	for _, b := range bm {
 		b.RegisterCodec(cdc)
+	}
+}
+
+// RegisterInterfaces registers all module interface types
+func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	for _, m := range bm {
+		m.RegisterInterfaces(registry)
 	}
 }
 

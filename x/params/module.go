@@ -27,7 +27,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the params module.
@@ -61,7 +60,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.NewQueryCmd()
 }
 
-func (am AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	proposal.RegisterInterfaces(registry)
 }
 

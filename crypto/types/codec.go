@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -12,4 +13,10 @@ type PublicKeyCodec interface {
 
 	// Decode decodes a crypto.PubKey from a protobuf PublicKey or returns an error
 	Decode(key *PublicKey) (crypto.PubKey, error)
+}
+
+var Cdc = amino.NewCodec()
+
+func init() {
+	Cdc.RegisterInterface((*isPublicKey_Sum)(nil), nil)
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
@@ -149,9 +150,12 @@ func TestReadStdTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
 	encodingConfig := simappparams.MakeEncodingConfig()
+	std.RegisterCodec(encodingConfig.Amino)
+
+	txGen := encodingConfig.TxConfig
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxConfig(txGen)
 
 	batch1 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
 {"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
@@ -183,11 +187,12 @@ malformed
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			scanner, i := NewBatchScanner(encodingConfig.Marshaler, strings.NewReader(tt.batch)), 0
+			scanner, i := NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
 			for scanner.Scan() {
 				_ = scanner.StdTx()
 				i++
 			}
+			t.Log(scanner.stdTx)
 			require.Equal(t, tt.wantScannerError, scanner.Err() != nil)
 			require.Equal(t, tt.wantUnmarshalError, scanner.UnmarshalErr() != nil)
 			require.Equal(t, tt.numTxs, i)

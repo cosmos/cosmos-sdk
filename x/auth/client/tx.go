@@ -14,10 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -141,16 +139,17 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
-func NewBatchScanner(cdc codec.Marshaler, r io.Reader) *BatchScanner {
-	return &BatchScanner{Scanner: bufio.NewScanner(r), cdc: cdc}
+func NewBatchScanner(cfg client.TxConfig, r io.Reader) *BatchScanner {
+	return &BatchScanner{Scanner: bufio.NewScanner(r), cfg: cfg}
 }
 
 // BatchScanner provides a convenient interface for reading batch data such as a file
 // of newline-delimited JSON encoded StdTx.
 type BatchScanner struct {
 	*bufio.Scanner
+	builder      client.TxBuilder
 	stdTx        sdk.Tx
-	cdc          codec.Marshaler
+	cfg          client.TxConfig
 	unmarshalErr error
 }
 
@@ -166,10 +165,8 @@ func (bs *BatchScanner) Scan() bool {
 		return false
 	}
 
-	pubKeyCdc := std.DefaultPublicKeyCodec{}
-	var err error
-	txD := authtx.DefaultJSONTxDecoder(bs.cdc, pubKeyCdc)
-	bs.stdTx, err = txD(bs.Bytes())
+	tx, err := bs.cfg.TxJSONDecoder()(bs.Bytes())
+	bs.stdTx = tx
 	if err != nil && bs.unmarshalErr == nil {
 		bs.unmarshalErr = err
 		return false

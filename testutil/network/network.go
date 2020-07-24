@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -278,16 +279,21 @@ func New(t *testing.T, cfg Config) *Network {
 		require.NoError(t, err)
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		tx := authtypes.NewStdTx([]sdk.Msg{createValMsg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
-		txBldr := authtypes.TxBuilder{}.
+		txBuilder := cfg.TxConfig.NewTxBuilder()
+		err = txBuilder.SetMsgs(createValMsg)
+		require.NoError(t, err)
+		txBuilder.SetMemo(memo)
+		txFactory := tx.Factory{}
+		txFactory = txFactory.
 			WithChainID(cfg.ChainID).
 			WithMemo(memo).
-			WithKeybase(kb)
+			WithKeybase(kb).
+			WithTxConfig(cfg.TxConfig)
 
-		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
+		err = tx.Sign(txFactory, nodeDirName, txBuilder)
 		require.NoError(t, err)
 
-		txBz, err := cfg.Codec.MarshalJSON(signedTx)
+		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
 		require.NoError(t, err)
 		require.NoError(t, writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz))
 

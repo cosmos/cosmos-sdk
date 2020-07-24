@@ -2,7 +2,7 @@ package staking_test
 
 import (
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,9 +14,9 @@ import (
 
 // nolint:deadcode,unused,varcheck
 var (
-	priv1 = secp256k1.GenPrivKey()
+	priv1 = ed25519.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = secp256k1.GenPrivKey()
+	priv2 = ed25519.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
 
 	commissionRates = types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())

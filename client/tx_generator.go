@@ -12,6 +12,7 @@ type (
 	// implement TxBuilder.
 	TxConfig interface {
 		NewTxBuilder() TxBuilder
+		WrapTxBuilder(sdk.Tx) (TxBuilder, error)
 		SignModeHandler() signing.SignModeHandler
 
 		TxEncoder() sdk.TxEncoder

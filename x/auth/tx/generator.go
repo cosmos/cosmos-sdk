@@ -1,10 +1,13 @@
 package tx
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -33,6 +36,15 @@ func NewTxConfig(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec, si
 
 func (g generator) NewTxBuilder() client.TxBuilder {
 	return newBuilder(g.marshaler, g.pubkeyCodec)
+}
+
+func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+	newBuilder, ok := newTx.(client.TxBuilder)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", &tx.Tx{}, newTx)
+	}
+
+	return newBuilder, nil
 }
 
 func (g generator) SignModeHandler() signing.SignModeHandler {

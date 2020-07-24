@@ -96,8 +96,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 // QuerierRoute returns the x/param module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// NewQuerierHandler returns the x/params querier handler.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler returns the x/params querier handler.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 

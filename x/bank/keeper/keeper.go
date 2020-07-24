@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -42,8 +39,6 @@ type Keeper interface {
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 	MarshalSupply(supplyI exported.SupplyI) ([]byte, error)
 	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
-	MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error)
-	UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error)
 
 	types.QueryServer
 }
@@ -53,13 +48,13 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	cdc        codec.Marshaler
+	cdc        codec.BinaryMarshaler
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 }
 
 func NewBaseKeeper(
-	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
 ) BaseKeeper {
 
@@ -369,35 +364,4 @@ func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
 	}
 
 	return evi, nil
-}
-
-// MarshalSupplyJSON JSON encodes a supply object implementing the Supply
-// interface.
-func (k BaseKeeper) MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error) {
-	msg, ok := supply.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", supply)
-	}
-
-	any, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return k.cdc.MarshalJSON(any)
-}
-
-// UnmarshalSupplyJSON returns a Supply from JSON encoded bytes
-func (k BaseKeeper) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
-	var any codectypes.Any
-	if err := k.cdc.UnmarshalJSON(bz, &any); err != nil {
-		return nil, err
-	}
-
-	var supply exported.SupplyI
-	if err := k.cdc.UnpackAny(&any, &supply); err != nil {
-		return nil, err
-	}
-
-	return supply, nil
 }

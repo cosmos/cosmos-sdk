@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -19,7 +18,7 @@ import (
 // encoding/decoding library.
 type AccountKeeper struct {
 	key           sdk.StoreKey
-	cdc           codec.Marshaler
+	cdc           codec.BinaryMarshaler
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
@@ -30,7 +29,7 @@ type AccountKeeper struct {
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 func NewAccountKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
 	maccPerms map[string][]string,
 ) AccountKeeper {
 
@@ -203,19 +202,4 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	return acc, nil
 }
 
-// UnmarshalAccountJSON returns an AccountI from JSON encoded bytes
-func (ak AccountKeeper) UnmarshalAccountJSON(bz []byte) (types.AccountI, error) {
-	var any codectypes.Any
-	if err := ak.cdc.UnmarshalJSON(bz, &any); err != nil {
-		return nil, err
-	}
-
-	var acc types.AccountI
-	if err := ak.cdc.UnpackAny(&any, &acc); err != nil {
-		return nil, err
-	}
-
-	return acc, nil
-}
-
-func (ak AccountKeeper) GetCodec() codec.Marshaler { return ak.cdc }
+func (ak AccountKeeper) GetCodec() codec.BinaryMarshaler { return ak.cdc }

@@ -30,7 +30,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // ----------------------------------------------------------------------------
@@ -101,7 +100,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -138,8 +137,8 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns the evidence module's Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler returns the evidence module's Querier.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 

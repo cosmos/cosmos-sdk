@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -48,6 +50,9 @@ func (AppModuleBasic) Name() string {
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	types.RegisterCodec(cdc)
 }
+
+// RegisterInterfaces registers the module's interface types
+func (a AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns the capability module's default genesis state.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
@@ -101,8 +106,8 @@ func (AppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler returns the capability module's Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
+// LegacyQuerierHandler returns the capability module's Querier.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.

@@ -32,7 +32,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
@@ -99,8 +98,8 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaceTypes implements InterfaceModule.RegisterInterfaceTypes
-func (a AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+// RegisterInterfaces implements InterfaceModule.RegisterInterfaces
+func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -145,8 +144,8 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns no sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler returns no sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 

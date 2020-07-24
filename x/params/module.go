@@ -27,7 +27,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the params module.
@@ -61,7 +60,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.NewQueryCmd()
 }
 
-func (am AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	proposal.RegisterInterfaces(registry)
 }
 
@@ -97,8 +96,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 // QuerierRoute returns the x/param module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// NewQuerierHandler returns the x/params querier handler.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler returns the x/params querier handler.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 

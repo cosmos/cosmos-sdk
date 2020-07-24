@@ -80,8 +80,8 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return nil
 }
 
-// RegisterInterfaceTypes registers module concrete types into protobuf Any.
-func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+// RegisterInterfaces registers module concrete types into protobuf Any.
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -113,8 +113,8 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler implements the AppModule interface
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler implements the AppModule interface
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return nil
 }
 

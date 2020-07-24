@@ -182,7 +182,12 @@ test-ledger-mock:
 test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
-test-unit:
+test-unit: test-unit-amino # TODO switch test-unit-proto to be default here after proto Tx is fully tested
+
+test-unit-proto:
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_proto'
+
+test-unit-amino:
 	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-race:

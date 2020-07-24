@@ -64,9 +64,9 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 // GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
-// RegisterInterfaceTypes registers interfaces and implementations of the crisis
+// RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
-func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -106,8 +106,8 @@ func (am AppModule) Route() sdk.Route {
 // QuerierRoute returns no querier route.
 func (AppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler returns no sdk.Querier.
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+// LegacyQuerierHandler returns no sdk.Querier.
+func (AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.

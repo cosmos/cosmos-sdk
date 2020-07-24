@@ -39,6 +39,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,6 +49,7 @@ import (
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
+	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
 	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
@@ -74,6 +76,13 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 	for _, b := range bm {
 		b.RegisterCodec(cdc)
+	}
+}
+
+// RegisterInterfaces registers all module interface types
+func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	for _, m := range bm {
+		m.RegisterInterfaces(registry)
 	}
 }
 
@@ -151,7 +160,7 @@ type AppModule interface {
 	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
 	// Deprecated: use RegisterQueryService
-	NewQuerierHandler() sdk.Querier
+	LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier
 	// RegisterQueryService allows a module to register a gRPC query service
 	RegisterQueryService(grpc.Server)
 
@@ -183,8 +192,8 @@ func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler returns an empty module querier
-func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
+// LegacyQuerierHandler returns an empty module querier
+func (gam GenesisOnlyAppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
@@ -255,13 +264,13 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterRoutes registers all module routes and module querier routes
-func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
+func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc codec.JSONMarshaler) {
 	for _, module := range m.Modules {
 		if !module.Route().Empty() {
 			router.AddRoute(module.Route())
 		}
 		if module.QuerierRoute() != "" {
-			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
+			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQuerierHandler(legacyQuerierCdc))
 		}
 	}
 }

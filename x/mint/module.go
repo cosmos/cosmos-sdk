@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -42,6 +43,9 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec registers the mint module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
+
+// RegisterInterfaces registers the module's interface types
+func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
 // module.
@@ -107,8 +111,8 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns the mint module sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler returns the mint module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return keeper.NewQuerier(am.keeper)
 }
 

@@ -28,7 +28,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.
@@ -75,8 +74,8 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaceTypes registers interfaces and implementations of the auth module.
-func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+// RegisterInterfaces registers interfaces and implementations of the auth module.
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -113,9 +112,9 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns the auth module sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return keeper.NewQuerier(am.accountKeeper)
+// LegacyQuerierHandler returns the auth module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.accountKeeper, jsonCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the

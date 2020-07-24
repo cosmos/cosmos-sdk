@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -75,7 +74,6 @@ func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64
 func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 	var (
 		txBuilder = suite.encodingConfig.TxConfig.NewTxBuilder()
-		cdc       *codec.Codec
 		genTxs    []sdk.Tx
 	)
 
@@ -120,10 +118,11 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc = suite.app.Codec()
+			cdc := suite.encodingConfig.Marshaler
+			txJsonEncoder := suite.encodingConfig.TxConfig.TxJSONEncoder()
 
 			tc.malleate()
-			appGenesisState, err := genutil.SetGenTxsInAppGenesisState(cdc, make(map[string]json.RawMessage), genTxs)
+			appGenesisState, err := genutil.SetGenTxsInAppGenesisState(cdc, txJsonEncoder, make(map[string]json.RawMessage), genTxs)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -143,7 +142,6 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 	var (
 		appGenesisState = make(map[string]json.RawMessage)
-		cdc             *codec.Codec
 		coins           sdk.Coins
 	)
 
@@ -187,7 +185,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc = suite.encodingConfig.Amino
+			cdc := suite.encodingConfig.Marshaler
 
 			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
 			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)

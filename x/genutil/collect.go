@@ -23,8 +23,8 @@ import (
 )
 
 // GenAppStateFromConfig gets the genesis app state from the config
-func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, config *cfg.Config,
-	initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
+func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder, txJsonEncoder sdk.TxEncoder,
+	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
@@ -49,7 +49,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txJsonDecoder sdk.TxDecoder,
 		return appState, err
 	}
 
-	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, appGenesisState, appGenTxs)
+	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, txJsonEncoder, appGenesisState, appGenTxs)
 	if err != nil {
 		return appState, err
 	}

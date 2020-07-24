@@ -3,12 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -182,37 +180,6 @@ func (k Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
 func (k Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
 	var evi exported.Evidence
 	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
-		return nil, err
-	}
-
-	return evi, nil
-}
-
-// MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence
-// interface.
-func (k Keeper) MarshalEvidenceJSON(evidence exported.Evidence) ([]byte, error) {
-	msg, ok := evidence.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", evidence)
-	}
-
-	any, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return k.cdc.MarshalBinaryBare(any)
-}
-
-// UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
-func (k Keeper) UnmarshalEvidenceJSON(bz []byte) (exported.Evidence, error) {
-	var any codectypes.Any
-	if err := k.cdc.UnmarshalBinaryBare(bz, &any); err != nil {
-		return nil, err
-	}
-
-	var evi exported.Evidence
-	if err := k.cdc.UnpackAny(&any, &evi); err != nil {
 		return nil, err
 	}
 

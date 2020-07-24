@@ -22,8 +22,8 @@ type Keeper struct {
 	types.QueryServer
 
 	storeKey     sdk.StoreKey
-	aminoCdc     *codec.Codec          // amino codec. TODO: remove after clients have been migrated to proto
-	cdc          codec.BinaryMarshaler // hybrid codec
+	aminoCdc     *codec.Codec // amino codec. TODO: remove after clients have been migrated to proto
+	cdc          codec.BinaryMarshaler
 	clientKeeper types.ClientKeeper
 }
 

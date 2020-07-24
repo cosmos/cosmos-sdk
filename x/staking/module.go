@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
@@ -45,6 +47,9 @@ func (AppModuleBasic) Name() string {
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	types.RegisterCodec(cdc)
 }
+
+// RegisterInterfaces registers the module's interface types
+func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking
 // module.

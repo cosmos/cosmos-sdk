@@ -64,9 +64,9 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 // GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
-// RegisterInterfaceTypes registers interfaces and implementations of the crisis
+// RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
-func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 

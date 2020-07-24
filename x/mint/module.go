@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -42,6 +44,9 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec registers the mint module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
+
+// RegisterInterfaces registers the module's interface types
+func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
 // module.

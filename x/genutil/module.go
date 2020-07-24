@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
@@ -31,6 +33,9 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec registers the genutil module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
+
+// RegisterInterfaces registers the module's interface types
+func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the genutil
 // module.

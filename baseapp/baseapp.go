@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/tendermint/tendermint/abci/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -323,7 +322,7 @@ func (app *BaseApp) RegisterGRPC(server gogogrpc.Server) {
 			return nil, err
 		}
 
-		abciReq := types.RequestQuery{
+		abciReq := abci.RequestQuery{
 			Data: msgBz,
 			Path: info.FullMethod,
 		}

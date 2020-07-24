@@ -14,7 +14,7 @@ message GenesisState {
     (gogoproto.nullable) = false
   ];
 
-  repeated Balance Balances = 2 [
+  repeated Balance balances = 2 [
     (gogoproto.casttype) = "Balance",
     (gogoproto.nullable) = false
   ];
@@ -29,7 +29,7 @@ message GenesisState {
 // genesis state.
 message Balance {
   option (gogoproto.goproto_getters)  = false;
-  
+
   bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   repeated cosmos.Coin coins = 2 [

@@ -14,7 +14,7 @@ import (
 )
 
 // Validate genesis command takes
-func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
+func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig) *cobra.Command {
 	return &cobra.Command{
 		Use:   "validate-genesis [file]",
 		Args:  cobra.RangeArgs(0, 1),
@@ -45,7 +45,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 
-			if err = mbm.ValidateGenesis(cdc, genState); err != nil {
+			if err = mbm.ValidateGenesis(cdc, txEncCfg, genState); err != nil {
 				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
 			}
 

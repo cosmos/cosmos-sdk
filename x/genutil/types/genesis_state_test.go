@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-  banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -77,7 +77,7 @@ func TestGenesisStateFromGenFile(t *testing.T) {
 	cdc := codec.New()
 
 	genFile := "../../../tests/fixtures/adr-024-coin-metadata_genesis.json"
-	genesisState, _, err := GenesisStateFromGenFile(cdc, genFile)
+	genesisState, _, err := types.GenesisStateFromGenFile(cdc, genFile)
 	require.NoError(t, err)
 
 	var bankGenesis banktypes.GenesisState

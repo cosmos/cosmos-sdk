@@ -13,10 +13,10 @@ import (
 
 // QuerierChannelClientState defines the sdk.Querier to query all the ClientState
 // associated with a given Channel.
-func QuerierChannelClientState(ctx sdk.Context, abciReq abci.RequestQuery, k Keeper) ([]byte, error) {
+func QuerierChannelClientState(ctx sdk.Context, abciReq abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var req types.QueryChannelClientStateRequest
 
-	if err := k.cdc.UnmarshalJSON(abciReq.Data, &req); err != nil {
+	if err := legacyQuerierCdc.UnmarshalJSON(abciReq.Data, &req); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
@@ -35,7 +35,7 @@ func QuerierChannelClientState(ctx sdk.Context, abciReq abci.RequestQuery, k Kee
 		return nil, sdkerrors.Wrapf(clienttypes.ErrClientNotFound, connection.ClientID)
 	}
 
-	res, err := codec.MarshalJSONIndent(k.cdc, clientState)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, clientState)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

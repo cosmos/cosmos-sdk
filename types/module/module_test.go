@@ -35,7 +35,7 @@ func TestBasicManager(t *testing.T) {
 
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
-	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
+	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
@@ -53,7 +53,7 @@ func TestBasicManager(t *testing.T) {
 	var data map[string]string
 	require.Equal(t, map[string]string(nil), data)
 
-	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, wantDefaultGenesis)))
+	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, nil, wantDefaultGenesis)))
 
 	mm.RegisterRESTRoutes(client.Context{}, &mux.Router{})
 
@@ -63,7 +63,7 @@ func TestBasicManager(t *testing.T) {
 	mm.AddQueryCommands(mockCmd)
 
 	// validate genesis returns nil
-	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, wantDefaultGenesis))
+	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, wantDefaultGenesis))
 }
 
 func TestGenesisOnlyAppModule(t *testing.T) {

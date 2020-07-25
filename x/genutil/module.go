@@ -23,9 +23,7 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.
-type AppModuleBasic struct {
-	txEncodingConfig client.TxEncodingConfig
-}
+type AppModuleBasic struct{}
 
 // Name returns the genutil module's name.
 func (AppModuleBasic) Name() string {
@@ -45,13 +43,13 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the genutil module.
-func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data, b.txEncodingConfig.TxJSONDecoder())
+	return types.ValidateGenesis(data, txEncodingConfig.TxJSONDecoder())
 }
 
 // RegisterRESTRoutes registers the REST routes for the genutil module.
@@ -69,9 +67,10 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper types.AccountKeeper
-	stakingKeeper types.StakingKeeper
-	deliverTx     deliverTxfn
+	accountKeeper    types.AccountKeeper
+	stakingKeeper    types.StakingKeeper
+	deliverTx        deliverTxfn
+	txEncodingConfig client.TxEncodingConfig
 }
 
 // NewAppModule creates a new AppModule object
@@ -81,12 +80,11 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 ) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic: AppModuleBasic{
-			txEncodingConfig: txEncodingConfig,
-		},
-		accountKeeper: accountKeeper,
-		stakingKeeper: stakingKeeper,
-		deliverTx:     deliverTx,
+		AppModuleBasic:   AppModuleBasic{},
+		accountKeeper:    accountKeeper,
+		stakingKeeper:    stakingKeeper,
+		deliverTx:        deliverTx,
+		txEncodingConfig: txEncodingConfig,
 	})
 }
 

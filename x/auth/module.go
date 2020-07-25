@@ -113,8 +113,8 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the auth module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(am.accountKeeper, jsonCdc)
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.accountKeeper, legacyQuerierCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the

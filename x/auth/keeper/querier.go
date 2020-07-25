@@ -10,14 +10,14 @@ import (
 )
 
 // NewQuerier creates a querier for auth REST endpoints
-func NewQuerier(k AccountKeeper, cdc codec.JSONMarshaler) sdk.Querier {
+func NewQuerier(k AccountKeeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryAccount:
-			return queryAccount(ctx, req, k, cdc)
+			return queryAccount(ctx, req, k, legacyQuerierCdc)
 
 		case types.QueryParams:
-			return queryParams(ctx, k, cdc)
+			return queryParams(ctx, k, legacyQuerierCdc)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
@@ -25,9 +25,9 @@ func NewQuerier(k AccountKeeper, cdc codec.JSONMarshaler) sdk.Querier {
 	}
 }
 
-func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, cdc codec.JSONMarshaler) ([]byte, error) {
+func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QueryAccountRequest
-	if err := cdc.UnmarshalJSON(req.Data, &params); err != nil {
+	if err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
@@ -36,7 +36,7 @@ func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, cdc c
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", params.Address)
 	}
 
-	bz, err := codec.MarshalJSONIndent(cdc, account)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, account)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -44,10 +44,10 @@ func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, cdc c
 	return bz, nil
 }
 
-func queryParams(ctx sdk.Context, k AccountKeeper, cdc codec.JSONMarshaler) ([]byte, error) {
+func queryParams(ctx sdk.Context, k AccountKeeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	params := k.GetParams(ctx)
 
-	res, err := codec.MarshalJSONIndent(cdc, params)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

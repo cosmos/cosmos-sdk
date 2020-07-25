@@ -3,6 +3,8 @@ package keeper
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
@@ -13,7 +15,7 @@ import (
 )
 
 // NewQuerier creates a querier for the IBC module
-func NewQuerier(k Keeper) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (
 			res []byte
@@ -24,7 +26,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 		case clienttypes.SubModuleName:
 			switch path[1] {
 			case clienttypes.QueryAllClients:
-				res, err = clientkeeper.QuerierClients(ctx, req, k.ClientKeeper)
+				res, err = clientkeeper.QuerierClients(ctx, req, k.ClientKeeper, legacyQuerierCdc)
 			default:
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", clienttypes.SubModuleName)
 			}
@@ -33,7 +35,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 		case channeltypes.SubModuleName:
 			switch path[1] {
 			case channeltypes.QueryChannelClientState:
-				res, err = channelkeeper.QuerierChannelClientState(ctx, req, k.ChannelKeeper)
+				res, err = channelkeeper.QuerierChannelClientState(ctx, req, k.ChannelKeeper, legacyQuerierCdc)
 			default:
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channeltypes.SubModuleName)
 			}

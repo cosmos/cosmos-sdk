@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"encoding/json"
@@ -9,9 +9,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+  banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -21,10 +23,10 @@ var (
 )
 
 func TestNetGenesisState(t *testing.T) {
-	gen := NewGenesisState(nil)
+	gen := types.NewGenesisState(nil)
 	assert.NotNil(t, gen.GenTxs) // https://github.com/cosmos/cosmos-sdk/issues/5086
 
-	gen = NewGenesisState(
+	gen = types.NewGenesisState(
 		[]json.RawMessage{
 			[]byte(`{"foo":"bar"}`),
 		},
@@ -33,7 +35,6 @@ func TestNetGenesisState(t *testing.T) {
 }
 
 func TestValidateGenesisMultipleMessages(t *testing.T) {
-
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 	comm := stakingtypes.CommissionRates{}
 
@@ -43,10 +44,15 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	msg2 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 
-	genTxs := authtypes.NewStdTx([]sdk.Msg{msg1, msg2}, authtypes.StdFee{}, nil, "")
-	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
+	txGen := params.MakeEncodingConfig().TxConfig
+	txBuilder := txGen.NewTxBuilder()
+	err := txBuilder.SetMsgs(msg1, msg2)
+	require.NoError(t, err)
 
-	err := ValidateGenesis(genesisState)
+	tx := txBuilder.GetTx()
+	genesisState := types.NewGenesisStateFromTx([]sdk.Tx{tx})
+
+	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)
 }
 
@@ -55,10 +61,15 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
 
-	genTxs := authtypes.NewStdTx([]sdk.Msg{msg1}, authtypes.StdFee{}, nil, "")
-	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
+	txGen := params.MakeEncodingConfig().TxConfig
+	txBuilder := txGen.NewTxBuilder()
+	err := txBuilder.SetMsgs(msg1)
+	require.NoError(t, err)
 
-	err := ValidateGenesis(genesisState)
+	tx := txBuilder.GetTx()
+	genesisState := types.NewGenesisStateFromTx([]sdk.Tx{tx})
+
+	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)
 }
 

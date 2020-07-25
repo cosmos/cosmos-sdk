@@ -97,7 +97,7 @@ const nodeDirPerm = 0755
 
 // Initialize the testnet
 func InitTestnet(
-	cmd *cobra.Command, config *tmconfig.Config, cdc codec.JSONMarshaler,
+	cmd *cobra.Command, nodeConfig *tmconfig.Config, cdc codec.JSONMarshaler,
 	txEncodingConfig client.TxEncodingConfig,
 	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
 	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
@@ -133,8 +133,8 @@ func InitTestnet(
 		clientDir := filepath.Join(outputDir, nodeDirName, nodeCLIHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
 
-		config.SetRoot(nodeDir)
-		config.RPC.ListenAddress = "tcp://0.0.0.0:26657"
+		nodeConfig.SetRoot(nodeDir)
+		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
 			_ = os.RemoveAll(outputDir)
@@ -146,7 +146,7 @@ func InitTestnet(
 			return err
 		}
 
-		config.Moniker = nodeDirName
+		nodeConfig.Moniker = nodeDirName
 
 		ip, err := getIP(i, startingIPAddress)
 		if err != nil {
@@ -154,14 +154,14 @@ func InitTestnet(
 			return err
 		}
 
-		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(config)
+		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(nodeConfig)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
-		genFiles = append(genFiles, config.GenesisFile())
+		genFiles = append(genFiles, nodeConfig.GenesisFile())
 
 		kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientDir, inBuf)
 		if err != nil {
@@ -241,7 +241,7 @@ func InitTestnet(
 	}
 
 	err := collectGenFiles(
-		cdc, txEncodingConfig, config, chainID, nodeIDs, valPubKeys, numValidators,
+		cdc, txEncodingConfig, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -296,7 +296,7 @@ func initGenFiles(
 
 func collectGenFiles(
 	cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig,
-	config *tmconfig.Config, chainID string,
+	nodeConfig *tmconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
 	genBalIterator banktypes.GenesisBalancesIterator,
@@ -309,19 +309,19 @@ func collectGenFiles(
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
 		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
-		config.Moniker = nodeDirName
+		nodeConfig.Moniker = nodeDirName
 
-		config.SetRoot(nodeDir)
+		nodeConfig.SetRoot(nodeDir)
 
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := types.GenesisDocFromFile(config.GenesisFile())
+		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
 		if err != nil {
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, txEncodingConfig, config, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, txEncodingConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
 		if err != nil {
 			return err
 		}
@@ -331,7 +331,7 @@ func collectGenFiles(
 			appState = nodeAppState
 		}
 
-		genFile := config.GenesisFile()
+		genFile := nodeConfig.GenesisFile()
 
 		// overwrite each validator's genesis file to have a canonical genesis time
 		if err := genutil.ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime); err != nil {

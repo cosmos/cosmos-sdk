@@ -179,13 +179,12 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 		},
 		{
 			name: "types.Any in G",
-			in: &testdata.TestVersionFD1{
-				X: 10,
-				A: &testdata.TestVersion1{},
-				G: mustAny(&testdata.TestVersion1{
+			in: &types.Any{
+				TypeUrl: "/testdata.TestVersion1",
+				Value: mustMarshal(&testdata.TestVersion3{
 					X: 102,
-					Sum: &testdata.TestVersion1_F{
-						F: &testdata.TestVersion1{
+					Sum: &testdata.TestVersion3_F{
+						F: &testdata.TestVersion3{
 							X: 4,
 						},
 					},
@@ -193,8 +192,48 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 			},
 			recv: new(testdata.TestVersion3LoneNesting),
 			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion1",
+				Type:         "*testdata.TestVersion3LoneNesting",
 				TagNum:       1,
+				GotWireType:  2,
+				WantWireType: 0,
+			},
+		},
+		{
+			name: "From nested proto message, message index 0",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner1: &testdata.TestVersion3LoneNesting_Inner1{
+					Id:   10,
+					Name: "foo",
+					Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
+						Id:   "ID",
+						City: "Palo Alto",
+					},
+				},
+			},
+			recv: new(testdata.TestVersion4LoneNesting),
+			wantErr: &errMismatchedWireType{
+				Type:         "*testdata.TestVersion4LoneNesting_Inner1_InnerInner",
+				TagNum:       1,
+				GotWireType:  2,
+				WantWireType: 0,
+			},
+		},
+		{
+			name: "From nested proto message, message index 1",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner2: &testdata.TestVersion3LoneNesting_Inner2{
+					Id:      "ID",
+					Country: "Maldives",
+					Inner: &testdata.TestVersion3LoneNesting_Inner2_InnerInner{
+						Id:   "ID",
+						City: "Unknown",
+					},
+				},
+			},
+			recv: new(testdata.TestVersion4LoneNesting),
+			wantErr: &errMismatchedWireType{
+				Type:         "*testdata.TestVersion4LoneNesting_Inner2_InnerInner",
+				TagNum:       2,
 				GotWireType:  2,
 				WantWireType: 0,
 			},
@@ -216,12 +255,12 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 	}
 }
 
-func mustAny(msg proto.Message) *types.Any {
-	anyy, err := types.NewAnyWithValue(msg)
+func mustMarshal(msg proto.Message) []byte {
+	blob, err := proto.Marshal(msg)
 	if err != nil {
 		panic(err)
 	}
-	return anyy
+	return blob
 }
 
 func TestCheckExtraneousFieldsFlat(t *testing.T) {

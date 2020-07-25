@@ -247,8 +247,72 @@ message TestVersion3LoneNesting {
     // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
     Customer1 k = 12 [(gogoproto.embed) = true];
     string non_critical_field = 1031;
+
+    message Inner1 {
+        int64 id = 1;
+        string name = 2;
+        message InnerInner {
+            string id = 1;
+            string city = 2;
+        }
+        InnerInner inner = 3;
+    }
+
+    Inner1 inner1 = 14;
+
+    message Inner2 {
+        string id = 1;
+        string country = 2;
+        message InnerInner {
+            string id = 1;
+            string city = 2;
+        }
+        InnerInner inner = 3;
+    }
+
+    Inner2 inner2 = 15;
 }
 
+message TestVersion4LoneNesting {
+    int64 x = 1;
+    TestVersion3 a = 2;
+    TestVersion3 b = 3; // [(gogoproto.nullable) = false];
+    repeated TestVersion3 c = 4;
+    repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
+    oneof sum {
+        TestVersion3LoneNesting f = 7;
+    }
+    google.protobuf.Any g = 8;
+    repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
+    // google.protobuf.Timestamp i = 10;
+    // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
+    Customer1 k = 12 [(gogoproto.embed) = true];
+    string non_critical_field = 1031;
+
+    message Inner1 {
+        int64 id = 1;
+        string name = 2;
+        message InnerInner {
+            int64 id = 1;
+            string city = 2;
+        }
+        InnerInner inner = 3;
+    }
+
+    Inner1 inner1 = 14;
+
+    message Inner2 {
+        string id = 1;
+        string country = 2;
+        message InnerInner {
+            string id = 1;
+            int64 value = 2;
+        }
+        InnerInner inner = 3;
+    }
+
+    Inner2 inner2 = 15;
+}
 
 message TestVersionFD1 {
     int64 x = 1;

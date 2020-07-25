@@ -35,7 +35,7 @@ func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 		return fmt.Errorf("%T does not have a Descriptor() method", msg)
 	}
 
-	fieldDescProtoFromTagNum, _, err := fieldNumToFieldDesc(desc, msg)
+	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 
 		default:
 			if tagNum&bit11NonCritical == 0 {
-				// The tag is non-critical, so report it.
+				// The tag is critical, so report it.
 				return &errExtraneousField{
 					Type:     reflect.ValueOf(msg).Type().String(),
 					TagNum:   tagNum,
@@ -81,10 +81,13 @@ func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 
 		protoMessageName := fieldDescProto.GetTypeName()
 		if protoMessageName == "" {
-			// At this point only TYPE_STRING is expected to be unregistered, since FieldDescriptorProto.IsScalar() returns false for TYPE_STRING
-			// per https://github.com/gogo/protobuf/blob/5628607bb4c51c3157aacc3a50f0ab707582b805/protoc-gen-gogo/descriptor/descriptor.go#L95-L118
-			if typ := fieldDescProto.GetType(); typ != descriptor.FieldDescriptorProto_TYPE_STRING {
-				return fmt.Errorf("failed to get typename for message of type %d, can only be TYPE_STRING", typ)
+			switch typ := fieldDescProto.GetType(); typ {
+			case descriptor.FieldDescriptorProto_TYPE_STRING, descriptor.FieldDescriptorProto_TYPE_BYTES:
+				// At this point only TYPE_STRING is expected to be unregistered, since FieldDescriptorProto.IsScalar() returns false for
+				// TYPE_BYTES and TYPE_STRING as per
+				// https://github.com/gogo/protobuf/blob/5628607bb4c51c3157aacc3a50f0ab707582b805/protoc-gen-gogo/descriptor/descriptor.go#L95-L118
+			default:
+				return fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
 			}
 			continue
 		}
@@ -98,6 +101,7 @@ func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 				return err
 			}
 			protoMessageName = any.TypeUrl
+			fieldBytes = any.Value
 		}
 
 		msg, err := protoMessageForTypeName(protoMessageName[1:])
@@ -268,9 +272,17 @@ var (
 	protoFileToDescMu sync.RWMutex
 )
 
+func unnestDesc(mdescs []*descriptor.DescriptorProto, indices []int) *descriptor.DescriptorProto {
+	mdesc := mdescs[indices[0]]
+	for _, index := range indices[1:] {
+		mdesc = mdesc.NestedType[index]
+	}
+	return mdesc
+}
+
 // Invoking descriptor.ForMessage(proto.Message.(Descriptor).Descriptor()) is incredibly slow
 // for every single message, thus the need for a hand-rolled custom version that's performant and cacheable.
-func extractFileDesMessageDesc(desc descriptorIface) (*descriptor.FileDescriptorProto, *descriptor.DescriptorProto, error) {
+func extractFileDescMessageDesc(desc descriptorIface) (*descriptor.FileDescriptorProto, *descriptor.DescriptorProto, error) {
 	gzippedPb, indices := desc.Descriptor()
 
 	protoFileToDescMu.RLock()
@@ -278,11 +290,7 @@ func extractFileDesMessageDesc(desc descriptorIface) (*descriptor.FileDescriptor
 	protoFileToDescMu.RUnlock()
 
 	if ok {
-		mdesc := cached.MessageType[indices[0]]
-		for _, index := range indices[1:] {
-			mdesc = mdesc.NestedType[index]
-		}
-		return cached, mdesc, nil
+		return cached, unnestDesc(cached.MessageType, indices), nil
 	}
 
 	// Time to gunzip the content of the FileDescriptor and then proto unmarshal them.
@@ -306,11 +314,7 @@ func extractFileDesMessageDesc(desc descriptorIface) (*descriptor.FileDescriptor
 	protoFileToDescMu.Unlock()
 
 	// Unnest the type if necessary.
-	mdesc := fdesc.MessageType[indices[0]]
-	for _, index := range indices[1:] {
-		mdesc = mdesc.NestedType[index]
-	}
-	return fdesc, mdesc, nil
+	return fdesc, unnestDesc(fdesc.MessageType, indices), nil
 }
 
 type descriptorMatch struct {
@@ -321,8 +325,8 @@ type descriptorMatch struct {
 var descprotoCacheMu sync.RWMutex
 var descprotoCache = make(map[reflect.Type]*descriptorMatch)
 
-// fieldNumToFieldDesc retrieves the mapping of field numbers to their respective field descriptors.
-func fieldNumToFieldDesc(desc descriptorIface, msg proto.Message) (map[int32]*descriptor.FieldDescriptorProto, *descriptor.DescriptorProto, error) {
+// getDescriptorInfo retrieves the mapping of field numbers to their respective field descriptors.
+func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*descriptor.FieldDescriptorProto, *descriptor.DescriptorProto, error) {
 	key := reflect.ValueOf(msg).Type()
 
 	descprotoCacheMu.RLock()
@@ -334,7 +338,7 @@ func fieldNumToFieldDesc(desc descriptorIface, msg proto.Message) (map[int32]*de
 	}
 
 	// Now compute and cache the index.
-	_, md, err := extractFileDesMessageDesc(desc)
+	_, md, err := extractFileDescMessageDesc(desc)
 	if err != nil {
 		return nil, nil, err
 	}

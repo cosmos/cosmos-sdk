@@ -23,6 +23,7 @@ type (
 		TxEncodingConfig
 
 		NewTxBuilder() TxBuilder
+		WrapTxBuilder(sdk.Tx) (TxBuilder, error)
 		SignModeHandler() signing.SignModeHandler
 	}
 

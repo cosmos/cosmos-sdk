@@ -968,7 +968,49 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins_Invalid() {
 func (suite *IntegrationTestSuite) TestSetDenomMetaData() {
 	app, ctx := suite.app, suite.ctx
 
-	expectedMetadata := []types.Metadata{{
+	metadata := suite.getTestMetadata()
+
+	for i := range []int{1, 2} {
+		app.BankKeeper.SetDenomMetaData(ctx, metadata[i])
+	}
+
+	actualMetadata := app.BankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
+
+	suite.Require().Equal(metadata[1].GetBase(), actualMetadata.GetBase())
+	suite.Require().Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
+	suite.Require().Equal(metadata[1].GetDescription(), actualMetadata.GetDescription())
+	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetDenom(), actualMetadata.GetDenomUnits()[1].GetDenom())
+	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetExponent(), actualMetadata.GetDenomUnits()[1].GetExponent())
+	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetAliases(), actualMetadata.GetDenomUnits()[1].GetAliases())
+}
+
+func (suite *IntegrationTestSuite) TestIterateAllDenomMetaData() {
+	app, ctx := suite.app, suite.ctx
+
+	expectedMetadata := suite.getTestMetadata()
+	// set metadata
+	for i := range []int{1, 2} {
+		app.BankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
+	}
+	// retrieve metadata
+	actualMetadata := make([]types.Metadata, 0)
+	app.BankKeeper.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		actualMetadata = append(actualMetadata, metadata)
+		return false
+	})
+	// execute checks
+	for i := range []int{1, 2} {
+		suite.Require().Equal(expectedMetadata[i].GetBase(), actualMetadata[i].GetBase())
+		suite.Require().Equal(expectedMetadata[i].GetDisplay(), actualMetadata[i].GetDisplay())
+		suite.Require().Equal(expectedMetadata[i].GetDescription(), actualMetadata[i].GetDescription())
+		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetDenom(), actualMetadata[i].GetDenomUnits()[1].GetDenom())
+		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetExponent(), actualMetadata[i].GetDenomUnits()[1].GetExponent())
+		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetAliases(), actualMetadata[i].GetDenomUnits()[1].GetAliases())
+	}
+}
+
+func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
+	return []types.Metadata{{
 		Description: "The native staking token of the Cosmos Hub.",
 		DenomUnits: []*types.DenomUnits{
 			{"uatom", uint32(0), []string{"microatom"}},
@@ -989,21 +1031,6 @@ func (suite *IntegrationTestSuite) TestSetDenomMetaData() {
 			Display: "token",
 		},
 	}
-
-	app.BankKeeper.SetDenomMetaData(ctx, expectedMetadata)
-
-	actualMetadata := app.BankKeeper.GetDenomMetaData(ctx)
-
-	for i := range []int{1, 2} {
-		suite.Require().Equal(expectedMetadata[i].GetBase(), actualMetadata[i].GetBase())
-		suite.Require().Equal(expectedMetadata[i].GetDisplay(), actualMetadata[i].GetDisplay())
-		suite.Require().Equal(expectedMetadata[i].GetDescription(), actualMetadata[i].GetDescription())
-		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetDenom(), actualMetadata[i].GetDenomUnits()[1].GetDenom())
-		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetExponent(), actualMetadata[i].GetDenomUnits()[1].GetExponent())
-		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetAliases(), actualMetadata[i].GetDenomUnits()[1].GetAliases())
-
-	}
-
 }
 
 func TestKeeperTestSuite(t *testing.T) {

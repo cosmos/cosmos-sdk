@@ -56,5 +56,11 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
 		})
 	}
 
-	return types.NewGenesisState(k.GetParams(ctx), balances, k.GetSupply(ctx).GetTotal(), k.GetDenomMetaData(ctx))
+	denomMetaData := make([]types.Metadata, 0)
+	k.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		denomMetaData = append(denomMetaData, metadata)
+		return false
+	})
+
+	return types.NewGenesisState(k.GetParams(ctx), balances, k.GetSupply(ctx).GetTotal(), denomMetaData)
 }

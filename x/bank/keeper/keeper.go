@@ -31,8 +31,9 @@ type Keeper interface {
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
 
-	GetDenomMetaData(ctx sdk.Context) []types.Metadata
-	SetDenomMetaData(ctx sdk.Context, denomMetaData []types.Metadata)
+	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
+	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
+	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
@@ -184,23 +185,25 @@ func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 	store.Set(types.SupplyKey, bz)
 }
 
-// GetDenomMetaData retrieves the denominations metadata
-func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context) []types.Metadata {
-	denomMetaData := make([]types.Metadata, 0)
-	k.IterateDenomMetaData(ctx, func(metadata types.Metadata) bool {
-		denomMetaData = append(denomMetaData, metadata)
-		return false
-	})
+// GetDenomMetaData retrieves the denomination metadata
+func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata {
+	store := ctx.KVStore(k.storeKey)
+	store = prefix.NewStore(store, types.DenomMetadataKey(denom))
 
-	return denomMetaData
+	bz := store.Get([]byte(denom))
+
+	var metadata types.Metadata
+	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
+
+	return metadata
 }
 
-// IterateDenomMetaData iterates over the denominations metadata and
+// IterateAllDenomMetaData iterates over all the denominations metadata and
 // provides the metadata to a callback. If true is returned from the
 // callback, iteration is halted.
-func (k BaseKeeper) IterateDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool) {
+func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool) {
 	store := ctx.KVStore(k.storeKey)
-	denomMetaDataStore := prefix.NewStore(store, types.DenomMetaDataKey)
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
 
 	iterator := denomMetaDataStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -216,15 +219,12 @@ func (k BaseKeeper) IterateDenomMetaData(ctx sdk.Context, cb func(types.Metadata
 }
 
 // SetDenomMetaData sets the denominations metadata
-func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData []types.Metadata) {
+func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
 	store := ctx.KVStore(k.storeKey)
-	denomMetaDataStore := prefix.NewStore(store, types.DenomMetaDataKey)
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataKey(denomMetaData.Base))
 
-	for i := range denomMetaData {
-		m := k.cdc.MustMarshalBinaryBare(&denomMetaData[i])
-		denomMetaDataStore.Set([]byte(denomMetaData[i].Base), m)
-	}
-
+	m := k.cdc.MustMarshalBinaryBare(&denomMetaData)
+	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
 }
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.

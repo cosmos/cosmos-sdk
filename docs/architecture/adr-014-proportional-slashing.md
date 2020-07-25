@@ -42,7 +42,7 @@ One will note, that this model doesn't differentiate between multiple validators
 
 #### Griefing
 
-Griefing, the act of intentionally being slashed to make another's slash worse, could be a concern here.  However, using the protocol described here, the attacker also gets equally impacted by the grief as the victim.
+Griefing, the act of intentionally getting oneself slashed in order to make another's slash worse, could be a concern here.  However, using the protocol described here, the attacker also gets equally impacted by the grief as the victim, so it would not provide much benefit to the griefer.
 
 ### Implementation
 

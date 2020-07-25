@@ -3,17 +3,14 @@ package common
 import (
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	viper.Set(flags.FlagOffline, true)
-	ctx := client.NewContext().WithJSONMarshaler(types.ModuleCdc)
+	clientCtx := client.Context{}.WithJSONMarshaler(types.ModuleCdc)
 
 	type args struct {
 		delAddr string
@@ -35,7 +32,7 @@ func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := QueryDelegationRewards(ctx, "", tt.args.delAddr, tt.args.valAddr)
+			_, _, err := QueryDelegationRewards(clientCtx, tt.args.delAddr, tt.args.valAddr)
 			require.True(t, err != nil, tt.wantErr)
 		})
 	}

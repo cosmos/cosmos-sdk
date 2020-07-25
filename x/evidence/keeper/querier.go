@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"encoding/hex"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,21 +34,16 @@ func NewQuerier(k Keeper) sdk.Querier {
 }
 
 func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryEvidenceParams
+	var params types.QueryEvidenceRequest
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	hash, err := hex.DecodeString(params.EvidenceHash)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to decode evidence hash string query")
-	}
-
-	evidence, ok := k.GetEvidence(ctx, hash)
+	evidence, ok := k.GetEvidence(ctx, params.EvidenceHash)
 	if !ok {
-		return nil, sdkerrors.Wrap(types.ErrNoEvidenceExists, params.EvidenceHash)
+		return nil, sdkerrors.Wrap(types.ErrNoEvidenceExists, params.EvidenceHash.String())
 	}
 
 	res, err := codec.MarshalJSONIndent(k.cdc, evidence)

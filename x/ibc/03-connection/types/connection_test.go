@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 var (
@@ -24,32 +25,27 @@ func TestConnectionValidateBasic(t *testing.T) {
 	}{
 		{
 			"valid connection",
-			types.ConnectionEnd{connectionID, clientID, []string{"1.0.0"}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			true,
 		},
 		{
-			"invalid connection id",
-			types.ConnectionEnd{"(connectionIDONE)", clientID, []string{"1.0.0"}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
-			false,
-		},
-		{
 			"invalid client id",
-			types.ConnectionEnd{connectionID, "(clientID1)", []string{"1.0.0"}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{"(clientID1)", []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"empty versions",
-			types.ConnectionEnd{connectionID, clientID, nil, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{clientID, nil, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid version",
-			types.ConnectionEnd{connectionID, clientID, []string{""}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{clientID, []string{"1.0.0"}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid counterparty",
-			types.ConnectionEnd{connectionID, clientID, []string{"1.0.0"}, types.INIT, types.Counterparty{clientID2, connectionID2, emptyPrefix}},
+			types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, emptyPrefix}},
 			false,
 		},
 	}
@@ -82,6 +78,36 @@ func TestCounterpartyValidateBasic(t *testing.T) {
 		tc := tc
 
 		err := tc.counterparty.ValidateBasic()
+		if tc.expPass {
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
+		} else {
+			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
+		}
+	}
+}
+
+func TestIdentifiedConnectionValidateBasic(t *testing.T) {
+	testCases := []struct {
+		name       string
+		connection types.IdentifiedConnection
+		expPass    bool
+	}{
+		{
+			"valid connection",
+			types.NewIdentifiedConnection(clientID, types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}}),
+			true,
+		},
+		{
+			"invalid connection id",
+			types.NewIdentifiedConnection("(connectionIDONE)", types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}}),
+			false,
+		},
+	}
+
+	for i, tc := range testCases {
+		tc := tc
+
+		err := tc.connection.ValidateBasic()
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
 		} else {

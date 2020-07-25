@@ -6,16 +6,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (suite *IntegrationTestSuite) TestQueryBalance() {
 	app, ctx := suite.app, suite.ctx
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -45,9 +45,9 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 
 func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	app, ctx := suite.app, suite.ctx
-	_, _, addr := authtypes.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -78,18 +78,18 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Equal(res.Balances.Len(), 1)
-	suite.NotNil(res.Res.NextKey)
+	suite.NotNil(res.Pagination.NextKey)
 
 	suite.T().Log("query second page with nextkey")
 	pageReq = &query.PageRequest{
-		Key:        res.Res.NextKey,
+		Key:        res.Pagination.NextKey,
 		Limit:      1,
 		CountTotal: true,
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Equal(res.Balances.Len(), 1)
-	suite.Nil(res.Res.NextKey)
+	suite.Nil(res.Pagination.NextKey)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
@@ -97,7 +97,7 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -116,7 +116,7 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 

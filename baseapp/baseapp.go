@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -96,6 +95,9 @@ type BaseApp struct { // nolint: maligned
 
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
+
+	// trace set will return full stack traces for errors in ABCI Log field
+	trace bool
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -277,6 +279,10 @@ func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 	app.interBlockCache = cache
 }
 
+func (app *BaseApp) setTrace(trace bool) {
+	app.trace = trace
+}
+
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
@@ -292,7 +298,7 @@ func (app *BaseApp) Router() sdk.Router {
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
-func (app *BaseApp) GRPCQueryRouter() grpc.Server { return app.grpcQueryRouter }
+func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }
@@ -642,7 +648,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		events = events.AppendEvents(msgEvents)
 
 		txData.Data = append(txData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), msgResult.Log, msgEvents))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
 	data, err := proto.Marshal(txData)

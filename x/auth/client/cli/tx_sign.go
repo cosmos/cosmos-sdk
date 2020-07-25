@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,7 +22,7 @@ const (
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
-func GetSignBatchCommand(codec *codec.Codec) *cobra.Command {
+func GetSignBatchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign-batch [file]",
 		Short: "Sign transaction batch files",
@@ -45,38 +44,39 @@ The --multisig=<multisig_key> flag generates a signature on behalf of a multisig
 account key. It implies --signature-only.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeSignBatchCmd(codec),
+		RunE:   makeSignBatchCmd(),
 		Args:   cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().String(
-		flagMultisig, "",
-		"Address of the multisig account on behalf of which the transaction shall be signed",
-	)
+	cmd.Flags().String(flagMultisig, "", "Address of the multisig account on behalf of which the transaction shall be signed")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().Bool(flagSigOnly, true, "Print only the generated signature, then exit")
-	cmd = flags.PostCommands(cmd)[0]
+	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 	cmd.MarkFlagRequired(flags.FlagFrom)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
+func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		inBuf := bufio.NewReader(cmd.InOrStdin())
-		clientCtx := client.NewContextWithInput(inBuf).WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
-		generateSignatureOnly := viper.GetBool(flagSigOnly)
+		clientCtx := client.GetClientContextFromCmd(cmd)
+
+		txBldr, err := types.NewTxBuilderFromFlags(bufio.NewReader(cmd.InOrStdin()), cmd.Flags(), clientCtx.HomeDir)
+		if err != nil {
+			return err
+		}
+
+		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
 		var (
-			err          error
 			multisigAddr sdk.AccAddress
 			infile       = os.Stdin
 		)
 
 		// validate multisig address if there's any
-		if viper.GetString(flagMultisig) != "" {
-			multisigAddr, err = sdk.AccAddressFromBech32(viper.GetString(flagMultisig))
+		if ms, _ := cmd.Flags().GetString(flagMultisig); ms != "" {
+			multisigAddr, err = sdk.AccAddressFromBech32(ms)
 			if err != nil {
 				return err
 			}
@@ -98,7 +98,7 @@ func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			}
 		}
 
-		scanner := authclient.NewBatchScanner(cdc, infile)
+		scanner := authclient.NewBatchScanner(clientCtx.JSONMarshaler, infile)
 
 		for sequence := txBldr.Sequence(); scanner.Scan(); sequence++ {
 			var stdTx types.StdTx
@@ -107,16 +107,24 @@ func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			txBldr = txBldr.WithSequence(sequence)
 
 			if multisigAddr.Empty() {
-				stdTx, err = authclient.SignStdTx(txBldr, clientCtx, viper.GetString(flags.FlagFrom), unsignedStdTx, false, true)
+				from, _ := cmd.Flags().GetString(flags.FlagFrom)
+				_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
+				if err != nil {
+					return fmt.Errorf("error getting account from keybase: %w", err)
+				}
+
+				stdTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, unsignedStdTx, false, true)
+				if err != nil {
+					return err
+				}
 			} else {
 				stdTx, err = authclient.SignStdTxWithSignerAddress(txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), unsignedStdTx, true)
+				if err != nil {
+					return err
+				}
 			}
 
-			if err != nil {
-				return err
-			}
-
-			json, err := getSignatureJSON(cdc, stdTx, generateSignatureOnly)
+			json, err := getSignatureJSON(clientCtx.JSONMarshaler, stdTx, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -133,7 +141,7 @@ func makeSignBatchCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 }
 
 func setOutputFile(cmd *cobra.Command) (func(), error) {
-	outputDoc := viper.GetString(flags.FlagOutputDocument)
+	outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 	if outputDoc == "" {
 		cmd.SetOut(cmd.OutOrStdout())
 		return func() {}, nil
@@ -150,7 +158,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 }
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(clientCtx client.Context) *cobra.Command {
+func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -170,22 +178,18 @@ key. It implies --signature-only. Full multisig signed transactions may eventual
 be generated via the 'multisign' command.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeSignCmd(clientCtx),
+		RunE:   makeSignCmd(),
 		Args:   cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().String(
-		flagMultisig, "",
-		"Address of the multisig account on behalf of which the transaction shall be signed",
-	)
-	cmd.Flags().Bool(
-		flagAppend, true,
-		"Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on",
-	)
+	cmd.Flags().String(flagMultisig, "", "Address of the multisig account on behalf of which the transaction shall be signed")
+	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on")
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
-	cmd = flags.PostCommands(cmd)[0]
+	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
+	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.MarkFlagRequired(flags.FlagFrom)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -193,14 +197,16 @@ be generated via the 'multisign' command.
 func preSignCmd(cmd *cobra.Command, _ []string) {
 	// Conditionally mark the account and sequence numbers required as no RPC
 	// query will be done.
-	if viper.GetBool(flags.FlagOffline) {
+	if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
 		cmd.MarkFlagRequired(flags.FlagAccountNumber)
 		cmd.MarkFlagRequired(flags.FlagSequence)
 	}
 }
 
-func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		clientCtx := client.GetClientContextFromCmd(cmd)
+
 		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
@@ -209,8 +215,14 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 
 		// if --signature-only is on, then override --append
 		var newTx types.StdTx
-		generateSignatureOnly := viper.GetBool(flagSigOnly)
-		multisigAddrStr := viper.GetString(flagMultisig)
+		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
+		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
+
+		from, _ := cmd.Flags().GetString(flags.FlagFrom)
+		_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
+		if err != nil {
+			return fmt.Errorf("error getting account from keybase: %w", err)
+		}
 
 		if multisigAddrStr != "" {
 			var multisigAddr sdk.AccAddress
@@ -219,44 +231,46 @@ func makeSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []strin
 			if err != nil {
 				return err
 			}
+
 			newTx, err = authclient.SignStdTxWithSignerAddress(
-				txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), stdTx, clientCtx.Offline,
+				txBldr, clientCtx, multisigAddr, fromName, stdTx, clientCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {
-			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = authclient.SignStdTx(txBldr, clientCtx, clientCtx.GetFromName(), stdTx, appendSig, clientCtx.Offline)
+			append, _ := cmd.Flags().GetBool(flagAppend)
+			appendSig := append && !generateSignatureOnly
+			newTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, stdTx, appendSig, clientCtx.Offline)
+			if err != nil {
+				return err
+			}
 		}
-
 		if err != nil {
 			return err
 		}
 
-		json, err := getSignatureJSON(clientCtx.Codec, newTx, generateSignatureOnly)
+		json, err := getSignatureJSON(clientCtx.JSONMarshaler, newTx, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
 
-		if viper.GetString(flags.FlagOutputDocument) == "" {
-			fmt.Printf("%s\n", json)
+		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+		if outputDoc == "" {
+			cmd.Printf("%s\n", json)
 			return nil
 		}
 
-		fp, err := os.OpenFile(
-			viper.GetString(flags.FlagOutputDocument), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
-		)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err
 		}
-
 		defer fp.Close()
-		fmt.Fprintf(fp, "%s\n", json)
 
+		fmt.Fprintf(fp, "%s\n", json)
 		return nil
 	}
 }
 
-func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, generateSignatureOnly bool) ([]byte, error) {
 	if generateSignatureOnly {
 		return cdc.MarshalJSON(newTx.Signatures[0])
 	}

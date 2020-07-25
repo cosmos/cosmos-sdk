@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -23,11 +22,26 @@ func StatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Query remote node for status",
-		RunE:  printNodeStatus,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			status, err := getNodeStatus(clientCtx)
+			if err != nil {
+				return err
+			}
+
+			output, err := legacy.Cdc.MarshalJSON(status)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+			return nil
+		},
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+
 	return cmd
 }
 
@@ -38,27 +52,6 @@ func getNodeStatus(clientCtx client.Context) (*ctypes.ResultStatus, error) {
 	}
 
 	return node.Status()
-}
-
-func printNodeStatus(_ *cobra.Command, _ []string) error {
-	// No need to verify proof in getting node status
-	viper.Set(flags.FlagTrustNode, true)
-	// No need to verify proof in getting node status
-	viper.Set(flags.FlagKeyringBackend, flags.DefaultKeyringBackend)
-
-	clientCtx := client.NewContext()
-	status, err := getNodeStatus(clientCtx)
-	if err != nil {
-		return err
-	}
-
-	output, err := legacy.Cdc.MarshalJSON(status)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(output))
-	return nil
 }
 
 // NodeInfoResponse defines a response type that contains node status and version
@@ -81,6 +74,7 @@ func NodeInfoRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			DefaultNodeInfo:    status.NodeInfo,
 			ApplicationVersion: version.NewInfo(),
 		}
+
 		rest.PostProcessResponseBare(w, clientCtx, resp)
 	}
 }

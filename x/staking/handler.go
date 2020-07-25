@@ -59,8 +59,9 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 		return nil, types.ErrValidatorPubKeyExists
 	}
 
-	if msg.Value.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Value.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Value.Denom, bondDenom)
 	}
 
 	if _, err := msg.Description.EnsureLength(); err != nil {
@@ -186,8 +187,9 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 		return nil, types.ErrNoValidatorFound
 	}
 
-	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	// NOTE: source funds are always unbonded
@@ -229,8 +231,9 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 		return nil, err
 	}
 
-	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, shares)
@@ -278,8 +281,9 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 		return nil, err
 	}
 
-	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return nil, types.ErrBadDenom
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	completionTime, err := k.BeginRedelegation(

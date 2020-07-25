@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,7 +25,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		Fees          sdk.Coins
 		GasPrices     sdk.DecCoins
 	}
-	defaultMsg := []sdk.Msg{sdk.NewTestMsg(addr)}
+	defaultMsg := []sdk.Msg{testdata.NewTestMsg(addr)}
 	tests := []struct {
 		name    string
 		fields  fields

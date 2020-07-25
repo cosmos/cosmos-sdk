@@ -24,7 +24,7 @@ func (k Keeper) SendPacket(
 	packet exported.PacketI,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "packet failed basic validation")
 	}
 
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -40,7 +40,7 @@ func (k Keeper) SendPacket(
 	}
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
@@ -128,6 +128,11 @@ func (k Keeper) SendPacket(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -212,6 +217,24 @@ func (k Keeper) RecvPacket(
 		}
 	}
 
+	// check if the packet is being received in order
+	if channel.Ordering == types.ORDERED {
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return sdkerrors.Wrapf(
+				types.ErrSequenceReceiveNotFound,
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+			)
+		}
+
+		if packet.GetSequence() != nextSequenceRecv {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
+			)
+		}
+	}
+
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
@@ -249,9 +272,9 @@ func (k Keeper) PacketExecuted(
 
 	capName := host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelCapability,
-			"channel capability failed authentication",
+			"channel capability failed authentication for capability name %s", capName,
 		)
 	}
 
@@ -271,13 +294,6 @@ func (k Keeper) PacketExecuted(
 			return sdkerrors.Wrapf(
 				types.ErrSequenceReceiveNotFound,
 				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
-			)
-		}
-
-		if packet.GetSequence() != nextSequenceRecv {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidPacket,
-				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
 			)
 		}
 
@@ -302,6 +318,11 @@ func (k Keeper) PacketExecuted(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -325,7 +346,7 @@ func (k Keeper) AcknowledgePacket(
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel(),
+			"port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
@@ -370,16 +391,17 @@ func (k Keeper) AcknowledgePacket(
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "commitment bytes are not equal: got (%v), expected (%v)", types.CommitPacket(packet), commitment)
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
 		packet.GetSequence(), acknowledgement,
 	); err != nil {
-		return sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
+		return sdkerrors.Wrap(err, "packet acknowledgement verification failed")
 	}
 
+	// assert packets acknowledged in order
 	if channel.Ordering == types.ORDERED {
 		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
@@ -395,8 +417,6 @@ func (k Keeper) AcknowledgePacket(
 				"packet sequence ≠ next ack sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceAck,
 			)
 		}
-
-		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck+1)
 	}
 
 	// NOTE: the remaining code is located in the AcknowledgementExecuted function
@@ -412,24 +432,38 @@ func (k Keeper) AcknowledgementExecuted(
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
-	// sanity check
-	_, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel(),
+			"port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
 	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelCapability,
-			"channel capability failed authentication",
+			"channel capability failed authentication for capability name %s", capName,
 		)
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	// increment NextSequenceAck
+	if channel.Ordering == types.ORDERED {
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return sdkerrors.Wrapf(
+				types.ErrSequenceAckNotFound,
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+			)
+		}
+
+		nextSequenceAck++
+
+		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck)
+	}
 
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))
@@ -445,6 +479,11 @@ func (k Keeper) AcknowledgementExecuted(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 

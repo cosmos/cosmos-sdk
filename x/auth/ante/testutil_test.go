@@ -83,7 +83,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	suite.txBuilder.SetSignatures(sigsV2...)
+	suite.Require().NoError(suite.txBuilder.SetSignatures(sigsV2...))
 
 	return suite.txBuilder.GetTx()
 }

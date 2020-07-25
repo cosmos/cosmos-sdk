@@ -1061,7 +1061,7 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 
 	msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 	msgs := []sdk.Msg{msg}
-	suite.txBuilder.SetMsgs(msgs...)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 
 	suite.txBuilder.SetMemo("thisisatestmemo")
 
@@ -1071,10 +1071,11 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 
 	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
 	// since these decorators don't run on recheck, the tx should pass the antehandler
-	stdTx := tx.(types.StdTx)
-	stdTx.Signatures = []types.StdSignature{}
+	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+	suite.Require().NoError(err)
+	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{}))
 
-	_, err := suite.anteHandler(suite.ctx, stdTx, false)
+	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)
 
 	tx = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())

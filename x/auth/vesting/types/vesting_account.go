@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
-	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 )
 
@@ -236,59 +234,6 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	return string(bz), err
 }
 
-// MarshalJSON returns the JSON representation of a BaseVestingAccount.
-func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
-	alias := vestingAccountPretty{
-		Address:          bva.Address,
-		Coins:            bva.Coins,
-		AccountNumber:    bva.AccountNumber,
-		Sequence:         bva.Sequence,
-		OriginalVesting:  bva.OriginalVesting,
-		DelegatedFree:    bva.DelegatedFree,
-		DelegatedVesting: bva.DelegatedVesting,
-		EndTime:          bva.EndTime,
-	}
-
-	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a BaseVestingAccount.
-func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
-	var alias vestingAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	var (
-		pk  crypto.PubKey
-		err error
-	)
-
-	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	bva.BaseAccount = authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence)
-	bva.OriginalVesting = alias.OriginalVesting
-	bva.DelegatedFree = alias.DelegatedFree
-	bva.DelegatedVesting = alias.DelegatedVesting
-	bva.EndTime = alias.EndTime
-
-	return nil
-}
-
 //-----------------------------------------------------------------------------
 // Continuous Vesting Account
 
@@ -420,63 +365,6 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	return string(bz), err
-}
-
-// MarshalJSON returns the JSON representation of a ContinuousVestingAccount.
-func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
-	alias := vestingAccountPretty{
-		Address:          cva.Address,
-		Coins:            cva.Coins,
-		AccountNumber:    cva.AccountNumber,
-		Sequence:         cva.Sequence,
-		OriginalVesting:  cva.OriginalVesting,
-		DelegatedFree:    cva.DelegatedFree,
-		DelegatedVesting: cva.DelegatedVesting,
-		EndTime:          cva.EndTime,
-		StartTime:        cva.StartTime,
-	}
-
-	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a ContinuousVestingAccount.
-func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
-	var alias vestingAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	var (
-		pk  crypto.PubKey
-		err error
-	)
-
-	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	cva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
-		OriginalVesting:  alias.OriginalVesting,
-		DelegatedFree:    alias.DelegatedFree,
-		DelegatedVesting: alias.DelegatedVesting,
-		EndTime:          alias.EndTime,
-	}
-	cva.StartTime = alias.StartTime
-
-	return nil
 }
 
 //-----------------------------------------------------------------------------
@@ -638,65 +526,6 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	return string(bz), err
 }
 
-// MarshalJSON returns the JSON representation of a PeriodicVestingAccount.
-func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
-	alias := vestingAccountPretty{
-		Address:          pva.Address,
-		Coins:            pva.Coins,
-		AccountNumber:    pva.AccountNumber,
-		Sequence:         pva.Sequence,
-		OriginalVesting:  pva.OriginalVesting,
-		DelegatedFree:    pva.DelegatedFree,
-		DelegatedVesting: pva.DelegatedVesting,
-		EndTime:          pva.EndTime,
-		StartTime:        pva.StartTime,
-		VestingPeriods:   pva.VestingPeriods,
-	}
-
-	if pva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a PeriodicVestingAccount.
-func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
-	var alias vestingAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	var (
-		pk  crypto.PubKey
-		err error
-	)
-
-	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	pva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
-		OriginalVesting:  alias.OriginalVesting,
-		DelegatedFree:    alias.DelegatedFree,
-		DelegatedVesting: alias.DelegatedVesting,
-		EndTime:          alias.EndTime,
-	}
-	pva.StartTime = alias.StartTime
-	pva.VestingPeriods = alias.VestingPeriods
-
-	return nil
-}
-
 //-----------------------------------------------------------------------------
 // Delayed Vesting Account
 
@@ -765,59 +594,4 @@ func (dva DelayedVestingAccount) GetStartTime() int64 {
 // Validate checks for errors on the account fields
 func (dva DelayedVestingAccount) Validate() error {
 	return dva.BaseVestingAccount.Validate()
-}
-
-// MarshalJSON returns the JSON representation of a DelayedVestingAccount.
-func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
-	alias := vestingAccountPretty{
-		Address:          dva.Address,
-		Coins:            dva.Coins,
-		AccountNumber:    dva.AccountNumber,
-		Sequence:         dva.Sequence,
-		OriginalVesting:  dva.OriginalVesting,
-		DelegatedFree:    dva.DelegatedFree,
-		DelegatedVesting: dva.DelegatedVesting,
-		EndTime:          dva.EndTime,
-	}
-
-	if dva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, dva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a DelayedVestingAccount.
-func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
-	var alias vestingAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	var (
-		pk  crypto.PubKey
-		err error
-	)
-
-	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	dva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
-		OriginalVesting:  alias.OriginalVesting,
-		DelegatedFree:    alias.DelegatedFree,
-		DelegatedVesting: alias.DelegatedVesting,
-		EndTime:          alias.EndTime,
-	}
-
-	return nil
 }

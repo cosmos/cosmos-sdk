@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -732,87 +731,4 @@ func TestGenesisAccountValidate(t *testing.T) {
 			require.Equal(t, tt.expErr, err)
 		})
 	}
-}
-
-func TestBaseVestingAccountJSON(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pubkey.Address())
-	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
-	baseAcc := authtypes.NewBaseAccount(addr, coins, pubkey, 10, 50)
-
-	acc, err := NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
-	require.NoError(t, err)
-
-	bz, err := json.Marshal(acc)
-	require.NoError(t, err)
-
-	bz1, err := acc.MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, string(bz1), string(bz))
-
-	var a BaseVestingAccount
-	require.NoError(t, json.Unmarshal(bz, &a))
-	require.Equal(t, acc.String(), a.String())
-}
-
-func TestContinuousVestingAccountJSON(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pubkey.Address())
-	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
-	baseAcc := authtypes.NewBaseAccount(addr, coins, pubkey, 10, 50)
-
-	baseVesting, err := NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
-	acc := NewContinuousVestingAccountRaw(baseVesting, baseVesting.EndTime)
-	require.NoError(t, err)
-
-	bz, err := json.Marshal(acc)
-	require.NoError(t, err)
-
-	bz1, err := acc.MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, string(bz1), string(bz))
-
-	var a ContinuousVestingAccount
-	require.NoError(t, json.Unmarshal(bz, &a))
-	require.Equal(t, acc.String(), a.String())
-}
-
-func TestPeriodicVestingAccountJSON(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pubkey.Address())
-	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
-	baseAcc := authtypes.NewBaseAccount(addr, coins, pubkey, 10, 50)
-
-	acc := NewPeriodicVestingAccount(baseAcc, time.Now().Unix(), Periods{Period{3600, coins}})
-
-	bz, err := json.Marshal(acc)
-	require.NoError(t, err)
-
-	bz1, err := acc.MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, string(bz1), string(bz))
-
-	var a PeriodicVestingAccount
-	require.NoError(t, json.Unmarshal(bz, &a))
-	require.Equal(t, acc.String(), a.String())
-}
-
-func TestDelayedVestingAccountJSON(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pubkey.Address())
-	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
-	baseAcc := authtypes.NewBaseAccount(addr, coins, pubkey, 10, 50)
-
-	acc := NewDelayedVestingAccount(baseAcc, time.Now().Unix())
-
-	bz, err := json.Marshal(acc)
-	require.NoError(t, err)
-
-	bz1, err := acc.MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, string(bz1), string(bz))
-
-	var a DelayedVestingAccount
-	require.NoError(t, json.Unmarshal(bz, &a))
-	require.Equal(t, acc.String(), a.String())
 }

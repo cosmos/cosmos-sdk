@@ -4,13 +4,13 @@ import (
 	gocontext "context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // QueryServiceTestHelper provides a helper for making grpc query service

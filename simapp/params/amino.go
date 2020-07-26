@@ -4,9 +4,9 @@
 package params
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for an amino based test configuration.

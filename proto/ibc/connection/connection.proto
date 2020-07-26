@@ -1,7 +1,7 @@
 syntax = "proto3";
 package ibc.connection;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types";
 
 import "gogoproto/gogo.proto";
 import "ibc/commitment/commitment.proto";
@@ -19,7 +19,7 @@ message MsgConnectionOpenInit {
   ];
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
   bytes signer = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+      [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
@@ -45,7 +45,7 @@ message MsgConnectionOpenTry {
   uint64 consensus_height = 8
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes signer = 9
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+      [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
@@ -65,7 +65,7 @@ message MsgConnectionOpenAck {
   uint64 consensus_height = 6
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes signer = 7
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+      [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
@@ -79,7 +79,7 @@ message MsgConnectionOpenConfirm {
   bytes proof_ack = 2 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
   uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes signer = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+      [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // ICS03 - Connection Data Structures as defined in

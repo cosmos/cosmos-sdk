@@ -5,9 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/crypto/types/multisig"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 )
 
 // VerifySignature verifies a transaction signature contained in SignatureData abstracting over different signing modes

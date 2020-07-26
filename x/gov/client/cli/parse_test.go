@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/KiraCore/cosmos-sdk/testutil"
 )
 
 func TestParseSubmitProposalFlags(t *testing.T) {

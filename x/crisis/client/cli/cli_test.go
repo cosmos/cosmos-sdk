@@ -7,12 +7,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/testutil"
+	"github.com/KiraCore/cosmos-sdk/testutil/network"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/crisis/client/cli"
 )
 
 type IntegrationTestSuite struct {

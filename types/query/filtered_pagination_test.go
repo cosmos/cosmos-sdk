@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/store/prefix"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/query"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 var addr1 = sdk.AccAddress([]byte("addr1"))

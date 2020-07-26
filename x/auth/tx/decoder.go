@@ -3,13 +3,13 @@ package tx
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/KiraCore/cosmos-sdk/types/tx"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	cryptotypes "github.com/KiraCore/cosmos-sdk/crypto/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler and PublicKeyCodec

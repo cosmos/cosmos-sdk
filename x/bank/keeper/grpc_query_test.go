@@ -3,12 +3,12 @@ package keeper_test
 import (
 	gocontext "context"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/KiraCore/cosmos-sdk/types/query"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/baseapp"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 func (suite *IntegrationTestSuite) TestQueryBalance() {

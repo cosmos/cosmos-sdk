@@ -4,23 +4,23 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/KiraCore/cosmos-sdk/x/auth/tx"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing/direct"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec"
 
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	signingtypes "github.com/KiraCore/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/std"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	txtypes "github.com/KiraCore/cosmos-sdk/types/tx"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing"
 )
 
 func TestDirectModeHandler(t *testing.T) {

@@ -3,7 +3,7 @@ package baseapp
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 var protoCodec = encoding.GetCodec(proto.Name)

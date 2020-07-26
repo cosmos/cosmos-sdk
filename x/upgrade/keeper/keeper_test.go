@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	store "github.com/KiraCore/cosmos-sdk/store/types"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 )
 
 type KeeperTestSuite struct {

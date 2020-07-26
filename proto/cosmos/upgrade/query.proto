@@ -3,7 +3,7 @@ package cosmos.upgrade;
 
 import "cosmos/upgrade/upgrade.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/upgrade/types";
 
 // Query defines the gRPC upgrade querier service
 service Query {

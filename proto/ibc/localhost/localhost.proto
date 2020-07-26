@@ -3,9 +3,9 @@ package ibc.localhost;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/types";
 
 // MsgCreateClient defines a message to create an IBC client
 message MsgCreateClient {
-    bytes signer = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes signer = 1 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }

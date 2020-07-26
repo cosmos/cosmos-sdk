@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 )
 
 var _ gogogrpc.ClientConn = Context{}

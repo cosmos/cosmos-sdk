@@ -5,11 +5,11 @@ package tx
 
 import (
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
-	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/cosmos-sdk/types"
-	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	types "github.com/KiraCore/cosmos-sdk/codec/types"
+	types1 "github.com/KiraCore/cosmos-sdk/crypto/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types2 "github.com/KiraCore/cosmos-sdk/types"
+	signing "github.com/KiraCore/cosmos-sdk/types/tx/signing"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"

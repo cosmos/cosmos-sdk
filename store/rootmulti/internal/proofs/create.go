@@ -6,7 +6,7 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
+	sdkmaps "github.com/KiraCore/cosmos-sdk/store/rootmulti/internal/maps"
 )
 
 // TendermintSpec constrains the format from ics23-tendermint (crypto/merkle SimpleProof)

@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/testutil"
+	"github.com/KiraCore/cosmos-sdk/testutil/network"
+	"github.com/KiraCore/cosmos-sdk/x/params/client/cli"
 )
 
 type IntegrationTestSuite struct {

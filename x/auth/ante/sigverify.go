@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authsigning "github.com/KiraCore/cosmos-sdk/x/auth/signing"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"

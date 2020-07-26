@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	channelexported "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 var (

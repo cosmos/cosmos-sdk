@@ -5,7 +5,7 @@ import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/gov/gov.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/gov/types";
 
 // Query defines the gRPC querier service for gov module
 service Query {
@@ -51,10 +51,10 @@ message QueryProposalsRequest {
   ProposalStatus proposal_status = 1 ;
   
   // Voter address for the proposals.
-  bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"]; 
+  bytes voter = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 
   // Deposit addresses from the proposals.
-  bytes depositor = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes depositor = 3 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 
   cosmos.query.PageRequest pagination = 4;
 }
@@ -72,7 +72,7 @@ message QueryVoteRequest {
   uint64 proposal_id = 1;
   
   // Voter address for the proposals.
-  bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"]; 
+  bytes voter = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method
@@ -113,7 +113,7 @@ message QueryDepositRequest {
   uint64 proposal_id = 1;
   
   // Deposit addresses from the proposals.
-  bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes depositor = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // QueryDepositResponse is the response type for the Query/Deposit RPC method

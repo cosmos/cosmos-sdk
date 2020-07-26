@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 )
 
 // PubKeyMultisigThreshold implements a K of N threshold multisig.

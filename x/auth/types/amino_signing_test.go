@@ -3,16 +3,16 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	signingtypes "github.com/KiraCore/cosmos-sdk/types/tx/signing"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {

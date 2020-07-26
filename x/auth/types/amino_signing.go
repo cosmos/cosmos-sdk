@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	signingtypes "github.com/KiraCore/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing"
 )
 
 // LegacyAminoJSONHandler is a SignModeHandler that handles SIGN_MODE_LEGACY_AMINO_JSON

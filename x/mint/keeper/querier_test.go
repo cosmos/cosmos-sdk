@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec"
 
 	"github.com/stretchr/testify/require"
 

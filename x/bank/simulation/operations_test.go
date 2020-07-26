@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	simappparams "github.com/KiraCore/cosmos-sdk/simapp/params"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	simtypes "github.com/KiraCore/cosmos-sdk/types/simulation"
+	"github.com/KiraCore/cosmos-sdk/x/bank/simulation"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 type SimTestSuite struct {

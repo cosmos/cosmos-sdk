@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	"github.com/KiraCore/cosmos-sdk/x/ibc"
+	ibctransfertypes "github.com/KiraCore/cosmos-sdk/x/ibc-transfer/types"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	channeltypes "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/KiraCore/cosmos-sdk/x/ibc/testing"
 )
 
 var (

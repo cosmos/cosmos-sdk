@@ -3,15 +3,15 @@ package rest_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	"github.com/KiraCore/cosmos-sdk/testutil/network"
+	"github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	bankrest "github.com/KiraCore/cosmos-sdk/x/bank/client/rest"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 func (s *IntegrationTestSuite) TestCoinSend() {

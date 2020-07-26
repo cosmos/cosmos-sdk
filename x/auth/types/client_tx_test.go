@@ -3,15 +3,15 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 
-	"github.com/cosmos/cosmos-sdk/client/testutil"
+	"github.com/KiraCore/cosmos-sdk/client/testutil"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 func testCodec() *codec.Codec {

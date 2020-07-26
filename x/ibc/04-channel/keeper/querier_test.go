@@ -3,10 +3,10 @@ package keeper_test
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	connectiontypes "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // TestQuerierChannelClientState verifies correct querying of client state associated

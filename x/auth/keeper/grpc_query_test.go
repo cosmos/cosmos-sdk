@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCQueryAccount() {

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // ClientContextKey defines the context key used to retrieve a client.Context from

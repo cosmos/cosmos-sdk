@@ -3,7 +3,7 @@ package multisig
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 )
 
 // PubKey defines a type which supports multi-signature verification via MultiSignatureData

@@ -5,8 +5,8 @@
 package mocks
 
 import (
-	client "github.com/cosmos/cosmos-sdk/client"
-	types "github.com/cosmos/cosmos-sdk/types"
+	client "github.com/KiraCore/cosmos-sdk/client"
+	types "github.com/KiraCore/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )

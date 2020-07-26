@@ -1,6 +1,6 @@
 package client
 
-import "github.com/cosmos/cosmos-sdk/types"
+import "github.com/KiraCore/cosmos-sdk/types"
 
 // AccountRetriever defines the interfaces required by transactions to
 // ensure an account exists and to be able to query for account fields necessary

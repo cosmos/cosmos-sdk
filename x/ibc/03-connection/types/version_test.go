@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	ibctesting "github.com/KiraCore/cosmos-sdk/x/ibc/testing"
 )
 
 func TestValidateVersion(t *testing.T) {

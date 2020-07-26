@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/simulation"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 func TestDecodeStore(t *testing.T) {

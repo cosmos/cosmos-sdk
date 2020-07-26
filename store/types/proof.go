@@ -4,7 +4,7 @@ import (
 	ics23 "github.com/confio/ics23/go"
 	"github.com/tendermint/tendermint/crypto/merkle"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 )
 
 const (

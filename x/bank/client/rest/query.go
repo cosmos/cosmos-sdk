@@ -6,11 +6,11 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 // QueryBalancesRequestHandlerFn returns a REST handler that queries for all

@@ -5,11 +5,11 @@ import (
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	clientsim "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
-	connectionsim "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
-	channelsim "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	clientsim "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/simulation"
+	connectionsim "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/simulation"
+	channelsim "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/simulation"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

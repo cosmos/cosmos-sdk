@@ -1,7 +1,7 @@
 package types
 
 import (
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // GenesisState is currently only used to ensure that the InitGenesis gets run

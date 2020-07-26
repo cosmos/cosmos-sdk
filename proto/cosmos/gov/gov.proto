@@ -167,7 +167,7 @@ message DepositParams {
   //  Minimum deposit for a proposal to enter voting period.
   repeated cosmos.Coin min_deposit = 1 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"min_deposit\"",
     (gogoproto.jsontag)      = "min_deposit,omitempty"
   ];
@@ -196,21 +196,21 @@ message VotingParams {
 message TallyParams {
   //  Minimum percentage of total stake needed to vote for a result to be considered valid.
   bytes quorum = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false,
     (gogoproto.jsontag) = "quorum,omitempty"
   ];
 
   //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5.
   bytes threshold = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false,
     (gogoproto.jsontag) = "threshold,omitempty"
   ];
 
   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3.
   bytes veto = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false,
     (gogoproto.jsontag) = "veto,omitempty"
   ];

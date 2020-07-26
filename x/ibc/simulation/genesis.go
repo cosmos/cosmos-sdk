@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
-	clientsims "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectionsims "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelsims "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/KiraCore/cosmos-sdk/types/module"
+	clientsims "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/simulation"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	connectionsims "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/simulation"
+	connectiontypes "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	channelsims "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/simulation"
+	channeltypes "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/types"
 )
 
 // Simulation parameter constants

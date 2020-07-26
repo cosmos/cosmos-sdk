@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	"github.com/KiraCore/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/KiraCore/cosmos-sdk/simapp/params"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/x/genutil"
+	"github.com/KiraCore/cosmos-sdk/x/genutil/types"
+	staking "github.com/KiraCore/cosmos-sdk/x/staking"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 var (

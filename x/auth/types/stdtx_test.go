@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/KiraCore/cosmos-sdk/crypto/types"
+	"github.com/KiraCore/cosmos-sdk/crypto/types/multisig"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

@@ -9,9 +9,9 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 var _ types.QueryServer = AccountKeeper{}

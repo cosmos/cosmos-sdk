@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.slashing;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option go_package            = "github.com/KiraCore/cosmos-sdk/x/slashing/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
@@ -11,7 +11,7 @@ import "google/protobuf/timestamp.proto";
 // MsgUnjail - struct for unjailing jailed validator
 message MsgUnjail {
   bytes validator_addr = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"address\"",
     (gogoproto.jsontag)  = "address"
   ];
@@ -23,7 +23,7 @@ message ValidatorSigningInfo {
   option (gogoproto.goproto_stringer) = false;
 
   bytes address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress"  // validator consensus address
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.ConsAddress"  // validator consensus address
   ];
   // height at which validator was first a candidate OR was unjailed
   int64 start_height = 2 [(gogoproto.moretags) = "yaml:\"start_height\""];
@@ -43,7 +43,7 @@ message Params {
   int64 signed_blocks_window  = 1 [(gogoproto.moretags) = "yaml:\"signed_blocks_window\""];
   bytes min_signed_per_window = 2 [
     (gogoproto.moretags)   = "yaml:\"min_signed_per_window\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   google.protobuf.Duration downtime_jail_duration = 3 [
@@ -53,12 +53,12 @@ message Params {
   ];
   bytes slash_fraction_double_sign = 4 [
     (gogoproto.moretags)   = "yaml:\"slash_fraction_double_sign\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   bytes slash_fraction_downtime = 5 [
     (gogoproto.moretags)   = "yaml:\"slash_fraction_downtime\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
 }

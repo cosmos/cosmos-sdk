@@ -3,11 +3,11 @@ package tx
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/KiraCore/cosmos-sdk/client"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/crypto/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing"
 )
 
 type generator struct {

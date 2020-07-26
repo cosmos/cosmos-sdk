@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	connectiontypes "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // Connection implements the IBC QueryServer interface

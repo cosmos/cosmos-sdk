@@ -7,7 +7,7 @@ import "cosmos/cosmos.proto";
 import "cosmos/tx/signing/signing.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
+option go_package = "github.com/KiraCore/cosmos-sdk/types/tx";
 
 // Tx is the standard type used for broadcasting transactions
 message Tx {
@@ -150,7 +150,7 @@ message ModeInfo {
 message Fee {
   // amount is the amount of coins to be paid as a fee
   repeated cosmos.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"];
 
   // gas_limit is the maximum gas that can be used in transaction processing
   // before an out of gas error occurs

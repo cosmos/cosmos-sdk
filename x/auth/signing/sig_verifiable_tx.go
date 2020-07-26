@@ -3,8 +3,8 @@ package signing
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 )
 
 // SigVerifiableTx defines a Tx interface for all signature verification decorators

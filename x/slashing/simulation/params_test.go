@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/simulation"
 )
 
 func TestParamChanges(t *testing.T) {

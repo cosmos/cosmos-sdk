@@ -6,8 +6,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/crypto/types"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 )
 
 // AminoMultisignature is used to represent amino multi-signatures for StdTx's.

@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 )
 
 var (

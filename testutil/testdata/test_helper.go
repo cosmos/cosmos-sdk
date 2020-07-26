@@ -3,7 +3,7 @@ package testdata
 import (
 	"github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {

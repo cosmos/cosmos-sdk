@@ -4,7 +4,7 @@ package cosmos.params;
 import "gogoproto/gogo.proto";
 import "cosmos/params/params.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/params/types/proposal";
 
 // Query creates service with Parameters as rpc
 service Query{

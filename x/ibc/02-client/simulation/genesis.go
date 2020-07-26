@@ -3,8 +3,8 @@ package simulation
 import (
 	"math/rand"
 
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	simtypes "github.com/KiraCore/cosmos-sdk/types/simulation"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // GenClientGenesis returns the default client genesis state.

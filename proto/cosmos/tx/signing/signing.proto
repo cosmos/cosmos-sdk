@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.tx.signing;
 
-option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
+option go_package = "github.com/KiraCore/cosmos-sdk/types/tx/signing";
 
 // SignMode represents a signing mode with its own security guarantees
 enum SignMode {

@@ -4,7 +4,7 @@ package testdata;
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
+option go_package = "github.com/KiraCore/cosmos-sdk/testutil/testdata";
 
 message Dog {
   string size = 1;
@@ -61,7 +61,7 @@ message TestAnyResponse {
 
 // msg type for testing
 message TestMsg {
-  repeated bytes signers = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  repeated bytes signers = 1 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // bad MultiSignature with extra fields

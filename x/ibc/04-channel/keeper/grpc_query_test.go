@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/query"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	ibctesting "github.com/KiraCore/cosmos-sdk/x/ibc/testing"
 )
 
 func (suite *KeeperTestSuite) TestQueryChannel() {

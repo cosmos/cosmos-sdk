@@ -6,7 +6,7 @@ import "google/protobuf/any.proto";
 import "cosmos/auth/auth.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/auth/types";
 
 // Query creates service with Account and Parameters as rpc
 service Query{
@@ -19,7 +19,7 @@ service Query{
 
 // QueryAccountRequest is request type for the Query/Account RPC method
 message QueryAccountRequest{
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes address = 1 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // QueryAccountResponse is response type for the Query/Account RPC method

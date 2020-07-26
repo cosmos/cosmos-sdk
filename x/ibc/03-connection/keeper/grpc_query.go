@@ -6,12 +6,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/store/prefix"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/types/query"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 var _ types.QueryServer = Keeper{}

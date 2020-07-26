@@ -1,10 +1,10 @@
 package tx
 
 import (
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	signing2 "github.com/KiraCore/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing/direct"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // DefaultSignModeHandler returns the default protobuf SignModeHandler supporting

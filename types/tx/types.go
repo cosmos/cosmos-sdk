@@ -1,8 +1,8 @@
 package tx
 
 import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 var _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}

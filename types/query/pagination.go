@@ -3,7 +3,7 @@ package query
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/KiraCore/cosmos-sdk/store/types"
 )
 
 // defaultLimit is the default `limit` for queries

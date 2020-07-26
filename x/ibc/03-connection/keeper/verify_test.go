@@ -9,7 +9,7 @@ import (
 	channeltypes "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibctesting "github.com/KiraCore/cosmos-sdk/x/ibc/testing"
 )
 
 // TestVerifyClientConsensusState verifies that the consensus state of

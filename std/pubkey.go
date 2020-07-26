@@ -3,8 +3,8 @@ package std
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/KiraCore/cosmos-sdk/crypto/types"
+	"github.com/KiraCore/cosmos-sdk/crypto/types/multisig"
 
 	"github.com/tendermint/tendermint/crypto"
 	ed255192 "github.com/tendermint/tendermint/crypto/ed25519"

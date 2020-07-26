@@ -5,22 +5,22 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing/direct"
 
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authsigning "github.com/KiraCore/cosmos-sdk/x/auth/signing"
 
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/KiraCore/cosmos-sdk/types/tx"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/crypto/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 )
 
 type builder struct {

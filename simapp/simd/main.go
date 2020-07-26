@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
+	"github.com/KiraCore/cosmos-sdk/simapp/simd/cmd"
 )
 
 func main() {

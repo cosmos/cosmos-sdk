@@ -3,19 +3,19 @@ package tx
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 
-	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
+	tx2 "github.com/KiraCore/cosmos-sdk/types/tx"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/std"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 func TestTxBuilder(t *testing.T) {

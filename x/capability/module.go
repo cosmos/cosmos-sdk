@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cdctypes "github.com/KiraCore/cosmos-sdk/codec/types"
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"

@@ -7,16 +7,16 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/client/tx"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	simappparams "github.com/KiraCore/cosmos-sdk/simapp/params"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/x/auth/ante"
+	xauthsigning "github.com/KiraCore/cosmos-sdk/x/auth/signing"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.

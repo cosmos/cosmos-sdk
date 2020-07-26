@@ -3,9 +3,9 @@ package client
 import (
 	"github.com/spf13/pflag"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/types/query"
 )
 
 // Paginate returns the correct starting and ending index for a paginated query,

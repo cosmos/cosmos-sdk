@@ -10,10 +10,10 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // Context implements a typical context created in SDK modules for transaction

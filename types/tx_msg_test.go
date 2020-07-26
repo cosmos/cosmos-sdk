@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
 

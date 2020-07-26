@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	"github.com/KiraCore/cosmos-sdk/telemetry"
 	"os"
 	"sort"
 	"strings"

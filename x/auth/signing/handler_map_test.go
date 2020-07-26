@@ -7,11 +7,11 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	signingtypes "github.com/KiraCore/cosmos-sdk/types/tx/signing"
+	"github.com/KiraCore/cosmos-sdk/x/auth/signing"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 func MakeTestHandlerMap() signing.SignModeHandler {

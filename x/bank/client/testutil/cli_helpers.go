@@ -3,12 +3,11 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/KiraCore/cosmos-sdk/testutil"
+	clitestutil "github.com/KiraCore/cosmos-sdk/testutil/cli"
 
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	"github.com/KiraCore/cosmos-sdk/client"
+	bankcli "github.com/KiraCore/cosmos-sdk/x/bank/client/cli"
 )
 
 func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {

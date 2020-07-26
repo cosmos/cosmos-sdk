@@ -7,22 +7,23 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/KiraCore/cosmos-sdk/simapp"
+	simappparams "github.com/KiraCore/cosmos-sdk/simapp/params"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
-	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
-	"github.com/KiraCore/cosmos-sdk/x/staking"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
-var moduleAccAddr = auth.NewModuleAddress(staking.BondedPoolName)
+var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := auth.BaseAccount{
+	acc := authtypes.BaseAccount{
 		Address: addr1,
 	}
 
 	// construct genesis state
-	genAccs := []authexported.GenesisAccount{&acc}
+	genAccs := []types.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, abci.Header{})
 
@@ -31,9 +32,11 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 
 	benchmarkApp.Commit()
+	txGen := simappparams.MakeEncodingConfig().TxConfig
 
 	// Precompute all txs
-	txs := simapp.GenSequenceOfTxs([]sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
+	txs, err := simapp.GenSequenceOfTxs(txGen, []sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
+	require.NoError(b, err)
 	b.ResetTimer()
 
 	height := int64(3)
@@ -57,12 +60,12 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := auth.BaseAccount{
+	acc := authtypes.BaseAccount{
 		Address: addr1,
 	}
 
 	// Construct genesis state
-	genAccs := []authexported.GenesisAccount{&acc}
+	genAccs := []authtypes.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := benchmarkApp.BaseApp.NewContext(false, abci.Header{})
 
@@ -71,9 +74,11 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 
 	benchmarkApp.Commit()
+	txGen := simappparams.MakeEncodingConfig().TxConfig
 
 	// Precompute all txs
-	txs := simapp.GenSequenceOfTxs([]sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
+	txs, err := simapp.GenSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
+	require.NoError(b, err)
 	b.ResetTimer()
 
 	height := int64(3)

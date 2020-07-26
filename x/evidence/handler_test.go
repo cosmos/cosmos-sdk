@@ -14,6 +14,7 @@ import (
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/evidence"
 	"github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/keeper"
 	"github.com/KiraCore/cosmos-sdk/x/evidence/types"
 )
 
@@ -25,7 +26,7 @@ type HandlerTestSuite struct {
 }
 
 func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidence {
-	msg, err := evidence.NewMsgSubmitEvidence(s, e)
+	msg, err := types.NewMsgSubmitEvidence(s, e)
 	r.NoError(err)
 	return msg
 }
@@ -53,10 +54,10 @@ func (suite *HandlerTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 
 	// recreate keeper in order to use custom testing types
-	evidenceKeeper := evidence.NewKeeper(
-		app.AppCodec(), app.GetKey(evidence.StoreKey), app.StakingKeeper, app.SlashingKeeper,
+	evidenceKeeper := keeper.NewKeeper(
+		app.AppCodec(), app.GetKey(types.StoreKey), app.StakingKeeper, app.SlashingKeeper,
 	)
-	router := evidence.NewRouter()
+	router := types.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(*evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 

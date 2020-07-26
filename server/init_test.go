@@ -8,7 +8,7 @@ import (
 	"github.com/KiraCore/cosmos-sdk/crypto/hd"
 	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
 	"github.com/KiraCore/cosmos-sdk/server"
-	"github.com/KiraCore/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/testutil"
 	"github.com/KiraCore/cosmos-sdk/types"
 )
 
@@ -25,7 +25,7 @@ func TestGenerateCoinKey(t *testing.T) {
 
 func TestGenerateSaveCoinKey(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	kb, err := keyring.New(t.Name(), "test", dir, nil)
@@ -47,7 +47,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 
 func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	kb, err := keyring.New(t.Name(), "test", dir, nil)

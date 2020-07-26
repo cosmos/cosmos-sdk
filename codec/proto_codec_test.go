@@ -1,13 +1,15 @@
 package codec_test
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/KiraCore/cosmos-sdk/codec"
-	"github.com/KiraCore/cosmos-sdk/codec/testdata"
 	"github.com/KiraCore/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 )
 
 func createTestInterfaceRegistry() types.InterfaceRegistry {
@@ -117,4 +119,77 @@ func TestProtoCodec(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProtoCodecMarshalAnyNonProtoErrors(t *testing.T) {
+	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
+
+	input := "this one that one"
+	_, err := cdc.MarshalJSON(input)
+	require.Error(t, err)
+	require.Equal(t, err, errors.New("cannot protobuf JSON encode unsupported type: string"))
+
+	require.Panics(t, func() { cdc.MustMarshalJSON(input) })
+}
+
+func TestProtoCodecUnmarshalAnyNonProtoErrors(t *testing.T) {
+	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
+
+	recv := new(int)
+	err := cdc.UnmarshalJSON([]byte("foo"), recv)
+	require.Error(t, err)
+	require.Equal(t, err, errors.New("cannot protobuf JSON decode unsupported type: *int"))
+}
+
+type lyingProtoMarshaler struct {
+	codec.ProtoMarshaler
+	falseSize int
+}
+
+func (lpm *lyingProtoMarshaler) Size() int {
+	return lpm.falseSize
+}
+
+func TestProtoCodecUnmarshalBinaryLengthPrefixedChecks(t *testing.T) {
+	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
+
+	truth := &testdata.Cat{Lives: 9, Moniker: "glowing"}
+	realSize := len(cdc.MustMarshalBinaryBare(truth))
+
+	falseSizes := []int{
+		100,
+		5,
+	}
+
+	for _, falseSize := range falseSizes {
+		falseSize := falseSize
+
+		t.Run(fmt.Sprintf("ByMarshaling falseSize=%d", falseSize), func(t *testing.T) {
+			lpm := &lyingProtoMarshaler{
+				ProtoMarshaler: &testdata.Cat{Lives: 9, Moniker: "glowing"},
+				falseSize:      falseSize,
+			}
+			var serialized []byte
+			require.NotPanics(t, func() { serialized = cdc.MustMarshalBinaryLengthPrefixed(lpm) })
+
+			recv := new(testdata.Cat)
+			gotErr := cdc.UnmarshalBinaryLengthPrefixed(serialized, recv)
+			var wantErr error
+			if falseSize > realSize {
+				wantErr = fmt.Errorf("not enough bytes to read; want: %d, got: %d", falseSize, realSize)
+			} else {
+				wantErr = fmt.Errorf("too many bytes to read; want: %d, got: %d", falseSize, realSize)
+			}
+			require.Equal(t, gotErr, wantErr)
+		})
+	}
+
+	t.Run("Crafted bad uvarint size", func(t *testing.T) {
+		crafted := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f}
+		recv := new(testdata.Cat)
+		gotErr := cdc.UnmarshalBinaryLengthPrefixed(crafted, recv)
+		require.Equal(t, gotErr, errors.New("invalid number of bytes read from length-prefixed encoding: -10"))
+
+		require.Panics(t, func() { cdc.MustUnmarshalBinaryLengthPrefixed(crafted, recv) })
+	})
 }

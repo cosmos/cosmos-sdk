@@ -3,30 +3,32 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/KiraCore/cosmos-sdk/codec"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
-	"github.com/KiraCore/cosmos-sdk/x/bank"
 	"github.com/KiraCore/cosmos-sdk/x/bank/keeper"
 	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	app, ctx := suite.app, suite.ctx
-	_, _, addr := authtypes.KeyTestPubAddr()
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	_, _, addr := testdata.KeyTestPubAddr()
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryBalance),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQueryBalanceParams(addr, fooDenom))
+	req.Data = app.Codec().MustMarshalJSON(types.NewQueryBalanceRequest(addr, fooDenom))
 	res, err = querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -50,19 +52,20 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	app, ctx := suite.app, suite.ctx
-	_, _, addr := authtypes.KeyTestPubAddr()
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	_, _, addr := testdata.KeyTestPubAddr()
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryAllBalances),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesParams(addr))
+	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesRequest(addr, nil))
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -86,7 +89,8 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 	app, ctx := suite.app, suite.ctx
-	expectedTotalSupply := bank.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
 	req := abci.RequestQuery{
@@ -94,7 +98,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QueryTotalSupply}, req)
 	suite.Require().NotNil(err)
@@ -112,10 +116,11 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 	app, ctx := suite.app, suite.ctx
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	test1Supply := sdk.NewInt64Coin("test1", 4000000)
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
-	expectedTotalSupply := bank.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
+	expectedTotalSupply := types.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
 	req := abci.RequestQuery{
@@ -123,7 +128,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QuerySupplyOf}, req)
 	suite.Require().NotNil(err)
@@ -134,19 +139,20 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	var resp sdk.Int
+	var resp sdk.Coin
 	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &resp))
-	suite.Require().Equal(test1Supply.Amount, resp)
+	suite.Require().Equal(test1Supply, resp)
 }
 
 func (suite *IntegrationTestSuite) TestQuerierRouteNotFound() {
 	app, ctx := suite.app, suite.ctx
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/invalid", types.ModuleName),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 	_, err := querier(ctx, []string{"invalid"}, req)
 	suite.Error(err)
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	v038auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_38"
 	v038bank "github.com/KiraCore/cosmos-sdk/x/bank/legacy/v0_38"
@@ -14,7 +15,7 @@ import (
 
 func TestMigrate(t *testing.T) {
 	v039Codec := codec.New()
-	codec.RegisterCrypto(v039Codec)
+	cryptocodec.RegisterCrypto(v039Codec)
 	v038auth.RegisterCodec(v039Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))

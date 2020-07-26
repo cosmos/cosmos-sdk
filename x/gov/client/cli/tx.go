@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,14 +8,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/KiraCore/cosmos-sdk/client"
-	"github.com/KiraCore/cosmos-sdk/client/context"
 	"github.com/KiraCore/cosmos-sdk/client/flags"
 	"github.com/KiraCore/cosmos-sdk/client/tx"
-	"github.com/KiraCore/cosmos-sdk/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/version"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
-	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
 	govutils "github.com/KiraCore/cosmos-sdk/x/gov/client/utils"
 	"github.com/KiraCore/cosmos-sdk/x/gov/types"
 )
@@ -25,7 +20,7 @@ import (
 const (
 	FlagTitle        = "title"
 	FlagDescription  = "description"
-	flagProposalType = "type"
+	FlagProposalType = "type"
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
@@ -46,7 +41,7 @@ type proposal struct {
 var ProposalFlags = []string{
 	FlagTitle,
 	FlagDescription,
-	flagProposalType,
+	FlagProposalType,
 	FlagDeposit,
 }
 
@@ -55,12 +50,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(
-	cdc codec.Marshaler,
-	txg tx.Generator,
-	ar tx.AccountRetriever,
-	newMsgFn func() types.MsgSubmitProposalI,
-	pcmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -69,26 +59,22 @@ func NewTxCmd(
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar, newMsgFn)
-	for _, pcmd := range pcmds {
-		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
+	cmdSubmitProp := NewCmdSubmitProposal()
+	for _, propCmd := range propCmds {
+		cmdSubmitProp.AddCommand(propCmd)
 	}
 
-	govTxCmd.AddCommand(flags.PostCommands(
-		NewCmdDeposit(cdc, txg, ar),
-		NewCmdVote(cdc, txg, ar),
+	govTxCmd.AddCommand(
+		NewCmdDeposit(),
+		NewCmdVote(),
 		cmdSubmitProp,
-	)...)
+	)
 
 	return govTxCmd
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
-func NewCmdSubmitProposal(
-	cdc codec.Marshaler,
-	txg tx.Generator,
-	ar tx.AccountRetriever,
-	newMsgFn func() types.MsgSubmitProposalI) *cobra.Command {
+func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -112,17 +98,19 @@ Which is equivalent to:
 
 $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
-
-			proposal, err := parseSubmitProposalFlags()
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
+			}
+
+			proposal, err := parseSubmitProposalFlags(cmd.Flags())
+			if err != nil {
+				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
 
 			amount, err := sdk.ParseCoins(proposal.Deposit)
@@ -132,34 +120,32 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := newMsgFn()
-			err = msg.SetContent(content)
+			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid message: %w", err)
 			}
-			msg.SetInitialDeposit(amount)
-			msg.SetProposer(cliCtx.FromAddress)
 
 			if err = msg.ValidateBasic(); err != nil {
-				return err
+				return fmt.Errorf("message validation failed: %w", err)
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
-	cmd.Flags().String(FlagTitle, "", "title of proposal")
-	cmd.Flags().String(FlagDescription, "", "description of proposal")
-	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
-	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagTitle, "", "The proposal title")
+	cmd.Flags().String(FlagDescription, "", "The proposal description")
+	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
+	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
-func NewCmdDeposit(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
-	return &cobra.Command{
+func NewCmdDeposit() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for an active proposal",
@@ -170,13 +156,15 @@ find the proposal-id by running "%s query gov proposals".
 Example:
 $ %s tx gov deposit 1 10stake --from mykey
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -185,7 +173,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 			}
 
 			// Get depositor address
-			from := cliCtx.GetFromAddress()
+			from := clientCtx.GetFromAddress()
 
 			// Get amount of coins
 			amount, err := sdk.ParseCoins(args[1])
@@ -199,201 +187,18 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
-		},
-	}
-}
-
-// NewCmdVote implements creating a new vote command.
-func NewCmdVote(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
-	return &cobra.Command{
-		Use:   "vote [proposal-id] [option]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a vote for an active proposal. You can
-find the proposal-id by running "%s query gov proposals".
-
-
-Example:
-$ %s tx gov vote 1 yes --from mykey
-`,
-				version.ClientName, version.ClientName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
-
-			// Get voting address
-			from := cliCtx.GetFromAddress()
-
-			// validate that the proposal id is a uint
-			proposalID, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
-			}
-
-			// Find out which vote option user chose
-			byteVoteOption, err := types.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
-			if err != nil {
-				return err
-			}
-
-			// Build vote message and run basic validation
-			msg := types.NewMsgVote(from, proposalID, byteVoteOption)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
-		},
-	}
-}
-
-// GetTxCmd returns the transaction commands for this module
-// governance ModuleClient is slightly different from other ModuleClients in that
-// it contains a slice of "proposal" child commands. These commands are respective
-// to proposal type handlers that are implemented in other modules but are mounted
-// under the governance CLI (eg. parameter change proposals).
-func GetTxCmd(storeKey string, cdc *codec.Codec, pcmds []*cobra.Command) *cobra.Command {
-	govTxCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Governance transactions subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
-	cmdSubmitProp := GetCmdSubmitProposal(cdc)
-	for _, pcmd := range pcmds {
-		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
-	}
-
-	govTxCmd.AddCommand(flags.PostCommands(
-		GetCmdDeposit(cdc),
-		GetCmdVote(cdc),
-		cmdSubmitProp,
-	)...)
-
-	return govTxCmd
-}
-
-// GetCmdSubmitProposal implements submitting a proposal transaction command.
-func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "submit-proposal",
-		Short: "Submit a proposal along with an initial deposit",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a proposal along with an initial deposit.
-Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
-
-Example:
-$ %s tx gov submit-proposal --proposal="path/to/proposal.json" --from mykey
-
-Where proposal.json contains:
-
-{
-  "title": "Test Proposal",
-  "description": "My awesome proposal",
-  "type": "Text",
-  "deposit": "10test"
-}
-
-Which is equivalent to:
-
-$ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
-`,
-				version.ClientName, version.ClientName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-
-			proposal, err := parseSubmitProposalFlags()
-			if err != nil {
-				return err
-			}
-
-			amount, err := sdk.ParseCoins(proposal.Deposit)
-			if err != nil {
-				return err
-			}
-
-			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-
-			msg := types.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
-	cmd.Flags().String(FlagTitle, "", "title of proposal")
-	cmd.Flags().String(FlagDescription, "", "description of proposal")
-	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
-	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-// GetCmdDeposit implements depositing tokens for an active proposal.
-func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "deposit [proposal-id] [deposit]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Deposit tokens for an active proposal",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a deposit for an active proposal. You can
-find the proposal-id by running "%s query gov proposals".
-
-Example:
-$ %s tx gov deposit 1 10stake --from mykey
-`,
-				version.ClientName, version.ClientName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-
-			// validate that the proposal id is a uint
-			proposalID, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
-			}
-
-			// Get depositor address
-			from := cliCtx.GetFromAddress()
-
-			// Get amount of coins
-			amount, err := sdk.ParseCoins(args[1])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgDeposit(from, proposalID, amount)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
-	}
-}
-
-// GetCmdVote implements creating a new vote command.
-func GetCmdVote(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+// NewCmdVote implements creating a new vote command.
+func NewCmdVote() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
@@ -405,16 +210,18 @@ find the proposal-id by running "%s query gov proposals".
 Example:
 $ %s tx gov vote 1 yes --from mykey
 `,
-				version.ClientName, version.ClientName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// Get voting address
-			from := cliCtx.GetFromAddress()
+			from := clientCtx.GetFromAddress()
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -435,9 +242,11 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-}
 
-// DONTCOVER
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}

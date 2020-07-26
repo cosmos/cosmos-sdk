@@ -8,9 +8,6 @@ import (
 	paramtypes "github.com/KiraCore/cosmos-sdk/x/params/types"
 )
 
-// DefaultParamspace defines the default auth module parameter subspace
-const DefaultParamspace = ModuleName
-
 // Default parameter values
 const (
 	DefaultMaxMemoCharacters      uint64 = 256

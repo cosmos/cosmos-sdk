@@ -24,6 +24,9 @@ func TestAccessors(t *testing.T) {
 	key := []byte("test")
 	value := []byte("testvalue")
 
+	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "setting a nil key should panic")
+	require.Panics(t, func() { store.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
+
 	require.Equal(t, types.StoreTypeDB, store.GetStoreType())
 	store.GetStoreType()
 

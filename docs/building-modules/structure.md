@@ -23,6 +23,7 @@ x/{module}
 │   └── exported.go
 ├── keeper
 │   ├── invariants.go
+│   ├── genesis.go
 │   ├── keeper.go
 │   ├── ...
 │   └── querier.go
@@ -46,19 +47,12 @@ x/{module}
 │   ├── params.go
 │   └── proposals.go
 ├── abci.go
-├── alias.go
-├── genesis.go
 ├── handler.go
 ├── ...
 └── module.go
 ```
 
 - `abci.go`: The module's `BeginBlocker` and `EndBlocker` implementations (if any).
-- `alias.go`: The module's exported types, constants, and variables. These are mainly
-to improve developer ergonomics by only needing to import a single package. Note,
-there is nothing preventing developers from importing other packages from the module
-but it is recommended that `alias.go` have everything exposed that other modules
-may need.
 - `client/`: The module's CLI and REST client functionality implementation and
 testing.
 - `exported/`: The module's exported types -- typically type interfaces. If a module
@@ -70,8 +64,6 @@ to the contract's implementing module and this is where `exported/` comes into p
 Types defined here allow for `expected_keepers.go` in other modules to define
 contracts that use single canonical types. This pattern allows for code to remain
 DRY and also alleviates import cycle chaos.
-- `genesis.go`: The module's genesis related business logic (e.g. `InitGenesis`).
-Note, genesis types are defined in `internal/types`.
 - `handler.go`: The module's message handlers.
 - `keeper/`: The module's keeper implementation along with any auxiliary
 implementations such as the querier and invariants.

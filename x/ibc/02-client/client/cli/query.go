@@ -7,96 +7,106 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	"github.com/KiraCore/cosmos-sdk/client/flags"
-	"github.com/KiraCore/cosmos-sdk/codec"
 	"github.com/KiraCore/cosmos-sdk/version"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/client/utils"
-	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // GetCmdQueryClientStates defines the command to query all the light clients
 // that this chain mantains.
-func GetCmdQueryClientStates(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryClientStates() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "states",
-		Short: "Query all available light clients",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all available light clients
-
-Example:
-$ %s query ibc client states
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			page := viper.GetInt(flags.FlagPage)
-			limit := viper.GetInt(flags.FlagLimit)
-
-			clientStates, height, err := utils.QueryAllClientStates(cliCtx, page, limit)
+		Use:     "states",
+		Short:   "Query all available light clients",
+		Long:    "Query all available light clients",
+		Example: fmt.Sprintf("%s query %s %s states", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(clientStates)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+
+			clientStates, height, err := utils.QueryAllClientStates(clientCtx, page, limit)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(clientStates)
 		},
 	}
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // GetCmdQueryClientState defines the command to query the state of a client with
 // a given id as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
-func GetCmdQueryClientState(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryClientState() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "state [client-id]",
-		Short: "Query a client state",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query stored client state
-
-Example:
-$ %s query ibc client state [client-id]
-		`, version.ClientName),
-		),
-		Args: cobra.ExactArgs(1),
+		Use:     "state [client-id]",
+		Short:   "Query a client state",
+		Long:    "Query stored client state",
+		Example: fmt.Sprintf("%s query %s %s state [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
 			}
 
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
-			clientStateRes, err := utils.QueryClientState(cliCtx, clientID, prove)
+			clientStateRes, err := utils.QueryClientState(clientCtx, clientID, prove)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(clientStateRes.ProofHeight))
-			return cliCtx.PrintOutput(clientStateRes)
+			clientCtx = clientCtx.WithHeight(int64(clientStateRes.ProofHeight))
+			return clientCtx.PrintOutput(clientStateRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // GetCmdQueryConsensusState defines the command to query the consensus state of
 // the chain as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
-func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryConsensusState() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "consensus-state [client-id] [height]",
 		Short:   "Query the consensus state of a client at a given height",
 		Long:    "Query the consensus state for a particular light client at a given height",
-		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.ClientName),
+		Example: fmt.Sprintf("%s query %s %s  consensus-state [client-id] [height]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			clientID := args[0]
 			if strings.TrimSpace(clientID) == "" {
 				return errors.New("client ID can't be blank")
@@ -107,79 +117,80 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 				return fmt.Errorf("expected integer height, got: %s", args[1])
 			}
 
-			prove := viper.GetBool(flags.FlagProve)
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
-			csRes, err := utils.QueryConsensusState(cliCtx, clientID, height, prove)
+			csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(int64(csRes.ProofHeight))
-			return cliCtx.PrintOutput(csRes)
+			clientCtx = clientCtx.WithHeight(int64(csRes.ProofHeight))
+			return clientCtx.PrintOutput(csRes)
 		},
 	}
+
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // GetCmdQueryHeader defines the command to query the latest header on the chain
-func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+func GetCmdQueryHeader() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:     "header",
 		Short:   "Query the latest header of the running chain",
 		Long:    "Query the latest Tendermint header of the running chain",
-		Example: fmt.Sprintf("%s query ibc client header", version.ClientName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			header, height, err := utils.QueryTendermintHeader(cliCtx)
+		Example: fmt.Sprintf("%s query %s %s  header", version.AppName, host.ModuleName, types.SubModuleName),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(header)
+			header, height, err := utils.QueryTendermintHeader(clientCtx)
+			if err != nil {
+				return err
+			}
+
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(header)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // GetCmdNodeConsensusState defines the command to query the latest consensus state of a node
 // The result is feed to client creation
-func GetCmdNodeConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "node-state",
-		Short: "Query a node consensus state",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query a node consensus state. This result is feed to the client creation transaction.
-
-Example:
-$ %s query ibc client node-state
-		`, version.ClientName),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			state, height, err := utils.QueryNodeConsensusState(cliCtx)
+func GetCmdNodeConsensusState() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "node-state",
+		Short:   "Query a node consensus state",
+		Long:    "Query a node consensus state. This result is feed to the client creation transaction.",
+		Example: fmt.Sprintf("%s query %s %s node-state", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			cliCtx = cliCtx.WithHeight(height)
-			return cliCtx.PrintOutput(state)
-		},
-	}
-}
+			state, height, err := utils.QueryNodeConsensusState(clientCtx)
+			if err != nil {
+				return err
+			}
 
-// GetCmdQueryPath defines the command to query the commitment path.
-func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "path",
-		Short: "Query the commitment path of the running chain",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
-			path := commitmenttypes.NewMerklePrefix([]byte("ibc"))
-			return ctx.PrintOutput(path)
+			clientCtx = clientCtx.WithHeight(height)
+			return clientCtx.PrintOutput(state)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

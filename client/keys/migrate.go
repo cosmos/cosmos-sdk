@@ -6,14 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+
 	"github.com/KiraCore/cosmos-sdk/client/flags"
 	"github.com/KiraCore/cosmos-sdk/client/input"
 	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // migratePassphrase is used as a no-op migration key passphrase as a passphrase
@@ -41,13 +40,15 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 }
 
 func runMigrateCmd(cmd *cobra.Command, args []string) error {
+	rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+
 	// instantiate legacy keybase
-	rootDir := viper.GetString(flags.FlagHome)
 	var legacyKb keyring.LegacyKeybase
 	legacyKb, err := NewLegacyKeyBaseFromDir(rootDir)
 	if err != nil {
 		return err
 	}
+
 	defer legacyKb.Close()
 
 	// fetch list of keys from legacy keybase
@@ -64,7 +65,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		migrator keyring.InfoImporter
 	)
 
-	if viper.GetBool(flags.FlagDryRun) {
+	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
 		tmpDir, err = ioutil.TempDir("", "migrator-migrate-dryrun")
 		if err != nil {
 			return errors.Wrap(err, "failed to create temporary directory for dryrun migration")
@@ -74,8 +75,10 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		migrator, err = keyring.NewInfoImporter(keyringServiceName, "test", tmpDir, buf)
 	} else {
-		migrator, err = keyring.NewInfoImporter(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
+		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+		migrator, err = keyring.NewInfoImporter(keyringServiceName, backend, rootDir, buf)
 	}
+
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(
 			"failed to initialize keybase for service %s at directory %s",

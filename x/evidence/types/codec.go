@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
 	"github.com/KiraCore/cosmos-sdk/codec/types"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/evidence/exported"
 )
@@ -11,7 +12,7 @@ import (
 // evidence module.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
-	cdc.RegisterConcrete(MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
+	cdc.RegisterConcrete(&MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
 	cdc.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation", nil)
 }
 
@@ -38,6 +39,6 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	codec.RegisterCrypto(amino)
+	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -13,9 +11,8 @@ import (
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
-		ID:           connectionID,
 		ClientID:     clientID,
 		Versions:     versions,
 		State:        state,
@@ -26,11 +23,6 @@ func NewConnectionEnd(state State, connectionID, clientID string, counterparty C
 // GetState implements the Connection interface
 func (c ConnectionEnd) GetState() int32 {
 	return int32(c.State)
-}
-
-// GetID implements the Connection interface
-func (c ConnectionEnd) GetID() string {
-	return c.ID
 }
 
 // GetClientID implements the Connection interface
@@ -52,18 +44,15 @@ func (c ConnectionEnd) GetVersions() []string {
 // NOTE: the protocol supports that the connection and client IDs match the
 // counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(c.ID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid connection ID: %s", c.ID)
-	}
-	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
-		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
+	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if len(c.Versions) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing connection versions")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty connection versions")
 	}
 	for _, version := range c.Versions {
-		if strings.TrimSpace(version) == "" {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
+		if err := ValidateVersion(version); err != nil {
+			return err
 		}
 	}
 	return c.Counterparty.ValidateBasic()
@@ -97,24 +86,34 @@ func (c Counterparty) GetPrefix() commitmentexported.Prefix {
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
 func (c Counterparty) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(c.ConnectionID); err != nil {
-		return sdkerrors.Wrap(err,
-			sdkerrors.Wrapf(
-				ErrInvalidCounterparty,
-				"invalid counterparty connection ID %s", c.ConnectionID,
-			).Error(),
-		)
+	if err := host.ConnectionIdentifierValidator(c.ConnectionID); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
-	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
-		return sdkerrors.Wrap(err,
-			sdkerrors.Wrapf(
-				ErrInvalidCounterparty,
-				"invalid counterparty client ID %s", c.ClientID,
-			).Error(),
-		)
+	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
-	if c.Prefix.IsEmpty() {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "invalid counterparty prefix")
+	if c.Prefix.Empty() {
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty prefix cannot be empty")
 	}
 	return nil
+}
+
+// NewIdentifiedConnection creates a new IdentifiedConnection instance
+func NewIdentifiedConnection(connectionID string, conn ConnectionEnd) IdentifiedConnection {
+	return IdentifiedConnection{
+		ID:           connectionID,
+		ClientID:     conn.ClientID,
+		Versions:     conn.Versions,
+		State:        conn.State,
+		Counterparty: conn.Counterparty,
+	}
+}
+
+// ValidateBasic performs a basic validation of the connection identifier and connection fields.
+func (ic IdentifiedConnection) ValidateBasic() error {
+	if err := host.ConnectionIdentifierValidator(ic.ID); err != nil {
+		return sdkerrors.Wrap(err, "invalid connection ID")
+	}
+	connection := NewConnectionEnd(ic.State, ic.ClientID, ic.Counterparty, ic.Versions)
+	return connection.ValidateBasic()
 }

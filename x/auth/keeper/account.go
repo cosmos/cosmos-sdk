@@ -2,12 +2,11 @@ package keeper
 
 import (
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth/exported"
 	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // NewAccountWithAddress implements sdk.AccountKeeper.
-func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) exported.Account {
+func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -18,7 +17,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 }
 
 // NewAccount sets the next account number to a given account interface
-func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc exported.Account) exported.Account {
+func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.AccountI {
 	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
 		panic(err)
 	}
@@ -27,7 +26,7 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc exported.Account) export
 }
 
 // GetAccount implements sdk.AccountKeeper.
-func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) exported.Account {
+func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(types.AddressStoreKey(addr))
 	if bz == nil {
@@ -38,8 +37,8 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) exporte
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
-func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []exported.Account) {
-	ak.IterateAccounts(ctx, func(acc exported.Account) (stop bool) {
+func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.AccountI) {
+	ak.IterateAccounts(ctx, func(acc types.AccountI) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
 	})
@@ -48,11 +47,11 @@ func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []exported.Acc
 }
 
 // SetAccount implements sdk.AccountKeeper.
-func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc exported.Account) {
+func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 
-	bz, err := ak.cdc.MarshalAccount(acc)
+	bz, err := ak.MarshalAccount(acc)
 	if err != nil {
 		panic(err)
 	}
@@ -62,14 +61,14 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc exported.Account) {
 
 // RemoveAccount removes an account for the account mapper store.
 // NOTE: this will cause supply invariant violation if called
-func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc exported.Account) {
+func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(types.AddressStoreKey(addr))
 }
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function
-func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account exported.Account) (stop bool)) {
+func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountI) (stop bool)) {
 	store := ctx.KVStore(ak.key)
 	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 

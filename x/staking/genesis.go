@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/staking/exported"
+	"github.com/KiraCore/cosmos-sdk/x/staking/keeper"
 	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
@@ -17,7 +18,7 @@ import (
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(
-	ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper,
+	ctx sdk.Context, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, data types.GenesisState,
 ) (res []abci.ValidatorUpdate) {
 	bondedTokens := sdk.ZeroInt()
@@ -146,7 +147,7 @@ func InitGenesis(
 // ExportGenesis returns a GenesisState for a given context and keeper. The
 // GenesisState will contain the pool, params, validators, and bonds found in
 // the keeper.
-func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	var unbondingDelegations []types.UnbondingDelegation
 
 	keeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
@@ -181,12 +182,13 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 }
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
+func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator exported.ValidatorI) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
-			PubKey: validator.GetConsPubKey(),
-			Power:  validator.GetConsensusPower(),
-			Name:   validator.GetMoniker(),
+			Address: validator.GetConsAddr().Bytes(),
+			PubKey:  validator.GetConsPubKey(),
+			Power:   validator.GetConsensusPower(),
+			Name:    validator.GetMoniker(),
 		})
 
 		return false

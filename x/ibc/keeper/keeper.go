@@ -3,32 +3,45 @@ package keeper
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/capability"
-	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
-	port "github.com/KiraCore/cosmos-sdk/x/ibc/05-port"
+	capabilitykeeper "github.com/KiraCore/cosmos-sdk/x/capability/keeper"
+	clientkeeper "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/keeper"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	connectionkeeper "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/keeper"
+	channelkeeper "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/keeper"
+	portkeeper "github.com/KiraCore/cosmos-sdk/x/ibc/05-port/keeper"
+	porttypes "github.com/KiraCore/cosmos-sdk/x/ibc/05-port/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/types"
 )
+
+var _ types.QueryServer = (*Keeper)(nil)
 
 // Keeper defines each ICS keeper for IBC
 type Keeper struct {
-	ClientKeeper     client.Keeper
-	ConnectionKeeper connection.Keeper
-	ChannelKeeper    channel.Keeper
-	PortKeeper       port.Keeper
-	Router           *port.Router
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
+	aminoCdc *codec.Codec
+	cdc      codec.BinaryMarshaler
+
+	ClientKeeper     clientkeeper.Keeper
+	ConnectionKeeper connectionkeeper.Keeper
+	ChannelKeeper    channelkeeper.Keeper
+	PortKeeper       portkeeper.Keeper
+	Router           *porttypes.Router
 }
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	cdc *codec.Codec, appCodec codec.Marshaler, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capability.ScopedKeeper,
+	aminoCdc *codec.Codec, cdc codec.BinaryMarshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
-	clientKeeper := client.NewKeeper(cdc, key, stakingKeeper)
-	connectionKeeper := connection.NewKeeper(cdc, appCodec, key, clientKeeper)
-	portKeeper := port.NewKeeper(scopedKeeper)
-	channelKeeper := channel.NewKeeper(appCodec, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
+	clientKeeper := clientkeeper.NewKeeper(aminoCdc, key, stakingKeeper)
+	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
+	portKeeper := portkeeper.NewKeeper(scopedKeeper)
+	channelKeeper := channelkeeper.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return &Keeper{
+		aminoCdc:         aminoCdc,
+		cdc:              cdc,
 		ClientKeeper:     clientKeeper,
 		ConnectionKeeper: connectionKeeper,
 		ChannelKeeper:    channelKeeper,
@@ -36,9 +49,14 @@ func NewKeeper(
 	}
 }
 
+// Codecs returns the IBC module codec.
+func (k Keeper) Codecs() (codec.BinaryMarshaler, *codec.Codec) {
+	return k.cdc, k.aminoCdc
+}
+
 // SetRouter sets the Router in IBC Keeper and seals it. The method panics if
 // there is an existing router that's already sealed.
-func (k *Keeper) SetRouter(rtr *port.Router) {
+func (k *Keeper) SetRouter(rtr *porttypes.Router) {
 	if k.Router != nil && k.Router.Sealed() {
 		panic("cannot reset a sealed router")
 	}

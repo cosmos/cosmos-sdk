@@ -2,7 +2,6 @@ package host
 
 import (
 	"fmt"
-	"strings"
 )
 
 const (
@@ -31,6 +30,7 @@ const (
 	KeyChannelCapabilityPrefix = "capabilities"
 	KeyNextSeqSendPrefix       = "seqSends"
 	KeyNextSeqRecvPrefix       = "seqRecvs"
+	KeyNextSeqAckPrefix        = "seqAcks"
 	KeyPacketCommitmentPrefix  = "commitments"
 	KeyPacketAckPrefix         = "acks"
 )
@@ -38,6 +38,12 @@ const (
 // KeyPrefixBytes return the key prefix bytes from a URL string format
 func KeyPrefixBytes(prefix int) []byte {
 	return []byte(fmt.Sprintf("%d/", prefix))
+}
+
+// FullKeyClientPath returns the full path of specific client path in the format:
+// "clients/{clientID}/{path}".
+func FullKeyClientPath(clientID string, path []byte) []byte {
+	return append(KeyClientStorePrefix, append([]byte("/"+clientID+"/"), path...)...)
 }
 
 // ICS02
@@ -87,7 +93,7 @@ func ClientConnectionsPath(clientID string) string {
 
 // ConnectionPath defines the path under which connection paths are stored
 func ConnectionPath(connectionID string) string {
-	return fmt.Sprintf("connections/%s", connectionID)
+	return fmt.Sprintf("%s/%s", KeyConnectionPrefix, connectionID)
 }
 
 // KeyClientConnections returns the store key for the connectios of a given client
@@ -129,9 +135,19 @@ func NextSequenceRecvPath(portID, channelID string) string {
 	return fmt.Sprintf("%s/", KeyNextSeqRecvPrefix) + channelPath(portID, channelID) + "/nextSequenceRecv"
 }
 
+// NextSequenceAckPath defines the next acknowledgement sequence counter store path
+func NextSequenceAckPath(portID, channelID string) string {
+	return fmt.Sprintf("%s/", KeyNextSeqAckPrefix) + channelPath(portID, channelID) + "/nextSequenceAck"
+}
+
 // PacketCommitmentPath defines the commitments to packet data fields store path
 func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/", KeyPacketCommitmentPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
+}
+
+// PacketCommitmentPrefixPath defines the prefix for commitments to packet data fields store path.
+func PacketCommitmentPrefixPath(portID, channelID string) string {
+	return fmt.Sprintf("%s/", KeyPacketCommitmentPrefix) + channelPath(portID, channelID)
 }
 
 // PacketAcknowledgementPath defines the packet acknowledgement store path
@@ -156,6 +172,12 @@ func KeyNextSequenceRecv(portID, channelID string) []byte {
 	return []byte(NextSequenceRecvPath(portID, channelID))
 }
 
+// KeyNextSequenceAck returns the store key for the acknowledgement sequence of
+// a particular channel binded to a specific port.
+func KeyNextSequenceAck(portID, channelID string) []byte {
+	return []byte(NextSequenceAckPath(portID, channelID))
+}
+
 // KeyPacketCommitment returns the store key of under which a packet commitment
 // is stored
 func KeyPacketCommitment(portID, channelID string, sequence uint64) []byte {
@@ -172,28 +194,10 @@ func channelPath(portID, channelID string) string {
 	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
 }
 
-func MustParseChannelPath(path string) (string, string) {
-	split := strings.Split(path, "/")
-	if len(split) != 5 {
-		panic("cannot parse channel path")
-	}
-
-	if split[1] != "ports" || split[3] != "channels" {
-		panic("cannot parse channel path")
-	}
-
-	return split[2], split[4]
-}
-
 // ICS05
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#store-paths
 
-// PortPath defines the path under which ports paths are stored
+// PortPath defines the path under which ports paths are stored on the capability module
 func PortPath(portID string) string {
 	return fmt.Sprintf("ports/%s", portID)
-}
-
-// KeyPort returns the store key for a particular port
-func KeyPort(portID string) []byte {
-	return []byte(PortPath(portID))
 }

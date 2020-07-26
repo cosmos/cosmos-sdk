@@ -6,8 +6,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/KiraCore/cosmos-sdk/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 	"github.com/KiraCore/cosmos-sdk/x/gov/types"
 )
 
@@ -26,7 +27,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding.
-	cdc types.Codec
+	cdc codec.BinaryMarshaler
 
 	// Proposal router
 	router types.Router
@@ -40,7 +41,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc types.Codec, key sdk.StoreKey, paramSpace types.ParamSubspace,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rtr types.Router,
 ) Keeper {
 
@@ -76,7 +77,7 @@ func (keeper Keeper) Router() types.Router {
 }
 
 // GetGovernanceAccount returns the governance ModuleAccount
-func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authexported.ModuleAccountI {
+func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 	return keeper.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 

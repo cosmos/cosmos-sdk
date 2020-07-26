@@ -4,9 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec/legacy"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 	vestexported "github.com/KiraCore/cosmos-sdk/x/auth/vesting/exported"
 
@@ -16,7 +15,7 @@ import (
 
 // Compile-time type assertions
 var (
-	_ authexported.Account        = (*BaseVestingAccount)(nil)
+	_ authtypes.AccountI          = (*BaseVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
@@ -242,13 +241,13 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          bva.EndTime,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a BaseVestingAccount.
 func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -265,7 +264,7 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 // Continuous Vesting Account
 
 var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
-var _ authexported.GenesisAccount = (*ContinuousVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*ContinuousVestingAccount)(nil)
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
 func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
@@ -399,13 +398,13 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 		StartTime:        cva.StartTime,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a ContinuousVestingAccount.
 func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -425,7 +424,7 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 // Periodic Vesting Account
 
 var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
-var _ authexported.GenesisAccount = (*PeriodicVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*PeriodicVestingAccount)(nil)
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
@@ -590,13 +589,13 @@ func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 		VestingPeriods:   pva.VestingPeriods,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a PeriodicVestingAccount.
 func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -617,7 +616,7 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 // Delayed Vesting Account
 
 var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
-var _ authexported.GenesisAccount = (*DelayedVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*DelayedVestingAccount)(nil)
 
 // NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
 func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {
@@ -693,13 +692,13 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          dva.EndTime,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a DelayedVestingAccount.
 func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 

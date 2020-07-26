@@ -4,19 +4,8 @@ import (
 	"time"
 
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	paramtypes "github.com/KiraCore/cosmos-sdk/x/params/types"
 	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
-
-// Default parameter namespace
-const (
-	DefaultParamspace = types.ModuleName
-)
-
-// ParamTable for staking module
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&types.Params{})
-}
 
 // UnbondingTime
 func (k Keeper) UnbondingTime(ctx sdk.Context) (res time.Duration) {

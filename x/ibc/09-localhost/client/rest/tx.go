@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/types/rest"
 	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
@@ -13,8 +13,8 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/clients/localhost", createClientHandlerFn(cliCtx)).Methods("POST")
+func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/ibc/clients/localhost", createClientHandlerFn(clientCtx)).Methods("POST")
 }
 
 // createClientHandlerFn implements a create client handler
@@ -27,10 +27,10 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Success 200 {object} PostCreateClient "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/localhost [post]
-func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func createClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateClientReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -51,6 +51,6 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

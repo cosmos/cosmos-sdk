@@ -9,6 +9,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -35,7 +36,7 @@ type TendermintTestSuite struct {
 
 func (suite *TendermintTestSuite) SetupTest() {
 	suite.cdc = codec.New()
-	codec.RegisterCrypto(suite.cdc)
+	cryptocodec.RegisterCrypto(suite.cdc)
 	ibctmtypes.RegisterCodec(suite.cdc)
 	commitmenttypes.RegisterCodec(suite.cdc)
 

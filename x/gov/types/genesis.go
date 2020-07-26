@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
@@ -47,8 +48,8 @@ func (data GenesisState) Equal(other GenesisState) bool {
 		data.VotingParams.Equal(other.VotingParams)
 }
 
-// IsEmpty returns true if a GenesisState is empty
-func (data GenesisState) IsEmpty() bool {
+// Empty returns true if a GenesisState is empty
+func (data GenesisState) Empty() bool {
 	return data.Equal(GenesisState{})
 }
 
@@ -71,5 +72,18 @@ func ValidateGenesis(data GenesisState) error {
 			data.DepositParams.MinDeposit.String())
 	}
 
+	return nil
+}
+
+var _ types.UnpackInterfacesMessage = GenesisState{}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, p := range data.Proposals {
+		err := p.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

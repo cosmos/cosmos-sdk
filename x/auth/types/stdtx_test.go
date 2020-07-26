@@ -4,6 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -21,8 +28,33 @@ var (
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
+// Deprecated, use fee amount and gas limit separately on TxBuilder.
+func NewTestStdFee() StdFee {
+	return NewStdFee(100000,
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
+	)
+}
+
+// Deprecated, use TxBuilder.
+func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee) sdk.Tx {
+	sigs := make([]StdSignature, len(privs))
+	for i, priv := range privs {
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
+
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+
+		sigs[i] = StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
+	}
+
+	tx := NewStdTx(msgs, fee, sigs, "")
+	return tx
+}
+
 func TestStdTx(t *testing.T) {
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
@@ -49,7 +81,7 @@ func TestStdSignBytes(t *testing.T) {
 		want string
 	}{
 		{
-			args{"1234", 3, 6, defaultFee, []sdk.Msg{sdk.NewTestMsg(addr)}, "memo"},
+			args{"1234", 3, 6, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"100000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
 		},
 	}
@@ -63,11 +95,11 @@ func TestTxValidateBasic(t *testing.T) {
 	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
-	priv1, _, addr1 := KeyTestPubAddr()
-	priv2, _, addr2 := KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
-	msg1 := NewTestMsg(addr1, addr2)
+	msg1 := testdata.NewTestMsg(addr1, addr2)
 	fee := NewTestStdFee()
 
 	msgs := []sdk.Msg{msg1}
@@ -122,10 +154,10 @@ func TestDefaultTxEncoder(t *testing.T) {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	encoder := DefaultTxEncoder(cdc)
 
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
@@ -141,7 +173,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 }
 
 func TestStdSignatureMarshalYAML(t *testing.T) {
-	_, pubKey, _ := KeyTestPubAddr()
+	_, pubKey, _ := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		sig    StdSignature
@@ -166,4 +198,82 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, tc.output, string(bz), "test case #%d", i)
 	}
+}
+
+func TestSignatureV2Conversions(t *testing.T) {
+	_, pubKey, _ := testdata.KeyTestPubAddr()
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	RegisterCodec(cdc)
+	dummy := []byte("dummySig")
+	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+
+	sigV2, err := StdSignatureToSignatureV2(cdc, sig)
+	require.NoError(t, err)
+	require.Equal(t, pubKey, sigV2.PubKey)
+	require.Equal(t, &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Signature: dummy,
+	}, sigV2.Data)
+
+	sigBz, err := SignatureDataToAminoSignature(cdc, sigV2.Data)
+	require.NoError(t, err)
+	require.Equal(t, dummy, sigBz)
+
+	// multisigs
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	multiPK := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{
+		pubKey, pubKey2,
+	})
+	dummy2 := []byte("dummySig2")
+	bitArray := types.NewCompactBitArray(2)
+	bitArray.SetIndex(0, true)
+	bitArray.SetIndex(1, true)
+	msigData := &signing.MultiSignatureData{
+		BitArray: bitArray,
+		Signatures: []signing.SignatureData{
+			&signing.SingleSignatureData{
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				Signature: dummy,
+			},
+			&signing.SingleSignatureData{
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				Signature: dummy2,
+			},
+		},
+	}
+
+	msig, err := SignatureDataToAminoSignature(cdc, msigData)
+	require.NoError(t, err)
+
+	sigV2, err = StdSignatureToSignatureV2(cdc, StdSignature{
+		PubKey:    multiPK.Bytes(),
+		Signature: msig,
+	})
+	require.NoError(t, err)
+	require.Equal(t, multiPK, sigV2.PubKey)
+	require.Equal(t, msigData, sigV2.Data)
+}
+
+func TestGetSignaturesV2(t *testing.T) {
+	_, pubKey, _ := testdata.KeyTestPubAddr()
+	dummy := []byte("dummySig")
+
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	RegisterCodec(cdc)
+
+	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
+
+	sigs, err := stdTx.GetSignaturesV2()
+	require.Nil(t, err)
+	require.Equal(t, len(sigs), 1)
+
+	require.Equal(t, sigs[0].PubKey.Bytes(), sig.GetPubKey().Bytes())
+	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
+		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Signature: sig.GetSignature(),
+	})
 }

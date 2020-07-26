@@ -19,26 +19,26 @@ func TestAccountRetriever(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockNodeQuerier := mocks.NewMockNodeQuerier(mockCtrl)
-	accRetr := types.NewAccountRetriever(appCodec, mockNodeQuerier)
+	accRetr := types.NewAccountRetriever(appCodec)
 	addr := []byte("test")
-	bs, err := appCodec.MarshalJSON(types.NewQueryAccountParams(addr))
+	bs, err := appCodec.MarshalJSON(types.QueryAccountRequest{Address: addr})
 	require.NoError(t, err)
 
 	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAccount)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq(route),
 		gomock.Eq(bs)).Return(nil, int64(0), errFoo).Times(1)
-	_, err = accRetr.GetAccount(addr)
+	_, err = accRetr.GetAccount(mockNodeQuerier, addr)
 	require.Error(t, err)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq(route),
 		gomock.Eq(bs)).Return(nil, int64(0), errFoo).Times(1)
-	n, s, err := accRetr.GetAccountNumberSequence(addr)
+	n, s, err := accRetr.GetAccountNumberSequence(mockNodeQuerier, addr)
 	require.Error(t, err)
 	require.Equal(t, uint64(0), n)
 	require.Equal(t, uint64(0), s)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq(route),
 		gomock.Eq(bs)).Return(nil, int64(0), errFoo).Times(1)
-	require.Error(t, accRetr.EnsureExists(addr))
+	require.Error(t, accRetr.EnsureExists(mockNodeQuerier, addr))
 }

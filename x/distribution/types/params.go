@@ -9,11 +9,6 @@ import (
 	paramtypes "github.com/KiraCore/cosmos-sdk/x/params/types"
 )
 
-const (
-	// default paramspace for params keeper
-	DefaultParamspace = ModuleName
-)
-
 // Parameter keys
 var (
 	ParamStoreKeyCommunityTax        = []byte("communitytax")

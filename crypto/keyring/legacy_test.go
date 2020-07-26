@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
-	"github.com/KiraCore/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/testutil"
 )
 
 func TestNewLegacyKeyBase(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := keyring.NewLegacy("keybasename", dir)
 	require.NoError(t, err)
@@ -21,7 +21,7 @@ func TestNewLegacyKeyBase(t *testing.T) {
 }
 
 func TestLegacyKeybase(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	// Backup testdata

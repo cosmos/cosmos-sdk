@@ -2,6 +2,7 @@ package keys
 
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 )
 
 // KeysCdc defines codec to be used with key operations
@@ -9,7 +10,7 @@ var KeysCdc *codec.Codec
 
 func init() {
 	KeysCdc = codec.New()
-	codec.RegisterCrypto(KeysCdc)
+	cryptocodec.RegisterCrypto(KeysCdc)
 	KeysCdc.Seal()
 }
 

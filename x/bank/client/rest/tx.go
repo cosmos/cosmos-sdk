@@ -5,9 +5,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	"github.com/KiraCore/cosmos-sdk/client/tx"
-	"github.com/KiraCore/cosmos-sdk/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/types/rest"
 	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
@@ -22,10 +21,8 @@ type SendReq struct {
 
 // NewSendRequestHandlerFn returns an HTTP REST handler for creating a MsgSend
 // transaction.
-func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func NewSendRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx = ctx.WithMarshaler(m)
-
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
 
@@ -35,7 +32,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 		}
 
 		var req SendReq
-		if !rest.ReadRESTReq(w, r, ctx.Marshaler, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.JSONMarshaler, &req) {
 			return
 		}
 
@@ -50,7 +47,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 		}
 
 		msg := types.NewMsgSend(fromAddr, toAddr, req.Amount)
-		tx.WriteGeneratedTxResponse(ctx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -64,7 +61,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
-func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func SendRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
@@ -75,7 +72,7 @@ func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		var req SendReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -90,6 +87,6 @@ func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		msg := types.NewMsgSend(fromAddr, toAddr, req.Amount)
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

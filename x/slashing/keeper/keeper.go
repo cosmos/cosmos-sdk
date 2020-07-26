@@ -16,13 +16,13 @@ import (
 // Keeper of the slashing store
 type Keeper struct {
 	storeKey   sdk.StoreKey
-	cdc        codec.Marshaler
+	cdc        codec.BinaryMarshaler
 	sk         types.StakingKeeper
 	paramspace types.ParamSubspace
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc codec.Marshaler, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramspace.HasKeyTable() {
 		paramspace = paramspace.WithKeyTable(types.ParamKeyTable())

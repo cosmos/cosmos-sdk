@@ -5,10 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	"github.com/KiraCore/cosmos-sdk/client/flags"
-	"github.com/KiraCore/cosmos-sdk/codec"
-	"github.com/KiraCore/cosmos-sdk/x/auth/client"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
 )
 
 // txEncodeRespStr implements a simple Stringer wrapper for a encoded tx.
@@ -20,7 +19,7 @@ func (txr txEncodeRespStr) String() string {
 
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
-func GetEncodeCommand(cdc *codec.Codec) *cobra.Command {
+func GetEncodeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode [file]",
 		Short: "Encode transactions generated offline",
@@ -28,16 +27,16 @@ func GetEncodeCommand(cdc *codec.Codec) *cobra.Command {
 Read a transaction from <file>, serialize it to the Amino wire protocol, and output it as base64.
 If you supply a dash (-) argument in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
+			tx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
-				return
+				return err
 			}
 
-			// re-encode it via the Amino wire protocol
-			txBytes, err := cliCtx.Codec.MarshalBinaryBare(stdTx)
+			// re-encode it
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(tx)
 			if err != nil {
 				return err
 			}
@@ -46,9 +45,11 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 			txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 			response := txEncodeRespStr(txBytesBase64)
-			return cliCtx.PrintOutput(response)
+			return clientCtx.PrintOutput(response)
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

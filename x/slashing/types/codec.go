@@ -3,11 +3,19 @@ package types
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
 	"github.com/KiraCore/cosmos-sdk/codec/types"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // RegisterCodec registers concrete types on codec
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgUnjail{}, "cosmos-sdk/MsgUnjail", nil)
+	cdc.RegisterConcrete(&MsgUnjail{}, "cosmos-sdk/MsgUnjail", nil)
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUnjail{},
+	)
 }
 
 var (
@@ -24,6 +32,6 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	codec.RegisterCrypto(amino)
+	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

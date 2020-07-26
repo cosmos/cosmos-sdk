@@ -2,23 +2,24 @@ package v038
 
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	v036auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_36"
 	v038auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_38"
 	v036distr "github.com/KiraCore/cosmos-sdk/x/distribution/legacy/v0_36"
 	v038distr "github.com/KiraCore/cosmos-sdk/x/distribution/legacy/v0_38"
 	v036genaccounts "github.com/KiraCore/cosmos-sdk/x/genaccounts/legacy/v0_36"
-	"github.com/KiraCore/cosmos-sdk/x/genutil"
+	"github.com/KiraCore/cosmos-sdk/x/genutil/types"
 	v036staking "github.com/KiraCore/cosmos-sdk/x/staking/legacy/v0_36"
 	v038staking "github.com/KiraCore/cosmos-sdk/x/staking/legacy/v0_38"
 )
 
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.
-func Migrate(appState genutil.AppMap) genutil.AppMap {
+func Migrate(appState types.AppMap) types.AppMap {
 	v036Codec := codec.New()
-	codec.RegisterCrypto(v036Codec)
+	cryptocodec.RegisterCrypto(v036Codec)
 
 	v038Codec := codec.New()
-	codec.RegisterCrypto(v038Codec)
+	cryptocodec.RegisterCrypto(v038Codec)
 	v038auth.RegisterCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {

@@ -7,11 +7,6 @@ import (
 	paramtypes "github.com/KiraCore/cosmos-sdk/x/params/types"
 )
 
-// Default parameter namespace
-const (
-	DefaultParamspace = ModuleName
-)
-
 var (
 	// key for constant fee parameter
 	ParamStoreKeyConstantFee = []byte("ConstantFee")

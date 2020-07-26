@@ -10,10 +10,11 @@ import (
 	"github.com/KiraCore/cosmos-sdk/codec"
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/bank"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
 	"github.com/KiraCore/cosmos-sdk/x/distribution/keeper"
 	"github.com/KiraCore/cosmos-sdk/x/distribution/types"
 	"github.com/KiraCore/cosmos-sdk/x/staking"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 const custom = "custom"
@@ -111,7 +112,8 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.Codec, qu
 func TestQueries(t *testing.T) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
-	bank.RegisterCodec(cdc)
+	banktypes.RegisterCodec(cdc)
+	legacyQuerierCdc := codec.NewAminoCodec(cdc)
 
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
@@ -120,7 +122,7 @@ func TestQueries(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 	valOpAddr1 := valAddrs[0]
 
-	querier := keeper.NewQuerier(app.DistrKeeper)
+	querier := keeper.NewQuerier(app.DistrKeeper, legacyQuerierCdc)
 
 	// test param queries
 	params := types.Params{
@@ -168,9 +170,9 @@ func TestQueries(t *testing.T) {
 
 	// test delegation rewards query
 	sh := staking.NewHandler(app.StakingKeeper)
-	comm := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(
-		valOpAddr1, valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, comm, sdk.OneInt(),
+	comm := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(
+		valOpAddr1, valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, comm, sdk.OneInt(),
 	)
 
 	res, err := sh(ctx, msg)

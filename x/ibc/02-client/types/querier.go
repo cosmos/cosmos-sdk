@@ -12,9 +12,7 @@ import (
 
 // query routes supported by the IBC client Querier
 const (
-	QueryAllClients     = "client_states"
-	QueryClientState    = "client_state"
-	QueryConsensusState = "consensus_state"
+	QueryAllClients = "client_states"
 )
 
 // QueryAllClientsParams defines the parameters necessary for querying for all

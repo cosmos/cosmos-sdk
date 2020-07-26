@@ -2,26 +2,26 @@ package types
 
 import (
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
 // creating a x/bank keeper.
 type AccountKeeper interface {
-	NewAccount(sdk.Context, exported.Account) exported.Account
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) exported.Account
+	NewAccount(sdk.Context, types.AccountI) types.AccountI
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) exported.Account
-	GetAllAccounts(ctx sdk.Context) []exported.Account
-	SetAccount(ctx sdk.Context, acc exported.Account)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetAllAccounts(ctx sdk.Context) []types.AccountI
+	SetAccount(ctx sdk.Context, acc types.AccountI)
 
-	IterateAccounts(ctx sdk.Context, process func(exported.Account) bool)
+	IterateAccounts(ctx sdk.Context, process func(types.AccountI) bool)
 
-	ValidatePermissions(macc exported.ModuleAccountI) error
+	ValidatePermissions(macc types.ModuleAccountI) error
 
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
-	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, []string)
-	GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI
-	SetModuleAccount(ctx sdk.Context, macc exported.ModuleAccountI)
+	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleAccountI, []string)
+	GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI
+	SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI)
 }

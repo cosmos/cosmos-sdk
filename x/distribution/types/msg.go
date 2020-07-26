@@ -6,18 +6,26 @@ import (
 	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 )
 
+// distribution message types
+const (
+	TypeMsgSetWithdrawAddress          = "set_withdraw_address"
+	TypeMsgWithdrawDelegatorReward     = "withdraw_delegator_reward"
+	TypeMsgWithdrawValidatorCommission = "withdraw_validator_commission"
+	TypeMsgFundCommunityPool           = "fund_community_pool"
+)
+
 // Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}
 
-func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdrawAddress {
-	return MsgSetWithdrawAddress{
+func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
+	return &MsgSetWithdrawAddress{
 		DelegatorAddress: delAddr,
 		WithdrawAddress:  withdrawAddr,
 	}
 }
 
 func (msg MsgSetWithdrawAddress) Route() string { return ModuleName }
-func (msg MsgSetWithdrawAddress) Type() string  { return "set_withdraw_address" }
+func (msg MsgSetWithdrawAddress) Type() string  { return TypeMsgSetWithdrawAddress }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
@@ -42,15 +50,15 @@ func (msg MsgSetWithdrawAddress) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegatorReward {
-	return MsgWithdrawDelegatorReward{
+func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgWithdrawDelegatorReward {
+	return &MsgWithdrawDelegatorReward{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
 	}
 }
 
 func (msg MsgWithdrawDelegatorReward) Route() string { return ModuleName }
-func (msg MsgWithdrawDelegatorReward) Type() string  { return "withdraw_delegator_reward" }
+func (msg MsgWithdrawDelegatorReward) Type() string  { return TypeMsgWithdrawDelegatorReward }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
@@ -74,14 +82,14 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) MsgWithdrawValidatorCommission {
-	return MsgWithdrawValidatorCommission{
+func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValidatorCommission {
+	return &MsgWithdrawValidatorCommission{
 		ValidatorAddress: valAddr,
 	}
 }
 
 func (msg MsgWithdrawValidatorCommission) Route() string { return ModuleName }
-func (msg MsgWithdrawValidatorCommission) Type() string  { return "withdraw_validator_commission" }
+func (msg MsgWithdrawValidatorCommission) Type() string  { return TypeMsgWithdrawValidatorCommission }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
@@ -102,12 +110,10 @@ func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
 	return nil
 }
 
-const TypeMsgFundCommunityPool = "fund_community_pool"
-
 // NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
 // a funding amount.
-func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) MsgFundCommunityPool {
-	return MsgFundCommunityPool{
+func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFundCommunityPool {
+	return &MsgFundCommunityPool{
 		Amount:    amount,
 		Depositor: depositor,
 	}

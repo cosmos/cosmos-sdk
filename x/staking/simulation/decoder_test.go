@@ -11,6 +11,7 @@ import (
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/staking/simulation"
@@ -26,7 +27,7 @@ var (
 func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	types.RegisterCodec(cdc)
 	return
 }

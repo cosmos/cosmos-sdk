@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -11,16 +13,17 @@ import (
 
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/bank"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
 	"github.com/KiraCore/cosmos-sdk/x/crisis"
-	distr "github.com/KiraCore/cosmos-sdk/x/distribution"
-	"github.com/KiraCore/cosmos-sdk/x/staking"
+	"github.com/KiraCore/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/KiraCore/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 var (
 	testModuleName        = "dummy"
-	dummyRouteWhichPasses = crisis.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) (string, bool) { return "", false })
-	dummyRouteWhichFails  = crisis.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) (string, bool) { return "whoops", true })
+	dummyRouteWhichPasses = types.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) (string, bool) { return "", false })
+	dummyRouteWhichFails  = types.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) (string, bool) { return "whoops", true })
 )
 
 func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
@@ -30,15 +33,15 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 
 	constantFee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)
 	app.CrisisKeeper.SetConstantFee(ctx, constantFee)
-	app.StakingKeeper.SetParams(ctx, staking.DefaultParams())
+	app.StakingKeeper.SetParams(ctx, stakingtypes.DefaultParams())
 
 	app.CrisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichPasses.Route, dummyRouteWhichPasses.Invar)
 	app.CrisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichFails.Route, dummyRouteWhichFails.Invar)
 
-	feePool := distr.InitialFeePool()
+	feePool := distrtypes.InitialFeePool()
 	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(sdk.NewCoins(constantFee)...)
 	app.DistrKeeper.SetFeePool(ctx, feePool)
-	app.BankKeeper.SetSupply(ctx, bank.NewSupply(sdk.Coins{}))
+	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(sdk.Coins{}))
 
 	addrs := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(10000))
 
@@ -56,10 +59,10 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 		msg            sdk.Msg
 		expectedResult string
 	}{
-		{"bad invariant route", crisis.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist"), "fail"},
-		{"invariant broken", crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route), "panic"},
-		{"invariant passing", crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route), "pass"},
-		{"invalid msg", sdk.NewTestMsg(), "fail"},
+		{"bad invariant route", types.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist"), "fail"},
+		{"invariant broken", types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route), "panic"},
+		{"invariant passing", types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route), "pass"},
+		{"invalid msg", testdata.NewTestMsg(), "fail"},
 	}
 
 	for _, tc := range cases {
@@ -95,7 +98,7 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 	app.CrisisKeeper.SetConstantFee(ctx, excessCoins)
 
 	h := crisis.NewHandler(app.CrisisKeeper)
-	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
+	msg := types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
 
 	res, err := h(ctx, msg)
 	require.Error(t, err)
@@ -112,7 +115,7 @@ func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *tes
 	app.DistrKeeper.SetFeePool(ctx, feePool)
 
 	h := crisis.NewHandler(app.CrisisKeeper)
-	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
+	msg := types.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 
 	var res *sdk.Result
 	require.Panics(t, func() {

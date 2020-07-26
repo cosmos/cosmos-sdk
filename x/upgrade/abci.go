@@ -2,10 +2,14 @@ package upgrade
 
 import (
 	"fmt"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/KiraCore/cosmos-sdk/telemetry"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 )
 
 // BeginBlock will check if there is a scheduled plan and if it is ready to be executed.
@@ -16,7 +20,9 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
+func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
 		return

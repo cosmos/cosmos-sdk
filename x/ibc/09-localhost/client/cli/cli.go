@@ -3,23 +3,21 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/KiraCore/cosmos-sdk/client/flags"
-	"github.com/KiraCore/cosmos-sdk/codec"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
-// GetTxCmd returns the transaction commands for IBC
-func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
-	ics09LocalhostTxCmd := &cobra.Command{
+// NewTxCmd returns a root CLI command handler for all ibc localhost transaction commands.
+func NewTxCmd() *cobra.Command {
+	txCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
-		Short:                      "Localhost transaction subcommands",
+		Short:                      "Localhost client transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ics09LocalhostTxCmd.AddCommand(flags.PostCommands(
-		GetCmdCreateClient(cdc),
-	)...)
+	txCmd.AddCommand(
+		NewCreateClientCmd(),
+	)
 
-	return ics09LocalhostTxCmd
+	return txCmd
 }

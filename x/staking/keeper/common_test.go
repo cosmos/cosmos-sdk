@@ -8,7 +8,6 @@ import (
 	"github.com/KiraCore/cosmos-sdk/codec"
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/staking"
 	"github.com/KiraCore/cosmos-sdk/x/staking/keeper"
 	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
@@ -27,10 +26,10 @@ func createTestInput() (*codec.Codec, *simapp.SimApp, sdk.Context) {
 
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,
-		app.GetKey(staking.StoreKey),
+		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(staking.ModuleName),
+		app.GetSubspace(types.ModuleName),
 	)
 
 	return codec.New(), app, ctx

@@ -23,7 +23,6 @@ type ViewKeeper interface {
 
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
@@ -33,13 +32,13 @@ type ViewKeeper interface {
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc      codec.Marshaler
+	cdc      codec.BinaryMarshaler
 	storeKey sdk.StoreKey
 	ak       types.AccountKeeper
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
 	return BaseViewKeeper{
 		cdc:      cdc,
 		storeKey: storeKey,

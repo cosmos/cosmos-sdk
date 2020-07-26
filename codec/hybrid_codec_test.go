@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/KiraCore/cosmos-sdk/codec"
-	"github.com/KiraCore/cosmos-sdk/codec/testdata"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 )
 
 func TestHybridCodec(t *testing.T) {

@@ -7,16 +7,16 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/KiraCore/cosmos-sdk/client"
 	"github.com/KiraCore/cosmos-sdk/codec"
-	"github.com/KiraCore/cosmos-sdk/server"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/version"
-	extypes "github.com/KiraCore/cosmos-sdk/x/genutil"
 	v036 "github.com/KiraCore/cosmos-sdk/x/genutil/legacy/v0_36"
 	v038 "github.com/KiraCore/cosmos-sdk/x/genutil/legacy/v0_38"
 	v039 "github.com/KiraCore/cosmos-sdk/x/genutil/legacy/v0_39"
+	"github.com/KiraCore/cosmos-sdk/x/genutil/types"
 )
 
 const (
@@ -27,14 +27,14 @@ const (
 // Allow applications to extend and modify the migration process.
 //
 // Ref: https://github.com/KiraCore/cosmos-sdk/issues/5041
-var migrationMap = extypes.MigrationMap{
+var migrationMap = types.MigrationMap{
 	"v0.36": v036.Migrate,
 	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible
 	"v0.39": v039.Migrate,
 }
 
 // GetMigrationCallback returns a MigrationCallback for a given version.
-func GetMigrationCallback(version string) extypes.MigrationCallback {
+func GetMigrationCallback(version string) types.MigrationCallback {
 	return migrationMap[version]
 }
 
@@ -55,7 +55,7 @@ func GetMigrationVersions() []string {
 }
 
 // MigrateGenesisCmd returns a command to execute genesis state migration.
-func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
+func MigrateGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate [target-version] [genesis-file]",
 		Short: "Migrate genesis to a specified target version",
@@ -63,20 +63,23 @@ func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
 
 Example:
 $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z
-`, version.ServerName),
+`, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.JSONMarshaler
+
 			var err error
 
 			target := args[0]
 			importGenesis := args[1]
 
-			genDoc, err := types.GenesisDocFromFile(importGenesis)
+			genDoc, err := tmtypes.GenesisDocFromFile(importGenesis)
 			if err != nil {
 				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
 			}
 
-			var initialState extypes.AppMap
+			var initialState types.AppMap
 			if err := cdc.UnmarshalJSON(genDoc.AppState, &initialState); err != nil {
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
@@ -94,7 +97,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
 
-			genesisTime := cmd.Flag(flagGenesisTime).Value.String()
+			genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
 			if genesisTime != "" {
 				var t time.Time
 
@@ -106,12 +109,12 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.GenesisTime = t
 			}
 
-			chainID := cmd.Flag(flagChainID).Value.String()
+			chainID, _ := cmd.Flags().GetString(flagChainID)
 			if chainID != "" {
 				genDoc.ChainID = chainID
 			}
 
-			bz, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
+			bz, err := codec.MarshalJSONIndent(cdc, genDoc)
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal genesis doc")
 			}

@@ -2,20 +2,20 @@ package types
 
 import (
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
-	"github.com/KiraCore/cosmos-sdk/x/staking"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 	stakingexported "github.com/KiraCore/cosmos-sdk/x/staking/exported"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 
 	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, name string) authexported.ModuleAccountI
+	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
 
 	// TODO remove with genesis 2-phases refactor https://github.com/KiraCore/cosmos-sdk/issues/2862
-	SetModuleAccount(sdk.Context, authexported.ModuleAccountI)
+	SetModuleAccount(sdk.Context, types.ModuleAccountI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -66,7 +66,7 @@ type StakingKeeper interface {
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 
-	GetAllSDKDelegations(ctx sdk.Context) []staking.Delegation
+	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

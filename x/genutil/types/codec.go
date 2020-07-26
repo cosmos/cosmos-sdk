@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
@@ -17,6 +18,6 @@ func init() {
 	stakingtypes.RegisterCodec(ModuleCdc)
 	authtypes.RegisterCodec(ModuleCdc)
 	sdk.RegisterCodec(ModuleCdc)
-	codec.RegisterCrypto(ModuleCdc)
+	cryptocodec.RegisterCrypto(ModuleCdc)
 	ModuleCdc.Seal()
 }

@@ -4,23 +4,23 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/abci/types"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/KiraCore/cosmos-sdk/simapp"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, types.Header{})
+	ctx := app.BaseApp.NewContext(false, abcitypes.Header{})
 
 	app.InitChain(
-		types.RequestInitChain{
+		abcitypes.RequestInitChain{
 			AppStateBytes: []byte("{}"),
 			ChainId:       "test-chain-id",
 		},
 	)
 
-	acc := app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(auth.FeeCollectorName))
+	acc := app.AccountKeeper.GetAccount(ctx, types.NewModuleAddress(types.FeeCollectorName))
 	require.NotNil(t, acc)
 }

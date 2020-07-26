@@ -20,7 +20,7 @@ func TestGetOrSetStoreCache(t *testing.T) {
 	sKey := types.NewKVStoreKey("test")
 	tree, err := iavl.NewMutableTree(db, 100)
 	require.NoError(t, err)
-	store := iavlstore.UnsafeNewStore(tree, types.PruneNothing)
+	store := iavlstore.UnsafeNewStore(tree)
 	store2 := mngr.GetStoreCache(sKey, store)
 
 	require.NotNil(t, store2)
@@ -34,7 +34,7 @@ func TestUnwrap(t *testing.T) {
 	sKey := types.NewKVStoreKey("test")
 	tree, err := iavl.NewMutableTree(db, 100)
 	require.NoError(t, err)
-	store := iavlstore.UnsafeNewStore(tree, types.PruneNothing)
+	store := iavlstore.UnsafeNewStore(tree)
 	_ = mngr.GetStoreCache(sKey, store)
 
 	require.Equal(t, store, mngr.Unwrap(sKey))
@@ -48,7 +48,7 @@ func TestStoreCache(t *testing.T) {
 	sKey := types.NewKVStoreKey("test")
 	tree, err := iavl.NewMutableTree(db, 100)
 	require.NoError(t, err)
-	store := iavlstore.UnsafeNewStore(tree, types.PruneNothing)
+	store := iavlstore.UnsafeNewStore(tree)
 	kvStore := mngr.GetStoreCache(sKey, store)
 
 	for i := uint(0); i < cache.DefaultCommitKVStoreCacheSize*2; i++ {

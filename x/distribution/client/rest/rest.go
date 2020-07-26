@@ -5,41 +5,39 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
-	"github.com/KiraCore/cosmos-sdk/client/tx"
-	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/client"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/types/rest"
 	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
 	"github.com/KiraCore/cosmos-sdk/x/distribution/types"
-	"github.com/KiraCore/cosmos-sdk/x/gov"
 	govrest "github.com/KiraCore/cosmos-sdk/x/gov/client/rest"
+	govtypes "github.com/KiraCore/cosmos-sdk/x/gov/types"
 )
 
-func RegisterHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
-	registerQueryRoutes(cliCtx, r)
-	registerTxHandlers(cliCtx, m, txg, r)
+func RegisterHandlers(clientCtx client.Context, r *mux.Router) {
+	registerQueryRoutes(clientCtx, r)
+	registerTxHandlers(clientCtx, r)
 }
 
 // RegisterRoutes register distribution REST routes.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	registerQueryRoutes(cliCtx, r)
-	registerTxRoutes(cliCtx, r, queryRoute)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
+	registerQueryRoutes(clientCtx, r)
+	registerTxRoutes(clientCtx, r)
 }
 
 // TODO add proto compatible Handler after x/gov migration
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the community pool spend REST handler with a given sub-route.
-func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "community_pool_spend",
-		Handler:  postProposalHandlerFn(cliCtx),
+		Handler:  postProposalHandlerFn(clientCtx),
 	}
 }
 
-func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CommunityPoolSpendProposalReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -50,11 +48,14 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		content := types.NewCommunityPoolSpendProposal(req.Title, req.Description, req.Recipient, req.Amount)
 
-		msg := gov.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
 	"github.com/KiraCore/cosmos-sdk/codec/types"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/bank/exported"
 )
@@ -12,8 +13,8 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.SupplyI)(nil), nil)
 	cdc.RegisterConcrete(&Supply{}, "cosmos-sdk/Supply", nil)
-	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/MsgSend", nil)
-	cdc.RegisterConcrete(MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
+	cdc.RegisterConcrete(&MsgSend{}, "cosmos-sdk/MsgSend", nil)
+	cdc.RegisterConcrete(&MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -43,6 +44,6 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	codec.RegisterCrypto(amino)
+	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

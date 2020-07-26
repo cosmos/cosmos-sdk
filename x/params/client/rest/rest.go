@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/types/rest"
 	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
@@ -15,17 +15,17 @@ import (
 
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the param
 // change REST handler with a given sub-route.
-func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "param_change",
-		Handler:  postProposalHandlerFn(cliCtx),
+		Handler:  postProposalHandlerFn(clientCtx),
 	}
 }
 
-func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req paramscutils.ParamChangeProposalReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -36,11 +36,14 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		content := proposal.NewParameterChangeProposal(req.Title, req.Description, req.Changes.ToParamChanges())
 
-		msg := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

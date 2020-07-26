@@ -93,7 +93,9 @@ func TestGetProposalsFiltered(t *testing.T) {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			p, err := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			require.NoError(t, err)
+
 			p.Status = s
 
 			if i%2 == 0 {

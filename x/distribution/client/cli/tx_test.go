@@ -1,70 +1,53 @@
 package cli
 
 import (
-	"io/ioutil"
 	"testing"
+
+	"github.com/spf13/pflag"
+
+	"github.com/KiraCore/cosmos-sdk/testutil"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	"github.com/KiraCore/cosmos-sdk/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
-	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
 )
 
-func createFakeTxBuilder() auth.TxBuilder {
-	cdc := codec.New()
-	return auth.NewTxBuilder(
-		authclient.GetTxEncoder(cdc),
-		123,
-		9876,
-		0,
-		1.2,
-		false,
-		"test_chain",
-		"hello",
-		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
-		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
-	)
-}
-
 func Test_splitAndCall_NoMessages(t *testing.T) {
-	ctx := context.CLIContext{}
-	txBldr := createFakeTxBuilder()
+	clientCtx := client.Context{}
 
-	err := splitAndApply(nil, ctx, txBldr, nil, 10)
+	err := newSplitAndApply(nil, clientCtx, nil, nil, 10)
 	assert.NoError(t, err, "")
 }
 
 func Test_splitAndCall_Splitting(t *testing.T) {
-	ctx := context.CLIContext{}
-	txBldr := createFakeTxBuilder()
+	clientCtx := client.Context{}
 
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	// Add five messages
 	msgs := []sdk.Msg{
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
-		sdk.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
+		testdata.NewTestMsg(addr),
 	}
 
 	// Keep track of number of calls
 	const chunkSize = 2
 
 	callCount := 0
-	err := splitAndApply(
-		func(ctx context.CLIContext, txBldr auth.TxBuilder, msgs []sdk.Msg) error {
+	err := newSplitAndApply(
+		func(clientCtx client.Context, fs *pflag.FlagSet, msgs ...sdk.Msg) error {
 			callCount++
 
-			assert.NotNil(t, ctx)
-			assert.NotNil(t, txBldr)
+			assert.NotNil(t, clientCtx)
 			assert.NotNil(t, msgs)
 
 			if callCount < 3 {
@@ -75,7 +58,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 			return nil
 		},
-		ctx, txBldr, msgs, chunkSize)
+		clientCtx, nil, msgs, chunkSize)
 
 	assert.NoError(t, err, "")
 	assert.Equal(t, 3, callCount)
@@ -83,9 +66,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 func TestParseProposal(t *testing.T) {
 	cdc := codec.New()
-	okJSON, err := ioutil.TempFile("", "proposal")
-	require.Nil(t, err, "unexpected error")
-	_, err = okJSON.WriteString(`
+	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
 {
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
@@ -94,7 +75,7 @@ func TestParseProposal(t *testing.T) {
   "deposit": "1000stake"
 }
 `)
-	require.NoError(t, err)
+	t.Cleanup(cleanup)
 
 	proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, okJSON.Name())
 	require.NoError(t, err)

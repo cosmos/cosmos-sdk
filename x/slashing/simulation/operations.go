@@ -52,28 +52,28 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "validator is not ok"), nil, nil // skip
 		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to find account"), nil, nil // skip
 		}
 
 		if !validator.IsJailed() {
 			// TODO: due to this condition this message is almost, if not always, skipped !
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "validator is not jailed"), nil, nil
 		}
 
 		consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
 		info, found := k.GetValidatorSigningInfo(ctx, consAddr)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to find validator signing info"), nil, nil // skip
 		}
 
 		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
 		if selfDel == nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "self delegation is nil"), nil, nil // skip
 		}
 
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
@@ -81,12 +81,14 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to generate fees"), nil, err
 		}
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		tx := helpers.GenTx(
+		txGen := simappparams.MakeEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
@@ -95,6 +97,9 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		}
 
 		_, res, err := app.Deliver(tx)
 
@@ -121,7 +126,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 		}
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, errors.New(res.Log)
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil

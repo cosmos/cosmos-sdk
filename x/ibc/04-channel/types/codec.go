@@ -14,15 +14,14 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(Channel{}, "ibc/channel/Channel", nil)
 	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
 
-	cdc.RegisterConcrete(MsgChannelOpenInit{}, "ibc/channel/MsgChannelOpenInit", nil)
-	cdc.RegisterConcrete(MsgChannelOpenTry{}, "ibc/channel/MsgChannelOpenTry", nil)
-	cdc.RegisterConcrete(MsgChannelOpenAck{}, "ibc/channel/MsgChannelOpenAck", nil)
-	cdc.RegisterConcrete(MsgChannelOpenConfirm{}, "ibc/channel/MsgChannelOpenConfirm", nil)
-	cdc.RegisterConcrete(MsgChannelCloseInit{}, "ibc/channel/MsgChannelCloseInit", nil)
-	cdc.RegisterConcrete(MsgChannelCloseConfirm{}, "ibc/channel/MsgChannelCloseConfirm", nil)
-	cdc.RegisterConcrete(MsgPacket{}, "ibc/channel/MsgPacket", nil)
-	cdc.RegisterConcrete(MsgAcknowledgement{}, "ibc/channel/MsgAcknowledgement", nil)
-	cdc.RegisterConcrete(MsgTimeout{}, "ibc/channel/MsgTimeout", nil)
+	cdc.RegisterConcrete(&MsgChannelOpenInit{}, "ibc/channel/MsgChannelOpenInit", nil)
+	cdc.RegisterConcrete(&MsgChannelOpenTry{}, "ibc/channel/MsgChannelOpenTry", nil)
+	cdc.RegisterConcrete(&MsgChannelOpenAck{}, "ibc/channel/MsgChannelOpenAck", nil)
+	cdc.RegisterConcrete(&MsgChannelOpenConfirm{}, "ibc/channel/MsgChannelOpenConfirm", nil)
+	cdc.RegisterConcrete(&MsgChannelCloseInit{}, "ibc/channel/MsgChannelCloseInit", nil)
+	cdc.RegisterConcrete(&MsgChannelCloseConfirm{}, "ibc/channel/MsgChannelCloseConfirm", nil)
+	cdc.RegisterConcrete(&MsgAcknowledgement{}, "ibc/channel/MsgAcknowledgement", nil)
+	cdc.RegisterConcrete(&MsgTimeout{}, "ibc/channel/MsgTimeout", nil)
 }
 
 // RegisterInterfaces register the ibc channel submodule interfaces to protobuf
@@ -36,7 +35,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgChannelOpenConfirm{},
 		&MsgChannelCloseInit{},
 		&MsgChannelCloseConfirm{},
-		&MsgPacket{},
+		&MsgRecvPacket{},
 		&MsgAcknowledgement{},
 		&MsgTimeout{},
 	)

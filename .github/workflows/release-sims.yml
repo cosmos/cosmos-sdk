@@ -1,9 +1,11 @@
 name: Release Sims
-on: 
-  pull_request: 
-    branches: 
-      - 'rc**'
-    
+# Release Sims workflow runs long-lived (multi-seed & large block size) simulations
+# This workflow only runs on a pull request when the branch contains rc** (rc1/vX.X.x)
+on:
+  pull_request:
+    branches:
+      - "rc**"
+
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest

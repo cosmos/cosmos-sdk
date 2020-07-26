@@ -1,4 +1,6 @@
-name: Code Coverage
+name: Tests / Code Coverage
+#  Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
+#  This workflow is run on pushes to master & every Pull Requests where a .go, .mod, .sum have been changed
 on:
   pull_request:
   push:
@@ -13,10 +15,37 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
 
-  test-coverage-upload:
+  split-test-files:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v2-beta
+      - uses: actions/checkout@v2
+      - name: Create a file with all the pkgs
+        run: go list ./... > pkgs.txt
+      - name: Split pkgs into 4 files
+        run: split -n l/4 --additional-suffix=.txt ./pkgs.txt
+      # cache multiple
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "${{ github.sha }}-aa"
+          path: ./xaa.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "${{ github.sha }}-ab"
+          path: ./xab.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "${{ github.sha }}-ac"
+          path: ./xac.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "${{ github.sha }}-ad"
+          path: ./xad.txt
+
+  test-coverage-run-1:
+    runs-on: ubuntu-latest
+    needs: split-test-files
+    timeout-minutes: 10
+    steps:
       - uses: actions/checkout@v2
       - uses: technote-space/get-diff-action@v1
         id: git_diff
@@ -25,14 +54,13 @@ jobs:
             .go
             .mod
             .sum
-      - name: build
-        run: |
-          make build
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-aa"
         if: "env.GIT_DIFF != ''"
-
       - name: test & coverage report creation
         run: |
-          go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xaa.txt | xargs go test -mod=readonly -timeout 8m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -45,19 +73,118 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v1.0.7
         with:
-          file: ./coverage.txt # optional
-          fail_ci_if_error: true
+          file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
-  integration-tests:
+
+  test-coverage-run-2:
     runs-on: ubuntu-latest
+    needs: split-test-files
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - name: build-sim
-        run: |
-          make build-sim
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-ab"
         if: "env.GIT_DIFF != ''"
-      - name: cli-test
+      - name: test & coverage report creation
         run: |
-          make test-integration
+          cat xab.txt | xargs go test -mod=readonly -timeout 6m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+        if: "env.GIT_DIFF != ''"
+      - name: filter out DONTCOVER
+        run: |
+          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
+          excludelist+=" $(find ./ -type f -name '*.pb.go')"
+          excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
+          for filename in ${excludelist}; do
+            filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
+            echo "Excluding ${filename} from coverage report..."
+            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
+          done
+        if: "env.GIT_DIFF != ''"
+      - uses: codecov/codecov-action@v1.0.7
+        with:
+          file: ./coverage.txt
+        if: "env.GIT_DIFF != ''"
+
+  test-coverage-run-3:
+    runs-on: ubuntu-latest
+    needs: split-test-files
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-ac"
+        if: "env.GIT_DIFF != ''"
+      - name: test & coverage report creation
+        run: |
+          cat xac.txt | xargs go test -mod=readonly -timeout 6m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+        if: "env.GIT_DIFF != ''"
+      - name: filter out DONTCOVER
+        run: |
+          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
+          excludelist+=" $(find ./ -type f -name '*.pb.go')"
+          excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
+          for filename in ${excludelist}; do
+            filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
+            echo "Excluding ${filename} from coverage report..."
+            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
+          done
+        if: "env.GIT_DIFF != ''"
+      - uses: codecov/codecov-action@v1.0.7
+        with:
+          file: ./coverage.txt
+        if: "env.GIT_DIFF != ''"
+
+  test-coverage-run-4:
+    runs-on: ubuntu-latest
+    needs: split-test-files
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-ad"
+        if: "env.GIT_DIFF != ''"
+      - name: test & coverage report creation
+        run: |
+          cat xad.txt | xargs go test -mod=readonly -timeout 6m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+        if: "env.GIT_DIFF != ''"
+      - name: filter out DONTCOVER
+        run: |
+          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
+          excludelist+=" $(find ./ -type f -name '*.pb.go')"
+          excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
+          for filename in ${excludelist}; do
+            filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
+            echo "Excluding ${filename} from coverage report..."
+            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
+          done
+        if: "env.GIT_DIFF != ''"
+      - uses: codecov/codecov-action@v1.0.7
+        with:
+          file: ./coverage.txt
+        if: "env.GIT_DIFF != ''"

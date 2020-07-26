@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/KiraCore/cosmos-sdk/client/flags"
 	"github.com/KiraCore/cosmos-sdk/client/input"
@@ -20,26 +19,27 @@ func ImportKeyCommand() *cobra.Command {
 		Short: "Import private keys into the local keybase",
 		Long:  "Import a ASCII armored private key into the local keybase.",
 		Args:  cobra.ExactArgs(2),
-		RunE:  runImportCmd,
-	}
-}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			buf := bufio.NewReader(cmd.InOrStdin())
 
-func runImportCmd(cmd *cobra.Command, args []string) error {
-	buf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
-	if err != nil {
-		return err
-	}
+			backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
+			kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
+			if err != nil {
+				return err
+			}
 
-	bz, err := ioutil.ReadFile(args[1])
-	if err != nil {
-		return err
-	}
+			bz, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
 
-	passphrase, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
-	if err != nil {
-		return err
-	}
+			passphrase, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
+			if err != nil {
+				return err
+			}
 
-	return kb.ImportPrivKey(args[0], string(bz), passphrase)
+			return kb.ImportPrivKey(args[0], string(bz), passphrase)
+		},
+	}
 }

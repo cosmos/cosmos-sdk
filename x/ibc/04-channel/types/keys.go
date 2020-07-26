@@ -2,7 +2,7 @@ package types
 
 const (
 	// SubModuleName defines the IBC channels name
-	SubModuleName = "channels"
+	SubModuleName = "channel"
 
 	// StoreKey is the store key string for IBC channels
 	StoreKey = SubModuleName

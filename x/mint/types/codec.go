@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 )
 
 var (
@@ -9,6 +10,6 @@ var (
 )
 
 func init() {
-	codec.RegisterCrypto(amino)
+	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

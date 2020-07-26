@@ -1,13 +1,10 @@
 package localhost
 
 import (
-	"fmt"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
-	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/client"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/client/cli"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/client/rest"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/types"
@@ -19,11 +16,11 @@ func Name() string {
 }
 
 // RegisterRESTRoutes registers the REST routes for the IBC localhost client
-func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, queryRoute string) {
-	rest.RegisterRoutes(ctx, rtr, fmt.Sprintf("%s/%s", queryRoute, types.SubModuleName))
+func RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // GetTxCmd returns the root tx command for the IBC localhost client
-func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
-	return cli.GetTxCmd(cdc, fmt.Sprintf("%s/%s", storeKey, types.SubModuleName))
+func GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }

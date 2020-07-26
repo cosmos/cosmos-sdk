@@ -4,7 +4,6 @@ import (
 	"bufio"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/KiraCore/cosmos-sdk/client/flags"
 	"github.com/KiraCore/cosmos-sdk/client/input"
@@ -19,27 +18,28 @@ func ExportKeyCommand() *cobra.Command {
 		Short: "Export private keys",
 		Long:  `Export a private key from the local keybase in ASCII-armored encrypted format.`,
 		Args:  cobra.ExactArgs(1),
-		RunE:  runExportCmd,
-	}
-}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			buf := bufio.NewReader(cmd.InOrStdin())
 
-func runExportCmd(cmd *cobra.Command, args []string) error {
-	buf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
-	if err != nil {
-		return err
-	}
+			backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
+			kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
+			if err != nil {
+				return err
+			}
 
-	encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
-	if err != nil {
-		return err
-	}
+			encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
+			if err != nil {
+				return err
+			}
 
-	armored, err := kb.ExportPrivKeyArmor(args[0], encryptPassword)
-	if err != nil {
-		return err
-	}
+			armored, err := kb.ExportPrivKeyArmor(args[0], encryptPassword)
+			if err != nil {
+				return err
+			}
 
-	cmd.Println(armored)
-	return nil
+			cmd.Println(armored)
+			return nil
+		},
+	}
 }

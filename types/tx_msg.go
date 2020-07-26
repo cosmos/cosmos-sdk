@@ -1,7 +1,7 @@
 package types
 
 import (
-	"encoding/json"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -9,6 +9,7 @@ import (
 type (
 	// Msg defines the interface a transaction message must fulfill.
 	Msg interface {
+		proto.Message
 
 		// Return the message type.
 		// Must be alphanumeric or empty.
@@ -54,6 +55,20 @@ type (
 		// require access to any other information.
 		ValidateBasic() error
 	}
+
+	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
+	FeeTx interface {
+		Tx
+		GetGas() uint64
+		GetFee() Coins
+		FeePayer() AccAddress
+	}
+
+	// Tx must have GetMemo() method to use ValidateMemoDecorator
+	TxWithMemo interface {
+		Tx
+		GetMemo() string
+	}
 )
 
 // TxDecoder unmarshals transaction bytes
@@ -63,30 +78,3 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 type TxEncoder func(tx Tx) ([]byte, error)
 
 //__________________________________________________________
-
-var _ Msg = (*TestMsg)(nil)
-
-// msg type for testing
-type TestMsg struct {
-	signers []AccAddress
-}
-
-func NewTestMsg(addrs ...AccAddress) *TestMsg {
-	return &TestMsg{
-		signers: addrs,
-	}
-}
-
-func (msg *TestMsg) Route() string { return "TestMsg" }
-func (msg *TestMsg) Type() string  { return "Test message" }
-func (msg *TestMsg) GetSignBytes() []byte {
-	bz, err := json.Marshal(msg.signers)
-	if err != nil {
-		panic(err)
-	}
-	return MustSortJSON(bz)
-}
-func (msg *TestMsg) ValidateBasic() error { return nil }
-func (msg *TestMsg) GetSigners() []AccAddress {
-	return msg.signers
-}

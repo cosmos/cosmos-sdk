@@ -1,12 +1,15 @@
-package codec
+package codec_test
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/KiraCore/cosmos-sdk/codec"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/KiraCore/cosmos-sdk/codec/testdata"
 	"github.com/KiraCore/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {
@@ -23,32 +26,41 @@ func NewTestInterfaceRegistry() types.InterfaceRegistry {
 func TestMarshalAny(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 
-	cdc := NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(registry)
 
 	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := MarshalAny(cdc, kitty)
+	bz, err := codec.MarshalAny(cdc, kitty)
 	require.NoError(t, err)
 
 	var animal testdata.Animal
 
 	// empty registry should fail
-	err = UnmarshalAny(cdc, &animal, bz)
+	err = codec.UnmarshalAny(cdc, &animal, bz)
 	require.Error(t, err)
 
 	// wrong type registration should fail
 	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	err = UnmarshalAny(cdc, &animal, bz)
+	err = codec.UnmarshalAny(cdc, &animal, bz)
 	require.Error(t, err)
 
 	// should pass
 	registry = NewTestInterfaceRegistry()
-	cdc = NewProtoCodec(registry)
-	err = UnmarshalAny(cdc, &animal, bz)
+	cdc = codec.NewProtoCodec(registry)
+	err = codec.UnmarshalAny(cdc, &animal, bz)
 	require.NoError(t, err)
 	require.Equal(t, kitty, animal)
 
 	// nil should fail
 	registry = NewTestInterfaceRegistry()
-	err = UnmarshalAny(cdc, nil, bz)
+	err = codec.UnmarshalAny(cdc, nil, bz)
 	require.Error(t, err)
+}
+
+func TestMarshalAnyNonProtoErrors(t *testing.T) {
+	registry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+
+	_, err := codec.MarshalAny(cdc, 29)
+	require.Error(t, err)
+	require.Equal(t, err, errors.New("can't proto marshal int"))
 }

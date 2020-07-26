@@ -11,6 +11,7 @@ import (
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 	"github.com/KiraCore/cosmos-sdk/x/staking"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
@@ -23,10 +24,10 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	sh := staking.NewHandler(app.StakingKeeper)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(addrs[0]), valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt(),
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt(),
 	)
 
 	res, err := sh(ctx, msg)
@@ -60,18 +61,18 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
 	// create second validator with 0% commission
-	commission = staking.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valAddrs[1], valConsPk2,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+	commission = stakingtypes.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
+	msg = stakingtypes.NewMsgCreateValidator(valAddrs[1], valConsPk2,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt())
 
 	res, err = sh(ctx, msg)
 	require.NoError(t, err)
@@ -140,25 +141,25 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	sh := staking.NewHandler(app.StakingKeeper)
 
 	// create validator with 10% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), staking.Description{}, commission, sdk.OneInt())
+	commission := stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	msg := stakingtypes.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), stakingtypes.Description{}, commission, sdk.OneInt())
 	res, err := sh(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
 	// create second validator with 10% commission
-	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valAddrs[1], valConsPk2,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+	commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	msg = stakingtypes.NewMsgCreateValidator(valAddrs[1], valConsPk2,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt())
 	res, err = sh(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
 	// create third validator with 10% commission
-	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valAddrs[2], valConsPk3,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+	commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	msg = stakingtypes.NewMsgCreateValidator(valAddrs[2], valConsPk3,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), stakingtypes.Description{}, commission, sdk.OneInt())
 	res, err = sh(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res)

@@ -5,11 +5,10 @@ import (
 
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
-	"github.com/KiraCore/cosmos-sdk/x/capability"
-	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	capabilitytypes "github.com/KiraCore/cosmos-sdk/x/capability/types"
+	connectiontypes "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/KiraCore/cosmos-sdk/x/ibc/05-port/types"
-	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -38,30 +37,43 @@ func (k Keeper) ChanOpenInit(
 	connectionHops []string,
 	portID,
 	channelID string,
-	portCap *capability.Capability,
+	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version string,
-) (*capability.Capability, error) {
+) (*capabilitytypes.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return nil, sdkerrors.Wrap(types.ErrChannelExists, channelID)
+		return nil, sdkerrors.Wrapf(types.ErrChannelExists, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
+		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() == int32(connection.UNINITIALIZED) {
-		return nil, sdkerrors.Wrap(
-			connection.ErrInvalidConnectionState,
-			"connection state cannot be UNINITIALIZED",
+	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
+		return nil, connectiontypes.ErrInvalidConnectionState
+	}
+
+	if len(connectionEnd.GetVersions()) != 1 {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"single version must be negotiated on connection before opening channel, got: %v",
+			connectionEnd.GetVersions(),
+		)
+	}
+
+	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"connection version %s does not support channel ordering: %s",
+			connectionEnd.GetVersions()[0], order.String(),
 		)
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
+		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
 	}
 
 	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
@@ -69,11 +81,12 @@ func (k Keeper) ChanOpenInit(
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
-		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
+		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
 	}
 
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
+	k.SetNextSequenceAck(ctx, portID, channelID, 1)
 
 	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> INIT", portID, channelID))
 	return capKey, nil
@@ -87,13 +100,13 @@ func (k Keeper) ChanOpenTry(
 	connectionHops []string,
 	portID,
 	channelID string,
-	portCap *capability.Capability,
+	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version,
 	counterpartyVersion string,
-	proofInit commitmentexported.Proof,
+	proofInit []byte,
 	proofHeight uint64,
-) (*capability.Capability, error) {
+) (*capabilitytypes.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
 	if found && !(previousChannel.State == types.INIT &&
@@ -106,18 +119,34 @@ func (k Keeper) ChanOpenTry(
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
+		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
+		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return nil, sdkerrors.Wrapf(
-			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
+			connectiontypes.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
+		)
+	}
+
+	if len(connectionEnd.GetVersions()) != 1 {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"single version must be negotiated on connection before opening channel, got: %v",
+			connectionEnd.GetVersions(),
+		)
+	}
+
+	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidVersion,
+			"connection version %s does not support channel ordering: %s",
+			connectionEnd.GetVersions()[0], order.String(),
 		)
 	}
 
@@ -150,11 +179,12 @@ func (k Keeper) ChanOpenTry(
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
-		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
+		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
 	}
 
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
+	k.SetNextSequenceAck(ctx, portID, channelID, 1)
 
 	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> TRYOPEN", portID, channelID))
 	return capKey, nil
@@ -166,14 +196,14 @@ func (k Keeper) ChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 	counterpartyVersion string,
-	proofTry commitmentexported.Proof,
+	proofTry []byte,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if !(channel.State == types.INIT || channel.State == types.TRYOPEN) {
@@ -184,18 +214,18 @@ func (k Keeper) ChanOpenAck(
 	}
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return sdkerrors.Wrapf(
-			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
+			connectiontypes.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -220,11 +250,12 @@ func (k Keeper) ChanOpenAck(
 		return err
 	}
 
+	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> OPEN", portID, channelID, channel.State))
+
 	channel.State = types.OPEN
 	channel.Version = counterpartyVersion
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: INIT -> OPEN", portID, channelID))
 	return nil
 }
 
@@ -234,13 +265,13 @@ func (k Keeper) ChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap *capability.Capability,
-	proofAck commitmentexported.Proof,
+	chanCap *capabilitytypes.Capability,
+	proofAck []byte,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if channel.State != types.TRYOPEN {
@@ -251,18 +282,18 @@ func (k Keeper) ChanOpenConfirm(
 	}
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return sdkerrors.Wrapf(
-			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
+			connectiontypes.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -304,15 +335,15 @@ func (k Keeper) ChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap *capability.Capability,
+	chanCap *capabilitytypes.Capability,
 ) error {
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -321,13 +352,13 @@ func (k Keeper) ChanCloseInit(
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return sdkerrors.Wrapf(
-			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
+			connectiontypes.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -345,17 +376,17 @@ func (k Keeper) ChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap *capability.Capability,
-	proofInit commitmentexported.Proof,
+	chanCap *capabilitytypes.Capability,
+	proofInit []byte,
 	proofHeight uint64,
 ) error {
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)")
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -364,13 +395,13 @@ func (k Keeper) ChanCloseConfirm(
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(connection.OPEN) {
+	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
 		return sdkerrors.Wrapf(
-			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
+			connectiontypes.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 

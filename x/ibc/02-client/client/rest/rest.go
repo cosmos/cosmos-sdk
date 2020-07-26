@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/gorilla/mux"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 )
 
 // REST client flags
@@ -13,6 +13,6 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	registerQueryRoutes(cliCtx, r)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
+	registerQueryRoutes(clientCtx, r)
 }

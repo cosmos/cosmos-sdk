@@ -3,6 +3,8 @@ package keeper
 import (
 	"encoding/binary"
 
+	"github.com/KiraCore/cosmos-sdk/codec"
+
 	"github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,15 +14,15 @@ import (
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints
-func NewQuerier(k Keeper) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 
 		case types.QueryCurrent:
-			return queryCurrent(ctx, req, k)
+			return queryCurrent(ctx, req, k, legacyQuerierCdc)
 
 		case types.QueryApplied:
-			return queryApplied(ctx, req, k)
+			return queryApplied(ctx, req, k, legacyQuerierCdc)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
@@ -28,13 +30,13 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	plan, has := k.GetUpgradePlan(ctx)
 	if !has {
 		return nil, nil
 	}
 
-	res, err := k.cdc.MarshalJSON(&plan)
+	res, err := legacyQuerierCdc.MarshalJSON(&plan)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -42,10 +44,10 @@ func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper) ([]byte, error
 	return res, nil
 }
 
-func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryAppliedParams
+func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+	var params types.QueryAppliedPlanRequest
 
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}

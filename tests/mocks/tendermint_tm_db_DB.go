@@ -6,7 +6,7 @@ package mocks
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	tm_db "github.com/tendermint/tm-db"
+	db "github.com/tendermint/tm-db"
 	reflect "reflect"
 )
 
@@ -106,10 +106,10 @@ func (mr *MockDBMockRecorder) Has(arg0 interface{}) *gomock.Call {
 }
 
 // Iterator mocks base method
-func (m *MockDB) Iterator(arg0, arg1 []byte) (tm_db.Iterator, error) {
+func (m *MockDB) Iterator(arg0, arg1 []byte) (db.Iterator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Iterator", arg0, arg1)
-	ret0, _ := ret[0].(tm_db.Iterator)
+	ret0, _ := ret[0].(db.Iterator)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -121,10 +121,10 @@ func (mr *MockDBMockRecorder) Iterator(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // NewBatch mocks base method
-func (m *MockDB) NewBatch() tm_db.Batch {
+func (m *MockDB) NewBatch() db.Batch {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewBatch")
-	ret0, _ := ret[0].(tm_db.Batch)
+	ret0, _ := ret[0].(db.Batch)
 	return ret0
 }
 
@@ -149,10 +149,10 @@ func (mr *MockDBMockRecorder) Print() *gomock.Call {
 }
 
 // ReverseIterator mocks base method
-func (m *MockDB) ReverseIterator(arg0, arg1 []byte) (tm_db.Iterator, error) {
+func (m *MockDB) ReverseIterator(arg0, arg1 []byte) (db.Iterator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReverseIterator", arg0, arg1)
-	ret0, _ := ret[0].(tm_db.Iterator)
+	ret0, _ := ret[0].(db.Iterator)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

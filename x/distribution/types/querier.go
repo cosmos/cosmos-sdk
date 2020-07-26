@@ -1,6 +1,8 @@
 package types
 
-import sdk "github.com/KiraCore/cosmos-sdk/types"
+import (
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+)
 
 // querier keys
 const (

@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/KiraCore/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/testutil"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestExportGenesisFileWithTime(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	fname := filepath.Join(dir, "genesis.json")

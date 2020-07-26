@@ -12,10 +12,10 @@ import (
 )
 
 // QuerierClients defines the sdk.Querier to query all the light client states.
-func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QueryAllClientsParams
 
-	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+	if err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
@@ -28,7 +28,7 @@ func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, e
 		clients = clients[start:end]
 	}
 
-	res, err := codec.MarshalJSONIndent(k.cdc, clients)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, clients)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

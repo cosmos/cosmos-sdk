@@ -3,38 +3,39 @@ package ibc_test
 import (
 	lite "github.com/tendermint/tendermint/lite2"
 
-	"github.com/KiraCore/cosmos-sdk/x/ibc"
-	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
 	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
-	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	connectiontypes "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/KiraCore/cosmos-sdk/x/ibc/testing"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/types"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
 	testCases := []struct {
 		name     string
-		genState ibc.GenesisState
+		genState types.GenesisState
 		expPass  bool
 	}{
 		{
 			name:     "default",
-			genState: ibc.DefaultGenesisState(),
+			genState: types.DefaultGenesisState(),
 			expPass:  true,
 		},
 		{
 			name: "valid genesis",
-			genState: ibc.GenesisState{
-				ClientGenesis: client.NewGenesisState(
+			genState: types.GenesisState{
+				ClientGenesis: clienttypes.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						localhosttypes.NewClientState("chaindID", 10),
 					},
-					[]client.ConsensusStates{
-						client.NewClientConsensusStates(
+					[]clienttypes.ClientConsensusStates{
+						clienttypes.NewClientConsensusStates(
 							clientID,
 							[]exported.ConsensusState{
 								ibctmtypes.NewConsensusState(
@@ -45,34 +46,37 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					},
 					true,
 				),
-				ConnectionGenesis: connection.NewGenesisState(
-					[]connection.End{
-						connection.NewConnectionEnd(connection.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+				ConnectionGenesis: connectiontypes.NewGenesisState(
+					[]connectiontypes.IdentifiedConnection{
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion})),
 					},
-					[]connection.Paths{
-						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
+					[]connectiontypes.ConnectionPaths{
+						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
 					},
 				),
-				ChannelGenesis: channel.NewGenesisState(
-					[]channel.IdentifiedChannel{
-						channel.NewIdentifiedChannel(
-							port1, channel1, channel.NewChannel(
-								channel.INIT, channelOrder,
-								channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
+				ChannelGenesis: channeltypes.NewGenesisState(
+					[]channeltypes.IdentifiedChannel{
+						channeltypes.NewIdentifiedChannel(
+							port1, channel1, channeltypes.NewChannel(
+								channeltypes.INIT, channelOrder,
+								channeltypes.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
 							),
 						),
 					},
-					[]channel.PacketAckCommitment{
-						channel.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
+					[]channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
 					},
-					[]channel.PacketAckCommitment{
-						channel.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
+					[]channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
 					},
-					[]channel.PacketSequence{
-						channel.NewPacketSequence(port1, channel1, 1),
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port1, channel1, 1),
 					},
-					[]channel.PacketSequence{
-						channel.NewPacketSequence(port2, channel2, 1),
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port2, channel2, 1),
+					},
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
 				),
 			},
@@ -80,29 +84,29 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid client genesis",
-			genState: ibc.GenesisState{
-				ClientGenesis: client.NewGenesisState(
+			genState: types.GenesisState{
+				ClientGenesis: clienttypes.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState("chaindID", 0),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+						localhosttypes.NewClientState("(chaindID)", 0),
 					},
 					nil,
 					false,
 				),
-				ConnectionGenesis: connection.DefaultGenesisState(),
+				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 			},
 			expPass: false,
 		},
 		{
 			name: "invalid connection genesis",
-			genState: ibc.GenesisState{
-				ClientGenesis: client.DefaultGenesisState(),
-				ConnectionGenesis: connection.NewGenesisState(
-					[]connection.End{
-						connection.NewConnectionEnd(connection.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+			genState: types.GenesisState{
+				ClientGenesis: clienttypes.DefaultGenesisState(),
+				ConnectionGenesis: connectiontypes.NewGenesisState(
+					[]connectiontypes.IdentifiedConnection{
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"})),
 					},
-					[]connection.Paths{
-						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
+					[]connectiontypes.ConnectionPaths{
+						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
 					},
 				),
 			},
@@ -110,12 +114,12 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid channel genesis",
-			genState: ibc.GenesisState{
-				ClientGenesis:     client.DefaultGenesisState(),
-				ConnectionGenesis: connection.DefaultGenesisState(),
-				ChannelGenesis: channel.GenesisState{
-					Acknowledgements: []channel.PacketAckCommitment{
-						channel.NewPacketAckCommitment("portID", channel1, 1, []byte("ack")),
+			genState: types.GenesisState{
+				ClientGenesis:     clienttypes.DefaultGenesisState(),
+				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
+				ChannelGenesis: channeltypes.GenesisState{
+					Acknowledgements: []channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment("(portID)", channel1, 1, []byte("ack")),
 					},
 				},
 			},

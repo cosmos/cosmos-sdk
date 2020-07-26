@@ -2,9 +2,11 @@ package exported
 
 import (
 	"encoding/json"
-	"fmt"
+
+	ics23 "github.com/confio/ics23/go"
 
 	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 
 	"github.com/KiraCore/cosmos-sdk/codec"
 	evidenceexported "github.com/KiraCore/cosmos-sdk/x/evidence/exported"
@@ -21,36 +23,38 @@ type ClientState interface {
 	GetLatestHeight() uint64
 	IsFrozen() bool
 	Validate() error
+	GetProofSpecs() []*ics23.ProofSpec
 
 	// State verification functions
 
 	VerifyClientConsensusState(
 		store sdk.KVStore,
-		cdc *codec.Codec,
+		cdc codec.BinaryMarshaler,
+		aminoCdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
 		counterpartyClientIdentifier string,
 		consensusHeight uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
 		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
@@ -58,9 +62,10 @@ type ClientState interface {
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -69,9 +74,10 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -80,9 +86,10 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -90,9 +97,10 @@ type ClientState interface {
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
@@ -188,7 +196,7 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 
 	clientType := ClientTypeFromString(s)
 	if clientType == 0 {
-		return fmt.Errorf("invalid client type '%s'", s)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid client type '%s'", s)
 	}
 
 	*ct = clientType

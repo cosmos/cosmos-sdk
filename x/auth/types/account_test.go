@@ -10,14 +10,14 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/KiraCore/cosmos-sdk/testutil/testdata"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth/exported"
 	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
-	_, pub1, addr1 := types.KeyTestPubAddr()
-	_, pub2, addr2 := types.KeyTestPubAddr()
+	_, pub1, addr1 := testdata.KeyTestPubAddr()
+	_, pub2, addr2 := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr1)
 
 	// check the address (set) and pubkey (not set)
@@ -49,7 +49,7 @@ func TestBaseAddressPubKey(t *testing.T) {
 }
 
 func TestBaseAccountSequence(t *testing.T) {
-	_, _, addr := types.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)
 
@@ -59,7 +59,7 @@ func TestBaseAccountSequence(t *testing.T) {
 }
 
 func TestBaseAccountMarshal(t *testing.T) {
-	_, pub, addr := types.KeyTestPubAddr()
+	_, pub, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)
 
@@ -69,15 +69,15 @@ func TestBaseAccountMarshal(t *testing.T) {
 	err = acc.SetSequence(seq)
 	require.Nil(t, err)
 
-	bz, err := appCodec.MarshalAccount(acc)
+	bz, err := app.AccountKeeper.MarshalAccount(acc)
 	require.Nil(t, err)
 
-	acc2, err := appCodec.UnmarshalAccount(bz)
+	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
 	require.Nil(t, err)
 	require.Equal(t, acc, acc2)
 
 	// error on bad bytes
-	_, err = appCodec.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(t, err)
 }
 
@@ -88,7 +88,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		acc    exported.GenesisAccount
+		acc    types.GenesisAccount
 		expErr bool
 	}{
 		{
@@ -150,7 +150,7 @@ func TestValidate(t *testing.T) {
 	baseAcc := types.NewBaseAccount(addr, nil, 0, 0)
 	tests := []struct {
 		name   string
-		acc    exported.GenesisAccount
+		acc    types.GenesisAccount
 		expErr error
 	}{
 		{
@@ -194,4 +194,16 @@ func TestModuleAccountJSON(t *testing.T) {
 	var a types.ModuleAccount
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, acc.String(), a.String())
+}
+
+func TestGenesisAccountsContains(t *testing.T) {
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	acc := types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0)
+
+	genAccounts := types.GenesisAccounts{}
+	require.False(t, genAccounts.Contains(acc.GetAddress()))
+
+	genAccounts = append(genAccounts, acc)
+	require.True(t, genAccounts.Contains(acc.GetAddress()))
 }

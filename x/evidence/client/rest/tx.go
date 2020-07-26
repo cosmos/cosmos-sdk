@@ -1,11 +1,11 @@
 package rest
 
 import (
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 
 	"github.com/gorilla/mux"
 )
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, handlers []EvidenceRESTHandler) {
+func registerTxRoutes(clientCtx client.Context, r *mux.Router, handlers []EvidenceRESTHandler) {
 	// TODO: Register tx handlers.
 }

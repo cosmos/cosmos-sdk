@@ -32,7 +32,7 @@ syntax = "proto3";
 
 package google.protobuf;
 
-import "third_party/proto/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 option csharp_namespace = "Google.Protobuf.WellKnownTypes";
 option go_package = "types";

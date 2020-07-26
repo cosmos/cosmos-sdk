@@ -2,14 +2,14 @@ package keys
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/KiraCore/cosmos-sdk/client/flags"
 )
 
 // Commands registers a sub-tree of commands to interact with
 // local private key storage.
-func Commands() *cobra.Command {
+func Commands(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "keys",
 		Short: "Manage your application's keys",
@@ -36,6 +36,7 @@ information:
 The pass backend requires GnuPG: https://gnupg.org/
 `,
 	}
+
 	cmd.AddCommand(
 		MnemonicKeyCommand(),
 		AddKeyCommand(),
@@ -48,7 +49,10 @@ The pass backend requires GnuPG: https://gnupg.org/
 		ParseKeyStringCommand(),
 		MigrateCommand(),
 	)
+
+	cmd.PersistentFlags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
+	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
+
 	return cmd
 }

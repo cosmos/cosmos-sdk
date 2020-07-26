@@ -1,9 +1,8 @@
 package keyring
 
 import (
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	"github.com/KiraCore/cosmos-sdk/crypto/hd"
 )
 
@@ -12,7 +11,7 @@ var CryptoCdc *codec.Codec
 
 func init() {
 	CryptoCdc = codec.New()
-	cryptoAmino.RegisterAmino(CryptoCdc)
+	cryptocodec.RegisterCrypto(CryptoCdc)
 	RegisterCodec(CryptoCdc)
 	CryptoCdc.Seal()
 }

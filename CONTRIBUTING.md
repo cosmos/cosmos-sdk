@@ -7,6 +7,7 @@
     - [Updating Documentation](#updating-documentation)
   - [Forking](#forking)
   - [Dependencies](#dependencies)
+  - [Protobuf](#protobuf)
   - [Testing](#testing)
   - [Branching Model and Release](#branching-model-and-release)
     - [PR Targeting](#pr-targeting)
@@ -14,6 +15,7 @@
     - [Pull Merge Procedure](#pull-merge-procedure)
     - [Release Procedure](#release-procedure)
     - [Point Release Procedure](#point-release-procedure)
+  - [Code Owner Membership](#code-owner-membership)
 
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
@@ -142,7 +144,22 @@ We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along 
 
 For linting and checking breaking changes, we use [buf](https://buf.build/). There are two options for linting and to check if your changes will cause a break. The first is that you can install [buf](https://buf.build/docs/installation) locally, the commands for running buf after installing are `make proto-lint` and the breaking changes check will be `make proto-check-breaking`. If you do not want to install buf and have docker installed already then you can use these commands `make proto-lint-docker` and `make proto-check-breaking-docker`.
 
-To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make protoc` & `make protoc-gen-gocosmos`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
+To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make proto-tools`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
+
+In order for imports to properly compile in your IDE, you may need to manually set your protobuf path in your IDE's workspace settings/config.
+
+For example, in vscode your `.vscode/settings.json` should look like:
+
+```
+{
+    "protoc": {
+        "options": [
+        "--proto_path=${workspaceRoot}/proto",
+        "--proto_path=${workspaceRoot}/third_party/proto"
+        ]
+    }
+}
+```
 
 ## Testing
 
@@ -216,6 +233,7 @@ only pull requests targeted directly against master.
   - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
 - On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
   - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
 - Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `master`
   and create a new `RC` branch (making sure to increment the `rcN`)
@@ -227,21 +245,47 @@ only pull requests targeted directly against master.
 
 ### Point Release Procedure
 
-At the moment, only a single major release will be supported, so all point
-releases will be based off of that release.
+At the moment, only a single major release will be supported, so all point releases will be based
+off of that release.
 
-- start on `vX.XX.X`
-- checkout a new branch `rcN/vX.X.X`
-- cherry pick the desired changes from `master`
-  - these changes should be small and NON-BREAKING (both API and state machine)
-- add entries to CHANGELOG.md and remove corresponding pending log entries
-- checkout a new branch `release/vX.X.X` based off of the previous release
-- create a PR merging `rcN/vX.X.X` into `release/vX.X.X`
-- run tests and simulations (noted in [Release Procedure](#release-procedure))
-- after tests and simulation have successfully completed, merge the `RC` branch into `release/vX.X.X`
-  - Make sure to delete the `RC` branch
-- create a PR into `master` containing ONLY the CHANGELOG.md updates
-- tag (use `git tag -a`) then push the tags (`git push --tags`)
+In order to alleviate the burden for a single person to have to cherry-pick and handle merge conflicts
+of all desired backporting PRs to a point release, we instead maintain a living backport branch, where
+all desired features and bug fixes are merged into as separate PRs.
+
+Example:
+
+Current release is `v0.38.4`. We then maintain a (living) branch `sru/release/v0.38.N`, given N as
+the next patch release number (currently `0.38.5`) for the `0.38` release series. As bugs are fixed
+and PRs are merged into `master`, if a contributor wishes the PR to be released as SRU into the
+`v0.38.N` point release, the contributor must:
+
+1. Add `0.38.N-backport` label
+2. Pull latest changes on the desired `sru/release/vX.X.N` branch
+3. Create a 2nd PR merging the respective SRU PR into `sru/release/v0.38.N`
+4. Update the PR's description and ensure it contains the following information:
+   - **[Impact]** Explanation of how the bug affects users or developers.
+   - **[Test Case]** section with detailed instructions on how to reproduce the bug.
+   - **[Regression Potential]** section with a discussion how regressions are most likely to manifest, or might
+   manifest even if it's unlikely, as a result of the change. **It is assumed that any SRU candidate PR is
+   well-tested before it is merged in and has an overall low risk of regression**.
+
+It is the PR's author's responsibility to fix merge conflicts, update changelog entries, and
+ensure CI passes. If a PR originates from an external contributor, it may be a core team member's
+responsibility to perform this process instead of the original author.
+Lastly, it is core team's responsibility to ensure that the PR meets all the SRU criteria.
+
+Finally, when a point release is ready to be made:
+
+1. Create `release/v0.38.N` branch
+2. Ensure changelog entries are verified
+   2. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
+3. Add release version date to the changelog
+4. Push release branch along with the annotated tag: **git tag -a**
+5. Create a PR into `master` containing ONLY `CHANGELOG.md` updates
+   1. Do not push `RELEASE_CHANGELOG.md` to `master`
+
+Note, although we aim to support only a single release at a time, the process stated above could be
+used for multiple previous versions.
 
 ## Code Owner Membership
 
@@ -250,8 +294,8 @@ alive, the core contributor team will strive to permit special repo privileges
 to developers who show an aptitude towards developing with this code base.
 
 Several different kinds of privileges may be granted however most common
-privileges to be granted are merge rights to either part of, or the entire the
-code base (though the github `CODEOWNERS` file). The on-boarding process for
+privileges to be granted are merge rights to either part of, or the entirety of the
+code base (through the github `CODEOWNERS` file). The on-boarding process for
 new code owners is as follows: On a bi-monthly basis (or more frequently if
 agreeable) all the existing code owners will privately convene to discuss
 potential new candidates as well as the potential for existing code-owners to
@@ -264,7 +308,7 @@ Only if unanimous consensus is reached among all the existing code-owners will
 an invitation be extended to a new potential-member. Likewise, when an existing
 member is suggested to be removed/or have their privileges reduced, the member
 in question must agree on the decision for their removal or else no action
-should be taken. If however, a code-owner is verifiably shown to intentionally
+should be taken. If however, a code-owner is demonstrably shown to intentionally
 have had acted maliciously or grossly negligent, code-owner privileges may be
 stripped with no prior warning or consent from the member in question.
 

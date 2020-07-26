@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 
 	"github.com/gorilla/mux"
 )
@@ -24,7 +24,7 @@ type EvidenceRESTHandler struct {
 
 // RegisterRoutes registers all Evidence submission handlers for the evidence module's
 // REST service handler.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, handlers []EvidenceRESTHandler) {
-	registerQueryRoutes(cliCtx, r)
-	registerTxRoutes(cliCtx, r, handlers)
+func RegisterRoutes(clientCtx client.Context, r *mux.Router, handlers []EvidenceRESTHandler) {
+	registerQueryRoutes(clientCtx, r)
+	registerTxRoutes(clientCtx, r, handlers)
 }

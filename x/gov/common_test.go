@@ -12,14 +12,14 @@ import (
 
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/gov/types"
-	"github.com/KiraCore/cosmos-sdk/x/staking"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 var (
 	valTokens           = sdk.TokensFromConsensusPower(42)
 	TestProposal        = types.NewTextProposal("Test", "description")
-	TestDescription     = staking.NewDescription("T", "E", "S", "T", "Z")
-	TestCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	TestDescription     = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
+	TestCommissionRates = stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 // SortAddresses - Sorts Addresses
@@ -84,7 +84,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 	for i := 0; i < len(addrs); i++ {
 
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
-		valCreateMsg := staking.NewMsgCreateValidator(
+		valCreateMsg := stakingtypes.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			TestDescription, TestCommissionRates, sdk.OneInt(),
 		)

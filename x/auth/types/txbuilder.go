@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/pflag"
+
 	"github.com/spf13/viper"
 
 	"github.com/KiraCore/cosmos-sdk/client/flags"
@@ -50,28 +52,40 @@ func NewTxBuilder(
 	}
 }
 
-// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
-// the command line using Viper.
-func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
+// NewTxBuilderFromFlags returns a new initialized TxBuilder with parameters extracted from
+// FlagSet.
+func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
+	backend, _ := fs.GetString(flags.FlagKeyringBackend)
+	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
+	accNum, _ := fs.GetUint64(flags.FlagAccountNumber)
+	seq, _ := fs.GetUint64(flags.FlagSequence)
+	gasAdjustment, _ := fs.GetFloat64(flags.FlagGasAdjustment)
+	chainID, _ := fs.GetString(flags.FlagChainID)
+	memo, _ := fs.GetString(flags.FlagMemo)
+	fees, _ := fs.GetString(flags.FlagFees)
+	gasPrices, _ := fs.GetString(flags.FlagGasPrices)
+
+	gasStr, _ := fs.GetString(flags.FlagGas)
+	gasSetting, err := flags.ParseGasSetting(gasStr)
 	if err != nil {
-		panic(err)
+		return TxBuilder{}, err
 	}
+
 	txbldr := TxBuilder{
 		keybase:            kb,
-		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
-		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                flags.GasFlagVar.Gas,
-		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		simulateAndExecute: flags.GasFlagVar.Simulate,
-		chainID:            viper.GetString(flags.FlagChainID),
-		memo:               viper.GetString(flags.FlagMemo),
+		accountNumber:      accNum,
+		sequence:           seq,
+		gas:                gasSetting.Gas,
+		simulateAndExecute: gasSetting.Simulate,
+		gasAdjustment:      gasAdjustment,
+		chainID:            chainID,
+		memo:               memo,
 	}
 
-	txbldr = txbldr.WithFees(viper.GetString(flags.FlagFees))
-	txbldr = txbldr.WithGasPrices(viper.GetString(flags.FlagGasPrices))
+	txbldr = txbldr.WithFees(fees)
+	txbldr = txbldr.WithGasPrices(gasPrices)
 
-	return txbldr
+	return txbldr, nil
 }
 
 // TxEncoder returns the transaction encoder
@@ -207,10 +221,10 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 	}, nil
 }
 
-// Sign signs a transaction given a name, passphrase, and a single message to
-// signed. An error is returned if signing fails.
-func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, error) {
-	sig, err := MakeSignature(bldr.keybase, name, passphrase, msg)
+// Sign signs a transaction given a name and a single message to be signed.
+// Returns error if signing fails.
+func (bldr TxBuilder) Sign(name string, msg StdSignMsg) ([]byte, error) {
+	sig, err := MakeSignature(bldr.keybase, name, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -219,14 +233,14 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
-// with the built message given a name, passphrase, and a set of messages.
-func (bldr TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]byte, error) {
+// with the built message given a name and a set of messages.
+func (bldr TxBuilder) BuildAndSign(name string, msgs []sdk.Msg) ([]byte, error) {
 	msg, err := bldr.BuildSignMsg(msgs)
 	if err != nil {
 		return nil, err
 	}
 
-	return bldr.Sign(name, passphrase, msg)
+	return bldr.Sign(name, msg)
 }
 
 // BuildTxForSim creates a StdSignMsg and encodes a transaction with the
@@ -244,12 +258,12 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If append
 // is false, it replaces the signatures already attached with the new signature.
-func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig bool) (signedStdTx StdTx, err error) {
+func (bldr TxBuilder) SignStdTx(name string, stdTx StdTx, appendSig bool) (signedStdTx StdTx, err error) {
 	if bldr.chainID == "" {
 		return StdTx{}, fmt.Errorf("chain ID required but not specified")
 	}
 
-	stdSignature, err := MakeSignature(bldr.keybase, name, passphrase, StdSignMsg{
+	stdSignature, err := MakeSignature(bldr.keybase, name, StdSignMsg{
 		ChainID:       bldr.chainID,
 		AccountNumber: bldr.accountNumber,
 		Sequence:      bldr.sequence,
@@ -271,18 +285,16 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 	return
 }
 
-// MakeSignature builds a StdSignature given keybase, key name, passphrase, and a StdSignMsg.
-func MakeSignature(keybase keyring.Keyring, name, passphrase string,
-	msg StdSignMsg) (sig StdSignature, err error) {
-
-	if keybase == nil {
-		keybase, err = keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
+// MakeSignature builds a StdSignature given a keyring, key name, and a StdSignMsg.
+func MakeSignature(kr keyring.Keyring, name string, msg StdSignMsg) (sig StdSignature, err error) {
+	if kr == nil {
+		kr, err = keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
 		if err != nil {
 			return
 		}
 	}
 
-	sigBytes, pubkey, err := keybase.Sign(name, msg.Bytes())
+	sigBytes, pubkey, err := kr.Sign(name, msg.Bytes())
 	if err != nil {
 		return
 	}

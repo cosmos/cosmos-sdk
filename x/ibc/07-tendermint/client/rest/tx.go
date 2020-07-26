@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/types/rest"
 	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
@@ -14,10 +14,10 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/clients/tendermint", createClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
+func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/ibc/clients/tendermint", createClientHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(clientCtx)).Methods("POST")
 }
 
 // createClientHandlerFn implements a create client handler
@@ -30,10 +30,10 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Success 200 {object} PostCreateClient "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/tendermint [post]
-func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func createClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateClientReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -52,7 +52,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		msg := ibctmtypes.NewMsgCreateClient(
 			req.ClientID, req.Header, req.TrustLevel,
 			req.TrustingPeriod, req.UnbondingPeriod, req.MaxClockDrift,
-			fromAddr,
+			req.ProofSpecs, fromAddr,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {
@@ -60,7 +60,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -76,13 +76,13 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/update [post]
-func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func updateClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
 
 		var req UpdateClientReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -109,7 +109,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -124,10 +124,10 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/misbehaviour [post]
-func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func submitMisbehaviourHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req SubmitMisbehaviourReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -149,6 +149,6 @@ func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

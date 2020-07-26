@@ -8,13 +8,12 @@ import (
 
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
-	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
-	"github.com/KiraCore/cosmos-sdk/x/bank"
-	"github.com/KiraCore/cosmos-sdk/x/staking"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
-func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.ValAddress, expFound bool) staking.Validator {
+func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.ValAddress, expFound bool) types.Validator {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	validator, found := app.StakingKeeper.GetValidator(ctxCheck, addr)
 
@@ -45,10 +44,10 @@ func TestStakingMsgs(t *testing.T) {
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
-	acc1 := &auth.BaseAccount{Address: addr1}
-	acc2 := &auth.BaseAccount{Address: addr2}
-	accs := authexported.GenesisAccounts{acc1, acc2}
-	balances := []bank.Balance{
+	acc1 := &authtypes.BaseAccount{Address: addr1}
+	acc2 := &authtypes.BaseAccount{Address: addr2}
+	accs := authtypes.GenesisAccounts{acc1, acc2}
+	balances := []banktypes.Balance{
 		{
 			Address: addr1,
 			Coins:   sdk.Coins{genCoin},
@@ -64,13 +63,14 @@ func TestStakingMsgs(t *testing.T) {
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
 
 	// create validator
-	description := staking.NewDescription("foo_moniker", "", "", "", "")
-	createValidatorMsg := staking.NewMsgCreateValidator(
+	description := types.NewDescription("foo_moniker", "", "", "", "")
+	createValidatorMsg := types.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
 	)
 
 	header := abci.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
+	txGen := simapp.MakeEncodingConfig().TxConfig
+	_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
@@ -86,11 +86,11 @@ func TestStakingMsgs(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// edit the validator
-	description = staking.NewDescription("bar_moniker", "", "", "", "")
-	editValidatorMsg := staking.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
+	description = types.NewDescription("bar_moniker", "", "", "", "")
+	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
 	header = abci.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{editValidatorMsg}, []uint64{0}, []uint64{1}, true, true, priv1)
+	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, []uint64{0}, []uint64{1}, true, true, priv1)
 	require.NoError(t, err)
 
 	validator = checkValidator(t, app, sdk.ValAddress(addr1), true)
@@ -98,19 +98,19 @@ func TestStakingMsgs(t *testing.T) {
 
 	// delegate
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
-	delegateMsg := staking.NewMsgDelegate(addr2, sdk.ValAddress(addr1), bondCoin)
+	delegateMsg := types.NewMsgDelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 
 	header = abci.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{delegateMsg}, []uint64{1}, []uint64{0}, true, true, priv2)
+	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{delegateMsg}, []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
 	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), true, bondTokens.ToDec())
 
 	// begin unbonding
-	beginUnbondingMsg := staking.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
+	beginUnbondingMsg := types.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 	header = abci.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, []uint64{1}, []uint64{1}, true, true, priv2)
+	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
 
 	// delegation should exist anymore

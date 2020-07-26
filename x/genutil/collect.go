@@ -15,22 +15,22 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/KiraCore/cosmos-sdk/client"
 	"github.com/KiraCore/cosmos-sdk/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 	bankexported "github.com/KiraCore/cosmos-sdk/x/bank/exported"
 	"github.com/KiraCore/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 // GenAppStateFromConfig gets the genesis app state from the config
-func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
-	initCfg InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
+func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig,
+	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
-	appGenTxs, persistentPeers, err := CollectStdTxs(
-		cdc, config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
+	appGenTxs, persistentPeers, err := CollectTxs(
+		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
 	)
 	if err != nil {
 		return appState, err
@@ -45,12 +45,12 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	}
 
 	// create the app state
-	appGenesisState, err := GenesisStateFromGenDoc(cdc, genDoc)
+	appGenesisState, err := types.GenesisStateFromGenDoc(cdc, genDoc)
 	if err != nil {
 		return appState, err
 	}
 
-	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, appGenesisState, appGenTxs)
+	appGenesisState, err = SetGenTxsInAppGenesisState(cdc, txEncodingConfig.TxJSONEncoder(), appGenesisState, appGenTxs)
 	if err != nil {
 		return appState, err
 	}
@@ -66,11 +66,11 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	return appState, err
 }
 
-// CollectStdTxs processes and validates application's genesis StdTxs and returns
+// CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
-func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
+func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
-) (appGenTxs []authtypes.StdTx, persistentPeers string, err error) {
+) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
@@ -104,36 +104,41 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 			continue
 		}
 
-		// get the genStdTx
+		// get the genTx
 		var jsonRawTx []byte
 
 		if jsonRawTx, err = ioutil.ReadFile(filename); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 
-		var genStdTx authtypes.StdTx
-		if err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx); err != nil {
+		var genTx sdk.Tx
+		if genTx, err = txJSONDecoder(jsonRawTx); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 
-		appGenTxs = append(appGenTxs, genStdTx)
+		appGenTxs = append(appGenTxs, genTx)
 
 		// the memo flag is used to store
 		// the ip and node-id, for example this may be:
 		// "528fd3df22b31f4969b05652bfe8f0fe921321d5@192.168.2.37:26656"
-		nodeAddrIP := genStdTx.GetMemo()
+
+		memoTx, ok := genTx.(sdk.TxWithMemo)
+		if !ok {
+			return appGenTxs, persistentPeers, fmt.Errorf("expected TxWithMemo, got %T", genTx)
+		}
+		nodeAddrIP := memoTx.GetMemo()
 		if len(nodeAddrIP) == 0 {
 			return appGenTxs, persistentPeers, fmt.Errorf("failed to find node's address and IP in %s", fo.Name())
 		}
 
 		// genesis transactions must be single-message
-		msgs := genStdTx.GetMsgs()
+		msgs := genTx.GetMsgs()
 		if len(msgs) != 1 {
 			return appGenTxs, persistentPeers, errors.New("each genesis transaction must provide a single genesis message")
 		}
 
 		// TODO abstract out staking message validation back to staking
-		msg := msgs[0].(stakingtypes.MsgCreateValidator)
+		msg := msgs[0].(*stakingtypes.MsgCreateValidator)
 
 		// validate delegator and validator addresses and funds against the accounts in the state
 		delAddr := msg.DelegatorAddress.String()

@@ -15,7 +15,7 @@ import (
 	simapparams "github.com/KiraCore/cosmos-sdk/simapp/params"
 	"github.com/KiraCore/cosmos-sdk/types/module"
 	simtypes "github.com/KiraCore/cosmos-sdk/types/simulation"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
@@ -137,9 +137,9 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
 
-	var authGenesis auth.GenesisState
-	if appState[auth.ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[auth.ModuleName], &authGenesis)
+	var authGenesis authtypes.GenesisState
+	if appState[authtypes.ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
 	}
 
 	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))

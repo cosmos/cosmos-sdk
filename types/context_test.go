@@ -231,3 +231,15 @@ func TestContextHeaderClone(t *testing.T) {
 		})
 	}
 }
+
+func TestUnwrapSDKContext(t *testing.T) {
+	sdkCtx := types.NewContext(nil, abci.Header{}, false, nil)
+	ctx := types.WrapSDKContext(sdkCtx)
+	sdkCtx2 := types.UnwrapSDKContext(ctx)
+	require.Equal(t, sdkCtx, sdkCtx2)
+
+	ctx = context.Background()
+	require.Panics(t, func() {
+		types.UnwrapSDKContext(ctx)
+	})
+}

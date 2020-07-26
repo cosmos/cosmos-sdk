@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 	"github.com/KiraCore/cosmos-sdk/x/distribution/types"
 )
 
@@ -17,5 +17,5 @@ var (
 	valConsAddr1 = sdk.ConsAddress(valConsPk1.Address())
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 
-	distrAcc = auth.NewEmptyModuleAccount(types.ModuleName)
+	distrAcc = authtypes.NewEmptyModuleAccount(types.ModuleName)
 )

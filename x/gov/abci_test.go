@@ -4,14 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/KiraCore/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/gov"
+	"github.com/KiraCore/cosmos-sdk/x/gov/types"
 	"github.com/KiraCore/cosmos-sdk/x/staking"
 )
 
@@ -29,8 +28,8 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg, err := std.NewMsgSubmitProposal(
-		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
+	newProposalMsg, err := types.NewMsgSubmitProposal(
+		types.ContentFromProposalType("test", "test", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -81,8 +80,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg, err := std.NewMsgSubmitProposal(
-		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
+	newProposalMsg, err := types.NewMsgSubmitProposal(
+		types.ContentFromProposalType("test", "test", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -104,8 +103,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg2, err := std.NewMsgSubmitProposal(
-		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
+	newProposalMsg2, err := types.NewMsgSubmitProposal(
+		types.ContentFromProposalType("test2", "test2", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -161,8 +160,8 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	newProposalMsg, err := std.NewMsgSubmitProposal(
-		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
+	newProposalMsg, err := types.NewMsgSubmitProposal(
+		types.ContentFromProposalType("test2", "test2", types.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
@@ -172,7 +171,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	proposalID := gov.GetProposalIDFromBytes(res.Data)
+	proposalID := types.GetProposalIDFromBytes(res.Data)
 
 	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -186,7 +185,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newDepositMsg := gov.NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
+	newDepositMsg := types.NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
 
 	res, err = govHandler(ctx, newDepositMsg)
 	require.NoError(t, err)
@@ -217,20 +216,20 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
-	newProposalMsg, err := std.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
+	newProposalMsg, err := types.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
 	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	proposalID := gov.GetProposalIDFromBytes(res.Data)
+	proposalID := types.GetProposalIDFromBytes(res.Data)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	newDepositMsg := gov.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+	newDepositMsg := types.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
 
 	res, err = govHandler(ctx, newDepositMsg)
 	require.NoError(t, err)
@@ -247,10 +246,10 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, activeQueue.Valid())
 
-	activeProposalID := gov.GetProposalIDFromBytes(activeQueue.Value())
+	activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
 	proposal, ok := app.GovKeeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
-	require.Equal(t, gov.StatusVotingPeriod, proposal.Status)
+	require.Equal(t, types.StatusVotingPeriod, proposal.Status)
 
 	activeQueue.Close()
 
@@ -287,7 +286,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
-	newDepositMsg := gov.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
+	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
 
 	res, err := handler(ctx, newDepositMsg)
 	require.NoError(t, err)
@@ -300,7 +299,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 	require.True(t, moduleAccCoins.IsEqual(deposits))
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], gov.OptionYes)
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], types.OptionYes)
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()
@@ -339,13 +338,13 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
-	newDepositMsg := gov.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
+	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
 
 	res, err := handler(ctx, newDepositMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], gov.OptionYes)
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], types.OptionYes)
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()

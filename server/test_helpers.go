@@ -2,15 +2,7 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
-	"os"
-	"testing"
-
-	"github.com/KiraCore/cosmos-sdk/client/flags"
-
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
 )
 
 // Get a free address for a test tendermint server
@@ -36,21 +28,3 @@ func FreeTCPAddr() (addr, port string, err error) {
 	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
 	return
 }
-
-// SetupViper creates a homedir to run inside,
-// and returns a cleanup function to defer
-func SetupViper(t *testing.T) func() {
-	rootDir, err := ioutil.TempDir("", "mock-sdk-cmd")
-	require.Nil(t, err)
-	viper.Set(flags.FlagHome, rootDir)
-	viper.Set(flags.FlagName, "moniker")
-	return func() {
-		err := os.RemoveAll(rootDir)
-		if err != nil {
-			// TODO: Handle with #870
-			panic(err)
-		}
-	}
-}
-
-// DONTCOVER

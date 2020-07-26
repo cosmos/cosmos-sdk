@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
@@ -30,7 +29,7 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 	acc2 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 	// acc2Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
-	genAccs := make([]exported.GenesisAccount, 2)
+	genAccs := make([]authtypes.GenesisAccount, 2)
 	genAccs[0] = baseVestingAcc
 	genAccs[1] = acc2
 

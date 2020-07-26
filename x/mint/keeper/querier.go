@@ -10,17 +10,17 @@ import (
 )
 
 // NewQuerier returns a minting Querier handler.
-func NewQuerier(k Keeper) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	return func(ctx sdk.Context, path []string, _ abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryParameters:
-			return queryParams(ctx, k)
+			return queryParams(ctx, k, legacyQuerierCdc)
 
 		case types.QueryInflation:
-			return queryInflation(ctx, k)
+			return queryInflation(ctx, k, legacyQuerierCdc)
 
 		case types.QueryAnnualProvisions:
-			return queryAnnualProvisions(ctx, k)
+			return queryAnnualProvisions(ctx, k, legacyQuerierCdc)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
@@ -28,10 +28,10 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
+func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	params := k.GetParams(ctx)
 
-	res, err := codec.MarshalJSONIndent(k.cdc, params)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -39,10 +39,10 @@ func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
 	return res, nil
 }
 
-func queryInflation(ctx sdk.Context, k Keeper) ([]byte, error) {
+func queryInflation(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	minter := k.GetMinter(ctx)
 
-	res, err := codec.MarshalJSONIndent(k.cdc, minter.Inflation)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, minter.Inflation)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -50,10 +50,10 @@ func queryInflation(ctx sdk.Context, k Keeper) ([]byte, error) {
 	return res, nil
 }
 
-func queryAnnualProvisions(ctx sdk.Context, k Keeper) ([]byte, error) {
+func queryAnnualProvisions(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	minter := k.GetMinter(ctx)
 
-	res, err := codec.MarshalJSONIndent(k.cdc, minter.AnnualProvisions)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, minter.AnnualProvisions)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

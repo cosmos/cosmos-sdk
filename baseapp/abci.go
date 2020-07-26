@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -102,6 +103,8 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
+
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
@@ -145,6 +148,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "end_block")
+
 	if app.deliverState.ms.TracingEnabled() {
 		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
 	}
@@ -163,9 +168,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // will contain releveant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+	defer telemetry.MeasureSince(time.Now(), "abci", "check_tx")
+
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, 0, 0)
+		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
 	}
 
 	var mode runTxMode
@@ -183,7 +190,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 
 	gInfo, result, err := app.runTx(mode, req.Tx, tx)
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed)
+		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
 	}
 
 	return abci.ResponseCheckTx{
@@ -201,14 +208,27 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
+
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, 0, 0)
+		return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
 	}
+
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
+
+	defer func() {
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+	}()
 
 	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx, tx)
 	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed)
+		resultStr = "failed"
+		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
 	}
 
 	return abci.ResponseDeliverTx{
@@ -228,6 +248,8 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
+
 	header := app.deliverState.ctx.BlockHeader()
 
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
@@ -294,6 +316,14 @@ func (app *BaseApp) halt() {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
+	defer telemetry.MeasureSince(time.Now(), "abci", "query")
+
+	// handle gRPC routes first rather than calling splitPath because '/' characters
+	// are used as part of gRPC paths
+	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
+		return app.handleQueryGRPC(grpcHandler, req)
+	}
+
 	path := splitPath(req.Path)
 	if len(path) == 0 {
 		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"))
@@ -315,6 +345,53 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
+}
+
+func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
+	ctx, err := app.createQueryContext(req)
+	if err != nil {
+		return sdkerrors.QueryResult(err)
+	}
+
+	res, err := handler(ctx, req)
+	if err != nil {
+		res = sdkerrors.QueryResult(err)
+		res.Height = req.Height
+		return res
+	}
+
+	return res
+}
+
+func (app *BaseApp) createQueryContext(req abci.RequestQuery) (sdk.Context, error) {
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
+
+	if req.Height <= 1 && req.Prove {
+		return sdk.Context{},
+			sdkerrors.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"cannot query with proof when height <= 1; please provide a valid height",
+			)
+	}
+
+	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+	if err != nil {
+		return sdk.Context{},
+			sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"failed to load state at height %d; %s (latest height: %d)", req.Height, err, app.LastBlockHeight(),
+			)
+	}
+
+	// cache wrap the commit-multistore for safety
+	ctx := sdk.NewContext(
+		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
+	).WithMinGasPrices(app.minGasPrices)
+
+	return ctx, nil
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
@@ -439,34 +516,10 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]))
 	}
 
-	// when a client did not provide a query height, manually inject the latest
-	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
-	}
-
-	if req.Height <= 1 && req.Prove {
-		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
-				sdkerrors.ErrInvalidRequest,
-				"cannot query with proof when height <= 1; please provide a valid height",
-			),
-		)
-	}
-
-	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+	ctx, err := app.createQueryContext(req)
 	if err != nil {
-		return sdkerrors.QueryResult(
-			sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest,
-				"failed to load state at height %d; %s (latest height: %d)", req.Height, err, app.LastBlockHeight(),
-			),
-		)
+		return sdkerrors.QueryResult(err)
 	}
-
-	// cache wrap the commit-multistore for safety
-	ctx := sdk.NewContext(
-		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
-	).WithMinGasPrices(app.minGasPrices)
 
 	// Passes the rest of the path as an argument to the querier.
 	//
@@ -474,13 +527,9 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 	// []string{"proposal", "test"} as the path.
 	resBytes, err := querier(ctx, path[2:], req)
 	if err != nil {
-		space, code, log := sdkerrors.ABCIInfo(err, false)
-		return abci.ResponseQuery{
-			Code:      code,
-			Codespace: space,
-			Log:       log,
-			Height:    req.Height,
-		}
+		res := sdkerrors.QueryResult(err)
+		res.Height = req.Height
+		return res
 	}
 
 	return abci.ResponseQuery{

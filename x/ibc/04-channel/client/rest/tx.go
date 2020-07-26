@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/types/rest"
 	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
@@ -14,14 +14,14 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/channels/open-init", channelOpenInitHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/channels/open-try", channelOpenTryHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-ack", RestPortID, RestChannelID), channelOpenAckHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-confirm", RestPortID, RestChannelID), channelOpenConfirmHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-init", RestPortID, RestChannelID), channelCloseInitHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-confirm", RestPortID, RestChannelID), channelCloseConfirmHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/packets/receive", recvPacketHandlerFn(cliCtx)).Methods("POST")
+func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/ibc/channels/open-init", channelOpenInitHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc("/ibc/channels/open-try", channelOpenTryHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-ack", RestPortID, RestChannelID), channelOpenAckHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-confirm", RestPortID, RestChannelID), channelOpenConfirmHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-init", RestPortID, RestChannelID), channelCloseInitHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-confirm", RestPortID, RestChannelID), channelCloseConfirmHandlerFn(clientCtx)).Methods("POST")
+	r.HandleFunc("/ibc/packets/receive", recvPacketHandlerFn(clientCtx)).Methods("POST")
 }
 
 // channelOpenInitHandlerFn implements a channel open init handler
@@ -34,10 +34,10 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Success 200 {object} PostChannelOpenInit "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/channels/open-init [post]
-func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenInitReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -69,7 +69,7 @@ func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -83,10 +83,10 @@ func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} PostChannelOpenTry "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/channels/open-try [post]
-func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenTryReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -121,7 +121,7 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -138,14 +138,14 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/open-ack [post]
-func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
 		channelID := vars[RestChannelID]
 
 		var req ChannelOpenAckReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -175,7 +175,7 @@ func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -192,14 +192,14 @@ func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/open-confirm [post]
-func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
 		channelID := vars[RestChannelID]
 
 		var req ChannelOpenConfirmReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -228,7 +228,7 @@ func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -245,14 +245,14 @@ func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/close-init [post]
-func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelCloseInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
 		channelID := vars[RestChannelID]
 
 		var req ChannelCloseInitReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -279,7 +279,7 @@ func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -296,14 +296,14 @@ func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/close-confirm [post]
-func channelCloseConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelCloseConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
 		channelID := vars[RestChannelID]
 
 		var req ChannelCloseConfirmReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -332,7 +332,7 @@ func channelCloseConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -346,10 +346,10 @@ func channelCloseConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} PostRecvPacket "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/packets/receive [post]
-func recvPacketHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func recvPacketHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RecvPacketReq
-		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
 			return
 		}
 
@@ -365,7 +365,7 @@ func recvPacketHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgPacket(
+		msg := types.NewMsgRecvPacket(
 			req.Packet,
 			req.Proofs,
 			req.Height,
@@ -377,6 +377,6 @@ func recvPacketHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

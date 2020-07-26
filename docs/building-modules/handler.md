@@ -28,8 +28,8 @@ Let us break it down:
 
 Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The
 [module manager](./module-manager.md) is used to add the module's `handler`s to the
-[application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically,
-the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`,
+[application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,
+the manager's `Route()` method simply constructs a Route that calls a `NewHandler()` method defined in `handler.go`,
 which looks like the following:
 
 ```go

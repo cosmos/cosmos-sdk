@@ -131,6 +131,7 @@ func (kv kvStore) Has(key []byte) bool {
 }
 
 func (kv kvStore) Set(key, value []byte) {
+	store.AssertValidKey(key)
 	kv.store[string(key)] = value
 }
 

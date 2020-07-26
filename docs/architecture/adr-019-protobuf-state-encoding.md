@@ -5,6 +5,7 @@
 - 2020 Feb 15: Initial Draft
 - 2020 Feb 24: Updates to handle messages with interface fields
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
+- 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
 
 ## Status
 
@@ -176,6 +177,14 @@ type InterfaceRegistry interface {
 In addition to serving as a whitelist, `InterfaceRegistry` can also serve
 to communicate the list of concrete types that satisfy an interface to clients.
 
+In .proto files:
+* fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
+using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
+* interface implementations should be annotated with `cosmos_proto.implements_interface`
+using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
+
+In the future, `protoName`, `cosmos_proto.accepts_interface`, `cosmos_proto.implements_interface`
+may be used via code generation, reflection &/or static linting.
 
 The same struct that implements `InterfaceRegistry` will also implement an
 interface `InterfaceUnpacker` to be used for unpacking `Any`s:
@@ -298,6 +307,21 @@ func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence {
   return msg.Evidence.GetCachedValue().(eviexported.Evidence)
 }
 ```
+
+### Amino Compatibility
+
+Our custom implementation of `Any` can be used transparently with Amino if used
+with the proper codec instance. What this means is that interfaces packed within
+`Any`s will be amino marshaled like regular Amino interfaces (assuming they
+have been registered properly with Amino).
+
+In order for this functionality to work:
+* **all legacy code must use `*codec.Codec` instead of `*amino.Codec` which is
+now a wrapper which properly handles `Any`**
+* **all new code should use `Marshaler` which is compatible with both amino and
+protobuf**
+
+Also, before v0.39, `codec.Codec` will be renamed to `codec.LegacyAmino`.
 
 ### Why Wasn't X Chosen Instead
 

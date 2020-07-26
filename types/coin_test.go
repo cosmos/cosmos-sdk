@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -25,6 +26,11 @@ func TestCoin(t *testing.T) {
 	require.Panics(t, func() { NewCoin(strings.ToUpper(testDenom1), NewInt(10)) })
 	require.Equal(t, NewInt(5), NewInt64Coin(testDenom1, 5).Amount)
 	require.Equal(t, NewInt(5), NewCoin(testDenom1, NewInt(5)).Amount)
+}
+
+func TestCoin_String(t *testing.T) {
+	coin := NewCoin(testDenom1, NewInt(10))
+	require.Equal(t, fmt.Sprintf("10%s", testDenom1), coin.String())
 }
 
 func TestIsEqualCoin(t *testing.T) {
@@ -187,6 +193,43 @@ func TestCoinIsZero(t *testing.T) {
 
 // ----------------------------------------------------------------------------
 // Coins tests
+
+func TestCoins_String(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    Coins
+		expected string
+	}{
+		{
+			name:     "empty coins",
+			input:    Coins{},
+			expected: "",
+		},
+		{
+			name: "single coin",
+			input: Coins{
+				{"tree", NewInt(1)},
+			},
+			expected: "1tree",
+		},
+		{
+			name: "multiple coins",
+			input: Coins{
+				{"tree", NewInt(1)},
+				{"gas", NewInt(1)},
+				{"mineral", NewInt(1)},
+			},
+			expected: "1tree,1gas,1mineral",
+		},
+	}
+
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, tt.input.String())
+		})
+	}
+}
 
 func TestIsZeroCoins(t *testing.T) {
 	cases := []struct {

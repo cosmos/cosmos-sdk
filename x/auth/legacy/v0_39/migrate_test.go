@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/KiraCore/cosmos-sdk/codec"
+	cryptocodec "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	"github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_34"
 	v038auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_38"
@@ -14,7 +15,7 @@ import (
 
 func TestMigrate(t *testing.T) {
 	v039Codec := codec.New()
-	codec.RegisterCrypto(v039Codec)
+	cryptocodec.RegisterCrypto(v039Codec)
 	v038auth.RegisterCodec(v039Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -51,7 +52,7 @@ func TestMigrate(t *testing.T) {
   },
   "accounts": [
     {
-      "type": "cosmos-sdk/Account",
+      "type": "cosmos-sdk/BaseAccount",
       "value": {
         "address": "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u",
         "public_key": "",

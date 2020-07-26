@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	"github.com/tendermint/crypto/bcrypt"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/armor"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
+	cryptoAmino "github.com/KiraCore/cosmos-sdk/crypto/codec"
 	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 )
 

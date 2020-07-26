@@ -6,11 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/KiraCore/cosmos-sdk/codec"
+
+	"github.com/KiraCore/cosmos-sdk/baseapp"
 	"github.com/KiraCore/cosmos-sdk/simapp"
 	sdk "github.com/KiraCore/cosmos-sdk/types"
-	"github.com/KiraCore/cosmos-sdk/x/auth"
-	"github.com/KiraCore/cosmos-sdk/x/bank"
-	"github.com/KiraCore/cosmos-sdk/x/evidence"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	banktypes "github.com/KiraCore/cosmos-sdk/x/bank/types"
 	"github.com/KiraCore/cosmos-sdk/x/evidence/exported"
 	"github.com/KiraCore/cosmos-sdk/x/evidence/keeper"
 	"github.com/KiraCore/cosmos-sdk/x/evidence/types"
@@ -74,30 +76,37 @@ type KeeperTestSuite struct {
 	ctx     sdk.Context
 	querier sdk.Querier
 	app     *simapp.SimApp
+
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// recreate keeper in order to use custom testing types
-	evidenceKeeper := evidence.NewKeeper(
-		app.AppCodec(), app.GetKey(evidence.StoreKey), app.StakingKeeper, app.SlashingKeeper,
+	evidenceKeeper := keeper.NewKeeper(
+		app.AppCodec(), app.GetKey(types.StoreKey), app.StakingKeeper, app.SlashingKeeper,
 	)
-	router := evidence.NewRouter()
+	router := types.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(*evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
 	app.EvidenceKeeper = *evidenceKeeper
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
-	suite.querier = keeper.NewQuerier(*evidenceKeeper)
+	suite.querier = keeper.NewQuerier(*evidenceKeeper, legacyQuerierCdc)
 	suite.app = app
 
 	for i, addr := range valAddresses {
 		addr := sdk.AccAddress(addr)
-		app.AccountKeeper.SetAccount(suite.ctx, auth.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+		app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
 	}
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
@@ -123,7 +132,7 @@ func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
 	// add accounts and set total supply
 	totalSupplyAmt := initAmt.MulRaw(int64(len(valAddresses)))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
-	suite.app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
+	suite.app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	for _, addr := range valAddresses {
 		_, err := suite.app.BankKeeper.AddCoins(ctx, sdk.AccAddress(addr), initCoins)

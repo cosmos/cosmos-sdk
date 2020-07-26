@@ -4,9 +4,11 @@ import (
 	sdk "github.com/KiraCore/cosmos-sdk/types"
 	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 	"github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/types"
 )
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
@@ -16,12 +18,12 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		default:
 
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }
 
-func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg exported.MsgSubmitEvidence) (*sdk.Result, error) {
+func handleMsgSubmitEvidence(ctx sdk.Context, k keeper.Keeper, msg exported.MsgSubmitEvidence) (*sdk.Result, error) {
 	evidence := msg.GetEvidence()
 	if err := k.SubmitEvidence(ctx, evidence); err != nil {
 		return nil, err
@@ -30,7 +32,7 @@ func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg exported.MsgSubmitEv
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSubmitter().String()),
 		),
 	)

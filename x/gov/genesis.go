@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/gov/keeper"
 	"github.com/KiraCore/cosmos-sdk/x/gov/types"
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k Keeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, data types.GenesisState) {
 	k.SetProposalID(ctx, data.StartingProposalID)
 	k.SetDepositParams(ctx, data.DepositParams)
 	k.SetVotingParams(ctx, data.VotingParams)
@@ -32,9 +33,9 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 	for _, proposal := range data.Proposals {
 		switch proposal.Status {
-		case StatusDepositPeriod:
+		case types.StatusDepositPeriod:
 			k.InsertInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)
-		case StatusVotingPeriod:
+		case types.StatusVotingPeriod:
 			k.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
 		}
 		k.SetProposal(ctx, proposal)
@@ -51,15 +52,15 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)
 	proposals := k.GetProposals(ctx)
 
-	var proposalsDeposits Deposits
-	var proposalsVotes Votes
+	var proposalsDeposits types.Deposits
+	var proposalsVotes types.Votes
 	for _, proposal := range proposals {
 		deposits := k.GetDeposits(ctx, proposal.ProposalID)
 		proposalsDeposits = append(proposalsDeposits, deposits...)
@@ -68,7 +69,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 		proposalsVotes = append(proposalsVotes, votes...)
 	}
 
-	return GenesisState{
+	return types.GenesisState{
 		StartingProposalID: startingProposalID,
 		Deposits:           proposalsDeposits,
 		Votes:              proposalsVotes,

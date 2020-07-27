@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -145,4 +146,31 @@ func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	return string(bs), nil
+}
+
+// MarshalJSON returns the JSON representation of a ModuleAccount.
+func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
+	return json.Marshal(moduleAccountPretty{
+		Address:       ma.Address,
+		Coins:         ma.Coins,
+		PubKey:        "",
+		AccountNumber: ma.AccountNumber,
+		Sequence:      ma.Sequence,
+		Name:          ma.Name,
+		Permissions:   ma.Permissions,
+	})
+}
+
+// UnmarshalJSON unmarshals raw JSON bytes into a ModuleAccount.
+func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
+	var alias moduleAccountPretty
+	if err := json.Unmarshal(bz, &alias); err != nil {
+		return err
+	}
+
+	ma.BaseAccount = authtypes.NewBaseAccount(alias.Address, alias.Coins, nil, alias.AccountNumber, alias.Sequence)
+	ma.Name = alias.Name
+	ma.Permissions = alias.Permissions
+
+	return nil
 }

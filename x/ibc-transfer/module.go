@@ -56,7 +56,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the ibc transfer module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -71,17 +71,17 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // GetTxCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
 // GetQueryCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetQueryCmd(_ client.Context) *cobra.Command {
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return nil
 }
 
-// RegisterInterfaceTypes registers module concrete types into protobuf Any.
-func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+// RegisterInterfaces registers module concrete types into protobuf Any.
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -113,11 +113,13 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler implements the AppModule interface
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler implements the AppModule interface
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return nil
 }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the ibc transfer module. It returns
@@ -371,9 +373,9 @@ func (am AppModule) OnTimeoutPacket(
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTimeout,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
 			sdk.NewAttribute(types.AttributeKeyRefundValue, data.Amount.String()),
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
 

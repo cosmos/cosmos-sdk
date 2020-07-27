@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -16,6 +18,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -68,6 +71,7 @@ type TestChain struct {
 	CurrentHeader abci.Header       // header for current block height
 	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
 	QueryServer   types.QueryServer
+	TxConfig      client.TxConfig
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -108,6 +112,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	}
 
 	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// create current header and call begin block
 	header := abci.Header{
@@ -115,14 +120,17 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Time:   globalStartTime,
 	}
 
+	txConfig := simapp.MakeEncodingConfig().TxConfig
+
 	// create an account to send transactions from
 	chain := &TestChain{
 		t:             t,
 		ChainID:       chainID,
 		App:           app,
 		CurrentHeader: header,
-		Querier:       keeper.NewQuerier(*app.IBCKeeper),
+		Querier:       keeper.NewQuerier(*app.IBCKeeper, legacyQuerierCdc),
 		QueryServer:   app.IBCKeeper,
+		TxConfig:      txConfig,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -204,7 +212,7 @@ func (chain *TestChain) NextBlock() {
 func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,
-		chain.App.Codec(),
+		chain.TxConfig,
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		[]sdk.Msg{msg},
@@ -225,7 +233,7 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	return nil
 }
 
-// GetClientState retreives the client state for the provided clientID. The client is
+// GetClientState retrieves the client state for the provided clientID. The client is
 // expected to exist otherwise testing will fail.
 func (chain *TestChain) GetClientState(clientID string) clientexported.ClientState {
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
@@ -234,7 +242,7 @@ func (chain *TestChain) GetClientState(clientID string) clientexported.ClientSta
 	return clientState
 }
 
-// GetConnection retreives an IBC Connection for the provided TestConnection. The
+// GetConnection retrieves an IBC Connection for the provided TestConnection. The
 // connection is expected to exist otherwise testing will fail.
 func (chain *TestChain) GetConnection(testConnection *TestConnection) connectiontypes.ConnectionEnd {
 	connection, found := chain.App.IBCKeeper.ConnectionKeeper.GetConnection(chain.GetContext(), testConnection.ID)
@@ -243,7 +251,7 @@ func (chain *TestChain) GetConnection(testConnection *TestConnection) connection
 	return connection
 }
 
-// GetChannel retreives an IBC Channel for the provided TestChannel. The channel
+// GetChannel retrieves an IBC Channel for the provided TestChannel. The channel
 // is expected to exist otherwise testing will fail.
 func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel {
 	channel, found := chain.App.IBCKeeper.ChannelKeeper.GetChannel(chain.GetContext(), testChannel.PortID, testChannel.ID)
@@ -252,7 +260,7 @@ func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel
 	return channel
 }
 
-// GetAcknowledgement retreives an acknowledgement for the provided packet. If the
+// GetAcknowledgement retrieves an acknowledgement for the provided packet. If the
 // acknowledgement does not exist then testing will fail.
 func (chain *TestChain) GetAcknowledgement(packet channelexported.PacketI) []byte {
 	ack, found := chain.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(chain.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -582,6 +590,14 @@ func (chain *TestChain) ChanCloseInit(
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.SendMsg(msg)
+}
+
+// GetPacketData returns a ibc-transfer marshalled packet to be used for
+// callback testing
+func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
+	packet := ibctransfertypes.NewFungibleTokenPacketData(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))), chain.SenderAccount.GetAddress().String(), counterparty.SenderAccount.GetAddress().String())
+
+	return packet.GetBytes()
 }
 
 // SendPacket simulates sending a packet through the channel keeper. No message needs to be

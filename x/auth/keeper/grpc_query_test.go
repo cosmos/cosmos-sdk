@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -11,7 +12,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 	var (
 		req *types.QueryAccountRequest
 	)
-	_, _, addr := types.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		msg       string
@@ -93,7 +94,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 	var (
-		req       *types.QueryParametersRequest
+		req       *types.QueryParamsRequest
 		expParams types.Params
 	)
 
@@ -105,7 +106,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 		{
 			"success",
 			func() {
-				req = &types.QueryParametersRequest{}
+				req = &types.QueryParamsRequest{}
 				expParams = suite.app.AccountKeeper.GetParams(suite.ctx)
 			},
 			true,
@@ -119,7 +120,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.Parameters(ctx, req)
+			res, err := suite.queryClient.Params(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

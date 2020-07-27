@@ -17,7 +17,7 @@ import (
 
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 

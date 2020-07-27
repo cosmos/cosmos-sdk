@@ -1,195 +1,187 @@
-// +build cli_test
-
 package cli_test
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankclienttestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
-func TestCLICreateValidator(t *testing.T) {
-	t.SkipNow() // Recreate when using CLI tests.
+type IntegrationTestSuite struct {
+	suite.Suite
 
-	t.Parallel()
-	f := cli.InitFixtures(t)
+	cfg     network.Config
+	network *network.Network
+}
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
 
-	barAddr := f.KeyAddress(cli.KeyBar)
-	barVal := sdk.ValAddress(barAddr)
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 1
 
-	// Check for the params
-	params := testutil.QueryStakingParameters(f)
-	require.NotEmpty(t, params)
+	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
 
-	// Query for the staking pool
-	pool := testutil.QueryStakingPool(f)
-	require.NotEmpty(t, pool)
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
 
-	consPubKey := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, ed25519.GenPrivKey().PubKey())
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
-	sendTokens := sdk.TokensFromConsensusPower(10)
-	bankclienttestutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
+	val := s.network.Validators[0]
 
-	require.Equal(t, sendTokens.String(), bankclienttestutil.QueryBalances(f, barAddr).AmountOf(cli.Denom).String())
+	consPrivKey := ed25519.GenPrivKey()
+	consPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
+	s.Require().NoError(err)
 
-	// Generate a create validator transaction and ensure correctness
-	success, stdout, stderr := testutil.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewInt64Coin(cli.Denom, 2), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
 
-	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
-	// Test --dry-run
-	newValTokens := sdk.TokensFromConsensusPower(2)
-	success, _, _ = testutil.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewCoin(cli.Denom, newValTokens), "--dry-run")
-	require.True(t, success)
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
 
-	// Create the validator
-	testutil.TxStakingCreateValidator(f, cli.KeyBar, consPubKey, sdk.NewCoin(cli.Denom, newValTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     fmt.Stringer
+		expectedCode uint32
+	}{
+		{
+			"invalid transaction (missing amount)",
+			[]string{
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"invalid transaction (missing pubkey)",
+			[]string{
+				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"invalid transaction (missing moniker)",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
+				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
+				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=NewValidator", cli.FlagMoniker),
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
 
-	// Ensure funds were deducted properly
-	require.Equal(t, sendTokens.Sub(newValTokens), bankclienttestutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
+	for _, tc := range testCases {
+		tc := tc
 
-	// Ensure that validator state is as expected
-	validator := testutil.QueryStakingValidator(f, barVal)
-	require.Equal(t, validator.OperatorAddress, barVal)
-	require.True(sdk.IntEq(t, newValTokens, validator.Tokens))
+		s.Run(tc.name, func() {
+			cmd := cli.NewCreateValidatorCmd()
+			_, out := testutil.ApplyMockIO(cmd)
 
-	// Query delegations to the validator
-	validatorDelegations := testutil.QueryStakingDelegationsTo(f, barVal)
-	require.Len(t, validatorDelegations, 1)
-	require.NotZero(t, validatorDelegations[0].Shares)
+			clientCtx := val.ClientCtx.WithOutput(out)
 
-	// Edit validator
-	// params to be changed in edit validator (NOTE: a validator can only change its commission once per day)
-	newMoniker := "test-moniker"
-	newWebsite := "https://cosmos.network"
-	newIdentity := "6A0D65E29A4CBC8D"
-	newDetails := "To-infinity-and-beyond!"
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	// Test --generate-only"
-	success, stdout, stderr = testutil.TxStakingEditValidator(f, barAddr.String(), newMoniker, newWebsite, newIdentity, newDetails, "--generate-only")
-	require.True(t, success)
-	require.True(t, success)
-	require.Empty(t, stderr)
+			out.Reset()
+			cmd.SetArgs(tc.args)
 
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
+			err := cmd.ExecuteContext(ctx)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-	success, _, _ = testutil.TxStakingEditValidator(f, cli.KeyBar, newMoniker, newWebsite, newIdentity, newDetails, "-y")
-	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
 
-	udpatedValidator := testutil.QueryStakingValidator(f, barVal)
-	require.Equal(t, udpatedValidator.Description.Moniker, newMoniker)
-	require.Equal(t, udpatedValidator.Description.Identity, newIdentity)
-	require.Equal(t, udpatedValidator.Description.Website, newWebsite)
-	require.Equal(t, udpatedValidator.Description.Details, newDetails)
-
-	// unbond a single share
-	validators := testutil.QueryStakingValidators(f)
-	require.Len(t, validators, 2)
-
-	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(1))
-	success = testutil.TxStakingUnbond(f, cli.KeyBar, unbondAmt.String(), barVal, "-y")
-	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Ensure bonded staking is correct
-	remainingTokens := newValTokens.Sub(unbondAmt.Amount)
-	validator = testutil.QueryStakingValidator(f, barVal)
-	require.Equal(t, remainingTokens, validator.Tokens)
-
-	// Query for historical info
-	require.NotEmpty(t, testutil.QueryStakingHistoricalInfo(f, 1))
-
-	// Get unbonding delegations from the validator
-	validatorUbds := testutil.QueryStakingUnbondingDelegationsFrom(f, barVal)
-	require.Len(t, validatorUbds, 1)
-	require.Len(t, validatorUbds[0].Entries, 1)
-	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
-
-	// Query staking unbonding delegation
-	ubd := testutil.QueryStakingUnbondingDelegation(f, barAddr.String(), barVal.String())
-	require.NotEmpty(t, ubd)
-
-	// Query staking unbonding delegations
-	ubds := testutil.QueryStakingUnbondingDelegations(f, barAddr.String())
-	require.Len(t, ubds, 1)
-
-	fooAddr := f.KeyAddress(cli.KeyFoo)
-
-	delegateTokens := sdk.TokensFromConsensusPower(2)
-	delegateAmount := sdk.NewCoin(cli.Denom, delegateTokens)
-
-	// Delegate txn
-	// Generate a create validator transaction and ensure correctness
-	success, stdout, stderr = testutil.TxStakingDelegate(f, fooAddr.String(), barVal.String(), delegateAmount, "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
-
-	// Delegate
-	success, _, err := testutil.TxStakingDelegate(f, cli.KeyFoo, barVal.String(), delegateAmount, "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-	require.Empty(t, err)
-	require.True(t, success)
-
-	// Query the delegation from foo address to barval
-	delegation := testutil.QueryStakingDelegation(f, fooAddr.String(), barVal)
-	require.NotZero(t, delegation.Shares)
-
-	// Query the delegations from foo address to barval
-	delegations := testutil.QueryStakingDelegations(f, barAddr.String())
-	require.Len(t, delegations, 1)
-
-	fooVal := sdk.ValAddress(fooAddr)
-
-	// Redelegate
-	success, stdout, stderr = testutil.TxStakingRedelegate(f, fooAddr.String(), barVal.String(), fooVal.String(), delegateAmount, "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
-
-	success, _, err = testutil.TxStakingRedelegate(f, cli.KeyFoo, barVal.String(), fooVal.String(), delegateAmount, "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-	require.Empty(t, err)
-	require.True(t, success)
-
-	redelegation := testutil.QueryStakingRedelegation(f, fooAddr.String(), barVal.String(), fooVal.String())
-	require.Len(t, redelegation, 1)
-
-	redelegations := testutil.QueryStakingRedelegations(f, fooAddr.String())
-	require.Len(t, redelegations, 1)
-
-	redelegationsFrom := testutil.QueryStakingRedelegationsFrom(f, barVal.String())
-	require.Len(t, redelegationsFrom, 1)
-
-	f.Cleanup()
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

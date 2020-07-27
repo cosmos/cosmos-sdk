@@ -17,9 +17,12 @@ type (
 	//
 	// 1. AminoCodec: Provides full Amino serialization compatibility.
 	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.
-	// 3. HybridCodec: Provides Protobuf serialization for binary encoding and Amino
-	// for JSON encoding.
 	Marshaler interface {
+		BinaryMarshaler
+		JSONMarshaler
+	}
+
+	BinaryMarshaler interface {
 		MarshalBinaryBare(o ProtoMarshaler) ([]byte, error)
 		MustMarshalBinaryBare(o ProtoMarshaler) []byte
 
@@ -32,7 +35,6 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
-		JSONMarshaler
 		types.AnyUnpacker
 	}
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -33,14 +32,13 @@ func GetCmdQueryConnections() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			offset, _ := cmd.Flags().GetInt(flags.FlagPage)
-			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			req := &types.QueryConnectionsRequest{
-				Req: &query.PageRequest{
-					Offset: uint64(offset),
-					Limit:  uint64(limit),
-				},
+				Pagination: pageReq,
 			}
 
 			res, err := queryClient.Connections(context.Background(), req)
@@ -52,9 +50,8 @@ func GetCmdQueryConnections() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "connection ends")
 
 	return cmd
 }

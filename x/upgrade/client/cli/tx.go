@@ -91,14 +91,19 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal(clientCtx client.Context) *cobra.Command {
+func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
@@ -132,13 +137,15 @@ func NewCmdSubmitCancelUpgradeProposal(clientCtx client.Context) *cobra.Command 
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
+	cmd.MarkFlagRequired(cli.FlagTitle)
+	cmd.MarkFlagRequired(cli.FlagDescription)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

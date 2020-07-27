@@ -22,10 +22,8 @@ rootCmd.AddCommand(rest.ServeCommand(cdc, registerRoutes))
 Users will then be able to use the application CLI to start a new REST server, a local server through which they can securely interact with the application without downloading the entire state. The command entered by users would look something like this:
 
 ```bash
-appcli rest-server --chain-id <chainID> --trust-node
+appcli rest-server --chain-id <chainID>
 ```
-
-Note that if `trust-node` is set to `false`, the REST server will verify the query proof against the merkle root (contained in the block header).
 
 ## REST Server
 
@@ -68,5 +66,5 @@ rootCmd.AddCommand(rest.ServeCommand(cdc, registerRoutes))
 gaiacli rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
-    --trust-node=true --unsafe-cors
+    --unsafe-cors
 ```

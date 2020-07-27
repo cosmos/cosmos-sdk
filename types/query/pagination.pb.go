@@ -27,7 +27,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 //
 //  message SomeRequest {
 //          Foo some_parameter = 1;
-//          PageRequest page = 2;
+//          PageRequest pagination = 2;
 //  }
 type PageRequest struct {
 	// key is a value returned in PageResponse.next_key to begin

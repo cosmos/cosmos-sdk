@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -59,7 +61,7 @@ func NewSimApp(val Validator) server.Application {
 // in-process local testing network.
 type Config struct {
 	Codec            codec.Marshaler
-	TxGenerator      client.TxGenerator
+	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
 	GenesisState     map[string]json.RawMessage // custom gensis state to provide
@@ -84,7 +86,7 @@ func DefaultConfig() Config {
 
 	return Config{
 		Codec:            encCfg.Marshaler,
-		TxGenerator:      encCfg.TxGenerator,
+		TxConfig:         encCfg.TxConfig,
 		AccountRetriever: authtypes.NewAccountRetriever(encCfg.Marshaler),
 		AppConstructor:   NewSimApp,
 		GenesisState:     simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
@@ -278,16 +280,21 @@ func New(t *testing.T, cfg Config) *Network {
 		require.NoError(t, err)
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		tx := authtypes.NewStdTx([]sdk.Msg{createValMsg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
-		txBldr := authtypes.TxBuilder{}.
+		txBuilder := cfg.TxConfig.NewTxBuilder()
+		require.NoError(t, txBuilder.SetMsgs(createValMsg))
+		txBuilder.SetMemo(memo)
+
+		txFactory := tx.Factory{}
+		txFactory = txFactory.
 			WithChainID(cfg.ChainID).
 			WithMemo(memo).
-			WithKeybase(kb)
+			WithKeybase(kb).
+			WithTxConfig(cfg.TxConfig)
 
-		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
+		err = tx.Sign(txFactory, nodeDirName, txBuilder)
 		require.NoError(t, err)
 
-		txBz, err := cfg.Codec.MarshalJSON(signedTx)
+		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
 		require.NoError(t, err)
 		require.NoError(t, writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz))
 
@@ -298,7 +305,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithJSONMarshaler(cfg.Codec).
-			WithTxGenerator(cfg.TxGenerator).
+			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)
 
 		network.Validators[i] = &Validator{
@@ -334,13 +341,6 @@ func New(t *testing.T, cfg Config) *Network {
 	return network
 }
 
-// WaitForHeight performs a blocking check where it waits for a block to be
-// committed after a given block. If that height is not reached within a timeout,
-// an error is returned. Regardless, the latest height queried is returned.
-func (n *Network) WaitForHeight(h int64) (int64, error) {
-	return n.WaitForHeightWithTimeout(h, 10*time.Second)
-}
-
 // LatestHeight returns the latest height of the network or an error if the
 // query fails or no validators exist.
 func (n *Network) LatestHeight() (int64, error) {
@@ -354,6 +354,13 @@ func (n *Network) LatestHeight() (int64, error) {
 	}
 
 	return status.SyncInfo.LatestBlockHeight, nil
+}
+
+// WaitForHeight performs a blocking check where it waits for a block to be
+// committed after a given block. If that height is not reached within a timeout,
+// an error is returned. Regardless, the latest height queried is returned.
+func (n *Network) WaitForHeight(h int64) (int64, error) {
+	return n.WaitForHeightWithTimeout(h, 10*time.Second)
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can
@@ -384,6 +391,22 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			}
 		}
 	}
+}
+
+// WaitForNextBlock waits for the next block to be committed, returning an error
+// upon failure.
+func (n *Network) WaitForNextBlock() error {
+	lastBlock, err := n.LatestHeight()
+	if err != nil {
+		return err
+	}
+
+	_, err = n.WaitForHeight(lastBlock + 1)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // Cleanup removes the root testing (temporary) directory and stops both the

@@ -3,7 +3,10 @@
 package cli_test
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -13,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codec2 "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -25,7 +27,6 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -72,10 +73,8 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	)
 	s.Require().NoError(err)
 
-	var tx sdk.Tx
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &tx)
+	tx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
 	s.Require().NoError(err)
-	s.T().Log(res.String())
 	// write  unsigned tx to file
 	unsignedTx, cleanup := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer cleanup()
@@ -134,7 +133,6 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	// sign-batch file
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().NoError(err)
-	s.T().Log(res.String())
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file
@@ -147,11 +145,11 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	defer cleanup2()
 
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
-	s.Require().EqualError(err, "cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value")
+	s.Require().EqualError(err, "invalid character 'm' looking for beginning of value")
 
 	// Sign batch malformed tx file signature only.
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
-	s.Require().EqualError(err, "cannot parse disfix JSON wrapper: invalid character 'm' looking for beginning of value")
+	s.Require().EqualError(err, "invalid character 'm' looking for beginning of value")
 }
 
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
@@ -176,10 +174,11 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	normalGeneratedStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, normalGeneratedTx.String())
-	s.Require().Equal(normalGeneratedStdTx.Fee.Gas, uint64(flags.DefaultGasLimit))
-	s.Require().Equal(len(normalGeneratedStdTx.Msgs), 1)
-	s.Require().Equal(0, len(normalGeneratedStdTx.GetSignatures()))
+	normalGeneratedStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, normalGeneratedTx.Bytes())
+	txBuilder, err := val1.ClientCtx.TxConfig.WrapTxBuilder(normalGeneratedStdTx)
+	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(flags.DefaultGasLimit))
+	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
+	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
 
 	// Test generate sendTx with --gas=$amount
 	limitedGasGeneratedTx, err := bankcli.MsgSendExec(
@@ -197,10 +196,12 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	limitedGasStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, limitedGasGeneratedTx.String())
-	s.Require().Equal(limitedGasStdTx.Fee.Gas, uint64(100))
-	s.Require().Equal(len(limitedGasStdTx.Msgs), 1)
-	s.Require().Equal(0, len(limitedGasStdTx.GetSignatures()))
+	limitedGasStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, limitedGasGeneratedTx.Bytes())
+	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(limitedGasStdTx)
+	s.Require().NotNil(txBuilder)
+	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(100))
+	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
+	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
 
 	// Test generate sendTx, estimate gas
 	finalGeneratedTx, err := bankcli.MsgSendExec(
@@ -218,9 +219,10 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	finalStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, finalGeneratedTx.String())
-	s.Require().Equal(uint64(flags.DefaultGasLimit), finalStdTx.Fee.Gas)
-	s.Require().Equal(len(finalStdTx.Msgs), 1)
+	finalStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, finalGeneratedTx.Bytes())
+	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(finalStdTx)
+	s.Require().Equal(uint64(flags.DefaultGasLimit), txBuilder.GetTx().GetGas())
+	s.Require().Equal(len(finalStdTx.GetMsgs()), 1)
 
 	// Write the output to disk
 	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), finalGeneratedTx.String())
@@ -245,11 +247,13 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Sign transaction
 	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
 	s.Require().NoError(err)
-
-	signedFinalTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, signedTx.String())
-	s.Require().Equal(len(signedFinalTx.Msgs), 1)
-	s.Require().Equal(1, len(signedFinalTx.GetSignatures()))
-	s.Require().Equal(val1.Address.String(), signedFinalTx.GetSigners()[0].String())
+	s.T().Log(signedTx.String())
+	signedFinalTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, signedTx.Bytes())
+	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(signedFinalTx)
+	s.Require().Error(err)
+	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
+	s.Require().Equal(1, len(txBuilder.GetTx().GetSignatures()))
+	s.Require().Equal(val1.Address.String(), txBuilder.GetTx().GetSigners()[0].String())
 
 	// Write the output to disk
 	signedTxFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), signedTx.String())
@@ -412,8 +416,9 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 	decodedTx, err := authtest.TxDecodeExec(val1.ClientCtx, trimmedBase64)
 	s.Require().NoError(err)
 
-	theTx := unmarshalStdTx(s.T(), val1.ClientCtx.JSONMarshaler, decodedTx.String())
-	s.Require().Equal("deadbeef", theTx.Memo)
+	theTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, decodedTx.Bytes())
+	txBuilder, err := val1.ClientCtx.TxConfig.WrapTxBuilder(theTx)
+	s.Require().Equal("deadbeef", txBuilder.GetTx().GetMemo())
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
@@ -514,7 +519,6 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
-	s.T().SkipNow()
 	val1 := s.network.Validators[0]
 
 	codec := codec2.New()
@@ -626,36 +630,38 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	require.EqualError(t, cmd.Execute(), "cannot broadcast tx during offline mode")
 }
 
-// func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
-// 	clientCtx := client.Context{}
-// 	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
-//
-// 	ctx := context.Background()
-// 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-//
-// 	cmd := authcli.GetBroadcastCommand()
-//
-// 	testDir, cleanFunc := testutil.NewTestCaseDir(t)
-// 	t.Cleanup(cleanFunc)
-//
-// 	// Create new file with tx
-// 	txContents := []byte("{\"type\":\"cosmos-sdk/StdTx\",\"value\":{\"msg\":[{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{\"from_address\":\"cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw\",\"to_address\":\"cosmos1wc8mpr8m3sy3ap3j7fsgqfzx36um05pystems4\",\"amount\":[{\"denom\":\"stake\",\"amount\":\"10000\"}]}}],\"fee\":{\"amount\":[],\"gas\":\"200000\"},\"signatures\":null,\"memo\":\"\"}}")
-// 	txFileName := filepath.Join(testDir, "tx.json")
-// 	err := ioutil.WriteFile(txFileName, txContents, 0644)
-// 	require.NoError(t, err)
-//
-// 	cmd.SetArgs([]string{txFileName})
-// 	err = cmd.ExecuteContext(ctx)
-//
-// 	// We test it tries to broadcast but we set unsupported tx to get the error.
-// 	require.EqualError(t, err, "unsupported return type ; supported types: sync, async, block")
-// }
+func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	cmd := authcli.GetBroadcastCommand()
+
+	testDir, cleanFunc := testutil.NewTestCaseDir(t)
+	t.Cleanup(cleanFunc)
+
+	// Create new file with tx
+	// TODO: Update this to tx
+	txContents := []byte("{\"type\":\"cosmos-sdk/StdTx\",\"value\":{\"msg\":[{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{\"from_address\":\"cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw\",\"to_address\":\"cosmos1wc8mpr8m3sy3ap3j7fsgqfzx36um05pystems4\",\"amount\":[{\"denom\":\"stake\",\"amount\":\"10000\"}]}}],\"fee\":{\"amount\":[],\"gas\":\"200000\"},\"signatures\":null,\"memo\":\"\"}}")
+	txFileName := filepath.Join(testDir, "tx.json")
+	err := ioutil.WriteFile(txFileName, txContents, 0644)
+	require.NoError(t, err)
+
+	cmd.SetArgs([]string{txFileName})
+	err = cmd.ExecuteContext(ctx)
+
+	// We test it tries to broadcast but we set unsupported tx to get the error.
+	require.EqualError(t, err, "unsupported return type ; supported types: sync, async, block")
+}
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func unmarshalStdTx(t require.TestingT, c codec.JSONMarshaler, s string) (stdTx authtypes.StdTx) {
-	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
+func unmarshalStdTx(t require.TestingT, txConfig client.TxConfig, b []byte) (stdTx sdk.Tx) {
+	stdTx, err := txConfig.TxJSONDecoder()(b)
+	require.NoError(t, err)
 	return stdTx
 }

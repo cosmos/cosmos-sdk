@@ -107,14 +107,11 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			if multisigAddr.Empty() {
-				homeDir, _ := cmd.Flags().GetString(flags.FlagFrom)
-				err = authclient.SignStdTx(txFactory, clientCtx, homeDir, txBuilder, false, true)
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
 				_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
-
 				err = authclient.SignStdTx(txFactory, clientCtx, fromName, txBuilder, false, true)
 				if err != nil {
 					return err
@@ -287,3 +284,24 @@ func getSignatureJSON(cdc codec.JSONMarshaler, txGen client.TxConfig, txBldr cli
 
 	return txGen.TxEncoder()(newTx)
 }
+
+// func getSignatureJSON(cdc codec.JSONMarshaler, newTx authsigning.SigVerifiableTx, indent, generateSignatureOnly bool) ([]byte, error) {
+// 	switch generateSignatureOnly {
+// 	case true:
+// 		sigData, err := newTx.GetSignatureData()
+// 		pubKeys := newTx.GetPubKeys()
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		return getSignatureBuilderJSON(cdc, client.SignatureBuilder{
+// 			PubKey: pubKeys[0],
+// 			Data:   sigData[0],
+// 		}, indent)
+// 	default:
+// 		panic("TODO")
+// 	}
+// }
+//
+// func getSignatureBuilderJSON(cdc codec.JSONMarshaler, sigBuilder client.SignatureBuilder, indent bool) ([]byte, error) {
+//
+// }

@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -42,13 +41,13 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	msg2 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 
-	txGen := params.MakeEncodingConfig().TxConfig
+	txGen := simapp.MakeEncodingConfig().TxConfig
 	txBuilder := txGen.NewTxBuilder()
 	err := txBuilder.SetMsgs(msg1, msg2)
 	require.NoError(t, err)
 
 	tx := txBuilder.GetTx()
-	genesisState := types.NewGenesisStateFromTx([]sdk.Tx{tx})
+	genesisState := types.NewGenesisStateFromTx(txGen.TxJSONEncoder(), []sdk.Tx{tx})
 
 	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)
@@ -59,13 +58,13 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
 
-	txGen := params.MakeEncodingConfig().TxConfig
+	txGen := simapp.MakeEncodingConfig().TxConfig
 	txBuilder := txGen.NewTxBuilder()
 	err := txBuilder.SetMsgs(msg1)
 	require.NoError(t, err)
 
 	tx := txBuilder.GetTx()
-	genesisState := types.NewGenesisStateFromTx([]sdk.Tx{tx})
+	genesisState := types.NewGenesisStateFromTx(txGen.TxJSONEncoder(), []sdk.Tx{tx})
 
 	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)

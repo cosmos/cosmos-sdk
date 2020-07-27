@@ -9,6 +9,9 @@ import (
 )
 
 // Migrate migrates exported state from v0.38 to a v0.39 genesis state.
+//
+// NOTE: No actual migration occurs since the types do not change, but JSON
+// serialization of accounts do change.
 func Migrate(appState types.AppMap) types.AppMap {
 	v038Codec := codec.New()
 	cryptocodec.RegisterCrypto(v038Codec)

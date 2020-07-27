@@ -27,12 +27,12 @@ type Keeper struct {
 	homePath           string
 	skipUpgradeHeights map[int64]bool
 	storeKey           sdk.StoreKey
-	cdc                codec.Marshaler
+	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.Marshaler, homePath string) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,

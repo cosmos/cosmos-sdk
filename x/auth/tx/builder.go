@@ -3,6 +3,8 @@ package tx
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 
@@ -16,7 +18,6 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -37,7 +38,6 @@ type builder struct {
 	// or decoded from AuthInfo when GetPubKey's was called
 	pubKeys []crypto.PubKey
 
-	marshaler   codec.Marshaler
 	pubkeyCodec types.PublicKeyCodec
 }
 
@@ -47,7 +47,7 @@ var (
 	_ direct.ProtoTx           = &builder{}
 )
 
-func newBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) *builder {
+func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
 	return &builder{
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
@@ -55,7 +55,6 @@ func newBuilder(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec) *bu
 				Fee: &tx.Fee{},
 			},
 		},
-		marshaler:   marshaler,
 		pubkeyCodec: pubkeyCodec,
 	}
 }
@@ -131,7 +130,11 @@ func (t *builder) GetBodyBytes() []byte {
 		// this method should always return the correct bytes. Note that after
 		// decoding bodyBz is derived from TxRaw so that it matches what was
 		// transmitted over the wire
-		t.bodyBz = t.marshaler.MustMarshalBinaryBare(t.tx.Body)
+		var err error
+		t.bodyBz, err = proto.Marshal(t.tx.Body)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return t.bodyBz
 }
@@ -143,7 +146,11 @@ func (t *builder) GetAuthInfoBytes() []byte {
 		// this method should always return the correct bytes. Note that after
 		// decoding authInfoBz is derived from TxRaw so that it matches what was
 		// transmitted over the wire
-		t.authInfoBz = t.marshaler.MustMarshalBinaryBare(t.tx.AuthInfo)
+		var err error
+		t.authInfoBz, err = proto.Marshal(t.tx.AuthInfo)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return t.authInfoBz
 }

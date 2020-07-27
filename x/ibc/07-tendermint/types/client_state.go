@@ -52,7 +52,7 @@ type ClientState struct {
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
+func InitializeFromMsg(msg *MsgCreateClient) (ClientState, error) {
 	return Initialize(
 		msg.GetClientID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,

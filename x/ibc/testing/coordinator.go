@@ -265,14 +265,10 @@ func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterparty
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		counterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // GetChain returns the TestChain using the given chainID and returns an error if it does

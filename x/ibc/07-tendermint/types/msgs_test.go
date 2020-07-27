@@ -20,7 +20,7 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 	invalidHeader.ValidatorSet = nil
 
 	cases := []struct {
-		msg     ibctmtypes.MsgCreateClient
+		msg     *ibctmtypes.MsgCreateClient
 		expPass bool
 		errMsg  string
 	}{
@@ -52,7 +52,7 @@ func (suite *TendermintTestSuite) TestMsgUpdateClient() {
 	signer := sdk.AccAddress(privKey.PubKey().Address())
 
 	cases := []struct {
-		msg     ibctmtypes.MsgUpdateClient
+		msg     *ibctmtypes.MsgUpdateClient
 		expPass bool
 		errMsg  string
 	}{

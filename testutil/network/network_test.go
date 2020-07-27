@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 type IntegrationTestSuite struct {
@@ -85,6 +86,23 @@ func (s *IntegrationTestSuite) TestGRPC() {
 	)
 	blockHeight = header.Get(servergrpc.GRPCBlockHeightHeader)
 	s.Require().Equal([]string{"1"}, blockHeight)
+
+	// Test server reflection
+	reflectClient := rpb.NewServerReflectionClient(conn)
+	stream, err := reflectClient.ServerReflectionInfo(context.Background(), grpc.WaitForReady(true))
+	s.Require().NoError(err)
+	s.Require().NoError(stream.Send(&rpb.ServerReflectionRequest{
+		MessageRequest: &rpb.ServerReflectionRequest_ListServices{},
+	}))
+	res, err := stream.Recv()
+	s.Require().NoError(err)
+	services := res.GetListServicesResponse().Service
+	servicesMap := make(map[string]bool)
+	for _, s := range services {
+		servicesMap[s.Name] = true
+	}
+	// Make sure the following services are present
+	s.Require().True(servicesMap["cosmos.bank.Query"])
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

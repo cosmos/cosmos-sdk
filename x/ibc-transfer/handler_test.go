@@ -30,6 +30,10 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 // constructs a send from chainA to chainB on the established channel/connection
 // and sends the coins back from chainB to chainA.
+// FIX: this test currently passes because source is incorrectly determined
+// by the ibc-transfer module, so what actually occurs is chainA and chainB
+// send coins to each other, but no coins are ever sent back. This can be
+// fixed by receving and acknowledeging the send on the counterparty chain.
 func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 	handlerA := ibctransfer.NewHandler(suite.chainA.App.TransferKeeper)

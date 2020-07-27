@@ -408,7 +408,7 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 	savedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
 	defer cleanup()
 
-	// Enconde
+	// Encode
 	encodeExec, err := authtest.TxEncodeExec(val1.ClientCtx, savedTxFile.Name())
 	s.Require().NoError(err)
 

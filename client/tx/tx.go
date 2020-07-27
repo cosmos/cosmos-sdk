@@ -63,7 +63,12 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return clientCtx.PrintOutput(tx.GetTx())
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+	if err != nil {
+		return err
+	}
+
+	return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the

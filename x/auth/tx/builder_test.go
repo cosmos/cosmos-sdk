@@ -110,6 +110,11 @@ func TestTxBuilder(t *testing.T) {
 	require.Equal(t, len(msgs), len(tx.GetMsgs()))
 	require.Equal(t, 1, len(tx.GetPubKeys()))
 	require.Equal(t, pubkey.Bytes(), tx.GetPubKeys()[0].Bytes())
+
+	tx = &builder{}
+	require.NotPanics(t, func() {
+		_ = tx.GetMsgs()
+	})
 }
 
 func TestBuilderValidateBasic(t *testing.T) {

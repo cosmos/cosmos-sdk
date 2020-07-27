@@ -178,21 +178,41 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 			},
 		},
 		{
-			name: "types.Any in G",
-			in: &types.Any{
-				TypeUrl: "/testdata.TestVersion1",
-				Value: mustMarshal(&testdata.TestVersion3{
-					X: 102,
-					Sum: &testdata.TestVersion3_F{
-						F: &testdata.TestVersion3{
-							X: 4,
+			name: "unknown field types.Any in G",
+			in: &testdata.TestVersion3{
+				G: &types.Any{
+					TypeUrl: "/testdata.TestVersion1",
+					Value: mustMarshal(&testdata.TestVersion2{
+						Sum: &testdata.TestVersion2_F{
+							F: &testdata.TestVersion2{
+								NewField: 999,
+							},
 						},
-					},
-				}),
+					}),
+				},
 			},
-			recv: new(testdata.TestVersion3LoneNesting),
+			recv: new(testdata.TestVersion3),
+			wantErr: &errExtraneousField{
+				Type:   "*testdata.TestVersion1",
+				TagNum: 25,
+			},
+		},
+		{
+			name: "mismatched types.Any in G",
+			in: &testdata.TestVersion1{
+				G: &types.Any{
+					TypeUrl: "/testdata.TestVersion4LoneNesting",
+					Value: mustMarshal(&testdata.TestVersion3LoneNesting_Inner1{
+						Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
+							Id:   "ID",
+							City: "Gotham",
+						},
+					}),
+				},
+			},
+			recv: new(testdata.TestVersion1),
 			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion3LoneNesting",
+				Type:         "*testdata.TestVersion3",
 				TagNum:       1,
 				GotWireType:  2,
 				WantWireType: 0,

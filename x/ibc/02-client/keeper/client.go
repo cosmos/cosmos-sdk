@@ -17,9 +17,8 @@ import (
 //
 // CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
-	ctx sdk.Context, clientState exported.ClientState, consensusState exported.ConsensusState,
+	ctx sdk.Context, clientID string, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) (exported.ClientState, error) {
-	clientID := clientState.GetID()
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
 		return nil, sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
@@ -34,7 +33,7 @@ func (k Keeper) CreateClient(
 		k.SetClientConsensusState(ctx, clientID, consensusState.GetHeight(), consensusState)
 	}
 
-	k.SetClientState(ctx, clientState)
+	k.SetClientState(ctx, clientID, clientState)
 	k.SetClientType(ctx, clientID, clientState.ClientType())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetLatestHeight()))
 
@@ -90,7 +89,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
-	k.SetClientState(ctx, clientState)
+	k.SetClientState(ctx, clientID, clientState)
 
 	// we don't set consensus state for localhost client
 	if header != nil && clientType != exported.Localhost {
@@ -141,7 +140,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return err
 	}
 
-	k.SetClientState(ctx, clientState)
+	k.SetClientState(ctx, misbehaviour.GetClientID(), clientState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.GetClientID()))
 
 	return nil

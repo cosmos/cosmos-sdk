@@ -192,8 +192,8 @@ func GetConfig(v *viper.Viper) Config {
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
 		GRPC: GRPCConfig{
-			Enable:  viper.GetBool("grpc.enable"),
-			Address: viper.GetString("grpc.address"),
+			Enable:  v.GetBool("grpc.enable"),
+			Address: v.GetString("grpc.address"),
 		},
 	}
 }

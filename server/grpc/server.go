@@ -12,8 +12,11 @@ import (
 )
 
 const (
-	// GRPCBlockHeightHeader is the gRPC header for block height
+	// GRPCBlockHeightHeader is the gRPC header for block height.
 	GRPCBlockHeightHeader = "sdk-block-height"
+	// GRPCWithProofHeader is a gRPC header which is true when the request
+	// requires a proof.
+	GRPCWithProofHeader = "sdk-require-proof"
 )
 
 // StartGRPCServer starts a gRPC server on the given address.

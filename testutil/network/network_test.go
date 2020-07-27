@@ -44,7 +44,7 @@ func (s *IntegrationTestSuite) TestNetwork_Liveness() {
 }
 
 func (s *IntegrationTestSuite) TestGRPC() {
-	_, err := s.network.WaitForHeight(1)
+	_, err := s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 
 	val0 := s.network.Validators[0]
@@ -75,6 +75,15 @@ func (s *IntegrationTestSuite) TestGRPC() {
 		*bankRes.GetBalance(),
 	)
 	blockHeight := header.Get(servergrpc.GRPCBlockHeightHeader)
+	s.Require().Equal([]string{"2"}, blockHeight)
+
+	// Request metadata should work
+	bankRes, err = bankClient.Balance(
+		metadata.AppendToOutgoingContext(context.Background(), servergrpc.GRPCBlockHeightHeader, "1"), // Add metadata to request
+		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},
+		grpc.Header(&header),
+	)
+	blockHeight = header.Get(servergrpc.GRPCBlockHeightHeader)
 	s.Require().Equal([]string{"1"}, blockHeight)
 }
 

@@ -226,6 +226,7 @@ func (bva BaseVestingAccount) String() string {
 func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountYAML{
 		Address:          bva.Address,
+		Coins:            bva.Coins,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
@@ -256,7 +257,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          bva.Address,
-		Coins:            cva.Coins,
+		Coins:            bva.Coins,
 		PubKey:           bva.GetPubKey(),
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
@@ -391,6 +392,7 @@ func (cva ContinuousVestingAccount) String() string {
 func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountYAML{
 		Address:          cva.Address,
+		Coins:            cva.Coins,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
@@ -586,6 +588,7 @@ func (pva PeriodicVestingAccount) String() string {
 func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountYAML{
 		Address:          pva.Address,
+		Coins:            pva.Coins,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
@@ -618,7 +621,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          pva.Address,
-		Coins:            cva.Coins,
+		Coins:            pva.Coins,
 		PubKey:           pva.GetPubKey(),
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
@@ -727,7 +730,7 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          dva.Address,
-		Coins:            cva.Coins,
+		Coins:            dva.Coins,
 		PubKey:           dva.GetPubKey(),
 		AccountNumber:    dva.AccountNumber,
 		Sequence:         dva.Sequence,

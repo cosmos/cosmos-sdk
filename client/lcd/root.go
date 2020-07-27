@@ -71,7 +71,8 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 
 	var h http.Handler = rs.Mux
 	if cors {
-		h = handlers.CORS()(h)
+		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+		h = allowAllCORS(h)
 	}
 
 	return tmrpcserver.Serve(rs.listener, h, rs.log, cfg)

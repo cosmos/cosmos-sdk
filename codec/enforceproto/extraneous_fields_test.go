@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func TestCheckExtraneousFieldsRepeated(t *testing.T) {
+func TestCheckUnknownFieldsRepeated(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      proto.Message
@@ -62,7 +62,7 @@ func TestCheckExtraneousFieldsRepeated(t *testing.T) {
 	}
 }
 
-func TestCheckExtraneousFieldsNested(t *testing.T) {
+func TestCheckUnknownFieldsNested(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      proto.Message
@@ -95,7 +95,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersionFD1),
-			wantErr: &errExtraneousField{
+			wantErr: &errUnknownField{
 				Type:     "*testdata.TestVersionFD1",
 				TagNum:   12,
 				WireType: 2,
@@ -148,7 +148,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersion3LoneOneOfValue),
-			wantErr: &errExtraneousField{
+			wantErr: &errUnknownField{
 				Type:     "*testdata.TestVersion3LoneOneOfValue",
 				TagNum:   7,
 				WireType: 2,
@@ -171,7 +171,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersion3LoneNesting),
-			wantErr: &errExtraneousField{
+			wantErr: &errUnknownField{
 				Type:     "*testdata.TestVersion3LoneNesting",
 				TagNum:   6,
 				WireType: 0,
@@ -192,7 +192,7 @@ func TestCheckExtraneousFieldsNested(t *testing.T) {
 				},
 			},
 			recv: new(testdata.TestVersion3),
-			wantErr: &errExtraneousField{
+			wantErr: &errUnknownField{
 				Type:   "*testdata.TestVersion1",
 				TagNum: 25,
 			},
@@ -283,7 +283,7 @@ func mustMarshal(msg proto.Message) []byte {
 	return blob
 }
 
-func TestCheckExtraneousFieldsFlat(t *testing.T) {
+func TestCheckUnknownFieldsFlat(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      proto.Message
@@ -309,7 +309,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 					ChequeNo: "123XXXXXXX881",
 				},
 			},
-			wantErr: &errExtraneousField{
+			wantErr: &errUnknownField{
 				Type:   "*testdata.Customer1",
 				TagNum: 8, WireType: 2,
 			},
@@ -319,7 +319,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 			in: &testdata.Customer2{
 				Miscellaneous: &types.Any{},
 			},
-			wantErr: &errExtraneousField{
+			wantErr: &errUnknownField{
 				Type:     "*testdata.Customer1",
 				TagNum:   10,
 				WireType: 2,
@@ -333,7 +333,7 @@ func TestCheckExtraneousFieldsFlat(t *testing.T) {
 					Id: 991,
 				},
 			},
-			wantErr: &errExtraneousField{
+			wantErr: &errUnknownField{
 				Type:     "*testdata.Customer1",
 				TagNum:   9,
 				WireType: 2,

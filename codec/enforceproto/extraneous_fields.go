@@ -24,7 +24,7 @@ type descriptorIface interface {
 
 // CheckMismatchedProtoFields walks through the protobuf serialized bytes in b, and tries to
 // compare field numbers and wireTypes against what msg expects. The error returned if non-nil will contain
-// the listing of the extraneous fields by tagNumber and wireType, or mismatched wireTypes.
+// the listing of the unknown fields by tagNumber and wireType, or mismatched wireTypes.
 func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 	if len(b) == 0 {
 		return nil
@@ -62,7 +62,7 @@ func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 		default:
 			if tagNum&bit11NonCritical == 0 {
 				// The tag is critical, so report it.
-				return &errExtraneousField{
+				return &errUnknownField{
 					Type:     reflect.ValueOf(msg).Type().String(),
 					TagNum:   tagNum,
 					WireType: wireType,
@@ -246,26 +246,26 @@ func wireTypeToString(wt protowire.Type) string {
 	}
 }
 
-// errExtraneousField represents an error indicating that we encountered
+// errUnknownField represents an error indicating that we encountered
 // a field that isn't available in the target proto.Message.
-type errExtraneousField struct {
+type errUnknownField struct {
 	Type     string
 	TagNum   protowire.Number
 	WireType protowire.Type
 }
 
 // String implements fmt.Stringer.
-func (twt *errExtraneousField) String() string {
-	return fmt.Sprintf("errExtraneousField %q: {TagNum: %d, WireType:%q}",
+func (twt *errUnknownField) String() string {
+	return fmt.Sprintf("errUnknownField %q: {TagNum: %d, WireType:%q}",
 		twt.Type, twt.TagNum, wireTypeToString(twt.WireType))
 }
 
 // Error implements the error interface.
-func (twt *errExtraneousField) Error() string {
+func (twt *errUnknownField) Error() string {
 	return twt.String()
 }
 
-var _ error = (*errExtraneousField)(nil)
+var _ error = (*errUnknownField)(nil)
 
 var (
 	protoFileToDesc   = make(map[string]*descriptor.FileDescriptorProto)

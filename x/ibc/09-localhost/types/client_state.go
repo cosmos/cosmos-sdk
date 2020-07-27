@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"strings"
 
 	ics23 "github.com/confio/ics23/go"
@@ -319,10 +318,4 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 
 	return nil
-}
-
-// consensusStatePath takes an Identifier and returns a Path under which to
-// store the consensus state of a client.
-func consensusStatePath(clientID string) string {
-	return fmt.Sprintf("consensusState/%s", clientID)
 }

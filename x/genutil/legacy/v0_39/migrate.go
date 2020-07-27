@@ -8,10 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// Migrate accepts exported x/auth genesis state from v0.38 and migrates it to
-// v0.39 x/auth genesis state. The migration includes:
-//
-// - Public key encoding being changed from bech32 to Amino
+// Migrate migrates exported state from v0.38 to a v0.39 genesis state.
 func Migrate(appState types.AppMap) types.AppMap {
 	v038Codec := codec.New()
 	cryptocodec.RegisterCrypto(v038Codec)

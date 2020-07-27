@@ -99,7 +99,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		scanner := authclient.NewBatchScanner(clientCtx.TxConfig, infile)
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
-			unsignedStdTx := scanner.StdTx()
+			unsignedStdTx := scanner.Tx()
 			txFactory = txFactory.WithSequence(sequence)
 			txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(unsignedStdTx)
 			if err != nil {
@@ -123,7 +123,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			json, err := getSignatureJSON(txGen, txBuilder, unsignedStdTx, generateSignatureOnly)
+			json, err := marshalSignatureJSON(txGen, txBuilder, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -244,8 +244,8 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			)
 			generateSignatureOnly = true
 		} else {
-			append, _ := cmd.Flags().GetBool(flagAppend)
-			appendSig := append && !generateSignatureOnly
+			flagAppend, _ := cmd.Flags().GetBool(flagAppend)
+			appendSig := flagAppend && !generateSignatureOnly
 			if appendSig {
 				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
@@ -254,7 +254,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		json, err := getSignatureJSON(txGen, txBuilder, newTx, generateSignatureOnly)
+		json, err := marshalSignatureJSON(txGen, txBuilder, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -276,14 +276,16 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func getSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
+func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, generateSignatureOnly bool) ([]byte, error) {
+	parsedTx := txBldr.GetTx()
+
 	if generateSignatureOnly {
-		sigs, err := txBldr.GetTx().GetSignaturesV2()
+		sigs, err := parsedTx.GetSignaturesV2()
 		if err != nil {
 			return nil, err
 		}
 		return txConfig.MarshalSignatureJSON(sigs)
 	}
 
-	return txConfig.TxEncoder()(newTx)
+	return txConfig.TxJSONEncoder()(parsedTx)
 }

@@ -125,6 +125,7 @@ func printAndValidateSigs(
 
 	return success
 }
+
 func readTxAndInitContexts(clientCtx client.Context, cmd *cobra.Command, filename string) (client.Context, tx.Factory, sdk.Tx, error) {
 	stdTx, err := authclient.ReadTxFromFile(clientCtx, filename)
 	if err != nil {

@@ -189,10 +189,10 @@ malformed
 		t.Run(tt.name, func(t *testing.T) {
 			scanner, i := NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
 			for scanner.Scan() {
-				_ = scanner.StdTx()
+				_ = scanner.Tx()
 				i++
 			}
-			t.Log(scanner.stdTx)
+			t.Log(scanner.theTx)
 			require.Equal(t, tt.wantScannerError, scanner.Err() != nil)
 			require.Equal(t, tt.wantUnmarshalError, scanner.UnmarshalErr() != nil)
 			require.Equal(t, tt.numTxs, i)

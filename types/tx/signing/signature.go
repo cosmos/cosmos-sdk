@@ -20,6 +20,9 @@ type SignatureV2 struct {
 	Data SignatureData
 }
 
+// SignatureDataToSignatureDescriptorData converts a SignatureData to SignatureDescriptor_Data.
+// SignatureDescriptor_Data is considered an encoding type whereas SignatureData is used for
+// business logic.
 func SignatureDataToSignatureDescriptorData(data SignatureData) *SignatureDescriptor_Data {
 	switch data := data.(type) {
 	case *SingleSignatureData:
@@ -51,6 +54,9 @@ func SignatureDataToSignatureDescriptorData(data SignatureData) *SignatureDescri
 	}
 }
 
+// SignatureDescriptorDataToSignatureData converts a SignatureDescriptor_Data to SignatureData.
+// SignatureDescriptor_Data is considered an encoding type whereas SignatureData is used for
+// business logic.
 func SignatureDescriptorDataToSignatureData(descData *SignatureDescriptor_Data) SignatureData {
 	switch descData := descData.Sum.(type) {
 	case *SignatureDescriptor_Data_Single_:

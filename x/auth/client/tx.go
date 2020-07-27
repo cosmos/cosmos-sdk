@@ -147,13 +147,13 @@ func NewBatchScanner(cfg client.TxConfig, r io.Reader) *BatchScanner {
 type BatchScanner struct {
 	*bufio.Scanner
 	builder      client.TxBuilder
-	stdTx        sdk.Tx
+	theTx        sdk.Tx
 	cfg          client.TxConfig
 	unmarshalErr error
 }
 
-// StdTx returns the most recent StdTx unmarshalled by a call to Scan.
-func (bs BatchScanner) StdTx() sdk.Tx { return bs.stdTx }
+// Tx returns the most recent Tx unmarshalled by a call to Scan.
+func (bs BatchScanner) Tx() sdk.Tx { return bs.theTx }
 
 // UnmarshalErr returns the first unmarshalling error that was encountered by the scanner.
 func (bs BatchScanner) UnmarshalErr() error { return bs.unmarshalErr }
@@ -165,7 +165,7 @@ func (bs *BatchScanner) Scan() bool {
 	}
 
 	tx, err := bs.cfg.TxJSONDecoder()(bs.Bytes())
-	bs.stdTx = tx
+	bs.theTx = tx
 	if err != nil && bs.unmarshalErr == nil {
 		bs.unmarshalErr = err
 		return false

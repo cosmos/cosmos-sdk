@@ -65,9 +65,15 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+
+		parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
 			return
+		}
+
+		txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(parsedTx)
+		if err != nil {
+			return err
 		}
 
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
@@ -101,7 +107,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		// read each signature and add it to the multisig if valid
 		for i := 2; i < len(args); i++ {
-			stdSig, err := readAndUnmarshalStdSignature(clientCtx, args[i])
+			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
 			if err != nil {
 				return err
 			}
@@ -111,39 +117,32 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 				AccountNumber:   txFactory.AccountNumber(),
 				AccountSequence: txFactory.Sequence(),
 			}
-			err = signing.VerifySignature(stdSig.PubKey, signingData, stdSig.Data, clientCtx.TxConfig.SignModeHandler(), stdTx)
-			if err != nil {
-				return fmt.Errorf("couldn't verify signature")
-			}
 
-			if err := multisig.AddSignatureV2(multisigSig, stdSig, multisigPub.PubKeys); err != nil {
-				return err
+			for _, sig := range sigs {
+				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, clientCtx.TxConfig.SignModeHandler(), txBuilder.GetTx())
+				if err != nil {
+					return fmt.Errorf("couldn't verify signature")
+				}
+
+				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.PubKeys); err != nil {
+					return err
+				}
 			}
 		}
-		var json []byte
 
-		txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(stdTx)
-		if err != nil {
-			return err
-		}
-
-		sigBldr := signingtypes.SignatureV2{
+		sigV2 := signingtypes.SignatureV2{
 			PubKey: multisigPub,
 			Data:   multisigSig,
 		}
 
-		err = txBuilder.SetSignatures(sigBldr)
-
+		err = txBuilder.SetSignatures(sigV2)
 		if err != nil {
 			return err
 		}
-		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-		if sigOnly {
-			json, err = clientCtx.JSONMarshaler.MarshalJSON(multisigSig.Signatures[0])
-		} else {
-			json, err = clientCtx.JSONMarshaler.MarshalJSON(txBuilder.GetTx())
-		}
 
+		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
+
+		json, err := marshalSignatureJSON(clientCtx.TxConfig, txBuilder, sigOnly)
 		if err != nil {
 			return err
 		}
@@ -165,13 +164,10 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func readAndUnmarshalStdSignature(clientCtx client.Context, filename string) (stdSig signingtypes.SignatureV2, err error) {
+func unmarshalSignatureJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return
 	}
-	if err = clientCtx.JSONMarshaler.UnmarshalJSON(bytes, &stdSig); err != nil {
-		return
-	}
-	return
+	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
 }

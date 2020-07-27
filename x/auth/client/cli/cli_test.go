@@ -86,8 +86,8 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	txBuilder.SetMemo("MODIFIED STD TX")
-	bz, err := val.ClientCtx.TxConfig.TxJSONEncoder()(signedTx)
+	txBuilder.SetMemo("MODIFIED TX")
+	bz, err := val.ClientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	modifiedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(bz))
@@ -139,11 +139,11 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	defer cleanup2()
 
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
-	s.Require().EqualError(err, "invalid character 'm' looking for beginning of value")
+	s.Require().Error(err)
 
 	// Sign batch malformed tx file signature only.
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
-	s.Require().EqualError(err, "invalid character 'm' looking for beginning of value")
+	s.Require().Error(err)
 }
 
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
@@ -168,8 +168,12 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	normalGeneratedStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, normalGeneratedTx.Bytes())
-	txBuilder, err := val1.ClientCtx.TxConfig.WrapTxBuilder(normalGeneratedStdTx)
+	txCfg := val1.ClientCtx.TxConfig
+
+	normalGeneratedStdTx, err := txCfg.TxJSONDecoder()(normalGeneratedTx.Bytes())
+	s.Require().NoError(err)
+	txBuilder, err := txCfg.WrapTxBuilder(normalGeneratedStdTx)
+	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(flags.DefaultGasLimit))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
 	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
@@ -190,9 +194,10 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	limitedGasStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, limitedGasGeneratedTx.Bytes())
-	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(limitedGasStdTx)
-	s.Require().NotNil(txBuilder)
+	limitedGasStdTx, err := txCfg.TxJSONDecoder()(limitedGasGeneratedTx.Bytes())
+	s.Require().NoError(err)
+	txBuilder, err = txCfg.WrapTxBuilder(limitedGasStdTx)
+	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(100))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
 	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
@@ -213,8 +218,10 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	)
 	s.Require().NoError(err)
 
-	finalStdTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, finalGeneratedTx.Bytes())
-	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(finalStdTx)
+	finalStdTx, err := txCfg.TxJSONDecoder()(finalGeneratedTx.Bytes())
+	s.Require().NoError(err)
+	txBuilder, err = txCfg.WrapTxBuilder(finalStdTx)
+	s.Require().NoError(err)
 	s.Require().Equal(uint64(flags.DefaultGasLimit), txBuilder.GetTx().GetGas())
 	s.Require().Equal(len(finalStdTx.GetMsgs()), 1)
 
@@ -242,9 +249,10 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
 	s.Require().NoError(err)
 	s.T().Log(signedTx.String())
-	signedFinalTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, signedTx.Bytes())
+	signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
+	s.Require().NoError(err)
 	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(signedFinalTx)
-	s.Require().Error(err)
+	s.Require().NoError(err)
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
 	s.Require().Equal(1, len(txBuilder.GetTx().GetSignatures()))
 	s.Require().Equal(val1.Address.String(), txBuilder.GetTx().GetSigners()[0].String())
@@ -410,8 +418,11 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 	decodedTx, err := authtest.TxDecodeExec(val1.ClientCtx, trimmedBase64)
 	s.Require().NoError(err)
 
-	theTx := unmarshalStdTx(s.T(), val1.ClientCtx.TxConfig, decodedTx.Bytes())
+	txCfg := val1.ClientCtx.TxConfig
+	theTx, err := txCfg.TxJSONDecoder()(decodedTx.Bytes())
+	s.Require().NoError(err)
 	txBuilder, err := val1.ClientCtx.TxConfig.WrapTxBuilder(theTx)
+	s.Require().NoError(err)
 	s.Require().Equal("deadbeef", txBuilder.GetTx().GetMemo())
 }
 
@@ -652,10 +663,4 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func unmarshalStdTx(t require.TestingT, txConfig client.TxConfig, b []byte) (stdTx sdk.Tx) {
-	stdTx, err := txConfig.TxJSONDecoder()(b)
-	require.NoError(t, err)
-	return stdTx
 }

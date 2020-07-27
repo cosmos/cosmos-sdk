@@ -233,76 +233,85 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	}
 }
 
+// TestOnAcknowledgementPacket tests that successful acknowledgement is a no-op
+// and failure acknowledment leads to refund when attempting to send from chainA
+// to chainB.
+func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
+	var (
+		successAck = types.FungibleTokenPacketAcknowledgement{
+			Success: true,
+		}
+		failedAck = types.FungibleTokenPacketAcknowledgement{
+			Success: false,
+			Error:   "failed packet transfer",
+		}
+
+		channelA, channelB ibctesting.TestChannel
+		coins              sdk.Coins
+	)
+
+	testCases := []struct {
+		msg      string
+		ack      types.FungibleTokenPacketAcknowledgement
+		malleate func()
+		source   bool
+		success  bool // success of ack
+	}{
+		{"success ack causes no-op", successAck, func() {
+			coins = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
+		}, true, true},
+		{"successful refund from source chain", failedAck,
+			func() {
+				escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))))
+				suite.Require().NoError(err)
+
+				coins = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
+			}, true, false},
+		{"successful refund from external chain", failedAck,
+			func() {
+				coins = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
+			}, false, false},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+			tc.malleate()
+
+			data := types.NewFungibleTokenPacketData(coins, suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
+			packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+
+			var denom string
+			if tc.source {
+				// peel off ibc denom if returning back to original chain
+				denom = sdk.DefaultBondDenom
+			} else {
+				denom = coins[0].Denom
+			}
+
+			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
+
+			err := suite.chainA.App.TransferKeeper.OnAcknowledgementPacket(suite.chainA.GetContext(), packet, data, tc.ack)
+			suite.Require().NoError(err)
+
+			postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
+			deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
+
+			if tc.success {
+				suite.Require().Equal(int64(0), deltaAmount.Int64(), "successful ack changed balance")
+			} else {
+				suite.Require().Equal(coins[0].Amount, deltaAmount, "failed ack did not trigger refund")
+			}
+		})
+	}
+}
+
 /*
-// // TestOnAcknowledgementPacket tests that successful acknowledgement is a no-op
-// // and failure acknowledment leads to refund
-// func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
-// 	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1.String(), testAddr2.String())
-
-// 	successAck := types.FungibleTokenPacketAcknowledgement{
-// 		Success: true,
-// 	}
-// 	failedAck := types.FungibleTokenPacketAcknowledgement{
-// 		Success: false,
-// 		Error:   "failed packet transfer",
-// 	}
-
-// 	testCases := []struct {
-// 		msg      string
-// 		ack      types.FungibleTokenPacketAcknowledgement
-// 		malleate func()
-// 		source   bool
-// 		success  bool // success of ack
-// 	}{
-// 		{"success ack causes no-op", successAck,
-// 			func() {}, true, true},
-// 		{"successful refund from source chain", failedAck,
-// 			func() {
-// 				escrow := types.GetEscrowAddress(testPort1, testChannel1)
-// 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
-// 				suite.Require().NoError(err)
-// 			}, true, false},
-// 		{"successful refund from external chain", failedAck,
-// 			func() {
-// 				data.Amount = prefixCoins
-// 			}, false, false},
-// 	}
-
-// 	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100, 0)
-
-// 	for i, tc := range testCases {
-// 		tc := tc
-// 		i := i
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
-
-// 			tc.malleate()
-
-// 			var denom string
-// 			if tc.source {
-// 				prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
-// 				denom = prefixCoins2[0].Denom[len(prefix):]
-// 			} else {
-// 				denom = data.Amount[0].Denom
-// 			}
-
-// 			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, denom)
-
-// 			err := suite.chainA.App.TransferKeeper.OnAcknowledgementPacket(suite.chainA.GetContext(), packet, data, tc.ack)
-// 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-
-// 			postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, denom)
-// 			deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
-
-// 			if tc.success {
-// 				suite.Require().Equal(sdk.ZeroInt(), deltaAmount, "successful ack changed balance")
-// 			} else {
-// 				suite.Require().Equal(prefixCoins2[0].Amount, deltaAmount, "failed ack did not trigger refund")
-// 			}
-// 		})
-// 	}
-// }
-
 // // TestOnTimeoutPacket test private refundPacket function since it is a simple wrapper over it
 // func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 // 	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1.String(), testAddr2.String())

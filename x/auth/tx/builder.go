@@ -60,6 +60,10 @@ func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
 }
 
 func (t *builder) GetMsgs() []sdk.Msg {
+	if t.tx == nil || t.tx.Body == nil {
+		return nil
+	}
+
 	anys := t.tx.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {

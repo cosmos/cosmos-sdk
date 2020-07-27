@@ -38,11 +38,11 @@ func DefaultGenesisState() GenesisState {
 
 // NewGenesisStateFromTx creates a new GenesisState object
 // from auth transactions
-func NewGenesisStateFromTx(txJsonEncoder sdk.TxEncoder, genTxs []sdk.Tx) GenesisState {
+func NewGenesisStateFromTx(txJSONEncoder sdk.TxEncoder, genTxs []sdk.Tx) GenesisState {
 	genTxsBz := make([]json.RawMessage, len(genTxs))
 	for i, genTx := range genTxs {
 		var err error
-		genTxsBz[i], err = txJsonEncoder(genTx)
+		genTxsBz[i], err = txJSONEncoder(genTx)
 		if err != nil {
 			panic(err)
 		}

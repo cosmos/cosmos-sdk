@@ -95,7 +95,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// FIXME: uncomment
 		// {
 		// 	name:        "successful verification",
-		// 	clientState: ibctmtypes.NewClientState(chainID, lite.chainID, height, commitmenttypes.GetSDKSpecs()),
+		// 	clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 		// 	consensusState: ibctmtypes.ConsensusState{
 		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
@@ -416,7 +416,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		// FIXME: uncomment
 		// {
 		// 	name:         "successful verification",
-		// 	clientState:  ibctmtypes.NewClientState(chainID, height, commitmenttypes.GetSDKSpecs()),
+		// 	clientState:  ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 		// 	connection:   conn,
 		// 	consensusState: ibctmtypes.ConsensusState{
 		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),

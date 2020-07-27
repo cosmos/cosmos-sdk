@@ -54,7 +54,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
-						clientID, localhosttypes.NewClientState("chainID", 10),
+						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
 					),
 				},
 				[]types.ClientConsensusStates{
@@ -79,7 +79,7 @@ func TestValidateGenesis(t *testing.T) {
 						"/~@$*", ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
-						clientID, localhosttypes.NewClientState("chainID", 10),
+						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
 					),
 				},
 				[]types.ClientConsensusStates{

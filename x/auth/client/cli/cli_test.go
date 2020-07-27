@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -626,7 +626,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
+	clientCtx = clientCtx.WithTxConfig(simapp.MakeEncodingConfig().TxConfig)
 
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
@@ -637,7 +637,8 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 
 func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxConfig(simappparams.MakeEncodingConfig().TxConfig)
+	txCfg := simapp.MakeEncodingConfig().TxConfig
+	clientCtx = clientCtx.WithTxConfig(txCfg)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -649,9 +650,17 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 
 	// Create new file with tx
 	// TODO: Update this to tx
-	txContents := []byte("{\"type\":\"cosmos-sdk/StdTx\",\"value\":{\"msg\":[{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{\"from_address\":\"cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw\",\"to_address\":\"cosmos1wc8mpr8m3sy3ap3j7fsgqfzx36um05pystems4\",\"amount\":[{\"denom\":\"stake\",\"amount\":\"10000\"}]}}],\"fee\":{\"amount\":[],\"gas\":\"200000\"},\"signatures\":null,\"memo\":\"\"}}")
+	builder := txCfg.NewTxBuilder()
+	builder.SetGasLimit(200000)
+	from, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
+	require.NoError(t, err)
+	to, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
+	require.NoError(t, err)
+	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
+	require.NoError(t, err)
+	txContents, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	txFileName := filepath.Join(testDir, "tx.json")
-	err := ioutil.WriteFile(txFileName, txContents, 0644)
+	err = ioutil.WriteFile(txFileName, txContents, 0644)
 	require.NoError(t, err)
 
 	cmd.SetArgs([]string{txFileName})

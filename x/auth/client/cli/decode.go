@@ -37,7 +37,14 @@ func GetDecodeCommand() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(tx)
+			json, err := clientCtx.TxConfig.TxJSONEncoder()(tx)
+			if err != nil {
+				return err
+			}
+
+			cmd.Printf("%s\n", json)
+
+			return nil
 		},
 	}
 

@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"strings"
 
 	ics23 "github.com/confio/ics23/go"
@@ -26,7 +25,6 @@ var _ clientexported.ClientState = ClientState{}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
-	ID      string `json:"id" yaml:"id"`
 	ChainID string `json:"chain_id" yaml:"chain_id"`
 	Height  int64  `json:"height" yaml:"height"`
 }
@@ -34,15 +32,9 @@ type ClientState struct {
 // NewClientState creates a new ClientState instance
 func NewClientState(chainID string, height int64) ClientState {
 	return ClientState{
-		ID:      clientexported.Localhost.String(),
 		ChainID: chainID,
 		Height:  height,
 	}
-}
-
-// GetID returns the loop-back client state identifier.
-func (cs ClientState) GetID() string {
-	return cs.ID
 }
 
 // GetChainID returns an empty string
@@ -73,7 +65,7 @@ func (cs ClientState) Validate() error {
 	if cs.Height <= 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
 	}
-	return host.ClientIdentifierValidator(cs.ID)
+	return nil
 }
 
 // GetProofSpecs returns nil since localhost does not have to verify proofs
@@ -97,7 +89,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	_ []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, consensusStatePath(cs.GetID()))
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientexported.ClientTypeLocalHost)
 	if err != nil {
 		return err
 	}
@@ -326,10 +318,4 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 
 	return nil
-}
-
-// consensusStatePath takes an Identifier and returns a Path under which to
-// store the consensus state of a client.
-func consensusStatePath(clientID string) string {
-	return fmt.Sprintf("consensusState/%s", clientID)
 }

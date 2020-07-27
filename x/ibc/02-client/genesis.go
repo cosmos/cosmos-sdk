@@ -12,8 +12,8 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, client := range gs.Clients {
-		k.SetClientState(ctx, client)
-		k.SetClientType(ctx, client.GetID(), client.ClientType())
+		k.SetClientState(ctx, client.ClientID, client.ClientState)
+		k.SetClientType(ctx, client.ClientID, client.ClientState.ClientType())
 	}
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
@@ -34,7 +34,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	// client id is always "localhost"
 	clientState := localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 
-	_, err := k.CreateClient(ctx, clientState, nil)
+	_, err := k.CreateClient(ctx, exported.ClientTypeLocalHost, clientState, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 // ExportGenesis returns the ibc client submodule's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
-		Clients:          k.GetAllClients(ctx),
+		Clients:          k.GetAllGenesisClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
 		CreateLocalhost:  true,
 	}

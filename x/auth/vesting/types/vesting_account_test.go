@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -743,7 +744,7 @@ func TestBaseVestingAccountJSON(t *testing.T) {
 	acc, err := NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 	require.NoError(t, err)
 
-	bz, err := json.Marshal(acc)
+	bz, err := codec.Cdc.MarshalJSON(acc)
 	require.NoError(t, err)
 
 	bz1, err := acc.MarshalJSON()

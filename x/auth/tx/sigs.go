@@ -106,7 +106,7 @@ func decodeMultisignatures(bz []byte) ([][]byte, error) {
 }
 
 func (g generator) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error) {
-	descs := make([]*tx.SignatureDescriptor, len(sigs))
+	descs := make([]*signing.SignatureDescriptor, len(sigs))
 
 	for i, sig := range sigs {
 		publicKey, err := g.pubkeyCodec.Encode(sig.PubKey)
@@ -114,52 +114,21 @@ func (g generator) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, err
 			return nil, err
 		}
 
-		descData := sigDataToSigDescData(sig.Data)
+		descData := signing.SignatureDataToSignatureDescriptorData(sig.Data)
 
-		descs[i] = &tx.SignatureDescriptor{
+		descs[i] = &signing.SignatureDescriptor{
 			PublicKey: publicKey,
 			Data:      descData,
 		}
 	}
 
-	toJson := &tx.SignatureDescriptors{Signatures: descs}
+	toJson := &signing.SignatureDescriptors{Signatures: descs}
 
 	return codec.ProtoMarshalJSON(toJson)
 }
 
-func sigDataToSigDescData(data signing.SignatureData) *tx.SignatureDescriptor_Data {
-	switch data := data.(type) {
-	case *signing.SingleSignatureData:
-		return &tx.SignatureDescriptor_Data{
-			Sum: &tx.SignatureDescriptor_Data_Single_{
-				Single: &tx.SignatureDescriptor_Data_Single{
-					Mode:      data.SignMode,
-					Signature: data.Signature,
-				},
-			},
-		}
-	case *signing.MultiSignatureData:
-		descDatas := make([]*tx.SignatureDescriptor_Data, len(data.Signatures))
-
-		for j, d := range data.Signatures {
-			descDatas[j] = sigDataToSigDescData(d)
-		}
-
-		return &tx.SignatureDescriptor_Data{
-			Sum: &tx.SignatureDescriptor_Data_Multi_{
-				Multi: &tx.SignatureDescriptor_Data_Multi{
-					Bitarray:   data.BitArray,
-					Signatures: descDatas,
-				},
-			},
-		}
-	default:
-		panic(fmt.Errorf("unexpected case %+v", data))
-	}
-}
-
 func (g generator) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error) {
-	var sigDescs tx.SignatureDescriptors
+	var sigDescs signing.SignatureDescriptors
 	err := g.protoCodec.UnmarshalJSON(bz, &sigDescs)
 	if err != nil {
 		return nil, err
@@ -172,7 +141,7 @@ func (g generator) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, err
 			return nil, err
 		}
 
-		data := sigDescDataToSigData(desc.Data)
+		data := signing.SignatureDescriptorDataToSignatureData(desc.Data)
 
 		sigs[i] = signing.SignatureV2{
 			PubKey: pubKey,
@@ -181,28 +150,4 @@ func (g generator) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, err
 	}
 
 	return sigs, nil
-}
-
-func sigDescDataToSigData(descData *tx.SignatureDescriptor_Data) signing.SignatureData {
-	switch descData := descData.Sum.(type) {
-	case *tx.SignatureDescriptor_Data_Single_:
-		return &signing.SingleSignatureData{
-			SignMode:  descData.Single.Mode,
-			Signature: descData.Single.Signature,
-		}
-	case *tx.SignatureDescriptor_Data_Multi_:
-		multi := descData.Multi
-		datas := make([]signing.SignatureData, len(multi.Signatures))
-
-		for j, d := range multi.Signatures {
-			datas[j] = sigDescDataToSigData(d)
-		}
-
-		return &signing.MultiSignatureData{
-			BitArray:   multi.Bitarray,
-			Signatures: datas,
-		}
-	default:
-		panic(fmt.Errorf("unexpected case %+v", descData))
-	}
 }

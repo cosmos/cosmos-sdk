@@ -28,7 +28,6 @@ func TestDecodeStore(t *testing.T) {
 	portID := "portidone"
 
 	clientState := ibctmtypes.ClientState{
-		ID:           clientID,
 		FrozenHeight: 10,
 	}
 	connection := connectiontypes.ConnectionEnd{

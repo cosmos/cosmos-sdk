@@ -45,7 +45,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 	}
 
 	_, err := k.CreateClient(
-		ctx, clientState, msg.GetConsensusState(),
+		ctx, msg.GetClientID(), clientState, msg.GetConsensusState(),
 	)
 	if err != nil {
 		return nil, err

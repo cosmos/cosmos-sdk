@@ -75,6 +75,15 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+// GRPCConfig defines configuration for the gRPC server.
+type GRPCConfig struct {
+	// Enable defines if the gRPC server should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// Address defines the API server to listen on
+	Address string `mapstructure:"address"`
+}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -82,6 +91,7 @@ type Config struct {
 	// Telemetry defines the application telemetry configuration
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
+	GRPC      GRPCConfig       `mapstructure:"grpc"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -134,6 +144,10 @@ func DefaultConfig() *Config {
 			RPCReadTimeout:     10,
 			RPCMaxBodyBytes:    1000000,
 		},
+		GRPC: GRPCConfig{
+			Enable:  false,
+			Address: "0.0.0.0:9090",
+		},
 	}
 }
 
@@ -176,6 +190,10 @@ func GetConfig(v *viper.Viper) Config {
 			RPCWriteTimeout:    v.GetUint("api.rpc-write-timeout"),
 			RPCMaxBodyBytes:    v.GetUint("api.rpc-max-body-bytes"),
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
+		},
+		GRPC: GRPCConfig{
+			Enable:  v.GetBool("grpc.enable"),
+			Address: v.GetString("grpc.address"),
 		},
 	}
 }

@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -80,6 +81,15 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 
 		val.api = apiSrv
+	}
+
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv, err := servergrpc.StartGRPCServer(app, val.AppConfig.GRPC.Address)
+		if err != nil {
+			return err
+		}
+
+		val.grpc = grpcSrv
 	}
 
 	return nil

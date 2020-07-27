@@ -193,6 +193,17 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metada
 	return metadata
 }
 
+// GetAllDenomMetaData retrieves all denominations metadata
+func (k BaseKeeper) GetAllDenomMetaData(ctx sdk.Context) []types.Metadata {
+	denomMetaData := make([]types.Metadata, 0)
+	k.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		denomMetaData = append(denomMetaData, metadata)
+		return false
+	})
+
+	return denomMetaData
+}
+
 // IterateAllDenomMetaData iterates over all the denominations metadata and
 // provides the metadata to a callback. If true is returned from the
 // callback, iteration is halted.

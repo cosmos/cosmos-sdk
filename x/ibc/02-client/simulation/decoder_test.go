@@ -21,7 +21,6 @@ func TestDecodeStore(t *testing.T) {
 	clientID := "clientidone"
 
 	clientState := ibctmtypes.ClientState{
-		ID:           clientID,
 		FrozenHeight: 10,
 	}
 

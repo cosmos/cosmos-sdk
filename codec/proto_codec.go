@@ -17,7 +17,9 @@ type ProtoCodec struct {
 	anyUnpacker types.AnyUnpacker
 }
 
-func NewProtoCodec(anyUnpacker types.AnyUnpacker) Marshaler {
+var _ Marshaler = &ProtoCodec{}
+
+func NewProtoCodec(anyUnpacker types.AnyUnpacker) *ProtoCodec {
 	return &ProtoCodec{anyUnpacker: anyUnpacker}
 }
 

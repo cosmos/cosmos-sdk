@@ -7,13 +7,15 @@ import "cosmos/tx/signing/signing.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
 
-// SignatureDescriptors wraps multiple SignatureDescriptor's
+// SignatureDescriptors wraps multiple SignatureDescriptor's.
 message SignatureDescriptors {
+    // signatures are the signature descriptors
     repeated SignatureDescriptor signatures = 1;
 }
 
 // SignatureDescriptor is a convenience type which represents the full data for a
-// signature including the public key of the signer, signing modes and the signature itself
+// signature including the public key of the signer, signing modes and the signature
+// itself. It is primarily used for coordinating signatures between clients.
 message SignatureDescriptor {
     // public_key is the public key of the signer
     cosmos.crypto.PublicKey public_key = 1;

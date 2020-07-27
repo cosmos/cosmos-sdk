@@ -592,16 +592,7 @@ var (
 // ValidateDenom validates a denomination string returning an error if it is
 // invalid.
 func ValidateDenom(denom string) error {
-	var match bool
-	switch strings.Contains(denom, "/") {
-	case true:
-		// TODO: validate IBC denom prefix
-		match = true
-	default:
-		match = reDnm.MatchString(denom)
-	}
-
-	if !match {
+	if !reDnm.MatchString(denom) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil

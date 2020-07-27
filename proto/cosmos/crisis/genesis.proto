@@ -9,8 +9,8 @@ import "cosmos/cosmos.proto";
 // GenesisState - genesis state of x/crisis
 message GenesisState {
 	cosmos.Coin constant_fee = 3 [
-	                             (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
-	                             (gogoproto.nullable) = false,
-	                             (gogoproto.moretags) = "yaml:\"constant_fee\""
-	                             ];
+	  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+	  (gogoproto.nullable) = false,
+	  (gogoproto.moretags) = "yaml:\"constant_fee\""
+	];
 }

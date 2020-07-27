@@ -90,8 +90,8 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs())
-	suite.keeper.SetClientState(suite.ctx, clientState)
+	clientState := ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs())
+	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 	suite.Require().True(found, "GetClientState failed")
@@ -120,14 +120,17 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {
+	clientIDs := []string{
+		testClientID2, testClientID3, testClientID,
+	}
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testClientID2, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testClientID3, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
 	}
 
 	for i := range expClients {
-		suite.keeper.SetClientState(suite.ctx, expClients[i])
+		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
@@ -138,6 +141,33 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
 	suite.Require().Equal(expClients, clients)
+}
+
+func (suite KeeperTestSuite) TestGetAllGenesisClients() {
+	clientIDs := []string{
+		testClientID2, testClientID3, testClientID,
+	}
+	expClients := []exported.ClientState{
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+	}
+
+	expGenClients := make([]types.GenesisClientState, len(expClients))
+
+	for i := range expClients {
+		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
+		expGenClients[i] = types.NewGenesisClientState(clientIDs[i], expClients[i])
+	}
+
+	// add localhost client
+	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	expGenClients = append(expGenClients, types.NewGenesisClientState(exported.ClientTypeLocalHost, localHostClient))
+
+	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
+
+	suite.Require().Equal(expGenClients, genClients)
 }
 
 func (suite KeeperTestSuite) TestGetConsensusState() {
@@ -168,10 +198,10 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+	clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 	suite.Require().NoError(err)
 
-	suite.keeper.SetClientState(suite.ctx, clientState)
+	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
 	nextState := ibctmtypes.ConsensusState{
@@ -186,7 +216,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// mock update functionality
 	clientState.LastHeader = header
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+5, nextState)
-	suite.keeper.SetClientState(suite.ctx, clientState)
+	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)
 	// recalculate cached totalVotingPower for equality check

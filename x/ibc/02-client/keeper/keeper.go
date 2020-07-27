@@ -54,8 +54,8 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 }
 
 // SetClientState sets a particular Client to the store
-func (k Keeper) SetClientState(ctx sdk.Context, clientState exported.ClientState) {
-	store := k.ClientStore(ctx, clientState.GetID())
+func (k Keeper) SetClientState(ctx sdk.Context, clientID string, clientState exported.ClientState) {
+	store := k.ClientStore(ctx, clientID)
 	bz := k.cdc.MustMarshalBinaryBare(clientState)
 	store.Set(host.KeyClientState(), bz)
 }
@@ -120,6 +120,19 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			break
 		}
 	}
+}
+
+// GetAllGenesisClients returns all the clients in state with their client ids returned as GenesisClientState
+func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.GenesisClientState) {
+	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
+		gc := types.GenesisClientState{
+			ClientID:    clientID,
+			ClientState: cs,
+		}
+		genClients = append(genClients, gc)
+		return false
+	})
+	return
 }
 
 // GetAllConsensusStates returns all stored client consensus states.
@@ -209,7 +222,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 // IterateClients provides an iterator over all stored light client State
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
-func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bool) {
+func (k Keeper) IterateClients(ctx sdk.Context, cb func(clientID string, cs exported.ClientState) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, host.KeyClientStorePrefix)
 
@@ -222,7 +235,9 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bo
 		var clientState exported.ClientState
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &clientState)
 
-		if cb(clientState) {
+		// key is ibc/{clientid}/clientState
+		// Thus, keySplit[1] is clientID
+		if cb(keySplit[1], clientState) {
 			break
 		}
 	}
@@ -230,7 +245,7 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bo
 
 // GetAllClients returns all stored light client State objects.
 func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
-	k.IterateClients(ctx, func(state exported.ClientState) bool {
+	k.IterateClients(ctx, func(_ string, state exported.ClientState) bool {
 		states = append(states, state)
 		return false
 	})

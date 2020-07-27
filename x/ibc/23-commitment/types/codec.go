@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
@@ -29,7 +28,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/23-commitmentl and
 	// defined at the application level.
-	SubModuleCdc = codec.NewHybridCodec(amino, cdctypes.NewInterfaceRegistry())
+	SubModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

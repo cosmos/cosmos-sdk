@@ -14,7 +14,7 @@ import (
 func MakeEncodingConfig() EncodingConfig {
 	cdc := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txGen := tx.NewTxConfig(interfaceRegistry, std.DefaultPublicKeyCodec{}, tx.DefaultSignModeHandler())
 
 	return EncodingConfig{

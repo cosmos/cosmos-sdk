@@ -37,7 +37,7 @@ func RegisterKeyTypeCodec(o interface{}, name string) {
 var (
 	amino = codec.New()
 
-	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

@@ -50,7 +50,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/04-channel and
 	// defined at the application level.
-	SubModuleCdc = codec.NewHybridCodec(amino, cdctypes.NewInterfaceRegistry())
+	SubModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

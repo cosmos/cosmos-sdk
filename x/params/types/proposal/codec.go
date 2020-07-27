@@ -15,7 +15,7 @@ type Codec struct {
 }
 
 func NewCodec(amino *codec.Codec) *Codec {
-	return &Codec{Marshaler: codec.NewHybridCodec(amino, types.NewInterfaceRegistry()), amino: amino}
+	return &Codec{Marshaler: codec.NewAminoCodec(amino), amino: amino}
 }
 
 // ModuleCdc is the module codec.

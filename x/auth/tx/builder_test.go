@@ -21,7 +21,7 @@ import (
 func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
-	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	tx := newBuilder(std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}

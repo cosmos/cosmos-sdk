@@ -29,7 +29,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc-transfer and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino, cdctypes.NewInterfaceRegistry())
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

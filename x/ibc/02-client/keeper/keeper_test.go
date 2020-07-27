@@ -163,7 +163,6 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	// add localhost client
 	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
 	suite.Require().True(found)
-	expClients = append(expClients, localHostClient)
 	expGenClients = append(expGenClients, types.NewGenesisClientState(exported.ClientTypeLocalHost, localHostClient))
 
 	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)

@@ -20,7 +20,7 @@ func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
 	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
-	tx := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
+	tx := newBuilder(std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}
 
@@ -123,8 +123,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
 	badFeeAmount[0].Amount = sdk.NewInt(-5)
-	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
-	bldr := newBuilder(marshaler, std.DefaultPublicKeyCodec{})
+	bldr := newBuilder(std.DefaultPublicKeyCodec{})
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{

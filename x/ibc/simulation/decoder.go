@@ -13,7 +13,7 @@ import (
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding ibc type.
-func NewDecodeStore(cdc codec.Marshaler, aminoCdc *codec.Codec) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(cdc codec.BinaryMarshaler, aminoCdc *codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		if res, found := clientsim.NewDecodeStore(aminoCdc, kvA, kvB); found {
 			return res

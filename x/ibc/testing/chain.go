@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -110,6 +112,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	}
 
 	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// create current header and call begin block
 	header := tmproto.Header{
@@ -125,7 +128,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		ChainID:       chainID,
 		App:           app,
 		CurrentHeader: header,
-		Querier:       keeper.NewQuerier(*app.IBCKeeper),
+		Querier:       keeper.NewQuerier(*app.IBCKeeper, legacyQuerierCdc),
 		QueryServer:   app.IBCKeeper,
 		TxConfig:      txConfig,
 		Vals:          valSet,

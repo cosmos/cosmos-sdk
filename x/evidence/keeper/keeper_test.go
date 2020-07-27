@@ -12,6 +12,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -81,6 +82,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := keeper.NewKeeper(
@@ -93,7 +95,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app.EvidenceKeeper = *evidenceKeeper
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
-	suite.querier = keeper.NewQuerier(*evidenceKeeper)
+	suite.querier = keeper.NewQuerier(*evidenceKeeper, legacyQuerierCdc)
 	suite.app = app
 
 	for i, addr := range valAddresses {

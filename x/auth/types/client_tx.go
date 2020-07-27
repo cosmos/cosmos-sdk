@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -90,6 +92,15 @@ func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 		StdTx: StdTx{},
 		cdc:   s.Cdc,
 	}
+}
+
+// WrapTxBuilder returns a StdTxBuilder from provided transaction
+func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+	stdTx, ok := newTx.(StdTx)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, newTx)
+	}
+	return &StdTxBuilder{StdTx: stdTx, cdc: s.Cdc}, nil
 }
 
 // MarshalTx implements TxConfig.MarshalTx

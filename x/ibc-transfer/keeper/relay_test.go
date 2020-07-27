@@ -311,74 +311,80 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 	}
 }
 
-/*
-// // TestOnTimeoutPacket test private refundPacket function since it is a simple wrapper over it
-// func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
-// 	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1.String(), testAddr2.String())
-// 	testCoins2 := sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
+// TestOnTimeoutPacket test private refundPacket function since it is a simple
+// wrapper over it. The actual timeout does not matter since IBC core logic
+// is not being tested. The test is timing out a send from chainA to chainB
+// so the refunds are occurring on chainA.
+func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
+	var (
+		channelA, channelB ibctesting.TestChannel
+		coins              sdk.Coins
+	)
 
-// 	testCases := []struct {
-// 		msg      string
-// 		malleate func()
-// 		source   bool
-// 		expPass  bool
-// 	}{
-// 		{"successful timeout from source chain",
-// 			func() {
-// 				escrow := types.GetEscrowAddress(testPort1, testChannel1)
-// 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
-// 				suite.Require().NoError(err)
-// 			}, true, true},
-// 		{"successful timeout from external chain",
-// 			func() {
-// 				data.Amount = testCoins2
-// 			}, false, true},
-// 		{"no source prefix on coin denom",
-// 			func() {
-// 				data.Amount = prefixCoins2
-// 			}, false, false},
-// 		{"unescrow failed",
-// 			func() {
-// 			}, true, false},
-// 		{"mint failed",
-// 			func() {
-// 				data.Amount[0].Denom = prefixCoins2[0].Denom
-// 				data.Amount[0].Amount = sdk.ZeroInt()
-// 			}, true, false},
-// 	}
+	testCases := []struct {
+		msg      string
+		malleate func()
+		source   bool
+		expPass  bool
+	}{
+		{"successful timeout from source chain",
+			func() {
+				escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))))
+				suite.Require().NoError(err)
 
-// 	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100, 0)
+				coins = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
+			}, true, true},
+		{"successful timeout from external chain",
+			func() {
+				coins = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
+			}, false, true},
+		{"no source prefix on coin denom",
+			func() {
+				coins = sdk.NewCoins(sdk.NewCoin("bitcoin", sdk.NewInt(100)))
+			}, false, false},
+		{"unescrow failed",
+			func() {
+				coins = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
+			}, true, false},
+		{"mint failed",
+			func() {
+				coins = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 0)
+			}, true, false},
+	}
 
-// 	for i, tc := range testCases {
-// 		tc := tc
-// 		i := i
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+	for _, tc := range testCases {
+		tc := tc
 
-// 			tc.malleate()
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
 
-// 			var denom string
-// 			if tc.source {
-// 				prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
-// 				denom = prefixCoins2[0].Denom[len(prefix):]
-// 			} else {
-// 				denom = data.Amount[0].Denom
-// 			}
+			tc.malleate()
 
-// 			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, denom)
+			data := types.NewFungibleTokenPacketData(coins, suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
+			packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
 
-// 			err := suite.chainA.App.TransferKeeper.OnTimeoutPacket(suite.chainA.GetContext(), packet, data)
+			var denom string
+			if tc.source {
+				denom = sdk.DefaultBondDenom
+			} else {
+				denom = coins[0].Denom
+			}
 
-// 			postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, denom)
-// 			deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
+			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 				suite.Require().Equal(prefixCoins2[0].Amount.Int64(), deltaAmount.Int64(), "successful timeout did not trigger refund")
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
-*/
+			err := suite.chainA.App.TransferKeeper.OnTimeoutPacket(suite.chainA.GetContext(), packet, data)
+
+			postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
+			deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(coins[0].Amount.Int64(), deltaAmount.Int64(), "successful timeout did not trigger refund")
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}

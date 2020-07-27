@@ -26,7 +26,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -73,27 +72,24 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	)
 	s.Require().NoError(err)
 
-	tx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
-	s.Require().NoError(err)
 	// write  unsigned tx to file
 	unsignedTx, cleanup := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer cleanup()
 
 	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
 	s.Require().NoError(err)
-
-	var signedTx types.StdTx
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &signedTx)
+	s.T().Log(res.String())
+	signedTx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
 	s.Require().NoError(err)
 
 	signedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer cleanup()
-
+	txBuilder, err := val.ClientCtx.TxConfig.WrapTxBuilder(signedTx)
 	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
-	signedTx.Memo = "MODIFIED STD TX"
-	bz, err := val.ClientCtx.JSONMarshaler.MarshalJSON(signedTx)
+	txBuilder.SetMemo("MODIFIED STD TX")
+	bz, err := val.ClientCtx.TxConfig.TxJSONEncoder()(signedTx)
 	s.Require().NoError(err)
 
 	modifiedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(bz))

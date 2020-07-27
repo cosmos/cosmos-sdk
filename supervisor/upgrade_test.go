@@ -1,3 +1,5 @@
+// +build linux
+
 package supervisor
 
 import (
@@ -123,13 +125,11 @@ func TestDoUpgradeNoDownloadUrl(t *testing.T) {
 }
 
 func TestOsArch(t *testing.T) {
-	t.SkipNow()
 	// all download tests will fail if we are not on linux...
 	assert.Equal(t, "linux/amd64", osArch())
 }
 
 func TestGetDownloadURL(t *testing.T) {
-	t.SkipNow()
 	// all download tests will fail if we are not on linux...
 	ref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/ref_zipped"))
 	require.NoError(t, err)

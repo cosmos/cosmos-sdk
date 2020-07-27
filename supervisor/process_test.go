@@ -1,3 +1,5 @@
+// +build linux
+
 package supervisor
 
 import (
@@ -52,7 +54,6 @@ func TestLaunchProcess(t *testing.T) {
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func TestLaunchProcessWithDownloads(t *testing.T) {
-	t.SkipNow()
 	// this is a fun path
 	// genesis -> "chain2" = zip_binary
 	// zip_binary -> "chain3" = ref_zipped -> zip_directory

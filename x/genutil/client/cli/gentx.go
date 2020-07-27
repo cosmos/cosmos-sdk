@@ -169,7 +169,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			// sign the transaction and write it to the output file
-			err = authclient.SignStdTx(txFactory, clientCtx, name, txBuilder, false, true)
+			err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to sign std tx")
 			}

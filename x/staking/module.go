@@ -129,10 +129,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) s
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
-	querier := keeper.Querier{Keeper: am.keeper}
-	types.RegisterQueryServer(server, querier)
-}
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the staking module. It returns
 // no validator updates.

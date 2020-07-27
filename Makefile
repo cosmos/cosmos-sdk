@@ -185,10 +185,10 @@ test-ledger: test-ledger-mock
 test-unit: test-unit-amino # TODO switch test-unit-proto to be default here after proto Tx is fully tested
 
 test-unit-proto:
-	@VERSION=$(VERSION) go test -mod=readonly ./x/auth/client/cli/cli_test.go -tags='ledger test_ledger_mock test_proto'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_proto'
 
 test-unit-amino:
-	@VERSION=$(VERSION) go test -mod=readonly ./x/auth/client/cli/cli_test.go -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)

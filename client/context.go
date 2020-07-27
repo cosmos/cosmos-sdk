@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -200,8 +200,7 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
 func (ctx Context) PrintOutput(toPrint interface{}) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
-	builder := toPrint.(TxBuilder)
-	out, err := ctx.TxConfig.TxJSONEncoder()(builder.GetTx())
+	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 	if err != nil {
 		return err
 	}

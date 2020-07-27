@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -112,19 +111,19 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
-				err = authclient.SignStdTx(txFactory, clientCtx, fromName, txBuilder, false, true)
+				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true)
 				if err != nil {
 					return err
 				}
 			} else {
-				err = authclient.SignStdTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, true)
+				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, true)
 			}
 
 			if err != nil {
 				return err
 			}
 
-			json, err := getSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, unsignedStdTx, generateSignatureOnly)
+			json, err := getSignatureJSON(txGen, txBuilder, unsignedStdTx, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -240,7 +239,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			err = authclient.SignStdTxWithSignerAddress(
+			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline,
 			)
 			generateSignatureOnly = true
@@ -248,14 +247,14 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			append, _ := cmd.Flags().GetBool(flagAppend)
 			appendSig := append && !generateSignatureOnly
 			if appendSig {
-				err = authclient.SignStdTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, appendSig, clientCtx.Offline)
+				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
 		}
 		if err != nil {
 			return err
 		}
 
-		json, err := getSignatureJSON(clientCtx.JSONMarshaler, txGen, txBuilder, newTx, generateSignatureOnly)
+		json, err := getSignatureJSON(txGen, txBuilder, newTx, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -277,31 +276,14 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func getSignatureJSON(cdc codec.JSONMarshaler, txGen client.TxConfig, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, newTx sdk.Tx, generateSignatureOnly bool) ([]byte, error) {
 	if generateSignatureOnly {
-		return cdc.MarshalJSON(txBldr.GetTx().GetSignatures())
+		sigs, err := txBldr.GetTx().GetSignaturesV2()
+		if err != nil {
+			return nil, err
+		}
+		return txConfig.MarshalSignatureJSON(sigs)
 	}
 
-	return txGen.TxEncoder()(newTx)
+	return txConfig.TxEncoder()(newTx)
 }
-
-// func getSignatureJSON(cdc codec.JSONMarshaler, newTx authsigning.SigVerifiableTx, indent, generateSignatureOnly bool) ([]byte, error) {
-// 	switch generateSignatureOnly {
-// 	case true:
-// 		sigData, err := newTx.GetSignatureData()
-// 		pubKeys := newTx.GetPubKeys()
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		return getSignatureBuilderJSON(cdc, client.SignatureBuilder{
-// 			PubKey: pubKeys[0],
-// 			Data:   sigData[0],
-// 		}, indent)
-// 	default:
-// 		panic("TODO")
-// 	}
-// }
-//
-// func getSignatureBuilderJSON(cdc codec.JSONMarshaler, sigBuilder client.SignatureBuilder, indent bool) ([]byte, error) {
-//
-// }

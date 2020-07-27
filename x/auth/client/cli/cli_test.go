@@ -1,5 +1,3 @@
-// +build test_proto
-
 package cli_test
 
 import (

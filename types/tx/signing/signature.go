@@ -1,6 +1,8 @@
 package signing
 
-import "github.com/tendermint/tendermint/crypto"
+import (
+	"github.com/tendermint/tendermint/crypto"
+)
 
 // SignatureV2 is a convenience type that is easier to use in application logic
 // than the protobuf SignerInfo's and raw signature bytes. It goes beyond the

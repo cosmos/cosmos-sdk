@@ -77,11 +77,10 @@ func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.
 	return err
 }
 
-// SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
+// SignTx appends a signature to a transaction. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(txFactory tx.Factory, clientCtx client.Context, name string,
-	stdTx client.TxBuilder, appendSig bool, offline bool) error {
+func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline bool) error {
 	info, err := txFactory.Keybase().Key(name)
 	if err != nil {
 		return err
@@ -100,10 +99,10 @@ func SignStdTx(txFactory tx.Factory, clientCtx client.Context, name string,
 	return tx.Sign(txFactory, name, stdTx)
 }
 
-// SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
+// SignTxWithSignerAddress attaches a signature to a transaction.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func SignStdTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
+func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
 	name string, txBuilder client.TxBuilder, offline bool) (err error) {
 
 	// check whether the address is a signer

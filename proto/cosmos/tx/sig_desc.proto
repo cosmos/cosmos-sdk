@@ -1,0 +1,52 @@
+syntax = "proto3";
+package cosmos.tx;
+
+import "cosmos/crypto/crypto.proto";
+import "cosmos/tx/signing/signing.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
+
+
+// SignatureDescriptors wraps multiple SignatureDescriptor's
+message SignatureDescriptors {
+    repeated SignatureDescriptor signatures = 1;
+}
+
+// SignatureDescriptor is a convenience type which represents the full data for a
+// signature including the public key of the signer, signing modes and the signature itself
+message SignatureDescriptor {
+    // public_key is the public key of the signer
+    cosmos.crypto.PublicKey public_key = 1;
+
+    // data represents the signature data
+    Data data = 2;
+
+    message Data {
+        // sum is the oneof that specifies whether this represents single or multi-signature data
+        oneof sum {
+            // single represents a single signer
+            Single single = 1;
+
+            // multi represents a multisig signer
+            Multi multi = 2;
+        }
+
+        // Single is the signature data for a single signer
+        message Single {
+            // mode is the signing mode of the single signer
+            cosmos.tx.signing.SignMode mode = 1;
+
+            // signature is the raw signature bytes
+            bytes signature = 2;
+        }
+
+        // Multi is the signature data for a multisig public key
+        message Multi {
+            // bitarray specifies which keys within the multisig are signing
+            cosmos.crypto.CompactBitArray bitarray = 1;
+
+            // signatures is the signatures of the multi-signature
+            repeated Data signatures  = 2;
+        }
+    }
+}

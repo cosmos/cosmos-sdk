@@ -1,4 +1,4 @@
-package enforceproto
+package unknownproto
 
 import (
 	"fmt"

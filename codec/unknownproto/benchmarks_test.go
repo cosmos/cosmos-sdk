@@ -1,4 +1,4 @@
-package enforceproto_test
+package unknownproto_test
 
 import (
 	"sync"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/enforceproto"
+	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
@@ -42,20 +42,20 @@ func init() {
 	}
 }
 
-func BenchmarkCheckMismatchedProtoFields_serial(b *testing.B) {
-	benchmarkCheckMismatchedProtoFields(b, false)
+func BenchmarkCheckMismatchedFields_serial(b *testing.B) {
+	benchmarkCheckMismatchedFields(b, false)
 }
-func BenchmarkCheckMismatchedProtoFields_parallel(b *testing.B) {
-	benchmarkCheckMismatchedProtoFields(b, true)
+func BenchmarkCheckMismatchedFields_parallel(b *testing.B) {
+	benchmarkCheckMismatchedFields(b, true)
 }
 
-func benchmarkCheckMismatchedProtoFields(b *testing.B, parallel bool) {
+func benchmarkCheckMismatchedFields(b *testing.B, parallel bool) {
 	b.ReportAllocs()
 
 	if !parallel {
 		for i := 0; i < b.N; i++ {
 			n1A := new(testdata.Nested1A)
-			if err := enforceproto.CheckMismatchedProtoFields(n1BBlob, n1A); err == nil {
+			if err := unknownproto.CheckMismatchedFields(n1BBlob, n1A); err == nil {
 				b.Fatal("expected an error")
 			}
 			b.SetBytes(int64(len(n1BBlob)))
@@ -66,7 +66,7 @@ func benchmarkCheckMismatchedProtoFields(b *testing.B, parallel bool) {
 			for pb.Next() {
 				// To simulate the conditions of multiple transactions being processed in parallel.
 				n1A := new(testdata.Nested1A)
-				if err := enforceproto.CheckMismatchedProtoFields(n1BBlob, n1A); err == nil {
+				if err := unknownproto.CheckMismatchedFields(n1BBlob, n1A); err == nil {
 					b.Fatal("expected an error")
 				}
 				mu.Lock()

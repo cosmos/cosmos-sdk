@@ -1,4 +1,4 @@
-package enforceproto
+package unknownproto
 
 import (
 	"reflect"
@@ -54,7 +54,7 @@ func TestCheckUnknownFieldsRepeated(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotErr := CheckMismatchedProtoFields(protoBlob, tt.recv)
+			gotErr := CheckMismatchedFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%v\n\nWant:\n%v", gotErr, tt.wantErr)
 			}
@@ -267,7 +267,7 @@ func TestCheckUnknownFieldsNested(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotErr := CheckMismatchedProtoFields(protoBlob, tt.recv)
+			gotErr := CheckMismatchedFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -424,7 +424,7 @@ func TestCheckUnknownFieldsFlat(t *testing.T) {
 			}
 
 			c1 := new(testdata.Customer1)
-			gotErr := CheckMismatchedProtoFields(blob, c1)
+			gotErr := CheckMismatchedFields(blob, c1)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}

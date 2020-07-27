@@ -1,4 +1,4 @@
-package enforceproto
+package unknownproto
 
 import (
 	"bytes"
@@ -22,10 +22,10 @@ type descriptorIface interface {
 	Descriptor() ([]byte, []int)
 }
 
-// CheckMismatchedProtoFields walks through the protobuf serialized bytes in b, and tries to
+// CheckMismatchedFields walks through the protobuf serialized bytes in b, and tries to
 // compare field numbers and wireTypes against what msg expects. The error returned if non-nil will contain
 // the listing of the unknown fields by tagNumber and wireType, or mismatched wireTypes.
-func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
+func CheckMismatchedFields(b []byte, msg proto.Message) error {
 	if len(b) == 0 {
 		return nil
 	}
@@ -108,7 +108,7 @@ func CheckMismatchedProtoFields(b []byte, msg proto.Message) error {
 		if err != nil {
 			return err
 		}
-		if err := CheckMismatchedProtoFields(fieldBytes, msg); err != nil {
+		if err := CheckMismatchedFields(fieldBytes, msg); err != nil {
 			return err
 		}
 	}

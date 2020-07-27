@@ -99,7 +99,6 @@ gaiacli rest-server --node=<full_node_address:full_node_port>
 
 Flags:
 
-- `--trust-node`: 布尔类型。如果为 `true`，轻节点校验将被禁用。如果为 `false`, 则会校验返回结果。 对于服务提供商，应将其设置为 `true`。默认情况下，它设置为 `true`。
 - `--node`: 全节点的 IP 地址和端口。格式为 `<full_node_address:full_node_port>`。如果全节点在同一台机器上，则地址应为 `tcp：// localhost：26657`。
 - `--laddr`: 此标识允许您指定 Rest 服务器的地址和端口（默认为“1317”）。通常只使用这个标识指定端口，此时只需输入 “localhost” 作为地址，格式为`<rest_server_address:port>`。
 

@@ -1,7 +1,7 @@
 // +build !cgo !ledger
 // test_ledger_mock
 
-package crypto
+package ledger
 
 import (
 	"github.com/pkg/errors"
@@ -11,7 +11,7 @@ import (
 // set the discoverLedger function which is responsible for loading the Ledger
 // device at runtime or returning an error.
 func init() {
-	discoverLedger = func() (LedgerSECP256K1, error) {
+	discoverLedger = func() (SECP256K1, error) {
 		return nil, errors.New("support for ledger devices is not available in this executable")
 	}
 }

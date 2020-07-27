@@ -148,7 +148,6 @@ func TestGetPaginatedVotes(t *testing.T) {
 			clientCtx := client.Context{}.
 				WithJSONMarshaler(cdc).
 				WithCodec(cdc).
-				WithTrustNode(true).
 				WithClient(cli)
 
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)

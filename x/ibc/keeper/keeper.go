@@ -21,7 +21,7 @@ type Keeper struct {
 	types.QueryServer
 
 	aminoCdc *codec.Codec
-	cdc      codec.Marshaler
+	cdc      codec.BinaryMarshaler
 
 	ClientKeeper     clientkeeper.Keeper
 	ConnectionKeeper connectionkeeper.Keeper
@@ -32,7 +32,7 @@ type Keeper struct {
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
+	aminoCdc *codec.Codec, cdc codec.BinaryMarshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
 	clientKeeper := clientkeeper.NewKeeper(aminoCdc, key, stakingKeeper)
 	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
@@ -50,7 +50,7 @@ func NewKeeper(
 }
 
 // Codecs returns the IBC module codec.
-func (k Keeper) Codecs() (codec.Marshaler, *codec.Codec) {
+func (k Keeper) Codecs() (codec.BinaryMarshaler, *codec.Codec) {
 	return k.cdc, k.aminoCdc
 }
 

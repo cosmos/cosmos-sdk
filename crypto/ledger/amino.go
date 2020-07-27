@@ -1,4 +1,4 @@
-package crypto
+package ledger
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

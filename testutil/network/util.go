@@ -60,8 +60,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	if val.APIAddress != "" {
 		val.ClientCtx = val.ClientCtx.
-			WithClient(val.RPCClient).
-			WithTrustNode(true)
+			WithClient(val.RPCClient)
 
 		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
@@ -106,7 +105,8 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 			return err
 		}
 
-		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
+		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
+			tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
 		if err != nil {
 			return err
 		}

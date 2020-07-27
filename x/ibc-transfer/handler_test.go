@@ -34,6 +34,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 // by the ibc-transfer module, so what actually occurs is chainA and chainB
 // send coins to each other, but no coins are ever sent back. This can be
 // fixed by receving and acknowledeging the send on the counterparty chain.
+// https://github.com/cosmos/cosmos-sdk/issues/6827
 func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 	handlerA := ibctransfer.NewHandler(suite.chainA.App.TransferKeeper)

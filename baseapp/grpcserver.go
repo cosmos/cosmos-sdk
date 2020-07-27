@@ -28,12 +28,8 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			return nil, status.Error(codes.Internal, "unable to retrieve metadata")
 		}
 
-		// Get height and prove headers from the request context
-		var (
-			height int64
-			prove  bool
-		)
-
+		// Get height header from the request context, if present.
+		var height int64
 		if heightHeaders := md.Get(servergrpc.GRPCBlockHeightHeader); len(heightHeaders) > 0 {
 			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
 			if err != nil {
@@ -41,20 +37,14 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			}
 		}
 
-		if proveHeaders := md.Get(servergrpc.GRPCWithProofHeader); len(proveHeaders) > 0 {
-			prove, err = strconv.ParseBool(proveHeaders[0])
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// Create the sdk.Context
-		sdkCtx, err := app.createQueryContext(height, prove)
+		// Create the sdk.Context. Passing false as 2nd arg, as we can't
+		// actually support proofs with gRPC right now.
+		sdkCtx, err := app.createQueryContext(height, false)
 		if err != nil {
 			return nil, err
 		}
 
-		// Attach the sdk.Context into the gRPC's context.Context
+		// Attach the sdk.Context into the gRPC's context.Context.
 		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
 
 		// Add relevant gRPC headers

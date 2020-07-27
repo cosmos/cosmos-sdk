@@ -256,6 +256,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          bva.Address,
+		Coins:            cva.Coins,
 		PubKey:           bva.GetPubKey(),
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
@@ -421,6 +422,7 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          cva.Address,
+		Coins:            cva.Coins,
 		PubKey:           cva.GetPubKey(),
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
@@ -616,6 +618,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          pva.Address,
+		Coins:            cva.Coins,
 		PubKey:           pva.GetPubKey(),
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
@@ -724,6 +727,7 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          dva.Address,
+		Coins:            cva.Coins,
 		PubKey:           dva.GetPubKey(),
 		AccountNumber:    dva.AccountNumber,
 		Sequence:         dva.Sequence,

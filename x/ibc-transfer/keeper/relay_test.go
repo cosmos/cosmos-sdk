@@ -11,8 +11,8 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-// test sending from chainA to chainB using both coins that orignate on this
-// chain and that came from chainB
+// test sending from chainA to chainB using both coins that orignate on
+// chainA and coins that orignate on chainB
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	var (
 		amount             sdk.Coins
@@ -21,10 +21,10 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	)
 
 	testCases := []struct {
-		msg           string
-		malleate      func()
-		isSourceChain bool
-		expPass       bool
+		msg      string
+		malleate func()
+		source   bool
+		expPass  bool
 	}{
 		{"successful transfer from source chain",
 			func() {
@@ -90,20 +90,98 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 
 			tc.malleate()
 
-			if tc.isSourceChain {
-				// use channelA for source
-				err = suite.chainA.App.TransferKeeper.SendTransfer(
-					suite.chainA.GetContext(), channelA.PortID, channelA.ID, amount,
-					suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0,
-				)
-			} else {
+			if !tc.source {
 				// send coins from chainB to chainA
 				coinFromBToA := ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
 				transferMsg := types.NewMsgTransfer(channelB.PortID, channelB.ID, coinFromBToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
 				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, []sdk.Msg{transferMsg})
 				suite.Require().NoError(err) // message committed
 
-				// TODO: retreive packet sequence from the resulting events in the commit above
+				// receive coins on chainA from chainB
+				fungibleTokenPacket := types.NewFungibleTokenPacketData(coinFromBToA, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
+				packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
+
+				// get proof of packet commitment from chainB
+				packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+				proof, proofHeight := suite.chainB.QueryProof(packetKey)
+
+				recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
+				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, []sdk.Msg{recvMsg})
+				suite.Require().NoError(err) // message committed
+			}
+
+			err = suite.chainA.App.TransferKeeper.SendTransfer(
+				suite.chainA.GetContext(), channelA.PortID, channelA.ID, amount,
+				suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+// test receiving coins on chainB with coins that orignate on chainA and
+// coins that orignated on chainB. Coins from source (chainA) have channelB
+// as the denom prefix. The bulk of the testing occurs in the test case
+// for loop since setup is intensive for all cases. The malleate function
+// allows for testing invalid cases.
+func (suite *KeeperTestSuite) TestOnRecvPacket() {
+	var (
+		channelA, channelB ibctesting.TestChannel
+		coins              sdk.Coins
+		receiver           string
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		source   bool
+		expPass  bool
+	}{
+		{"success receive from source chain", func() {}, true, true},
+		{"success receive with coins orignated on this chain", func() {}, false, true},
+		{"empty amount", func() {
+			coins = nil
+		}, true, false},
+		{"invalid receiver address", func() {
+			receiver = "gaia1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrudl"
+		}, true, false},
+		{"no dest prefix on coin denom", func() {
+			coins = ibctesting.NewTransferCoins(channelB, "bitcoin", 100)
+		}, false, false},
+
+		// onRecvPacket
+		// - coins from source chain (chainA)
+		{"failure: mint zero coins", func() {
+			coins = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 0)
+		}, true, false},
+
+		// - coins being sent back to original chain (chainB)
+		{"tries to unescrow more tokens than allowed", func() {
+			coins = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 10000)
+		}, false, false},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			receiver = suite.chainB.SenderAccount.GetAddress().String() // must be explicitly changed in malleate
+
+			seq := uint64(1)
+
+			if !tc.source {
+				// send coins from chainB to chainA, receive them, acknowledge them, and send back to chainB
+				coinFromBToA := ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
+				transferMsg := types.NewMsgTransfer(channelB.PortID, channelB.ID, coinFromBToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
+				err := suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, []sdk.Msg{transferMsg})
+				suite.Require().NoError(err) // message committed
 
 				// receive coins on chainA from chainB
 				fungibleTokenPacket := types.NewFungibleTokenPacketData(coinFromBToA, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
@@ -117,12 +195,34 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, []sdk.Msg{recvMsg})
 				suite.Require().NoError(err) // message committed
 
-				// use channelB for source
-				err = suite.chainA.App.TransferKeeper.SendTransfer(
-					suite.chainA.GetContext(), channelA.PortID, channelA.ID, amount,
-					suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0,
-				)
+				// get proof of acknowledgement on chainA
+				packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+				proof, proofHeight = suite.chainA.QueryProof(packetKey)
+
+				// acknowledge on chainB the receive that happened on chainA
+				ack := types.FungibleTokenPacketAcknowledgement{true, ""}
+				ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack.GetBytes(), proof, proofHeight, suite.chainB.SenderAccount.GetAddress())
+				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, []sdk.Msg{ackMsg})
+				suite.Require().NoError(err) // message committed
+
+				seq++
+				// NOTE: coins must be explicitly changed in malleate to test invalid cases
+				coins = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
+			} else {
+				coins = ibctesting.NewTransferCoins(channelB, sdk.DefaultBondDenom, 100)
 			}
+
+			// send coins from chainA to chainB
+			transferMsg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coins, suite.chainA.SenderAccount.GetAddress(), receiver, 110, 0)
+			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, []sdk.Msg{transferMsg})
+			suite.Require().NoError(err) // message committed
+
+			tc.malleate()
+
+			data := types.NewFungibleTokenPacketData(coins, suite.chainA.SenderAccount.GetAddress().String(), receiver)
+			packet := channeltypes.NewPacket(data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+
+			err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, data)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -134,94 +234,6 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 }
 
 /*
-func (suite *KeeperTestSuite) TestOnRecvPacket() {
-	_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-
-	prefixCoins = types.GetPrefixedCoins(channelA.PortID, channelA.ID, sdk.NewInt64Coin("atom", 100))
-	sourceCoins := types.GetPrefixedCoins(channelB.PortID, channelB.ID, sdk.NewInt64Coin("atom", 100))
-	data := types.NewFungibleTokenPacketData(prefixCoins, suite.sender.String(), suite.receiver.String())
-
-	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		// {"success receive from source chain",
-		// 	func() {}, true},
-		{
-			"empty amount",
-			func() {
-				data.Amount = nil
-			},
-			false,
-		},
-		{
-			"invalid receiver address",
-			func() {
-				data.Amount = prefixCoins
-				data.Receiver = "gaia1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrudl"
-			},
-			false,
-		},
-		{
-			"no dest prefix on coin denom",
-			func() {
-				data.Amount = testCoins
-				data.Receiver = suite.receiver.String()
-			},
-			false,
-		},
-		// onRecvPacket
-		// - source chain
-		{
-			"mint failed",
-			func() {
-				data.Amount = sourceCoins
-				data.Amount[0].Amount = sdk.ZeroInt()
-			},
-			false,
-		},
-		// {
-		// 	"success receive",
-		// 	func() {
-		// 		data.Amount = sourceCoins
-		// 	},
-		// 	true,
-		// },
-		// // - receiving chain
-		// {"incorrect dest prefix on coin denom",
-		// 	func() {
-		// 		data.Amount = prefixCoins
-		// 	}, false},
-		// {"success receive from external chain",
-		// 	func() {
-		// 		data.Amount = prefixCoins
-		// 		escrow := types.GetEscrowAddress(testPort2, testChannel2)
-		// 		_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, testCoins)
-		// 		suite.Require().NoError(err)
-		// 	}, true},
-	}
-
-	packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
-
-	for i, tc := range testCases {
-		tc := tc
-		i := i
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
-			tc.malleate()
-
-			err := suite.chainA.App.TransferKeeper.OnRecvPacket(suite.chainA.GetContext(), packet, data)
-
-			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-			}
-		})
-	}
-}
-
 // // TestOnAcknowledgementPacket tests that successful acknowledgement is a no-op
 // // and failure acknowledment leads to refund
 // func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {

@@ -49,7 +49,7 @@ type ClientState struct {
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
+func InitializeFromMsg(msg *MsgCreateClient) (ClientState, error) {
 	return Initialize(
 		msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
@@ -157,7 +157,7 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	aminoCdc *codec.Codec,
 	provingRoot commitmentexported.Root,
 	height uint64,
@@ -194,7 +194,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -233,7 +233,7 @@ func (cs ClientState) VerifyConnectionState(
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -273,7 +273,7 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -304,7 +304,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -336,7 +336,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -366,7 +366,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -398,7 +398,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 // shared between the verification functions and returns the unmarshalled
 // merkle proof and an error if one occurred.
 func sanitizeVerificationArgs(
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	cs ClientState,
 	height uint64,
 	prefix commitmentexported.Prefix,

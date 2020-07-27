@@ -11,7 +11,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func NewQuerier(k Keeper) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (
 			res []byte
@@ -20,10 +20,10 @@ func NewQuerier(k Keeper) sdk.Querier {
 
 		switch path[0] {
 		case types.QueryEvidence:
-			res, err = queryEvidence(ctx, req, k)
+			res, err = queryEvidence(ctx, req, k, legacyQuerierCdc)
 
 		case types.QueryAllEvidence:
-			res, err = queryAllEvidence(ctx, req, k)
+			res, err = queryAllEvidence(ctx, req, k, legacyQuerierCdc)
 
 		default:
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
@@ -33,10 +33,10 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QueryEvidenceRequest
 
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -46,7 +46,7 @@ func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, er
 		return nil, sdkerrors.Wrap(types.ErrNoEvidenceExists, params.EvidenceHash.String())
 	}
 
-	res, err := codec.MarshalJSONIndent(k.cdc, evidence)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, evidence)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -54,10 +54,10 @@ func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, er
 	return res, nil
 }
 
-func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QueryAllEvidenceParams
 
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -71,7 +71,7 @@ func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 		evidence = evidence[start:end]
 	}
 
-	res, err := codec.MarshalJSONIndent(k.cdc, evidence)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, evidence)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

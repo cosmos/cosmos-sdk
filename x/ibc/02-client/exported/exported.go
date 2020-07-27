@@ -28,7 +28,7 @@ type ClientState interface {
 
 	VerifyClientConsensusState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		aminoCdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
@@ -40,7 +40,7 @@ type ClientState interface {
 	) error
 	VerifyConnectionState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -50,7 +50,7 @@ type ClientState interface {
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -61,7 +61,7 @@ type ClientState interface {
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -73,7 +73,7 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -85,7 +85,7 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -96,7 +96,7 @@ type ClientState interface {
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,

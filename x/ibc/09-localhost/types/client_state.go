@@ -79,7 +79,7 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
-	_ codec.Marshaler,
+	_ codec.BinaryMarshaler,
 	aminoCdc *codec.Codec,
 	_ commitmentexported.Root,
 	height uint64,
@@ -118,7 +118,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // specified connection end stored locally.
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ []byte,
@@ -156,7 +156,7 @@ func (cs ClientState) VerifyConnectionState(
 // channel end, under the specified port, stored on the local machine.
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ []byte,
@@ -195,7 +195,7 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
-	_ codec.Marshaler,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ []byte,
@@ -229,7 +229,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
-	_ codec.Marshaler,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ []byte,
@@ -264,7 +264,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
-	_ codec.Marshaler,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ []byte,
@@ -290,7 +290,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
-	_ codec.Marshaler,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ []byte,

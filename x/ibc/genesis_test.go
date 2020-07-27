@@ -30,9 +30,13 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "valid genesis",
 			genState: types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-						localhosttypes.NewClientState("chaindID", 10),
+					[]clienttypes.GenesisClientState{
+						clienttypes.NewGenesisClientState(
+							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+						),
+						clienttypes.NewGenesisClientState(
+							exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+						),
 					},
 					[]clienttypes.ClientConsensusStates{
 						clienttypes.NewClientConsensusStates(
@@ -86,9 +90,13 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "invalid client genesis",
 			genState: types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-						localhosttypes.NewClientState("(chaindID)", 0),
+					[]clienttypes.GenesisClientState{
+						clienttypes.NewGenesisClientState(
+							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+						),
+						clienttypes.NewGenesisClientState(
+							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),
+						),
 					},
 					nil,
 					false,

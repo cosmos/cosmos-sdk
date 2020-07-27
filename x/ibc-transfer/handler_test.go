@@ -43,7 +43,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res, "%+v", res) // successfully executed
 
-	err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, []sdk.Msg{msg})
+	err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
 	suite.Require().NoError(err) // message committed
 
 	handlerB := ibctransfer.NewHandler(suite.chainB.App.TransferKeeper)
@@ -57,7 +57,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res, "%+v", res) // successfully executed
 
-	err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, clientA, []sdk.Msg{msg})
+	err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, clientA, msg)
 	suite.Require().NoError(err) // message committed
 }
 

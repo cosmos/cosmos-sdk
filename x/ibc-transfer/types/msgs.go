@@ -1,6 +1,9 @@
 package types
 
 import (
+	"bytes"
+	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -14,13 +17,15 @@ const (
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
-	amount sdk.Coins, sender sdk.AccAddress, receiver string,
+	amount sdk.Coins, trace DenomTrace,
+	sender sdk.AccAddress, receiver string,
 	timeoutHeight, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,
 		SourceChannel:    sourceChannel,
 		Amount:           amount,
+		Trace:            trace,
 		Sender:           sender,
 		Receiver:         receiver,
 		TimeoutHeight:    timeoutHeight,
@@ -52,6 +57,27 @@ func (msg MsgTransfer) ValidateBasic() error {
 	}
 	if !msg.Amount.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+	if err := msg.Trace.Validate(); err != nil {
+		return err
+	}
+	// Only validate the ibc denomination when trace info is not provided
+	if msg.Trace.Trace != "" {
+		denomTraceHash, err := ValidateIBCDenom(msg.Amount[0].Denom)
+		if err != nil {
+			return err
+		}
+		traceHash := msg.Trace.Hash()
+		if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
+			return fmt.Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
+		}
+	} else if msg.Trace.BaseDenom != msg.Amount[0].Denom {
+		// otherwise, validate that denominations are equal
+		return sdkerrors.Wrapf(
+			ErrInvalidDenomForTransfer,
+			"token denom must match the trace base denom (%s ≠ %s)",
+			msg.Amount, msg.Trace.BaseDenom,
+		)
 	}
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")

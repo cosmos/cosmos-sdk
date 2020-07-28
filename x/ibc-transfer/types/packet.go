@@ -46,7 +46,7 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 		return err
 	}
 	// Only validate the ibc denomination when trace info is not provided
-	if ftpd.Trace.Trace == "" {
+	if ftpd.Trace.Trace != "" {
 		denomTraceHash, err := ValidateIBCDenom(ftpd.Amount[0].Denom)
 		if err != nil {
 			return err
@@ -57,13 +57,13 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 			return fmt.Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
 		}
 	} else if ftpd.Trace.BaseDenom != ftpd.Amount[0].Denom {
+		// otherwise, validate that denominations are equal
 		return sdkerrors.Wrapf(
 			ErrInvalidDenomForTransfer,
 			"token denom must match the trace base denom (%s ≠ %s)",
 			ftpd.Amount, ftpd.Trace.BaseDenom,
 		)
 	}
-
 	if strings.TrimSpace(ftpd.Sender) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
 	}

@@ -62,8 +62,12 @@ func (dt *DenomTrace) RemovePrefix() error {
 
 func (dt DenomTrace) validateTrace() error {
 	// empty trace is accepted when token lives on the original chain
-	if dt.Trace == "" {
+
+	switch {
+	case dt.Trace == "" && dt.BaseDenom != "":
 		return nil
+	case strings.TrimSpace(dt.Trace == ""):
+		return fmt.Errorf("cannot have an empty trace and empty base denomination")
 	}
 
 	traceSplit := strings.Split(dt.Trace, "/")

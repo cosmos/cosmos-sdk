@@ -146,7 +146,6 @@ func NewBatchScanner(cfg client.TxConfig, r io.Reader) *BatchScanner {
 // of newline-delimited JSON encoded StdTx.
 type BatchScanner struct {
 	*bufio.Scanner
-	builder      client.TxBuilder
 	theTx        sdk.Tx
 	cfg          client.TxConfig
 	unmarshalErr error

@@ -36,9 +36,9 @@ message SignatureDescriptor {
     // public_key is the public key of the signer
     cosmos.crypto.PublicKey public_key = 1;
 
-    // data represents the signature data
     Data data = 2;
 
+    // Data represents signature data
     message Data {
         // sum is the oneof that specifies whether this represents single or multi-signature data
         oneof sum {

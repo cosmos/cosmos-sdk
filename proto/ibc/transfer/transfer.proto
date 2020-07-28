@@ -68,3 +68,14 @@ message DenomTrace {
   // base denomination of the relayed fungible token
   string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
 }
+
+
+// IdentifiedDenomTrace contains DenomTrace and the hash used for the IBC fungible denom map.
+message IdentifiedDenomTrace {
+  // chain of port/channel identifiers used for tracing the source of the fungible token
+  string trace = 1;
+  // base denomination of the relayed fungible token
+	string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
+	// SHA256 hash of the trace and the base denom: hash(trace + "/" + baseDenom)
+	bytes hash = 3;
+}

@@ -5,7 +5,6 @@ package types
 
 import (
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -26,8 +25,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the ibc-transfer genesis state
 type GenesisState struct {
-	PortID      string               `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
-	DenomTraces []*GenesisDenomTrace `protobuf:"bytes,2,rep,name=denom_traces,json=denomTraces,proto3" json:"denom_traces,omitempty" yaml:"denom_traces"`
+	PortID      string                  `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	DenomTraces []*IdentifiedDenomTrace `protobuf:"bytes,2,rep,name=denom_traces,json=denomTraces,proto3" json:"denom_traces,omitempty" yaml:"denom_traces"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -70,107 +69,39 @@ func (m *GenesisState) GetPortID() string {
 	return ""
 }
 
-func (m *GenesisState) GetDenomTraces() []*GenesisDenomTrace {
+func (m *GenesisState) GetDenomTraces() []*IdentifiedDenomTrace {
 	if m != nil {
 		return m.DenomTraces
 	}
 	return nil
 }
 
-// GenesisDenomTrace contains DenomTrace and the hash used for the IBC fungible denom map.
-type GenesisDenomTrace struct {
-	// chain of port/channel identifiers used for tracing the source of the fungible token
-	Trace string `protobuf:"bytes,1,opt,name=trace,proto3" json:"trace,omitempty"`
-	// base denomination of the relayed fungible token
-	BaseDenom string `protobuf:"bytes,2,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty" yaml:"base_denom"`
-	// SHA256 hash of the trace and the base denom: hash(trace + "/" + baseDenom)
-	Hash []byte `protobuf:"bytes,3,opt,name=hash,proto3" json:"hash,omitempty"`
-}
-
-func (m *GenesisDenomTrace) Reset()         { *m = GenesisDenomTrace{} }
-func (m *GenesisDenomTrace) String() string { return proto.CompactTextString(m) }
-func (*GenesisDenomTrace) ProtoMessage()    {}
-func (*GenesisDenomTrace) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c13b8463155e05c2, []int{1}
-}
-func (m *GenesisDenomTrace) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *GenesisDenomTrace) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_GenesisDenomTrace.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *GenesisDenomTrace) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GenesisDenomTrace.Merge(m, src)
-}
-func (m *GenesisDenomTrace) XXX_Size() int {
-	return m.Size()
-}
-func (m *GenesisDenomTrace) XXX_DiscardUnknown() {
-	xxx_messageInfo_GenesisDenomTrace.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GenesisDenomTrace proto.InternalMessageInfo
-
-func (m *GenesisDenomTrace) GetTrace() string {
-	if m != nil {
-		return m.Trace
-	}
-	return ""
-}
-
-func (m *GenesisDenomTrace) GetBaseDenom() string {
-	if m != nil {
-		return m.BaseDenom
-	}
-	return ""
-}
-
-func (m *GenesisDenomTrace) GetHash() []byte {
-	if m != nil {
-		return m.Hash
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "ibc.transfer.GenesisState")
-	proto.RegisterType((*GenesisDenomTrace)(nil), "ibc.transfer.GenesisDenomTrace")
 }
 
 func init() { proto.RegisterFile("ibc/transfer/genesis.proto", fileDescriptor_c13b8463155e05c2) }
 
 var fileDescriptor_c13b8463155e05c2 = []byte{
-	// 336 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x90, 0xcb, 0x4e, 0xc2, 0x40,
-	0x14, 0x86, 0x19, 0x50, 0x0c, 0x43, 0x63, 0xc2, 0x80, 0xb1, 0x41, 0xd3, 0x92, 0xae, 0xd8, 0xd0,
-	0x89, 0xb7, 0x8d, 0x4b, 0x42, 0x62, 0x88, 0x1b, 0x53, 0x5d, 0xe9, 0x82, 0xf4, 0x32, 0x96, 0x46,
-	0xcb, 0x90, 0x39, 0x63, 0x22, 0x6f, 0xe1, 0x33, 0xf8, 0x34, 0x2e, 0x59, 0xba, 0x6a, 0x4c, 0x79,
-	0x03, 0x9e, 0xc0, 0x74, 0x06, 0x04, 0xe2, 0xaa, 0xff, 0xe9, 0xff, 0x9d, 0xcb, 0xfc, 0xb8, 0x9d,
-	0x04, 0x21, 0x95, 0xc2, 0x9f, 0xc0, 0x33, 0x13, 0x34, 0x66, 0x13, 0x06, 0x09, 0xb8, 0x53, 0xc1,
-	0x25, 0x27, 0x46, 0x12, 0x84, 0xee, 0xda, 0x6b, 0xb7, 0x62, 0x1e, 0x73, 0x65, 0xd0, 0x42, 0x69,
-	0xa6, 0xdd, 0x0c, 0x39, 0xa4, 0x1c, 0xa8, 0xfe, 0xac, 0x7e, 0x9e, 0xec, 0x0c, 0x5d, 0x0b, 0x6d,
-	0x3a, 0x9f, 0x08, 0x1b, 0x37, 0x7a, 0xcf, 0xbd, 0xf4, 0x25, 0x23, 0x57, 0xf8, 0x60, 0xca, 0x85,
-	0x1c, 0x25, 0x91, 0x89, 0x3a, 0xa8, 0x5b, 0xeb, 0x9f, 0xe6, 0x99, 0x5d, 0xbd, 0xe3, 0x42, 0x0e,
-	0x07, 0xcb, 0xcc, 0x3e, 0x9c, 0xf9, 0xe9, 0xeb, 0xb5, 0xb3, 0x42, 0x1c, 0xaf, 0x5a, 0xa8, 0x61,
-	0x44, 0x9e, 0xb0, 0x11, 0xb1, 0x09, 0x4f, 0x47, 0x52, 0xf8, 0x21, 0x03, 0xb3, 0xdc, 0xa9, 0x74,
-	0xeb, 0xe7, 0xb6, 0xbb, 0x7d, 0xb4, 0xbb, 0x5a, 0x34, 0x28, 0xc0, 0x87, 0x82, 0xeb, 0x1f, 0x2f,
-	0x33, 0xbb, 0xa9, 0x47, 0x6e, 0xb7, 0x3b, 0x5e, 0x3d, 0xfa, 0x83, 0xc0, 0x01, 0xdc, 0xf8, 0xd7,
-	0x4a, 0x5a, 0x78, 0x5f, 0xc1, 0xfa, 0x4c, 0x4f, 0x17, 0xe4, 0x12, 0xe3, 0xc0, 0x07, 0x36, 0x52,
-	0xed, 0x66, 0x59, 0xbd, 0xe0, 0x68, 0x99, 0xd9, 0x0d, 0xbd, 0x64, 0xe3, 0x39, 0x5e, 0xad, 0x28,
-	0xd4, 0x40, 0x42, 0xf0, 0xde, 0xd8, 0x87, 0xb1, 0x59, 0xe9, 0xa0, 0xae, 0xe1, 0x29, 0xdd, 0xbf,
-	0xfd, 0xca, 0x2d, 0x34, 0xcf, 0x2d, 0xf4, 0x93, 0x5b, 0xe8, 0x63, 0x61, 0x95, 0xe6, 0x0b, 0xab,
-	0xf4, 0xbd, 0xb0, 0x4a, 0x8f, 0x67, 0x71, 0x22, 0xc7, 0x6f, 0x81, 0x1b, 0xf2, 0x94, 0xee, 0x04,
-	0xde, 0x83, 0xe8, 0x85, 0xbe, 0xd3, 0x24, 0x08, 0x7b, 0x9b, 0xbc, 0x67, 0x53, 0x06, 0x41, 0x55,
-	0xa5, 0x7d, 0xf1, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xfb, 0x9d, 0xec, 0x92, 0xe1, 0x01, 0x00, 0x00,
+	// 274 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xca, 0x4c, 0x4a, 0xd6,
+	0x2f, 0x29, 0x4a, 0xcc, 0x2b, 0x4e, 0x4b, 0x2d, 0xd2, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c,
+	0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0xc9, 0x4c, 0x4a, 0xd6, 0x83, 0xc9, 0x49, 0x89,
+	0xa4, 0xe7, 0xa7, 0xe7, 0x83, 0x25, 0xf4, 0x41, 0x2c, 0x88, 0x1a, 0x29, 0x69, 0x14, 0xfd, 0x30,
+	0x06, 0x44, 0x52, 0x69, 0x29, 0x23, 0x17, 0x8f, 0x3b, 0xc4, 0xc8, 0xe0, 0x92, 0xc4, 0x92, 0x54,
+	0x21, 0x53, 0x2e, 0xf6, 0x82, 0xfc, 0xa2, 0x92, 0xf8, 0xcc, 0x14, 0x09, 0x46, 0x05, 0x46, 0x0d,
+	0x4e, 0x27, 0x99, 0x47, 0xf7, 0xe4, 0xd9, 0x02, 0xf2, 0x8b, 0x4a, 0x3c, 0x5d, 0x3e, 0xdd, 0x93,
+	0xe7, 0xab, 0x4c, 0xcc, 0xcd, 0xb1, 0x52, 0x82, 0x2a, 0x51, 0x0a, 0x62, 0x03, 0xb1, 0x3c, 0x53,
+	0x84, 0xe2, 0xb8, 0x78, 0x52, 0x52, 0xf3, 0xf2, 0x73, 0xe3, 0x4b, 0x8a, 0x12, 0x93, 0x53, 0x8b,
+	0x25, 0x98, 0x14, 0x98, 0x35, 0xb8, 0x8d, 0x94, 0xf4, 0x90, 0xdd, 0xa7, 0xe7, 0x99, 0x92, 0x9a,
+	0x57, 0x92, 0x99, 0x96, 0x99, 0x9a, 0xe2, 0x02, 0x52, 0x1b, 0x02, 0x52, 0xea, 0x24, 0xfe, 0xe9,
+	0x9e, 0xbc, 0x30, 0xc4, 0x54, 0x64, 0x13, 0x94, 0x82, 0xb8, 0x53, 0xe0, 0x8a, 0x8a, 0x9d, 0xbc,
+	0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5,
+	0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0xca, 0x30, 0x3d, 0xb3, 0x24, 0xa3,
+	0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x3f, 0x39, 0xbf, 0x38, 0x37, 0xbf, 0x18, 0x4a, 0xe9, 0x16,
+	0xa7, 0x64, 0xeb, 0x57, 0xe8, 0x67, 0x26, 0x25, 0xeb, 0x22, 0x7c, 0x5f, 0x59, 0x90, 0x5a, 0x9c,
+	0xc4, 0x06, 0xf6, 0xbb, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xc0, 0x03, 0xe9, 0xd6, 0x5a, 0x01,
+	0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -217,50 +148,6 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GenesisDenomTrace) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *GenesisDenomTrace) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *GenesisDenomTrace) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Hash) > 0 {
-		i -= len(m.Hash)
-		copy(dAtA[i:], m.Hash)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Hash)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.BaseDenom) > 0 {
-		i -= len(m.BaseDenom)
-		copy(dAtA[i:], m.BaseDenom)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.BaseDenom)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Trace) > 0 {
-		i -= len(m.Trace)
-		copy(dAtA[i:], m.Trace)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Trace)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGenesis(v)
 	base := offset
@@ -287,27 +174,6 @@ func (m *GenesisState) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
-	}
-	return n
-}
-
-func (m *GenesisDenomTrace) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Trace)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	l = len(m.BaseDenom)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	l = len(m.Hash)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
 	}
 	return n
 }
@@ -408,160 +274,9 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DenomTraces = append(m.DenomTraces, &GenesisDenomTrace{})
+			m.DenomTraces = append(m.DenomTraces, &IdentifiedDenomTrace{})
 			if err := m.DenomTraces[len(m.DenomTraces)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipGenesis(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *GenesisDenomTrace) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowGenesis
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: GenesisDenomTrace: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GenesisDenomTrace: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Trace", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Trace = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BaseDenom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Hash = append(m.Hash[:0], dAtA[iNdEx:postIndex]...)
-			if m.Hash == nil {
-				m.Hash = []byte{}
 			}
 			iNdEx = postIndex
 		default:

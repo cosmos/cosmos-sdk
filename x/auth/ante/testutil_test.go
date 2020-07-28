@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -34,6 +36,15 @@ type AnteTestSuite struct {
 	ctx         sdk.Context
 	clientCtx   client.Context
 	txBuilder   client.TxBuilder
+}
+
+// returns context and app with params set on account keeper
+func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(isCheckTx)
+	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+	return app, ctx
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.

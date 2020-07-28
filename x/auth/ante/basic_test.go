@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *AnteTestSuite) TestValidateBasic() {
@@ -134,10 +134,11 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
 
 	// simulation must not underestimate gas of this decorator even with nil signatures
-	sigTx := tx.(types.StdTx)
-	sigTx.Signatures = []types.StdSignature{{}}
+	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+	suite.Require().NoError(err)
+	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{}))
 
-	simTxBytes, err := json.Marshal(sigTx)
+	simTxBytes, err := json.Marshal(txBuilder.GetTx())
 	suite.Require().Nil(err)
 	// require that simulated tx is smaller than tx with signatures
 	suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
@@ -148,7 +149,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	beforeSimGas := suite.ctx.GasMeter().GasConsumed()
 
 	// run antehandler with simulate=true
-	suite.ctx, err = antehandler(suite.ctx, sigTx, true)
+	suite.ctx, err = antehandler(suite.ctx, txBuilder.GetTx(), true)
 	consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
 
 	// require that antehandler passes and does not underestimate decorator cost

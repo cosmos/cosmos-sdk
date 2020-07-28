@@ -837,8 +837,11 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			sdkerrors.ErrInvalidPubKey,
 		},
 		{
-			"make sure previous public key has NOT been set, test invalid signature and public key",
+			"make sure previous public key has NOT been set, test new tx with invalid signature and public key",
 			func() {
+				accNums = []uint64{1}
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
+
 				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
 				suite.Require().Nil(acc1.GetPubKey())
 			},

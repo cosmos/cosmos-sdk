@@ -1,6 +1,6 @@
 # Cosmos Supervisor
 
-This is a tiny little shim around Cosmos SDK binaries that use the upgrade
+This is a tiny shim around Cosmos SDK binaries that use the upgrade
 module that allows for smooth and configurable management of upgrading
 binaries as a live chain is upgraded, and can be used to simplify validator
 devops while doing upgrades or to make syncing a full node for genesis

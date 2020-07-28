@@ -120,14 +120,25 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
 
-			if authGenState.Accounts.Contains(addr) {
+			accs, err := authtypes.ConvertAccountsAny(authGenState.Accounts)
+			if err != nil {
+				return fmt.Errorf("failed to get accounts from any: %w", err)
+			}
+
+			if accs.Contains(addr) {
 				return fmt.Errorf("cannot add account at existing address %s", addr)
 			}
 
 			// Add the new account to the set of genesis accounts and sanitize the
 			// accounts afterwards.
-			authGenState.Accounts = append(authGenState.Accounts, genAccount)
-			authGenState.Accounts = authtypes.SanitizeGenesisAccounts(authGenState.Accounts)
+			accs = append(accs, genAccount)
+			accs = authtypes.SanitizeGenesisAccounts(accs)
+
+			genAccs, err := authtypes.ConvertAccounts(accs)
+			if err != nil {
+				return fmt.Errorf("failed to convert accounts into any's: %w", err)
+			}
+			authGenState.Accounts = genAccs
 
 			authGenStateBz, err := cdc.MarshalJSON(authGenState)
 			if err != nil {

@@ -6,19 +6,19 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	proto "github.com/gogo/protobuf/proto"
 )
-
-// GenesisState - all auth state that must be provided at genesis
-type GenesisState struct {
-	Params   Params          `json:"params" yaml:"params"`
-	Accounts GenesisAccounts `json:"accounts" yaml:"accounts"`
-}
 
 // NewGenesisState - Create a new genesis state
 func NewGenesisState(params Params, accounts GenesisAccounts) GenesisState {
+	genAccounts, err := ConvertAccounts(accounts)
+	if err != nil {
+		panic(err)
+	}
 	return GenesisState{
 		Params:   params,
-		Accounts: accounts,
+		Accounts: genAccounts,
 	}
 }
 
@@ -46,7 +46,12 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
-	return ValidateGenAccounts(data.Accounts)
+	genAccs, err := ConvertAccountsAny(data.Accounts)
+	if err != nil {
+		return err
+	}
+
+	return ValidateGenAccounts(genAccs)
 }
 
 // SanitizeGenesisAccounts sorts accounts and coin sets.
@@ -89,8 +94,47 @@ func (GenesisAccountIterator) IterateGenesisAccounts(
 	cdc codec.Marshaler, appGenesis map[string]json.RawMessage, cb func(AccountI) (stop bool),
 ) {
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
-		if cb(genAcc) {
+		acc, ok := genAcc.GetCachedValue().(AccountI)
+		if !ok {
+			panic("expected account")
+		}
+		if cb(acc) {
 			break
 		}
 	}
+}
+
+// ConvertAccounts converts GenesisAccounts to Any slice
+func ConvertAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
+	accountsAny := make([]*types.Any, len(accounts))
+	for i, acc := range accounts {
+		msg, ok := acc.(proto.Message)
+		if !ok {
+			return nil, fmt.Errorf("cannot proto marshal %T", acc)
+		}
+		any, err := types.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+		accountsAny[i] = any
+	}
+
+	return accountsAny, nil
+}
+
+// ConvertAccountsAny converts Any slice to GenesisAccounts
+func ConvertAccountsAny(accountsAny []*types.Any) (GenesisAccounts, error) {
+	accounts := make(GenesisAccounts, len(accountsAny))
+	for i, any := range accountsAny {
+		acc, ok := any.GetCachedValue().(GenesisAccount)
+		if !ok {
+			return nil, fmt.Errorf("expected genesis account")
+		}
+		if acc == nil {
+			return nil, fmt.Errorf("genesis account %d cannot be nil", i)
+		}
+		accounts[i] = acc
+	}
+
+	return accounts, nil
 }

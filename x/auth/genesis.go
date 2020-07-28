@@ -12,9 +12,18 @@ import (
 // a genesis port script to the new fee collector account
 func InitGenesis(ctx sdk.Context, ak keeper.AccountKeeper, data types.GenesisState) {
 	ak.SetParams(ctx, data.Params)
-	data.Accounts = types.SanitizeGenesisAccounts(data.Accounts)
 
-	for _, a := range data.Accounts {
+	accounts := make([]types.GenesisAccount, len(data.Accounts))
+	for i, genAcc := range data.Accounts {
+		acc, ok := genAcc.GetCachedValue().(types.GenesisAccount)
+		if !ok {
+			panic("expected account")
+		}
+		accounts[i] = acc
+	}
+	accounts = types.SanitizeGenesisAccounts(accounts)
+
+	for _, a := range accounts {
 		acc := ak.NewAccount(ctx, a)
 		ak.SetAccount(ctx, acc)
 	}

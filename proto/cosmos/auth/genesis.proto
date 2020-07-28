@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.auth;
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/auth/auth.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+
+// GenesisState - all auth state that must be provided at genesis
+message GenesisState {
+  Params params = 1 [
+    (gogoproto.casttype) = "Params",
+    (gogoproto.nullable) = false
+  ];
+  repeated google.protobuf.Any accounts = 2;
+}

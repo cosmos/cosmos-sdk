@@ -107,7 +107,7 @@ func (dt DenomTrace) IBCDenom() string {
 }
 ```
 
-In order to trim the denomination trace prefix when sending/receiving fungible tokens, the `RemovePrefix` funciton is provided.
+In order to trim the denomination trace prefix when sending/receiving fungible tokens, the `RemovePrefix` function is provided.
 
 > NOTE: the prefix addition must be done on the client side.
 
@@ -167,10 +167,10 @@ func (k Keeper) HasDenomTrace(ctx Context, denomTraceHash []byte)  bool {
 }
 
 // SetTrace sets a new {trace hash -> trace} pair to the store.
-func (k Keeper) SetTrace(ctx Context, denomTraceHash []byte, denomTrace DenomTrace) {
+func (k Keeper) SetTrace(ctx Context, denomTrace DenomTrace) {
   store := ctx.KVStore(k.storeKey)
   bz := k.cdc.MustMarshalBinaryBare(&denomTrace)
-  store.Set(types.KeyTrace(traceHash), bz)
+  store.Set(types.KeyTrace(denomTrace.Hash()), bz)
 }
 ```
 

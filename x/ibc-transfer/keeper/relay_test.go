@@ -100,7 +100,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				// send coins from chainB to chainA
 				coinFromBToA := ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
 				transferMsg := types.NewMsgTransfer(channelB.PortID, channelB.ID, coinFromBToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
-				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, []sdk.Msg{transferMsg})
+				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, transferMsg)
 				suite.Require().NoError(err) // message committed
 
 				// receive coins on chainA from chainB
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
 				recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
-				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, []sdk.Msg{recvMsg})
+				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, recvMsg)
 				suite.Require().NoError(err) // message committed
 			}
 
@@ -157,7 +157,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 			receiver = "gaia1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrudl"
 		}, true, false},
 		{"no dest prefix on coin denom", func() {
-			coins = ibctesting.NewTransferCoins(channelB, "bitcoin", 100)
+			coins = sdk.NewCoins(sdk.NewInt64Coin("bitcoin", 100))
 		}, false, false},
 
 		// onRecvPacket
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 
 		// - coins being sent back to original chain (chainB)
 		{"tries to unescrow more tokens than allowed", func() {
-			coins = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 10000)
+			coins = ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 1000000)
 		}, false, false},
 	}
 
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 				// send coins from chainB to chainA, receive them, acknowledge them, and send back to chainB
 				coinFromBToA := ibctesting.NewTransferCoins(channelA, sdk.DefaultBondDenom, 100)
 				transferMsg := types.NewMsgTransfer(channelB.PortID, channelB.ID, coinFromBToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
-				err := suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, []sdk.Msg{transferMsg})
+				err := suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, transferMsg)
 				suite.Require().NoError(err) // message committed
 
 				// receive coins on chainA from chainB
@@ -198,7 +198,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 				proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
 				recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
-				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, []sdk.Msg{recvMsg})
+				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, recvMsg)
 				suite.Require().NoError(err) // message committed
 
 				// get proof of acknowledgement on chainA
@@ -208,7 +208,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 				// acknowledge on chainB the receive that happened on chainA
 				ack := types.FungibleTokenPacketAcknowledgement{true, ""}
 				ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack.GetBytes(), proof, proofHeight, suite.chainB.SenderAccount.GetAddress())
-				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, []sdk.Msg{ackMsg})
+				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, ackMsg)
 				suite.Require().NoError(err) // message committed
 
 				seq++
@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 
 			// send coins from chainA to chainB
 			transferMsg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coins, suite.chainA.SenderAccount.GetAddress(), receiver, 110, 0)
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, []sdk.Msg{transferMsg})
+			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, transferMsg)
 			suite.Require().NoError(err) // message committed
 
 			tc.malleate()

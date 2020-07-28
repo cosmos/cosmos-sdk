@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -212,6 +214,9 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
+		if txF.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+			txF = txF.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		}
 		if err != nil {
 			return err
 		}

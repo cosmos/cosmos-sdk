@@ -1,0 +1,22 @@
+syntax = "proto3";
+package ibc.connection;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
+
+import "gogoproto/gogo.proto";
+import "ibc/connection/connection.proto";
+
+
+// GenesisState defines the ibc connection submodule's genesis state.
+message GenesisState {
+  repeated IdentifiedConnection connections = 1[
+    (gogoproto.nullable) = false,
+    (gogoproto.casttype) = "IdentifiedConnection"
+  ];
+
+  repeated ConnectionPaths client_connection_paths = 2[
+    (gogoproto.nullable) = false,
+    (gogoproto.casttype) = "ConnectionPaths",
+    (gogoproto.moretags) = "yaml:\"client_connection_paths\""
+  ];
+}

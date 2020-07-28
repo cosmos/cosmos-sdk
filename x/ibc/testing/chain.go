@@ -600,7 +600,7 @@ func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
 		Amount:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 		Sender:   chain.SenderAccount.GetAddress().String(),
 		Receiver: counterparty.SenderAccount.GetAddress().String(),
-		Source:   true,
+		Source:   false,
 	}
 
 	return packet.GetBytes()

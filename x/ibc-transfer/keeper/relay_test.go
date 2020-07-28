@@ -189,27 +189,12 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 				err := suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, transferMsg)
 				suite.Require().NoError(err) // message committed
 
-				// receive coins on chainA from chainB
+				// relay send packet
 				fungibleTokenPacket := types.NewFungibleTokenPacketData(coinFromBToA, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
 				packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
-
-				// get proof of packet commitment from chainB
-				packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-				proof, proofHeight := suite.chainB.QueryProof(packetKey)
-
-				recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
-				err = suite.coordinator.SendMsgs(suite.chainA, suite.chainB, channelB.ClientID, recvMsg)
-				suite.Require().NoError(err) // message committed
-
-				// get proof of acknowledgement on chainA
-				packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-				proof, proofHeight = suite.chainA.QueryProof(packetKey)
-
-				// acknowledge on chainB the receive that happened on chainA
-				ack := types.FungibleTokenPacketAcknowledgement{true, ""}
-				ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack.GetBytes(), proof, proofHeight, suite.chainB.SenderAccount.GetAddress())
-				err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, channelA.ClientID, ackMsg)
-				suite.Require().NoError(err) // message committed
+				ack := types.FungibleTokenPacketAcknowledgement{Success: true}
+				err = suite.coordinator.RelayPacket(suite.chainB, suite.chainA, clientB, clientA, packet, ack.GetBytes())
+				suite.Require().NoError(err) // relay committed
 
 				seq++
 				// NOTE: coins must be explicitly changed in malleate to test invalid cases

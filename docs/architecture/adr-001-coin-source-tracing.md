@@ -83,7 +83,7 @@ The hash function will be a SHA256 hash of the fields of the `DenomTrace`:
 // DenomTrace contains the base denomination for ICS20 fungible tokens and the souce tracing
 // information
 message DenomTrace {
-  // chain of port/channel identifiers used for tracing the souce of the fungible token
+  // chain of port/channel identifiers used for tracing the source of the fungible token
   string trace = 1;
   // base denomination of the relayed fungible token
   string base_denom = 2;
@@ -94,6 +94,44 @@ message DenomTrace {
 // Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields.
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
   return tmhash.Sum(dt.Trace + "/" + dt.BaseDenom)
+}
+```
+
+```golang
+// AddPrefix prefixes the current trace with the given port and channel identifiers
+func (dt *DenomTrace) AddPrefix(portID, channelID string) {
+  if dt.Trace == "" {
+    dt.Trace = portID + "/" + channelID
+    return
+  }
+  dt.Trace = portID + "/" + channelID + "/" + dt.Trace
+}
+
+// RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators it will return an error.
+func (dt *DenomTrace) RemovePrefix() error {
+  if dt.Trace == "" {
+    return nil
+  }
+
+  traceSplit := strings.SplitN(dt.Trace, "/", 3)
+
+  var err error
+  switch {
+  case len(traceSplit) == 0, traceSplit[0] == dt.Trace:
+    err = Wrapf(ErrInvalidDenomForTransfer, "trace info %s must contain '/' separators", dt.Trace)
+  case len(traceSplit) == 1:
+    err = Wrapf(ErrInvalidDenomForTransfer, "trace info %s must come in pairs of '{portID}/channelID}'", dt.Trace)
+  case len(traceSplit) == 2:
+    dt.Trace = ""
+  case len(traceSplit) == 3:
+    dt.Trace = traceSplit[2]
+  }
+
+  if err != nil {
+    return err
+  }
+
+  return nil
 }
 ```
 
@@ -131,24 +169,84 @@ func (k Keeper) SetTrace(ctx Context, denomTraceHash []byte, denomTrace DenomTra
 }
 ```
 
+The problem with this approach is that when a token is received for the first time, the full trace
+info will need to be passed in order to construct the hash and set it to the mapping on the store.
+To mitigate this a new `Trace` field needs to be added to the `FungibleTokenPacketData`:
+
+```protobuf
+message FungibleTokenPacketData {
+  // the tokens to be transferred
+  repeated cosmos.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // coins denomination trace for tracking the source
+  repeated DenomTrace denom_traces = 2;
+  // the sender address
+  string sender = 3;
+  // the recipient address on the destination chain
+  string receiver = 4;
+}
+```
+
+The `MsgTransfer` will validate that the Coins from the `Amount` field contain the hash that is valid:
+
+```golang
+func (msg MsgTransfer) ValidateBasic() error {
+  // ...
+  if len(msg.Amount) != len(msg.DenomTraces) {
+    //  error
+  }
+  for i := range msg.Amount {
+    hash, err := GetTraceHashFromDenom(msg.Amount[i].Denom)
+    if err != nil {
+      return err
+    }
+    if hash != msg.DenomTraces[i].Hash() {
+      // error
+    }
+  }
+}
+```
+
+```golang
+func GetTraceHashFromDenom(rawDenom string) (tmbytes.HexBytes, error) {
+  denomSplit := strings.SplitN(denom, "/", 3)
+
+  switch {
+    case len(denomSplit) == 0:
+      err = Wrap(ErrInvalidDenomForTransfer, denom)
+    case denomSplit[0] == denom:
+      err = Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
+    case denomSplit[0] != "ibc":
+      err = Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
+    case len(denomSplit) > 1  && len(denomSplit[1]) != 32:
+      err = Wrapf(ErrInvalidDenomForTransfer, "invalid SHA256 hash %s", denomSplit[1])
+    default:
+      err = Wrap(ErrInvalidDenomForTransfer, denom)
+  }
+
+  if err != nil {
+    return nil, err
+  }
+
+  return denomSplit[1], nil
+}
+```
+
 When a fungible token is sent to a sink chain, the trace information needs to be updated with the
 new port and channel identifiers:
 
-```golang
+// TODO: update
+<!-- ```golang
 // PrefixDenom adds the given port and channel identifiers prefix to the denomination and sets the
 // new {trace hash -> trace} pair to the store.
-func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string {
-  // Get each component of the denom. The resulting slice will be:
-  //
-  // - ["ibc", hash], if the denom is dirty (contains trace metadata).
-  // - [baseDenom], if the denom has never been sent from the origin chain.
-  denomSplit := strings.SplitN(denom, "/", 3)
-
-  var (
-    baseDenom string
-    trace     string
-    traceHash tmbytes.HexBytes
-  )
+func PrefixDenom(portID, channelID string, denomTrace DenomTrace) DenomTrace {
+  if denomTrace.Trace == "" {
+    denom.Trace = portID + "/" + channelID
+  } else {
+    denom.Trace = portID + "/" + channelID + "/" + denom.Trace
+  }
 
   // check if the denomination is clean or if it contains the trace info
   if len(denomSplit) == 1 && denomSplit[0] == denom {
@@ -163,12 +261,12 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
       trace = portID + "/" + channelID +"/" + denomTrace.Trace + "/"
       baseDenom = denomTrace.BaseDenom
     } else {
+
       // TODO: construct the trace info from the msg fields
     }
   }
 
-  denomTrace = DenomTrace{Trace: trace, BaseDenom: baseDenom}
-  
+  denomTrace.Trace =  trace
   traceHash = denomTrace.Hash()
 
   // set the value to the lookup table if not stored already
@@ -179,11 +277,12 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
   denom = "ibc/"+ traceHash.String()
   return denom
 }
-```
+``` -->
 
 The denomination also needs to be updated when token is received on the source chain:
 
-```golang
+// TODO: update
+<!-- ```golang
 // UnprefixDenom removes the first portID/channelID pair from a given denomination trace info and returns the
 // denomination with the updated trace hash and the new trace info.
 // An error is returned if the trace cannot be found on the store from the denom's trace hash.
@@ -228,30 +327,7 @@ func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, e
   denom = "ibc/"+ traceHash.String()
   return denom
 }
-```
-
-```golang
-// GetTraceFromDenom returns the token source tracing info from the trace hash of the given denomination
-func (k Keeper) GetTraceFromDenom(ctx Context, denom string) (string, error) {
-  denomSplit := strings.Split(denom, "/")
-
-  if len(denomSplit) == 0 {
-    return "", Wrap(ErrInvalidDenomForTransfer, denom)
-  } else if denomSplit[0] == denom {
-    return "", nil
-  }
-
-  traceHash := tmbytes.HexBytes(denomSplit[1])
-  // Get the value from the map trace hash -> trace info prefix
-  trace, found := k.GetDenomTrace(ctx, traceHash)
-  if !found {
-    return "", Wrapf(ErrDenomTraceNotFound, "denom: %s", denom)
-  }
-
-  return trace
-}
-
-```
+``` -->
 
 Additionally, the `SendTransfer`'s `createOutgoingPacket` call and the `OnRecvPacket` need to be
 updated to be retreive the trace info (using `GetTraceFromDenom`) prior to checking the correctness

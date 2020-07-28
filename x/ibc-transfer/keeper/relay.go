@@ -18,7 +18,7 @@ import (
 // chain will mint vouchers to the receiving address.
 //
 // 2. Sender chain is acting as the sink zone. The coins (vouchers) are burned
-// on the sender chain and then transferrred to the receiving chain though IBC
+// on the sender chain and then transferred to the receiving chain though IBC
 // TAO logic. It is expected that the receiving chain will unescrow the fungible
 // token and send it to the receiving address.
 func (k Keeper) SendTransfer(

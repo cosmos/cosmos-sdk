@@ -20,6 +20,13 @@ var protoCodec = encoding.GetCodec(proto.Name)
 type GRPCQueryRouter struct {
 	routes      map[string]GRPCQueryHandler
 	anyUnpacker types.AnyUnpacker
+	serviceData []serviceData
+}
+
+// serviceData represents a gRPC service, along with its handler.
+type serviceData struct {
+	serviceDesc *grpc.ServiceDesc
+	handler     interface{}
 }
 
 var _ gogogrpc.Server
@@ -83,6 +90,11 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			}, nil
 		}
 	}
+
+	qrt.serviceData = append(qrt.serviceData, serviceData{
+		serviceDesc: sd,
+		handler:     handler,
+	})
 }
 
 // AnyUnpacker returns the AnyUnpacker for the router

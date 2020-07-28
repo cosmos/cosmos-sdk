@@ -11,17 +11,17 @@ import (
 )
 
 // NewQuerier creates a new querier for slashing clients.
-func NewQuerier(k Keeper) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryParameters:
-			return queryParams(ctx, k)
+			return queryParams(ctx, k, legacyQuerierCdc)
 
 		case types.QuerySigningInfo:
-			return querySigningInfo(ctx, req, k)
+			return querySigningInfo(ctx, req, k, legacyQuerierCdc)
 
 		case types.QuerySigningInfos:
-			return querySigningInfos(ctx, req, k)
+			return querySigningInfos(ctx, req, k, legacyQuerierCdc)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
@@ -29,10 +29,10 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
+func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	params := k.GetParams(ctx)
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, params)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -40,10 +40,10 @@ func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
 	return res, nil
 }
 
-func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QuerySigningInfoRequest
 
-	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -53,7 +53,7 @@ func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 		return nil, sdkerrors.Wrap(types.ErrNoSigningInfoFound, params.ConsAddress.String())
 	}
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, signingInfo)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, signingInfo)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -61,10 +61,10 @@ func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 	return res, nil
 }
 
-func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QuerySigningInfosParams
 
-	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -83,7 +83,7 @@ func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 		signingInfos = signingInfos[start:end]
 	}
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, signingInfos)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, signingInfos)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

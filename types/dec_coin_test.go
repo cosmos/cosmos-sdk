@@ -96,6 +96,61 @@ func TestAddDecCoins(t *testing.T) {
 	}
 }
 
+func TestFilteredZeroDecCoins(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    DecCoins
+		original string
+		expected string
+	}{
+		{
+			name: "all greater than zero",
+			input: DecCoins{
+				{"testa", NewDec(1)},
+				{"testb", NewDec(2)},
+				{"testc", NewDec(3)},
+				{"testd", NewDec(4)},
+				{"teste", NewDec(5)},
+			},
+			original: "1.000000000000000000testa,2.000000000000000000testb,3.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
+			expected: "1.000000000000000000testa,2.000000000000000000testb,3.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
+		},
+		{
+			name: "zero coin in middle",
+			input: DecCoins{
+				{"testa", NewDec(1)},
+				{"testb", NewDec(2)},
+				{"testc", NewDec(0)},
+				{"testd", NewDec(4)},
+				{"teste", NewDec(5)},
+			},
+			original: "1.000000000000000000testa,2.000000000000000000testb,0.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
+			expected: "1.000000000000000000testa,2.000000000000000000testb,4.000000000000000000testd,5.000000000000000000teste",
+		},
+		{
+			name: "zero coin end (unordered)",
+			input: DecCoins{
+				{"teste", NewDec(5)},
+				{"testc", NewDec(3)},
+				{"testa", NewDec(1)},
+				{"testd", NewDec(4)},
+				{"testb", NewDec(0)},
+			},
+			original: "5.000000000000000000teste,3.000000000000000000testc,1.000000000000000000testa,4.000000000000000000testd,0.000000000000000000testb",
+			expected: "1.000000000000000000testa,3.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
+		},
+	}
+
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			undertest := NewDecCoins(tt.input...)
+			require.Equal(t, tt.expected, undertest.String(), "NewDecCoins must return expected results")
+			require.Equal(t, tt.original, tt.input.String(), "input must be unmodified and match original")
+		})
+	}
+}
+
 func TestIsValid(t *testing.T) {
 	tests := []struct {
 		coin       DecCoin

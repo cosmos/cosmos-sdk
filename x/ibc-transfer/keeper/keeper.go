@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -107,6 +108,32 @@ func (k Keeper) GetPort(ctx sdk.Context) string {
 func (k Keeper) SetPort(ctx sdk.Context, portID string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.PortKey, []byte(portID))
+}
+
+// GetDenomTrace retreives the full identifiers trace and base denomination from the store.
+func (k Keeper) GetDenomTrace(ctx Context, denomTraceHash []byte) (types.DenomTrace, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
+	bz := store.Get(traceHash)
+	if bz == nil {
+		return &types.DenomTrace, false
+	}
+
+	var denomTrace types.DenomTrace
+	k.cdc.MustUnmarshalBinaryBare(bz, &denomTrace)
+	return denomTrace, true
+}
+
+// HasDenomTrace checks if a the key with the given denomination trace hash exists on the store.
+func (k Keeper) HasDenomTrace(ctx Context, denomTraceHash []byte) bool {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
+	return store.Has(denomTraceHash)
+}
+
+// SetDenomTrace sets a new {trace hash -> denom trace} pair to the store.
+func (k Keeper) SetDenomTrace(ctx Context, denomTraceHash []byte, denomTrace types.DenomTrace) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
+	bz := k.cdc.MustMarshalBinaryBare(&denomTrace)
+	store.Set(denomTraceHash, bz)
 }
 
 // ClaimCapability allows the transfer module that can claim a capability that IBC module

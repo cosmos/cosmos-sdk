@@ -7,11 +7,22 @@ import "gogoproto/gogo.proto";
 import "cosmos/cosmos.proto";
 import "ibc/transfer/transfer.proto";
 
-// GenesisState is currently only used to ensure that the InitGenesis gets run
-// by the module manager
+// GenesisState defines the ibc-transfer genesis state
 message GenesisState{
 	string port_id  = 1 [
 	  (gogoproto.customname) = "PortID",
 	  (gogoproto.moretags) = "yaml:\"port_id\""
 	];
+	repeated GenesisDenomTrace denom_traces = 2 [(gogoproto.moretags) = "yaml:\"denom_traces\""];
+}
+
+
+// GenesisDenomTrace contains DenomTrace and the hash used for the IBC fungible denom map.
+message GenesisDenomTrace {
+  // chain of port/channel identifiers used for tracing the source of the fungible token
+  string trace = 1;
+  // base denomination of the relayed fungible token
+	string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
+	// SHA256 hash of the trace and the base denom: hash(trace + "/" + baseDenom)
+	bytes hash = 3;
 }

@@ -44,10 +44,12 @@ message FungibleTokenPacketData {
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  // coins denomination trace for tracking the source
+  repeated DenomTrace denom_traces = 2 [(gogoproto.moretags) = "yaml:\"denom_traces\""];
   // the sender address
-  string sender = 2;
+  string sender = 3;
   // the recipient address on the destination chain
-  string receiver = 3;
+  string receiver = 4;
 }
 
 // FungibleTokenPacketAcknowledgement contains a boolean success flag and an optional error msg
@@ -56,4 +58,13 @@ message FungibleTokenPacketData {
 message FungibleTokenPacketAcknowledgement {
   bool   success = 1;
   string error   = 2;
+}
+
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the souce tracing
+// information
+message DenomTrace {
+  // chain of port/channel identifiers used for tracing the source of the fungible token
+  string trace = 1;
+  // base denomination of the relayed fungible token
+  string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
 }

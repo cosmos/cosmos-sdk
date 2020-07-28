@@ -1,7 +1,5 @@
 # Cosmos Upgrade Manager
 
-[![CircleCI](https://circleci.com/gh/regen-network/cosmos-upgrade-manager/tree/master.svg?style=svg)](https://circleci.com/gh/regen-network/cosmos-upgrade-manager/tree/master) [![codecov](https://codecov.io/gh/regen-network/cosmos-upgrade-manager/branch/master/graph/badge.svg)](https://codecov.io/gh/regen-network/cosmos-upgrade-manager)
-
 This is a tiny little shim around Cosmos SDK binaries that use the upgrade
 module that allows for smooth and configurable management of upgrading
 binaries as a live chain is upgraded, and can be used to simplify validator

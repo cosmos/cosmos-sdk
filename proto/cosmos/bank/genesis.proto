@@ -24,9 +24,9 @@ message GenesisState {
     (gogoproto.nullable) = false
   ];
 
-  repeated Metadata denom_meta_data = 4 [
+  repeated Metadata denom_metadata = 4 [
     (gogoproto.casttype) = "Metadata",
-    (gogoproto.moretags) = "yaml:\"denom_meta_data\"",
+    (gogoproto.moretags) = "yaml:\"denom_metadata\"",
     (gogoproto.nullable) = false
   ];
 }

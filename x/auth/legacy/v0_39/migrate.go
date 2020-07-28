@@ -1,6 +1,8 @@
 package v039
 
 import (
+	"fmt"
+
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 )
 
@@ -42,6 +44,9 @@ func Migrate(oldAuthGenState v038auth.GenesisState) GenesisState {
 				NewBaseAccount(t.Address, t.Coins, t.PubKey, t.AccountNumber, t.Sequence),
 				t.Name, t.Permissions...,
 			)
+
+		default:
+			panic(fmt.Sprintf("unexpected account type: %T", acc))
 		}
 	}
 

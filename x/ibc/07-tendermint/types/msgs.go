@@ -45,18 +45,18 @@ type MsgCreateClient struct {
 const TODO = "TODO"
 
 // dummy implementation of proto.Message
-func (msg MsgCreateClient) Reset()         {}
-func (msg MsgCreateClient) String() string { return TODO }
-func (msg MsgCreateClient) ProtoMessage()  {}
+func (msg *MsgCreateClient) Reset()         {}
+func (msg *MsgCreateClient) String() string { return TODO }
+func (msg *MsgCreateClient) ProtoMessage()  {}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, header Header, trustLevel tmmath.Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
 	specs []*ics23.ProofSpec, signer sdk.AccAddress,
-) MsgCreateClient {
+) *MsgCreateClient {
 
-	return MsgCreateClient{
+	return &MsgCreateClient{
 		ClientID:        id,
 		Header:          header,
 		TrustLevel:      trustLevel,
@@ -157,13 +157,13 @@ type MsgUpdateClient struct {
 }
 
 // dummy implementation of proto.Message
-func (msg MsgUpdateClient) Reset()         {}
-func (msg MsgUpdateClient) String() string { return TODO }
-func (msg MsgUpdateClient) ProtoMessage()  {}
+func (msg *MsgUpdateClient) Reset()         {}
+func (msg *MsgUpdateClient) String() string { return TODO }
+func (msg *MsgUpdateClient) ProtoMessage()  {}
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
-	return MsgUpdateClient{
+func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) *MsgUpdateClient {
+	return &MsgUpdateClient{
 		ClientID: id,
 		Header:   header,
 		Signer:   signer,

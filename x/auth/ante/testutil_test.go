@@ -51,12 +51,13 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.app, suite.ctx = createTestApp(isCheckTx)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
-	// set up the TxBuilder
+	// set up TxConfig
 	encodingConfig := simappparams.MakeEncodingConfig()
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
+
+	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
 }
 
 // CreateTestAccounts creates `numAccs` accounts, and return all relevant

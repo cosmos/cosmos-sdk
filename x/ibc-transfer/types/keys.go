@@ -46,6 +46,11 @@ func GetDenomPrefix(portID, channelID string) string {
 	return fmt.Sprintf("%s/%s/", portID, channelID)
 }
 
+// GetPrefixedDenom returns the denomination with the portID and channelID prefixed
+func GetPrefixedDenom(portID, channelID, baseDenom string) string {
+	return fmt.Sprintf("%s/%s/%s", portID, channelID, baseDenom)
+}
+
 // GetPrefixedCoins creates a copy of the given coins with the denom updated with the prefix.
 func GetPrefixedCoins(portID, channelID string, coins ...sdk.Coin) sdk.Coins {
 	prefixedCoins := make(sdk.Coins, len(coins))

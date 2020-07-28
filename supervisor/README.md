@@ -31,7 +31,7 @@ to restart it if needed. Note that this will not auto-restart the child if there
 
 `$DAEMON_HOME/upgrade_manager` is expected to belong completely to the supervisor and 
 subprocesses
-constrolled by it. Under this folder, we will see the following:
+controlled by it. Under this folder, we will see the following:
 
 ```
 - genesis

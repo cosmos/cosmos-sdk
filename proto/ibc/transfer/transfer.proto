@@ -22,18 +22,20 @@ message MsgTransfer {
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  // fungible token denomination trace info for source tracking
+  DenomTrace trace = 4;
   // the sender address
-  bytes sender = 4 [
+  bytes sender = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   // the recipient address on the destination chain
-  string receiver = 5;
+  string receiver = 6;
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
-  uint64 timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  uint64 timeout_height = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload
@@ -44,8 +46,8 @@ message FungibleTokenPacketData {
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  // coins denomination trace for tracking the source
-  repeated DenomTrace denom_traces = 2 [(gogoproto.moretags) = "yaml:\"denom_traces\""];
+  // fungible token denomination trace info for source tracking
+  DenomTrace trace = 2 [(gogoproto.nullable) = false];
   // the sender address
   string sender = 3;
   // the recipient address on the destination chain
@@ -77,5 +79,5 @@ message IdentifiedDenomTrace {
   // base denomination of the relayed fungible token
 	string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
 	// SHA256 hash of the trace and the base denom: hash(trace + "/" + baseDenom)
-	bytes hash = 3;
+	string hash = 3;
 }

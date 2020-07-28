@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+	"fmt"
 	"strings"
 	"time"
 
@@ -23,9 +25,10 @@ var (
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coins, sender, receiver string) FungibleTokenPacketData {
+	amount sdk.Coins, trace DenomTrace, sender, receiver string) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
 		Amount:   amount,
+		Trace:    trace,
 		Sender:   sender,
 		Receiver: receiver,
 	}
@@ -39,6 +42,28 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if !ftpd.Amount.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Amount.String())
 	}
+	if err := ftpd.Trace.Validate(); err != nil {
+		return err
+	}
+	// Only validate the ibc denomination when trace info is not provided
+	if ftpd.Trace.Trace == "" {
+		denomTraceHash, err := ValidateIBCDenom(ftpd.Amount[0].Denom)
+		if err != nil {
+			return err
+		}
+
+		traceHash := ftpd.Trace.Hash()
+		if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
+			return fmt.Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
+		}
+	} else if ftpd.Trace.BaseDenom != ftpd.Amount[0].Denom {
+		return sdkerrors.Wrapf(
+			ErrInvalidDenomForTransfer,
+			"token denom must match the trace base denom (%s ≠ %s)",
+			ftpd.Amount, ftpd.Trace.BaseDenom,
+		)
+	}
+
 	if strings.TrimSpace(ftpd.Sender) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
 	}

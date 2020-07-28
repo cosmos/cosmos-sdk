@@ -165,15 +165,13 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	account, err := val1.ClientCtx.Keyring.Key("newAccount")
 	s.Require().NoError(err)
 
-	sendTokens := sdk.TokensFromConsensusPower(10)
+	sendTokens := sdk.NewCoin(s.cfg.BondDenom, sdk.TokensFromConsensusPower(10))
 
 	normalGeneratedTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
 		account.GetAddress(),
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sendTokens),
-		),
+		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -196,9 +194,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 		val1.ClientCtx,
 		val1.Address,
 		account.GetAddress(),
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sendTokens),
-		),
+		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -228,9 +224,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 		val1.ClientCtx,
 		val1.Address,
 		account.GetAddress(),
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sendTokens),
-		),
+		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -269,7 +263,6 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Sign transaction
 	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
 	s.Require().NoError(err)
-	s.T().Log(signedTx.String())
 	signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
 	s.Require().NoError(err)
 	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(signedFinalTx)
@@ -316,7 +309,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens, coins.AmountOf(s.cfg.BondDenom))
+	s.Require().Equal(sendTokens.Amount, coins.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
@@ -401,15 +394,13 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 func (s *IntegrationTestSuite) TestCLIEncode() {
 	val1 := s.network.Validators[0]
 
-	sendTokens := sdk.TokensFromConsensusPower(10)
+	sendTokens := sdk.NewCoin(s.cfg.BondDenom, sdk.TokensFromConsensusPower(10))
 
 	normalGeneratedTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
 		val1.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sendTokens),
-		),
+		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -463,7 +454,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	var coins sdk.Coins
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	intialBal := coins.AmountOf(s.cfg.BondDenom).Uint64()
+	intialCoins := coins
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -471,9 +462,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 		val1.ClientCtx,
 		val1.Address,
 		multisigInfo.GetAddress(),
-		sdk.NewCoins(
-			sendTokens,
-		),
+		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -488,8 +477,8 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-
-	s.Require().Equal(sendTokens.Amount.Uint64(), coins.AmountOf(s.cfg.BondDenom).Uint64()-intialBal)
+	diff, _ := coins.SafeSub(intialCoins)
+	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -566,9 +555,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		val1.ClientCtx,
 		val1.Address,
 		multisigInfo.GetAddress(),
-		sdk.NewCoins(
-			sendTokens,
-		),
+		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

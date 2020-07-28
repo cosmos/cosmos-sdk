@@ -12,14 +12,69 @@ import (
 
 func TestRejectUnknownFieldsRepeated(t *testing.T) {
 	tests := []struct {
-		name                  string
-		in                    proto.Message
-		recv                  proto.Message
-		wantErr               error
-		allowUnknownCriticals bool
+		name                     string
+		in                       proto.Message
+		recv                     proto.Message
+		wantErr                  error
+		allowUnknownNonCriticals bool
 	}{
 		{
 			name: "Unknown field in midst of repeated values",
+			in: &testdata.TestVersion2{
+				C: []*testdata.TestVersion2{
+					{
+						C: []*testdata.TestVersion2{
+							{
+								Sum: &testdata.TestVersion2_F{
+									F: &testdata.TestVersion2{
+										A: &testdata.TestVersion2{
+											B: &testdata.TestVersion2{
+												H: []*testdata.TestVersion2{
+													{
+														X: 0x01,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							{
+								Sum: &testdata.TestVersion2_F{
+									F: &testdata.TestVersion2{
+										A: &testdata.TestVersion2{
+											B: &testdata.TestVersion2{
+												H: []*testdata.TestVersion2{
+													{
+														X: 0x02,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							{
+								Sum: &testdata.TestVersion2_F{
+									F: &testdata.TestVersion2{
+										NewField: 411,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			recv: new(testdata.TestVersion1),
+			wantErr: &errUnknownField{
+				Type:     "*testdata.TestVersion1",
+				TagNum:   25,
+				WireType: 0,
+			},
+		},
+		{
+			name:                     "Unknown field in midst of repeated values, allowUnknownNonCriticals set",
+			allowUnknownNonCriticals: true,
 			in: &testdata.TestVersion2{
 				C: []*testdata.TestVersion2{
 					{
@@ -119,8 +174,8 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			},
 		},
 		{
-			name:                  "Unknown field in midst of repeated values, non-critical field ignored",
-			allowUnknownCriticals: true,
+			name:                     "Unknown field in midst of repeated values, non-critical field ignored",
+			allowUnknownNonCriticals: true,
 			in: &testdata.TestVersion3{
 				C: []*testdata.TestVersion3{
 					{
@@ -170,8 +225,8 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownCriticals}
-			gotErr := ckr.RejectUnknownFieldsFields(protoBlob, tt.recv)
+			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownNonCriticals}
+			gotErr := ckr.RejectUnknownFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%v\n\nWant:\n%v", gotErr, tt.wantErr)
 			}
@@ -179,12 +234,12 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 	}
 }
 
-func TestRejectUnknownFields_allowUnknownCriticals(t *testing.T) {
+func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 	tests := []struct {
-		name                  string
-		in                    proto.Message
-		allowUnknownCriticals bool
-		wantErr               error
+		name                     string
+		in                       proto.Message
+		allowUnknownNonCriticals bool
+		wantErr                  error
 	}{
 		{
 			name: "Field that's in the reserved range, should fail by default",
@@ -199,8 +254,8 @@ func TestRejectUnknownFields_allowUnknownCriticals(t *testing.T) {
 			},
 		},
 		{
-			name:                  "Field that's in the reserved range, toggle allowUnknownCriticals",
-			allowUnknownCriticals: true,
+			name:                     "Field that's in the reserved range, toggle allowUnknownNonCriticals",
+			allowUnknownNonCriticals: true,
 			in: &testdata.Customer2{
 				Id:       289,
 				Reserved: 99,
@@ -208,8 +263,8 @@ func TestRejectUnknownFields_allowUnknownCriticals(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:                  "Unkown fields that are critical, but with allowUnknownCriticals set",
-			allowUnknownCriticals: true,
+			name:                     "Unkown fields that are critical, but with allowUnknownNonCriticals set",
+			allowUnknownNonCriticals: true,
 			in: &testdata.Customer2{
 				Id:   289,
 				City: testdata.Customer2_PaloAlto,
@@ -230,9 +285,9 @@ func TestRejectUnknownFields_allowUnknownCriticals(t *testing.T) {
 				t.Fatalf("Failed to marshal input: %v", err)
 			}
 
-			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownCriticals}
+			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownNonCriticals}
 			c1 := new(testdata.Customer1)
-			gotErr := ckr.RejectUnknownFieldsFields(blob, c1)
+			gotErr := ckr.RejectUnknownFields(blob, c1)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -444,7 +499,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 				t.Fatal(err)
 			}
 			ckr := new(Checker)
-			gotErr := ckr.RejectUnknownFieldsFields(protoBlob, tt.recv)
+			gotErr := ckr.RejectUnknownFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -598,7 +653,7 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 
 			c1 := new(testdata.Customer1)
 			ckr := new(Checker)
-			gotErr := ckr.RejectUnknownFieldsFields(blob, c1)
+			gotErr := ckr.RejectUnknownFields(blob, c1)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -684,7 +739,7 @@ func TestMismatchedTypes_Nested(t *testing.T) {
 				t.Fatal(err)
 			}
 			ckr := new(Checker)
-			gotErr := ckr.RejectUnknownFieldsFields(protoBlob, tt.recv)
+			gotErr := ckr.RejectUnknownFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}

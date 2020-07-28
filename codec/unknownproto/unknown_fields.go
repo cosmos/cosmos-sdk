@@ -27,7 +27,7 @@ type Checker struct {
 	AllowUnknownNonCriticals bool
 }
 
-func (ckr *Checker) RejectUnknownFieldsFields(b []byte, msg proto.Message) error {
+func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 	if len(b) == 0 {
 		return nil
 	}
@@ -98,7 +98,7 @@ func (ckr *Checker) RejectUnknownFieldsFields(b []byte, msg proto.Message) error
 
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			if err := ckr.RejectUnknownFieldsFields(fieldBytes, (*types.Any)(nil)); err != nil {
+			if err := ckr.RejectUnknownFields(fieldBytes, (*types.Any)(nil)); err != nil {
 				return err
 			}
 			// And finally we can extract the TypeURL containing the protoMessageName.
@@ -114,7 +114,7 @@ func (ckr *Checker) RejectUnknownFieldsFields(b []byte, msg proto.Message) error
 		if err != nil {
 			return err
 		}
-		if err := ckr.RejectUnknownFieldsFields(fieldBytes, msg); err != nil {
+		if err := ckr.RejectUnknownFields(fieldBytes, msg); err != nil {
 			return err
 		}
 	}

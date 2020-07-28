@@ -9,7 +9,7 @@ b) Mismatched wire types for a field -- this is indicative of mismatched service
 Its API signature is similar to proto.Unmarshal([]byte, proto.Message) as
 
     ckr := new(unknownproto.Checker)
-    if err := ckr.CheckMismatchedFields(protoBlob, protoMessage); err != nil {
+    if err := ckr.RejectUnknownFields(protoBlob, protoMessage); err != nil {
             // Handle the error.
     }
 

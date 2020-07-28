@@ -42,14 +42,14 @@ func init() {
 	}
 }
 
-func BenchmarkRejectUnknownFieldsFields_serial(b *testing.B) {
-	benchmarkRejectUnknownFieldsFields(b, false)
+func BenchmarkRejectUnknownFields_serial(b *testing.B) {
+	benchmarkRejectUnknownFields(b, false)
 }
-func BenchmarkRejectUnknownFieldsFields_parallel(b *testing.B) {
-	benchmarkRejectUnknownFieldsFields(b, true)
+func BenchmarkRejectUnknownFields_parallel(b *testing.B) {
+	benchmarkRejectUnknownFields(b, true)
 }
 
-func benchmarkRejectUnknownFieldsFields(b *testing.B, parallel bool) {
+func benchmarkRejectUnknownFields(b *testing.B, parallel bool) {
 	b.ReportAllocs()
 
 	if !parallel {
@@ -57,7 +57,7 @@ func benchmarkRejectUnknownFieldsFields(b *testing.B, parallel bool) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			n1A := new(testdata.Nested1A)
-			if err := ckr.RejectUnknownFieldsFields(n1BBlob, n1A); err == nil {
+			if err := ckr.RejectUnknownFields(n1BBlob, n1A); err == nil {
 				b.Fatal("expected an error")
 			}
 			b.SetBytes(int64(len(n1BBlob)))
@@ -70,7 +70,7 @@ func benchmarkRejectUnknownFieldsFields(b *testing.B, parallel bool) {
 			for pb.Next() {
 				// To simulate the conditions of multiple transactions being processed in parallel.
 				n1A := new(testdata.Nested1A)
-				if err := ckr.RejectUnknownFieldsFields(n1BBlob, n1A); err == nil {
+				if err := ckr.RejectUnknownFields(n1BBlob, n1A); err == nil {
 					b.Fatal("expected an error")
 				}
 				mu.Lock()

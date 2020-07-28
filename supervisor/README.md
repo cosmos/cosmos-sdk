@@ -23,7 +23,7 @@ be `$HOME/.gaiad` or `$HOME/.xrnd`)
 * `DAEMON_NAME` is the name of the binary itself (eg. `xrnd`, `gaiad`, `simd`)
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (optional) if set to `on` will enable auto-downloading of new binaries
 (for security reasons, this is intended for fullnodes rather than validators)
-* `DAEMON_RESTART_AFTER_UPGRADE` (optional) if set to `on` it will restart a the sub-process with the same args
+* `DAEMON_RESTART_AFTER_UPGRADE` (optional) if set to `on` it will restart the sub-process with the same args
 (but new binary) after a successful upgrade. By default, the `supervisor` dies afterward and allows the supervisor
 to restart it if needed. Note that this will not auto-restart the child if there was an error.
 

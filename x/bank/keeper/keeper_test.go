@@ -9,6 +9,7 @@ import (
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -60,8 +61,9 @@ func getCoinsByName(ctx sdk.Context, bk keeper.Keeper, ak types.AccountKeeper, m
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
+	app         *simapp.SimApp
+	ctx         sdk.Context
+	queryClient types.QueryClient
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -71,8 +73,13 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
 	suite.app = app
 	suite.ctx = ctx
+	suite.queryClient = queryClient
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {

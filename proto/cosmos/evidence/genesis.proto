@@ -3,7 +3,6 @@ package cosmos.evidence;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/evidence/types";
 
-// import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
 // GenesisState defines the evidence module's genesis state.

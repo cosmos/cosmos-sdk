@@ -15,6 +15,12 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
 
+  test-supervisor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run supervisor tests
+        run: cd supervisor; go test .
   split-test-files:
     runs-on: ubuntu-latest
     steps:

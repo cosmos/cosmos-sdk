@@ -12,7 +12,7 @@ and act appropriately. (With better integrations possible in the future)
 
 ## Arguments
 
-`upgrader` is a shim around a native binary. All arguments passed to the upgrade manager 
+`supervisor` is a shim around a native binary. All arguments passed to the upgrade manager 
 command will be passed to the current daemon binary (as a subprocess).
  It will return stdout and stderr of the subprocess as
 it's own. Because of that, it cannot accept any command line arguments, nor
@@ -52,7 +52,7 @@ active folder (so `current/bin/$DAEMON_NAME` is the binary)
 Note: the `<name>` after `upgrades` is the URI-encoded name of the upgrade as specified in the upgrade module plan.
 
 Please note that `$DAEMON_HOME/upgrade_manager` just stores the *binaries* and associated *program code*.
-The `upgrader` binary can be stored in any typical location (eg `/usr/local/bin`). The actual blockchain
+The `supervisor` binary can be stored in any typical location (eg `/usr/local/bin`). The actual blockchain
 program will store it's data under `$GAIA_HOME` etc, which is independent of the `$DAEMON_HOME`. You can
 choose to export `GAIA_HOME=$DAEMON_HOME` and then end up with a configuation like the following, but this
 is left as a choice to the admin for best directory layout.

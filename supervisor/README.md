@@ -29,7 +29,7 @@ to restart it if needed. Note that this will not auto-restart the child if there
 
 ## Folder Layout
 
-`$DAEMON_HOME/upgrade_manager` is expected to belong completely to the supervisor and 
+`$DAEMON_HOME/supervisor` is expected to belong completely to the supervisor and 
 subprocesses
 controlled by it. Under this folder, we will see the following:
 
@@ -51,7 +51,7 @@ active folder (so `current/bin/$DAEMON_NAME` is the binary)
 
 Note: the `<name>` after `upgrades` is the URI-encoded name of the upgrade as specified in the upgrade module plan.
 
-Please note that `$DAEMON_HOME/upgrade_manager` just stores the *binaries* and associated *program code*.
+Please note that `$DAEMON_HOME/supervisor` just stores the *binaries* and associated *program code*.
 The `supervisor` binary can be stored in any typical location (eg `/usr/local/bin`). The actual blockchain
 program will store it's data under `$GAIA_HOME` etc, which is independent of the `$DAEMON_HOME`. You can
 choose to export `GAIA_HOME=$DAEMON_HOME` and then end up with a configuation like the following, but this
@@ -61,7 +61,7 @@ is left as a choice to the admin for best directory layout.
 .gaiad
 ├── config
 ├── data
-└── upgrade_manager
+└── supervisor
 ```
 
 ## Usage

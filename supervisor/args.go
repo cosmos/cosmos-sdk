@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	rootName    = "upgrade_manager"
+	rootName    = "supervisor"
 	genesisDir  = "genesis"
 	upgradesDir = "upgrades"
 	currentLink = "current"
@@ -104,7 +104,7 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 // validate returns an error if this config is invalid.
-// it enforces Home/upgrade_manager is a valid directory and exists,
+// it enforces Home/supervisor is a valid directory and exists,
 // and that Name is set
 func (cfg *Config) validate() error {
 	if cfg.Name == "" {

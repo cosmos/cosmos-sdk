@@ -18,16 +18,16 @@ func TestConfigPaths(t *testing.T) {
 		"simple": {
 			cfg:           Config{Home: "/foo", Name: "myd"},
 			upgradeName:   "bar",
-			expectRoot:    "/foo/upgrade_manager",
-			expectGenesis: "/foo/upgrade_manager/genesis/bin/myd",
-			expectUpgrade: "/foo/upgrade_manager/upgrades/bar/bin/myd",
+			expectRoot:    "/foo/supervisor",
+			expectGenesis: "/foo/supervisor/genesis/bin/myd",
+			expectUpgrade: "/foo/supervisor/upgrades/bar/bin/myd",
 		},
 		"handle space": {
 			cfg:           Config{Home: "/longer/prefix/", Name: "yourd"},
 			upgradeName:   "some spaces",
-			expectRoot:    "/longer/prefix/upgrade_manager",
-			expectGenesis: "/longer/prefix/upgrade_manager/genesis/bin/yourd",
-			expectUpgrade: "/longer/prefix/upgrade_manager/upgrades/some%20spaces/bin/yourd",
+			expectRoot:    "/longer/prefix/supervisor",
+			expectGenesis: "/longer/prefix/supervisor/genesis/bin/yourd",
+			expectUpgrade: "/longer/prefix/supervisor/upgrades/some%20spaces/bin/yourd",
 		},
 	}
 

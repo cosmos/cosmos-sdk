@@ -94,7 +94,10 @@ func (k Keeper) createOutgoingPacket(
 		// ensure that the coin has the correct prefix
 		prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
 		if !strings.HasPrefix(amount.Denom, prefix) {
-			return sdkerrors.Wrapf(types.ErrInvalidDenomForTransfer, "denom (%s) has the incorrect prefix, expected prefix: %s", amount.Denom, prefix)
+			return sdkerrors.Wrapf(
+				types.ErrInvalidDenomForTransfer,
+				"%s doesn't contain the prefix '%s'", amount.Denom, prefix,
+			)
 		}
 
 		// transfer the coins to the module account and burn them
@@ -134,8 +137,7 @@ func (k Keeper) createOutgoingPacket(
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
-
-	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+	amount := data.Amount
 
 	// decode the receiver address
 	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
@@ -147,23 +149,22 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 		// mint new tokens if the source of the transfer is the same chain
 		if err := k.bankKeeper.MintCoins(
-			ctx, types.ModuleName, sdk.NewCoins(data.Amount),
+			ctx, types.ModuleName, sdk.NewCoins(amount),
 		); err != nil {
 			return err
 		}
 
 		// send to receiver
 		return k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.ModuleName, receiver, sdk.NewCoins(data.Amount),
+			ctx, types.ModuleName, receiver, sdk.NewCoins(amount),
 		)
 	}
 
 	// check the denom prefix
-	prefix = types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-	amount := data.Amount
+	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 	if !strings.HasPrefix(amount.Denom, prefix) {
 		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidCoins,
+			types.ErrInvalidDenomForTransfer,
 			"%s doesn't contain the prefix '%s'", amount.Denom, prefix,
 		)
 	}
@@ -188,8 +189,7 @@ func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, dat
 func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
-	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+	amount := data.Amount
 
 	// decode the sender address
 	sender, err := sdk.AccAddressFromBech32(data.Sender)
@@ -198,9 +198,13 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channeltypes.Packet, 
 	}
 
 	if data.Source {
-		amount := data.Amount
+		// check the denom prefix
+		prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 		if !strings.HasPrefix(amount.Denom, prefix) {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "%s doesn't contain the prefix '%s'", amount.Denom, prefix)
+			return sdkerrors.Wrapf(
+				types.ErrInvalidDenomForTransfer,
+				"%s doesn't contain the prefix '%s'", amount.Denom, prefix,
+			)
 		}
 		amount.Denom = amount.Denom[len(prefix):]
 
@@ -211,10 +215,10 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channeltypes.Packet, 
 
 	// mint vouchers back to sender
 	if err := k.bankKeeper.MintCoins(
-		ctx, types.ModuleName, sdk.NewCoins(data.Amount),
+		ctx, types.ModuleName, sdk.NewCoins(amount),
 	); err != nil {
 		return err
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(data.Amount))
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(amount))
 }

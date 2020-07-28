@@ -39,10 +39,10 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 	handlerA := ibctransfer.NewHandler(suite.chainA.App.TransferKeeper)
 
-	coinToSendToB := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%s/%s", channelB.PortID, channelB.ID, sdk.DefaultBondDenom), sdk.NewInt(100)))
+	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	// send from chainA to chainB
-	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0)
+	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), true, 110, 0)
 
 	res, err := handlerA(suite.chainA.GetContext(), msg)
 	suite.Require().NoError(err)
@@ -53,10 +53,10 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	handlerB := ibctransfer.NewHandler(suite.chainB.App.TransferKeeper)
 
-	coinToSendBackToA := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%s/%s", channelA.PortID, channelA.ID, sdk.DefaultBondDenom), sdk.NewInt(100)))
+	coinToSendBackToA := sdk.NewCoin(fmt.Sprintf("%s/%s/%s", channelB.PortID, channelB.ID, sdk.DefaultBondDenom), sdk.NewInt(100))
 
 	// send from chainB back to chainA
-	msg = types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
+	msg = types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), false, 110, 0)
 
 	res, err = handlerB(suite.chainB.GetContext(), msg)
 	suite.Require().NoError(err)

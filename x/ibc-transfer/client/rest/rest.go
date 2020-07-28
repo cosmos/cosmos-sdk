@@ -21,8 +21,9 @@ func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 // TransferTxReq defines the properties of a transfer tx request's body.
 type TransferTxReq struct {
 	BaseReq          rest.BaseReq `json:"base_req" yaml:"base_req"`
-	Amount           sdk.Coins    `json:"amount" yaml:"amount"`
+	Amount           sdk.Coin     `json:"amount" yaml:"amount"`
 	Receiver         string       `json:"receiver" yaml:"receiver"`
+	Source           bool         `json:"source" yaml:"source"`
 	TimeoutHeight    uint64       `json:"timeout_height" yaml:"timeout_height"`
 	TimeoutTimestamp uint64       `json:"timeout_timestamp" yaml:"timeout_timestamp"`
 }

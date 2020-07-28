@@ -46,7 +46,7 @@ type (
 
 	BaseAccount struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -54,7 +54,7 @@ type (
 
 	baseAccountPretty struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey        string         `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -72,7 +72,7 @@ type (
 
 	vestingAccountPretty struct {
 		Address          sdk.AccAddress `json:"address" yaml:"address"`
-		Coins            sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins            sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey           string         `json:"public_key" yaml:"public_key"`
 		AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
 		Sequence         uint64         `json:"sequence" yaml:"sequence"`
@@ -104,7 +104,7 @@ type (
 
 	moduleAccountPretty struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey        string         `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -434,7 +434,7 @@ func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...stri
 }
 
 func (ma ModuleAccount) Validate() error {
-	if err := validatePermissions(ma.Permissions...); err != nil {
+	if err := ValidatePermissions(ma.Permissions...); err != nil {
 		return err
 	}
 
@@ -476,7 +476,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-func validatePermissions(permissions ...string) error {
+func ValidatePermissions(permissions ...string) error {
 	for _, perm := range permissions {
 		if strings.TrimSpace(perm) == "" {
 			return fmt.Errorf("module permission is empty")
@@ -486,7 +486,7 @@ func validatePermissions(permissions ...string) error {
 	return nil
 }
 
-func sanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
+func SanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
 	sort.Slice(genAccounts, func(i, j int) bool {
 		return genAccounts[i].GetAccountNumber() < genAccounts[j].GetAccountNumber()
 	})
@@ -500,7 +500,7 @@ func sanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
 	return genAccounts
 }
 
-func validateGenAccounts(genAccounts GenesisAccounts) error {
+func ValidateGenAccounts(genAccounts GenesisAccounts) error {
 	addrMap := make(map[string]bool, len(genAccounts))
 	for _, acc := range genAccounts {
 
@@ -524,7 +524,7 @@ func validateGenAccounts(genAccounts GenesisAccounts) error {
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*Account)(nil), nil)
-	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)
+	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)

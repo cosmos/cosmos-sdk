@@ -40,8 +40,6 @@ func DefaultGenesisState() GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	for i, e := range gs.Evidence {
-		// var evi exported.Evidence
-		// UnpackAny(e, &evi)
 		evi, ok := e.GetCachedValue().(exported.Evidence)
 		if !ok {
 			return fmt.Errorf("expected evidence")

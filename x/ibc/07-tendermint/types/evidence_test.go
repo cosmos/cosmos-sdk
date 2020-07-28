@@ -17,7 +17,7 @@ func (suite *TendermintTestSuite) TestEvidence() {
 
 	ev := ibctmtypes.Evidence{
 		Header1:  suite.header,
-		Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, signers),
+		Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, suite.valSet, signers),
 		ChainID:  chainID,
 		ClientID: "gaiamainnet",
 	}
@@ -67,7 +67,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"valid evidence",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -78,7 +78,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"invalid client ID ",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, suite.valSet, signers),
 				ChainID:  chainID,
 				ClientID: "GAIA",
 			},
@@ -89,7 +89,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"wrong chainID on header1",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.valSet, suite.valSet, signers),
 				ChainID:  "ethermint",
 				ClientID: "gaiamainnet",
 			},
@@ -100,7 +100,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"wrong chainID on header2",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.valSet, suite.valSet, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -111,7 +111,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"mismatched heights",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, 6, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, 6, suite.now, suite.valSet, suite.valSet, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -132,7 +132,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"header 1 doesn't have 2/3 majority",
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.header,
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
@@ -150,7 +150,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"header 2 doesn't have 2/3 majority",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -167,7 +167,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"validators sign off on wrong commit",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},

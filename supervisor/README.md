@@ -34,14 +34,15 @@ subprocesses
 controlled by it. Under this folder, we will see the following:
 
 ```
-- genesis
-  - bin
-    - $DAEMON_NAME
-- upgrades
-  - <name>
-    - bin
-      - $DAEMON_NAME
-- current -> upgrades/foo, genesis, etc
+.
+├── current -> upgrades/<name>, genesis, etc
+├── genesis
+│   └── bin
+│       └── $DAEMON_NAME
+└── upgrades
+    └── <name>
+        └── bin
+            └── $DAEMON_NAME
 ```
 
 Each version of the chain is stored under either `genesis` or `upgrades/<name>`, which holds `bin/$DAEMON_NAME`
@@ -57,10 +58,10 @@ choose to export `GAIA_HOME=$DAEMON_HOME` and then end up with a configuation li
 is left as a choice to the admin for best directory layout.
 
 ```
-- .gaiad
-  - config
-  - data
-  - upgrade_manager
+.gaiad
+├── config
+├── data
+└── upgrade_manager
 ```
 
 ## Usage

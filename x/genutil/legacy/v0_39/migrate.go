@@ -2,7 +2,6 @@ package v039
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -14,11 +13,11 @@ import (
 // serialization of accounts do change.
 func Migrate(appState types.AppMap) types.AppMap {
 	v038Codec := codec.New()
-	cryptocodec.RegisterCrypto(v038Codec)
+	codec.RegisterCrypto(v038Codec)
 	v038auth.RegisterCodec(v038Codec)
 
 	v039Codec := codec.New()
-	cryptocodec.RegisterCrypto(v039Codec)
+	codec.RegisterCrypto(v039Codec)
 	v039auth.RegisterCodec(v039Codec)
 
 	// migrate x/auth state (JSON serialization only)

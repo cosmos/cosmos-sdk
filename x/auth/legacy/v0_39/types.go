@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
@@ -181,12 +180,12 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          bva.EndTime,
 	}
 
-	return legacy.Cdc.MarshalJSON(alias)
+	return codec.Cdc.MarshalJSON(alias)
 }
 
 func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -241,12 +240,12 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 		StartTime:        cva.StartTime,
 	}
 
-	return legacy.Cdc.MarshalJSON(alias)
+	return codec.Cdc.MarshalJSON(alias)
 }
 
 func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -285,13 +284,13 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          dva.EndTime,
 	}
 
-	return legacy.Cdc.MarshalJSON(alias)
+	return codec.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a DelayedVestingAccount.
 func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -345,13 +344,13 @@ func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 		VestingPeriods:   pva.VestingPeriods,
 	}
 
-	return legacy.Cdc.MarshalJSON(alias)
+	return codec.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a PeriodicVestingAccount.
 func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -394,7 +393,7 @@ func (ma ModuleAccount) Validate() error {
 
 // MarshalJSON returns the JSON representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
-	return legacy.Cdc.MarshalJSON(moduleAccountPretty{
+	return codec.Cdc.MarshalJSON(moduleAccountPretty{
 		Address:       ma.Address,
 		Coins:         ma.Coins,
 		PubKey:        "",
@@ -408,7 +407,7 @@ func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals raw JSON bytes into a ModuleAccount.
 func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	var alias moduleAccountPretty
-	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 

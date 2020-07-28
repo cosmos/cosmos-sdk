@@ -42,9 +42,9 @@ func Migrate(authGenState v036auth.GenesisState, genAccountsGenState v036genacco
 		accounts[i] = genAccount
 	}
 
-	accounts = sanitizeGenesisAccounts(accounts)
+	accounts = SanitizeGenesisAccounts(accounts)
 
-	if err := validateGenAccounts(accounts); err != nil {
+	if err := ValidateGenAccounts(accounts); err != nil {
 		panic(err)
 	}
 

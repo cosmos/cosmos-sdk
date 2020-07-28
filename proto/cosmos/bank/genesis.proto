@@ -23,6 +23,12 @@ message GenesisState {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
+
+  repeated Metadata denom_meta_data = 4 [
+    (gogoproto.casttype) = "Metadata",
+    (gogoproto.moretags) = "yaml:\"denom_meta_data\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Balance defines an account address and balance pair used in the bank module's

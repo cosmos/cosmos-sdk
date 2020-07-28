@@ -13,6 +13,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
@@ -242,6 +243,39 @@ func (coord *Coordinator) AcknowledgementExecuted(
 		counterparty, source,
 		counterpartyClientID, clientexported.Tendermint,
 	)
+}
+
+// RelayPacket receives a channel packet on counterparty, queries the ack
+// and acknowledges the packet on source. The clients are updated as needed.
+func (coord *Coordinator) RelayPacket(
+	source, counterparty *TestChain,
+	sourceClient, counterpartyClient string,
+	packet channeltypes.Packet, ack []byte,
+) error {
+	// get proof of packet commitment on source
+	packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+	proof, proofHeight := source.QueryProof(packetKey)
+
+	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
+
+	// receive on counterparty and update source client
+	if err := coord.SendMsgs(counterparty, source, sourceClient, recvMsg); err != nil {
+		return err
+	}
+
+	// get proof of acknowledgement on counterparty
+	packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	proof, proofHeight = counterparty.QueryProof(packetKey)
+
+	// TODO: add a query for the acknowledgement by events
+	// - https://github.com/cosmos/cosmos-sdk/issues/6509
+
+	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
+	if err := coord.SendMsgs(source, counterparty, counterpartyClient, ackMsg); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // IncrementTime iterates through all the TestChain's and increments their current header time

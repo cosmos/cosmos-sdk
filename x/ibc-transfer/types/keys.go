@@ -51,11 +51,13 @@ func GetPrefixedDenom(portID, channelID, baseDenom string) string {
 	return fmt.Sprintf("%s/%s/%s", portID, channelID, baseDenom)
 }
 
-// GetPrefixedCoins creates a copy of the given coins with the denom updated with the prefix.
-func GetPrefixedCoins(portID, channelID string, coins ...sdk.Coin) sdk.Coins {
-	prefixedCoins := make(sdk.Coins, len(coins))
-	for i := range coins {
-		prefixedCoins[i] = sdk.NewCoin(GetDenomPrefix(portID, channelID)+coins[i].Denom, coins[i].Amount)
-	}
-	return prefixedCoins
+// GetPrefixedCoin creates a copy of the given coin with the prefixed denom
+func GetPrefixedCoin(portID, channelID string, coin sdk.Coin) sdk.Coin {
+	return sdk.NewCoin(GetPrefixedDenom(portID, channelID, coin.Denom), coin.Amount)
+}
+
+// GetTransferCoin creates a transfer coin with the port ID and channel ID
+// prefixed to the base denom.
+func GetTransferCoin(portID, channelID, baseDenom string, amount int64) sdk.Coin {
+	return sdk.NewCoin(GetPrefixedDenom(portID, channelID, baseDenom), sdk.NewInt(amount))
 }

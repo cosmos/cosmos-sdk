@@ -4,6 +4,7 @@ import (
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -22,13 +23,20 @@ import (
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
-	clientState clientexported.ClientState, header clientexported.Header,
-	currentTimestamp time.Time,
+	clientState clientexported.ClientState, consState clientexported.ConsensusState,
+	header clientexported.Header, currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState,
+		)
+	}
+
+	tmConsState, ok := consState.(types.ConsensusState)
+	if !ok {
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidConsensus, "expected type %T, got %T", types.ConsensusState{}, consState,
 		)
 	}
 
@@ -39,7 +47,7 @@ func CheckValidityAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmHeader, currentTimestamp); err != nil {
+	if err := checkValidity(tmClientState, tmConsState, tmHeader, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
@@ -51,19 +59,19 @@ func CheckValidityAndUpdateState(
 //
 // CONTRACT: assumes header.Height > consensusState.Height
 func checkValidity(
-	clientState types.ClientState, header types.Header, currentTimestamp time.Time,
+	clientState types.ClientState, consState types.ConsensusState, header types.Header, currentTimestamp time.Time,
 ) error {
 	// assert trusting period has not yet passed
-	if currentTimestamp.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
+	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
 			types.ErrTrustingPeriodExpired,
 			"current timestamp minus the latest trusted client state timestamp is greater than or equal to the trusting period (%s >= %s)",
-			currentTimestamp.Sub(clientState.GetLatestTimestamp()), clientState.TrustingPeriod,
+			currentTimestamp.Sub(consState.Timestamp), clientState.TrustingPeriod,
 		)
 	}
 
 	// assert header timestamp is not past the trusting period
-	if header.Time.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
+	if header.Time.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidHeader,
 			"header blocktime is outside trusting period from last client timestamp",
@@ -71,11 +79,11 @@ func checkValidity(
 	}
 
 	// assert header timestamp is past latest clientstate timestamp
-	if header.Time.Unix() <= clientState.GetLatestTimestamp().Unix() {
+	if header.Time.Unix() <= consState.Timestamp.Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header blocktime ≤ latest client state block time (%s ≤ %s)",
-			header.Time.UTC(), clientState.GetLatestTimestamp().UTC(),
+			header.Time.UTC(), consState.Timestamp.UTC(),
 		)
 	}
 
@@ -87,10 +95,21 @@ func checkValidity(
 		)
 	}
 
+	// Construct a trusted header using the fields in consensus state
+	// Only Height, Time, and NextValidatorsHash are necessary for verification
+	trustedHeader := tmtypes.Header{
+		Height:             int64(consState.Height),
+		Time:               consState.Timestamp,
+		NextValidatorsHash: consState.NextValidatorsHash,
+	}
+	signedHeader := tmtypes.SignedHeader{
+		Header: &trustedHeader,
+	}
+
 	// Verify next header with the last header's validatorset as trusted validatorset
 	err := lite.Verify(
-		clientState.GetChainID(), &clientState.LastHeader.SignedHeader,
-		clientState.LastHeader.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
+		clientState.GetChainID(), &signedHeader,
+		consState.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel,
 	)
 	if err != nil {
@@ -101,7 +120,9 @@ func checkValidity(
 
 // update the consensus state from a new header
 func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
-	clientState.LastHeader = header
+	if uint64(header.Height) > clientState.LatestHeight {
+		clientState.LatestHeight = uint64(header.Height)
+	}
 	consensusState := types.ConsensusState{
 		Height:       uint64(header.Height),
 		Timestamp:    header.Time,

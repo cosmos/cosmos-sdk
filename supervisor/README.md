@@ -6,7 +6,7 @@ binaries as a live chain is upgraded, and can be used to simplify validator
 devops while doing upgrades or to make syncing a full node for genesis
 simple. The `supervisor` will monitor the stdout of the daemon to look 
 for messages from the upgrade module indicating a pending or required upgrade 
-and act appropriately. (With better integrations possible in the future)
+and act appropriately. (With better integrations possible in the future).
 
 ## Arguments
 

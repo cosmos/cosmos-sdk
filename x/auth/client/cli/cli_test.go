@@ -44,7 +44,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
 
-	_, err := s.network.WaitForHeight(1)
+	kb := s.network.Validators[0].ClientCtx.Keyring
+	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	_, err = kb.SaveMultisig("multi", multi)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -76,7 +90,6 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
 	s.Require().NoError(err)
-	s.T().Log(res.String())
 	signedTx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
 	s.Require().NoError(err)
 
@@ -149,7 +162,7 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	val1 := s.network.Validators[0]
 
-	account, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account, err := val1.ClientCtx.Keyring.Key("newAccount")
 	s.Require().NoError(err)
 
 	sendTokens := sdk.TokensFromConsensusPower(10)
@@ -201,6 +214,14 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(100))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
 	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
+
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	s.Require().NoError(err)
+
+	var coins sdk.Coins
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	s.Require().NoError(err)
+	startTokens := coins.AmountOf(s.cfg.BondDenom)
 
 	// Test generate sendTx, estimate gas
 	finalGeneratedTx, err := bankcli.MsgSendExec(
@@ -267,11 +288,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
 	// Ensure foo has right amount of funds
-	startTokens := sdk.TokensFromConsensusPower(400)
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
-	var coins sdk.Coins
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
 	s.Require().Equal(startTokens, coins.AmountOf(s.cfg.BondDenom))
@@ -305,7 +324,6 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt(389999990), coins.AmountOf(s.cfg.BondDenom))
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
@@ -317,14 +335,10 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	val1.ClientCtx.Codec = codec
 
 	// Generate 2 accounts and a multisig.
-	account1, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
 	s.Require().NoError(err)
 
-	account2, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
-	s.Require().NoError(err)
-
-	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
-	multisigInfo, err := val1.ClientCtx.Keyring.SaveMultisig("multi", multi)
+	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
@@ -434,15 +448,22 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	val1.ClientCtx.Codec = codec
 
 	// Generate 2 accounts and a multisig.
-	account1, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
 	s.Require().NoError(err)
 
-	account2, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account2, err := val1.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 
-	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
-	multisigInfo, err := val1.ClientCtx.Keyring.SaveMultisig("multi", multi)
+	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
+
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	s.Require().NoError(err)
+
+	var coins sdk.Coins
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	s.Require().NoError(err)
+	intialBal := coins.AmountOf(s.cfg.BondDenom).Uint64()
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -462,13 +483,13 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
-	var coins sdk.Coins
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, coins.AmountOf(s.cfg.BondDenom))
+
+	s.Require().Equal(sendTokens.Amount.Uint64(), coins.AmountOf(s.cfg.BondDenom).Uint64()-intialBal)
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -530,14 +551,13 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1.ClientCtx.Codec = codec
 
 	// Generate 2 accounts and a multisig.
-	account1, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
 	s.Require().NoError(err)
 
-	account2, _, err := val1.ClientCtx.Keyring.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account2, err := val1.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 
-	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
-	multisigInfo, err := val1.ClientCtx.Keyring.SaveMultisig("multi", multi)
+	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.

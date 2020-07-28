@@ -22,10 +22,24 @@ type descriptorIface interface {
 	Descriptor() ([]byte, []int)
 }
 
+type Checker struct {
+	// AllowUnknownNonCriticals when set will skip over non-critical fields that are unknown.
+	AllowUnknownNonCriticals bool
+}
+
+// By default, the defaultChecker will report every single unknown field, whether non-critical or not.
+// To customize this behavior, create a custom checker and modify its behavior.
+var defaultChecker = &Checker{AllowUnknownNonCriticals: false}
+
 // CheckMismatchedFields walks through the protobuf serialized bytes in b, and tries to
 // compare field numbers and wireTypes against what msg expects. The error returned if non-nil will contain
 // the listing of the unknown fields by tagNumber and wireType, or mismatched wireTypes.
+// If you'd like to toggle between allowing non-critical unknown fields, use CheckMismatchedFieldsAllowNonCritical
 func CheckMismatchedFields(b []byte, msg proto.Message) error {
+	return defaultChecker.CheckMismatchedFields(b, msg)
+}
+
+func (ckr *Checker) CheckMismatchedFields(b []byte, msg proto.Message) error {
 	if len(b) == 0 {
 		return nil
 	}
@@ -60,7 +74,7 @@ func CheckMismatchedFields(b []byte, msg proto.Message) error {
 			}
 
 		default:
-			if tagNum&bit11NonCritical == 0 {
+			if !ckr.AllowUnknownNonCriticals || tagNum&bit11NonCritical == 0 {
 				// The tag is critical, so report it.
 				return &errUnknownField{
 					Type:     reflect.ValueOf(msg).Type().String(),
@@ -95,12 +109,12 @@ func CheckMismatchedFields(b []byte, msg proto.Message) error {
 		// Let's recursively traverse and typecheck the field.
 
 		if protoMessageName == ".google.protobuf.Any" {
-                        // Firstly typecheck types.Any to ensure nothing snuck in.
-			if err := CheckMismatchedFields(fieldBytes, (*types.Any)(nil)); err != nil {
+			// Firstly typecheck types.Any to ensure nothing snuck in.
+			if err := ckr.CheckMismatchedFields(fieldBytes, (*types.Any)(nil)); err != nil {
 				return err
 			}
 			// And finally we can extract the TypeURL containing the protoMessageName.
-                        any := new(types.Any)
+			any := new(types.Any)
 			if err := proto.Unmarshal(fieldBytes, any); err != nil {
 				return err
 			}
@@ -112,7 +126,7 @@ func CheckMismatchedFields(b []byte, msg proto.Message) error {
 		if err != nil {
 			return err
 		}
-		if err := CheckMismatchedFields(fieldBytes, msg); err != nil {
+		if err := ckr.CheckMismatchedFields(fieldBytes, msg); err != nil {
 			return err
 		}
 	}

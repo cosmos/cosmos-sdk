@@ -308,6 +308,67 @@ func mustMarshal(msg proto.Message) []byte {
 	return blob
 }
 
+func TestCheckUnknownFieldsToggleCriticalFieldsChecking(t *testing.T) {
+	tests := []struct {
+		name                  string
+		in                    proto.Message
+		allowUnknownCriticals bool
+		wantErr               error
+	}{
+		{
+			name: "Field that's in the reserved range, should fail by default",
+			in: &testdata.Customer2{
+				Id:       289,
+				Reserved: 99,
+			},
+			wantErr: &errUnknownField{
+				Type:     "*testdata.Customer1",
+				TagNum:   1047,
+				WireType: 0,
+			},
+		},
+		{
+			name:                  "Field that's in the reserved range, toggle allowUnknownCriticals",
+			allowUnknownCriticals: true,
+			in: &testdata.Customer2{
+				Id:       289,
+				Reserved: 99,
+			},
+			wantErr: nil,
+		},
+		{
+			name:                  "Unkown fields that are critical, but with allowUnknownCriticals set",
+			allowUnknownCriticals: true,
+			in: &testdata.Customer2{
+				Id:   289,
+				City: testdata.Customer2_PaloAlto,
+			},
+			wantErr: &errUnknownField{
+				Type:     "*testdata.Customer1",
+				TagNum:   6,
+				WireType: 0,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			blob, err := proto.Marshal(tt.in)
+			if err != nil {
+				t.Fatalf("Failed to marshal input: %v", err)
+			}
+
+			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownCriticals}
+			c1 := new(testdata.Customer1)
+			gotErr := ckr.CheckMismatchedFields(blob, c1)
+			if !reflect.DeepEqual(gotErr, tt.wantErr) {
+				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestCheckUnknownFieldsFlat(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -378,12 +439,16 @@ func TestCheckUnknownFieldsFlat(t *testing.T) {
 			},
 		},
 		{
-			name: "Using a field that's in the reserved range, should pass",
+			name: "Using a field that's in the reserved range, should fail by default",
 			in: &testdata.Customer2{
 				Id:       289,
 				Reserved: 99,
 			},
-			wantErr: nil,
+			wantErr: &errUnknownField{
+				Type:     "*testdata.Customer1",
+				TagNum:   1047,
+				WireType: 0,
+			},
 		},
 		{
 			name: "Only fields matching",

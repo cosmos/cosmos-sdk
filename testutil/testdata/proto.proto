@@ -324,3 +324,20 @@ message TestVersionFD1 {
     google.protobuf.Any g = 8;
     repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
 }
+
+message TestVersionFD1WithExtraAny {
+    int64 x = 1;
+    TestVersion1 a = 2;
+    oneof sum {
+        int32 e = 6;
+        TestVersion1 f = 7;
+    }
+    AnyWithExtra g = 8;
+    repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
+}
+
+message AnyWithExtra {
+    google.protobuf.Any a = 1 [(gogoproto.embed) = true];
+    int64 b = 3;
+    int64 c = 4;
+}

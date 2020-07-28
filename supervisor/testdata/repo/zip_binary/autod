@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo Chain 2 from zipped binary link to referal
+echo Chain 2 from zipped binary link to referral
 echo Args: $@
 # note that we just have a url (follow the ref), not a full link
 echo 'ERROR: UPGRADE "chain3" NEEDED at height: 936: https://github.com/regen-network/cosmosd/raw/master/testdata/repo/ref_zipped?checksum=sha256:3dbb59e823d03550ce1166337139f97e06fd33098d6c83467a2c49ee53cfa3ef module=main'

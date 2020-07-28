@@ -6,7 +6,7 @@ binaries as a live chain is upgraded, and can be used to simplify validator
 devops while doing upgrades or to make syncing a full node for genesis
 simple. The `supervisor` will monitor the stdout of the daemon to look 
 for messages from the upgrade module indicating a pending or required upgrade 
-and act appropriately. (With better integrations possible in the future)
+and act appropriately. (With better integrations possible in the future).
 
 ## Arguments
 
@@ -24,14 +24,14 @@ be `$HOME/.gaiad` or `$HOME/.xrnd`)
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (optional) if set to `on` will enable auto-downloading of new binaries
 (for security reasons, this is intended for fullnodes rather than validators)
 * `DAEMON_RESTART_AFTER_UPGRADE` (optional) if set to `on` it will restart a the sub-process with the same args
-(but new binary) after a successful upgrade. By default, the `supervisor` dies afterwards and allows the supervisor
+(but new binary) after a successful upgrade. By default, the `supervisor` dies afterward and allows the supervisor
 to restart it if needed. Note that this will not auto-restart the child if there was an error.
 
 ## Folder Layout
 
 `$DAEMON_HOME/upgrade_manager` is expected to belong completely to the supervisor and 
 subprocesses
-constrolled by it. Under this folder, we will see the following:
+controlled by it. Under this folder, we will see the following:
 
 ```
 - genesis

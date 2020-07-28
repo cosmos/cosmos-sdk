@@ -7,14 +7,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 )
 
 const (
@@ -22,25 +23,9 @@ const (
 )
 
 type (
-	// partial interface needed only for amino encoding and sanitization
-	Account interface {
-		GetAddress() sdk.AccAddress
-		GetAccountNumber() uint64
-		GetCoins() sdk.Coins
-		SetCoins(sdk.Coins) error
-	}
-
-	GenesisAccount interface {
-		Account
-
-		Validate() error
-	}
-
-	GenesisAccounts []GenesisAccount
-
 	GenesisState struct {
-		Params   v034auth.Params `json:"params" yaml:"params"`
-		Accounts GenesisAccounts `json:"accounts" yaml:"accounts"`
+		Params   v034auth.Params          `json:"params" yaml:"params"`
+		Accounts v038auth.GenesisAccounts `json:"accounts" yaml:"accounts"`
 	}
 
 	BaseAccount struct {
@@ -118,7 +103,7 @@ type (
 	}
 )
 
-func NewGenesisState(params v034auth.Params, accounts GenesisAccounts) GenesisState {
+func NewGenesisState(params v034auth.Params, accounts v038auth.GenesisAccounts) GenesisState {
 	return GenesisState{
 		Params:   params,
 		Accounts: accounts,
@@ -186,6 +171,7 @@ func NewBaseVestingAccount(
 func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          bva.Address,
+		Coins:            bva.Coins,
 		PubKey:           bva.PubKey,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
@@ -195,12 +181,12 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          bva.EndTime,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -244,6 +230,7 @@ func (cva ContinuousVestingAccount) Validate() error {
 func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          cva.Address,
+		Coins:            cva.Coins,
 		PubKey:           cva.PubKey,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
@@ -254,12 +241,12 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 		StartTime:        cva.StartTime,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -275,6 +262,12 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {
+	return &DelayedVestingAccount{
+		BaseVestingAccount: bva,
+	}
+}
+
 func (dva DelayedVestingAccount) Validate() error {
 	return dva.BaseVestingAccount.Validate()
 }
@@ -282,6 +275,7 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          dva.Address,
+		Coins:            dva.Coins,
 		PubKey:           dva.PubKey,
 		AccountNumber:    dva.AccountNumber,
 		Sequence:         dva.Sequence,
@@ -291,13 +285,13 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          dva.EndTime,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a DelayedVestingAccount.
 func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -339,6 +333,7 @@ func (pva PeriodicVestingAccount) Validate() error {
 func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountJSON{
 		Address:          pva.Address,
+		Coins:            pva.Coins,
 		PubKey:           pva.PubKey,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
@@ -350,13 +345,13 @@ func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 		VestingPeriods:   pva.VestingPeriods,
 	}
 
-	return codec.Cdc.MarshalJSON(alias)
+	return legacy.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a PeriodicVestingAccount.
 func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -373,8 +368,16 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...string) *ModuleAccount {
+	return &ModuleAccount{
+		BaseAccount: baseAccount,
+		Name:        name,
+		Permissions: permissions,
+	}
+}
+
 func (ma ModuleAccount) Validate() error {
-	if err := validatePermissions(ma.Permissions...); err != nil {
+	if err := v038auth.ValidatePermissions(ma.Permissions...); err != nil {
 		return err
 	}
 
@@ -382,8 +385,8 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("module account name cannot be blank")
 	}
 
-	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
-		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
+	if x := sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))); !ma.Address.Equals(x) {
+		return fmt.Errorf("address %s cannot be derived from the module name '%s'; expected: %s", ma.Address, ma.Name, x)
 	}
 
 	return ma.BaseAccount.Validate()
@@ -391,7 +394,7 @@ func (ma ModuleAccount) Validate() error {
 
 // MarshalJSON returns the JSON representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
-	return codec.Cdc.MarshalJSON(moduleAccountPretty{
+	return legacy.Cdc.MarshalJSON(moduleAccountPretty{
 		Address:       ma.Address,
 		Coins:         ma.Coins,
 		PubKey:        "",
@@ -405,7 +408,7 @@ func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals raw JSON bytes into a ModuleAccount.
 func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	var alias moduleAccountPretty
-	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+	if err := legacy.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -416,54 +419,9 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-func SanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
-	sort.Slice(genAccounts, func(i, j int) bool {
-		return genAccounts[i].GetAccountNumber() < genAccounts[j].GetAccountNumber()
-	})
-
-	for _, acc := range genAccounts {
-		if err := acc.SetCoins(acc.GetCoins().Sort()); err != nil {
-			panic(err)
-		}
-	}
-
-	return genAccounts
-}
-
-func ValidateGenAccounts(genAccounts GenesisAccounts) error {
-	addrMap := make(map[string]bool, len(genAccounts))
-	for _, acc := range genAccounts {
-
-		// check for duplicated accounts
-		addrStr := acc.GetAddress().String()
-		if _, ok := addrMap[addrStr]; ok {
-			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
-		}
-
-		addrMap[addrStr] = true
-
-		// check account specific validation
-		if err := acc.Validate(); err != nil {
-			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
-		}
-	}
-
-	return nil
-}
-
-func validatePermissions(permissions ...string) error {
-	for _, perm := range permissions {
-		if strings.TrimSpace(perm) == "" {
-			return fmt.Errorf("module permission is empty")
-		}
-	}
-
-	return nil
-}
-
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
-	cdc.RegisterInterface((*Account)(nil), nil)
+	cdc.RegisterInterface((*v038auth.GenesisAccount)(nil), nil)
+	cdc.RegisterInterface((*v038auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)

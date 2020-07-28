@@ -62,7 +62,12 @@ func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 			return queryEvidence(clientCtx, hash)
 		}
 
-		return queryAllEvidence(clientCtx, client.ReadPageRequest(cmd.Flags()))
+		pageReq, err := client.ReadPageRequest(cmd.Flags())
+		if err != nil {
+			return err
+		}
+
+		return queryAllEvidence(clientCtx, pageReq)
 	}
 }
 

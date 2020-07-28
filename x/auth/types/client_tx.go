@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -33,15 +35,20 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 // SetSignatures implements TxBuilder.SetSignatures
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
+
 	for i, sig := range signatures {
-		pubKey := sig.PubKey
 		var pubKeyBz []byte
+
+		pubKey := sig.PubKey
 		if pubKey != nil {
 			pubKeyBz = pubKey.Bytes()
 		}
 
-		var sigBz []byte
-		var err error
+		var (
+			sigBz []byte
+			err   error
+		)
+
 		if sig.Data != nil {
 			sigBz, err = SignatureDataToAminoSignature(legacy.Cdc, sig.Data)
 			if err != nil {
@@ -54,6 +61,7 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 			Signature: sigBz,
 		}
 	}
+
 	s.Signatures = sigs
 	return nil
 }
@@ -84,6 +92,15 @@ func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 		StdTx: StdTx{},
 		cdc:   s.Cdc,
 	}
+}
+
+// WrapTxBuilder returns a StdTxBuilder from provided transaction
+func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+	stdTx, ok := newTx.(StdTx)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, newTx)
+	}
+	return &StdTxBuilder{StdTx: stdTx, cdc: s.Cdc}, nil
 }
 
 // MarshalTx implements TxConfig.MarshalTx

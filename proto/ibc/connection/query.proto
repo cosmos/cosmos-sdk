@@ -47,7 +47,7 @@ message QueryConnectionsRequest {
 // QueryConnectionsResponse is the response type for the Query/Connections RPC method.
 message QueryConnectionsResponse {
   // list of stored connections of the chain.
-  repeated ibc.connection.ConnectionEnd connections = 1;
+  repeated ibc.connection.IdentifiedConnection connections = 1;
   // pagination response
   cosmos.query.PageResponse pagination = 2;
   // query block height

@@ -30,9 +30,13 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "valid genesis",
 			genState: types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-						localhosttypes.NewClientState("chaindID", 10),
+					[]clienttypes.GenesisClientState{
+						clienttypes.NewGenesisClientState(
+							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+						),
+						clienttypes.NewGenesisClientState(
+							exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+						),
 					},
 					[]clienttypes.ClientConsensusStates{
 						clienttypes.NewClientConsensusStates(
@@ -47,8 +51,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					true,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
-					[]connectiontypes.ConnectionEnd{
-						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion}),
+					[]connectiontypes.IdentifiedConnection{
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion})),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
@@ -86,9 +90,13 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "invalid client genesis",
 			genState: types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-						localhosttypes.NewClientState("(chaindID)", 0),
+					[]clienttypes.GenesisClientState{
+						clienttypes.NewGenesisClientState(
+							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+						),
+						clienttypes.NewGenesisClientState(
+							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),
+						),
 					},
 					nil,
 					false,
@@ -102,8 +110,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: types.GenesisState{
 				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
-					[]connectiontypes.ConnectionEnd{
-						connectiontypes.NewConnectionEnd(connectiontypes.INIT, connectionID, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+					[]connectiontypes.IdentifiedConnection{
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"})),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),

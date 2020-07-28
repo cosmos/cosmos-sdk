@@ -100,7 +100,7 @@ type TestCase struct {
 // CreateTestTx is a helper function to create a tx given multiple inputs.
 func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
 	suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-		suite.txBuilder.SetMsgs(msgs...)
+		suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 

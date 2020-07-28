@@ -104,7 +104,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 				privs, accNums, accSeqs = []crypto.PrivKey{}, []uint64{}, []uint64{}
 
 				// Create tx manually to test the tx's signers
-				suite.txBuilder.SetMsgs(msgs...)
+				suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 				tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
@@ -1073,7 +1073,7 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	// since these decorators don't run on recheck, the tx should pass the antehandler
 	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 	suite.Require().NoError(err)
-	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{}))
+	suite.Require().NoError(txBuilder.SetSignatures())
 
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)

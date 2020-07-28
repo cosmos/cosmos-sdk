@@ -10,7 +10,7 @@ import (
 
 // MarshalAny is a convenience function for packing the provided value in an
 // Any and then proto marshaling it to bytes
-func MarshalAny(m Marshaler, x interface{}) ([]byte, error) {
+func MarshalAny(m BinaryMarshaler, x interface{}) ([]byte, error) {
 	msg, ok := x.(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("can't proto marshal %T", x)
@@ -32,7 +32,7 @@ func MarshalAny(m Marshaler, x interface{}) ([]byte, error) {
 // Ex:
 //		var x MyInterface
 //		err := UnmarshalAny(unpacker, &x, bz)
-func UnmarshalAny(m Marshaler, iface interface{}, bz []byte) error {
+func UnmarshalAny(m BinaryMarshaler, iface interface{}, bz []byte) error {
 	any := &types.Any{}
 
 	err := m.UnmarshalBinaryBare(bz, any)

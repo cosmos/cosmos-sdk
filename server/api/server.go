@@ -74,7 +74,8 @@ func (s *Server) Start(cfg config.Config) error {
 	var h http.Handler = s.Router
 
 	if cfg.API.EnableUnsafeCORS {
-		return tmrpcserver.Serve(s.listener, handlers.CORS()(h), s.logger, tmCfg)
+		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
 	}
 
 	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)

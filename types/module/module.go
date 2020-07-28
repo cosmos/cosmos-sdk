@@ -39,6 +39,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,9 +49,10 @@ import (
 type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
+	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
-	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
+	ValidateGenesis(codec.JSONMarshaler, client.TxEncodingConfig, json.RawMessage) error
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
@@ -77,6 +79,13 @@ func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 	}
 }
 
+// RegisterInterfaces registers all module interface types
+func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	for _, m := range bm {
+		m.RegisterInterfaces(registry)
+	}
+}
+
 // DefaultGenesis provides default genesis information for all modules
 func (bm BasicManager) DefaultGenesis(cdc codec.JSONMarshaler) map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
@@ -88,9 +97,9 @@ func (bm BasicManager) DefaultGenesis(cdc codec.JSONMarshaler) map[string]json.R
 }
 
 // ValidateGenesis performs genesis state validation for all modules
-func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, genesis map[string]json.RawMessage) error {
+func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
-		if err := b.ValidateGenesis(cdc, genesis[b.Name()]); err != nil {
+		if err := b.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
 			return err
 		}
 	}
@@ -151,7 +160,7 @@ type AppModule interface {
 	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
 	// Deprecated: use RegisterQueryService
-	NewQuerierHandler() sdk.Querier
+	LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier
 	// RegisterQueryService allows a module to register a gRPC query service
 	RegisterQueryService(grpc.Server)
 
@@ -183,8 +192,8 @@ func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler returns an empty module querier
-func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
+// LegacyQuerierHandler returns an empty module querier
+func (gam GenesisOnlyAppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
@@ -255,13 +264,13 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterRoutes registers all module routes and module querier routes
-func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
+func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc codec.JSONMarshaler) {
 	for _, module := range m.Modules {
 		if !module.Route().Empty() {
 			router.AddRoute(module.Route())
 		}
 		if module.QuerierRoute() != "" {
-			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
+			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQuerierHandler(legacyQuerierCdc))
 		}
 	}
 }

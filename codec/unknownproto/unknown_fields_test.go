@@ -198,6 +198,31 @@ func TestCheckUnknownFieldsNested(t *testing.T) {
 			},
 		},
 		{
+			name: "types.Any with extra fields",
+			in: &testdata.TestVersionFD1WithExtraAny{
+				G: &testdata.AnyWithExtra{
+					Any: &types.Any{
+						TypeUrl: "/testdata.TestVersion1",
+						Value: mustMarshal(&testdata.TestVersion2{
+							Sum: &testdata.TestVersion2_F{
+								F: &testdata.TestVersion2{
+									NewField: 999,
+								},
+							},
+						}),
+					},
+					B: 3,
+					C: 2,
+				},
+			},
+			recv: new(testdata.TestVersion3),
+			wantErr: &errUnknownField{
+				Type:     "*types.Any",
+				TagNum:   3,
+				WireType: 0,
+			},
+		},
+		{
 			name: "mismatched types.Any in G",
 			in: &testdata.TestVersion1{
 				G: &types.Any{

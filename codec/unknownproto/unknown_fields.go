@@ -95,8 +95,12 @@ func CheckMismatchedFields(b []byte, msg proto.Message) error {
 		// Let's recursively traverse and typecheck the field.
 
 		if protoMessageName == ".google.protobuf.Any" {
-			// We'll need to extract the TypeURL which will contain the protoMessageName.
-			any := new(types.Any)
+                        // Firstly typecheck types.Any to ensure nothing snuck in.
+			if err := CheckMismatchedFields(fieldBytes, (*types.Any)(nil)); err != nil {
+				return err
+			}
+			// And finally we can extract the TypeURL containing the protoMessageName.
+                        any := new(types.Any)
 			if err := proto.Unmarshal(fieldBytes, any); err != nil {
 				return err
 			}

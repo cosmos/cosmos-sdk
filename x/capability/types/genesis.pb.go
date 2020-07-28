@@ -23,6 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// GenesisOwners defines the capability owners with their corresponding index.
 type GenesisOwners struct {
 	Index  uint64           `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
 	Owners CapabilityOwners `protobuf:"bytes,2,opt,name=owners,proto3" json:"index_owners" yaml:"index_owners"`
@@ -75,8 +76,12 @@ func (m *GenesisOwners) GetOwners() CapabilityOwners {
 	return CapabilityOwners{}
 }
 
+// GenesisState represents the Capability module genesis state
 type GenesisState struct {
-	Index  uint64          `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	// capability global index
+	Index uint64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	// map from index to owners of the capability index
+	// index key is string to allow amino marshalling
 	Owners []GenesisOwners `protobuf:"bytes,2,rep,name=owners,proto3,casttype=GenesisOwners" json:"owners"`
 }
 

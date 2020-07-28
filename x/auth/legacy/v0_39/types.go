@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -16,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 )
 
 const (
@@ -23,25 +23,9 @@ const (
 )
 
 type (
-	// partial interface needed only for amino encoding and sanitization
-	Account interface {
-		GetAddress() sdk.AccAddress
-		GetAccountNumber() uint64
-		GetCoins() sdk.Coins
-		SetCoins(sdk.Coins) error
-	}
-
-	GenesisAccount interface {
-		Account
-
-		Validate() error
-	}
-
-	GenesisAccounts []GenesisAccount
-
 	GenesisState struct {
-		Params   v034auth.Params `json:"params" yaml:"params"`
-		Accounts GenesisAccounts `json:"accounts" yaml:"accounts"`
+		Params   v034auth.Params          `json:"params" yaml:"params"`
+		Accounts v038auth.GenesisAccounts `json:"accounts" yaml:"accounts"`
 	}
 
 	BaseAccount struct {
@@ -119,7 +103,7 @@ type (
 	}
 )
 
-func NewGenesisState(params v034auth.Params, accounts GenesisAccounts) GenesisState {
+func NewGenesisState(params v034auth.Params, accounts v038auth.GenesisAccounts) GenesisState {
 	return GenesisState{
 		Params:   params,
 		Accounts: accounts,
@@ -278,6 +262,12 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {
+	return &DelayedVestingAccount{
+		BaseVestingAccount: bva,
+	}
+}
+
 func (dva DelayedVestingAccount) Validate() error {
 	return dva.BaseVestingAccount.Validate()
 }
@@ -378,8 +368,16 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...string) *ModuleAccount {
+	return &ModuleAccount{
+		BaseAccount: baseAccount,
+		Name:        name,
+		Permissions: permissions,
+	}
+}
+
 func (ma ModuleAccount) Validate() error {
-	if err := validatePermissions(ma.Permissions...); err != nil {
+	if err := v038auth.ValidatePermissions(ma.Permissions...); err != nil {
 		return err
 	}
 
@@ -387,8 +385,8 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("module account name cannot be blank")
 	}
 
-	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
-		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
+	if x := sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))); !ma.Address.Equals(x) {
+		return fmt.Errorf("address %s cannot be derived from the module name '%s'; expected: %s", ma.Address, ma.Name, x)
 	}
 
 	return ma.BaseAccount.Validate()
@@ -421,54 +419,9 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-func SanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
-	sort.Slice(genAccounts, func(i, j int) bool {
-		return genAccounts[i].GetAccountNumber() < genAccounts[j].GetAccountNumber()
-	})
-
-	for _, acc := range genAccounts {
-		if err := acc.SetCoins(acc.GetCoins().Sort()); err != nil {
-			panic(err)
-		}
-	}
-
-	return genAccounts
-}
-
-func ValidateGenAccounts(genAccounts GenesisAccounts) error {
-	addrMap := make(map[string]bool, len(genAccounts))
-	for _, acc := range genAccounts {
-
-		// check for duplicated accounts
-		addrStr := acc.GetAddress().String()
-		if _, ok := addrMap[addrStr]; ok {
-			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
-		}
-
-		addrMap[addrStr] = true
-
-		// check account specific validation
-		if err := acc.Validate(); err != nil {
-			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
-		}
-	}
-
-	return nil
-}
-
-func validatePermissions(permissions ...string) error {
-	for _, perm := range permissions {
-		if strings.TrimSpace(perm) == "" {
-			return fmt.Errorf("module permission is empty")
-		}
-	}
-
-	return nil
-}
-
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
-	cdc.RegisterInterface((*Account)(nil), nil)
+	cdc.RegisterInterface((*v038auth.GenesisAccount)(nil), nil)
+	cdc.RegisterInterface((*v038auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)

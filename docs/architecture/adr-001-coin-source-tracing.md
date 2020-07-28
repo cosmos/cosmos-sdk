@@ -74,40 +74,64 @@ the denomination prefix in order to get a consistent length for all the cross-ch
 The new format will be the following:
 
 ```golang
-ibcDenom = "ibc/" + SHA256 hash of the trace identifiers prefix + "/" + base coin denomination
+ibcDenom = "ibc/" + hash(trace + "/" + base denom)
+```
+
+The hash function will be a SHA256 hash of the fields of the `DenomTrace`:
+
+```protobuf
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the souce tracing
+// information
+message DenomTrace {
+  // chain of port/channel identifiers used for tracing the souce of the fungible token
+  string trace = 1;
+  // base denomination of the relayed fungible token
+  string base_denom = 2;
+}
+```
+
+```golang
+// Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields.
+func (dt DenomTrace) Hash() tmbytes.HexBytes {
+  return tmhash.Sum(dt.Trace + "/" + dt.BaseDenom)
+}
 ```
 
 ### `x/ibc-transfer` Changes
 
 In order to retreive the trace information from an IBC denomination, a lookup table needs to be
 added to the `ibc-transfer` module. These values need to also be persisted between upgrades, meaning
-that a new `[]Trace` `GenesisState` field state needs to be added to the module:
+that a new `[]DenomTrace` `GenesisState` field state needs to be added to the module:
 
 ```golang
-// GetDenom retreives the full identifiers trace from the store.
-func (k Keeper) GetTrace(ctx Context, traceHash []byte) string {
+// GetDenom retreives the full identifiers trace and base denomination from the store.
+func (k Keeper) GetDenomTrace(ctx Context, denomTraceHash []byte) (DenomTrace, bool) {
   store := ctx.KVStore(k.storeKey)
-  bz := store.Get(types.KeyTrace(traceHash))
-  if len(bz) == 0 {
-    return ""
+  bz := store.Get(types.KeyDenomTrace(traceHash))
+  if bz == nil {
+    return &DenomTrace, false
   }
-  return string(bz)
+
+  var denomTrace DenomTrace
+  k.cdc.MustUnmarshalBinaryBare(bz, &denomTrace)
+  return denomTrace, true
 }
 
 // HasTrace checks if a the key with the given trace hash exists on the store.
-func (k Keeper) HasTrace(ctx Context, traceHash []byte)  bool {
+func (k Keeper) HasDenomTrace(ctx Context, denomTraceHash []byte)  bool {
   store := ctx.KVStore(k.storeKey)
-  return store.Has(types.KeyTrace(traceHash))
+  return store.Has(types.KeyTrace(denomTraceHash))
 }
 
 // SetTrace sets a new {trace hash -> trace} pair to the store.
-func (k Keeper) SetTrace(ctx Context, traceHash []byte, trace string) {
+func (k Keeper) SetTrace(ctx Context, denomTraceHash []byte, denomTrace DenomTrace) {
   store := ctx.KVStore(k.storeKey)
-  store.Set(types.KeyTrace(traceHash), []byte(trace))
+  bz := k.cdc.MustMarshalBinaryBare(&denomTrace)
+  store.Set(types.KeyTrace(traceHash), bz)
 }
 ```
 
-When a fungible token is send to a sink chain, the trace information needs to be updated with the
+When a fungible token is sent to a sink chain, the trace information needs to be updated with the
 new port and channel identifiers:
 
 ```golang
@@ -116,7 +140,7 @@ new port and channel identifiers:
 func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string {
   // Get each component of the denom. The resulting slice will be:
   //
-  // - ["ibc", traceHash, baseDenom], if the denom is dirty (contains trace metadata).
+  // - ["ibc", hash], if the denom is dirty (contains trace metadata).
   // - [baseDenom], if the denom has never been sent from the origin chain.
   denomSplit := strings.SplitN(denom, "/", 3)
 
@@ -127,26 +151,32 @@ func (k Keeper) PrefixDenom(ctx Context, portID, channelID, denom string) string
   )
 
   // check if the denomination is clean or if it contains the trace info
-  if denomSplit[0] == denom {
+  if len(denomSplit) == 1 && denomSplit[0] == denom {
     baseDenom = denom
     trace = portID + "/" + channelID +"/"
   } else {
-    baseDenom = denomSplit[2]
     traceHash = tmbytes.HexBytes(denomSplit[1])
     // Get the value from the map trace hash -> trace info prefix
-    trace = k.GetTrace(ctx, traceHash)
-    // prefix the identifiers to create the new trace
-    trace = portID + "/" + channelID +"/" + trace + "/"
+    denomTrace, found := k.GetDenomTrace(ctx, traceHash)
+    if found {
+      // prefix the identifiers to create the new trace
+      trace = portID + "/" + channelID +"/" + denomTrace.Trace + "/"
+      baseDenom = denomTrace.BaseDenom
+    } else {
+      // TODO: construct the trace info from the msg fields
+    }
   }
+
+  denomTrace = DenomTrace{Trace: trace, BaseDenom: baseDenom}
   
-  traceHash = tmbytes.HexBytes(tmhash.Sum(trace))
+  traceHash = denomTrace.Hash()
 
   // set the value to the lookup table if not stored already
-  if !k.HasTrace(ctx, traceHash) {
-    k.SetTrace(ctx, traceHash)
+  if !k.HasDenomTrace(ctx, traceHash) {
+    k.SetDenomTrace(ctx, traceHash, denomTrace)
   }
 
-  denom = "ibc/"+ traceHash.String()  "/" + baseDenom
+  denom = "ibc/"+ traceHash.String()
   return denom
 }
 ```
@@ -158,39 +188,44 @@ The denomination also needs to be updated when token is received on the source c
 // denomination with the updated trace hash and the new trace info.
 // An error is returned if the trace cannot be found on the store from the denom's trace hash.
 func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, err error) {
-  denomSplit := strings.SplitN(denom, "/", 3)
+  denomSplit := strings.SplitN(denom, "/", 2)
 
   switch {
+    case len(denomSplit) == 0:
+      err = Wrap(ErrInvalidDenomForTransfer, denom)
     case denomSplit[0] == denom:
-      return "", Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{traceHash}/%s'", denom)
+      err = Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
     case denomSplit[0] != "ibc":
-      return "", Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
+      err = Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
   }
 
-  baseDenom = denomSplit[2]
+  if err != nil {
+    return "", err
+  }
+
   traceHash := tmbytes.HexBytes(denomSplit[1])
   // Get the value from the map trace hash -> trace info prefix
-  trace = k.GetTrace(ctx, traceHash)
-  if trace == "" {
-    return "", Wrapf(ErrTraceNotFound, "denom: %s", denom)
+  denomTrace, found = k.GetDenomTrace(ctx, traceHash)
+  if !found {
+    return "", Wrapf(ErrDenomTraceNotFound, "denom: %s", denom)
   }
 
-  traceSplit := strings.SplitN(denom, "/", 3)
-  if len(traceSplit) == 3 {
+  traceSplit := strings.SplitN(denom, "/", 2)
+  if len(traceSplit) == 2 {
     // the trace has only one portID/channelID pair
-    return baseDenom
+    return denomTrace.BaseDenom
   }
 
   // remove a single identifiers pair to create the new trace
-  trace = trace[2]
-  traceHash = tmbytes.HexBytes(tmhash.Sum(trace))
+  denomTrace.Trace = denom.Trace[2:]
+  traceHash = denomTrace.Hash()
 
   // set the value to the lookup table if not stored already
-  if !k.HasTrace(ctx, traceHash) {
-    k.SetTrace(ctx, traceHash)
+  if !k.HasDenomTrace(ctx, traceHash) {
+    k.SetDenomTrace(ctx, traceHash, denomTrace)
   }
 
-  denom = "ibc/"+ traceHash.String() + "/" + baseDenom
+  denom = "ibc/"+ traceHash.String()
   return denom
 }
 ```
@@ -199,15 +234,18 @@ func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, e
 // GetTraceFromDenom returns the token source tracing info from the trace hash of the given denomination
 func (k Keeper) GetTraceFromDenom(ctx Context, denom string) (string, error) {
   denomSplit := strings.Split(denom, "/")
-  if denomSplit[0] == denom {
+
+  if len(denomSplit) == 0 {
+    return "", Wrap(ErrInvalidDenomForTransfer, denom)
+  } else if denomSplit[0] == denom {
     return "", nil
   }
 
   traceHash := tmbytes.HexBytes(denomSplit[1])
   // Get the value from the map trace hash -> trace info prefix
-  trace := k.GetTrace(ctx, traceHash)
-  if trace == "" {
-    return "", Wrapf(ErrTraceNotFound, "denom: %s", denom)
+  trace, found := k.GetDenomTrace(ctx, traceHash)
+  if !found {
+    return "", Wrapf(ErrDenomTraceNotFound, "denom: %s", denom)
   }
 
   return trace
@@ -224,13 +262,7 @@ of the prefix.
 The coin denomination validation will need to be updated to reflect these changes. In particular, the denomination validation
 function will now accept slash separators (`"/"`) and will bump the maximum character length to 64.
 
-In the specific case of cross-chain fungible token transfers, an IBC denomination will allow at
-most 27 characters for base denominations:
-
-```golang
-maxBaseDenomLen = 64 - 4 - 32 - 1  // max len - "ibc/" - SHA256 hash - "/"
-maxBaseDenomLen = 27
-```
+Additional validation logic, such as verifying the kenght of the hash, the  can be integrated if [custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755) is integrated into the SDK.
 
 ### Positive
 
@@ -243,8 +275,7 @@ maxBaseDenomLen = 27
 ### Negative
 
 - Store each set of tracing denomination identifiers on the `ibc-transfer` module store.
-- ICS20 won't be able to support tokens greater than 27 characters for base denomination. This can be mitigated with
-[custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755).
+- Clients will have to fetch the base denomination everytime they receive a new relayed fungible token over IBC. This can be mitigated using a map for already seen hashes on the client side.
 
 ### Neutral
 

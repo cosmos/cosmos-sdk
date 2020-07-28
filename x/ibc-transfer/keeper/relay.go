@@ -27,6 +27,7 @@ func (k Keeper) SendTransfer(
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver string,
+	source bool,
 	timeoutHeight,
 	timeoutTimestamp uint64,
 ) error {
@@ -49,7 +50,7 @@ func (k Keeper) SendTransfer(
 
 	return k.createOutgoingPacket(
 		ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel,
-		amount, sender, receiver, timeoutHeight, timeoutTimestamp,
+		amount, sender, receiver, source, timeoutHeight, timeoutTimestamp,
 	)
 }
 
@@ -62,6 +63,7 @@ func (k Keeper) createOutgoingPacket(
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver string,
+	source bool,
 	timeoutHeight, timeoutTimestamp uint64,
 ) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))

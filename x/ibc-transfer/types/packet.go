@@ -23,17 +23,20 @@ var (
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coins, sender, receiver string) FungibleTokenPacketData {
+	amount sdk.Coin, sender, receiver string,
+	source bool,
+) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,
+		Source:   source,
 	}
 }
 
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
-	if !ftpd.Amount.IsAllPositive() {
+	if !ftpd.Amount.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
 	}
 	if !ftpd.Amount.IsValid() {

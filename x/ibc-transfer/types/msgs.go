@@ -14,7 +14,8 @@ const (
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
-	amount sdk.Coins, sender sdk.AccAddress, receiver string,
+	amount sdk.Coin, sender sdk.AccAddress, receiver string,
+	source bool,
 	timeoutHeight, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
@@ -23,6 +24,7 @@ func NewMsgTransfer(
 		Amount:           amount,
 		Sender:           sender,
 		Receiver:         receiver,
+		Source:           source,
 		TimeoutHeight:    timeoutHeight,
 		TimeoutTimestamp: timeoutTimestamp,
 	}
@@ -39,7 +41,7 @@ func (MsgTransfer) Type() string {
 }
 
 // ValidateBasic performs a basic check of the MsgTransfer fields.
-// NOTE: timeout height and timestamp values can be 0 to disable the timeout.
+// NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
@@ -47,17 +49,24 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
 		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
-	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Amount.String())
-	}
 	if !msg.Amount.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+	if !msg.Amount.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Amount.String())
 	}
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
+	}
+
+	// sanity check that validate basic on fungible token packet passes
+	// NOTE: this should always pass since validation checks should be the same
+	packet := NewFungibleTokenPacketData(msg.Amount, msg.Sender.String(), msg.Receiver, msg.Source)
+	if err := packet.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "unexpected failure in fungible token packet validation, please open an issue")
 	}
 	return nil
 }

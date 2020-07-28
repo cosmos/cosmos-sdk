@@ -8,32 +8,24 @@ import (
 
 // TestFungibleTokenPacketDataValidateBasic tests ValidateBasic for FungibleTokenPacketData
 func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
-	testPacketDataTransfer := []FungibleTokenPacketData{
-		NewFungibleTokenPacketData(coins, addr1.String(), addr2),              // valid msg
-		NewFungibleTokenPacketData(invalidDenomCoins, addr1.String(), addr2),  // invalid amount
-		NewFungibleTokenPacketData(negativeCoins, addr1.String(), addr2),      // amount contains negative coin
-		NewFungibleTokenPacketData(coins, emptyAddr.String(), addr2),          // missing sender address
-		NewFungibleTokenPacketData(coins, addr1.String(), emptyAddr.String()), // missing recipient address
-	}
-
 	testCases := []struct {
+		name       string
 		packetData FungibleTokenPacketData
 		expPass    bool
-		errMsg     string
 	}{
-		{testPacketDataTransfer[0], true, ""},
-		{testPacketDataTransfer[1], false, "invalid amount"},
-		{testPacketDataTransfer[2], false, "amount contains negative coin"},
-		{testPacketDataTransfer[3], false, "missing sender address"},
-		{testPacketDataTransfer[4], false, "missing recipient address"},
+		{"valid packet", NewFungibleTokenPacketData(coin, addr1.String(), addr2, true), true},
+		{"invalid amount", NewFungibleTokenPacketData(invalidDenomCoin, addr1.String(), addr2, true), false},
+		{"amount contains negative coin", NewFungibleTokenPacketData(negativeCoin, addr1.String(), addr2, true), false},
+		{"missing sender address", NewFungibleTokenPacketData(coin, emptyAddr.String(), addr2, false), false},
+		{"missing recipient address", NewFungibleTokenPacketData(coin, addr1.String(), emptyAddr.String(), false), false},
 	}
 
 	for i, tc := range testCases {
 		err := tc.packetData.ValidateBasic()
 		if tc.expPass {
-			require.NoError(t, err, "PacketDataTransfer %d failed: %v", i, err)
+			require.NoError(t, err, "valid test case %d failed: %v", i, err)
 		} else {
-			require.Error(t, err, "Invalid PacketDataTransfer %d passed: %s", i, tc.errMsg)
+			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
 		}
 	}
 }

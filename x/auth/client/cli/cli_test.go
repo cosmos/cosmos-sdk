@@ -309,7 +309,6 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
-	s.T().SkipNow() // TODO check encoding.
 	val1 := s.network.Validators[0]
 
 	codec := codec2.New()
@@ -380,7 +379,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	defer cleanup3()
 
 	exec, err := authtest.TxValidateSignaturesExec(val1.ClientCtx, multiSigWith1SignatureFile.Name())
-	s.Require().NoError(err)
+	s.Require().Error(err)
 
 	fmt.Printf("%s", exec)
 }
@@ -427,7 +426,6 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
-	s.T().SkipNow()
 	val1 := s.network.Validators[0]
 
 	codec := codec2.New()

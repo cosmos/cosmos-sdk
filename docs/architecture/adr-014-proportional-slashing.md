@@ -3,6 +3,8 @@
 ## Changelog
 
 - 2019-10-15: Initial draft
+- 2020-05-25: Removed correlation root slashing
+- 2020-07-01: Updated to include S-curve function instead of linear
 
 ## Context
 

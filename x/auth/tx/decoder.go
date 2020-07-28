@@ -3,15 +3,18 @@ package tx
 import (
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/types/tx"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler and PublicKeyCodec
-func DefaultTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
+func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
+	cdc := codec.NewProtoCodec(anyUnpacker)
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw tx.TxRaw
 		err := cdc.UnmarshalBinaryBare(txBytes, &raw)
@@ -35,14 +38,14 @@ func DefaultTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) 
 			bodyBz:      raw.BodyBytes,
 			authInfoBz:  raw.AuthInfoBytes,
 			pubKeys:     pks,
-			marshaler:   cdc,
 			pubkeyCodec: keyCodec,
 		}, nil
 	}
 }
 
 // DefaultTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler and PublicKeyCodec
-func DefaultJSONTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
+func DefaultJSONTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
+	cdc := codec.NewProtoCodec(anyUnpacker)
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var theTx tx.Tx
 		err := cdc.UnmarshalJSON(txBytes, &theTx)
@@ -58,7 +61,6 @@ func DefaultJSONTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCod
 		return &builder{
 			tx:          &theTx,
 			pubKeys:     pks,
-			marshaler:   cdc,
 			pubkeyCodec: keyCodec,
 		}, nil
 	}

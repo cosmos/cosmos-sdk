@@ -90,23 +90,28 @@ message DenomTrace {
 }
 ```
 
+The `IBCDenom` function constructs the `Coin` denomination used when creating the ICS20 fungible token packet data:
+
 ```golang
 // Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields.
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
   return tmhash.Sum(dt.Trace + "/" + dt.BaseDenom)
 }
+
+// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace + baseDenom)}'. If the trace is empty, it will return the base denomination.
+func (dt DenomTrace) IBCDenom() string {
+  if dt.Trace != "" {
+    return fmt.Sprintf("ibc/%s", dt.Hash())
+  }
+  return dt.BaseDenom
+}
 ```
 
-```golang
-// AddPrefix prefixes the current trace with the given port and channel identifiers
-func (dt *DenomTrace) AddPrefix(portID, channelID string) {
-  if dt.Trace == "" {
-    dt.Trace = portID + "/" + channelID
-    return
-  }
-  dt.Trace = portID + "/" + channelID + "/" + dt.Trace
-}
+In order to trim the denomination trace prefix when sending/receiving fungible tokens, the `RemovePrefix` funciton is provided.
 
+> NOTE: the prefix addition must be done on the client side.
+
+```golang
 // RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators it will return an error.
 func (dt *DenomTrace) RemovePrefix() error {
   if dt.Trace == "" {
@@ -220,7 +225,7 @@ func GetTraceHashFromDenom(rawDenom string) (tmbytes.HexBytes, error) {
       err = Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
     case denomSplit[0] != "ibc":
       err = Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
-    case len(denomSplit) > 1  && len(denomSplit[1]) != 32:
+    case len(denomSplit) == 2  && len(denomSplit[1]) != 32:
       err = Wrapf(ErrInvalidDenomForTransfer, "invalid SHA256 hash %s", denomSplit[1])
     default:
       err = Wrap(ErrInvalidDenomForTransfer, denom)
@@ -237,108 +242,114 @@ func GetTraceHashFromDenom(rawDenom string) (tmbytes.HexBytes, error) {
 When a fungible token is sent to a sink chain, the trace information needs to be updated with the
 new port and channel identifiers:
 
-// TODO: update
-<!-- ```golang
-// PrefixDenom adds the given port and channel identifiers prefix to the denomination and sets the
-// new {trace hash -> trace} pair to the store.
-func PrefixDenom(portID, channelID string, denomTrace DenomTrace) DenomTrace {
-  if denomTrace.Trace == "" {
-    denom.Trace = portID + "/" + channelID
-  } else {
-    denom.Trace = portID + "/" + channelID + "/" + denom.Trace
+The denomination also needs to be updated when token is received on the source chain. This is done during the `SendTransfer`'s `createOutgoingPacket` call and the `OnRecvPacket` call. Below is the updated function that sets the :
+
+```golang
+// createOutgoingPacket
+// ...
+prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
+source := strings.HasPrefix(amount[0].Denom, prefix)
+
+for _, denomTrace := range denomTraces {
+  // set the value to the lookup table if not stored already
+  traceHash := denomTrace.Hash()
+  if !k.HasDenomTrace(ctx, traceHash) {
+    k.SetDenomTrace(ctx, traceHash, denomTrace)
   }
+}
 
-  // check if the denomination is clean or if it contains the trace info
-  if len(denomSplit) == 1 && denomSplit[0] == denom {
-    baseDenom = denom
-    trace = portID + "/" + channelID +"/"
-  } else {
-    traceHash = tmbytes.HexBytes(denomSplit[1])
-    // Get the value from the map trace hash -> trace info prefix
-    denomTrace, found := k.GetDenomTrace(ctx, traceHash)
-    if found {
-      // prefix the identifiers to create the new trace
-      trace = portID + "/" + channelID +"/" + denomTrace.Trace + "/"
-      baseDenom = denomTrace.BaseDenom
+if source {
+  // clear the denomination from the prefix to send the coins to the escrow account
+  coins := make(sdk.Coins, len(amount))
+  for i, coin := range amount {
+    if strings.HasPrefix(denomTraces[i].Trace, prefix) {
+      if err := denomTraces[i].RemovePrefix(); err != nil {
+        return err
+      }
+
+      // set the new value to the lookup table if not stored already
+      traceHash := denomTraces[i].Hash()
+      if !k.HasDenomTrace(ctx, traceHash) {
+        k.SetDenomTrace(ctx, traceHash, denomTrace[i])
+      }
+
+      coins[i] = sdk.NewCoin(denomTrace[i].IBCDenom(), coin.Amount)
     } else {
-
-      // TODO: construct the trace info from the msg fields
+      coins[i] = coin
     }
   }
 
-  denomTrace.Trace =  trace
-  traceHash = denomTrace.Hash()
+  // escrow tokens if the destination chain is the same as the sender's
+  escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
+  // escrow source tokens. It fails if balance insufficient.
+  if err := k.bankKeeper.SendCoins(
+    ctx, sender, escrowAddress, coins,
+  ); err != nil {
+    return err
+  }
+} else {
+  // build the receiving denomination prefix if it's not present
+  prefix = types.GetDenomPrefix(sourcePort, sourceChannel)
+  for _, coin := range amount {
+    if !strings.HasPrefix(denomTrace[i].Trace, prefix) {
+      return Wrapf(types.ErrInvalidDenomForTransfer, "invalid token denom trace prefix: %s", denomTrace[i].IBCDenom())
+    }
+  }
+// ...
+}
+```
+
+```golang
+// OnRecvPacket
+// ...
+prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+source := strings.HasPrefix(data.DenomTraces[0].Trace, prefix)
+
+// ...
+
+for _, denomTrace := range denomTraces {
   // set the value to the lookup table if not stored already
+  traceHash := denomTrace.Hash()
   if !k.HasDenomTrace(ctx, traceHash) {
     k.SetDenomTrace(ctx, traceHash, denomTrace)
   }
-
-  denom = "ibc/"+ traceHash.String()
-  return denom
 }
-``` -->
 
-The denomination also needs to be updated when token is received on the source chain:
+if source {
+  // ... (no changes)
+}
 
-// TODO: update
-<!-- ```golang
-// UnprefixDenom removes the first portID/channelID pair from a given denomination trace info and returns the
-// denomination with the updated trace hash and the new trace info.
-// An error is returned if the trace cannot be found on the store from the denom's trace hash.
-func (k Keeper) UnprefixDenom(ctx Context, denom string) (denom, trace string, err error) {
-  denomSplit := strings.SplitN(denom, "/", 2)
-
-  switch {
-    case len(denomSplit) == 0:
-      err = Wrap(ErrInvalidDenomForTransfer, denom)
-    case denomSplit[0] == denom:
-      err = Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
-    case denomSplit[0] != "ibc":
-      err = Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
+// check the denom prefix
+prefix = types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+coins := make(sdk.Coins, len(data.Amount))
+for i, coin := range data.Amount {
+  if !strings.HasPrefix(denomTraces[i].Trace, prefix) {
+    return Wrapf(types.ErrInvalidDenomForTransfer, "invalid token denom trace prefix: %s", denomTrace[i].IBCDenom(),
+    )
   }
 
-  if err != nil {
-    return "", err
+  if err := denomTraces[i].RemovePrefix(); err != nil {
+    return err
   }
 
-  traceHash := tmbytes.HexBytes(denomSplit[1])
-  // Get the value from the map trace hash -> trace info prefix
-  denomTrace, found = k.GetDenomTrace(ctx, traceHash)
-  if !found {
-    return "", Wrapf(ErrDenomTraceNotFound, "denom: %s", denom)
-  }
-
-  traceSplit := strings.SplitN(denom, "/", 2)
-  if len(traceSplit) == 2 {
-    // the trace has only one portID/channelID pair
-    return denomTrace.BaseDenom
-  }
-
-  // remove a single identifiers pair to create the new trace
-  denomTrace.Trace = denom.Trace[2:]
-  traceHash = denomTrace.Hash()
-
-  // set the value to the lookup table if not stored already
+  // set the new value to the lookup table if not stored already
+  traceHash := denomTraces[i].Hash()
   if !k.HasDenomTrace(ctx, traceHash) {
-    k.SetDenomTrace(ctx, traceHash, denomTrace)
+    k.SetDenomTrace(ctx, traceHash, denomTrace[i])
   }
 
-  denom = "ibc/"+ traceHash.String()
-  return denom
+  coins[i] = sdk.NewCoin(denomTraces[i].IBCDenom(), coin.Amount)
 }
-``` -->
-
-Additionally, the `SendTransfer`'s `createOutgoingPacket` call and the `OnRecvPacket` need to be
-updated to be retreive the trace info (using `GetTraceFromDenom`) prior to checking the correctness
-of the prefix.
+// ...
+```
 
 ### Coin Changes
 
 The coin denomination validation will need to be updated to reflect these changes. In particular, the denomination validation
 function will now accept slash separators (`"/"`) and will bump the maximum character length to 64.
 
-Additional validation logic, such as verifying the kenght of the hash, the  can be integrated if [custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755) is integrated into the SDK.
+Additional validation logic, such as verifying the kenght of the hash, the  may be added to the bank module in the future if the [custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755) is integrated into the SDK.
 
 ### Positive
 
@@ -350,16 +361,16 @@ Additional validation logic, such as verifying the kenght of the hash, the  can 
 
 ### Negative
 
-- Store each set of tracing denomination identifiers on the `ibc-transfer` module store.
-- Clients will have to fetch the base denomination everytime they receive a new relayed fungible token over IBC. This can be mitigated using a map for already seen hashes on the client side.
+- Store each set of tracing denomination identifiers on the `ibc-transfer` module store
+- Clients will have to fetch the base denomination everytime they receive a new relayed fungible token over IBC. This can be mitigated using a map/cache for already seen hashes on the client side.
 
 ### Neutral
 
 - Slight difference with the ICS20 spec
-- Additional validation logic for IBC coins
-- Additional genesis fields.
+- Additional validation logic for IBC coins on the `ibc-transfer` module
+- Additional genesis fields
 - Slightly increases the gas usage on cross-chain transfers due to access to the store. This should
-  be inter-block cached if transfers are frequent
+  be inter-block cached if transfers are frequent.
 
 ## References
 

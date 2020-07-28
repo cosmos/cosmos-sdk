@@ -42,31 +42,35 @@ func init() {
 	}
 }
 
-func BenchmarkCheckMismatchedFields_serial(b *testing.B) {
-	benchmarkCheckMismatchedFields(b, false)
+func BenchmarkRejectUnknownFieldsFields_serial(b *testing.B) {
+	benchmarkRejectUnknownFieldsFields(b, false)
 }
-func BenchmarkCheckMismatchedFields_parallel(b *testing.B) {
-	benchmarkCheckMismatchedFields(b, true)
+func BenchmarkRejectUnknownFieldsFields_parallel(b *testing.B) {
+	benchmarkRejectUnknownFieldsFields(b, true)
 }
 
-func benchmarkCheckMismatchedFields(b *testing.B, parallel bool) {
+func benchmarkRejectUnknownFieldsFields(b *testing.B, parallel bool) {
 	b.ReportAllocs()
 
 	if !parallel {
+		ckr := new(unknownproto.Checker)
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			n1A := new(testdata.Nested1A)
-			if err := unknownproto.CheckMismatchedFields(n1BBlob, n1A); err == nil {
+			if err := ckr.RejectUnknownFieldsFields(n1BBlob, n1A); err == nil {
 				b.Fatal("expected an error")
 			}
 			b.SetBytes(int64(len(n1BBlob)))
 		}
 	} else {
 		var mu sync.Mutex
+		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
+			ckr := new(unknownproto.Checker)
 			for pb.Next() {
 				// To simulate the conditions of multiple transactions being processed in parallel.
 				n1A := new(testdata.Nested1A)
-				if err := unknownproto.CheckMismatchedFields(n1BBlob, n1A); err == nil {
+				if err := ckr.RejectUnknownFieldsFields(n1BBlob, n1A); err == nil {
 					b.Fatal("expected an error")
 				}
 				mu.Lock()

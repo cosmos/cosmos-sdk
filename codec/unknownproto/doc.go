@@ -8,7 +8,8 @@ b) Mismatched wire types for a field -- this is indicative of mismatched service
 
 Its API signature is similar to proto.Unmarshal([]byte, proto.Message) as
 
-    if err := unknownproto.CheckMismatchedFields(protoBlob, protoMessage); err != nil {
+    ckr := new(unknownproto.Checker)
+    if err := ckr.CheckMismatchedFields(protoBlob, protoMessage); err != nil {
             // Handle the error.
     }
 
@@ -20,7 +21,7 @@ this behavior, please create a Checker and set the AllowUnknownNonCriticals to t
     ckr := &unknownproto.Checker{
             AllowUnknownNonCriticals: true,
     }
-    if err := ckr.CheckMismatchedField(protoBlob, protoMessage); err != nil {
+    if err := ckr.RejectUnknownFields(protoBlob, protoMessage); err != nil {
             // Handle the error.
     }
 */

@@ -10,25 +10,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func TestCheckUnknownFieldsRepeated(t *testing.T) {
+func TestRejectUnknownFieldsRepeated(t *testing.T) {
 	tests := []struct {
-		name    string
-		in      proto.Message
-		recv    proto.Message
-		wantErr error
+		name                  string
+		in                    proto.Message
+		recv                  proto.Message
+		wantErr               error
+		allowUnknownCriticals bool
 	}{
 		{
-			name: "TestVersionFD1 vs TestVersion3 -- full equivalence",
-			in: &testdata.TestVersionFD1{
-				H: []*testdata.TestVersion1{
+			name: "Unknown field in midst of repeated values",
+			in: &testdata.TestVersion2{
+				C: []*testdata.TestVersion2{
 					{
-						H: []*testdata.TestVersion1{
+						C: []*testdata.TestVersion2{
 							{
-								Sum: &testdata.TestVersion1_F{
-									F: &testdata.TestVersion1{
-										A: &testdata.TestVersion1{
-											B: &testdata.TestVersion1{
-												H: []*testdata.TestVersion1{
+								Sum: &testdata.TestVersion2_F{
+									F: &testdata.TestVersion2{
+										A: &testdata.TestVersion2{
+											B: &testdata.TestVersion2{
+												H: []*testdata.TestVersion2{
 													{
 														X: 0x01,
 													},
@@ -38,11 +39,126 @@ func TestCheckUnknownFieldsRepeated(t *testing.T) {
 									},
 								},
 							},
+							{
+								Sum: &testdata.TestVersion2_F{
+									F: &testdata.TestVersion2{
+										A: &testdata.TestVersion2{
+											B: &testdata.TestVersion2{
+												H: []*testdata.TestVersion2{
+													{
+														X: 0x02,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							{
+								Sum: &testdata.TestVersion2_F{
+									F: &testdata.TestVersion2{
+										NewField: 411,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
-			recv:    new(testdata.TestVersion3),
+			recv: new(testdata.TestVersion1),
+			wantErr: &errUnknownField{
+				Type:     "*testdata.TestVersion1",
+				TagNum:   25,
+				WireType: 0,
+			},
+		},
+		{
+			name: "Unknown field in midst of repeated values, non-critical field to be rejected",
+			in: &testdata.TestVersion3{
+				C: []*testdata.TestVersion3{
+					{
+						C: []*testdata.TestVersion3{
+							{
+								Sum: &testdata.TestVersion3_F{
+									F: &testdata.TestVersion3{
+										A: &testdata.TestVersion3{
+											B: &testdata.TestVersion3{
+												X: 0x01,
+											},
+										},
+									},
+								},
+							},
+							{
+								Sum: &testdata.TestVersion3_F{
+									F: &testdata.TestVersion3{
+										A: &testdata.TestVersion3{
+											B: &testdata.TestVersion3{
+												X: 0x02,
+											},
+										},
+									},
+								},
+							},
+							{
+								Sum: &testdata.TestVersion3_F{
+									F: &testdata.TestVersion3{
+										NonCriticalField: "non-critical",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			recv: new(testdata.TestVersion1),
+			wantErr: &errUnknownField{
+				Type:     "*testdata.TestVersion1",
+				TagNum:   1031,
+				WireType: 2,
+			},
+		},
+		{
+			name:                  "Unknown field in midst of repeated values, non-critical field ignored",
+			allowUnknownCriticals: true,
+			in: &testdata.TestVersion3{
+				C: []*testdata.TestVersion3{
+					{
+						C: []*testdata.TestVersion3{
+							{
+								Sum: &testdata.TestVersion3_F{
+									F: &testdata.TestVersion3{
+										A: &testdata.TestVersion3{
+											B: &testdata.TestVersion3{
+												X: 0x01,
+											},
+										},
+									},
+								},
+							},
+							{
+								Sum: &testdata.TestVersion3_F{
+									F: &testdata.TestVersion3{
+										A: &testdata.TestVersion3{
+											B: &testdata.TestVersion3{
+												X: 0x02,
+											},
+										},
+									},
+								},
+							},
+							{
+								Sum: &testdata.TestVersion3_F{
+									F: &testdata.TestVersion3{
+										NonCriticalField: "non-critical",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			recv:    new(testdata.TestVersion1),
 			wantErr: nil,
 		},
 	}
@@ -54,7 +170,8 @@ func TestCheckUnknownFieldsRepeated(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotErr := CheckMismatchedFields(protoBlob, tt.recv)
+			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownCriticals}
+			gotErr := ckr.RejectUnknownFieldsFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%v\n\nWant:\n%v", gotErr, tt.wantErr)
 			}
@@ -62,7 +179,68 @@ func TestCheckUnknownFieldsRepeated(t *testing.T) {
 	}
 }
 
-func TestCheckUnknownFieldsNested(t *testing.T) {
+func TestRejectUnknownFields_allowUnknownCriticals(t *testing.T) {
+	tests := []struct {
+		name                  string
+		in                    proto.Message
+		allowUnknownCriticals bool
+		wantErr               error
+	}{
+		{
+			name: "Field that's in the reserved range, should fail by default",
+			in: &testdata.Customer2{
+				Id:       289,
+				Reserved: 99,
+			},
+			wantErr: &errUnknownField{
+				Type:     "*testdata.Customer1",
+				TagNum:   1047,
+				WireType: 0,
+			},
+		},
+		{
+			name:                  "Field that's in the reserved range, toggle allowUnknownCriticals",
+			allowUnknownCriticals: true,
+			in: &testdata.Customer2{
+				Id:       289,
+				Reserved: 99,
+			},
+			wantErr: nil,
+		},
+		{
+			name:                  "Unkown fields that are critical, but with allowUnknownCriticals set",
+			allowUnknownCriticals: true,
+			in: &testdata.Customer2{
+				Id:   289,
+				City: testdata.Customer2_PaloAlto,
+			},
+			wantErr: &errUnknownField{
+				Type:     "*testdata.Customer1",
+				TagNum:   6,
+				WireType: 0,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			blob, err := proto.Marshal(tt.in)
+			if err != nil {
+				t.Fatalf("Failed to marshal input: %v", err)
+			}
+
+			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownCriticals}
+			c1 := new(testdata.Customer1)
+			gotErr := ckr.RejectUnknownFieldsFields(blob, c1)
+			if !reflect.DeepEqual(gotErr, tt.wantErr) {
+				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRejectUnknownFieldsNested(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      proto.Message
@@ -76,13 +254,13 @@ func TestCheckUnknownFieldsNested(t *testing.T) {
 				Sum: &testdata.TestVersion2_E{
 					E: 100,
 				},
-				H: []*testdata.TestVersion1{
+				H: []*testdata.TestVersion2{
 					{X: 999},
 					{X: -55},
 					{
 						X: 102,
-						Sum: &testdata.TestVersion1_F{
-							F: &testdata.TestVersion1{
+						Sum: &testdata.TestVersion2_F{
+							F: &testdata.TestVersion2{
 								X: 4,
 							},
 						},
@@ -99,33 +277,6 @@ func TestCheckUnknownFieldsNested(t *testing.T) {
 				Type:     "*testdata.TestVersionFD1",
 				TagNum:   12,
 				WireType: 2,
-			},
-		},
-		{
-			name: "Nested2B vs Nested3B",
-			in: &testdata.Nested2B{
-				Id:  5,
-				Fee: 88.91,
-				Nested: &testdata.Nested3B{
-					Id:   15,
-					Age:  47,
-					Name: "Crowley",
-					B4: []*testdata.Nested4B{
-						{
-							Id: 34, Age: 55, Name: "Trivia",
-						},
-						{
-							Id: 55, Age: 78, Name: "Incredible",
-						},
-					},
-				},
-			},
-			recv: new(testdata.TestVersion3),
-			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion3",
-				TagNum:       2,
-				GotWireType:  1,
-				WantWireType: 2,
 			},
 		},
 		{
@@ -292,7 +443,8 @@ func TestCheckUnknownFieldsNested(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotErr := CheckMismatchedFields(protoBlob, tt.recv)
+			ckr := new(Checker)
+			gotErr := ckr.RejectUnknownFieldsFields(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -300,76 +452,7 @@ func TestCheckUnknownFieldsNested(t *testing.T) {
 	}
 }
 
-func mustMarshal(msg proto.Message) []byte {
-	blob, err := proto.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return blob
-}
-
-func TestCheckUnknownFieldsToggleCriticalFieldsChecking(t *testing.T) {
-	tests := []struct {
-		name                  string
-		in                    proto.Message
-		allowUnknownCriticals bool
-		wantErr               error
-	}{
-		{
-			name: "Field that's in the reserved range, should fail by default",
-			in: &testdata.Customer2{
-				Id:       289,
-				Reserved: 99,
-			},
-			wantErr: &errUnknownField{
-				Type:     "*testdata.Customer1",
-				TagNum:   1047,
-				WireType: 0,
-			},
-		},
-		{
-			name:                  "Field that's in the reserved range, toggle allowUnknownCriticals",
-			allowUnknownCriticals: true,
-			in: &testdata.Customer2{
-				Id:       289,
-				Reserved: 99,
-			},
-			wantErr: nil,
-		},
-		{
-			name:                  "Unkown fields that are critical, but with allowUnknownCriticals set",
-			allowUnknownCriticals: true,
-			in: &testdata.Customer2{
-				Id:   289,
-				City: testdata.Customer2_PaloAlto,
-			},
-			wantErr: &errUnknownField{
-				Type:     "*testdata.Customer1",
-				TagNum:   6,
-				WireType: 0,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			blob, err := proto.Marshal(tt.in)
-			if err != nil {
-				t.Fatalf("Failed to marshal input: %v", err)
-			}
-
-			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownCriticals}
-			c1 := new(testdata.Customer1)
-			gotErr := ckr.CheckMismatchedFields(blob, c1)
-			if !reflect.DeepEqual(gotErr, tt.wantErr) {
-				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestCheckUnknownFieldsFlat(t *testing.T) {
+func TestRejectUnknownFieldsFlat(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      proto.Message
@@ -514,10 +597,105 @@ func TestCheckUnknownFieldsFlat(t *testing.T) {
 			}
 
 			c1 := new(testdata.Customer1)
-			gotErr := CheckMismatchedFields(blob, c1)
+			ckr := new(Checker)
+			gotErr := ckr.RejectUnknownFieldsFields(blob, c1)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
 		})
 	}
+}
+
+func TestMismatchedTypes_Nested(t *testing.T) {
+	tests := []struct {
+		name    string
+		in      proto.Message
+		recv    proto.Message
+		wantErr error
+	}{
+		{
+			name: "mismatched types.Any in G",
+			in: &testdata.TestVersion1{
+				G: &types.Any{
+					TypeUrl: "/testdata.TestVersion4LoneNesting",
+					Value: mustMarshal(&testdata.TestVersion3LoneNesting_Inner1{
+						Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
+							Id:   "ID",
+							City: "Gotham",
+						},
+					}),
+				},
+			},
+			recv: new(testdata.TestVersion1),
+			wantErr: &errMismatchedWireType{
+				Type:         "*testdata.TestVersion3",
+				TagNum:       1,
+				GotWireType:  2,
+				WantWireType: 0,
+			},
+		},
+		{
+			name: "From nested proto message, message index 0",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner1: &testdata.TestVersion3LoneNesting_Inner1{
+					Id:   10,
+					Name: "foo",
+					Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
+						Id:   "ID",
+						City: "Palo Alto",
+					},
+				},
+			},
+			recv: new(testdata.TestVersion4LoneNesting),
+			wantErr: &errMismatchedWireType{
+				Type:         "*testdata.TestVersion4LoneNesting_Inner1_InnerInner",
+				TagNum:       1,
+				GotWireType:  2,
+				WantWireType: 0,
+			},
+		},
+		{
+			name: "From nested proto message, message index 1",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner2: &testdata.TestVersion3LoneNesting_Inner2{
+					Id:      "ID",
+					Country: "Maldives",
+					Inner: &testdata.TestVersion3LoneNesting_Inner2_InnerInner{
+						Id:   "ID",
+						City: "Unknown",
+					},
+				},
+			},
+			recv: new(testdata.TestVersion4LoneNesting),
+			wantErr: &errMismatchedWireType{
+				Type:         "*testdata.TestVersion4LoneNesting_Inner2_InnerInner",
+				TagNum:       2,
+				GotWireType:  2,
+				WantWireType: 0,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			protoBlob, err := proto.Marshal(tt.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ckr := new(Checker)
+			gotErr := ckr.RejectUnknownFieldsFields(protoBlob, tt.recv)
+			if !reflect.DeepEqual(gotErr, tt.wantErr) {
+				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
+func mustMarshal(msg proto.Message) []byte {
+	blob, err := proto.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return blob
 }

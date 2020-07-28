@@ -2,29 +2,28 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
-	v036bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
 	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
 	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_36"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
+	v036supply "github.com/cosmos/cosmos-sdk/x/supply/legacy/v0_36"
 )
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
-func Migrate(appState types.AppMap) types.AppMap {
+func Migrate(appState genutil.AppMap) genutil.AppMap {
 	v034Codec := codec.New()
-	cryptocodec.RegisterCrypto(v034Codec)
+	codec.RegisterCrypto(v034Codec)
 	v034gov.RegisterCodec(v034Codec)
 
 	v036Codec := codec.New()
-	cryptocodec.RegisterCrypto(v036Codec)
+	codec.RegisterCrypto(v036Codec)
 	v036gov.RegisterCodec(v036Codec)
 
 	// migrate genesis accounts state
@@ -91,7 +90,7 @@ func Migrate(appState types.AppMap) types.AppMap {
 	}
 
 	// migrate supply state
-	appState[v036bank.ModuleName] = v036Codec.MustMarshalJSON(v036bank.EmptyGenesisState())
+	appState[v036supply.ModuleName] = v036Codec.MustMarshalJSON(v036supply.EmptyGenesisState())
 
 	return appState
 }

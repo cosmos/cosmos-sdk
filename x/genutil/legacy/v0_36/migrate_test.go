@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 var basic034Gov = []byte(`
@@ -86,7 +86,7 @@ var basic034Gov = []byte(`
 `)
 
 func TestDummyGenesis(t *testing.T) {
-	genesisDummy := types.AppMap{
+	genesisDummy := genutil.AppMap{
 		"foo": {},
 		"bar": []byte(`{"custom": "module"}`),
 	}
@@ -98,7 +98,7 @@ func TestDummyGenesis(t *testing.T) {
 }
 
 func TestGovGenesis(t *testing.T) {
-	genesis := types.AppMap{
+	genesis := genutil.AppMap{
 		"gov": basic034Gov,
 	}
 

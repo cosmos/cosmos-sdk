@@ -46,17 +46,18 @@ func ValidateGenesis(data GenesisState) error {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(params Params, balances []Balance, supply sdk.Coins) GenesisState {
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) GenesisState {
 	return GenesisState{
-		Params:   params,
-		Balances: balances,
-		Supply:   supply,
+		Params:        params,
+		Balances:      balances,
+		Supply:        supply,
+		DenomMetadata: denomMetaData,
 	}
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal())
+	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal(), []Metadata{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application

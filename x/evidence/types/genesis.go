@@ -3,26 +3,36 @@ package types
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // DONTCOVER
 
-// GenesisState defines the evidence module's genesis state.
-type GenesisState struct {
-	Evidence []exported.Evidence `json:"evidence" yaml:"evidence"`
-}
-
+// NewGenesisState creates a new genesis state for the evidence module.
 func NewGenesisState(e []exported.Evidence) GenesisState {
+	evidence := make([]*types.Any, len(e))
+	for i, evi := range e {
+		msg, ok := evi.(proto.Message)
+		if !ok {
+			panic(fmt.Errorf("cannot proto marshal %T", evi))
+		}
+		any, err := types.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+		evidence[i] = any
+	}
 	return GenesisState{
-		Evidence: e,
+		Evidence: evidence,
 	}
 }
 
 // DefaultGenesisState returns the evidence module's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Evidence: []exported.Evidence{},
+		Evidence: []*types.Any{},
 	}
 }
 
@@ -30,10 +40,16 @@ func DefaultGenesisState() GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	for i, e := range gs.Evidence {
-		if e == nil {
+		// var evi exported.Evidence
+		// UnpackAny(e, &evi)
+		evi, ok := e.GetCachedValue().(exported.Evidence)
+		if !ok {
+			return fmt.Errorf("expected evidence")
+		}
+		if evi == nil {
 			return fmt.Errorf("evidence %d cannot be nil", i)
 		}
-		if err := e.ValidateBasic(); err != nil {
+		if err := evi.ValidateBasic(); err != nil {
 			return err
 		}
 	}

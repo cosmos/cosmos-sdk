@@ -8,9 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -18,13 +18,13 @@ import (
 const evidence = "evidence"
 
 // GenEvidences returns an empty slice of evidences.
-func GenEvidences(_ *rand.Rand, _ []simtypes.Account) []exported.Evidence {
-	return []exported.Evidence{}
+func GenEvidences(_ *rand.Rand, _ []simtypes.Account) []*codectypes.Any {
+	return []*codectypes.Any{}
 }
 
 // RandomizedGenState generates a random GenesisState for evidence
 func RandomizedGenState(simState *module.SimulationState) {
-	var ev []exported.Evidence
+	var ev []*codectypes.Any
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, evidence, &ev, simState.Rand,

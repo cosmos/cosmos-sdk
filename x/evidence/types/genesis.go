@@ -31,18 +31,6 @@ func NewGenesisState(e []exported.Evidence) GenesisState {
 	}
 }
 
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	for _, any := range g.Evidence {
-		var evi exported.Evidence
-		err := unpacker.UnpackAny(any, &evi)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // DefaultGenesisState returns the evidence module's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
@@ -66,5 +54,17 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, any := range gs.Evidence {
+		var evi exported.Evidence
+		err := unpacker.UnpackAny(any, &evi)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

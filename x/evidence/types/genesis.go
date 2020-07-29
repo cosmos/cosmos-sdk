@@ -8,8 +8,6 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 )
 
-// DONTCOVER
-
 var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState creates a new genesis state for the evidence module.

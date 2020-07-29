@@ -40,7 +40,7 @@ message MsgConnectionOpenTry {
   // INIT`
   bytes proof_init = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_epoch  = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
-  uint64 proof_height = 7;
+  uint64 proof_height = 7 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of client consensus state
   bytes proof_consensus = 8 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
   uint64 consensus_epoch = 9 [(gogoproto.moretags) = "yaml:\"consensus_epoch\""];

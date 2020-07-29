@@ -122,7 +122,7 @@ func GetCmdQueryConsensusState() *cobra.Command {
 
 			epoch, err := cmd.Flags().GetInt(flagEpoch)
 			if err != nil {
-				return fmt.Errorf("expected integer epoch: %v", err)
+				return fmt.Errorf("expected integer epoch: %w", err)
 			}
 
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)

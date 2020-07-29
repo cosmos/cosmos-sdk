@@ -218,8 +218,8 @@ func ClientTypeFromString(clientType string) ClientType {
 	}
 }
 
-// Height is an interface for a monotonically increasing data type
-// that can be compared against for the purposes of updating and freezing clients
+// Height is a monotonically increasing data type
+// that can be compared against another Height for the purposes of updating and freezing clients
 // Compare implements a method to compare two heights. When comparing two heights a, b
 // we can call a.Compare(b) which will return
 // negative if a < b
@@ -234,6 +234,7 @@ type Height struct {
 	EpochHeight uint64 `json:"epoch_height" yaml:"epoch_height"`
 }
 
+// NewHeight creates a new client Height instance from the epoch values.
 func NewHeight(epochNumber, epochHeight uint64) Height {
 	return Height{
 		EpochNumber: epochNumber,
@@ -267,6 +268,7 @@ func (h Height) Valid() bool {
 	return h.EpochHeight != 0
 }
 
+// String implements the fmt.Stringer interface
 func (h Height) String() string {
 	return fmt.Sprintf("epoch-%d_height-%d", h.EpochNumber, h.EpochHeight)
 }

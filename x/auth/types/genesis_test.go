@@ -55,7 +55,9 @@ func TestGenesisAccountIterator(t *testing.T) {
 	genAccounts := types.GenesisAccounts{acc1, acc2}
 
 	authGenState := types.DefaultGenesisState()
-	authGenState.Accounts = genAccounts
+	accounts, err := types.ConvertAccounts(genAccounts)
+	require.NoError(t, err)
+	authGenState.Accounts = accounts
 
 	appGenesis := make(map[string]json.RawMessage)
 	authGenStateBz, err := appCodec.MarshalJSON(authGenState)

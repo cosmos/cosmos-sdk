@@ -10,6 +10,8 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 )
 
+var _ types.UnpackInterfacesMessage = GenesisState{}
+
 // NewGenesisState - Create a new genesis state
 func NewGenesisState(params Params, accounts GenesisAccounts) GenesisState {
 	genAccounts, err := ConvertAccounts(accounts)
@@ -20,6 +22,18 @@ func NewGenesisState(params Params, accounts GenesisAccounts) GenesisState {
 		Params:   params,
 		Accounts: genAccounts,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, any := range g.Accounts {
+		var account GenesisAccount
+		err := unpacker.UnpackAny(any, &account)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // DefaultGenesisState - Return a default genesis state

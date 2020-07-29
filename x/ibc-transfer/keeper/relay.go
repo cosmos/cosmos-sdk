@@ -49,24 +49,9 @@ func (k Keeper) SendTransfer(
 		)
 	}
 
-	return k.createOutgoingPacket(
-		ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel,
-		token, sender, receiver, source, timeoutHeight, timeoutTimestamp,
-	)
-}
+	// begin createOutgoingPacket logic
+	// See spec for this logic: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 
-// See spec for this function: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-func (k Keeper) createOutgoingPacket(
-	ctx sdk.Context,
-	seq uint64,
-	sourcePort, sourceChannel,
-	destinationPort, destinationChannel string,
-	token sdk.Coin,
-	sender sdk.AccAddress,
-	receiver string,
-	source bool,
-	timeoutHeight, timeoutTimestamp uint64,
-) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
@@ -123,7 +108,7 @@ func (k Keeper) createOutgoingPacket(
 
 	packet := channeltypes.NewPacket(
 		packetData.GetBytes(),
-		seq,
+		sequence,
 		sourcePort,
 		sourceChannel,
 		destinationPort,

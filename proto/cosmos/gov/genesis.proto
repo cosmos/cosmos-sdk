@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package cosmos.gov;
+
+import "gogoproto/gogo.proto";
+import "cosmos/gov/gov.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+
+// GenesisState - all staking state that must be provided at genesis
+message GenesisState{
+	uint64 starting_proposal_id  = 1 [
+	  (gogoproto.customname) = "StartingProposalID",
+	  (gogoproto.moretags) = "yaml:\"starting_proposal_id\""
+	];
+	repeated Deposit deposits    = 2 [
+	  (gogoproto.castrepeated) = "Deposits",
+	  (gogoproto.nullable) = false
+	];
+	repeated Vote votes          = 3 [
+	  (gogoproto.castrepeated) = "Votes",
+	  (gogoproto.nullable) = false
+	];
+	repeated Proposal proposals  = 4 [
+	  (gogoproto.castrepeated) = "Proposals",
+	  (gogoproto.nullable) = false
+	];
+	DepositParams deposit_params = 5 [
+	  (gogoproto.nullable) = false,
+	  (gogoproto.moretags) = "yaml:\"deposit_params\""
+	];
+	VotingParams voting_params   = 6 [
+	  (gogoproto.nullable) = false,
+	  (gogoproto.moretags) = "yaml:\"voting_params\""
+	];
+	TallyParams tally_params     = 7 [
+	  (gogoproto.nullable) = false,
+	  (gogoproto.moretags) = "yaml:\"tally_params\""
+	];
+}

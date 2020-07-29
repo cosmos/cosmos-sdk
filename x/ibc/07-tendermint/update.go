@@ -124,10 +124,11 @@ func update(clientState types.ClientState, header types.Header) (types.ClientSta
 		clientState.LatestHeight = uint64(header.Height)
 	}
 	consensusState := types.ConsensusState{
-		Height:       uint64(header.Height),
-		Timestamp:    header.Time,
-		Root:         commitmenttypes.NewMerkleRoot(header.AppHash),
-		ValidatorSet: header.ValidatorSet,
+		Height:             uint64(header.Height),
+		Timestamp:          header.Time,
+		Root:               commitmenttypes.NewMerkleRoot(header.AppHash),
+		NextValidatorsHash: header.NextValidatorsHash,
+		ValidatorSet:       header.ValidatorSet,
 	}
 
 	return clientState, consensusState

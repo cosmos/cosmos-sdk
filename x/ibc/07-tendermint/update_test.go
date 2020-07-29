@@ -184,10 +184,11 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		tc.setup()
 
 		expectedConsensus := ibctmtypes.ConsensusState{
-			Height:       uint64(newHeader.Height),
-			Timestamp:    newHeader.Time,
-			Root:         commitmenttypes.NewMerkleRoot(newHeader.AppHash),
-			ValidatorSet: newHeader.ValidatorSet,
+			Height:             uint64(newHeader.Height),
+			Timestamp:          newHeader.Time,
+			Root:               commitmenttypes.NewMerkleRoot(newHeader.AppHash),
+			NextValidatorsHash: newHeader.NextValidatorsHash,
+			ValidatorSet:       newHeader.ValidatorSet,
 		}
 
 		newClientState, consensusState, err := tendermint.CheckValidityAndUpdateState(clientState, consensusState, newHeader, currentTime)

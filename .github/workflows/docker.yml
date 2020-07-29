@@ -1,8 +1,7 @@
 name: Publish Docker Builds
 on:
-  pull_request:
-  # schedule:
-  #   - cron: "0 0 * * 1-5"
+  schedule:
+    - cron: "0 0 * * 1-5"
 
 jobs:
   build:
@@ -12,12 +11,10 @@ jobs:
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-      - name: Echo current date
-        run: echo ${{ steps.date.outputs.date }}
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v1.1.0
         with:
-          repository: marbar3778/simapp
+          repository: interchainio/simapp
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           tags: nightly-${{ steps.date.outputs.date }}

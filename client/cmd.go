@@ -80,22 +80,22 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // flags that do not necessarily change with context. These must be checked if
 // the caller explicitly changed the values.
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
-	if clientCtx.OutputFormat == "" {
+	if clientCtx.OutputFormat == "" || flagSet.Changed(cli.OutputFlag) {
 		output, _ := flagSet.GetString(cli.OutputFlag)
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
-	if clientCtx.HomeDir == "" {
+	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)
 	}
 
-	if clientCtx.ChainID == "" {
+	if clientCtx.ChainID == "" || flagSet.Changed(flags.FlagChainID) {
 		chainID, _ := flagSet.GetString(flags.FlagChainID)
 		clientCtx = clientCtx.WithChainID(chainID)
 	}
 
-	if clientCtx.Keyring == nil {
+	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
 		if keyringBackend != "" {
@@ -108,7 +108,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		}
 	}
 
-	if clientCtx.Client == nil {
+	if clientCtx.Client == nil || flagSet.Changed(flags.FlagNode) {
 		rpcURI, _ := flagSet.GetString(flags.FlagNode)
 		if rpcURI != "" {
 			clientCtx = clientCtx.WithNodeURI(rpcURI)
@@ -126,12 +126,12 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 // be considered "persistent" (e.g. KeyBase or Client) and these should be checked
 // if the caller explicitly set those.
 func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
-	if clientCtx.Height == 0 {
+	if clientCtx.Height == 0 || flagSet.Changed(flags.FlagHeight) {
 		height, _ := flagSet.GetInt64(flags.FlagHeight)
 		clientCtx = clientCtx.WithHeight(height)
 	}
 
-	if !clientCtx.UseLedger {
+	if !clientCtx.UseLedger || flagSet.Changed(flags.FlagUseLedger) {
 		useLedger, _ := flagSet.GetBool(flags.FlagUseLedger)
 		clientCtx = clientCtx.WithUseLedger(useLedger)
 	}
@@ -152,38 +152,37 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		return clientCtx, err
 	}
 
-	if !clientCtx.GenerateOnly {
+	if !clientCtx.GenerateOnly || flagSet.Changed(flags.FlagGenerateOnly) {
 		genOnly, _ := flagSet.GetBool(flags.FlagGenerateOnly)
 		clientCtx = clientCtx.WithGenerateOnly(genOnly)
-
 	}
 
-	if !clientCtx.Simulate {
+	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
 		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
 		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
-	if !clientCtx.Offline {
+	if !clientCtx.Offline || flagSet.Changed(flags.FlagOffline) {
 		offline, _ := flagSet.GetBool(flags.FlagOffline)
 		clientCtx = clientCtx.WithOffline(offline)
 	}
 
-	if !clientCtx.UseLedger {
+	if !clientCtx.UseLedger || flagSet.Changed(flags.FlagUseLedger) {
 		useLedger, _ := flagSet.GetBool(flags.FlagUseLedger)
 		clientCtx = clientCtx.WithUseLedger(useLedger)
 	}
 
-	if clientCtx.BroadcastMode == "" {
+	if clientCtx.BroadcastMode == "" || flagSet.Changed(flags.FlagBroadcastMode) {
 		bMode, _ := flagSet.GetString(flags.FlagBroadcastMode)
 		clientCtx = clientCtx.WithBroadcastMode(bMode)
 	}
 
-	if !clientCtx.SkipConfirm {
+	if !clientCtx.SkipConfirm || flagSet.Changed(flags.FlagSkipConfirmation) {
 		skipConfirm, _ := flagSet.GetBool(flags.FlagSkipConfirmation)
 		clientCtx = clientCtx.WithSkipConfirmation(skipConfirm)
 	}
 
-	if clientCtx.From == "" {
+	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
 		fromAddr, fromName, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
 		if err != nil {

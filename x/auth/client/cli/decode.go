@@ -43,8 +43,7 @@ func GetDecodeCommand() *cobra.Command {
 				return err
 			}
 
-			err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
-			return err
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 		},
 	}
 

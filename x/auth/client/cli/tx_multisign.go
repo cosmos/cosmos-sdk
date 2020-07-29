@@ -71,7 +71,13 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			return
 		}
 
-		txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(parsedTx)
+		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		if txFactory.SignMode() == signingtypes.SignMode_SIGN_MODE_UNSPECIFIED {
+			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		}
+
+		txCfg := clientCtx.TxConfig
+		txBuilder, err := txCfg.WrapTxBuilder(parsedTx)
 		if err != nil {
 			return err
 		}
@@ -94,8 +100,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
-
 		if !clientCtx.Offline {
 			accnum, seq, err := types.NewAccountRetriever(clientCtx.JSONMarshaler).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
@@ -119,7 +123,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			for _, sig := range sigs {
-				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, clientCtx.TxConfig.SignModeHandler(), txBuilder.GetTx())
+				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
 					return fmt.Errorf("couldn't verify signature")
 				}
@@ -142,7 +146,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-		json, err := marshalSignatureJSON(clientCtx.TxConfig, txBuilder, sigOnly)
+		json, err := marshalSignatureJSON(txCfg, txBuilder, sigOnly)
 		if err != nil {
 			return err
 		}
@@ -159,8 +163,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		defer fp.Close()
 
-		err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
-		return err
+		return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 	}
 }
 

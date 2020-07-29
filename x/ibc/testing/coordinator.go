@@ -245,12 +245,12 @@ func (coord *Coordinator) AcknowledgementExecuted(
 	)
 }
 
-// RelayPacket receives a channel packet on counterparty, queries the ack
-// and acknowledges the packet on source. The clients are updated as needed.
-func (coord *Coordinator) RelayPacket(
+// RecvPacket receives a channel packet on the counterparty chain and updates
+// the client on the source chain representing the counterparty.
+func (coord *Coordinator) RecvPacket(
 	source, counterparty *TestChain,
-	sourceClient, counterpartyClient string,
-	packet channeltypes.Packet, ack []byte,
+	sourceClient string,
+	packet channeltypes.Packet,
 ) error {
 	// get proof of packet commitment on source
 	packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
@@ -263,15 +263,43 @@ func (coord *Coordinator) RelayPacket(
 		return err
 	}
 
-	// get proof of acknowledgement on counterparty
-	packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-	proof, proofHeight = counterparty.QueryProof(packetKey)
+	return nil
+}
 
-	// TODO: add a query for the acknowledgement by events
-	// - https://github.com/cosmos/cosmos-sdk/issues/6509
+// AcknowledgePacket acknowledges on the source chain the packet received on
+// the counterparty chain and updates the client on the counterparty representing
+// the source chain.
+// TODO: add a query for the acknowledgement by events
+// - https://github.com/cosmos/cosmos-sdk/issues/6509
+func (coord *Coordinator) AcknowledgePacket(
+	source, counterparty *TestChain,
+	counterpartyClient string,
+	packet channeltypes.Packet, ack []byte,
+) error {
+	// get proof of acknowledgement on counterparty
+	packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	proof, proofHeight := counterparty.QueryProof(packetKey)
 
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
 	if err := coord.SendMsgs(source, counterparty, counterpartyClient, ackMsg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RelayPacket receives a channel packet on counterparty, queries the ack
+// and acknowledges the packet on source. The clients are updated as needed.
+func (coord *Coordinator) RelayPacket(
+	source, counterparty *TestChain,
+	sourceClient, counterpartyClient string,
+	packet channeltypes.Packet, ack []byte,
+) error {
+	if err := coord.RecvPacket(source, counterparty, sourceClient, packet); err != nil {
+		return err
+	}
+
+	if err := coord.AcknowledgePacket(source, counterparty, counterpartyClient, packet, ack); err != nil {
 		return err
 	}
 

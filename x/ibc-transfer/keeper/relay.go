@@ -131,6 +131,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 
 	if data.Source {
+		// ensure that the coin has the correct prefix
+		prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+		if !strings.HasPrefix(token.Denom, prefix) {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidDenomForTransfer,
+				"%s doesn't contain the prefix '%s'", token.Denom, prefix,
+			)
+		}
 
 		// mint new tokens if the source of the transfer is the same chain
 		if err := k.bankKeeper.MintCoins(

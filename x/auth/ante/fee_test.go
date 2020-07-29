@@ -1,10 +1,6 @@
 package ante_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -27,12 +23,13 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetMsgs(msg)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
@@ -43,7 +40,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
 	// antehandler errors with insufficient fees
-	_, err := antehandler(suite.ctx, tx, false)
+	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
 
 	// Set IsCheckTx to false
@@ -75,12 +72,13 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetMsgs(msg)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	// Set account with insufficient funds
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
@@ -90,7 +88,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
-	_, err := antehandler(suite.ctx, tx, false)
+	_, err = antehandler(suite.ctx, tx, false)
 
 	suite.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
 
@@ -101,8 +99,4 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	_, err = antehandler(suite.ctx, tx, false)
 
 	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
-}
-
-func TestAnteFeeTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

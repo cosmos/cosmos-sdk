@@ -73,8 +73,8 @@ func (k Keeper) createOutgoingPacket(
 	}
 	// NOTE: When the sender chain is acting as the source zone, the coins will
 	// be constructed with the destination port and channel ID prefixed when
-	// represented in the fungible token packet data. When being escrowed these
-	// coins will not have the prefix.
+	// represented in the fungible token packet data. However the coins
+	// will be escrowed on the source chain without the prefix
 
 	if source {
 		// create the escrow address for the tokens

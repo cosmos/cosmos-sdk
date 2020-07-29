@@ -27,7 +27,7 @@ This message is expected to fail if:
 - `SourceChannel` is invalid (see 24-host naming requirements)
 - `Amount` is invalid (denom is invalid or amount is negative)
 - `Amount` is not positive
-` `Sender` is empty
+- `Sender` is empty
 - `Receiver` is empty
 - `TimeoutHeight` and `TimeoutTimestamp` are both zero
 
@@ -45,5 +45,4 @@ chain will be added in protocol. The fungible token packet created in protocol
 will contain this prefixed denomination **only if** source is set to true. The
 token is adding to the trace (ie being sent to a different chain then it came 
 from).
-
 

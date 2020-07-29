@@ -57,7 +57,7 @@ func (k Keeper) ConnOpenTry(
 ) error {
 	// ConsensusHeight must be less than current height
 	// NOTE: Only epoch=0 supported for now
-	if consensusHeight.Compare(clientexported.NewHeight(0, uint64(ctx.BlockHeight()))) >= 0 {
+	if !consensusHeight.LT(clientexported.NewHeight(0, uint64(ctx.BlockHeight()))) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"consensus height is greater than or equal to the current block height (%v >= %v)", consensusHeight, ctx.BlockHeight(),
@@ -139,7 +139,7 @@ func (k Keeper) ConnOpenAck(
 ) error {
 	// ConsensusHeight must be less than current height
 	// NOTE: Only epoch=0 supported for now
-	if consensusHeight.Compare(clientexported.NewHeight(0, uint64(ctx.BlockHeight()))) >= 0 {
+	if !consensusHeight.LT(clientexported.NewHeight(0, uint64(ctx.BlockHeight()))) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"consensus height is greater than or equal to the current block height (%v >= %v)", consensusHeight, ctx.BlockHeight(),

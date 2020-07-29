@@ -416,17 +416,17 @@ func sanitizeVerificationArgs(
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) (merkleProof commitmenttypes.MerkleProof, err error) {
-	if cmp := cs.GetLatestHeight().Compare(height); cmp < 0 {
+	if cs.GetLatestHeight().LT(height) {
 		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"client state (%s) height < proof height (%s < %s)", cs.ID, cs.GetLatestHeight().String(), height.String(),
 		)
 	}
 
-	if cmp := cs.FrozenHeight.Compare(height); cs.IsFrozen() && cmp >= 0 {
+	if cs.IsFrozen() && !height.LT(cs.FrozenHeight) {
 		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"frozen client %s frozen height <= proof height (%s <= %s)", cs.ID, cs.FrozenHeight.String(), height.String(),
+			"frozen client %s frozen height <= proof height (%s <= %s)", cs.ID, cs.FrozenHeight, height,
 		)
 	}
 

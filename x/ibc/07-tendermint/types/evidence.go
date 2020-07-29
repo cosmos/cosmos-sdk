@@ -109,7 +109,7 @@ func (ev Evidence) ValidateBasic() error {
 		)
 	}
 	// Ensure that Heights are the same
-	if cmp := ev.Header1.Height.Compare(ev.Header2.Height); cmp != 0 {
+	if !ev.Header1.Height.EQ(ev.Header2.Height) {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%v ≠ %v)", ev.Header1.Height, ev.Header2.Height)
 	}
 	// Ensure that Commit Hashes are different

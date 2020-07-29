@@ -246,10 +246,33 @@ func NewHeight(epochNumber, epochHeight uint64) Height {
 // It first compares based on epoch numbers, whichever has the higher epoch number is the higher height
 // If epoch number is the same, then the epoch height is compared
 func (h Height) Compare(other Height) int64 {
+	var cmp int64
 	if h.EpochNumber != other.EpochNumber {
-		return int64(h.EpochNumber) - int64(other.EpochNumber)
+		cmp = int64(h.EpochNumber) - int64(other.EpochNumber)
+	} else {
+		cmp = int64(h.EpochHeight) - int64(other.EpochHeight)
 	}
-	return int64(h.EpochHeight) - int64(other.EpochHeight)
+	if cmp < 0 {
+		return -1
+	} else if cmp > 0 {
+		return 1
+	}
+	return 0
+}
+
+// LT Helper comparison function returns true if h < other
+func (h Height) LT(other Height) bool {
+	return h.Compare(other) == -1
+}
+
+// GT Helper comparison function returns true if h > other
+func (h Height) GT(other Height) bool {
+	return h.Compare(other) == 1
+}
+
+// EQ Helper comparison function returns true if h == other
+func (h Height) EQ(other Height) bool {
+	return h.Compare(other) == 0
 }
 
 // Decrement implements clientexported.Height

@@ -74,7 +74,7 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	timeoutHeight := clientexported.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutHeight())
-	if (packet.GetTimeoutHeight() == 0 || proofHeight.Compare(timeoutHeight) == -1) &&
+	if (packet.GetTimeoutHeight() == 0 || proofHeight.LT(timeoutHeight)) &&
 		(packet.GetTimeoutTimestamp() == 0 || proofTimestamp < packet.GetTimeoutTimestamp()) {
 		return sdkerrors.Wrap(types.ErrPacketTimeout, "packet timeout has not been reached for height or timestamp")
 	}

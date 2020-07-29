@@ -27,7 +27,7 @@ func (suite *TendermintTestSuite) TestEvidence() {
 	suite.Require().Equal(ev.Route(), "client")
 	suite.Require().Equal(ev.Type(), "client_misbehaviour")
 	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(ibctmtypes.SubModuleCdc.MustMarshalBinaryBare(ev))))
-	suite.Require().True(ev.GetIBCHeight().Compare(height) == 0, "evidence_height")
+	suite.Require().True(ev.GetIBCHeight().EQ(height), "evidence_height")
 }
 
 func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {

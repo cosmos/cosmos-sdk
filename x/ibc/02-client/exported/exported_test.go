@@ -67,13 +67,13 @@ func TestCompareHeights(t *testing.T) {
 
 		switch tc.compareSign {
 		case -1:
-			require.True(t, compare < 0, "case %d: %s should return negative value on comparison, got: %d",
+			require.True(t, compare == -1, "case %d: %s should return negative value on comparison, got: %d",
 				i, tc.name, compare)
 		case 0:
 			require.True(t, compare == 0, "case %d: %s should return zero on comparison, got: %d",
 				i, tc.name, compare)
 		case 1:
-			require.True(t, compare > 0, "case %d: %s should return positive value on comparison, got: %d",
+			require.True(t, compare == 1, "case %d: %s should return positive value on comparison, got: %d",
 				i, tc.name, compare)
 		}
 	}

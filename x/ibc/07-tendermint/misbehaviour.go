@@ -39,7 +39,7 @@ func CheckMisbehaviourAndUpdateState(
 	tmHeight := tmEvidence.GetIBCHeight()
 
 	// If client is already frozen at earlier height than evidence, return with error
-	if cmp := tmClientState.FrozenHeight.Compare(tmEvidence.GetIBCHeight()); tmClientState.IsFrozen() && cmp <= 0 {
+	if tmClientState.IsFrozen() && !tmEvidence.GetIBCHeight().LT(tmClientState.FrozenHeight) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
 			"client is already frozen at earlier height %d than misbehaviour height %d", tmClientState.FrozenHeight, misbehaviour.GetHeight())
 	}
@@ -89,7 +89,7 @@ func checkMisbehaviour(
 	}
 
 	// check if height less than or equal to the headers' height
-	if cmp := height.Compare(evidence.GetIBCHeight()); cmp > 0 {
+	if height.GT(evidence.GetIBCHeight()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"height > evidence header height (%v > %v)", height, evidence.GetHeight(),

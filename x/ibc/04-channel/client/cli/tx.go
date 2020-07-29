@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -20,21 +22,25 @@ const (
 )
 
 // NewChannelOpenInitCmd returns the command to create a MsgChannelOpenInit transaction
-func NewChannelOpenInitCmd(clientCtx client.Context) *cobra.Command {
+func NewChannelOpenInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-init [port-id] [channel-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops]",
 		Short: "Creates and sends a ChannelOpenInit message",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			portID := args[0]
 			channelID := args[1]
 			counterpartyPortID := args[2]
 			counterpartyChannelID := args[3]
 			hops := strings.Split(args[4], "/")
-			order := channelOrder()
-			version := viper.GetString(FlagIBCVersion)
+			order := channelOrder(cmd.Flags())
+			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
 			msg := types.NewMsgChannelOpenInit(
 				portID, channelID, version, order, hops,
@@ -44,32 +50,39 @@ func NewChannelOpenInitCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
-	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewChannelOpenTryCmd returns the command to create a MsgChannelOpenTry transaction
-func NewChannelOpenTryCmd(clientCtx client.Context) *cobra.Command {
+func NewChannelOpenTryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-try [port-id] [channel-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops] [/path/to/proof_init.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenTry message",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			portID := args[0]
 			channelID := args[1]
 			counterpartyPortID := args[2]
 			counterpartyChannelID := args[3]
 			hops := strings.Split(args[4], "/")
-			order := channelOrder()
-			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
+			order := channelOrder(cmd.Flags())
+
+			// TODO: Differentiate between channel and counterparty versions.
+			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
 			proofInit, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
@@ -90,27 +103,35 @@ func NewChannelOpenTryCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
-	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewChannelOpenAckCmd returns the command to create a MsgChannelOpenAck transaction
-func NewChannelOpenAckCmd(clientCtx client.Context) *cobra.Command {
+func NewChannelOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-ack [port-id] [channel-id] [/path/to/proof_try.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenAck message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			portID := args[0]
 			channelID := args[1]
-			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
+
+			// TODO: Differentiate between channel and counterparty versions.
+			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
 			proofTry, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
 			if err != nil {
@@ -129,21 +150,27 @@ func NewChannelOpenAckCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
+	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // NewChannelOpenConfirmCmd returns the command to create a MsgChannelOpenConfirm transaction
-func NewChannelOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+func NewChannelOpenConfirmCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof_ack.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenConfirm message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			portID := args[0]
 			channelID := args[1]
@@ -165,19 +192,27 @@ func NewChannelOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewChannelCloseInitCmd returns the command to create a MsgChannelCloseInit transaction
-func NewChannelCloseInitCmd(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+func NewChannelCloseInitCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "close-init [port-id] [channel-id]",
 		Short: "Creates and sends a ChannelCloseInit message",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			portID := args[0]
 			channelID := args[1]
@@ -187,19 +222,27 @@ func NewChannelCloseInitCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewChannelCloseConfirmCmd returns the command to create a MsgChannelCloseConfirm transaction
-func NewChannelCloseConfirmCmd(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
+func NewChannelCloseConfirmCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof_init.json] [proof-height]",
 		Short: "Creates and sends a ChannelCloseConfirm message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			portID := args[0]
 			channelID := args[1]
@@ -221,14 +264,19 @@ func NewChannelCloseConfirmCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
-func channelOrder() types.Order {
-	if viper.GetBool(FlagOrdered) {
+func channelOrder(fs *pflag.FlagSet) types.Order {
+	if ordered, _ := fs.GetBool(FlagOrdered); ordered {
 		return types.ORDERED
 	}
+
 	return types.UNORDERED
 }

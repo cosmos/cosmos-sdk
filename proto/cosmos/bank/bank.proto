@@ -7,6 +7,25 @@ import "cosmos/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
+// Params defines the set of bank parameters.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  repeated SendEnabled send_enabled = 1[
+    (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\""
+  ];
+  bool default_send_enabled = 2[
+    (gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\""
+  ];
+}
+
+// Send enabled configuration properties for each denomination
+message SendEnabled {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+  string denom = 1;
+  bool enabled = 2;
+}
+
 // MsgSend - high level transaction of the coin module
 message MsgSend {
   option (gogoproto.equal) = true;
@@ -59,4 +78,21 @@ message Supply {
 
   repeated cosmos.Coin total = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// DenomUnits represents a struct that describes different 
+// denominations units of the basic token
+message DenomUnits {
+  string denom    = 1;
+  uint32 exponent = 2;  
+  repeated string aliases = 3;
+}
+
+// Metadata represents a struct that describes 
+// a basic token
+message Metadata {
+  string description = 1;
+  repeated DenomUnits denom_units = 2;
+  string base = 3;
+  string display = 4;
 }

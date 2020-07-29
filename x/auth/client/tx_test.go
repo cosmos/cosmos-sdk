@@ -3,10 +3,11 @@ package client
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 
@@ -126,9 +127,9 @@ func TestReadStdTxFromFile(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
+	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxGenerator(txGen)
+	clientCtx = clientCtx.WithTxConfig(txGen)
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
@@ -137,8 +138,8 @@ func TestReadStdTxFromFile(t *testing.T) {
 	// Write it to the file
 	encodedTx, err := txGen.TxJSONEncoder()(stdTx)
 	require.NoError(t, err)
-	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
-	defer os.Remove(jsonTxFile.Name())
+	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
+	t.Cleanup(cleanup)
 
 	// Read it back
 	decodedTx, err := ReadTxFromFile(clientCtx, jsonTxFile.Name())
@@ -195,7 +196,7 @@ malformed
 }
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
@@ -217,10 +218,10 @@ func TestPrepareTxBuilder(t *testing.T) {
 	var accNum uint64 = 10
 	var accSeq uint64 = 17
 
-	txGen := encodingConfig.TxGenerator
+	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.
-		WithTxGenerator(txGen).
+		WithTxConfig(txGen).
 		WithJSONMarshaler(encodingConfig.Marshaler).
 		WithAccountRetriever(client.TestAccountRetriever{Accounts: map[string]struct {
 			Address sdk.AccAddress
@@ -247,21 +248,11 @@ func TestPrepareTxBuilder(t *testing.T) {
 	require.Equal(t, accSeq, bldr.Sequence())
 }
 
-func writeToNewTempFile(t *testing.T, data string) *os.File {
-	fp, err := ioutil.TempFile(os.TempDir(), "client_tx_test")
-	require.NoError(t, err)
-
-	_, err = fp.WriteString(data)
-	require.NoError(t, err)
-
-	return fp
-}
-
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	authtypes.RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }

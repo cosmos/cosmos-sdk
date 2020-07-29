@@ -20,7 +20,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&MsgChannelOpenConfirm{}, "ibc/channel/MsgChannelOpenConfirm", nil)
 	cdc.RegisterConcrete(&MsgChannelCloseInit{}, "ibc/channel/MsgChannelCloseInit", nil)
 	cdc.RegisterConcrete(&MsgChannelCloseConfirm{}, "ibc/channel/MsgChannelCloseConfirm", nil)
-	cdc.RegisterConcrete(&MsgPacket{}, "ibc/channel/MsgPacket", nil)
+	cdc.RegisterConcrete(&MsgRecvPacket{}, "ibc/channel/MsgRecvPacket", nil)
 	cdc.RegisterConcrete(&MsgAcknowledgement{}, "ibc/channel/MsgAcknowledgement", nil)
 	cdc.RegisterConcrete(&MsgTimeout{}, "ibc/channel/MsgTimeout", nil)
 }
@@ -36,7 +36,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgChannelOpenConfirm{},
 		&MsgChannelCloseInit{},
 		&MsgChannelCloseConfirm{},
-		&MsgPacket{},
+		&MsgRecvPacket{},
 		&MsgAcknowledgement{},
 		&MsgTimeout{},
 	)

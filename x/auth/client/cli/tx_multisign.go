@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -16,13 +15,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetSignCommand returns the sign command
-func GetMultiSignCommand(clientCtx client.Context) *cobra.Command {
+func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multisign [file] [name] [[signature]...]",
 		Short: "Generate multisig signatures for transactions generated offline",
@@ -42,23 +42,24 @@ The --offline flag makes sure that the client will not reach out to an external 
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
-		RunE: makeMultiSignCmd(clientCtx),
+		RunE: makeMultiSignCmd(),
 		Args: cobra.MinimumNArgs(3),
 	}
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 
-	// Add the flags here and return the command
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
-func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []string) error {
+func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		clientCtx = clientCtx.Init()
+		clientCtx := client.GetClientContextFromCmd(cmd)
 		cdc := clientCtx.Codec
 		tx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		stdTx := tx.(types.StdTx)
@@ -66,9 +67,10 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			return
 		}
 
+		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		kb, err := keyring.New(sdk.KeyringServiceName(),
-			viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), inBuf)
+		kb, err := keyring.New(sdk.KeyringServiceName(), backend, clientCtx.HomeDir, inBuf)
 		if err != nil {
 			return
 		}
@@ -83,10 +85,13 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		txBldr, err := types.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
+		if err != nil {
+			return errors.Wrap(err, "error creating tx builder from flags")
+		}
 
 		if !clientCtx.Offline {
-			accnum, seq, err := types.NewAccountRetriever(authclient.Codec).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := types.NewAccountRetriever(clientCtx.JSONMarshaler).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}
@@ -130,7 +135,7 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 
 		var json []byte
 
-		sigOnly := viper.GetBool(flagSigOnly)
+		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		if sigOnly {
 			json, err = cdc.MarshalJSON(newTx.Signatures[0])
 		} else {
@@ -141,21 +146,19 @@ func makeMultiSignCmd(clientCtx client.Context) func(cmd *cobra.Command, args []
 			return err
 		}
 
-		if viper.GetString(flags.FlagOutputDocument) == "" {
-			fmt.Printf("%s\n", json)
+		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+		if outputDoc == "" {
+			cmd.Printf("%s\n", json)
 			return
 		}
 
-		fp, err := os.OpenFile(
-			viper.GetString(flags.FlagOutputDocument), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
-		)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err
 		}
 		defer fp.Close()
 
 		fmt.Fprintf(fp, "%s\n", json)
-
 		return
 	}
 }

@@ -7,9 +7,26 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// ClientContextKey defines the context key used to retrieve a client.Context from
+// a command's Context.
+const ClientContextKey = sdk.ContextKey("client.context")
+
+// SetCmdClientContextHandler is to be used in a command pre-hook execution to
+// read flags that populate a Context and sets that to the command's Context.
+func SetCmdClientContextHandler(clientCtx Context, cmd *cobra.Command) (err error) {
+	clientCtx, err = ReadPersistentCommandFlags(clientCtx, cmd.Flags())
+	if err != nil {
+		return err
+	}
+
+	return SetCmdClientContext(cmd, clientCtx)
+}
 
 // ValidateCmd returns unknown command error or Help display if help flag set
 func ValidateCmd(cmd *cobra.Command, args []string) error {
@@ -63,6 +80,11 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // flags that do not necessarily change with context. These must be checked if
 // the caller explicitly changed the values.
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+	if flagSet.Changed(cli.OutputFlag) {
+		output, _ := flagSet.GetString(cli.OutputFlag)
+		clientCtx = clientCtx.WithOutputFormat(output)
+	}
+
 	if flagSet.Changed(flags.FlagHome) {
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)
@@ -73,25 +95,24 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithChainID(chainID)
 	}
 
-	if flagSet.Changed(flags.FlagTrustNode) {
-		trustNode, _ := flagSet.GetBool(flags.FlagTrustNode)
-		clientCtx = clientCtx.WithTrustNode(trustNode)
-	}
-
-	if flagSet.Changed(flags.FlagKeyringBackend) {
+	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
-		kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
-		if err != nil {
-			return clientCtx, err
-		}
+		if keyringBackend != "" {
+			kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+			if err != nil {
+				return clientCtx, err
+			}
 
-		clientCtx = clientCtx.WithKeyring(kr)
+			clientCtx = clientCtx.WithKeyring(kr)
+		}
 	}
 
-	if flagSet.Changed(flags.FlagNode) {
+	if clientCtx.Client == nil || flagSet.Changed(flags.FlagNode) {
 		rpcURI, _ := flagSet.GetString(flags.FlagNode)
-		clientCtx = clientCtx.WithNodeURI(rpcURI)
+		if rpcURI != "" {
+			clientCtx = clientCtx.WithNodeURI(rpcURI)
+		}
 	}
 
 	return clientCtx, nil
@@ -154,4 +175,28 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 
 	return clientCtx, nil
+}
+
+// GetClientContextFromCmd returns a Context from a command or an empty Context
+// if it has not been set.
+func GetClientContextFromCmd(cmd *cobra.Command) Context {
+	if v := cmd.Context().Value(ClientContextKey); v != nil {
+		clientCtxPtr := v.(*Context)
+		return *clientCtxPtr
+	}
+
+	return Context{}
+}
+
+// SetCmdClientContext sets a command's Context value to the provided argument.
+func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
+	v := cmd.Context().Value(ClientContextKey)
+	if v == nil {
+		return errors.New("client context not set")
+	}
+
+	clientCtxPtr := v.(*Context)
+	*clientCtxPtr = clientCtx
+
+	return nil
 }

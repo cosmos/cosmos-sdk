@@ -413,7 +413,7 @@ func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signin
 	sigDatas := make([]signing.SignatureData, len(sigs))
 	pubKeys := multiPK.GetPubKeys()
 	bitArray := multiSig.BitArray
-	n := multiSig.BitArray.Size()
+	n := multiSig.BitArray.Count()
 	signatures := multisig.NewMultisig(n)
 	sigIdx := 0
 	for i := 0; i < n; i++ {

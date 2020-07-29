@@ -20,7 +20,6 @@ func TestFilteredPaginations(t *testing.T) {
 	app, ctx, appCodec := setupTest()
 
 	var balances sdk.Coins
-
 	for i := 0; i < numBalances; i++ {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
@@ -40,56 +39,52 @@ func TestFilteredPaginations(t *testing.T) {
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
 	balances, res, err := execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 4, len(balances))
 
-	// verify empty request
+	t.Log("verify empty request")
 	balances, res, err = execFilterPaginate(store, nil, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 4, len(balances))
 	require.Equal(t, uint64(4), res.Total)
+	require.Nil(t, res.NextKey)
 
-	// verify next key is returned
+	t.Log("verify nextKey is returned if there are more results")
 	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 2, len(balances))
 	require.NotNil(t, res.NextKey)
+	require.Equal(t, string(res.NextKey), fmt.Sprintf("test2denom"))
 	require.Equal(t, uint64(4), res.Total)
 
-	// use next key for query
+	t.Log("verify both key and offset can't be given")
+	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, Offset: 2, CountTotal: true}
+	_, _, err = execFilterPaginate(store, pageReq, appCodec)
+	require.Error(t, err)
+
+	t.Log("use nextKey for query")
 	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 2, len(balances))
-	require.NotNil(t, res.NextKey)
+	require.Nil(t, res.NextKey)
 
-	// verify both key and offset can't be given
-	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, Offset: 2, CountTotal: true}
-	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-	require.Error(t, err)
-
-	// verify default limit
+	t.Log("verify default limit")
 	pageReq = &query.PageRequest{Key: nil, Limit: 0}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, 4, len(balances))
 	require.Equal(t, uint64(4), res.Total)
 
-	// verify offset
+	t.Log("verify with offset")
 	pageReq = &query.PageRequest{Offset: 2, Limit: 2}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.LessOrEqual(t, len(balances), 2)
@@ -99,7 +94,6 @@ func ExampleFilteredPaginate() {
 	app, ctx, appCodec := setupTest()
 
 	var balances sdk.Coins
-
 	for i := 0; i < numBalances; i++ {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
@@ -123,7 +117,7 @@ func ExampleFilteredPaginate() {
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 
 	var balResult sdk.Coins
-	res, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
 		err := appCodec.UnmarshalBinaryBare(value, &bal)
 		if err != nil {
@@ -145,9 +139,9 @@ func ExampleFilteredPaginate() {
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
-	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
+	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Pagination: pageRes})
 	// Output:
-	// balances:<denom:"test0denom" amount:"250" > res:<next_key:"test0denom" total:5 >
+	// balances:<denom:"test0denom" amount:"250" > pagination:<next_key:"test1denom" total:5 >
 }
 
 func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Marshaler) (balances sdk.Coins, res *query.PageResponse, err error) {

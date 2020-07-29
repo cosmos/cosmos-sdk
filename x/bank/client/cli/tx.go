@@ -11,7 +11,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Bank transaction subcommands",
@@ -20,19 +20,21 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(NewSendTxCmd(clientCtx))
+	txCmd.AddCommand(NewSendTxCmd())
 
 	return txCmd
 }
 
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
-func NewSendTxCmd(clientCtx client.Context) *cobra.Command {
+func NewSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",
 		Short: "Create and/or sign and broadcast a MsgSend transaction",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Flags().Set(flags.FlagFrom, args[0])
+
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -57,5 +59,7 @@ func NewSendTxCmd(clientCtx client.Context) *cobra.Command {
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

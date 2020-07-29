@@ -45,7 +45,7 @@ func getDonePlanHandler(clientCtx client.Context) func(http.ResponseWriter, *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		params := types.NewQueryAppliedParams(name)
+		params := types.QueryAppliedPlanRequest{Name: name}
 		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return

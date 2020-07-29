@@ -27,6 +27,9 @@ module.exports = {
       key: "ac317234e6a42074175369b2f42e9754",
       index: "cosmos-sdk"
     },
+    topbar: {
+      banner: true
+    },
     sidebar: { 
       auto: true,
       nav: [

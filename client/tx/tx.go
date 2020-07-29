@@ -309,7 +309,7 @@ func getSignBytes(
 	signMode signing.SignMode, signerData authsigning.SignerData,
 	txBuilder client.TxBuilder, pubKey crypto.PubKey, txConfig client.TxConfig,
 ) ([]byte, error) {
-	// Set signer info, we assume here that's is a single signature.
+	// Set signer info, we only support single signature in this function.
 	err := txBuilder.SetSignerInfo(pubKey, &txtypes.ModeInfo{
 		Sum: &txtypes.ModeInfo_Single_{
 			Single: &txtypes.ModeInfo_Single{Mode: signMode},

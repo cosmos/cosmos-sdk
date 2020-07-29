@@ -829,7 +829,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			sdkerrors.ErrInvalidPubKey,
 		},
 		{
-			"make sure public key is not set, when tx has no signature",
+			"make sure public key is not set, when tx has no pubkey or signature",
 			func() {
 				// Make sure public key has not been set from previous test.
 				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
@@ -838,6 +838,8 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
 				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
 				suite.txBuilder.SetMsgs(msgs...)
+				suite.txBuilder.SetFeeAmount(feeAmount)
+				suite.txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
 				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
@@ -847,7 +849,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 				suite.Require().NoError(txBuilder.SetSignatures())
 
 				// Run anteHandler manually, expect ErrNoSignatures.
-				_, err = suite.anteHandler(suite.ctx, tx, false)
+				_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 				suite.Require().Error(err)
 				suite.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
 

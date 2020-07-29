@@ -109,7 +109,13 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
-	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+
+	var txBytes []byte
+	if suite.clientCtx.TxConfig.SignModeHandler().DefaultMode() == signing.SignMode_SIGN_MODE_DIRECT {
+		txBytes, err = suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+	} else {
+		txBytes, err = json.Marshal(tx)
+	}
 	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
 	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper)
@@ -141,9 +147,15 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{
 		PubKey: priv1.PubKey(),
 	}))
+	tx = txBuilder.GetTx()
 
-	simTxBytes, err := json.Marshal(txBuilder.GetTx())
-	suite.Require().Nil(err)
+	var simTxBytes []byte
+	if suite.clientCtx.TxConfig.SignModeHandler().DefaultMode() == signing.SignMode_SIGN_MODE_DIRECT {
+		simTxBytes, err = suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+	} else {
+		simTxBytes, err = json.Marshal(tx)
+	}
+	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 	// require that simulated tx is smaller than tx with signatures
 	suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
 
@@ -153,7 +165,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	beforeSimGas := suite.ctx.GasMeter().GasConsumed()
 
 	// run antehandler with simulate=true
-	suite.ctx, err = antehandler(suite.ctx, txBuilder.GetTx(), true)
+	suite.ctx, err = antehandler(suite.ctx, tx, true)
 	consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
 
 	// require that antehandler passes and does not underestimate decorator cost

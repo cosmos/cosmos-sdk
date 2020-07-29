@@ -1,10 +1,6 @@
 package ante_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -102,8 +98,4 @@ type PanicDecorator struct{}
 
 func (pd PanicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	panic("random error")
-}
-
-func TestAnteSetupTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

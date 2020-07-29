@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -1007,7 +1006,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
-	}, types.LegacyAminoJSONHandler{})
+	}, suite.clientCtx.TxConfig.SignModeHandler())
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(1)
@@ -1093,7 +1092,7 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	// since these decorators don't run on recheck, the tx should pass the antehandler
 	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 	suite.Require().NoError(err)
-	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{}))
+	suite.Require().NoError(txBuilder.SetSignatures())
 
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)
@@ -1142,8 +1141,4 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 
 	_, err = suite.anteHandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
-}
-
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

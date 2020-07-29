@@ -3,6 +3,7 @@ package ante_test
 import (
 	"errors"
 	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -163,4 +164,8 @@ func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, 
 			}
 		}
 	})
+}
+
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
 }

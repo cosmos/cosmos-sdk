@@ -2,9 +2,6 @@ package ante_test
 
 import (
 	"fmt"
-	"testing"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
@@ -144,7 +141,7 @@ func (suite *AnteTestSuite) TestSigVerification() {
 	gasLimit := testdata.NewTestGasLimit()
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.LegacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
@@ -233,7 +230,7 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.LegacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params
@@ -286,8 +283,4 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 		suite.Require().NoError(err, "unexpected error; tc #%d, %v", i, tc)
 		suite.Require().Equal(tc.expectedSeq, suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetSequence())
 	}
-}
-
-func TestAnteSigverifyTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

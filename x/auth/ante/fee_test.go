@@ -1,10 +1,6 @@
 package ante_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -103,8 +99,4 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	_, err = antehandler(suite.ctx, tx, false)
 
 	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
-}
-
-func TestAnteFeeTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

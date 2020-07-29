@@ -282,18 +282,36 @@ func (t *builder) SetFeeAmount(coins sdk.Coins) {
 	t.authInfoBz = nil
 }
 
-// SetSignatures implements TxBuilder.SetSignatures.
 func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
+	signerInfos := make([]*tx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
 
 	for i, sig := range signatures {
-		_, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
+		var modeInfo *tx.ModeInfo
+		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
+		pk, err := t.pubkeyCodec.Encode(sig.PubKey)
+		if err != nil {
+			return err
+		}
+		signerInfos[i] = &tx.SignerInfo{
+			PublicKey: pk,
+			ModeInfo:  modeInfo,
+		}
 	}
 
+	t.setSignerInfos(signerInfos)
 	t.setSignatures(rawSigs)
 
 	return nil
+}
+
+func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
+	t.tx.AuthInfo.SignerInfos = infos
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	t.authInfoBz = nil
+	// set cached pubKeys to nil because they no longer match tx.AuthInfo
+	t.pubKeys = nil
 }
 
 // getSignerIndex returns the index of a public key in the GetSigners array. It
@@ -323,8 +341,14 @@ func (t *builder) SetSignerInfo(pubKey crypto.PubKey, modeInfo *tx.ModeInfo) err
 		return err
 	}
 
+	n := len(t.GetSigners())
+	// If t.tx.AuthInfo.SignerInfos is empty, we just initialize with some
+	// empty data.
 	if len(t.tx.AuthInfo.SignerInfos) == 0 {
-		t.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(t.GetSigners()))
+		t.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, n)
+		for i := 1; i < n; i++ {
+			t.tx.AuthInfo.SignerInfos[i] = &tx.SignerInfo{}
+		}
 	}
 
 	t.tx.AuthInfo.SignerInfos[signerIndex] = &tx.SignerInfo{

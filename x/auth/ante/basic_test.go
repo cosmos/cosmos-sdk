@@ -3,9 +3,6 @@ package ante_test
 import (
 	"encoding/json"
 	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -112,7 +109,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
-	txBytes, err := json.Marshal(tx)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
 	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper)
@@ -141,7 +138,9 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	// simulation must not underestimate gas of this decorator even with nil signatures
 	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 	suite.Require().NoError(err)
-	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{}))
+	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{
+		PubKey: priv1.PubKey(),
+	}))
 
 	simTxBytes, err := json.Marshal(txBuilder.GetTx())
 	suite.Require().Nil(err)
@@ -160,8 +159,4 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	// require that antehandler passes and does not underestimate decorator cost
 	suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 	suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
-}
-
-func TestAnteBasicTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

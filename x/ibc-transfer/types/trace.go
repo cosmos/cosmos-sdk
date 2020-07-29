@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	fmt "fmt"
 	"strings"
 
@@ -66,7 +65,7 @@ func (dt DenomTrace) validateTrace() error {
 	switch {
 	case dt.Trace == "" && dt.BaseDenom != "":
 		return nil
-	case strings.TrimSpace(dt.Trace == ""):
+	case strings.TrimSpace(dt.Trace) == "":
 		return fmt.Errorf("cannot have an empty trace and empty base denomination")
 	}
 
@@ -101,29 +100,21 @@ func (dt DenomTrace) Validate() error {
 }
 
 // Traces defines a wrapper type for a slice of IdentifiedDenomTraces.
-type Traces []IdentifiedDenomTrace
+type Traces []DenomTrace
 
 // Validate performs a basic validation of each denomination trace info.
 func (t Traces) Validate() error {
 	seenTraces := make(map[string]bool)
 	for i, trace := range t {
-		if seenTraces[trace.Hash] {
+		hash := trace.Hash().String()
+		if seenTraces[hash] {
 			return fmt.Errorf("duplicated denomination trace with hash  %s", trace.Hash)
 		}
-		hash := tmhash.Sum([]byte(trace.Trace + "/" + trace.BaseDenom))
-		if !bytes.Equal(tmbytes.HexBytes(trace.Hash), hash) {
-			return fmt.Errorf("trace hash mismatch, expected %s got %s", trace.Hash, hash)
-		}
 
-		denomTrace := DenomTrace{
-			Trace:     trace.Trace,
-			BaseDenom: trace.BaseDenom,
-		}
-
-		if err := denomTrace.Validate(); err != nil {
+		if err := trace.Validate(); err != nil {
 			sdkerrors.Wrapf(err, "failed denom trace %d validation", i)
 		}
-		seenTraces[trace.Hash] = true
+		seenTraces[hash] = true
 	}
 	return nil
 }

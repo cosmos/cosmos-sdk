@@ -122,19 +122,19 @@ func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 // module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
-// InitGenesis performs genesis initialization for the ibc transfer module. It returns
+// InitGenesis performs genesis initialization for the ibc-transfer module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-
-	// TODO: check if the IBC transfer module account is set
-	InitGenesis(ctx, am.keeper, genesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
+// ExportGenesis returns the exported genesis state as raw bytes for the ibc-transfer
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 

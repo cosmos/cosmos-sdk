@@ -1,6 +1,7 @@
 syntax = "proto3";
 package ibc.transfer;
 
+import "gogoproto/gogo.proto";
 import "cosmos/query/pagination.proto";
 import "ibc/transfer/transfer.proto";
 
@@ -24,7 +25,7 @@ message QueryDenomTraceRequest {
 // QueryDenomTraceResponse is the response type for the Query/DenomTrace RPC method.
 message QueryDenomTraceResponse {
   // denomination trace associated with the request hash
-  ibc.transfer.DenomTrace denom_trace = 1;
+  DenomTrace denom_trace = 1;
 }
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC method
@@ -35,7 +36,10 @@ message QueryDenomTracesRequest {
 // QueryConnectionsResponse is the response type for the Query/Connections RPC method.
 message QueryDenomTracesResponse {
   // list of stored connections of the chain.
-  repeated ibc.transfer.IdentifiedDenomTrace denom_traces = 1;
+  repeated DenomTrace denom_traces = 1 [
+		(gogoproto.castrepeated) = "Traces",
+    (gogoproto.nullable) = false
+  ];
   // pagination response
   cosmos.query.PageResponse pagination = 2;
 }

@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -111,11 +112,11 @@ func (k Keeper) SetPort(ctx sdk.Context, portID string) {
 }
 
 // GetDenomTrace retreives the full identifiers trace and base denomination from the store.
-func (k Keeper) GetDenomTrace(ctx Context, denomTraceHash []byte) (types.DenomTrace, bool) {
+func (k Keeper) GetDenomTrace(ctx sdk.Context, denomTraceHash []byte) (types.DenomTrace, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
-	bz := store.Get(traceHash)
+	bz := store.Get(denomTraceHash)
 	if bz == nil {
-		return &types.DenomTrace, false
+		return types.DenomTrace{}, false
 	}
 
 	var denomTrace types.DenomTrace
@@ -124,16 +125,45 @@ func (k Keeper) GetDenomTrace(ctx Context, denomTraceHash []byte) (types.DenomTr
 }
 
 // HasDenomTrace checks if a the key with the given denomination trace hash exists on the store.
-func (k Keeper) HasDenomTrace(ctx Context, denomTraceHash []byte) bool {
+func (k Keeper) HasDenomTrace(ctx sdk.Context, denomTraceHash []byte) bool {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
 	return store.Has(denomTraceHash)
 }
 
 // SetDenomTrace sets a new {trace hash -> denom trace} pair to the store.
-func (k Keeper) SetDenomTrace(ctx Context, denomTraceHash []byte, denomTrace types.DenomTrace) {
+func (k Keeper) SetDenomTrace(ctx sdk.Context, denomTrace types.DenomTrace) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
 	bz := k.cdc.MustMarshalBinaryBare(&denomTrace)
-	store.Set(denomTraceHash, bz)
+	store.Set(denomTrace.Hash(), bz)
+}
+
+// GetAllDenomTraces returns the trace information for all the denominations.
+func (k Keeper) GetAllDenomTraces(ctx sdk.Context) types.Traces {
+	traces := types.Traces{}
+	k.IterateDenomTraces(ctx, func(_ tmbytes.HexBytes, denomTrace types.DenomTrace) bool {
+		traces = append(traces, denomTrace)
+		return false
+	})
+
+	return traces
+}
+
+// IterateDenomTraces iterates over the denomination traces in the store
+// and performs a callback function.
+func (k Keeper) IterateDenomTraces(ctx sdk.Context, cb func(hash tmbytes.HexBytes, denomTrace types.DenomTrace) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.DenomTraceKey)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+
+		var denomTrace types.DenomTrace
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &denomTrace)
+
+		if cb(iterator.Key(), denomTrace) {
+			break
+		}
+	}
 }
 
 // ClaimCapability allows the transfer module that can claim a capability that IBC module

@@ -12,7 +12,7 @@ message GenesisState{
 	  (gogoproto.customname) = "PortID",
 	  (gogoproto.moretags) = "yaml:\"port_id\""
 	];
-	repeated IdentifiedDenomTrace denom_traces = 2 [
+	repeated DenomTrace denom_traces = 2 [
 		(gogoproto.castrepeated) = "Traces",
 		(gogoproto.nullable) = false,
 		(gogoproto.moretags) = "yaml:\"denom_traces\""

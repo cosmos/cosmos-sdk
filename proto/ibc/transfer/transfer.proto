@@ -23,7 +23,7 @@ message MsgTransfer {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // fungible token denomination trace info for source tracking
-  DenomTrace trace = 4;
+  DenomTrace trace = 4 [(gogoproto.nullable) = false];
   // the sender address
   bytes sender = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
@@ -69,15 +69,4 @@ message DenomTrace {
   string trace = 1;
   // base denomination of the relayed fungible token
   string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
-}
-
-
-// IdentifiedDenomTrace contains DenomTrace and the hash used for the IBC fungible denom map.
-message IdentifiedDenomTrace {
-  // chain of port/channel identifiers used for tracing the source of the fungible token
-  string trace = 1;
-  // base denomination of the relayed fungible token
-	string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
-	// SHA256 hash of the trace and the base denom: hash(trace + "/" + baseDenom)
-	string hash = 3;
 }

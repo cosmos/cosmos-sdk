@@ -32,6 +32,11 @@ func (suite *TendermintTestSuite) TestValidate() {
 			expPass:     true,
 		},
 		{
+			name:        "invalid chainID",
+			clientState: ibctmtypes.NewClientState("  ", lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			expPass:     true,
+		},
+		{
 			name:        "invalid trust level",
 			clientState: ibctmtypes.NewClientState(chainID, tmmath.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,

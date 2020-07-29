@@ -193,7 +193,7 @@ func TestMultiSigMigration(t *testing.T) {
 	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := authtypes.StdSignature{PubKey: pkSet[1].Bytes(), Signature: msg}
+	sig := authtypes.StdSignature{PubKey: pkSet[1], Signature: msg}
 	sigV2, err := authtypes.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 

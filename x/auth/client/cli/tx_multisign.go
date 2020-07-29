@@ -130,7 +130,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub.Bytes()}                        //nolint:staticcheck
+		newStdSig := types.StdSignature{Signature: sigBz, PubKey: multisigPub}                                //nolint:staticcheck
 		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo()) //nolint:staticcheck
 
 		var json []byte

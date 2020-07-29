@@ -46,13 +46,6 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
 
 	for i, sig := range signatures {
-		var pubKeyBz []byte
-
-		pubKey := sig.PubKey
-		if pubKey != nil {
-			pubKeyBz = pubKey.Bytes()
-		}
-
 		var (
 			sigBz []byte
 			err   error
@@ -66,7 +59,7 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 		}
 
 		sigs[i] = StdSignature{
-			PubKey:    pubKeyBz,
+			PubKey:    sig.PubKey,
 			Signature: sigBz,
 		}
 	}

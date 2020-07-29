@@ -96,7 +96,6 @@ func TestValidateGenesis(t *testing.T) {
 			),
 			expPass: false,
 		},
-
 		{
 			name: "invalid client",
 			genState: types.NewGenesisState(

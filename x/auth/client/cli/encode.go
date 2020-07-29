@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/base64"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -37,8 +38,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 			// base64 encode the encoded tx bytes
 			txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
-			cmd.Printf("%s\n", txBytesBase64)
-
+			err = clientCtx.PrintString(fmt.Sprintf("%s\n", txBytesBase64))
 			return nil
 		},
 	}

@@ -114,7 +114,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if cs.ChainID == "" {
+	if strings.TrimSpace(cs.ChainID) == "" {
 		return sdkerrors.Wrap(ErrInvalidChainID, "chain id cannot be empty string")
 	}
 	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {

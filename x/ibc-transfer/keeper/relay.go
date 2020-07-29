@@ -25,6 +25,7 @@ func (k Keeper) SendTransfer(
 	sourcePort,
 	sourceChannel string,
 	amount sdk.Coins,
+	denomTrace types.DenomTrace,
 	sender sdk.AccAddress,
 	receiver string,
 	timeoutHeight,
@@ -49,7 +50,7 @@ func (k Keeper) SendTransfer(
 
 	return k.createOutgoingPacket(
 		ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel,
-		amount, sender, receiver, timeoutHeight, timeoutTimestamp,
+		amount, denomTrace, sender, receiver, timeoutHeight, timeoutTimestamp,
 	)
 }
 
@@ -60,6 +61,7 @@ func (k Keeper) createOutgoingPacket(
 	sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
 	amount sdk.Coins,
+	denomTrace types.DenomTrace,
 	sender sdk.AccAddress,
 	receiver string,
 	timeoutHeight, timeoutTimestamp uint64,
@@ -131,7 +133,7 @@ func (k Keeper) createOutgoingPacket(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		amount, sender.String(), receiver,
+		amount, denomTrace, sender.String(), receiver,
 	)
 
 	packet := channeltypes.NewPacket(

@@ -1,18 +1,17 @@
-name: Publish Docker
+name: Publish Docker Builds
 on:
-  release:
-    types: [published]
   schedule:
     - cron: "0 0 * * 1-5"
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@master
+      - name: Publish to Docker Hub
+        uses: docker/build-push-action@v1.1.0
         with:
-          name: cosmosbot/cosmos-sdk
+          repository: interchainio/simapp
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          tag_names: true
+          tags: org.opencontainers.image.created

@@ -77,7 +77,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers module concrete types into protobuf Any.
@@ -120,7 +120,9 @@ func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
+}
 
 // InitGenesis performs genesis initialization for the ibc-transfer module. It returns
 // no validator updates.

@@ -24,14 +24,14 @@ const (
 // NewTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func NewTransferTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "transfer [src-port] [src-channel] [receiver] [amount]",
+		Use:   "transfer [src-port] [src-channel] [receiver] [amount] [denom-trace]",
 		Short: "Transfer a fungible token through IBC",
 		Long: strings.TrimSpace(`Transfer a fungible token through IBC. Timeouts can be specified
 as absolute or relative using the "absolute-timeouts" flag. Relative timeouts are added to
 the block height and block timestamp queried from the latest consensus state corresponding
 to the counterparty channel. Any timeout set to 0 is disabled.`),
 		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),
-		Args:    cobra.ExactArgs(4),
+		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -45,6 +45,11 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			receiver := args[2]
 
 			coins, err := sdk.ParseCoins(args[3])
+			if err != nil {
+				return err
+			}
+
+			denomTrace, err := types.ParseDenomTrace(args[4])
 			if err != nil {
 				return err
 			}
@@ -82,7 +87,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			}
 
 			msg := types.NewMsgTransfer(
-				srcPort, srcChannel, coins, sender, receiver, timeoutHeight, timeoutTimestamp,
+				srcPort, srcChannel, coins, denomTrace, sender, receiver, timeoutHeight, timeoutTimestamp,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

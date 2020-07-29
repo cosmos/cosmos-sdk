@@ -57,6 +57,7 @@ func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			portID,
 			channelID,
 			req.Amount,
+			req.DenomTrace,
 			fromAddr,
 			req.Receiver,
 			req.TimeoutHeight,

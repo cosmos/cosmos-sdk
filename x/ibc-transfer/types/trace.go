@@ -6,6 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -108,7 +109,7 @@ func (t Traces) Validate() error {
 	for i, trace := range t {
 		hash := trace.Hash().String()
 		if seenTraces[hash] {
-			return fmt.Errorf("duplicated denomination trace with hash  %s", trace.Hash)
+			return fmt.Errorf("duplicated denomination trace with hash  %s", trace.Hash())
 		}
 
 		if err := trace.Validate(); err != nil {
@@ -131,8 +132,8 @@ func ValidateIBCDenom(denom string) (tmbytes.HexBytes, error) {
 		err = sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
 	case denomSplit[0] != "ibc":
 		err = sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
-	case len(denomSplit) == 2 && len(denomSplit[1]) != tmhash.Size:
-		err = sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "invalid SHA256 hash %s length, expected %d, got %d", denomSplit[1], tmhash.Size, len(denomSplit[1]))
+	case len(denomSplit) == 2:
+		err = tmtypes.ValidateHash([]byte(denomSplit[1]))
 	default:
 		err = sdkerrors.Wrap(ErrInvalidDenomForTransfer, denom)
 	}
@@ -142,4 +143,16 @@ func ValidateIBCDenom(denom string) (tmbytes.HexBytes, error) {
 	}
 
 	return tmbytes.HexBytes(denomSplit[1]), nil
+}
+
+// ParseDenomTrace parses a string with the ibc prefix (denom trace) and the base denomination
+// into a DenomTrace type. The parsing will fail if the base denom is invalid or if the trace is not correctly constructed
+// in pairs of valid port and channel identifiers.
+//
+// Valid examples:
+// 	- "portidone/channelidone/uatom" => DenomTrace{Trace: "portidone/channelidone", BaseDenom: "uatom"}
+// 	- "uatom" => DenomTrace{Trace: "", BaseDenom: "uatom"}
+func ParseDenomTrace(trace string) (DenomTrace, error) {
+	// TODO: use ParseCoin as reference
+	return DenomTrace{}, nil
 }

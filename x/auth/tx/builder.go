@@ -317,6 +317,13 @@ func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
 // getSignerIndex returns the index of a public key in the GetSigners array. It
 // returns an error if the publicKey is not in GetSigners.
 func (t *builder) getSignerIndex(pubKey crypto.PubKey) (int, error) {
+	if pubKey == nil {
+		return -1, sdkerrors.Wrap(
+			sdkerrors.ErrInvalidPubKey,
+			"public key is empty",
+		)
+	}
+
 	for i, signer := range t.GetSigners() {
 		if bytes.Equal(signer.Bytes(), pubKey.Address().Bytes()) {
 			return i, nil

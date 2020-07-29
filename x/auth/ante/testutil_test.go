@@ -83,7 +83,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
+func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.SigFeeMemoTx, error) {
 	// First round: we gather all the signer infos.
 	for _, priv := range privs {
 		err := suite.txBuilder.SetSignerInfo(priv.PubKey(), &txtypes.ModeInfo{
@@ -93,7 +93,9 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 				},
 			},
 		})
-		suite.Require().NoError(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 	// Second round: all signer infos are set, so each signer can sign.
 	var sigsV2 []signing.SignatureV2
@@ -104,13 +106,18 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 			AccountSequence: accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData, suite.txBuilder, priv, suite.clientCtx.TxConfig)
-		suite.Require().NoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	suite.Require().NoError(suite.txBuilder.SetSignatures(sigsV2...))
+	err := suite.txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
 
-	return suite.txBuilder.GetTx()
+	return suite.txBuilder.GetTx(), nil
 }
 
 // TestCase represents a test case used in test tables.
@@ -129,17 +136,31 @@ func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, 
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 
-		tx := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
-		newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+		// Theoretically speaking, ante handler unit tests should only test
+		// ante handlers, but here we sometimes also test the tx creation
+		// process.
+		tx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
+		newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 		if tc.expPass {
-			suite.Require().NoError(err)
+			suite.Require().NoError(txErr)
+			suite.Require().NoError(anteErr)
 			suite.Require().NotNil(newCtx)
 
 			suite.ctx = newCtx
 		} else {
-			suite.Require().Error(err)
-			suite.Require().True(errors.Is(err, tc.expErr))
+			switch {
+			case txErr != nil:
+				suite.Require().Error(txErr)
+				suite.Require().True(errors.Is(txErr, tc.expErr))
+
+			case anteErr != nil:
+				suite.Require().Error(anteErr)
+				suite.Require().True(errors.Is(anteErr, tc.expErr))
+
+			default:
+				suite.Fail("expected one of txErr,anteErr to be an error")
+			}
 		}
 	})
 }

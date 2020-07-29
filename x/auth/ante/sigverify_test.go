@@ -50,7 +50,8 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd)
@@ -171,9 +172,10 @@ func (suite *AnteTestSuite) TestSigVerification() {
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 
-		tx := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID())
+		tx, err := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID())
+		suite.Require().NoError(err)
 
-		_, err := antehandler(suite.ctx, tx, false)
+		_, err = antehandler(suite.ctx, tx, false)
 		if tc.shouldErr {
 			suite.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
 		} else {
@@ -226,7 +228,8 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
@@ -260,7 +263,8 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	isd := ante.NewIncrementSequenceDecorator(suite.app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(isd)

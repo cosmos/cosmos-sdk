@@ -105,7 +105,8 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 
 				// Create tx manually to test the tx's signers
 				suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
-				tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				suite.Require().NoError(err)
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 				expectedSigners := []sdk.AccAddress{addr0, addr1, addr2}
 				suite.Require().Equal(expectedSigners, tx.GetSigners())
@@ -810,56 +811,69 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 		{
 			"make sure public key has been set (tx itself should fail because of replay protection)",
 			func() {
+				// Make sure public key has been set from previous test.
 				acc0 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[0].acc.GetAddress())
 				suite.Require().Equal(acc0.GetPubKey(), accounts[0].priv.PubKey())
+			},
+			false,
+			false,
+			sdkerrors.ErrUnauthorized, // because of wrong accSeq
+		},
+		{
+			"test public key not found",
+			func() {
+				// See above, `privs` still holds the private key of accounts[0].
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
+		{
+			"make sure public key is not set, when tx has no signature",
+			func() {
+				// Make sure public key has not been set from previous test.
+				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				suite.Require().Nil(acc1.GetPubKey())
+
+				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
+				suite.txBuilder.SetMsgs(msgs...)
+
+				// Manually create tx, and remove signature.
+				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				suite.Require().NoError(err)
+				txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+				suite.Require().NoError(err)
+				suite.Require().NoError(txBuilder.SetSignatures())
+
+				// Run anteHandler manually, expect ErrNoSignatures.
+				_, err = suite.anteHandler(suite.ctx, tx, false)
+				suite.Require().Error(err)
+				suite.Require().True(errors.Is(err, sdkerrors.ErrNoSignatures))
+
+				// Make sure public key has not been set.
+				acc1 = suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
+				suite.Require().Nil(acc1.GetPubKey())
+
+				// Set incorrect accSeq, to generate incorrect signature.
+				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{1}
 			},
 			false,
 			false,
 			sdkerrors.ErrUnauthorized,
 		},
 		{
-			"test public key not found",
+			"make sure previous public key has been set after wrong signature",
 			func() {
-				accNums = []uint64{1}
-				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
-
-				// Manually create tx, and remove signature
-				tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-				txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
-				suite.Require().NoError(err)
-				suite.Require().NoError(txBuilder.SetSignatures())
-
-				_, err = suite.anteHandler(suite.ctx, tx, false)
-				suite.Require().Error(err)
-				suite.Require().EqualError(err, "wrong number of signers; expected 0, got 1: unauthorized")
-				suite.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
-			},
-			false,
-			false,
-			sdkerrors.ErrInvalidPubKey,
-		},
-		{
-			"make sure previous public key has NOT been set, test new tx with invalid signature and public key",
-			func() {
-				accNums = []uint64{1}
-				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
-
+				// Make sure public key has been set, as SetPubKeyDecorator
+				// is called before all signature verification decorators.
 				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
-				suite.Require().Nil(acc1.GetPubKey())
+				suite.Require().Equal(acc1.GetPubKey(), accounts[1].priv.PubKey())
 			},
 			false,
 			false,
-			sdkerrors.ErrInvalidPubKey,
-		},
-		{
-			"make sure previous public key has NOT been set",
-			func() {
-				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
-				suite.Require().Nil(acc1.GetPubKey())
-			},
-			false,
-			false,
-			sdkerrors.ErrInvalidPubKey,
+			sdkerrors.ErrUnauthorized,
 		},
 	}
 
@@ -1072,18 +1086,20 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 
 	// test that operations skipped on recheck do not run
 	privs, accNums, accSeqs := []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
 	// since these decorators don't run on recheck, the tx should pass the antehandler
 	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 	suite.Require().NoError(err)
-	suite.Require().NoError(txBuilder.SetSignatures())
+	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{}))
 
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)
 
-	tx = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 	txBytes, err := json.Marshal(tx)
 	suite.Require().Nil(err, "Error marshalling tx: %v", err)
 	suite.ctx = suite.ctx.WithTxBytes(txBytes)

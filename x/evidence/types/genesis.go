@@ -10,6 +10,8 @@ import (
 
 // DONTCOVER
 
+var _ types.UnpackInterfacesMessage = GenesisState{}
+
 // NewGenesisState creates a new genesis state for the evidence module.
 func NewGenesisState(e []exported.Evidence) GenesisState {
 	evidence := make([]*types.Any, len(e))
@@ -27,6 +29,18 @@ func NewGenesisState(e []exported.Evidence) GenesisState {
 	return GenesisState{
 		Evidence: evidence,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, any := range g.Evidence {
+		var evi exported.Evidence
+		err := unpacker.UnpackAny(any, &evi)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // DefaultGenesisState returns the evidence module's default genesis state.

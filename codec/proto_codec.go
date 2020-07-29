@@ -1,7 +1,6 @@
 package codec
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"strings"
@@ -40,16 +39,9 @@ func (pc *ProtoCodec) MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, err
 		return nil, err
 	}
 
-	buf := new(bytes.Buffer)
-	if err := encodeUvarint(buf, uint64(o.Size())); err != nil {
-		return nil, err
-	}
-
-	if _, err := buf.Write(bz); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+	var sizeBuf [binary.MaxVarintLen64]byte
+	n := binary.PutUvarint(sizeBuf[:], uint64(o.Size()))
+	return append(sizeBuf[:n], bz...), nil
 }
 
 func (pc *ProtoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {

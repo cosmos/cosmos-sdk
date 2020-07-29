@@ -37,7 +37,8 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 
 // SetSignerInfo implements TxBuilder.SetSignerInfo.
 func (s *StdTxBuilder) SetSignerInfo(_ crypto.PubKey, _ *txtypes.ModeInfo) error {
-	panic("SetSignerInfo is not implemented for amino StdTx")
+	// SetSignerInfo is a no-op for amino StdTx
+	return nil
 }
 
 // SetSignatures implements TxBuilder.SetSignatures.

@@ -24,7 +24,6 @@ message GenesisState {
   // map from index to owners of the capability index
 	// index key is string to allow amino marshalling
   repeated GenesisOwners owners = 2 [
-    (gogoproto.casttype) = "GenesisOwners",
     (gogoproto.nullable) = false
   ];
 }

@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -22,6 +24,7 @@ import (
 	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	dbm "github.com/tendermint/tm-db"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,6 +34,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,9 +49,9 @@ var lock = new(sync.Mutex)
 
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
-type AppConstructor = func(val Validator) server.Application
+type AppConstructor = func(val Validator) servertypes.Application
 
-func NewSimApp(val Validator) server.Application {
+func NewSimApp(val Validator) servertypes.Application {
 	return simapp.NewSimApp(
 		val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
@@ -118,7 +122,7 @@ type (
 		BaseDir    string
 		Validators []*Validator
 
-		config Config
+		Config Config
 	}
 
 	// Validator defines an in-process Tendermint validator node. Through this object,
@@ -141,6 +145,7 @@ type (
 
 		tmNode *node.Node
 		api    *api.Server
+		grpc   *grpc.Server
 	}
 )
 
@@ -157,7 +162,7 @@ func New(t *testing.T, cfg Config) *Network {
 		T:          t,
 		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),
-		config:     cfg,
+		Config:     cfg,
 	}
 
 	t.Log("preparing test network...")
@@ -203,6 +208,11 @@ func New(t *testing.T, cfg Config) *Network {
 			rpcAddr, _, err := server.FreeTCPAddr()
 			require.NoError(t, err)
 			tmCfg.RPC.ListenAddress = rpcAddr
+
+			_, grpcPort, err := server.FreeTCPAddr()
+			require.NoError(t, err)
+			appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
+			appCfg.GRPC.Enable = true
 		}
 
 		logger := log.NewNopLogger()
@@ -278,16 +288,21 @@ func New(t *testing.T, cfg Config) *Network {
 		require.NoError(t, err)
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		tx := authtypes.NewStdTx([]sdk.Msg{createValMsg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
-		txBldr := authtypes.TxBuilder{}.
+		txBuilder := cfg.TxConfig.NewTxBuilder()
+		require.NoError(t, txBuilder.SetMsgs(createValMsg))
+		txBuilder.SetMemo(memo)
+
+		txFactory := tx.Factory{}
+		txFactory = txFactory.
 			WithChainID(cfg.ChainID).
 			WithMemo(memo).
-			WithKeybase(kb)
+			WithKeybase(kb).
+			WithTxConfig(cfg.TxConfig)
 
-		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
+		err = tx.Sign(txFactory, nodeDirName, txBuilder)
 		require.NoError(t, err)
 
-		txBz, err := cfg.Codec.MarshalJSON(signedTx)
+		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
 		require.NoError(t, err)
 		require.NoError(t, writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz))
 
@@ -334,13 +349,6 @@ func New(t *testing.T, cfg Config) *Network {
 	return network
 }
 
-// WaitForHeight performs a blocking check where it waits for a block to be
-// committed after a given block. If that height is not reached within a timeout,
-// an error is returned. Regardless, the latest height queried is returned.
-func (n *Network) WaitForHeight(h int64) (int64, error) {
-	return n.WaitForHeightWithTimeout(h, 10*time.Second)
-}
-
 // LatestHeight returns the latest height of the network or an error if the
 // query fails or no validators exist.
 func (n *Network) LatestHeight() (int64, error) {
@@ -354,6 +362,13 @@ func (n *Network) LatestHeight() (int64, error) {
 	}
 
 	return status.SyncInfo.LatestBlockHeight, nil
+}
+
+// WaitForHeight performs a blocking check where it waits for a block to be
+// committed after a given block. If that height is not reached within a timeout,
+// an error is returned. Regardless, the latest height queried is returned.
+func (n *Network) WaitForHeight(h int64) (int64, error) {
+	return n.WaitForHeightWithTimeout(h, 10*time.Second)
 }
 
 // WaitForHeightWithTimeout is the same as WaitForHeight except the caller can
@@ -386,6 +401,22 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 	}
 }
 
+// WaitForNextBlock waits for the next block to be committed, returning an error
+// upon failure.
+func (n *Network) WaitForNextBlock() error {
+	lastBlock, err := n.LatestHeight()
+	if err != nil {
+		return err
+	}
+
+	_, err = n.WaitForHeight(lastBlock + 1)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 // Cleanup removes the root testing (temporary) directory and stops both the
 // Tendermint and API services. It allows other callers to create and start
 // test networks. This method must be called when a test is finished, typically
@@ -408,7 +439,7 @@ func (n *Network) Cleanup() {
 		}
 	}
 
-	if n.config.CleanupDir {
+	if n.Config.CleanupDir {
 		_ = os.RemoveAll(n.BaseDir)
 	}
 

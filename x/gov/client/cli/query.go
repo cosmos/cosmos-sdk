@@ -136,7 +136,10 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			res, err := queryClient.Proposals(
 				context.Background(),
@@ -299,7 +302,10 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 			}
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			res, err := queryClient.Votes(
 				context.Background(),
@@ -313,9 +319,6 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 		},
 	}
-
-	// Deprecated, remove line when removing FlagPage altogether.
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of proposals to to query for")
 
 	flags.AddPaginationFlagsToCmd(cmd, "votes")
 	flags.AddQueryFlagsToCmd(cmd)
@@ -446,7 +449,10 @@ $ %s query gov deposits 1
 				return clientCtx.PrintOutput(dep)
 			}
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			res, err := queryClient.Deposits(
 				context.Background(),

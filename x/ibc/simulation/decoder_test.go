@@ -23,15 +23,14 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(app.IBCKeeper.Codecs())
 
 	clientID := "clientidone"
+	connectionID := "connectionidone"
 	channelID := "channelidone"
 	portID := "portidone"
 
 	clientState := ibctmtypes.ClientState{
-		ID:           clientID,
 		FrozenHeight: 10,
 	}
 	connection := connectiontypes.ConnectionEnd{
-		ID:       clientID,
 		ClientID: "clientidone",
 		Versions: []string{"1.0"},
 	}
@@ -46,7 +45,7 @@ func TestDecodeStore(t *testing.T) {
 			Value: aminoCdc.MustMarshalBinaryBare(clientState),
 		},
 		tmkv.Pair{
-			Key:   host.KeyConnection(connection.ID),
+			Key:   host.KeyConnection(connectionID),
 			Value: cdc.MustMarshalBinaryBare(&connection),
 		},
 		tmkv.Pair{

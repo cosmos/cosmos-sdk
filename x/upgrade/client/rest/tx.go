@@ -60,6 +60,13 @@ func ProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	}
 }
 
+func ProposalCancelRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
+	return govrest.ProposalRESTHandler{
+		SubRoute: "upgrade",
+		Handler:  cancelPlanHandler(clientCtx),
+	}
+}
+
 // nolint
 func newPostPlanHandler(clientCtx client.Context, txg client.TxConfig, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -188,24 +188,9 @@ jobs:
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
-
-  integration-tests:
+  test-unit-proto-expected-to-fail:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
-        id: git_diff
-        with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum
-      - name: build-simd
-        run: |
-          make build-simd
-        if: "env.GIT_DIFF != ''"
-      - name: cli-test
-        run: |
-          make test-integration
-        if: "env.GIT_DIFF != ''"
+      - name: test-unit-proto
+        run: make test-unit-proto

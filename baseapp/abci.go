@@ -349,7 +349,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
-	ctx, err := app.createQueryContext(req)
+	ctx, err := app.createQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err)
 	}
@@ -364,13 +364,15 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 	return res
 }
 
-func (app *BaseApp) createQueryContext(req abci.RequestQuery) (sdk.Context, error) {
+// createQueryContext creates a new sdk.Context for a query, taking as args
+// the block height and whether the query needs a proof or not.
+func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, error) {
 	// when a client did not provide a query height, manually inject the latest
-	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
+	if height == 0 {
+		height = app.LastBlockHeight()
 	}
 
-	if req.Height <= 1 && req.Prove {
+	if height <= 1 && prove {
 		return sdk.Context{},
 			sdkerrors.Wrap(
 				sdkerrors.ErrInvalidRequest,
@@ -378,12 +380,12 @@ func (app *BaseApp) createQueryContext(req abci.RequestQuery) (sdk.Context, erro
 			)
 	}
 
-	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+	cacheMS, err := app.cms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest,
-				"failed to load state at height %d; %s (latest height: %d)", req.Height, err, app.LastBlockHeight(),
+				"failed to load state at height %d; %s (latest height: %d)", height, err, app.LastBlockHeight(),
 			)
 	}
 
@@ -517,7 +519,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]))
 	}
 
-	ctx, err := app.createQueryContext(req)
+	ctx, err := app.createQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err)
 	}

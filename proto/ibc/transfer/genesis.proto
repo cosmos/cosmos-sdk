@@ -1,0 +1,17 @@
+syntax = "proto3";
+package ibc.transfer;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/cosmos.proto";
+import "ibc/transfer/transfer.proto";
+
+// GenesisState is currently only used to ensure that the InitGenesis gets run
+// by the module manager
+message GenesisState{
+	string port_id  = 1 [
+	  (gogoproto.customname) = "PortID",
+	  (gogoproto.moretags) = "yaml:\"port_id\""
+	];
+}

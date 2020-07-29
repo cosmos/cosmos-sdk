@@ -3,9 +3,12 @@ package types
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -31,7 +34,13 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
-// SetSignatures implements TxBuilder.SetSignatures
+// SetSignerInfo implements TxBuilder.SetSignerInfo.
+func (s *StdTxBuilder) SetSignerInfo(_ crypto.PubKey, _ *txtypes.ModeInfo) error {
+	// SetSignerInfo is a no-op for amino StdTx
+	return nil
+}
+
+// SetSignatures implements TxBuilder.SetSignatures.
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
 

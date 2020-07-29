@@ -39,7 +39,7 @@ func (pc *ProtoCodec) MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, err
 		return nil, err
 	}
 
-	var sizeBuf [10]byte
+	var sizeBuf [binary.MaxVarintLen64]byte
 	n := binary.PutUvarint(sizeBuf[:], uint64(o.Size()))
 	return append(sizeBuf[:n], bz...), nil
 }

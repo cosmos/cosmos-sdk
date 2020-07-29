@@ -1,17 +1,23 @@
 name: Publish Docker Builds
 on:
-  schedule:
-    - cron: "0 0 * * 1-5"
+  pull_request:
+  # schedule:
+  #   - cron: "0 0 * * 1-5"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: Publish to Docker Hub
-        uses: docker/build-push-action@v1.1.0
-        with:
-          repository: interchainio/simapp
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          tags: org.opencontainers.image.created
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - name: Echo current date
+        run: echo ${{ steps.date.outputs.date }}
+      # - name: Publish to Docker Hub
+      #   uses: docker/build-push-action@v1.1.0
+      #   with:
+      #     repository: interchainio/simapp
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      #     tags: org.opencontainers.image.created

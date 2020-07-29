@@ -186,7 +186,7 @@ message FungibleTokenPacketData {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // coins denomination trace for tracking the source
-  repeated DenomTrace denom_traces = 2;
+  DenomTrace denom_trace = 2;
   // the sender address
   string sender = 3;
   // the recipient address on the destination chain
@@ -202,14 +202,13 @@ func (msg MsgTransfer) ValidateBasic() error {
   if len(msg.Amount) != len(msg.DenomTraces) {
     //  error
   }
-  for i := range msg.Amount {
-    hash, err := GetTraceHashFromDenom(msg.Amount[i].Denom)
-    if err != nil {
-      return err
-    }
-    if hash != msg.DenomTraces[i].Hash() {
-      // error
-    }
+  // tokens length should be 1
+  hash, err := GetTraceHashFromDenom(msg.Amount[0].Denom)
+  if err != nil {
+    return err
+  }
+  if hash != msg.DenomTrace.Hash() {
+    // error
   }
 }
 ```
@@ -247,40 +246,38 @@ The denomination also needs to be updated when token is received on the source c
 ```golang
 // createOutgoingPacket
 // ...
-prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
+prefix := GetDenomPrefix(destinationPort, destinationChannel)
 source := strings.HasPrefix(amount[0].Denom, prefix)
 
-for _, denomTrace := range denomTraces {
-  // set the value to the lookup table if not stored already
-  traceHash := denomTrace.Hash()
-  if !k.HasDenomTrace(ctx, traceHash) {
-    k.SetDenomTrace(ctx, traceHash, denomTrace)
-  }
+// set the value to the lookup table if not stored already
+traceHash := denomTrace.Hash()
+if !k.HasDenomTrace(ctx, traceHash) {
+  k.SetDenomTrace(ctx, traceHash, denomTrace)
 }
 
 if source {
   // clear the denomination from the prefix to send the coins to the escrow account
   coins := make(sdk.Coins, len(amount))
   for i, coin := range amount {
-    if strings.HasPrefix(denomTraces[i].Trace, prefix) {
-      if err := denomTraces[i].RemovePrefix(); err != nil {
+    if strings.HasPrefix(denomTrace.Trace, prefix) {
+      if err := denomTrace.RemovePrefix(); err != nil {
         return err
       }
 
       // set the new value to the lookup table if not stored already
-      traceHash := denomTraces[i].Hash()
+      traceHash := denomTrace.Hash()
       if !k.HasDenomTrace(ctx, traceHash) {
-        k.SetDenomTrace(ctx, traceHash, denomTrace[i])
+        k.SetDenomTrace(ctx, traceHash, denomTrace)
       }
 
-      coins[i] = sdk.NewCoin(denomTrace[i].IBCDenom(), coin.Amount)
+      coins[i] = sdk.NewCoin(denomTrace.IBCDenom(), coin.Amount)
     } else {
       coins[i] = coin
     }
   }
 
   // escrow tokens if the destination chain is the same as the sender's
-  escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
+  escrowAddress := GetEscrowAddress(sourcePort, sourceChannel)
 
   // escrow source tokens. It fails if balance insufficient.
   if err := k.bankKeeper.SendCoins(
@@ -290,10 +287,10 @@ if source {
   }
 } else {
   // build the receiving denomination prefix if it's not present
-  prefix = types.GetDenomPrefix(sourcePort, sourceChannel)
+  prefix = GetDenomPrefix(sourcePort, sourceChannel)
   for _, coin := range amount {
-    if !strings.HasPrefix(denomTrace[i].Trace, prefix) {
-      return Wrapf(types.ErrInvalidDenomForTransfer, "invalid token denom trace prefix: %s", denomTrace[i].IBCDenom())
+    if !strings.HasPrefix(denomTrace.Trace, prefix) {
+      return Wrapf(ErrInvalidDenomForTransfer, "invalid token denom trace prefix: %s", denomTrace.IBCDenom())
     }
   }
 // ...
@@ -304,16 +301,13 @@ if source {
 // OnRecvPacket
 // ...
 prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
-source := strings.HasPrefix(data.DenomTraces[0].Trace, prefix)
+source := strings.HasPrefix(data.DenomTrace.Trace, prefix)
 
 // ...
-
-for _, denomTrace := range denomTraces {
-  // set the value to the lookup table if not stored already
-  traceHash := denomTrace.Hash()
-  if !k.HasDenomTrace(ctx, traceHash) {
-    k.SetDenomTrace(ctx, traceHash, denomTrace)
-  }
+// set the value to the lookup table if not stored already
+traceHash := denomTrace.Hash()
+if !k.HasDenomTrace(ctx, traceHash) {
+  k.SetDenomTrace(ctx, traceHash, denomTrace)
 }
 
 if source {
@@ -324,22 +318,22 @@ if source {
 prefix = types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 coins := make(sdk.Coins, len(data.Amount))
 for i, coin := range data.Amount {
-  if !strings.HasPrefix(denomTraces[i].Trace, prefix) {
-    return Wrapf(types.ErrInvalidDenomForTransfer, "invalid token denom trace prefix: %s", denomTrace[i].IBCDenom(),
+  if !strings.HasPrefix(denomTrace.Trace, prefix) {
+    return Wrapf(types.ErrInvalidDenomForTransfer, "invalid token denom trace prefix: %s", denomTrace.IBCDenom(),
     )
   }
 
-  if err := denomTraces[i].RemovePrefix(); err != nil {
+  if err := denomTrace.RemovePrefix(); err != nil {
     return err
   }
 
   // set the new value to the lookup table if not stored already
-  traceHash := denomTraces[i].Hash()
+  traceHash := denomTrace.Hash()
   if !k.HasDenomTrace(ctx, traceHash) {
-    k.SetDenomTrace(ctx, traceHash, denomTrace[i])
+    k.SetDenomTrace(ctx, traceHash, denomTrace)
   }
 
-  coins[i] = sdk.NewCoin(denomTraces[i].IBCDenom(), coin.Amount)
+  coins[i] = sdk.NewCoin(denomTrace.IBCDenom(), coin.Amount)
 }
 // ...
 ```

@@ -13,7 +13,7 @@ import (
 func InitGenesis(ctx sdk.Context, ak keeper.AccountKeeper, data types.GenesisState) {
 	ak.SetParams(ctx, data.Params)
 
-	accounts, err := types.ConvertAccountsAny(data.Accounts)
+	accounts, err := types.UnpackAccounts(data.Accounts)
 	if err != nil {
 		panic(err)
 	}

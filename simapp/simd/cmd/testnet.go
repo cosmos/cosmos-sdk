@@ -264,7 +264,7 @@ func initGenFiles(
 	var authGenState authtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
-	accounts, err := authtypes.ConvertAccounts(genAccounts)
+	accounts, err := authtypes.PackAccounts(genAccounts)
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState - Create a new genesis state
 func NewGenesisState(params Params, accounts GenesisAccounts) GenesisState {
-	genAccounts, err := ConvertAccounts(accounts)
+	genAccounts, err := PackAccounts(accounts)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +60,7 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
-	genAccs, err := ConvertAccountsAny(data.Accounts)
+	genAccs, err := UnpackAccounts(data.Accounts)
 	if err != nil {
 		return err
 	}
@@ -118,8 +118,8 @@ func (GenesisAccountIterator) IterateGenesisAccounts(
 	}
 }
 
-// ConvertAccounts converts GenesisAccounts to Any slice
-func ConvertAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
+// PackAccounts converts GenesisAccounts to Any slice
+func PackAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
 	accountsAny := make([]*types.Any, len(accounts))
 	for i, acc := range accounts {
 		msg, ok := acc.(proto.Message)
@@ -136,8 +136,8 @@ func ConvertAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
 	return accountsAny, nil
 }
 
-// ConvertAccountsAny converts Any slice to GenesisAccounts
-func ConvertAccountsAny(accountsAny []*types.Any) (GenesisAccounts, error) {
+// UnpackAccounts converts Any slice to GenesisAccounts
+func UnpackAccounts(accountsAny []*types.Any) (GenesisAccounts, error) {
 	accounts := make(GenesisAccounts, len(accountsAny))
 	for i, any := range accountsAny {
 		acc, ok := any.GetCachedValue().(GenesisAccount)

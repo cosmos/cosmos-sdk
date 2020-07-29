@@ -57,7 +57,7 @@ func TestGenesisAccountIterator(t *testing.T) {
 	genAccounts := types.GenesisAccounts{acc1, acc2}
 
 	authGenState := types.DefaultGenesisState()
-	accounts, err := types.ConvertAccounts(genAccounts)
+	accounts, err := types.PackAccounts(genAccounts)
 	require.NoError(t, err)
 	authGenState.Accounts = accounts
 
@@ -119,7 +119,7 @@ func TestConvertAccountsAny(t *testing.T) {
 		t.Run(tc.msg, func(t *testing.T) {
 			tc.malleate()
 
-			res, err := types.ConvertAccountsAny(accounts)
+			res, err := types.UnpackAccounts(accounts)
 
 			if tc.expPass {
 				require.NoError(t, err)

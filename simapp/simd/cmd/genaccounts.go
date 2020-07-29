@@ -120,7 +120,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
 
-			accs, err := authtypes.ConvertAccountsAny(authGenState.Accounts)
+			accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
 			if err != nil {
 				return fmt.Errorf("failed to get accounts from any: %w", err)
 			}
@@ -134,7 +134,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			accs = append(accs, genAccount)
 			accs = authtypes.SanitizeGenesisAccounts(accs)
 
-			genAccs, err := authtypes.ConvertAccounts(accs)
+			genAccs, err := authtypes.PackAccounts(accs)
 			if err != nil {
 				return fmt.Errorf("failed to convert accounts into any's: %w", err)
 			}

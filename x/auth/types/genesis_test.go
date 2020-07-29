@@ -80,7 +80,7 @@ func TestGenesisAccountIterator(t *testing.T) {
 	require.Equal(t, addresses[1], acc2.GetAddress())
 }
 
-func TestConvertAccountsAny(t *testing.T) {
+func TestPackAccountsAny(t *testing.T) {
 	var (
 		accounts []*codectypes.Any
 	)

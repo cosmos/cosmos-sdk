@@ -53,23 +53,3 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, uint64(0), genAccounts[2].GetAccountNumber())
 	require.Equal(t, uint64(0), genAccounts[2].GetSequence())
 }
-
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
-func TestRandomizedGenState1(t *testing.T) {
-	cdc := codec.New()
-
-	s := rand.NewSource(1)
-	r := rand.New(s)
-
-	simState := module.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
-		Rand:         r,
-		NumBonded:    3,
-		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
-		GenState:     make(map[string]json.RawMessage),
-	}
-
-	require.Panicsf(t, func() { simulation.RandomizedGenState(&simState) }, "Unregistered interface types.GenesisAccount")
-}

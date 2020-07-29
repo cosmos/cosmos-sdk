@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,13 +29,14 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		err = clientCtx.JSONMarshaler.UnmarshalJSON(body, &req)
+		// NOTE: amino is used intentionally here, don't migrate it
+		err = clientCtx.Codec.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		// re-encode it
-		txBytes, err := clientCtx.TxConfig.TxEncoder()(req)
+		txBytes, err := convertAndEncodeStdTx(clientCtx.TxConfig, req)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -42,6 +45,42 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 		response := EncodeResp{Tx: txBytesBase64}
+
+		// NOTE: amino is set intentionally here, don't migrate it
 		rest.PostProcessResponseBare(w, clientCtx, response)
 	}
+}
+
+func convertAndEncodeStdTx(txConfig client.TxConfig, stdTx types.StdTx) ([]byte, error) {
+	builder := txConfig.NewTxBuilder()
+
+	err := copyTx(stdTx, builder)
+	if err != nil {
+		return nil, err
+	}
+
+	return txConfig.TxEncoder()(builder.GetTx())
+}
+
+func copyTx(tx signing.SigFeeMemoTx, builder client.TxBuilder) error {
+	err := builder.SetMsgs(tx.GetMsgs()...)
+	if err != nil {
+		return err
+	}
+
+	sigs, err := tx.GetSignaturesV2()
+	if err != nil {
+		return err
+	}
+
+	err = builder.SetSignatures(sigs...)
+	if err != nil {
+		return err
+	}
+
+	builder.SetMemo(tx.GetMemo())
+	builder.SetFeeAmount(tx.GetFee())
+	builder.SetGasLimit(tx.GetGas())
+
+	return nil
 }

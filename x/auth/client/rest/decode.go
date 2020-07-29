@@ -2,11 +2,18 @@ package rest
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
@@ -17,7 +24,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp sdk.Tx
+	DecodeResp types.StdTx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -32,7 +39,8 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		err = clientCtx.JSONMarshaler.UnmarshalJSON(body, &req)
+		// NOTE: amino is used intentionally here, don't migrate it
+		err = clientCtx.Codec.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -47,7 +55,38 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		response := DecodeResp(tx)
+		stdTx, err := convertTxToStdTx(clientCtx.Codec, tx)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+
+		response := DecodeResp(stdTx)
+
+		// NOTE: amino is set intentionally here, don't migrate it
+		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.Codec)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
+}
+
+func convertTxToStdTx(codec *codec.Codec, tx sdk.Tx) (types.StdTx, error) {
+	sigFeeMemoTx, ok := tx.(signing.SigFeeMemoTx)
+	if !ok {
+		return types.StdTx{}, fmt.Errorf("cannot convert %+v to StdTx", tx)
+	}
+
+	aminoTxConfig := types.StdTxConfig{Cdc: codec}
+	builder := aminoTxConfig.NewTxBuilder()
+
+	err := copyTx(sigFeeMemoTx, builder)
+	if err != nil {
+
+		return types.StdTx{}, err
+	}
+
+	stdTx, ok := builder.GetTx().(types.StdTx)
+	if !ok {
+		return types.StdTx{}, fmt.Errorf("expected %T, got %+v", types.StdTx{}, builder.GetTx())
+	}
+
+	return stdTx, nil
 }

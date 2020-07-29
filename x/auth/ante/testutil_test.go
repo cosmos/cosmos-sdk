@@ -14,6 +14,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -83,6 +84,18 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
 func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
+	// First round: we gather all the signer infos.
+	for _, priv := range privs {
+		err := suite.txBuilder.SetSignerInfo(priv.PubKey(), &txtypes.ModeInfo{
+			Sum: &txtypes.ModeInfo_Single_{
+				Single: &txtypes.ModeInfo_Single{
+					Mode: suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				},
+			},
+		})
+		suite.Require().NoError(err)
+	}
+	// Second round: all signer infos are set, so each signer can sign.
 	var sigsV2 []signing.SignatureV2
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{

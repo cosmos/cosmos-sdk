@@ -1,26 +1,21 @@
 package tx
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
-
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/cosmos/cosmos-sdk/types/tx"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 )
 
 type builder struct {
@@ -287,36 +282,62 @@ func (t *builder) SetFeeAmount(coins sdk.Coins) {
 	t.authInfoBz = nil
 }
 
+// SetSignatures implements TxBuilder.SetSignatures.
 func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
-	signerInfos := make([]*tx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
 
 	for i, sig := range signatures {
-		var modeInfo *tx.ModeInfo
-		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		pk, err := t.pubkeyCodec.Encode(sig.PubKey)
-		if err != nil {
-			return err
-		}
-		signerInfos[i] = &tx.SignerInfo{
-			PublicKey: pk,
-			ModeInfo:  modeInfo,
-		}
+		_, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
 	}
 
-	t.setSignerInfos(signerInfos)
 	t.setSignatures(rawSigs)
 
 	return nil
 }
 
-func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
-	t.tx.AuthInfo.SignerInfos = infos
+// getSignerIndex returns the index of a public key in the GetSigners array. It
+// returns an error if the publicKey is not in GetSigners.
+func (t *builder) getSignerIndex(pubKey crypto.PubKey) (int, error) {
+	for i, signer := range t.GetSigners() {
+		if bytes.Equal(signer.Bytes(), pubKey.Address().Bytes()) {
+			return i, nil
+		}
+	}
+
+	return -1, sdkerrors.Wrapf(
+		sdkerrors.ErrInvalidPubKey,
+		"public key %s is not a signer of this tx, call SetMsgs first", pubKey,
+	)
+}
+
+// SetSignerInfo implements TxBuilder.SetSignerInfo.
+func (t *builder) SetSignerInfo(pubKey crypto.PubKey, modeInfo *tx.ModeInfo) error {
+	signerIndex, err := t.getSignerIndex(pubKey)
+	if err != nil {
+		return err
+	}
+
+	pk, err := t.pubkeyCodec.Encode(pubKey)
+	if err != nil {
+		return err
+	}
+
+	if len(t.tx.AuthInfo.SignerInfos) == 0 {
+		t.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, len(t.GetSigners()))
+	}
+
+	t.tx.AuthInfo.SignerInfos[signerIndex] = &tx.SignerInfo{
+		PublicKey: pk,
+		ModeInfo:  modeInfo,
+	}
+
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil
 	// set cached pubKeys to nil because they no longer match tx.AuthInfo
 	t.pubKeys = nil
+
+	return nil
 }
 
 func (t *builder) setSignatures(sigs [][]byte) {

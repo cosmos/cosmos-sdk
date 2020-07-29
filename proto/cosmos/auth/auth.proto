@@ -3,6 +3,7 @@ package cosmos.auth;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/crypto/crypto.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -15,7 +16,7 @@ message BaseAccount {
   option (cosmos_proto.implements_interface) = "AccountI";
 
   bytes  address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  bytes  pub_key = 2 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
+  cosmos.crypto.PublicKey pub_key = 2 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
   uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
   uint64 sequence       = 4;
 }

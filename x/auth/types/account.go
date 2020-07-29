@@ -62,23 +62,10 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 
 // GetPubKey - Implements sdk.AccountI.
 func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
-	if len(acc.PubKey) == 0 {
-		return nil
-	}
-
-	amino.MustUnmarshalBinaryBare(acc.PubKey, &pk)
-	return pk
 }
 
 // SetPubKey - Implements sdk.AccountI.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	if pubKey == nil {
-		acc.PubKey = nil
-	} else {
-		acc.PubKey = pubKey.Bytes()
-	}
-
-	return nil
 }
 
 // GetAccountNumber - Implements AccountI

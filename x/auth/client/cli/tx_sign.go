@@ -67,7 +67,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
-		txGen := clientCtx.TxConfig
+		txCfg := clientCtx.TxConfig
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
 		var (
@@ -98,12 +98,12 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
-		scanner := authclient.NewBatchScanner(clientCtx.TxConfig, infile)
+		scanner := authclient.NewBatchScanner(txCfg, infile)
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
 			unsignedStdTx := scanner.Tx()
 			txFactory = txFactory.WithSequence(sequence)
-			txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(unsignedStdTx)
+			txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)
 			if err != nil {
 				return err
 			}
@@ -125,7 +125,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			json, err := marshalSignatureJSON(txGen, txBuilder, generateSignatureOnly)
+			json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -214,14 +214,14 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
-		if txF.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-			txF = txF.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-		}
 		if err != nil {
 			return err
 		}
-		txGen := clientCtx.TxConfig
-		txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(newTx)
+		if txF.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+			txF = txF.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		}
+		txCfg := clientCtx.TxConfig
+		txBuilder, err := txCfg.WrapTxBuilder(newTx)
 		if err != nil {
 			return err
 		}
@@ -259,7 +259,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		json, err := marshalSignatureJSON(txGen, txBuilder, generateSignatureOnly)
+		json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -276,8 +276,8 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		defer fp.Close()
 
-		fmt.Fprintf(fp, "%s\n", json)
-		return nil
+		err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
+		return err
 	}
 }
 

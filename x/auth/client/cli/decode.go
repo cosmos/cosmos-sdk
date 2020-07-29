@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -42,9 +43,8 @@ func GetDecodeCommand() *cobra.Command {
 				return err
 			}
 
-			cmd.Printf("%s\n", json)
-
-			return nil
+			err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
+			return err
 		},
 	}
 

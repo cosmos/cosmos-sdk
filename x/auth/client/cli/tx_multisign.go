@@ -159,8 +159,8 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		defer fp.Close()
 
-		fmt.Fprintf(fp, "%s\n", json)
-		return
+		err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
+		return err
 	}
 }
 

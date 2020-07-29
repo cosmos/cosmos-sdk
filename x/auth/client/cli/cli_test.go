@@ -607,8 +607,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	defer cleanup3()
 
 	// Does not work in offline mode.
-	val1.ClientCtx.Offline = true
-	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
 	s.Require().EqualError(err, "couldn't verify signature")
 
 	val1.ClientCtx.Offline = false

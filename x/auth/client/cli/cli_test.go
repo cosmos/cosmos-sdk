@@ -654,7 +654,6 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	t.Cleanup(cleanFunc)
 
 	// Create new file with tx
-	// TODO: Update this to tx
 	builder := txCfg.NewTxBuilder()
 	builder.SetGasLimit(200000)
 	from, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")

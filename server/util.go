@@ -297,13 +297,12 @@ func openDB(rootDir string) (dbm.DB, error) {
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
-	if traceWriterFile != "" {
-		w, err = os.OpenFile(
-			traceWriterFile,
-			os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-			0666,
-		)
+	if traceWriterFile == "" {
 		return
 	}
-	return
+	return os.OpenFile(
+		traceWriterFile,
+		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
+		0666,
+	)
 }

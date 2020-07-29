@@ -39,13 +39,10 @@ func DefaultGenesisState() GenesisState {
 // Validate performs basic gensis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	for i, e := range gs.Evidence {
+	for _, e := range gs.Evidence {
 		evi, ok := e.GetCachedValue().(exported.Evidence)
 		if !ok {
 			return fmt.Errorf("expected evidence")
-		}
-		if evi == nil {
-			return fmt.Errorf("evidence %d cannot be nil", i)
 		}
 		if err := evi.ValidateBasic(); err != nil {
 			return err

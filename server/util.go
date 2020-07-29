@@ -293,8 +293,7 @@ func addrToIP(addr net.Addr) net.IP {
 
 func openDB(rootDir string) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	db, err := sdk.NewLevelDB("application", dataDir)
-	return db, err
+	return sdk.NewLevelDB("application", dataDir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

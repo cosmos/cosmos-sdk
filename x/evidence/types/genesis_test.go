@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -17,6 +18,42 @@ func TestDefaultGenesisState(t *testing.T) {
 	gs := types.DefaultGenesisState()
 	require.NotNil(t, gs.Evidence)
 	require.Len(t, gs.Evidence, 0)
+}
+
+func TestNewGenesisState(t *testing.T) {
+	var (
+		evidence []exported.Evidence
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"cannot proto marshal",
+			func() {
+				evidence = []exported.Evidence{&TestEvidence{}}
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
+			tc.malleate()
+
+			if tc.expPass {
+				require.NotPanics(t, func() {
+					types.NewGenesisState(evidence)
+				})
+			} else {
+				require.Panics(t, func() {
+					types.NewGenesisState(evidence)
+				})
+			}
+		})
+	}
 }
 
 func TestGenesisStateValidate(t *testing.T) {
@@ -85,4 +122,32 @@ func TestGenesisStateValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+type TestEvidence struct{}
+
+var _ exported.Evidence = &TestEvidence{}
+
+func (*TestEvidence) Route() string {
+	return "test-route"
+}
+
+func (*TestEvidence) Type() string {
+	return "test-type"
+}
+
+func (*TestEvidence) String() string {
+	return "test-string"
+}
+
+func (*TestEvidence) Hash() tmbytes.HexBytes {
+	return tmbytes.HexBytes([]byte("test-hash"))
+}
+
+func (*TestEvidence) ValidateBasic() error {
+	return nil
+}
+
+func (*TestEvidence) GetHeight() int64 {
+	return 0
 }

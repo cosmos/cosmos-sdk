@@ -104,7 +104,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns latest block height.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.LatestHeight)
+	return cs.LatestHeight
 }
 
 // IsFrozen returns true if the frozen height has been set.

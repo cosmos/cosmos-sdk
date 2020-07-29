@@ -564,7 +564,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
 	var coins sdk.Coins

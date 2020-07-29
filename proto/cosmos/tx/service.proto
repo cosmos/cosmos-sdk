@@ -1,0 +1,87 @@
+syntax = "proto3";
+package cosmos.tx;
+
+import "gogoproto/gogo.proto";
+import "cosmos/crypto/crypto.proto";
+import "cosmos/cosmos.proto";
+import "cosmos/tx/signing/signing.proto";
+import "cosmos/tx/tx.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
+
+service TxService {
+    rpc Generate(GenerateRequest) returns (GenerateResponse) {}
+    rpc Broadcast(BroadcastRequest) returns (BroadcastResponse) {}
+    rpc QueryTx(QueryTxRequest) returns (QueryTxResponse) {}
+}
+
+message GenerateRequest {
+    repeated google.protobuf.Any messages = 1;
+    Base base = 2;
+
+    message Base {
+        string from = 1;
+        string memo = 2;
+        string chain_id = 3;
+        uint64 account_number = 4;
+        uint64 account_sequence = 5;
+        repeated cosmos.Coin fees = 6 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+        repeated cosmos.DecCoin gas_prices = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+        string gas = 8;
+        string gas_adjustment = 9;
+        bool simulate = 10;
+    }
+}
+
+message GenerateResponse {
+
+}
+
+message BroadcastRequest {
+    TxRaw tx = 1;
+    BroadcastMode mode = 2;
+}
+
+enum BroadcastMode {
+    BLOCK = 0;
+    SYNC = 1;
+    ASYNC = 2;
+}
+
+message BroadcastResponse {
+    int64 height = 1;
+    string txhash = 2 [(gogoproto.customname) = "TxHash"];
+    string codespace = 3;
+    uint32 code = 4;
+    string data = 5;
+    string raw_log = 6;
+    repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
+    string info = 8;
+    int64 gas_wanted = 9;
+    int64 gas_used = 10;
+    Tx tx = 11;
+    string timestamp = 12;
+}
+
+message QueryTxRequest {
+    string tx_hash = 1;
+}
+
+message QueryTxsRequest {
+    string message_action = 1;
+    string message_sender = 2;
+    int64 min_height = 3;
+    int64 max_height = 4;
+    uint64 page = 5;
+    uint64 limit = 6;
+}
+
+message QueryTxsResponseBase {
+    uint64 total_count = 1;
+    uint64 count = 2;
+    uint64 page_number = 3;
+    uint64 page_total = 4;
+    uint64 limit = 5;
+}
+

@@ -23,11 +23,11 @@ var (
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coin, sender, receiver string,
+	token sdk.Coin, sender, receiver string,
 	source bool,
 ) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
-		Amount:   amount,
+		Token:    token,
 		Sender:   sender,
 		Receiver: receiver,
 		Source:   source,
@@ -36,11 +36,11 @@ func NewFungibleTokenPacketData(
 
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
-	if !ftpd.Amount.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
+	if !ftpd.Token.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Token.String())
 	}
-	if !ftpd.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Amount.String())
+	if !ftpd.Token.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Token.String())
 	}
 	if strings.TrimSpace(ftpd.Sender) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")

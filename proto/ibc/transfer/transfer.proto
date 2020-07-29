@@ -15,16 +15,13 @@ message MsgTransfer {
   // the channel by which the packet will be sent
   string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
   // the tokens to be transferred
-  cosmos.Coin amount = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.Coin"
-  ];
+  cosmos.Coin token = 3 [(gogoproto.nullable) = false];
   // the sender address
   bytes sender = 4
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // the recipient address on the destination chain
   string receiver = 5;
-  // flag indicating if the oken came from the source chain
+  // flag indicating if the token came from the source chain
   bool source = 6;
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
@@ -40,15 +37,16 @@ message MsgTransfer {
 // https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message FungibleTokenPacketData {
   // the token to be transferred
-  cosmos.Coin amount = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.Coin"
-  ];
+  cosmos.Coin token = 1 [(gogoproto.nullable) = false];
   // the sender address
   string sender = 2;
   // the recipient address on the destination chain
   string receiver = 3;
-  // flag indicating if the token came from the source chain
+  // flag indicating if the sender chain is acting as a source zone or a sink
+  // zone. A source zone will escrow the sending tokens while a sink zone
+  // will burn the vouchers that were minted for the tokens. The Source bool
+  // should only be false if the tokens are being sent back to the chain that
+  // cause them to be created on the sender chain.
   bool source = 4;
 }
 

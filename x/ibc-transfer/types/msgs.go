@@ -14,14 +14,14 @@ const (
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
-	amount sdk.Coin, sender sdk.AccAddress, receiver string,
+	token sdk.Coin, sender sdk.AccAddress, receiver string,
 	source bool,
 	timeoutHeight, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,
 		SourceChannel:    sourceChannel,
-		Amount:           amount,
+		Token:            token,
 		Sender:           sender,
 		Receiver:         receiver,
 		Source:           source,
@@ -49,11 +49,11 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
 		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
-	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	if !msg.Token.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Token.String())
 	}
-	if !msg.Amount.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Amount.String())
+	if !msg.Token.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Token.String())
 	}
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
@@ -64,7 +64,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 
 	// sanity check that validate basic on fungible token packet passes
 	// NOTE: this should always pass since validation checks should be the same
-	packet := NewFungibleTokenPacketData(msg.Amount, msg.Sender.String(), msg.Receiver, msg.Source)
+	packet := NewFungibleTokenPacketData(msg.Token, msg.Sender.String(), msg.Receiver, msg.Source)
 	if err := packet.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "unexpected failure in fungible token packet validation, please open an issue")
 	}

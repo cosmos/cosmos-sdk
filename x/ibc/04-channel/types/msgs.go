@@ -464,9 +464,6 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if len(msg.Acknowledgement) > 100 {
-		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
-	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}

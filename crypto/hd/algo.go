@@ -1,7 +1,7 @@
 package hd
 
 import (
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 )

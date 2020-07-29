@@ -165,7 +165,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs())
+	clientState, err := ibctmtypes.Initialize(client.Header.ChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(client.Header.Height), commitmenttypes.GetSDKSpecs())
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,8 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, client.ClientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs()),
+		ctxTarget, client.ClientID,
+		ibctmtypes.NewClientState(client.Header.ChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(client.Header.Height), commitmenttypes.GetSDKSpecs()),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

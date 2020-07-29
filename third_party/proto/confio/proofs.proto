@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package ics23;
 
+option go_package = "github.com/confio/ics23/go";
+
 enum HashOp {
     // NO_HASH is the default if no data passed. Note this is an illegal argument some places.
     NO_HASH = 0;

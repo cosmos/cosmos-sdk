@@ -338,7 +338,7 @@ TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/maste
 
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL = https://raw.githubusercontent.com/confio/ics23/master
+CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/master
 
 TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto
 TM_KEY_TYPES     		= third_party/proto/tendermint/crypto
@@ -349,7 +349,7 @@ TM_LIBS							= third_party/proto/tendermint/libs/bits
 
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
-CONFIO_TYPES = third_party/proto/confio
+CONFIO_TYPES 		= third_party/proto/confio
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -373,6 +373,7 @@ proto-update-deps:
 	@curl -sSL $(TM_URL)/proto/tendermint/types/types.proto > $(TM_TYPES)/types.proto
 	@curl -sSL $(TM_URL)/proto/tendermint/types/evidence.proto > $(TM_TYPES)/evidence.proto
 	@curl -sSL $(TM_URL)/proto/tendermint/types/params.proto > $(TM_TYPES)/params.proto
+	@curl -sSL $(TM_URL)/proto/tendermint/types/validator.proto > $(TM_TYPES)/validator.proto
 
 	@mkdir -p $(TM_MERKLE_TYPES)
 	@curl -sSL $(TM_URL)/proto/tendermint/crypto/proof.proto > $(TM_MERKLE_TYPES)/proof.proto
@@ -382,7 +383,7 @@ proto-update-deps:
 
 	@mkdir -p $(TM_LIBS)
 	@curl -sSL $(TM_URL)/proto/tendermint/libs/bits/types.proto > $(TM_LIBS)/types.proto
-
+	
 	@mkdir -p $(CONFIO_TYPES)
 	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto
 

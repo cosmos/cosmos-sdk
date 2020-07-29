@@ -70,7 +70,7 @@ func (ev Evidence) GetHeight() int64 {
 // maximum value from both headers to prevent producing an invalid header outside
 // of the evidence age range.
 func (ev Evidence) GetTime() time.Time {
-	minTime := int64(math.Max(float64(ev.Header1.Time.UnixNano()), float64(ev.Header2.Time.UnixNano())))
+	minTime := int64(math.Max(float64(ev.Header1.GetTime().UnixNano()), float64(ev.Header2.GetTime().UnixNano())))
 	return time.Unix(0, minTime)
 }
 

@@ -19,11 +19,15 @@ message ConsensusParams {
 
 // BlockParams contains limits on the block size.
 message BlockParams {
+  // Max block size, in bytes.
   // Note: must be greater than 0
   int64 max_bytes = 1;
+  // Max gas per block.
   // Note: must be greater or equal to -1
   int64 max_gas = 2;
-  // Minimum time increment between consecutive blocks (in milliseconds)
+  // Minimum time increment between consecutive blocks (in milliseconds) If the
+  // block header timestamp is ahead of the system clock, decrease this value.
+  //
   // Not exposed to the application.
   int64 time_iota_ms = 3;
 }
@@ -74,8 +78,8 @@ message VersionParams {
 }
 
 // HashedParams is a subset of ConsensusParams.
-// It is amino encoded and hashed into
-// the Header.ConsensusHash.
+//
+// It is hashed into the Header.ConsensusHash.
 message HashedParams {
   int64 block_max_bytes = 1;
   int64 block_max_gas   = 2;

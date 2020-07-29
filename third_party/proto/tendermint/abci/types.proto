@@ -332,9 +332,9 @@ message TxResult {
 
 // Validator
 message Validator {
-  bytes address = 1;
+  bytes address = 1; // The first 20 bytes of SHA256(public key)
   // PubKey pub_key = 2 [(gogoproto.nullable)=false];
-  int64 power = 3;
+  int64 power = 3; // The voting power
 }
 
 // ValidatorUpdate

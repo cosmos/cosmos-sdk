@@ -29,14 +29,6 @@ var (
 	_ evidenceexported.MsgSubmitEvidence = (*MsgSubmitClientMisbehaviour)(nil)
 )
 
-// this is a constant to satisfy the linter
-const TODO = "TODO"
-
-// dummy implementation of proto.Message
-func (msg MsgCreateClient) Reset()         {}
-func (msg MsgCreateClient) String() string { return TODO }
-func (msg MsgCreateClient) ProtoMessage()  {}
-
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, header Header, trustLevel Fraction,
@@ -138,11 +130,6 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	}
 }
 
-// dummy implementation of proto.Message
-func (msg MsgUpdateClient) Reset()         {}
-func (msg MsgUpdateClient) String() string { return TODO }
-func (msg MsgUpdateClient) ProtoMessage()  {}
-
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
 	return MsgUpdateClient{
@@ -189,11 +176,6 @@ func (msg MsgUpdateClient) GetClientID() string {
 func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 	return msg.Header
 }
-
-// dummy implementation of proto.Message
-func (msg MsgSubmitClientMisbehaviour) Reset()         {}
-func (msg MsgSubmitClientMisbehaviour) String() string { return TODO }
-func (msg MsgSubmitClientMisbehaviour) ProtoMessage()  {}
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.

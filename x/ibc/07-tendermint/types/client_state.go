@@ -4,7 +4,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	tmmath "github.com/tendermint/tendermint/libs/math"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +33,7 @@ func InitializeFromMsg(msg MsgCreateClient) ClientState {
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustLevel tmmath.Fraction,
+	id string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header, specs []*ics23.ProofSpec,
 ) (ClientState, error) {
@@ -98,7 +98,7 @@ func (cs ClientState) Validate() error {
 	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
 		return err
 	}
-	if err := ibctmtypes.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
+	if err := light.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {
@@ -202,7 +202,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	connection := connectionEnd.(connectiontypes.ConnectionEnd)
+	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid connection type %T", connectionEnd)
 	}

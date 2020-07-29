@@ -41,11 +41,9 @@ var (
 	disabledTimeout   = uint64(0)
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
-	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
 
 	packet        = types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 	unknownPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
-	invalidAck    = invalidAckData
 
 	emptyProof     = []byte{}
 	invalidProofs1 = commitmentexported.Proof(nil)
@@ -471,7 +469,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, 1, emptyAddr),
 		types.NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
 		types.NewMsgAcknowledgement(unknownPacket, packet.GetData(), suite.proof, 1, addr),
-		types.NewMsgAcknowledgement(packet, invalidAck, suite.proof, 1, addr),
 	}
 
 	testCases := []struct {
@@ -484,7 +481,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		{testMsgs[2], false, "missing signer address"},
 		{testMsgs[3], false, "cannot submit an empty proof"},
 		{testMsgs[4], false, "invalid packet"},
-		{testMsgs[5], false, "invalid acknowledgement"},
 	}
 
 	for i, tc := range testCases {

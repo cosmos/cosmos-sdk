@@ -264,7 +264,12 @@ func initGenFiles(
 	var authGenState authtypes.GenesisState
 	cdc.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
-	authGenState.Accounts = genAccounts
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	if err != nil {
+		return err
+	}
+
+	authGenState.Accounts = accounts
 	appGenState[authtypes.ModuleName] = cdc.MustMarshalJSON(authGenState)
 
 	// set the balances in the genesis state

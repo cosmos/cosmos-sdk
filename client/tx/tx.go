@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -308,25 +309,13 @@ func getSignBytes(
 	signMode signing.SignMode, signerData authsigning.SignerData,
 	txBuilder client.TxBuilder, pubKey crypto.PubKey, txConfig client.TxConfig,
 ) ([]byte, error) {
-
-	sigData := signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
-	}
-	sig := signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   &sigData,
-	}
-
-	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
-	// TxBuilder under the hood, and SignerInfos is needed to generated the
-	// sign bytes. This is the reason for setting SetSignatures here, with a
-	// nil signature.
-	//
-	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
-	// also doesn't affect its generated sign bytes, so for code's simplicity
-	// sake, we put it here.
-	if err := txBuilder.SetSignatures(sig); err != nil {
+	// Set signer info, we only support single signature in this function.
+	err := txBuilder.SetSignerInfo(pubKey, &txtypes.ModeInfo{
+		Sum: &txtypes.ModeInfo_Single_{
+			Single: &txtypes.ModeInfo_Single{Mode: signMode},
+		},
+	})
+	if err != nil {
 		return nil, err
 	}
 

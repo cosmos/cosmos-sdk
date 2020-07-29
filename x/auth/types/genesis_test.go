@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -76,4 +78,57 @@ func TestGenesisAccountIterator(t *testing.T) {
 	require.Len(t, addresses, 2)
 	require.Equal(t, addresses[0], acc1.GetAddress())
 	require.Equal(t, addresses[1], acc2.GetAddress())
+}
+
+func TestConvertAccountsAny(t *testing.T) {
+	var (
+		accounts []*codectypes.Any
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"expected genesis account",
+			func() {
+				accounts = []*codectypes.Any{&codectypes.Any{}}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				genAccounts := types.GenesisAccounts{&types.BaseAccount{}}
+				accounts = make([]*codectypes.Any, len(genAccounts))
+
+				for i, a := range genAccounts {
+					msg, ok := a.(proto.Message)
+					require.Equal(t, ok, true)
+					any, err := codectypes.NewAnyWithValue(msg)
+					require.NoError(t, err)
+					accounts[i] = any
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.msg, func(t *testing.T) {
+			tc.malleate()
+
+			res, err := types.ConvertAccountsAny(accounts)
+
+			if tc.expPass {
+				require.NoError(t, err)
+				require.NotNil(t, res)
+				require.Equal(t, len(res), len(accounts))
+			} else {
+				require.Error(t, err)
+				require.Nil(t, res)
+			}
+		})
+	}
 }

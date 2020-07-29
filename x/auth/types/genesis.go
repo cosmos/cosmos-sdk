@@ -144,9 +144,6 @@ func ConvertAccountsAny(accountsAny []*types.Any) (GenesisAccounts, error) {
 		if !ok {
 			return nil, fmt.Errorf("expected genesis account")
 		}
-		if acc == nil {
-			return nil, fmt.Errorf("genesis account %d cannot be nil", i)
-		}
 		accounts[i] = acc
 	}
 

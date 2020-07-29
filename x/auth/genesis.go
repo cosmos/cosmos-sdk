@@ -13,13 +13,9 @@ import (
 func InitGenesis(ctx sdk.Context, ak keeper.AccountKeeper, data types.GenesisState) {
 	ak.SetParams(ctx, data.Params)
 
-	accounts := make([]types.GenesisAccount, len(data.Accounts))
-	for i, genAcc := range data.Accounts {
-		acc, ok := genAcc.GetCachedValue().(types.GenesisAccount)
-		if !ok {
-			panic("expected account")
-		}
-		accounts[i] = acc
+	accounts, err := types.ConvertAccountsAny(data.Accounts)
+	if err != nil {
+		panic(err)
 	}
 	accounts = types.SanitizeGenesisAccounts(accounts)
 

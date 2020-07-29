@@ -12,20 +12,26 @@ func NewGenesisState(
 	params Params, signingInfos map[string]ValidatorSigningInfo, missedBlocks map[string][]MissedBlock,
 ) GenesisState {
 
-	var si []ValidatorSigningInfos
+	var si = make([]ValidatorSigningInfos, len(signingInfos))
+
+	index := 0
 	for address, signingInfo := range signingInfos {
-		si = append(si, ValidatorSigningInfos{
+		si[index] = ValidatorSigningInfos{
 			Address:      address,
 			SigningInfos: signingInfo,
-		})
+		}
+		index++
 	}
 
-	var validatorMissedBlocks []ValidatorMissedBlocks
+	var validatorMissedBlocks = make([]ValidatorMissedBlocks, len(missedBlocks))
+
+	index = 0
 	for address, validatorMissedBlock := range missedBlocks {
-		validatorMissedBlocks = append(validatorMissedBlocks, ValidatorMissedBlocks{
+		validatorMissedBlocks[index] = ValidatorMissedBlocks{
 			Address:      address,
 			MissedBlocks: validatorMissedBlock,
-		})
+		}
+		index++
 	}
 
 	return GenesisState{

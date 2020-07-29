@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -276,8 +275,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		defer fp.Close()
 
-		err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
-		return err
+		return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 	}
 }
 

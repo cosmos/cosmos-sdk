@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"time"
 
 	ics23 "github.com/confio/ics23/go"

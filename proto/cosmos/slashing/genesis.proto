@@ -14,7 +14,7 @@ message GenesisState {
     (gogoproto.nullable) = false
   ];
 
-  repeated ValidatorSigningInfos signing_infos = 2 [
+  repeated SigningInfos signing_infos = 2 [
     (gogoproto.moretags) = "yaml:\"signing_infos\"",
     (gogoproto.nullable) = false
   ];
@@ -25,8 +25,8 @@ message GenesisState {
   ];
 }
 
-// ValidatorSigningInfos 
-message ValidatorSigningInfos {
+// SigningInfos 
+message SigningInfos {
   string address = 1;
   ValidatorSigningInfo signing_infos = 2 [
     (gogoproto.nullable) = false,

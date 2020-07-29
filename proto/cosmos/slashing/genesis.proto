@@ -15,13 +15,11 @@ message GenesisState {
   ];
 
   repeated ValidatorSigningInfos signing_infos = 2 [
-    (gogoproto.casttype) = "ValidatorSigningInfos",
     (gogoproto.moretags) = "yaml:\"signing_infos\"",
     (gogoproto.nullable) = false
   ];
 
   repeated ValidatorMissedBlocks missed_blocks = 3 [
-    (gogoproto.casttype) = "ValidatorMissedBlocks",
     (gogoproto.moretags) = "yaml:\"missed_blocks\"",
     (gogoproto.nullable) = false
   ];
@@ -31,7 +29,6 @@ message GenesisState {
 message ValidatorSigningInfos {
   string address = 1;
   ValidatorSigningInfo signing_infos = 2 [
-    (gogoproto.casttype) = "ValidatorSigningInfo",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"signing_infos\""
   ];
@@ -41,7 +38,6 @@ message ValidatorSigningInfos {
 message ValidatorMissedBlocks {
   string address = 1;
   repeated MissedBlock missed_blocks = 2 [
-    (gogoproto.casttype) = "MissedBlock",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"missed_blocks\""
   ];

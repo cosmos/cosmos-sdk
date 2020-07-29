@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
@@ -149,8 +150,12 @@ func TestReadStdTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
+	encodingConfig := simappparams.MakeEncodingConfig()
+	std.RegisterCodec(encodingConfig.Amino)
+
+	txGen := encodingConfig.TxConfig
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxConfig(txGen)
 
 	batch1 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
 {"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
@@ -182,12 +187,12 @@ malformed
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			scanner, i := NewBatchScanner(cdc, strings.NewReader(tt.batch)), 0
+			scanner, i := NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
 			for scanner.Scan() {
-				_ = scanner.StdTx()
+				_ = scanner.Tx()
 				i++
 			}
-
+			t.Log(scanner.theTx)
 			require.Equal(t, tt.wantScannerError, scanner.Err() != nil)
 			require.Equal(t, tt.wantUnmarshalError, scanner.UnmarshalErr() != nil)
 			require.Equal(t, tt.numTxs, i)
@@ -204,48 +209,6 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	encoderBytes, err := actual(tx)
 	require.NoError(t, err)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
-}
-
-func TestPrepareTxBuilder(t *testing.T) {
-	cdc := makeCodec()
-
-	encodingConfig := simappparams.MakeEncodingConfig()
-	sdk.RegisterCodec(encodingConfig.Amino)
-
-	fromAddr := sdk.AccAddress("test-addr0000000000")
-	fromAddrStr := fromAddr.String()
-
-	var accNum uint64 = 10
-	var accSeq uint64 = 17
-
-	txGen := encodingConfig.TxConfig
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.
-		WithTxConfig(txGen).
-		WithJSONMarshaler(encodingConfig.Marshaler).
-		WithAccountRetriever(client.TestAccountRetriever{Accounts: map[string]struct {
-			Address sdk.AccAddress
-			Num     uint64
-			Seq     uint64
-		}{
-			fromAddrStr: {
-				Address: fromAddr,
-				Num:     accNum,
-				Seq:     accSeq,
-			},
-		}}).
-		WithFromAddress(fromAddr)
-
-	bldr := authtypes.NewTxBuilder(
-		authtypes.DefaultTxEncoder(cdc), 0, 0,
-		200000, 1.1, false, "test-chain",
-		"test-builder", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
-		sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))})
-
-	bldr, err := PrepareTxBuilder(bldr, clientCtx)
-	require.NoError(t, err)
-	require.Equal(t, accNum, bldr.AccountNumber())
-	require.Equal(t, accSeq, bldr.Sequence())
 }
 
 func makeCodec() *codec.Codec {

@@ -39,7 +39,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 			txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 			err = clientCtx.PrintString(fmt.Sprintf("%s\n", txBytesBase64))
-			return nil
+			return err
 		},
 	}
 

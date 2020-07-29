@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -125,9 +127,19 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 // GetAllGenesisClients returns all the clients in state with their client ids returned as GenesisClientState
 func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.GenesisClientState) {
 	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
+		msg, ok := cs.(proto.Message)
+		if !ok {
+			panic(fmt.Errorf("cannot proto marshal %T", cs))
+		}
+
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+
 		gc := types.GenesisClientState{
 			ClientID:    clientID,
-			ClientState: cs,
+			ClientState: any,
 		}
 		genClients = append(genClients, gc)
 		return false

@@ -58,14 +58,14 @@ func TestValidateGenesis(t *testing.T) {
 					),
 				},
 				[]types.ClientConsensusStates{
-					{
+					types.NewClientConsensusStates(
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
 								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet,
 							),
 						},
-					},
+					),
 				},
 				true,
 			),
@@ -83,14 +83,14 @@ func TestValidateGenesis(t *testing.T) {
 					),
 				},
 				[]types.ClientConsensusStates{
-					{
+					types.NewClientConsensusStates(
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
 								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet,
 							),
 						},
-					},
+					),
 				},
 				true,
 			),
@@ -123,14 +123,14 @@ func TestValidateGenesis(t *testing.T) {
 					),
 				},
 				[]types.ClientConsensusStates{
-					{
+					types.NewClientConsensusStates(
 						"CLIENTID2",
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
 								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet,
 							),
 						},
-					},
+					),
 				},
 				true,
 			),

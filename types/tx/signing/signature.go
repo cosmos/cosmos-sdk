@@ -20,10 +20,10 @@ type SignatureV2 struct {
 	Data SignatureData
 }
 
-// SignatureDataToSignatureDescriptorData converts a SignatureData to SignatureDescriptor_Data.
+// SignatureDataToProto converts a SignatureData to SignatureDescriptor_Data.
 // SignatureDescriptor_Data is considered an encoding type whereas SignatureData is used for
 // business logic.
-func SignatureDataToSignatureDescriptorData(data SignatureData) *SignatureDescriptor_Data {
+func SignatureDataToProto(data SignatureData) *SignatureDescriptor_Data {
 	switch data := data.(type) {
 	case *SingleSignatureData:
 		return &SignatureDescriptor_Data{
@@ -38,7 +38,7 @@ func SignatureDataToSignatureDescriptorData(data SignatureData) *SignatureDescri
 		descDatas := make([]*SignatureDescriptor_Data, len(data.Signatures))
 
 		for j, d := range data.Signatures {
-			descDatas[j] = SignatureDataToSignatureDescriptorData(d)
+			descDatas[j] = SignatureDataToProto(d)
 		}
 
 		return &SignatureDescriptor_Data{
@@ -54,10 +54,10 @@ func SignatureDataToSignatureDescriptorData(data SignatureData) *SignatureDescri
 	}
 }
 
-// SignatureDescriptorDataToSignatureData converts a SignatureDescriptor_Data to SignatureData.
+// SignatureDataFromProto converts a SignatureDescriptor_Data to SignatureData.
 // SignatureDescriptor_Data is considered an encoding type whereas SignatureData is used for
 // business logic.
-func SignatureDescriptorDataToSignatureData(descData *SignatureDescriptor_Data) SignatureData {
+func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 	switch descData := descData.Sum.(type) {
 	case *SignatureDescriptor_Data_Single_:
 		return &SingleSignatureData{
@@ -69,7 +69,7 @@ func SignatureDescriptorDataToSignatureData(descData *SignatureDescriptor_Data) 
 		datas := make([]SignatureData, len(multi.Signatures))
 
 		for j, d := range multi.Signatures {
-			datas[j] = SignatureDescriptorDataToSignatureData(d)
+			datas[j] = SignatureDataFromProto(d)
 		}
 
 		return &MultiSignatureData{

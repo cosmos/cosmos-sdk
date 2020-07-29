@@ -114,7 +114,7 @@ func (g generator) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, err
 			return nil, err
 		}
 
-		descData := signing.SignatureDataToSignatureDescriptorData(sig.Data)
+		descData := signing.SignatureDataToProto(sig.Data)
 
 		descs[i] = &signing.SignatureDescriptor{
 			PublicKey: publicKey,
@@ -141,7 +141,7 @@ func (g generator) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, err
 			return nil, err
 		}
 
-		data := signing.SignatureDescriptorDataToSignatureData(desc.Data)
+		data := signing.SignatureDataFromProto(desc.Data)
 
 		sigs[i] = signing.SignatureV2{
 			PubKey: pubKey,

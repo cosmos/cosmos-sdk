@@ -3,7 +3,7 @@ package staking
 import (
 	"time"
 
-	"github.com/armon/go-metrics"
+	metrics "github.com/armon/go-metrics"
 	gogotypes "github.com/gogo/protobuf/types"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	tmtypes "github.com/tendermint/tendermint/types"

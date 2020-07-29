@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmos.genutil;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/genutil/types";
+
+// GenesisState defines the raw genesis transaction in JSON
+message GenesisState {
+  repeated bytes gen_txs = 1 [
+    (gogoproto.casttype) = "encoding/json.RawMessage",
+    (gogoproto.jsontag) = "gentxs",
+    (gogoproto.moretags) = "yaml:\"gentxs\""
+  ];
+}

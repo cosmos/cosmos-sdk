@@ -1,7 +1,6 @@
 package ante_test
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -110,12 +109,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	var txBytes []byte
-	if suite.clientCtx.TxConfig.SignModeHandler().DefaultMode() == signing.SignMode_SIGN_MODE_DIRECT {
-		txBytes, err = suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-	} else {
-		txBytes, err = json.Marshal(tx)
-	}
+	txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
 	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
 	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper)
@@ -149,12 +143,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	}))
 	tx = txBuilder.GetTx()
 
-	var simTxBytes []byte
-	if suite.clientCtx.TxConfig.SignModeHandler().DefaultMode() == signing.SignMode_SIGN_MODE_DIRECT {
-		simTxBytes, err = suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-	} else {
-		simTxBytes, err = json.Marshal(tx)
-	}
+	simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
 	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 	// require that simulated tx is smaller than tx with signatures
 	suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")

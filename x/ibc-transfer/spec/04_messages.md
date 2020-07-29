@@ -12,7 +12,7 @@ A fungible token cross chain transfer is achieved by using the `MsgTransfer`:
 type MsgTransfer struct {
   SourcePort        string
   SourceChannel     string
-  Amount            sdk.Coin
+  Token             sdk.Coin
   Sender            sdk.AccAddress
   Receiver          string
   Source            bool
@@ -25,8 +25,8 @@ This message is expected to fail if:
 
 - `SourcePort` is invalid (see 24-host naming requirements)
 - `SourceChannel` is invalid (see 24-host naming requirements)
-- `Amount` is invalid (denom is invalid or amount is negative)
-- `Amount` is not positive
+- `Token` is invalid (denom is invalid or amount is negative)
+- `Token.Amount` is not positive
 - `Sender` is empty
 - `Receiver` is empty
 - `TimeoutHeight` and `TimeoutTimestamp` are both zero

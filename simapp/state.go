@@ -154,8 +154,13 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string
 
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 
+		a, ok := acc.GetCachedValue().(authtypes.AccountI)
+		if !ok {
+			panic("expected account")
+		}
+
 		// create simulator accounts
-		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: acc.GetAddress()}
+		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: a.GetAddress()}
 		newAccs[i] = simAcc
 	}
 

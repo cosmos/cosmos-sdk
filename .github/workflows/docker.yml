@@ -1,7 +1,9 @@
-name: Publish Docker Builds
+name: Nightly Builds
+# Nightly Builds rebuilds the simapp docker image Monday - Friday at midnight
+# and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
 on:
   schedule:
-    - cron: "0 0 * * 1-5"
+    - cron: "0 0 * * 1-5" # deploy at midnight Monday - Friday
 
 jobs:
   build:

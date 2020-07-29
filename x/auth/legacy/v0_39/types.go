@@ -1,14 +1,12 @@
-package v038
+package v039
 
 // DONTCOVER
 // nolint
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -16,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 )
 
 const (
@@ -23,39 +22,15 @@ const (
 )
 
 type (
-	// partial interface needed only for amino encoding and sanitization
-	Account interface {
-		GetAddress() sdk.AccAddress
-		GetAccountNumber() uint64
-		GetCoins() sdk.Coins
-		SetCoins(sdk.Coins) error
-	}
-
-	GenesisAccount interface {
-		Account
-
-		Validate() error
-	}
-
-	GenesisAccounts []GenesisAccount
-
 	GenesisState struct {
-		Params   v034auth.Params `json:"params" yaml:"params"`
-		Accounts GenesisAccounts `json:"accounts" yaml:"accounts"`
+		Params   v034auth.Params          `json:"params" yaml:"params"`
+		Accounts v038auth.GenesisAccounts `json:"accounts" yaml:"accounts"`
 	}
 
 	BaseAccount struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
 		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
-		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-		Sequence      uint64         `json:"sequence" yaml:"sequence"`
-	}
-
-	baseAccountPretty struct {
-		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
-		PubKey        string         `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
 	}
@@ -70,10 +45,10 @@ type (
 		EndTime int64 `json:"end_time"`
 	}
 
-	vestingAccountPretty struct {
+	vestingAccountJSON struct {
 		Address          sdk.AccAddress `json:"address" yaml:"address"`
-		Coins            sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
-		PubKey           string         `json:"public_key" yaml:"public_key"`
+		Coins            sdk.Coins      `json:"coins,omitempty" yaml:"coins"`
+		PubKey           crypto.PubKey  `json:"public_key" yaml:"public_key"`
 		AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
 		Sequence         uint64         `json:"sequence" yaml:"sequence"`
 		OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`
@@ -82,7 +57,8 @@ type (
 		EndTime          int64          `json:"end_time" yaml:"end_time"`
 
 		// custom fields based on concrete vesting type which can be omitted
-		StartTime int64 `json:"start_time,omitempty" yaml:"start_time,omitempty"`
+		StartTime      int64   `json:"start_time,omitempty" yaml:"start_time,omitempty"`
+		VestingPeriods Periods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
 	}
 
 	ContinuousVestingAccount struct {
@@ -95,6 +71,19 @@ type (
 		*BaseVestingAccount
 	}
 
+	Period struct {
+		Length int64     `json:"length" yaml:"length"` // length of the period, in seconds
+		Amount sdk.Coins `json:"amount" yaml:"amount"` // amount of coins vesting during this period
+	}
+
+	Periods []Period
+
+	PeriodicVestingAccount struct {
+		*BaseVestingAccount
+		StartTime      int64   `json:"start_time" yaml:"start_time"`           // when the coins start to vest
+		VestingPeriods Periods `json:"vesting_periods" yaml:"vesting_periods"` // the vesting schedule
+	}
+
 	ModuleAccount struct {
 		*BaseAccount
 
@@ -104,7 +93,7 @@ type (
 
 	moduleAccountPretty struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
+		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins"`
 		PubKey        string         `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -113,7 +102,7 @@ type (
 	}
 )
 
-func NewGenesisState(params v034auth.Params, accounts GenesisAccounts) GenesisState {
+func NewGenesisState(params v034auth.Params, accounts v038auth.GenesisAccounts) GenesisState {
 	return GenesisState{
 		Params:   params,
 		Accounts: accounts,
@@ -165,50 +154,6 @@ func (acc BaseAccount) Validate() error {
 	return nil
 }
 
-func (acc BaseAccount) MarshalJSON() ([]byte, error) {
-	alias := baseAccountPretty{
-		Address:       acc.Address,
-		Coins:         acc.Coins,
-		AccountNumber: acc.AccountNumber,
-		Sequence:      acc.Sequence,
-	}
-
-	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a BaseAccount.
-func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
-	var alias baseAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	if alias.PubKey != "" {
-		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-
-		acc.PubKey = pk
-	}
-
-	acc.Address = alias.Address
-	acc.Coins = alias.Coins
-	acc.AccountNumber = alias.AccountNumber
-	acc.Sequence = alias.Sequence
-
-	return nil
-}
-
 func NewBaseVestingAccount(
 	baseAccount *BaseAccount, originalVesting, delegatedFree, delegatedVesting sdk.Coins, endTime int64,
 ) *BaseVestingAccount {
@@ -222,20 +167,11 @@ func NewBaseVestingAccount(
 	}
 }
 
-func (bva BaseVestingAccount) Validate() error {
-	if (bva.Coins.IsZero() && !bva.OriginalVesting.IsZero()) ||
-		bva.OriginalVesting.IsAnyGT(bva.Coins) {
-		return errors.New("vesting amount cannot be greater than total amount")
-	}
-
-	return bva.BaseAccount.Validate()
-}
-
-// MarshalJSON returns the JSON representation of a BaseVestingAccount.
 func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
-	alias := vestingAccountPretty{
+	alias := vestingAccountJSON{
 		Address:          bva.Address,
 		Coins:            bva.Coins,
+		PubKey:           bva.PubKey,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
@@ -244,44 +180,35 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          bva.EndTime,
 	}
 
-	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
+	return codec.Cdc.MarshalJSON(alias)
 }
 
-// UnmarshalJSON unmarshals raw JSON bytes into a BaseVestingAccount.
 func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
-	var alias vestingAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
+	var alias vestingAccountJSON
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
-	var (
-		pk  crypto.PubKey
-		err error
-	)
-
-	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	bva.BaseAccount = NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence)
+	bva.BaseAccount = NewBaseAccount(alias.Address, alias.Coins, alias.PubKey, alias.AccountNumber, alias.Sequence)
 	bva.OriginalVesting = alias.OriginalVesting
 	bva.DelegatedFree = alias.DelegatedFree
 	bva.DelegatedVesting = alias.DelegatedVesting
 	bva.EndTime = alias.EndTime
 
 	return nil
+}
+
+func (bva BaseVestingAccount) GetEndTime() int64 {
+	return bva.EndTime
+}
+
+func (bva BaseVestingAccount) Validate() error {
+	if (bva.Coins.IsZero() && !bva.OriginalVesting.IsZero()) ||
+		bva.OriginalVesting.IsAnyGT(bva.Coins) {
+		return errors.New("vesting amount cannot be greater than total amount")
+	}
+
+	return bva.BaseAccount.Validate()
 }
 
 func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
@@ -299,11 +226,11 @@ func (cva ContinuousVestingAccount) Validate() error {
 	return cva.BaseVestingAccount.Validate()
 }
 
-// MarshalJSON returns the JSON representation of a ContinuousVestingAccount.
 func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
-	alias := vestingAccountPretty{
+	alias := vestingAccountJSON{
 		Address:          cva.Address,
 		Coins:            cva.Coins,
+		PubKey:           cva.PubKey,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
@@ -313,39 +240,17 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 		StartTime:        cva.StartTime,
 	}
 
-	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
+	return codec.Cdc.MarshalJSON(alias)
 }
 
-// UnmarshalJSON unmarshals raw JSON bytes into a ContinuousVestingAccount.
 func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
-	var alias vestingAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
+	var alias vestingAccountJSON
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
-	var (
-		pk  crypto.PubKey
-		err error
-	)
-
-	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-	}
-
 	cva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
+		BaseAccount:      NewBaseAccount(alias.Address, alias.Coins, alias.PubKey, alias.AccountNumber, alias.Sequence),
 		OriginalVesting:  alias.OriginalVesting,
 		DelegatedFree:    alias.DelegatedFree,
 		DelegatedVesting: alias.DelegatedVesting,
@@ -366,11 +271,11 @@ func (dva DelayedVestingAccount) Validate() error {
 	return dva.BaseVestingAccount.Validate()
 }
 
-// MarshalJSON returns the JSON representation of a DelayedVestingAccount.
 func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
-	alias := vestingAccountPretty{
+	alias := vestingAccountJSON{
 		Address:          dva.Address,
 		Coins:            dva.Coins,
+		PubKey:           dva.PubKey,
 		AccountNumber:    dva.AccountNumber,
 		Sequence:         dva.Sequence,
 		OriginalVesting:  dva.OriginalVesting,
@@ -379,39 +284,18 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          dva.EndTime,
 	}
 
-	if dva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, dva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
+	return codec.Cdc.MarshalJSON(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a DelayedVestingAccount.
 func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
-	var alias vestingAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
+	var alias vestingAccountJSON
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
-	var (
-		pk  crypto.PubKey
-		err error
-	)
-
-	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-	}
-
 	dva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
+		BaseAccount:      NewBaseAccount(alias.Address, alias.Coins, alias.PubKey, alias.AccountNumber, alias.Sequence),
 		OriginalVesting:  alias.OriginalVesting,
 		DelegatedFree:    alias.DelegatedFree,
 		DelegatedVesting: alias.DelegatedVesting,
@@ -421,8 +305,66 @@ func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-func NewModuleAddress(name string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
+func (pva PeriodicVestingAccount) GetStartTime() int64 {
+	return pva.StartTime
+}
+
+func (pva PeriodicVestingAccount) Validate() error {
+	if pva.GetStartTime() >= pva.GetEndTime() {
+		return errors.New("vesting start-time cannot be before end-time")
+	}
+	endTime := pva.StartTime
+	originalVesting := sdk.NewCoins()
+	for _, p := range pva.VestingPeriods {
+		endTime += p.Length
+		originalVesting = originalVesting.Add(p.Amount...)
+	}
+	if endTime != pva.EndTime {
+		return errors.New("vesting end time does not match length of all vesting periods")
+	}
+	if !originalVesting.IsEqual(pva.OriginalVesting) {
+		return errors.New("original vesting coins does not match the sum of all coins in vesting periods")
+	}
+
+	return pva.BaseVestingAccount.Validate()
+}
+
+func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
+	alias := vestingAccountJSON{
+		Address:          pva.Address,
+		Coins:            pva.Coins,
+		PubKey:           pva.PubKey,
+		AccountNumber:    pva.AccountNumber,
+		Sequence:         pva.Sequence,
+		OriginalVesting:  pva.OriginalVesting,
+		DelegatedFree:    pva.DelegatedFree,
+		DelegatedVesting: pva.DelegatedVesting,
+		EndTime:          pva.EndTime,
+		StartTime:        pva.StartTime,
+		VestingPeriods:   pva.VestingPeriods,
+	}
+
+	return codec.Cdc.MarshalJSON(alias)
+}
+
+// UnmarshalJSON unmarshals raw JSON bytes into a PeriodicVestingAccount.
+func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
+	var alias vestingAccountJSON
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
+		return err
+	}
+
+	pva.BaseVestingAccount = &BaseVestingAccount{
+		BaseAccount:      NewBaseAccount(alias.Address, alias.Coins, alias.PubKey, alias.AccountNumber, alias.Sequence),
+		OriginalVesting:  alias.OriginalVesting,
+		DelegatedFree:    alias.DelegatedFree,
+		DelegatedVesting: alias.DelegatedVesting,
+		EndTime:          alias.EndTime,
+	}
+	pva.StartTime = alias.StartTime
+	pva.VestingPeriods = alias.VestingPeriods
+
+	return nil
 }
 
 func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...string) *ModuleAccount {
@@ -434,7 +376,7 @@ func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...stri
 }
 
 func (ma ModuleAccount) Validate() error {
-	if err := ValidatePermissions(ma.Permissions...); err != nil {
+	if err := v038auth.ValidatePermissions(ma.Permissions...); err != nil {
 		return err
 	}
 
@@ -442,8 +384,8 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("module account name cannot be blank")
 	}
 
-	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
-		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
+	if x := sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))); !ma.Address.Equals(x) {
+		return fmt.Errorf("address %s cannot be derived from the module name '%s'; expected: %s", ma.Address, ma.Name, x)
 	}
 
 	return ma.BaseAccount.Validate()
@@ -451,7 +393,7 @@ func (ma ModuleAccount) Validate() error {
 
 // MarshalJSON returns the JSON representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
-	return json.Marshal(moduleAccountPretty{
+	return codec.Cdc.MarshalJSON(moduleAccountPretty{
 		Address:       ma.Address,
 		Coins:         ma.Coins,
 		PubKey:        "",
@@ -465,7 +407,7 @@ func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals raw JSON bytes into a ModuleAccount.
 func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	var alias moduleAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -476,57 +418,13 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-func ValidatePermissions(permissions ...string) error {
-	for _, perm := range permissions {
-		if strings.TrimSpace(perm) == "" {
-			return fmt.Errorf("module permission is empty")
-		}
-	}
-
-	return nil
-}
-
-func SanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
-	sort.Slice(genAccounts, func(i, j int) bool {
-		return genAccounts[i].GetAccountNumber() < genAccounts[j].GetAccountNumber()
-	})
-
-	for _, acc := range genAccounts {
-		if err := acc.SetCoins(acc.GetCoins().Sort()); err != nil {
-			panic(err)
-		}
-	}
-
-	return genAccounts
-}
-
-func ValidateGenAccounts(genAccounts GenesisAccounts) error {
-	addrMap := make(map[string]bool, len(genAccounts))
-	for _, acc := range genAccounts {
-
-		// check for duplicated accounts
-		addrStr := acc.GetAddress().String()
-		if _, ok := addrMap[addrStr]; ok {
-			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
-		}
-
-		addrMap[addrStr] = true
-
-		// check account specific validation
-		if err := acc.Validate(); err != nil {
-			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
-		}
-	}
-
-	return nil
-}
-
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
-	cdc.RegisterInterface((*Account)(nil), nil)
+	cdc.RegisterInterface((*v038auth.GenesisAccount)(nil), nil)
+	cdc.RegisterInterface((*v038auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
+	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 }

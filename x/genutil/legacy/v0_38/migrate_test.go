@@ -5,8 +5,8 @@ import (
 
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 
 	"github.com/stretchr/testify/require"
@@ -132,7 +132,7 @@ var genStakingState = []byte(`{
 }`)
 
 func TestMigrate(t *testing.T) {
-	genesis := genutil.AppMap{
+	genesis := types.AppMap{
 		v036auth.ModuleName:        genAuthState,
 		v036genaccounts.ModuleName: genAccountsState,
 		v036staking.ModuleName:     genStakingState,

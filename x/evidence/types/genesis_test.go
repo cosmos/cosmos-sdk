@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -119,6 +120,40 @@ func TestGenesisStateValidate(t *testing.T) {
 				require.NoError(t, genesisState.Validate())
 			} else {
 				require.Error(t, genesisState.Validate())
+			}
+		})
+	}
+}
+
+func TestUnpackInterfaces(t *testing.T) {
+	var gs = types.GenesisState{
+		Evidence: []*codectypes.Any{&codectypes.Any{}},
+	}
+
+	testCases := []struct {
+		msg      string
+		unpacker codectypes.AnyUnpacker
+		expPass  bool
+	}{
+		{
+			"success",
+			codectypes.NewInterfaceRegistry(),
+			true,
+		},
+		{
+			"error",
+			codec.New(),
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
+
+			if tc.expPass {
+				require.NoError(t, gs.UnpackInterfaces(tc.unpacker))
+			} else {
+				require.Error(t, gs.UnpackInterfaces(tc.unpacker))
 			}
 		})
 	}

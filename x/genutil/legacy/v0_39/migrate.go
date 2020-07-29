@@ -27,7 +27,7 @@ func Migrate(appState types.AppMap) types.AppMap {
 		v038Codec.MustUnmarshalJSON(appState[v038auth.ModuleName], &authGenState)
 
 		delete(appState, v038auth.ModuleName) // delete old key in case the name changed
-		appState[v039auth.ModuleName] = v039Codec.MustMarshalJSON(authGenState)
+		appState[v039auth.ModuleName] = v039Codec.MustMarshalJSON(v039auth.Migrate(authGenState))
 	}
 
 	return appState

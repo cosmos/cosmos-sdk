@@ -1,11 +1,12 @@
 package types
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
@@ -21,14 +22,13 @@ var (
 )
 
 // NewBaseAccount creates a new BaseAccount object
-func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
+func NewBaseAccount(address sdk.AccAddress, pubKey *types.PublicKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
 		Address:       address,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
+		PubKey:        pubKey,
 	}
-
-	acc.SetPubKey(pubKey)
 
 	return acc
 }
@@ -61,11 +61,14 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 }
 
 // GetPubKey - Implements sdk.AccountI.
-func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
+func (acc BaseAccount) GetPubKey() (pk *types.PublicKey) {
+	return acc.PubKey
 }
 
 // SetPubKey - Implements sdk.AccountI.
-func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (acc *BaseAccount) SetPubKey(pubKey *types.PublicKey) error {
+	acc.PubKey = pubKey
+	return nil
 }
 
 // GetAccountNumber - Implements AccountI
@@ -92,11 +95,6 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 
 // Validate checks for errors on the account fields
 func (acc BaseAccount) Validate() error {
-	if len(acc.PubKey) != 0 && acc.Address != nil &&
-		!bytes.Equal(acc.GetPubKey().Address().Bytes(), acc.Address.Bytes()) {
-		return errors.New("account address and pubkey address do not match")
-	}
-
 	return nil
 }
 
@@ -192,7 +190,7 @@ func (ma ModuleAccount) GetPermissions() []string {
 }
 
 // SetPubKey - Implements AccountI
-func (ma ModuleAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (ma ModuleAccount) SetPubKey(pubKey *types.PublicKey) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
@@ -282,8 +280,8 @@ type AccountI interface {
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
 
-	GetPubKey() crypto.PubKey // can return nil.
-	SetPubKey(crypto.PubKey) error
+	GetPubKey() *types.PublicKey // can return nil.
+	SetPubKey(*types.PublicKey) error
 
 	GetAccountNumber() uint64
 	SetAccountNumber(uint64) error

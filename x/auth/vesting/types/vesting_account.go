@@ -4,13 +4,14 @@ import (
 	"errors"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/tendermint/tendermint/crypto"
-	"gopkg.in/yaml.v2"
 )
 
 // Compile-time type assertions

@@ -3,14 +3,15 @@ package v040_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v040 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_40"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestMigrate(t *testing.T) {
@@ -36,7 +37,7 @@ func TestMigrate(t *testing.T) {
 			SigVerifyCostED25519:   10,
 			SigVerifyCostSecp256k1: 10,
 		},
-		Accounts: v039auth.GenesisAccounts{acc1, vaac},
+		Accounts: v038auth.GenesisAccounts{acc1, vaac},
 	}
 
 	migrated := v040.Migrate(gs)

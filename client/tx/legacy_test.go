@@ -99,7 +99,7 @@ func TestConvertTxToStdTx(t *testing.T) {
 	require.Equal(t, gas, stdTx.Fee.Gas)
 	require.Equal(t, fee, stdTx.Fee.Amount)
 	require.Equal(t, msg, stdTx.Msgs[0])
-	require.Equal(t, sig.PubKey.Bytes(), stdTx.Signatures[0].PubKey)
+	require.Equal(t, sig.PubKey, stdTx.Signatures[0].PubKey)
 	require.Equal(t, sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
 }
 

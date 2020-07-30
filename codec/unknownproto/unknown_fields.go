@@ -110,8 +110,10 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			if hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, &types.Any{}, allowUnknownNonCriticals); err != nil {
-				return hasUnknownNonCriticals || hasUnknownNonCriticalsChild, err
+			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, &types.Any{}, allowUnknownNonCriticals)
+			hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
+			if err != nil {
+				return hasUnknownNonCriticals, err
 			}
 			// And finally we can extract the TypeURL containing the protoMessageName.
 			any := new(types.Any)
@@ -128,8 +130,11 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 		if err != nil {
 			return hasUnknownNonCriticals, err
 		}
-		if hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals); err != nil {
-			return hasUnknownNonCriticals || hasUnknownNonCriticalsChild, err
+
+		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals)
+		hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
+		if err != nil {
+			return hasUnknownNonCriticals, err
 		}
 	}
 

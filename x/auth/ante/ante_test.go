@@ -988,7 +988,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
-	}, types.LegacyAminoJSONHandler{})
+	}, types.legacyAminoJSONHandler{})
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(1)

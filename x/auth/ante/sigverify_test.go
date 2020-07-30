@@ -143,7 +143,7 @@ func (suite *AnteTestSuite) TestSigVerification() {
 	gasLimit := testdata.NewTestGasLimit()
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.LegacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.legacyAminoJSONHandler{})
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
@@ -230,7 +230,7 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.LegacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.legacyAminoJSONHandler{})
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params

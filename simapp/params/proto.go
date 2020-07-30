@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -15,7 +16,10 @@ func MakeEncodingConfig() EncodingConfig {
 	cdc := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
-	txGen := tx.NewTxConfig(interfaceRegistry, std.DefaultPublicKeyCodec{}, tx.DefaultSignModeHandler())
+	txGen := tx.NewTxConfig(interfaceRegistry, std.DefaultPublicKeyCodec{}, []signingtypes.SignMode{
+		signingtypes.SignMode_SIGN_MODE_DIRECT,
+		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+	})
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,

@@ -6,8 +6,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
-
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -46,7 +44,6 @@ type builder struct {
 var (
 	_ authsigning.SigFeeMemoTx = &builder{}
 	_ client.TxBuilder         = &builder{}
-	_ direct.ProtoTx           = &builder{}
 )
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
@@ -129,7 +126,7 @@ func (t *builder) ValidateBasic() error {
 	return nil
 }
 
-func (t *builder) GetBodyBytes() []byte {
+func (t *builder) getBodyBytes() []byte {
 	if len(t.bodyBz) == 0 {
 		// if bodyBz is empty, then marshal the body. bodyBz will generally
 		// be set to nil whenever SetBody is called so the result of calling
@@ -145,7 +142,7 @@ func (t *builder) GetBodyBytes() []byte {
 	return t.bodyBz
 }
 
-func (t *builder) GetAuthInfoBytes() []byte {
+func (t *builder) getAuthInfoBytes() []byte {
 	if len(t.authInfoBz) == 0 {
 		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
 		// be set to nil whenever SetAuthInfo is called so the result of calling

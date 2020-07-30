@@ -123,5 +123,5 @@ func (s StdTxConfig) TxJSONDecoder() sdk.TxDecoder {
 }
 
 func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
-	return LegacyAminoJSONHandler{}
+	return legacyAminoJSONHandler{}
 }

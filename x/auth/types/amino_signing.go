@@ -8,23 +8,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// LegacyAminoJSONHandler is a SignModeHandler that handles SIGN_MODE_LEGACY_AMINO_JSON
-type LegacyAminoJSONHandler struct{}
+// legacyAminoJSONHandler is a SignModeHandler that handles SIGN_MODE_LEGACY_AMINO_JSON
+type legacyAminoJSONHandler struct{}
 
-var _ signing.SignModeHandler = LegacyAminoJSONHandler{}
+var _ signing.SignModeHandler = legacyAminoJSONHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
-func (h LegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
+func (h legacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
 	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 // Modes implements SignModeHandler.Modes
-func (LegacyAminoJSONHandler) Modes() []signingtypes.SignMode {
+func (legacyAminoJSONHandler) Modes() []signingtypes.SignMode {
 	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes
-func (LegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+func (legacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
 	}

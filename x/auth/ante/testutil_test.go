@@ -40,7 +40,7 @@ type AnteTestSuite struct {
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.app, suite.ctx = createTestApp(isCheckTx)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
+	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, types.legacyAminoJSONHandler{})
 
 	// set up the TxBuilder
 	encodingConfig := simappparams.MakeEncodingConfig()

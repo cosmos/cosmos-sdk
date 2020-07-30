@@ -149,11 +149,7 @@ func (dt *DenomTrace) RemovePrefix() error {
 
   var err error
   switch {
-  case len(traceSplit) == 1 && traceSplit[0] == dt.Trace:
-    err = Wrapf(ErrInvalidDenomForTransfer, "trace info %s must contain '/' separators", dt.Trace)
-  case len(traceSplit) == 1:
-    // trace only contains one identifier
-    err = Wrapf(ErrInvalidDenomForTransfer, "trace info %s must come in pairs of identifiers '{portID}/{channelID}'", dt.Trace)
+  // NOTE: other cases are checked during msg validation
   case len(traceSplit) == 2:
     dt.Trace = ""
   case len(traceSplit) == 3:
@@ -229,7 +225,7 @@ func (msg MsgTransfer) ValidateBasic() error {
   if err := msg.Trace.Validate(); err != nil {
     return err
   }
-  // Only validate the ibc denomination when trace info is not provided
+  // Only validate the ibc denomination when trace info is provided
   if msg.Trace.Trace != "" {
     denomTraceHash, err := ValidateIBCDenom(msg.Token.Denom)
     if err != nil {
@@ -239,12 +235,12 @@ func (msg MsgTransfer) ValidateBasic() error {
     if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
       return Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
     }
-  } else if msg.Trace.BaseDenom != msg.Amount[0].Denom {
-    // otherwise, validate that denominations are equal
+  } else if msg.Trace.BaseDenom != msg.Token.Denom {
+    // otherwise, validate that base denominations are equal
     return Wrapf(
       ErrInvalidDenomForTransfer,
       "token denom must match the trace base denom (%s ≠ %s)",
-      msg.Amount, msg.Trace.BaseDenom,
+      msg.Token.Denom, msg.Trace.BaseDenom,
     )
   }
   // ...

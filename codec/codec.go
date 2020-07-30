@@ -1,12 +1,9 @@
 package codec
 
 import (
-	"encoding/binary"
-	"io"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/gogo/protobuf/proto"
 )
 
 type (
@@ -58,12 +55,3 @@ type (
 		Unmarshal(data []byte) error
 	}
 )
-
-func encodeUvarint(w io.Writer, u uint64) (err error) {
-	var buf [10]byte
-
-	n := binary.PutUvarint(buf[:], u)
-	_, err = w.Write(buf[0:n])
-
-	return err
-}

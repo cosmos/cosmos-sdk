@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/base64"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -9,13 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
-
-// txEncodeRespStr implements a simple Stringer wrapper for a encoded tx.
-type txEncodeRespStr string
-
-func (txr txEncodeRespStr) String() string {
-	return string(txr)
-}
 
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
@@ -44,8 +38,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 			// base64 encode the encoded tx bytes
 			txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
-			response := txEncodeRespStr(txBytesBase64)
-			return clientCtx.PrintOutput(response)
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", txBytesBase64))
 		},
 	}
 

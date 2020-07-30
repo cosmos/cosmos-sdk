@@ -10,15 +10,35 @@ import (
 
 // SendTransfer handles transfer sending logic. There are 2 possible cases:
 //
-// 1. Sender chain is acting as the source zone. The coins are transferred to an
-// escrow address (i.e locked) on the sender chain and then transferred to the
-// receiving chain through IBC TAO logic. It is expected that the receiving
-// chain will mint vouchers to the receiving address.
+// 1. Sender chain is acting as the source zone. The coins are transferred
+// to an escrow address (i.e locked) on the sender chain and then transferred
+// to the receiving chain through IBC TAO logic. It is expected that the
+// receiving chain will mint vouchers to the receiving address.
 //
 // 2. Sender chain is acting as the sink zone. The coins (vouchers) are burned
 // on the sender chain and then transferred to the receiving chain though IBC
-// TAO logic. It is expected that the receiving chain, which had previously sent the original denomination, will unescrow the fungible
-// token and send it to the receiving address.
+// TAO logic. It is expected that the receiving chain, which had previously
+// sent the original denomination, will unescrow the fungible token and send
+// it to the receiving address.
+//
+// Another way of thinking of source and sink zones is through the token's
+// timeline. Each send to any chain other than the one it was previously
+// received from is a movement forwards in the token's timeline. This causes
+// trace to be added to the token's history and the destination port and
+// destination channel to be prefixed to the denomination. In these instances
+// the sender chain is acting as the source zone. When the token is sent back
+// to the chain it previously received from, the prefix is removed. This is
+// a backwards movement in the token's timeline and the sender chain
+// is acting as the sink zone.
+//
+// Example:
+// These steps of transfer occur: A -> B -> C -> A -> C
+// 1. A -> B :: sender chain is source zone
+// 2. B -> C :: sender chain is source zone
+// 3. C -> A :: sender chain is source zone
+// 4. A -> C :: sender chain is sink zone
+// token has final prefix of C/B/A/denom
+
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
@@ -161,6 +181,10 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	)
 }
 
+// OnAcknowledgementPacket responds to the the success or failure of a packet
+// acknowledgement written on the receiving chain. If the acknowledgement
+// was a success then nothing occurs. If the acknowledgement failed, then
+// the sender is refunded their tokens using the refundPacketToken function.
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData, ack types.FungibleTokenPacketAcknowledgement) error {
 	if !ack.Success {
 		return k.refundPacketToken(ctx, packet, data)
@@ -168,10 +192,16 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 	return nil
 }
 
+// OnTimeoutPacket refunds the sender since the original packet sent was
+// never received and has been timed out.
 func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	return k.refundPacketToken(ctx, packet, data)
 }
 
+// refundPacketToken will unescrow and send back the tokens back to sender
+// if the sending chain was the source chain. Otherwise, the sent tokens
+// were burnt in the original send so new tokens are minted and sent to
+// the sending address.
 func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 

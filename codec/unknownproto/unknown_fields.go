@@ -78,6 +78,12 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 			}
 		}
 
+		// Skip over the bytes that store fieldNumber and wireType bytes.
+		b = b[m:]
+		n := protowire.ConsumeFieldValue(tagNum, wireType, b)
+		fieldBytes := b[:n]
+		b = b[n:]
+
 		// An unknown but non-critical field or just a scalar type (aka *INT and BYTES like).
 		if fieldDescProto == nil || fieldDescProto.IsScalar() {
 			continue
@@ -91,18 +97,16 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 				// TYPE_BYTES and TYPE_STRING as per
 				// https://github.com/gogo/protobuf/blob/5628607bb4c51c3157aacc3a50f0ab707582b805/protoc-gen-gogo/descriptor/descriptor.go#L95-L118
 			default:
-				return false, fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
+				return hasUnknownNonCriticals, fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
 			}
 			continue
 		}
 
 		// Let's recursively traverse and typecheck the field.
 
-		// Skip over the bytes that store fieldNumber and wireType bytes.
-		b = b[m:]
-		n := protowire.ConsumeFieldValue(tagNum, wireType, b)
-		fieldBytes := b[:n]
-		b = b[n:]
+		// consume length prefix of nested message
+		_, o := protowire.ConsumeVarint(fieldBytes)
+		fieldBytes = fieldBytes[o:]
 
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
@@ -116,6 +120,8 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 			}
 			protoMessageName = any.TypeUrl
 			fieldBytes = any.Value
+		} else {
+			// remove
 		}
 
 		msg, err := protoMessageForTypeName(protoMessageName[1:])

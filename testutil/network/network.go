@@ -62,6 +62,7 @@ func NewSimApp(val Validator) servertypes.Application {
 // in-process local testing network.
 type Config struct {
 	Codec            codec.Marshaler
+	LegacyAmino      *codec.Codec
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
@@ -88,6 +89,7 @@ func DefaultConfig() Config {
 	return Config{
 		Codec:            encCfg.Marshaler,
 		TxConfig:         encCfg.TxConfig,
+		LegacyAmino:      encCfg.Amino,
 		AccountRetriever: authtypes.NewAccountRetriever(encCfg.Marshaler),
 		AppConstructor:   NewSimApp,
 		GenesisState:     simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
@@ -312,6 +314,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithJSONMarshaler(cfg.Codec).
+			WithCodec(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)
 

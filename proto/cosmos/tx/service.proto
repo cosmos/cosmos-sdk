@@ -42,10 +42,19 @@ message GenerateRequest {
         // account_sequence is the account sequence to sign against
         uint64 account_sequence = 5;
 
+        // fees is the fees paid
         repeated cosmos.Coin fees = 6 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+        // gas prices are the gas prices used to calculate fees
         repeated cosmos.DecCoin gas_prices = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+
+        // gas is the gas setting - either auto or an integer gas limit value
         string gas = 8;
-        string gas_adjustment = 9;
+
+        // gas_adjustment is the gas adjustment used for calculating fees. It is multiplied by the gas used in simulate
+        double gas_adjustment = 9;
+
+        // simulate specifies whether or not to simulate the transaction to calculate gas
         bool simulate = 10;
     }
 }

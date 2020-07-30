@@ -1,6 +1,5 @@
-// +build test_proto
+// +build !test_amino
 
-// TODO switch to !test_amino build flag once proto Tx's are ready
 package params
 
 import (

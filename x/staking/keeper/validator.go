@@ -426,29 +426,48 @@ func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHe
 func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
-	unbondingValIterator := k.ValidatorQueueIterator(ctx, ctx.BlockTime(), ctx.BlockHeight())
+	blockTime := ctx.BlockTime()
+	blockHeight := ctx.BlockHeight()
+
+	// unbondingValIterator will contains all validator addresses indexed under
+	// the ValidatorQueueKey prefix. Note, the entire index key is composed as
+	// ValidatorQueueKey | timeBzLen (8-byte big endian) | timeBz | heightBz (8-byte big endian),
+	// so it may be possible that certain validator addresses that are iterated
+	// over are not ready to unbond, so an explicit check is required.
+	unbondingValIterator := k.ValidatorQueueIterator(ctx, blockTime, blockHeight)
 	defer unbondingValIterator.Close()
 
 	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
-		addrs := sdk.ValAddresses{}
-		k.cdc.MustUnmarshalBinaryBare(unbondingValIterator.Value(), &addrs)
-
-		for _, valAddr := range addrs.Addresses {
-			val, found := k.GetValidator(ctx, valAddr)
-			if !found {
-				panic("validator in the unbonding queue was not found")
-			}
-
-			if !val.IsUnbonding() {
-				panic("unexpected validator in unbonding queue; status was not unbonding")
-			}
-
-			val = k.UnbondingToUnbonded(ctx, val)
-			if val.GetDelegatorShares().IsZero() {
-				k.RemoveValidator(ctx, val.OperatorAddress)
-			}
+		key := unbondingValIterator.Key()
+		keyTime, keyHeight, err := types.ParseValidatorQueueKey(key)
+		if err != nil {
+			panic(fmt.Errorf("failed to parse unbonding key: %w", err))
 		}
 
-		store.Delete(unbondingValIterator.Key())
+		// All addresses for the given key have the same unbonding height and time.
+		// We only unbond if the height and time are less than the current height
+		// and time.
+		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
+			addrs := sdk.ValAddresses{}
+			k.cdc.MustUnmarshalBinaryBare(unbondingValIterator.Value(), &addrs)
+
+			for _, valAddr := range addrs.Addresses {
+				val, found := k.GetValidator(ctx, valAddr)
+				if !found {
+					panic("validator in the unbonding queue was not found")
+				}
+
+				if !val.IsUnbonding() {
+					panic("unexpected validator in unbonding queue; status was not unbonding")
+				}
+
+				val = k.UnbondingToUnbonded(ctx, val)
+				if val.GetDelegatorShares().IsZero() {
+					k.RemoveValidator(ctx, val.OperatorAddress)
+				}
+			}
+
+			store.Delete(key)
+		}
 	}
 }

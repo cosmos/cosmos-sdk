@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -72,15 +70,6 @@ func (k Keeper) SendTransfer(
 		}
 
 	} else {
-		// ensure that the coin has the correct prefix
-		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
-		if !strings.HasPrefix(token.Denom, prefix) {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidDenomForTransfer,
-				"%s doesn't contain the prefix '%s'", token.Denom, prefix,
-			)
-		}
-
 		// transfer the coins to the module account and burn them
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(
 			ctx, sender, types.ModuleName, sdk.NewCoins(token),
@@ -139,7 +128,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	// receiving this coin as seen in the "sender chain is the source" condition.
 	voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 
-	if strings.HasPrefix(data.Denom, voucherPrefix) {
+	if types.ReceiverChainIsSource(voucherPrefix, data.Denom) {
 		// sender chain is not the source, unescrow tokens
 
 		// remove prefix added by sender chain

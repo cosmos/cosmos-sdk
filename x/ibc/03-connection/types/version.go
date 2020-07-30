@@ -50,9 +50,6 @@ func ValidateVersion(encodedVersion string) error {
 		return sdkerrors.Wrapf(err, "failed to unmarshal version string %s", encodedVersion)
 	}
 
-	if strings.TrimSpace(version.Identifier) == "" {
-		return sdkerrors.Wrap(ErrInvalidVersion, "version identifier cannot be blank")
-	}
 	for i, feature := range version.Features {
 		if strings.TrimSpace(feature) == "" {
 			return sdkerrors.Wrapf(ErrInvalidVersion, "feature cannot be blank, index %d", i)

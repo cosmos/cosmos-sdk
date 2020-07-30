@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -107,6 +107,11 @@ func (vo *VoteOption) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+
+	if s == "" {
+		*vo = OptionEmpty
+		return nil
 	}
 
 	bz2, err := VoteOptionFromString(s)

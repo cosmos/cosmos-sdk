@@ -9,7 +9,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -130,25 +129,32 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 		},
 	} {
+
 		tc := tc
+
 		t.Run(tc.description, func(t *testing.T) {
 			var (
 				marshalled = make([]tmtypes.Tx, len(tc.txs))
 				cdc        = newTestCodec()
 			)
+
 			for i := range tc.txs {
 				tx, err := cdc.MarshalBinaryBare(&tc.txs[i])
 				require.NoError(t, err)
 				marshalled[i] = tx
 			}
-			client := TxSearchMock{txs: marshalled}
-			ctx := context.CLIContext{}.WithCodec(cdc).WithTrustNode(true).WithClient(client)
+
+			cli := TxSearchMock{txs: marshalled}
+			clientCtx := client.Context{}.
+				WithJSONMarshaler(cdc).
+				WithCodec(cdc).
+				WithClient(cli)
 
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)
-			votesData, err := QueryVotesByTxQuery(ctx, params)
+			votesData, err := QueryVotesByTxQuery(clientCtx, params)
 			require.NoError(t, err)
 			votes := []types.Vote{}
-			require.NoError(t, ctx.Codec.UnmarshalJSON(votesData, &votes))
+			require.NoError(t, clientCtx.JSONMarshaler.UnmarshalJSON(votesData, &votes))
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {
 				require.Equal(t, tc.votes[i], votes[i])

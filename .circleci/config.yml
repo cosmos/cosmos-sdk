@@ -1,17 +1,11 @@
 version: 2.1
 
 executors:
-  golang:
-    docker:
-      - image: circleci/golang:1.14
   docs:
     docker:
       - image: tendermintdev/docker-website-deployment
     environment:
       AWS_REGION: us-east-1
-  protoc:
-    docker:
-      - image: tendermintdev/docker-protoc
 
 commands:
   make:
@@ -44,89 +38,15 @@ jobs:
       - checkout
       - run:
           name: "Build docs"
-          command: make build-docs
+          command: make build-docs LEDGER_ENABLED=false
       - run:
           name: "Upload docs to S3"
-          command: make sync-docs
-
-  setup-dependencies:
-    executor: golang
-    steps:
-      - checkout
-      - restore_cache:
-          name: "Restore go modules cache"
-          keys:
-            - go-mod-v2-{{ checksum "go.sum" }}
-      - run:
-          name: Cache go modules
-          command: make go-mod-cache
-      - run:
-          name: Build
-          command: make build
-      - run:
-          name: Git garbage collection
-          command: git gc
-      - save_cache:
-          name: "Save go modules cache"
-          key: go-mod-v2-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
-      - save_cache:
-          name: "Save source code cache"
-          key: go-src-v1-{{ .Revision }}
-          paths:
-            - ".git"
-
-  proto:
-    executor: protoc
-    steps:
-      - make:
-          target: protoc-gen-gocosmos
-          description: "Generate go plugin for protoc"
-      - make:
-          target: proto-gen proto-lint proto-check-breaking
-          description: "Lint and verify Protocol Buffer definitions"
-
-  test-sim-multi-seed-long:
-    executor: golang
-    steps:
-      - make:
-          target: test-sim-multi-seed-long
-          description: "Test multi-seed simulation (long)"
-
-  update-swagger-docs:
-    executor: golang
-    steps:
-      - make:
-          target: update-swagger-docs
-          description: "Check if statik.go is up-to-date"
+          command: make sync-docs LEDGER_ENABLED=false
 
 workflows:
   version: 2
   test-suite:
     jobs:
-      - update-swagger-docs:
-          requires:
-            - setup-dependencies
-      - setup-dependencies:
-          # This filter enables the job for tags
-          filters:
-            tags:
-              only:
-                - /^v.*/
-      - test-sim-multi-seed-long:
-          requires:
-            - setup-dependencies
-          # These filters ensure that the long sim only runs during release
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only:
-                - /^v.*/
-      - proto:
-          requires:
-            - setup-dependencies
       - build-docs:
           context: docs-deployment-master
           filters:

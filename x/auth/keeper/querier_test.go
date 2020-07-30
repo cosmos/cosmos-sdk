@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	keep "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestQueryAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
-	cdc := app.Codec()
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	req := abci.RequestQuery{
 		Path: "",
@@ -23,7 +25,7 @@ func TestQueryAccount(t *testing.T) {
 	}
 
 	path := []string{types.QueryAccount}
-	querier := keep.NewQuerier(app.AccountKeeper)
+	querier := keep.NewQuerier(app.AccountKeeper, legacyQuerierCdc)
 
 	bz, err := querier(ctx, []string{"other"}, req)
 	require.Error(t, err)
@@ -37,13 +39,13 @@ func TestQueryAccount(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountParams([]byte("")))
+	req.Data = legacyQuerierCdc.MustMarshalJSON(types.QueryAccountRequest{Address: []byte("")})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	_, _, addr := types.KeyTestPubAddr()
-	req.Data = cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
+	_, _, addr := testdata.KeyTestPubAddr()
+	req.Data = legacyQuerierCdc.MustMarshalJSON(types.QueryAccountRequest{Address: addr})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
@@ -57,7 +59,7 @@ func TestQueryAccount(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	var account exported.Account
-	err2 := cdc.UnmarshalJSON(res, &account)
+	var account types.AccountI
+	err2 := legacyQuerierCdc.UnmarshalJSON(res, &account)
 	require.Nil(t, err2)
 }

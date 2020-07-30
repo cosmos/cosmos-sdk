@@ -7,14 +7,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // query routes supported by the IBC client Querier
 const (
-	QueryAllClients     = "client_states"
-	QueryClientState    = "client_state"
-	QueryConsensusState = "consensus_state"
+	QueryAllClients = "client_states"
 )
 
 // QueryAllClientsParams defines the parameters necessary for querying for all
@@ -48,7 +46,7 @@ func NewClientStateResponse(
 	return StateResponse{
 		ClientState: clientState,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(ibctypes.ClientStatePath(), "/")...)),
+		ProofPath:   commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(host.ClientStatePath(), "/")...)),
 		ProofHeight: uint64(height),
 	}
 }
@@ -69,7 +67,7 @@ func NewConsensusStateResponse(
 	return ConsensusStateResponse{
 		ConsensusState: cs,
 		Proof:          commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:      commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(ibctypes.ClientStatePath(), "/")...)),
+		ProofPath:      commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(host.ClientStatePath(), "/")...)),
 		ProofHeight:    uint64(height),
 	}
 }

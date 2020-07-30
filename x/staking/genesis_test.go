@@ -11,15 +11,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
-	addrDels, addrVals := generateAddresses(app, ctx, numAddrs, 10000)
+	addrDels, _ := generateAddresses(app, ctx, numAddrs, 10000)
 
 	amt := sdk.TokensFromConsensusPower(power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
@@ -29,13 +29,13 @@ func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimA
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
+	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
-	return app, ctx, addrDels, addrVals
+	return app, ctx, addrDels
 }
 
 func TestInitGenesis(t *testing.T) {
-	app, ctx, addrs, _ := bootstrapGenesisTest(t, 1000, 10)
+	app, ctx, addrs := bootstrapGenesisTest(t, 1000, 10)
 
 	valTokens := sdk.TokensFromConsensusPower(1)
 
@@ -71,6 +71,11 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
 
+	// Ensure validators have addresses.
+	for _, val := range staking.WriteValidators(ctx, app.StakingKeeper) {
+		require.NotEmpty(t, val.Address)
+	}
+
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
 	require.True(t, found)
@@ -92,7 +97,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	app, ctx, addrs, _ := bootstrapGenesisTest(t, 1000, 200)
+	app, ctx, addrs := bootstrapGenesisTest(t, 1000, 200)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}

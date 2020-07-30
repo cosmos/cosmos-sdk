@@ -22,14 +22,16 @@ func NewQueryRouter() *QueryRouter {
 // AddRoute adds a query path to the router with a given Querier. It will panic
 // if a duplicate route is given. The route must be alphanumeric.
 func (qrt *QueryRouter) AddRoute(path string, q sdk.Querier) sdk.QueryRouter {
-	if !isAlphaNumeric(path) {
+	if !sdk.IsAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
+
 	if qrt.routes[path] != nil {
 		panic(fmt.Sprintf("route %s has already been initialized", path))
 	}
 
 	qrt.routes[path] = q
+
 	return qrt
 }
 

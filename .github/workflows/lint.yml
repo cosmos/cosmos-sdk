@@ -1,12 +1,29 @@
 name: Lint
-on: [pull_request]
+# Lint runs golangci-lint over the entire cosmos-sdk repository
+# This workflow is run on every pull request and push to master
+# The `golangci` will pass without running if no *.{go, mod, sum} files have been changed.
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 jobs:
-  golangci-lint:
+  golangci:
+    name: golangci-lint
     runs-on: ubuntu-latest
+    timeout-minutes: 6
     steps:
-      - uses: actions/checkout@master
-      - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v1
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
         with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - uses: golangci/golangci-lint-action@master
+        with:
+          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+          version: v1.28
+          args: --timeout 10m
+          github-token: ${{ secrets.github_token }}
+        if: "env.GIT_DIFF != ''"

@@ -1,6 +1,9 @@
 package types
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 // Gas consumption descriptors.
 const (
@@ -36,6 +39,7 @@ type GasMeter interface {
 	ConsumeGas(amount Gas, descriptor string)
 	IsPastLimit() bool
 	IsOutOfGas() bool
+	String() string
 }
 
 type basicGasMeter struct {
@@ -98,6 +102,10 @@ func (g *basicGasMeter) IsOutOfGas() bool {
 	return g.consumed >= g.limit
 }
 
+func (g *basicGasMeter) String() string {
+	return fmt.Sprintf("BasicGasMeter:\n  limit: %d\n  consumed: %d", g.limit, g.consumed)
+}
+
 type infiniteGasMeter struct {
 	consumed Gas
 }
@@ -136,6 +144,10 @@ func (g *infiniteGasMeter) IsPastLimit() bool {
 
 func (g *infiniteGasMeter) IsOutOfGas() bool {
 	return false
+}
+
+func (g *infiniteGasMeter) String() string {
+	return fmt.Sprintf("InfiniteGasMeter:\n  consumed: %d", g.consumed)
 }
 
 // GasConfig defines gas cost for each operation on KVStores

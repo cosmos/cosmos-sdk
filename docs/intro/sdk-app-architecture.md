@@ -36,7 +36,7 @@ The Cosmos SDK gives developers maximum flexibility to define the state of their
 
 ## Tendermint
 
-Thanks to the Cosmos SDK, develepers just have to define the state machine, and [*Tendermint*](https://tendermint.com/docs/introduction/what-is-tendermint.html) will handle replication over the network for them.
+Thanks to the Cosmos SDK, developers just have to define the state machine, and [*Tendermint*](https://tendermint.com/docs/introduction/what-is-tendermint.html) will handle replication over the network for them.
 
 
 ```

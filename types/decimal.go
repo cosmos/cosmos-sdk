@@ -159,7 +159,6 @@ func NewDecFromStr(str string) (Dec, error) {
 			return Dec{}, ErrInvalidDecimalLength
 		}
 		combinedStr += strs[1]
-
 	} else if len(strs) > 2 {
 		return Dec{}, ErrInvalidDecimalStr
 	}
@@ -277,7 +276,6 @@ func (d Dec) MulInt64(i int64) Dec {
 
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
-
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -293,7 +291,6 @@ func (d Dec) Quo(d2 Dec) Dec {
 
 // quotient truncate
 func (d Dec) QuoTruncate(d2 Dec) Dec {
-
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -386,6 +383,7 @@ func (d Dec) Power(power uint64) Dec {
 		return OneDec()
 	}
 	tmp := OneDec()
+
 	for i := power; i > 1; {
 		if i%2 == 0 {
 			i /= 2
@@ -395,6 +393,7 @@ func (d Dec) Power(power uint64) Dec {
 		}
 		d = d.Mul(d)
 	}
+
 	return d.Mul(tmp)
 }
 
@@ -423,7 +422,8 @@ func (d Dec) String() string {
 	}
 
 	isNeg := d.IsNegative()
-	if d.IsNegative() {
+
+	if isNeg {
 		d = d.Neg()
 	}
 
@@ -451,9 +451,7 @@ func (d Dec) String() string {
 
 		// set final digits
 		copy(bzStr[2+(Precision-inputSize):], bzInt)
-
 	} else {
-
 		// inputSize + 1 to account for the decimal point that is being added
 		bzStr = make([]byte, inputSize+1)
 		decPointPlace := inputSize - Precision
@@ -484,7 +482,6 @@ func (d Dec) String() string {
 //
 // Mutates the input. Use the non-mutative version if that is undesired
 func chopPrecisionAndRound(d *big.Int) *big.Int {
-
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
@@ -517,7 +514,6 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 }
 
 func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
-
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
@@ -704,7 +700,8 @@ func (d *Dec) MarshalTo(data []byte) (n int, err error) {
 	if d.i == nil {
 		d.i = new(big.Int)
 	}
-	if len(d.i.Bytes()) == 0 {
+
+	if d.i.Cmp(zeroInt) == 0 {
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

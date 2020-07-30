@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
@@ -18,9 +18,9 @@ type StakingKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	NewAccount(sdk.Context, authexported.Account) authexported.Account
-	SetAccount(sdk.Context, authexported.Account)
-	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
+	NewAccount(sdk.Context, auth.AccountI) auth.AccountI
+	SetAccount(sdk.Context, auth.AccountI)
+	IterateAccounts(ctx sdk.Context, process func(auth.AccountI) (stop bool))
 }
 
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
@@ -28,14 +28,14 @@ type GenesisAccountsIterator interface {
 	IterateGenesisAccounts(
 		cdc *codec.Codec,
 		appGenesis map[string]json.RawMessage,
-		cb func(authexported.Account) (stop bool),
+		cb func(auth.AccountI) (stop bool),
 	)
 }
 
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
 type GenesisBalancesIterator interface {
 	IterateGenesisBalances(
-		cdc *codec.Codec,
+		cdc codec.JSONMarshaler,
 		appGenesis map[string]json.RawMessage,
 		cb func(bankexported.GenesisBalance) (stop bool),
 	)

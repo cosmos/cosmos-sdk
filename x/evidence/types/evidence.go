@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Evidence type constants
@@ -19,26 +19,26 @@ const (
 	TypeEquivocation  = "equivocation"
 )
 
-var _ exported.Evidence = (*Equivocation)(nil)
+var _ exported.Evidence = &Equivocation{}
 
 // Route returns the Evidence Handler route for an Equivocation type.
-func (e Equivocation) Route() string { return RouteEquivocation }
+func (e *Equivocation) Route() string { return RouteEquivocation }
 
 // Type returns the Evidence Handler type for an Equivocation type.
-func (e Equivocation) Type() string { return TypeEquivocation }
+func (e *Equivocation) Type() string { return TypeEquivocation }
 
-func (e Equivocation) String() string {
+func (e *Equivocation) String() string {
 	bz, _ := yaml.Marshal(e)
 	return string(bz)
 }
 
 // Hash returns the hash of an Equivocation object.
-func (e Equivocation) Hash() tmbytes.HexBytes {
-	return tmhash.Sum(ModuleCdc.MustMarshalBinaryBare(&e))
+func (e *Equivocation) Hash() tmbytes.HexBytes {
+	return tmhash.Sum(ModuleCdc.MustMarshalBinaryBare(e))
 }
 
 // ValidateBasic performs basic stateless validation checks on an Equivocation object.
-func (e Equivocation) ValidateBasic() error {
+func (e *Equivocation) ValidateBasic() error {
 	if e.Time.IsZero() {
 		return fmt.Errorf("invalid equivocation time: %s", e.Time)
 	}
@@ -83,7 +83,7 @@ func (e Equivocation) GetTotalPower() int64 { return 0 }
 // ConvertDuplicateVoteEvidence converts a Tendermint concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
 func ConvertDuplicateVoteEvidence(dupVote abci.Evidence) exported.Evidence {
-	return Equivocation{
+	return &Equivocation{
 		Height:           dupVote.Height,
 		Power:            dupVote.Validator.Power,
 		ConsensusAddress: sdk.ConsAddress(dupVote.Validator.Address),

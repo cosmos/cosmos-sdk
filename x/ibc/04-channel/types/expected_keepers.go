@@ -2,12 +2,11 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientKeeper expected account IBC client keeper
@@ -27,7 +26,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		channel exported.ChannelI,
@@ -36,7 +35,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -46,7 +45,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -56,7 +55,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -65,7 +64,7 @@ type ConnectionKeeper interface {
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
 		height uint64,
-		proof commitmentexported.Proof,
+		proof []byte,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
@@ -74,5 +73,5 @@ type ConnectionKeeper interface {
 
 // PortKeeper expected account IBC port keeper
 type PortKeeper interface {
-	Authenticate(ctx sdk.Context, key *capability.Capability, portID string) bool
+	Authenticate(ctx sdk.Context, key *capabilitytypes.Capability, portID string) bool
 }

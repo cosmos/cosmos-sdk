@@ -7,6 +7,18 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+type GenesisClientState struct {
+	ClientID    string               `json:"client_id" yaml:"client_id"`
+	ClientState exported.ClientState `json:"client_state" yaml:"client_state"`
+}
+
+func NewGenesisClientState(id string, cs exported.ClientState) GenesisClientState {
+	return GenesisClientState{
+		ClientID:    id,
+		ClientState: cs,
+	}
+}
+
 // ClientConsensusStates defines all the stored consensus states for a given client.
 type ClientConsensusStates struct {
 	ClientID        string                    `json:"client_id" yaml:"client_id"`
@@ -23,25 +35,28 @@ func NewClientConsensusStates(id string, states []exported.ConsensusState) Clien
 
 // GenesisState defines the ibc client submodule's genesis state.
 type GenesisState struct {
-	Clients          []exported.ClientState  `json:"clients" yaml:"clients"`
+	Clients          []GenesisClientState    `json:"clients" yaml:"clients"`
 	ClientsConsensus []ClientConsensusStates `json:"clients_consensus" yaml:"clients_consensus"`
+	CreateLocalhost  bool                    `json:"create_localhost" yaml:"create_localhost"`
 }
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []exported.ClientState, clientsConsensus []ClientConsensusStates,
+	clients []GenesisClientState, clientsConsensus []ClientConsensusStates, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
 		ClientsConsensus: clientsConsensus,
+		CreateLocalhost:  createLocalhost,
 	}
 }
 
 // DefaultGenesisState returns the ibc client submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Clients:          []exported.ClientState{},
+		Clients:          []GenesisClientState{},
 		ClientsConsensus: []ClientConsensusStates{},
+		CreateLocalhost:  true,
 	}
 }
 
@@ -49,18 +64,21 @@ func DefaultGenesisState() GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	for i, client := range gs.Clients {
-		if err := client.Validate(); err != nil {
-			return fmt.Errorf("invalid client %d: %w", i, err)
+		if err := host.ClientIdentifierValidator(client.ClientID); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientID, i, err)
+		}
+		if err := client.ClientState.Validate(); err != nil {
+			return fmt.Errorf("invalid client %v index %d: %w", client, i, err)
 		}
 	}
 
 	for i, cs := range gs.ClientsConsensus {
-		if err := host.DefaultClientIdentifierValidator(cs.ClientID); err != nil {
-			return fmt.Errorf("invalid client consensus state %d: %w", i, err)
+		if err := host.ClientIdentifierValidator(cs.ClientID); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cs.ClientID, i, err)
 		}
 		for _, consensusState := range cs.ConsensusStates {
 			if err := consensusState.ValidateBasic(); err != nil {
-				return fmt.Errorf("invalid client consensus state %d: %w", i, err)
+				return fmt.Errorf("invalid client consensus state %v index %d: %w", consensusState, i, err)
 			}
 		}
 	}

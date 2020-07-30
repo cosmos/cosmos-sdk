@@ -3,6 +3,10 @@ package types
 import (
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	lite "github.com/tendermint/tendermint/lite2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -10,7 +14,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // Message types for the IBC client
@@ -21,40 +24,53 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient     = MsgCreateClient{}
-	_ clientexported.MsgUpdateClient     = MsgUpdateClient{}
-	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
+	_ clientexported.MsgCreateClient     = &MsgCreateClient{}
+	_ clientexported.MsgUpdateClient     = &MsgUpdateClient{}
+	_ evidenceexported.MsgSubmitEvidence = &MsgSubmitClientMisbehaviour{}
 )
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID        string         `json:"client_id" yaml:"client_id"`
-	Header          Header         `json:"header" yaml:"header"`
-	TrustingPeriod  time.Duration  `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration  `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration  `json:"max_clock_drift" yaml:"max_clock_drift"`
-	Signer          sdk.AccAddress `json:"address" yaml:"address"`
+	ClientID        string             `json:"client_id" yaml:"client_id"`
+	Header          Header             `json:"header" yaml:"header"`
+	TrustLevel      tmmath.Fraction    `json:"trust_level" yaml:"trust_level"`
+	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
+	ProofSpecs      []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
+	Signer          sdk.AccAddress     `json:"address" yaml:"address"`
 }
+
+// this is a constant to satisfy the linter
+const TODO = "TODO"
+
+// dummy implementation of proto.Message
+func (msg *MsgCreateClient) Reset()         {}
+func (msg *MsgCreateClient) String() string { return TODO }
+func (msg *MsgCreateClient) ProtoMessage()  {}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
-	id string, header Header,
-	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration, signer sdk.AccAddress,
-) MsgCreateClient {
+	id string, header Header, trustLevel tmmath.Fraction,
+	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
+	specs []*ics23.ProofSpec, signer sdk.AccAddress,
+) *MsgCreateClient {
 
-	return MsgCreateClient{
+	return &MsgCreateClient{
 		ClientID:        id,
 		Header:          header,
+		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
 		MaxClockDrift:   maxClockDrift,
+		ProofSpecs:      specs,
 		Signer:          signer,
 	}
 }
 
 // Route implements sdk.Msg
 func (msg MsgCreateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -66,6 +82,9 @@ func (msg MsgCreateClient) Type() string {
 func (msg MsgCreateClient) ValidateBasic() error {
 	if msg.TrustingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
+	}
+	if err := lite.ValidateTrustLevel(msg.TrustLevel); err != nil {
+		return err
 	}
 	if msg.UnbondingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "duration cannot be 0")
@@ -80,7 +99,22 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	if msg.TrustingPeriod >= msg.UnbondingPeriod {
+		return sdkerrors.Wrapf(
+			ErrInvalidTrustingPeriod,
+			"trusting period (%s) should be < unbonding period (%s)", msg.TrustingPeriod, msg.UnbondingPeriod,
+		)
+	}
+	// Validate ProofSpecs
+	if msg.ProofSpecs == nil {
+		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil")
+	}
+	for _, spec := range msg.ProofSpecs {
+		if spec == nil {
+			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
+		}
+	}
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -122,9 +156,14 @@ type MsgUpdateClient struct {
 	Signer   sdk.AccAddress `json:"address" yaml:"address"`
 }
 
+// dummy implementation of proto.Message
+func (msg *MsgUpdateClient) Reset()         {}
+func (msg *MsgUpdateClient) String() string { return TODO }
+func (msg *MsgUpdateClient) ProtoMessage()  {}
+
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
-	return MsgUpdateClient{
+func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) *MsgUpdateClient {
+	return &MsgUpdateClient{
 		ClientID: id,
 		Header:   header,
 		Signer:   signer,
@@ -133,7 +172,7 @@ func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpda
 
 // Route implements sdk.Msg
 func (msg MsgUpdateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -146,7 +185,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -176,6 +215,11 @@ type MsgSubmitClientMisbehaviour struct {
 	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
 }
 
+// dummy implementation of proto.Message
+func (msg MsgSubmitClientMisbehaviour) Reset()         {}
+func (msg MsgSubmitClientMisbehaviour) String() string { return TODO }
+func (msg MsgSubmitClientMisbehaviour) ProtoMessage()  {}
+
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
 func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
@@ -183,10 +227,12 @@ func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddres
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
-func (msg MsgSubmitClientMisbehaviour) Route() string { return ibctypes.RouterKey }
+func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
-func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }
+func (msg MsgSubmitClientMisbehaviour) Type() string {
+	return TypeMsgSubmitClientMisbehaviour
+}
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {

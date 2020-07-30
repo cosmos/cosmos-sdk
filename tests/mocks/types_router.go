@@ -34,17 +34,17 @@ func (m *MockRouter) EXPECT() *MockRouterMockRecorder {
 }
 
 // AddRoute mocks base method
-func (m *MockRouter) AddRoute(r string, h types.Handler) types.Router {
+func (m *MockRouter) AddRoute(r types.Route) types.Router {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddRoute", r, h)
+	ret := m.ctrl.Call(m, "AddRoute", r)
 	ret0, _ := ret[0].(types.Router)
 	return ret0
 }
 
 // AddRoute indicates an expected call of AddRoute
-func (mr *MockRouterMockRecorder) AddRoute(r, h interface{}) *gomock.Call {
+func (mr *MockRouterMockRecorder) AddRoute(r interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRoute", reflect.TypeOf((*MockRouter)(nil).AddRoute), r, h)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRoute", reflect.TypeOf((*MockRouter)(nil).AddRoute), r)
 }
 
 // Route mocks base method

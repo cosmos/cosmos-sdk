@@ -10,8 +10,9 @@ import (
 )
 
 func TestConfig_SetCoinType(t *testing.T) {
-	config := &sdk.Config{}
-	require.Equal(t, uint32(0), config.GetCoinType())
+	config := sdk.NewConfig()
+	config.SetCoinType(1)
+	require.Equal(t, uint32(1), config.GetCoinType())
 	config.SetCoinType(99)
 	require.Equal(t, uint32(99), config.GetCoinType())
 
@@ -21,7 +22,7 @@ func TestConfig_SetCoinType(t *testing.T) {
 
 func TestConfig_SetTxEncoder(t *testing.T) {
 	mockErr := errors.New("test")
-	config := &sdk.Config{}
+	config := sdk.NewConfig()
 	require.Nil(t, config.GetTxEncoder())
 	encFunc := sdk.TxEncoder(func(tx sdk.Tx) ([]byte, error) { return nil, nil })
 	config.SetTxEncoder(encFunc)
@@ -33,10 +34,12 @@ func TestConfig_SetTxEncoder(t *testing.T) {
 }
 
 func TestConfig_SetFullFundraiserPath(t *testing.T) {
-	config := &sdk.Config{}
-	require.Equal(t, "", config.GetFullFundraiserPath())
+	config := sdk.NewConfig()
 	config.SetFullFundraiserPath("test/path")
 	require.Equal(t, "test/path", config.GetFullFundraiserPath())
+
+	config.SetFullFundraiserPath("test/poth")
+	require.Equal(t, "test/poth", config.GetFullFundraiserPath())
 
 	config.Seal()
 	require.Panics(t, func() { config.SetFullFundraiserPath("x/test/path") })

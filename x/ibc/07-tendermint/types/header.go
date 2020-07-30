@@ -16,8 +16,8 @@ var _ clientexported.Header = Header{}
 
 // Header defines the Tendermint consensus Header
 type Header struct {
-	tmtypes.SignedHeader                       // contains the commitment root
-	ValidatorSet         *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
+	tmtypes.SignedHeader `json:"signed_header" yaml:"signed_header"` // contains the commitment root
+	ValidatorSet         *tmtypes.ValidatorSet                       `json:"validator_set" yaml:"validator_set"`
 }
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
@@ -46,7 +46,7 @@ func (h Header) GetHeight() uint64 {
 // and checks that validatorsets are not nil
 func (h Header) ValidateBasic(chainID string) error {
 	if err := h.SignedHeader.ValidateBasic(chainID); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
+		return sdkerrors.Wrap(err, "header failed basic validation")
 	}
 	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")

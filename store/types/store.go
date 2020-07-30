@@ -5,11 +5,12 @@ import (
 	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-type Store interface { //nolint
+type Store interface {
 	GetStoreType() StoreType
 	CacheWrapper
 }
@@ -18,6 +19,8 @@ type Store interface { //nolint
 type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
+
+	// TODO: Deprecate after 0.38.5
 	SetPruning(PruningOptions)
 }
 
@@ -87,7 +90,7 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 
 }
 
-type MultiStore interface { //nolint
+type MultiStore interface {
 	Store
 
 	// Cache wrap MultiStore.
@@ -236,7 +239,7 @@ type CacheWrap interface {
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
-type CacheWrapper interface { //nolint
+type CacheWrapper interface {
 	// CacheWrap cache wraps.
 	CacheWrap() CacheWrap
 
@@ -253,7 +256,7 @@ type CommitID struct {
 	Hash    []byte
 }
 
-func (cid CommitID) IsZero() bool { //nolint
+func (cid CommitID) IsZero() bool {
 	return cid.Version == 0 && len(cid.Hash) == 0
 }
 
@@ -268,7 +271,6 @@ func (cid CommitID) String() string {
 type StoreType int
 
 const (
-	//nolint
 	StoreTypeMulti StoreType = iota
 	StoreTypeDB
 	StoreTypeIAVL
@@ -319,6 +321,9 @@ type KVStoreKey struct {
 // NewKVStoreKey returns a new pointer to a KVStoreKey.
 // Use a pointer so keys don't collide.
 func NewKVStoreKey(name string) *KVStoreKey {
+	if name == "" {
+		panic("empty key name not allowed")
+	}
 	return &KVStoreKey{
 		name: name,
 	}
@@ -377,7 +382,7 @@ func (key *MemoryStoreKey) String() string {
 //----------------------------------------
 
 // key-value result for iterator queries
-type KVPair tmkv.Pair
+type KVPair kv.Pair
 
 //----------------------------------------
 

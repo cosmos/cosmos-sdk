@@ -10,11 +10,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -25,8 +25,8 @@ type HandlerTestSuite struct {
 	app     *simapp.SimApp
 }
 
-func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {
-	msg, err := codecstd.NewMsgSubmitEvidence(e, s)
+func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidence {
+	msg, err := types.NewMsgSubmitEvidence(s, e)
 	r.NoError(err)
 	return msg
 }
@@ -54,11 +54,10 @@ func (suite *HandlerTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 
 	// recreate keeper in order to use custom testing types
-	evidenceKeeper := evidence.NewKeeper(
-		codecstd.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
-		app.StakingKeeper, app.SlashingKeeper,
+	evidenceKeeper := keeper.NewKeeper(
+		app.AppCodec(), app.GetKey(types.StoreKey), app.StakingKeeper, app.SlashingKeeper,
 	)
-	router := evidence.NewRouter()
+	router := types.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(*evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
@@ -102,10 +101,6 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			),
 			true,
 		},
-		{
-			types.NewMsgSubmitEvidenceBase(s),
-			true,
-		},
 	}
 
 	for i, tc := range testCases {
@@ -118,7 +113,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			suite.Require().NoError(err, "unexpected error; tc #%d", i)
 			suite.Require().NotNil(res, "expected non-nil result; tc #%d", i)
 
-			msg := tc.msg.(codecstd.MsgSubmitEvidence)
+			msg := tc.msg.(exported.MsgSubmitEvidence)
 			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), res.Data, "invalid hash; tc #%d", i)
 		}
 	}

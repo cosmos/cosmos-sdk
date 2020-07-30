@@ -3,47 +3,38 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
-	"fmt"
 	"strings"
+
+	ics23 "github.com/confio/ics23/go"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var _ clientexported.ClientState = ClientState{}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
-	store   sdk.KVStore
-	ID      string `json:"id" yaml:"id"`
 	ChainID string `json:"chain_id" yaml:"chain_id"`
 	Height  int64  `json:"height" yaml:"height"`
 }
 
 // NewClientState creates a new ClientState instance
-func NewClientState(store sdk.KVStore, chainID string, height int64) ClientState {
+func NewClientState(chainID string, height int64) ClientState {
 	return ClientState{
-		store:   store,
-		ID:      clientexported.Localhost.String(),
 		ChainID: chainID,
 		Height:  height,
 	}
-}
-
-// GetID returns the loop-back client state identifier.
-func (cs ClientState) GetID() string {
-	return cs.ID
 }
 
 // GetChainID returns an empty string
@@ -68,18 +59,17 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
-		return err
-	}
 	if strings.TrimSpace(cs.ChainID) == "" {
-		return errors.New("chain id cannot be blank")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
 	if cs.Height <= 0 {
-		return fmt.Errorf("height must be positive: %d", cs.Height)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
 	}
-	if cs.store == nil {
-		return errors.New("KVStore cannot be nil")
-	}
+	return nil
+}
+
+// GetProofSpecs returns nil since localhost does not have to verify proofs
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
@@ -88,27 +78,29 @@ func (cs ClientState) Validate() error {
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
-	cdc *codec.Codec,
+	store sdk.KVStore,
+	_ codec.BinaryMarshaler,
+	aminoCdc *codec.Codec,
 	_ commitmentexported.Root,
 	height uint64,
 	_ string,
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, consensusStatePath(cs.GetID()))
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientexported.ClientTypeLocalHost)
 	if err != nil {
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
 	}
 
-	var prevConsensusState exported.ConsensusState
-	if err := cdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
+	var prevConsensusState clientexported.ConsensusState
+	if err := aminoCdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
 		return err
 	}
 
@@ -125,30 +117,32 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored locally.
 func (cs ClientState) VerifyConnectionState(
-	cdc *codec.Codec,
+	store sdk.KVStore,
+	cdc codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
 	if err != nil {
 		return err
 	}
 
-	bz := cs.store.Get([]byte(path.String()))
+	bz := store.Get([]byte(path.String()))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
 	}
 
-	var prevConnection connectionexported.ConnectionI
-	if err := cdc.UnmarshalBinaryBare(bz, &prevConnection); err != nil {
+	var prevConnection connectiontypes.ConnectionEnd
+	err = cdc.UnmarshalBinaryBare(bz, &prevConnection)
+	if err != nil {
 		return err
 	}
 
-	if connectionEnd != prevConnection {
+	if connectionEnd != &prevConnection {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrFailedConnectionStateVerification,
 			"connection end ≠ previous stored connection: \n%v\n≠\n%v", connectionEnd, prevConnection,
@@ -161,30 +155,33 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the local machine.
 func (cs ClientState) VerifyChannelState(
-	cdc *codec.Codec,
+	store sdk.KVStore,
+	cdc codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
 
-	bz := cs.store.Get([]byte(path.String()))
+	bz := store.Get([]byte(path.String()))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
 	}
 
-	var prevChannel channelexported.ChannelI
-	if err := cdc.UnmarshalBinaryBare(bz, &prevChannel); err != nil {
+	var prevChannel channeltypes.Channel
+	err = cdc.UnmarshalBinaryBare(bz, &prevChannel)
+	if err != nil {
 		return err
 	}
-	if channel != prevChannel {
+
+	if channel != &prevChannel {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrFailedChannelStateVerification,
 			"channel end ≠ previous stored channel: \n%v\n≠\n%v", channel, prevChannel,
@@ -197,21 +194,23 @@ func (cs ClientState) VerifyChannelState(
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
+	store sdk.KVStore,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketCommitmentVerification, "not found for path %s", path)
 	}
@@ -229,21 +228,23 @@ func (cs ClientState) VerifyPacketCommitment(
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
+	store sdk.KVStore,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketAckVerification, "not found for path %s", path)
 	}
@@ -262,20 +263,22 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+	store sdk.KVStore,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if data != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, "expected no ack absence")
 	}
@@ -286,20 +289,22 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
+	store sdk.KVStore,
+	_ codec.BinaryMarshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
-	_ commitmentexported.Proof,
+	_ []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
 	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, "not found for path %s", path)
 	}
@@ -313,10 +318,4 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 
 	return nil
-}
-
-// consensusStatePath takes an Identifier and returns a Path under which to
-// store the consensus state of a client.
-func consensusStatePath(clientID string) string {
-	return fmt.Sprintf("consensusState/%s", clientID)
 }

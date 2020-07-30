@@ -28,5 +28,6 @@ func buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr string) (commiss
 	}
 
 	commission = types.NewCommissionRates(rate, maxRate, maxChangeRate)
+
 	return commission, nil
 }

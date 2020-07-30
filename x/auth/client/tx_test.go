@@ -1,17 +1,23 @@
-package client
+package client_test
 
 import (
-	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"os"
+	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -30,12 +36,12 @@ func TestParseQueryResponse(t *testing.T) {
 	bz, err := codec.ProtoMarshalJSON(simRes)
 	require.NoError(t, err)
 
-	res, err := parseQueryResponse(bz)
+	res, err := authclient.ParseQueryResponse(bz)
 	require.NoError(t, err)
 	require.Equal(t, 10, int(res.GasInfo.GasUsed))
 	require.NotNil(t, res.Result)
 
-	res, err = parseQueryResponse([]byte("fuzzy"))
+	res, err = authclient.ParseQueryResponse([]byte("fuzzy"))
 	require.Error(t, err)
 }
 
@@ -77,7 +83,7 @@ func TestCalculateGas(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(tt.args.queryFuncGasUsed, tt.args.queryFuncWantErr)
-			simRes, gotAdjusted, err := CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
+			simRes, gotAdjusted, err := authclient.CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
 			if tt.expPass {
 				require.NoError(t, err)
 				require.Equal(t, simRes.GasInfo.GasUsed, tt.wantEstimate)
@@ -91,51 +97,103 @@ func TestCalculateGas(t *testing.T) {
 	}
 }
 
+// TODO: remove this and authclient.GetTxEncoder after the proto tx migration is complete
 func TestDefaultTxEncoder(t *testing.T) {
 	cdc := makeCodec()
 
 	defaultEncoder := authtypes.DefaultTxEncoder(cdc)
-	encoder := GetTxEncoder(cdc)
+	encoder := authclient.GetTxEncoder(cdc)
 
 	compareEncoders(t, defaultEncoder, encoder)
 }
 
-func TestConfiguredTxEncoder(t *testing.T) {
-	cdc := makeCodec()
+func TestReadTxFromFile(t *testing.T) {
+	t.Parallel()
+	encodingConfig := simapp.MakeEncodingConfig()
 
-	customEncoder := func(tx sdk.Tx) ([]byte, error) {
-		return json.Marshal(tx)
-	}
+	txCfg := encodingConfig.TxConfig
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
+	clientCtx = clientCtx.WithTxConfig(txCfg)
 
-	config := sdk.GetConfig()
-	config.SetTxEncoder(customEncoder)
+	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
+	gasLimit := uint64(50000)
+	memo := "foomemo"
 
-	encoder := GetTxEncoder(cdc)
-
-	compareEncoders(t, customEncoder, encoder)
-}
-
-func TestReadStdTxFromFile(t *testing.T) {
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
-
-	// Build a test transaction
-	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	txBuilder := txCfg.NewTxBuilder()
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo(memo)
 
 	// Write it to the file
-	encodedTx, _ := cdc.MarshalJSON(stdTx)
-	jsonTxFile := writeToNewTempFile(t, string(encodedTx))
-	defer os.Remove(jsonTxFile.Name())
+	encodedTx, err := txCfg.TxJSONEncoder()(txBuilder.GetTx())
+	require.NoError(t, err)
+	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
+	t.Cleanup(cleanup)
 
 	// Read it back
-	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
+	decodedTx, err := authclient.ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
-	require.Equal(t, decodedTx.Memo, "foomemo")
+	txBldr, err := txCfg.WrapTxBuilder(decodedTx)
+	require.NoError(t, err)
+	t.Log(txBuilder.GetTx())
+	t.Log(txBldr.GetTx())
+	require.Equal(t, txBuilder.GetTx().GetMemo(), txBldr.GetTx().GetMemo())
+	require.Equal(t, txBuilder.GetTx().GetFee(), txBldr.GetTx().GetFee())
+}
+
+func TestBatchScanner_Scan(t *testing.T) {
+	t.Parallel()
+	encodingConfig := simapp.MakeEncodingConfig()
+
+	txGen := encodingConfig.TxConfig
+	clientCtx := client.Context{}
+	clientCtx = clientCtx.WithTxConfig(txGen)
+
+	// generate some tx JSON
+	bldr := txGen.NewTxBuilder()
+	bldr.SetGasLimit(50000)
+	bldr.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	bldr.SetMemo("foomemo")
+	txJson, err := txGen.TxJSONEncoder()(bldr.GetTx())
+	require.NoError(t, err)
+
+	// use the tx JSON to generate some tx batches (it doesn't matter that we use the same JSON because we don't care about the actual context)
+	goodBatchOf3Txs := fmt.Sprintf("%s\n%s\n%s\n", txJson, txJson, txJson)
+	malformedBatch := fmt.Sprintf("%s\nmalformed\n%s\n", txJson, txJson)
+	batchOf2TxsWithNoNewline := fmt.Sprintf("%s\n%s", txJson, txJson)
+	batchWithEmptyLine := fmt.Sprintf("%s\n\n%s", txJson, txJson)
+
+	tests := []struct {
+		name               string
+		batch              string
+		wantScannerError   bool
+		wantUnmarshalError bool
+		numTxs             int
+	}{
+		{"good batch", goodBatchOf3Txs, false, false, 3},
+		{"malformed", malformedBatch, false, true, 1},
+		{"missing trailing newline", batchOf2TxsWithNoNewline, false, false, 2},
+		{"empty line", batchWithEmptyLine, false, true, 1},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			scanner, i := authclient.NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
+			for scanner.Scan() {
+				_ = scanner.Tx()
+				i++
+			}
+			require.Equal(t, tt.wantScannerError, scanner.Err() != nil)
+			require.Equal(t, tt.wantUnmarshalError, scanner.UnmarshalErr() != nil)
+			require.Equal(t, tt.numTxs, i)
+		})
+	}
 }
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
-	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
@@ -145,21 +203,11 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
-func writeToNewTempFile(t *testing.T, data string) *os.File {
-	fp, err := ioutil.TempFile(os.TempDir(), "client_tx_test")
-	require.NoError(t, err)
-
-	_, err = fp.WriteString(data)
-	require.NoError(t, err)
-
-	return fp
-}
-
 func makeCodec() *codec.Codec {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	authtypes.RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }

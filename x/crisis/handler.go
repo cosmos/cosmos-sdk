@@ -15,7 +15,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case types.MsgVerifyInvariant:
+		case *types.MsgVerifyInvariant:
 			return handleMsgVerifyInvariant(ctx, msg, k)
 
 		default:
@@ -24,7 +24,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k keeper.Keeper) (*sdk.Result, error) {
+func handleMsgVerifyInvariant(ctx sdk.Context, msg *types.MsgVerifyInvariant, k keeper.Keeper) (*sdk.Result, error) {
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 
 	if err := k.SendCoinsFromAccountToFeeCollector(ctx, msg.Sender, constantFee); err != nil {
@@ -43,6 +43,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 		if invarRoute.FullRoute() == msgFullRoute {
 			res, stop = invarRoute.Invar(cacheCtx)
 			found = true
+
 			break
 		}
 	}

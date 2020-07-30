@@ -1,47 +1,44 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// GetCmdCreateClient defines the command to create a new IBC Client as defined
+// NewCreateClientCmd defines the command to create a new IBC Loopback Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
-func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
+func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "create new localhost client",
-		Long: strings.TrimSpace(fmt.Sprintf(`create new localhost (loopback) client:
+		Use:     "create",
+		Short:   "create new localhost client",
+		Long:    "create new localhost (loopback) client",
+		Example: fmt.Sprintf("%s tx %s %s create --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
-Example:
-$ %s tx ibc client localhost create --from node0 --home ../node0/<app>cli --chain-id $CID
-`, version.ClientName),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
-
-			msg := types.NewMsgCreateClient(cliCtx.GetFromAddress())
+			msg := types.NewMsgCreateClient(clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }

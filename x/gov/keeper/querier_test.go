@@ -10,7 +10,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -147,9 +146,9 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := codecstd.NewAppCodec(app.Codec())
-
-	querier := keeper.NewQuerier(app.GovKeeper)
+	appCodec := app.AppCodec()
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))
 
@@ -295,13 +294,11 @@ func TestQueries(t *testing.T) {
 func TestPaginatedVotesQuery(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := codecstd.NewAppCodec(app.Codec())
+	appCodec := app.AppCodec()
 
 	proposal := types.Proposal{
-		ProposalBase: types.ProposalBase{
-			ProposalID: 100,
-			Status:     types.StatusVotingPeriod,
-		},
+		ProposalID: 100,
+		Status:     types.StatusVotingPeriod,
 	}
 
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -320,7 +317,8 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		app.GovKeeper.SetVote(ctx, vote)
 	}
 
-	querier := keeper.NewQuerier(app.GovKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	// keeper preserves consistent order for each query, but this is not the insertion order
 	all := getQueriedVotes(t, ctx, appCodec, querier, proposal.ProposalID, 1, 0)

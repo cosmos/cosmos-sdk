@@ -556,18 +556,15 @@ func (coins DecCoins) IsAllPositive() bool {
 }
 
 func removeZeroDecCoins(coins DecCoins) DecCoins {
-	i, l := 0, len(coins)
-	for i < l {
-		if coins[i].IsZero() {
-			// remove coin
-			coins = append(coins[:i], coins[i+1:]...)
-			l--
-		} else {
-			i++
+	result := make([]DecCoin, 0, len(coins))
+
+	for _, coin := range coins {
+		if !coin.IsZero() {
+			result = append(result, coin)
 		}
 	}
 
-	return coins[:i]
+	return result
 }
 
 //-----------------------------------------------------------------------------
@@ -575,7 +572,6 @@ func removeZeroDecCoins(coins DecCoins) DecCoins {
 
 var _ sort.Interface = Coins{}
 
-//nolint
 func (coins DecCoins) Len() int           { return len(coins) }
 func (coins DecCoins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
 func (coins DecCoins) Swap(i, j int)      { coins[i], coins[j] = coins[j], coins[i] }

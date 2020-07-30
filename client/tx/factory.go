@@ -1,92 +1,103 @@
 package tx
 
 import (
-	"io"
+	"github.com/spf13/pflag"
 
-	"github.com/spf13/viper"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
-
-// AccountRetriever defines the interfaces required for use by the Factory to
-// ensure an account exists and to be able to query for account fields necessary
-// for signing.
-type AccountRetriever interface {
-	EnsureExists(addr sdk.AccAddress) error
-	GetAccountNumberSequence(addr sdk.AccAddress) (uint64, uint64, error)
-}
 
 // Factory defines a client transaction factory that facilitates generating and
 // signing an application-specific transaction.
 type Factory struct {
 	keybase            keyring.Keyring
-	txGenerator        Generator
-	accountRetriever   AccountRetriever
+	txConfig           client.TxConfig
+	accountRetriever   client.AccountRetriever
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
 	gasAdjustment      float64
-	simulateAndExecute bool
 	chainID            string
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	signMode           signing.SignMode
+	simulateAndExecute bool
 }
 
-func NewFactoryFromCLI(input io.Reader) Factory {
-	kb, err := keyring.New(
-		sdk.KeyringServiceName(),
-		viper.GetString(flags.FlagKeyringBackend),
-		viper.GetString(flags.FlagHome),
-		input,
-	)
-	if err != nil {
-		panic(err)
+const (
+	signModeDirect    = "direct"
+	signModeAminoJSON = "amino-json"
+)
+
+func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
+	signModeStr, _ := flagSet.GetString(flags.FlagSignMode)
+
+	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+	switch signModeStr {
+	case signModeDirect:
+		signMode = signing.SignMode_SIGN_MODE_DIRECT
+	case signModeAminoJSON:
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
+
+	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
+	accSeq, _ := flagSet.GetUint64(flags.FlagSequence)
+	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
+	memo, _ := flagSet.GetString(flags.FlagMemo)
+
+	gasStr, _ := flagSet.GetString(flags.FlagGas)
+	gasSetting, _ := flags.ParseGasSetting(gasStr)
 
 	f := Factory{
-		keybase:            kb,
-		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
-		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                flags.GasFlagVar.Gas,
-		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		simulateAndExecute: flags.GasFlagVar.Simulate,
-		chainID:            viper.GetString(flags.FlagChainID),
-		memo:               viper.GetString(flags.FlagMemo),
+		txConfig:           clientCtx.TxConfig,
+		accountRetriever:   clientCtx.AccountRetriever,
+		keybase:            clientCtx.Keyring,
+		chainID:            clientCtx.ChainID,
+		gas:                gasSetting.Gas,
+		simulateAndExecute: gasSetting.Simulate,
+		accountNumber:      accNum,
+		sequence:           accSeq,
+		gasAdjustment:      gasAdj,
+		memo:               memo,
+		signMode:           signMode,
 	}
 
-	f = f.WithFees(viper.GetString(flags.FlagFees))
-	f = f.WithGasPrices(viper.GetString(flags.FlagGasPrices))
+	feesStr, _ := flagSet.GetString(flags.FlagFees)
+	f = f.WithFees(feesStr)
+
+	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
+	f = f.WithGasPrices(gasPricesStr)
 
 	return f
 }
 
-// nolint
-func (f Factory) AccountNumber() uint64              { return f.accountNumber }
-func (f Factory) Sequence() uint64                   { return f.sequence }
-func (f Factory) Gas() uint64                        { return f.gas }
-func (f Factory) GasAdjustment() float64             { return f.gasAdjustment }
-func (f Factory) Keybase() keyring.Keyring           { return f.keybase }
-func (f Factory) ChainID() string                    { return f.chainID }
-func (f Factory) Memo() string                       { return f.memo }
-func (f Factory) Fees() sdk.Coins                    { return f.fees }
-func (f Factory) GasPrices() sdk.DecCoins            { return f.gasPrices }
-func (f Factory) AccountRetriever() AccountRetriever { return f.accountRetriever }
+func (f Factory) AccountNumber() uint64                     { return f.accountNumber }
+func (f Factory) Sequence() uint64                          { return f.sequence }
+func (f Factory) Gas() uint64                               { return f.gas }
+func (f Factory) GasAdjustment() float64                    { return f.gasAdjustment }
+func (f Factory) Keybase() keyring.Keyring                  { return f.keybase }
+func (f Factory) ChainID() string                           { return f.chainID }
+func (f Factory) Memo() string                              { return f.memo }
+func (f Factory) Fees() sdk.Coins                           { return f.fees }
+func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
+func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
 func (f Factory) SimulateAndExecute() bool { return f.simulateAndExecute }
 
-// WithTxGenerator returns a copy of the Factory with an updated Generator.
-func (f Factory) WithTxGenerator(g Generator) Factory {
-	f.txGenerator = g
+// WithTxConfig returns a copy of the Factory with an updated TxConfig.
+func (f Factory) WithTxConfig(g client.TxConfig) Factory {
+	f.txConfig = g
 	return f
 }
 
 // WithAccountRetriever returns a copy of the Factory with an updated AccountRetriever.
-func (f Factory) WithAccountRetriever(ar AccountRetriever) Factory {
+func (f Factory) WithAccountRetriever(ar client.AccountRetriever) Factory {
 	f.accountRetriever = ar
 	return f
 }
@@ -159,5 +170,16 @@ func (f Factory) WithGasAdjustment(gasAdj float64) Factory {
 // simulation value.
 func (f Factory) WithSimulateAndExecute(sim bool) Factory {
 	f.simulateAndExecute = sim
+	return f
+}
+
+// SignMode returns the sign mode configured in the Factory
+func (f Factory) SignMode() signing.SignMode {
+	return f.signMode
+}
+
+// WithSignMode returns a copy of the Factory with an updated sign mode value.
+func (f Factory) WithSignMode(mode signing.SignMode) Factory {
+	f.signMode = mode
 	return f
 }

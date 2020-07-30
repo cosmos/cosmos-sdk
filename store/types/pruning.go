@@ -1,66 +1,77 @@
 package types
 
-var (
-	// PruneEverything defines a pruning strategy where all committed states will
-	// be deleted, persisting only the current state.
-	PruneEverything = PruningOptions{
-		KeepEvery:     1,
-		SnapshotEvery: 0,
-	}
+import "fmt"
 
-	// PruneNothing defines a pruning strategy where all committed states will be
-	// kept on disk, i.e. no states will be pruned.
-	PruneNothing = PruningOptions{
-		KeepEvery:     1,
-		SnapshotEvery: 1,
-	}
-
-	// PruneSyncable defines a pruning strategy where only those states not needed
-	// for state syncing will be pruned. It flushes every 100th state to disk and
-	// keeps every 10000th.
-	PruneSyncable = PruningOptions{
-		KeepEvery:     100,
-		SnapshotEvery: 10000,
-	}
+// Pruning option string constants
+const (
+	PruningOptionDefault    = "default"
+	PruningOptionEverything = "everything"
+	PruningOptionNothing    = "nothing"
+	PruningOptionCustom     = "custom"
 )
 
-// PruningOptions defines the specific pruning strategy every store in a multi-store
-// will use when committing state, where keepEvery determines which committed
-// heights are flushed to disk and snapshotEvery determines which of these heights
-// are kept after pruning.
+var (
+	// PruneDefault defines a pruning strategy where the last 100 heights are kept
+	// in addition to every 100th and where to-be pruned heights are pruned at
+	// every 10th height.
+	PruneDefault = NewPruningOptions(100, 100, 10)
+
+	// PruneEverything defines a pruning strategy where all committed heights are
+	// deleted, storing only the current height and where to-be pruned heights are
+	// pruned at every 10th height.
+	PruneEverything = NewPruningOptions(0, 0, 10)
+
+	// PruneNothing defines a pruning strategy where all heights are kept on disk.
+	PruneNothing = NewPruningOptions(0, 1, 0)
+)
+
+// PruningOptions defines the pruning strategy used when determining which
+// heights are removed from disk when committing state.
 type PruningOptions struct {
-	KeepEvery     int64
-	SnapshotEvery int64
+	// KeepRecent defines how many recent heights to keep on disk.
+	KeepRecent uint64
+
+	// KeepEvery defines how many offset heights are kept on disk past KeepRecent.
+	KeepEvery uint64
+
+	// Interval defines when the pruned heights are removed from disk.
+	Interval uint64
 }
 
-// IsValid verifies if the pruning options are valid. It returns false if invalid
-// and true otherwise. Pruning options are considered valid iff:
-//
-// - KeepEvery > 0
-// - SnapshotEvery >= 0
-// - SnapshotEvery % KeepEvery = 0
-func (po PruningOptions) IsValid() bool {
-	// must flush at positive block interval
-	if po.KeepEvery <= 0 {
-		return false
+func NewPruningOptions(keepRecent, keepEvery, interval uint64) PruningOptions {
+	return PruningOptions{
+		KeepRecent: keepRecent,
+		KeepEvery:  keepEvery,
+		Interval:   interval,
+	}
+}
+
+func (po PruningOptions) Validate() error {
+	if po.KeepEvery == 0 && po.Interval == 0 {
+		return fmt.Errorf("invalid 'Interval' when pruning everything: %d", po.Interval)
+	}
+	if po.KeepEvery == 1 && po.Interval != 0 { // prune nothing
+		return fmt.Errorf("invalid 'Interval' when pruning nothing: %d", po.Interval)
+	}
+	if po.KeepEvery > 1 && po.Interval == 0 {
+		return fmt.Errorf("invalid 'Interval' when pruning: %d", po.Interval)
 	}
 
-	// cannot snapshot negative intervals
-	if po.SnapshotEvery < 0 {
-		return false
+	return nil
+}
+
+func NewPruningOptionsFromString(strategy string) PruningOptions {
+	switch strategy {
+	case PruningOptionEverything:
+		return PruneEverything
+
+	case PruningOptionNothing:
+		return PruneNothing
+
+	case PruningOptionDefault:
+		return PruneDefault
+
+	default:
+		return PruneDefault
 	}
-
-	return po.SnapshotEvery%po.KeepEvery == 0
-}
-
-// FlushVersion returns a boolean signaling if the provided version/height should
-// be flushed to disk.
-func (po PruningOptions) FlushVersion(ver int64) bool {
-	return po.KeepEvery != 0 && ver%po.KeepEvery == 0
-}
-
-// SnapshotVersion returns a boolean signaling if the provided version/height
-// should be snapshotted (kept on disk).
-func (po PruningOptions) SnapshotVersion(ver int64) bool {
-	return po.SnapshotEvery != 0 && ver%po.SnapshotEvery == 0
 }

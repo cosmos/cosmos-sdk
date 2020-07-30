@@ -8,9 +8,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// DefaultParamspace defines the default auth module parameter subspace
-const DefaultParamspace = ModuleName
-
 // Default parameter values
 const (
 	DefaultMaxMemoCharacters      uint64 = 256
@@ -35,7 +32,6 @@ var _ paramtypes.ParamSet = &Params{}
 func NewParams(
 	maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64,
 ) Params {
-
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
 		TxSigLimit:             txSigLimit,

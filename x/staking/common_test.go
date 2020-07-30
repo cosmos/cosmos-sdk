@@ -6,10 +6,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -21,20 +19,20 @@ var (
 	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
 
-	commissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commissionRates = types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	PKs = simapp.CreateTestPubKeys(500)
 )
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *types.MsgCreateValidator {
 	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), staking.Description{}, commissionRates, sdk.OneInt(),
+		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), types.Description{}, commissionRates, sdk.OneInt(),
 	)
 }
 
-func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) staking.MsgDelegate {
+func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) *types.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
-	return staking.NewMsgDelegate(delAddr, valAddr, amount)
+	return types.NewMsgDelegate(delAddr, valAddr, amount)
 }
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
@@ -43,14 +41,14 @@ func getBaseSimappWithCustomKeeper() (*codec.Codec, *simapp.SimApp, sdk.Context)
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	appCodec := codecstd.NewAppCodec(codec.New())
+	appCodec := app.AppCodec()
 
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,
-		app.GetKey(staking.StoreKey),
+		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(staking.ModuleName),
+		app.GetSubspace(types.ModuleName),
 	)
 	app.StakingKeeper.SetParams(ctx, types.DefaultParams())
 

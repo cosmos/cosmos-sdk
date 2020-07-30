@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -18,7 +20,7 @@ type EncodeResp struct {
 // EncodeTxRequestHandlerFn returns the encode tx REST handler. In particular,
 // it takes a json-formatted transaction, encodes it to the Amino wire protocol,
 // and responds with base64-encoded bytes.
-func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.StdTx
 
@@ -27,13 +29,14 @@ func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		err = cliCtx.Codec.UnmarshalJSON(body, &req)
+		// NOTE: amino is used intentionally here, don't migrate it
+		err = clientCtx.Codec.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		// re-encode it via the Amino wire protocol
-		txBytes, err := cliCtx.Codec.MarshalBinaryBare(req)
+		// re-encode it in the chain's native binary format
+		txBytes, err := tx.ConvertAndEncodeStdTx(clientCtx.TxConfig, req)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -42,6 +45,8 @@ func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 		response := EncodeResp{Tx: txBytesBase64}
-		rest.PostProcessResponseBare(w, cliCtx, response)
+
+		// NOTE: amino is set intentionally here, don't migrate it
+		rest.PostProcessResponseBare(w, clientCtx, response)
 	}
 }

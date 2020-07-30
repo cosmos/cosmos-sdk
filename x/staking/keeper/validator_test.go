@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -29,7 +29,7 @@ func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.Si
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
+	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	return app, ctx, addrDels, addrVals
 }

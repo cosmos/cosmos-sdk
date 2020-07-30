@@ -40,6 +40,11 @@ func TestPaginate(t *testing.T) {
 			50, 75,
 		},
 		{
+			"fallback to default limit",
+			75, 5, 0, 10,
+			40, 50,
+		},
+		{
 			"invalid start page",
 			75, 4, 25, 100,
 			-1, -1,
@@ -47,6 +52,16 @@ func TestPaginate(t *testing.T) {
 		{
 			"invalid zero start page",
 			75, 0, 25, 100,
+			-1, -1,
+		},
+		{
+			"invalid negative start page",
+			75, -1, 25, 100,
+			-1, -1,
+		},
+		{
+			"invalid default limit",
+			75, 2, 0, -10,
 			-1, -1,
 		},
 	}

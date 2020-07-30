@@ -7,11 +7,10 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -22,25 +21,26 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := codecstd.NewAppCodec(codecstd.MakeCodec(simapp.ModuleBasics))
+	app := simapp.Setup(false)
+	cdc, _ := simapp.MakeCodecs()
 	acc := types.NewBaseAccountWithAddress(delAddr1)
-	dec := simulation.NewDecodeStore(cdc)
+	dec := simulation.NewDecodeStore(app.AccountKeeper)
 
-	accBz, err := cdc.MarshalAccount(acc)
+	accBz, err := app.AccountKeeper.MarshalAccount(acc)
 	require.NoError(t, err)
 
 	globalAccNumber := gogotypes.UInt64Value{Value: 10}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   types.AddressStoreKey(delAddr1),
 			Value: accBz,
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   types.GlobalAccountNumberKey,
 			Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

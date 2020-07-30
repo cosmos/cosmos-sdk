@@ -25,7 +25,6 @@ func init() {
 	gov.RegisterProposalTypeCodec(&CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal")
 }
 
-// nolint
 func (sup *SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
 func (sup *SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
 func (sup *SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
@@ -51,7 +50,6 @@ func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 // Implements Proposal Interface
 var _ gov.Content = &CancelSoftwareUpgradeProposal{}
 
-// nolint
 func (sup *CancelSoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
 func (sup *CancelSoftwareUpgradeProposal) GetDescription() string { return sup.Description }
 func (sup *CancelSoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }

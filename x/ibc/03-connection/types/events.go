@@ -3,14 +3,15 @@ package types
 import (
 	"fmt"
 
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // IBC connection events
 const (
-	AttributeKeyConnectionID         = "connection_id"
-	AttributeKeyClientID             = "client_id"
-	AttributeKeyCounterpartyClientID = "counterparty_client_id"
+	AttributeKeyConnectionID             = "connection_id"
+	AttributeKeyClientID                 = "client_id"
+	AttributeKeyCounterpartyClientID     = "counterparty_client_id"
+	AttributeKeyCounterpartyConnectionID = "counterparty_connection_id"
 )
 
 // IBC connection events vars
@@ -20,5 +21,5 @@ var (
 	EventTypeConnectionOpenAck     = MsgConnectionOpenAck{}.Type()
 	EventTypeConnectionOpenConfirm = MsgConnectionOpenConfirm{}.Type()
 
-	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
+	AttributeValueCategory = fmt.Sprintf("%s_%s", host.ModuleName, SubModuleName)
 )

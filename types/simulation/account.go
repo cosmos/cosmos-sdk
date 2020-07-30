@@ -33,6 +33,7 @@ func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
 // RandomAccounts generates n random accounts
 func RandomAccounts(r *rand.Rand, n int) []Account {
 	accs := make([]Account, n)
+
 	for i := 0; i < n; i++ {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
@@ -81,5 +82,6 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 	// Create a random fee and verify the fees are within the account's spendable
 	// balance.
 	fees := sdk.NewCoins(sdk.NewCoin(randCoin.Denom, amt))
+
 	return fees, nil
 }

@@ -84,7 +84,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		if !k.GetWithdrawAddrEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSetWithdrawAddress, "withdrawal is not enabled"), nil, nil
 		}
 
 		simAccount, _ := simtypes.RandomAcc(r, accs)
@@ -95,12 +95,14 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSetWithdrawAddress, "unable to generate fees"), nil, err
 		}
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
-		tx := helpers.GenTx(
+		txGen := simappparams.MakeEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
@@ -109,10 +111,13 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -127,14 +132,14 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawDelegatorReward, "number of delegators equal 0"), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
 
 		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
 		if validator == nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawDelegatorReward, "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -142,12 +147,14 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawDelegatorReward, "unable to generate fees"), nil, err
 		}
 
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
-		tx := helpers.GenTx(
+		txGen := simappparams.MakeEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
@@ -156,10 +163,13 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -174,17 +184,17 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "random validator is not ok"), nil, nil
 		}
 
 		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
 		if commission.Commission.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "validator commission is zero"), nil, nil
 		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "could not find account"), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -192,12 +202,14 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "unable to generate fees"), nil, err
 		}
 
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
-		tx := helpers.GenTx(
+		txGen := simappparams.MakeEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
@@ -206,10 +218,13 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -230,7 +245,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		fundAmount := simtypes.RandSubsetCoins(r, spendable)
 		if fundAmount.Empty() {
-			return simtypes.NoOpMsg(types.ModuleName), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFundCommunityPool, "fund amount is empty"), nil, nil
 		}
 
 		var (
@@ -242,12 +257,14 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName), nil, err
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFundCommunityPool, "unable to generate fees"), nil, err
 			}
 		}
 
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
-		tx := helpers.GenTx(
+		txGen := simappparams.MakeEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
@@ -256,10 +273,13 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 			[]uint64{account.GetSequence()},
 			funder.PrivKey,
 		)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil

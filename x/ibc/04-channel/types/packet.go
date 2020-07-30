@@ -9,11 +9,11 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// CommitPacket return the hash of commitment bytes
-// TODO: no specification for packet commitment currently,
-// make it spec compatible once we have it
+// CommitPacket returns a packet commitment bytes. The commitment consists of:
+// hash(timeout_timestamp + timeout_height + data) from a given packet.
 func CommitPacket(packet exported.PacketI) []byte {
-	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutHeight())
+	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight())...)
 	buf = append(buf, packet.GetData()...)
 	return tmhash.Sum(buf)
 }
@@ -23,22 +23,10 @@ func CommitAcknowledgement(data []byte) []byte {
 	return tmhash.Sum(data)
 }
 
-var _ exported.PacketI = Packet{}
+var _ exported.PacketI = (*Packet)(nil)
 
-// Packet defines a type that carries data across different chains through IBC
-type Packet struct {
-	Data []byte `json:"data" yaml:"data"` // Actual opaque bytes transferred directly to the application module
-
-	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.
-	SourceChannel      string `json:"source_channel" yaml:"source_channel"`           // identifies the channel end on the sending chain.
-	DestinationPort    string `json:"destination_port" yaml:"destination_port"`       // identifies the port on the receiving chain.
-	DestinationChannel string `json:"destination_channel" yaml:"destination_channel"` // identifies the channel end on the receiving chain.
-	TimeoutHeight      uint64 `json:"timeout_height" yaml:"timeout_height"`           // block height after which the packet times out
-	TimeoutTimestamp   uint64 `json:"timeout_timestamp" yaml:"timeout_timestamp"`     // block timestamp (in nanoseconds) after which the packet times out
-}
-
-// NewPacket creates a new Packet instance
+// NewPacket creates a new Packet instance. It panics if the provided
+// packet data interface is not registered.
 func NewPacket(
 	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
@@ -83,29 +71,17 @@ func (p Packet) GetTimeoutTimestamp() uint64 { return p.TimeoutTimestamp }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(p.SourcePort); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid source port ID: %s", p.SourcePort).Error(),
-		)
+	if err := host.PortIdentifierValidator(p.SourcePort); err != nil {
+		return sdkerrors.Wrap(err, "invalid source port ID")
 	}
-	if err := host.DefaultPortIdentifierValidator(p.DestinationPort); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid destination port ID: %s", p.DestinationPort).Error(),
-		)
+	if err := host.PortIdentifierValidator(p.DestinationPort); err != nil {
+		return sdkerrors.Wrap(err, "invalid destination port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(p.SourceChannel); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid source channel ID: %s", p.SourceChannel).Error(),
-		)
+	if err := host.ChannelIdentifierValidator(p.SourceChannel); err != nil {
+		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(p.DestinationChannel); err != nil {
-		return sdkerrors.Wrapf(
-			ErrInvalidPacket,
-			sdkerrors.Wrapf(err, "invalid destination channel ID: %s", p.DestinationChannel).Error(),
-		)
+	if err := host.ChannelIdentifierValidator(p.DestinationChannel); err != nil {
+		return sdkerrors.Wrap(err, "invalid destination channel ID")
 	}
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")

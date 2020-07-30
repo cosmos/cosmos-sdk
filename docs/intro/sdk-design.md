@@ -25,7 +25,7 @@ For more on `baseapp`, please click [here](../core/baseapp.md).
 
 ## Multistore
 
-The Cosmos SDK provides a [`multistore`](../core/store.md#multisotre) for persisting state. The multistore allows developers to declare any number of [`KVStores`](../core/store.md#base-layer-kvstores). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [a codec](../core/encoding.md) before being stored.
+The Cosmos SDK provides a [`multistore`](../core/store.md#multistore) for persisting state. The multistore allows developers to declare any number of [`KVStores`](../core/store.md#base-layer-kvstores). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [a codec](../core/encoding.md) before being stored.
 
 The multistore abstraction is used to divide the state in distinct compartments, each managed by its own module. For more on the multistore, click [here](../core/store.md#multistore)
 

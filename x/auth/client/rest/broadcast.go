@@ -4,7 +4,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -18,7 +20,7 @@ type BroadcastReq struct {
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible
 // for broadcasting a valid and signed tx to a full node. The tx can be
 // broadcasted via a sync|async|block mechanism.
-func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
+func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req BroadcastReq
 
@@ -27,22 +29,25 @@ func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		if err := cliCtx.Codec.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
+		// NOTE: amino is used intentionally here, don't migrate it!
+		if err := clientCtx.Codec.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		txBytes, err := cliCtx.Codec.MarshalBinaryBare(req.Tx)
+		txBytes, err := tx.ConvertAndEncodeStdTx(clientCtx.TxConfig, req.Tx)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		cliCtx = cliCtx.WithBroadcastMode(req.Mode)
+		clientCtx = clientCtx.WithBroadcastMode(req.Mode)
 
-		res, err := cliCtx.BroadcastTx(txBytes)
+		res, err := clientCtx.BroadcastTx(txBytes)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		rest.PostProcessResponseBare(w, cliCtx, res)
+		// NOTE: amino is set intentionally here, don't migrate it!
+		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.Codec)
+		rest.PostProcessResponseBare(w, clientCtx, res)
 	}
 }

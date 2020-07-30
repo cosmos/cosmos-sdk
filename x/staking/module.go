@@ -5,22 +5,21 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
 	abci "github.com/tendermint/tendermint/abci/types"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -40,79 +39,61 @@ var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Name returns the staking module's name.
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterCodec registers the staking module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
+}
+
+// RegisterInterfaces registers the module's interface types
+func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the staking module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var data GenesisState
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
 	return ValidateGenesis(data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the staking module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterHandlers(clientCtx, rtr)
 }
 
 // GetTxCmd returns the root tx command for the staking module.
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(StoreKey, cdc)
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the staking module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
-
-//_____________________________________
-// extra helpers
-
-// CreateValidatorMsgHelpers - used for gen-tx
-func (AppModuleBasic) CreateValidatorMsgHelpers(ipDefault string) (
-	fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string) {
-	return cli.CreateValidatorMsgHelpers(ipDefault)
-}
-
-// PrepareFlagsForTxCreateValidator - used for gen-tx
-func (AppModuleBasic) PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeID,
-	chainID string, valPubKey crypto.PubKey) {
-	cli.PrepareFlagsForTxCreateValidator(config, nodeID, chainID, valPubKey)
-}
-
-// BuildCreateValidatorMsg - used for gen-tx
-func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
-	txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
-	return cli.BuildCreateValidatorMsg(cliCtx, txBldr)
-}
-
-//____________________________________________________________________________
 
 // AppModule implements an application module for the staking module.
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        Keeper
+	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -123,39 +104,43 @@ func NewAppModule(cdc codec.Marshaler, keeper Keeper, ak types.AccountKeeper, bk
 
 // Name returns the staking module's name.
 func (AppModule) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterInvariants registers the staking module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	RegisterInvariants(ir, am.keeper)
+	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // Route returns the message routing key for the staking module.
-func (AppModule) Route() string {
-	return RouterKey
-}
-
-// NewHandler returns an sdk.Handler for the staking module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the staking module's querier route name.
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns the staking module sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+// LegacyQuerierHandler returns the staking module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
+}
+
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	querier := keeper.Querier{Keeper: am.keeper}
+	types.RegisterQueryServer(server, querier)
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState GenesisState
+	var genesisState types.GenesisState
+
 	cdc.MustUnmarshalJSON(data, &genesisState)
+
 	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, genesisState)
 }
 
@@ -198,7 +183,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for staking module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the staking module operations with their respective weights.

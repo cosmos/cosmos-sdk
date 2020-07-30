@@ -11,7 +11,6 @@ func NewMultiStakingHooks(hooks ...StakingHooks) MultiStakingHooks {
 	return hooks
 }
 
-// nolint
 func (h MultiStakingHooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	for i := range h {
 		h[i].AfterValidatorCreated(ctx, valAddr)

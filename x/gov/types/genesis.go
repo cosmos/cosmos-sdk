@@ -3,19 +3,9 @@ package types
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// GenesisState - all staking state that must be provided at genesis
-type GenesisState struct {
-	StartingProposalID uint64        `json:"starting_proposal_id" yaml:"starting_proposal_id"`
-	Deposits           Deposits      `json:"deposits" yaml:"deposits"`
-	Votes              Votes         `json:"votes" yaml:"votes"`
-	Proposals          Proposals     `json:"proposals" yaml:"proposals"`
-	DepositParams      DepositParams `json:"deposit_params" yaml:"deposit_params"`
-	VotingParams       VotingParams  `json:"voting_params" yaml:"voting_params"`
-	TallyParams        TallyParams   `json:"tally_params" yaml:"tally_params"`
-}
 
 // NewGenesisState creates a new genesis state for the governance module
 func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
@@ -47,8 +37,8 @@ func (data GenesisState) Equal(other GenesisState) bool {
 		data.VotingParams.Equal(other.VotingParams)
 }
 
-// IsEmpty returns true if a GenesisState is empty
-func (data GenesisState) IsEmpty() bool {
+// Empty returns true if a GenesisState is empty
+func (data GenesisState) Empty() bool {
 	return data.Equal(GenesisState{})
 }
 
@@ -71,5 +61,18 @@ func ValidateGenesis(data GenesisState) error {
 			data.DepositParams.MinDeposit.String())
 	}
 
+	return nil
+}
+
+var _ types.UnpackInterfacesMessage = GenesisState{}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, p := range data.Proposals {
+		err := p.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

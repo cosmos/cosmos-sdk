@@ -1,10 +1,9 @@
 package codec
 
 import (
-	"encoding/binary"
-	"io"
-
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 type (
@@ -15,9 +14,12 @@ type (
 	//
 	// 1. AminoCodec: Provides full Amino serialization compatibility.
 	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.
-	// 3. HybridCodec: Provides Protobuf serialization for binary encoding and Amino
-	// for JSON encoding.
 	Marshaler interface {
+		BinaryMarshaler
+		JSONMarshaler
+	}
+
+	BinaryMarshaler interface {
 		MarshalBinaryBare(o ProtoMarshaler) ([]byte, error)
 		MustMarshalBinaryBare(o ProtoMarshaler) []byte
 
@@ -30,14 +32,14 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
-		JSONMarshaler
+		types.AnyUnpacker
 	}
 
 	JSONMarshaler interface {
-		MarshalJSON(o interface{}) ([]byte, error) // nolint: stdmethods
+		MarshalJSON(o interface{}) ([]byte, error)
 		MustMarshalJSON(o interface{}) []byte
 
-		UnmarshalJSON(bz []byte, ptr interface{}) error // nolint: stdmethods
+		UnmarshalJSON(bz []byte, ptr interface{}) error
 		MustUnmarshalJSON(bz []byte, ptr interface{})
 	}
 
@@ -53,12 +55,3 @@ type (
 		Unmarshal(data []byte) error
 	}
 )
-
-func encodeUvarint(w io.Writer, u uint64) (err error) {
-	var buf [10]byte
-
-	n := binary.PutUvarint(buf[:], u)
-	_, err = w.Write(buf[0:n])
-
-	return err
-}

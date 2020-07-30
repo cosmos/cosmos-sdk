@@ -5,7 +5,6 @@ import (
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
-// nolint
 type (
 	PruningOptions   = types.PruningOptions
 	Store            = types.Store
@@ -22,18 +21,11 @@ type (
 	CacheWrapper     = types.CacheWrapper
 	CacheWrap        = types.CacheWrap
 	CommitID         = types.CommitID
-	StoreKey         = types.StoreKey
-	StoreType        = types.StoreType
+	Key              = types.StoreKey
+	Type             = types.StoreType
 	Queryable        = types.Queryable
 	TraceContext     = types.TraceContext
 	Gas              = types.Gas
 	GasMeter         = types.GasMeter
 	GasConfig        = types.GasConfig
-)
-
-// nolint - reexport
-var (
-	PruneNothing    = types.PruneNothing
-	PruneEverything = types.PruneEverything
-	PruneSyncable   = types.PruneSyncable
 )

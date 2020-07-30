@@ -1,17 +1,14 @@
 package types
 
 import (
-	tmkv "github.com/tendermint/tendermint/libs/kv"
-
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-// nolint - reexport
 type (
 	PruningOptions = types.PruningOptions
 )
 
-// nolint - reexport
 type (
 	Store                     = types.Store
 	Committer                 = types.Committer
@@ -27,7 +24,7 @@ type (
 
 // StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
 // simulation.
-type StoreDecoderRegistry map[string]func(kvA, kvB tmkv.Pair) string
+type StoreDecoderRegistry map[string]func(kvA, kvB kv.Pair) string
 
 // Iterator over all the keys with a certain prefix in ascending order
 func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
@@ -53,11 +50,10 @@ func KVStoreReversePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, lim
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes
-func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []tmkv.Pair) {
+func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
 	return types.DiffKVStores(a, b, prefixesToSkip)
 }
 
-// nolint - reexport
 type (
 	CacheKVStore  = types.CacheKVStore
 	CommitKVStore = types.CommitKVStore
@@ -66,10 +62,8 @@ type (
 	CommitID      = types.CommitID
 )
 
-// nolint - reexport
 type StoreType = types.StoreType
 
-// nolint - reexport
 const (
 	StoreTypeMulti     = types.StoreTypeMulti
 	StoreTypeDB        = types.StoreTypeDB
@@ -78,7 +72,6 @@ const (
 	StoreTypeMemory    = types.StoreTypeMemory
 )
 
-// nolint - reexport
 type (
 	StoreKey          = types.StoreKey
 	CapabilityKey     = types.CapabilityKey
@@ -158,25 +151,21 @@ type TraceContext = types.TraceContext
 
 // --------------------------------------
 
-// nolint - reexport
 type (
 	Gas       = types.Gas
 	GasMeter  = types.GasMeter
 	GasConfig = types.GasConfig
 )
 
-// nolint - reexport
 func NewGasMeter(limit Gas) GasMeter {
 	return types.NewGasMeter(limit)
 }
 
-// nolint - reexport
 type (
 	ErrorOutOfGas    = types.ErrorOutOfGas
 	ErrorGasOverflow = types.ErrorGasOverflow
 )
 
-// nolint - reexport
 func NewInfiniteGasMeter() GasMeter {
 	return types.NewInfiniteGasMeter()
 }

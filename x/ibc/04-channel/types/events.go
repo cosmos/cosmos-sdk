@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // IBC channel events
@@ -17,7 +17,6 @@ const (
 	EventTypeSendPacket        = "send_packet"
 	EventTypeRecvPacket        = "recv_packet"
 	EventTypeAcknowledgePacket = "acknowledge_packet"
-	EventTypeCleanupPacket     = "cleanup_packet"
 	EventTypeTimeoutPacket     = "timeout_packet"
 
 	AttributeKeyData             = "packet_data"
@@ -29,6 +28,7 @@ const (
 	AttributeKeySrcChannel       = "packet_src_channel"
 	AttributeKeyDstPort          = "packet_dst_port"
 	AttributeKeyDstChannel       = "packet_dst_channel"
+	AttributeKeyChannelOrdering  = "packet_channel_ordering"
 )
 
 // IBC channel events vars
@@ -40,5 +40,5 @@ var (
 	EventTypeChannelCloseInit    = MsgChannelCloseInit{}.Type()
 	EventTypeChannelCloseConfirm = MsgChannelCloseConfirm{}.Type()
 
-	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
+	AttributeValueCategory = fmt.Sprintf("%s_%s", host.ModuleName, SubModuleName)
 )

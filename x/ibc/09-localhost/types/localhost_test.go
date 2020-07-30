@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	dbm "github.com/tendermint/tm-db"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 const (
@@ -20,17 +20,19 @@ const (
 type LocalhostTestSuite struct {
 	suite.Suite
 
-	cdc   *codec.Codec
-	store *cachekv.Store
+	aminoCdc *codec.Codec
+	cdc      codec.Marshaler
+	store    sdk.KVStore
 }
 
 func (suite *LocalhostTestSuite) SetupTest() {
-	suite.cdc = codec.New()
-	codec.RegisterCrypto(suite.cdc)
-	commitmenttypes.RegisterCodec(suite.cdc)
+	isCheckTx := false
+	app := simapp.Setup(isCheckTx)
 
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	suite.store = cachekv.NewStore(mem)
+	suite.aminoCdc = app.Codec()
+	suite.cdc = app.AppCodec()
+	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 1})
+	suite.store = app.IBCKeeper.ClientKeeper.ClientStore(ctx, clientexported.ClientTypeLocalHost)
 }
 
 func TestLocalhostTestSuite(t *testing.T) {

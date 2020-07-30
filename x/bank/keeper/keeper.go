@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -20,8 +22,15 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
+	InitGenesis(sdk.Context, types.GenesisState)
+	ExportGenesis(sdk.Context) types.GenesisState
+
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
+
+	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
+	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
+	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
@@ -33,6 +42,10 @@ type Keeper interface {
 
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
+	MarshalSupply(supplyI exported.SupplyI) ([]byte, error)
+	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
+
+	types.QueryServer
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.
@@ -40,14 +53,14 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	cdc        types.Codec
+	cdc        codec.BinaryMarshaler
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 }
 
 func NewBaseKeeper(
-	cdc types.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
-	blacklistedAddrs map[string]bool,
+	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
+	blockedAddrs map[string]bool,
 ) BaseKeeper {
 
 	// set KeyTable if it has not already been set
@@ -56,7 +69,7 @@ func NewBaseKeeper(
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blacklistedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
 		ak:             ak,
 		cdc:            cdc,
 		storeKey:       storeKey,
@@ -148,7 +161,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context) exported.SupplyI {
 		panic("stored supply should not have been nil")
 	}
 
-	supply, err := k.cdc.UnmarshalSupply(bz)
+	supply, err := k.UnmarshalSupply(bz)
 	if err != nil {
 		panic(err)
 	}
@@ -159,12 +172,65 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context) exported.SupplyI {
 // SetSupply sets the Supply to store
 func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.MarshalSupply(supply)
+	bz, err := k.MarshalSupply(supply)
 	if err != nil {
 		panic(err)
 	}
 
 	store.Set(types.SupplyKey, bz)
+}
+
+// GetDenomMetaData retrieves the denomination metadata
+func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata {
+	store := ctx.KVStore(k.storeKey)
+	store = prefix.NewStore(store, types.DenomMetadataKey(denom))
+
+	bz := store.Get([]byte(denom))
+
+	var metadata types.Metadata
+	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
+
+	return metadata
+}
+
+// GetAllDenomMetaData retrieves all denominations metadata
+func (k BaseKeeper) GetAllDenomMetaData(ctx sdk.Context) []types.Metadata {
+	denomMetaData := make([]types.Metadata, 0)
+	k.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		denomMetaData = append(denomMetaData, metadata)
+		return false
+	})
+
+	return denomMetaData
+}
+
+// IterateAllDenomMetaData iterates over all the denominations metadata and
+// provides the metadata to a callback. If true is returned from the
+// callback, iteration is halted.
+func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool) {
+	store := ctx.KVStore(k.storeKey)
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
+
+	iterator := denomMetaDataStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var metadata types.Metadata
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &metadata)
+
+		if cb(metadata) {
+			break
+		}
+	}
+}
+
+// SetDenomMetaData sets the denominations metadata
+func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
+	store := ctx.KVStore(k.storeKey)
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataKey(denomMetaData.Base))
+
+	m := k.cdc.MustMarshalBinaryBare(&denomMetaData)
+	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
 }
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
@@ -226,7 +292,7 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
-	if !recipientAcc.HasPermission(auth.Staking) {
+	if !recipientAcc.HasPermission(authtypes.Staking) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to receive delegated coins", recipientModule))
 	}
 
@@ -245,7 +311,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
-	if !acc.HasPermission(auth.Staking) {
+	if !acc.HasPermission(authtypes.Staking) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
@@ -260,7 +326,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
-	if !acc.HasPermission(auth.Minter) {
+	if !acc.HasPermission(authtypes.Minter) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
@@ -289,7 +355,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
-	if !acc.HasPermission(auth.Burner) {
+	if !acc.HasPermission(authtypes.Burner) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
@@ -337,4 +403,23 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	}
 
 	return nil
+}
+
+// MarshalSupply marshals a Supply interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
+	return codec.MarshalAny(k.cdc, supplyI)
+}
+
+// UnmarshalSupply returns a Supply interface from raw encoded supply
+// bytes of a Proto-based Supply type. An error is returned upon decoding
+// failure.
+func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
+	var evi exported.SupplyI
+	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
+		return nil, err
+	}
+
+	return evi, nil
 }

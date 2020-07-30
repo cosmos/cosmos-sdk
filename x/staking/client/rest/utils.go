@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -20,11 +20,12 @@ func contains(stringSlice []string, txType string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 // queries staking txs
-func queryTxs(cliCtx context.CLIContext, action string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
+func queryTxs(clientCtx client.Context, action string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
 	page := 1
 	limit := 100
 	events := []string{
@@ -32,10 +33,10 @@ func queryTxs(cliCtx context.CLIContext, action string, delegatorAddr string) (*
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, delegatorAddr),
 	}
 
-	return authclient.QueryTxsByEvents(cliCtx, events, page, limit, "")
+	return authclient.QueryTxsByEvents(clientCtx, events, page, limit, "")
 }
 
-func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
+func queryBonds(clientCtx client.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
@@ -51,29 +52,29 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 			return
 		}
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		params := types.NewQueryBondsParams(delegatorAddr, validatorAddr)
+		params := types.QueryDelegatorValidatorRequest{DelegatorAddr: delegatorAddr, ValidatorAddr: validatorAddr}
 
-		bz, err := cliCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		res, height, err := cliCtx.QueryWithData(endpoint, bz)
+		res, height, err := clientCtx.QueryWithData(endpoint, bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
 	}
 }
 
-func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
+func queryDelegator(clientCtx client.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
@@ -83,56 +84,61 @@ func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
 		params := types.NewQueryDelegatorParams(delegatorAddr)
 
-		bz, err := cliCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		res, height, err := cliCtx.QueryWithData(endpoint, bz)
+		res, height, err := clientCtx.QueryWithData(endpoint, bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
 	}
 }
 
-func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
+func queryValidator(clientCtx client.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["validatorAddr"]
+
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
 
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
 		}
 
-		params := types.NewQueryValidatorParams(validatorAddr)
+		params := types.NewQueryValidatorParams(validatorAddr, page, limit)
 
-		bz, err := cliCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		res, height, err := cliCtx.QueryWithData(endpoint, bz)
+		res, height, err := clientCtx.QueryWithData(endpoint, bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
 	}
 }

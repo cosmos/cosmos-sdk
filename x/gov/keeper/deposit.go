@@ -17,6 +17,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	keeper.cdc.MustUnmarshalBinaryBare(bz, &deposit)
+
 	return deposit, true
 }
 
@@ -33,6 +34,7 @@ func (keeper Keeper) GetAllDeposits(ctx sdk.Context) (deposits types.Deposits) {
 		deposits = append(deposits, deposit)
 		return false
 	})
+
 	return
 }
 
@@ -42,6 +44,7 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits t
 		deposits = append(deposits, deposit)
 		return false
 	})
+
 	return
 }
 
@@ -66,8 +69,10 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.D
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
 
 	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
+
 		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &deposit)
 
 		if cb(deposit) {
@@ -82,8 +87,10 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
 
 	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
+
 		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &deposit)
 
 		if cb(deposit) {
@@ -118,13 +125,16 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
+
 	if proposal.Status == types.StatusDepositPeriod && proposal.TotalDeposit.IsAllGTE(keeper.GetDepositParams(ctx).MinDeposit) {
 		keeper.ActivateVotingPeriod(ctx, proposal)
+
 		activatedVotingPeriod = true
 	}
 
 	// Add or update deposit object
 	deposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
+
 	if found {
 		deposit.Amount = deposit.Amount.Add(depositAmount...)
 	} else {
@@ -140,6 +150,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	)
 
 	keeper.SetDeposit(ctx, deposit)
+
 	return activatedVotingPeriod, nil
 }
 

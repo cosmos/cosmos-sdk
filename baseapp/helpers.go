@@ -1,14 +1,10 @@
 package baseapp
 
 import (
-	"regexp"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	return app.runTx(runTxModeCheck, nil, tx)
@@ -30,4 +26,8 @@ func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	}
 
 	return sdk.NewContext(app.deliverState.ms, header, false, app.logger)
+}
+
+func (app *BaseApp) NewUncachedContext(isCheckTx bool, header abci.Header) sdk.Context {
+	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }

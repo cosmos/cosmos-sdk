@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestHybridCodec(t *testing.T) {
@@ -20,7 +20,7 @@ func TestHybridCodec(t *testing.T) {
 	}{
 		{
 			"valid encoding and decoding",
-			codec.NewHybridCodec(createTestCodec()),
+			codec.NewHybridCodec(createTestCodec(), createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Dog{},
 			false,
@@ -28,7 +28,7 @@ func TestHybridCodec(t *testing.T) {
 		},
 		{
 			"invalid decode type",
-			codec.NewHybridCodec(createTestCodec()),
+			codec.NewHybridCodec(createTestCodec(), createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Cat{},
 			false,

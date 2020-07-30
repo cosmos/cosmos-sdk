@@ -94,8 +94,20 @@ var (
 	// ErrorInvalidGasAdjustment defines an error for an invalid gas adjustment
 	ErrorInvalidGasAdjustment = Register(RootCodespace, 25, "invalid gas adjustment")
 
+	// ErrInvalidHeight defines an error for an invalid height
+	ErrInvalidHeight = Register(RootCodespace, 26, "invalid height")
+
+	// ErrInvalidVersion defines a general error for an invalid version
+	ErrInvalidVersion = Register(RootCodespace, 27, "invalid version")
+
+	// ErrInvalidChainID defines an error when the chain-id is invalid.
+	ErrInvalidChainID = Register(RootCodespace, 28, "invalid chain-id")
+
+	// ErrInvalidType defines an error an invalid type.
+	ErrInvalidType = Register(RootCodespace, 29, "invalid type")
+
 	// ErrTxHeightTimeout defines an error for when a tx timesout due to it's height
-	ErrTxHeightTimeout = Register(RootCodespace, 26, "tx height timeout")
+	ErrTxHeightTimeout = Register(RootCodespace, 30, "tx height timeout")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info

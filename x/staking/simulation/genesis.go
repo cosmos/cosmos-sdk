@@ -40,19 +40,22 @@ func GetHistEntries(r *rand.Rand) uint32 {
 // RandomizedGenState generates a random GenesisState for staking
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
-	var unbondTime time.Duration
+	var (
+		unbondTime  time.Duration
+		maxVals     uint32
+		histEntries uint32
+	)
+
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, unbondingTime, &unbondTime, simState.Rand,
 		func(r *rand.Rand) { unbondTime = GenUnbondingTime(r) },
 	)
 
-	var maxVals uint32
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, maxValidators, &maxVals, simState.Rand,
 		func(r *rand.Rand) { maxVals = GenMaxValidators(r) },
 	)
 
-	var histEntries uint32
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, historicalEntries, &histEntries, simState.Rand,
 		func(r *rand.Rand) { histEntries = GetHistEntries(r) },
@@ -61,7 +64,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-
 	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, sdk.DefaultBondDenom)
 
 	// validators & delegations
@@ -71,6 +73,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	valAddrs := make([]sdk.ValAddress, simState.NumBonded)
+
 	for i := 0; i < int(simState.NumBonded); i++ {
 		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
 		valAddrs[i] = valAddr
@@ -88,6 +91,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		validator.Commission = commission
 
 		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdk.NewDec(simState.InitialStake))
+
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}

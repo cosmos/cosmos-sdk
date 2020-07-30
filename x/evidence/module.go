@@ -5,19 +5,25 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
+	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/evidence/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var (
@@ -32,12 +38,11 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the evidence module.
 type AppModuleBasic struct {
-	cdc              Codec
-	evidenceHandlers []client.EvidenceHandler // client evidence submission handlers
+	evidenceHandlers []eviclient.EvidenceHandler // eviclient evidence submission handlers
 }
 
 // NewAppModuleBasic crates a AppModuleBasic without the codec.
-func NewAppModuleBasic(evidenceHandlers ...client.EvidenceHandler) AppModuleBasic {
+func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleBasic {
 	return AppModuleBasic{
 		evidenceHandlers: evidenceHandlers,
 	}
@@ -45,54 +50,58 @@ func NewAppModuleBasic(evidenceHandlers ...client.EvidenceHandler) AppModuleBasi
 
 // Name returns the evidence module's name.
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterCodec registers the evidence module's types to the provided codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var gs GenesisState
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
 	return gs.Validate()
 }
 
 // RegisterRESTRoutes registers the evidence module's REST service handlers.
-func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	evidenceRESTHandlers := make([]rest.EvidenceRESTHandler, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceRESTHandlers[i] = evidenceHandler.RESTHandler(ctx)
+		evidenceRESTHandlers[i] = evidenceHandler.RESTHandler(clientCtx)
 	}
 
-	rest.RegisterRoutes(ctx, rtr, evidenceRESTHandlers)
+	rest.RegisterRoutes(clientCtx, rtr, evidenceRESTHandlers)
 }
 
 // GetTxCmd returns the evidence module's root tx command.
-func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(cdc)
+		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler()
 	}
 
-	return cli.GetTxCmd(StoreKey, cdc, evidenceCLIHandlers)
+	return cli.GetTxCmd(evidenceCLIHandlers)
 }
 
-// GetTxCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+// GetQueryCmd returns the evidence module's root query command.
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
+}
+
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // ----------------------------------------------------------------------------
@@ -103,12 +112,12 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper Keeper
+	keeper keeper.Keeper
 }
 
-func NewAppModule(cdc Codec, keeper Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 	}
 }
@@ -119,23 +128,24 @@ func (am AppModule) Name() string {
 }
 
 // Route returns the evidence module's message routing key.
-func (AppModule) Route() string {
-	return RouterKey
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the evidence module's query routing key.
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return types.QuerierRoute
 }
 
-// NewHandler returns the evidence module's message Handler.
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+// LegacyQuerierHandler returns the evidence module's Querier.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
-// NewQuerierHandler returns the evidence module's Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
 }
 
 // RegisterInvariants registers the evidence module's invariants.
@@ -144,10 +154,10 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs GenesisState
+	var gs types.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
+		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
 	}
 
 	InitGenesis(ctx, am.keeper, gs)
@@ -192,7 +202,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

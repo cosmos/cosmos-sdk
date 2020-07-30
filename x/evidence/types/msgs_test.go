@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -13,8 +12,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {
-	msg, err := codecstd.NewMsgSubmitEvidence(e, s)
+func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidence {
+	msg, err := types.NewMsgSubmitEvidence(s, e)
 	require.NoError(t, err)
 	return msg
 }
@@ -28,11 +27,6 @@ func TestMsgSubmitEvidence(t *testing.T) {
 		submitter sdk.AccAddress
 		expectErr bool
 	}{
-		{
-			types.NewMsgSubmitEvidenceBase(submitter),
-			submitter,
-			false,
-		},
 		{
 			testMsgSubmitEvidence(t, &types.Equivocation{
 				Height:           0,

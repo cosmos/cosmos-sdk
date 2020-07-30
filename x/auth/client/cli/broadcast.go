@@ -6,14 +6,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/client"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetBroadcastCommand returns the tx broadcast command.
-func GetBroadcastCommand(cdc *codec.Codec) *cobra.Command {
+func GetBroadcastCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "broadcast [file_path]",
 		Short: "Broadcast transactions generated offline",
@@ -26,30 +25,32 @@ $ <appcli> tx broadcast ./mytxn.json
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			if cliCtx.Offline {
+			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
+			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
 
-			txBytes, err := cliCtx.Codec.MarshalBinaryBare(stdTx)
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
 			if err != nil {
 				return err
 			}
 
-			res, err := cliCtx.BroadcastTx(txBytes)
+			res, err := clientCtx.BroadcastTx(txBytes)
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(res)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

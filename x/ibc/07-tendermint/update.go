@@ -1,7 +1,6 @@
 package tendermint
 
 import (
-	"errors"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
@@ -28,15 +27,15 @@ func CheckValidityAndUpdateState(
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
-			clienttypes.ErrInvalidClientType, "light client is not from Tendermint",
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState,
 		)
 	}
 
 	tmHeader, ok := header.(types.Header)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
-			clienttypes.ErrInvalidHeader, "header is not from Tendermint",
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader, "expected type %T, got %T", types.Header{}, header,
 		)
 	}
 
@@ -56,7 +55,11 @@ func checkValidity(
 ) error {
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
-		return errors.New("trusting period since last client timestamp already passed")
+		return sdkerrors.Wrapf(
+			types.ErrTrustingPeriodExpired,
+			"current timestamp minus the latest trusted client state timestamp is greater than or equal to the trusting period (%s >= %s)",
+			currentTimestamp.Sub(clientState.GetLatestTimestamp()), clientState.TrustingPeriod,
+		)
 	}
 
 	// assert header timestamp is not past the trusting period
@@ -72,7 +75,7 @@ func checkValidity(
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header blocktime ≤ latest client state block time (%s ≤ %s)",
-			header.Time.String(), clientState.GetLatestTimestamp().String(),
+			header.Time.UTC(), clientState.GetLatestTimestamp().UTC(),
 		)
 	}
 
@@ -88,10 +91,10 @@ func checkValidity(
 	err := lite.Verify(
 		clientState.GetChainID(), &clientState.LastHeader.SignedHeader,
 		clientState.LastHeader.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
-		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, lite.DefaultTrustLevel,
+		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel,
 	)
 	if err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
+		return sdkerrors.Wrap(err, "failed to verify header")
 	}
 	return nil
 }

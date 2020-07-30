@@ -11,20 +11,20 @@ import (
 )
 
 // NewQuerier returns a new sdk.Keeper instance.
-func NewQuerier(k Keeper) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryBalance:
-			return queryBalance(ctx, req, k)
+			return queryBalance(ctx, req, k, legacyQuerierCdc)
 
 		case types.QueryAllBalances:
-			return queryAllBalance(ctx, req, k)
+			return queryAllBalance(ctx, req, k, legacyQuerierCdc)
 
 		case types.QueryTotalSupply:
-			return queryTotalSupply(ctx, req, k)
+			return queryTotalSupply(ctx, req, k, legacyQuerierCdc)
 
 		case types.QuerySupplyOf:
-			return querySupplyOf(ctx, req, k)
+			return querySupplyOf(ctx, req, k, legacyQuerierCdc)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
@@ -32,16 +32,16 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryBalanceParams
+func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+	var params types.QueryBalanceRequest
 
-	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
+	if err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	balance := k.GetBalance(ctx, params.Address, params.Denom)
 
-	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balance)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, balance)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -49,16 +49,16 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 	return bz, nil
 }
 
-func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryAllBalancesParams
+func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+	var params types.QueryAllBalancesRequest
 
-	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
+	if err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	balances := k.GetAllBalances(ctx, params.Address)
 
-	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balances)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, balances)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -66,10 +66,10 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 	return bz, nil
 }
 
-func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QueryTotalSupplyParams
 
-	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -83,7 +83,7 @@ func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 		totalSupply = totalSupply[start:end]
 	}
 
-	res, err := totalSupply.MarshalJSON()
+	res, err := legacyQuerierCdc.MarshalJSON(totalSupply)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -91,20 +91,21 @@ func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 	return res, nil
 }
 
-func querySupplyOf(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func querySupplyOf(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
 	var params types.QuerySupplyOfParams
 
-	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	supply := k.GetSupply(ctx).GetTotal().AmountOf(params.Denom)
+	amount := k.GetSupply(ctx).GetTotal().AmountOf(params.Denom)
+	supply := sdk.NewCoin(params.Denom, amount)
 
-	res, err := supply.MarshalJSON()
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, supply)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
-	return res, nil
+	return bz, nil
 }

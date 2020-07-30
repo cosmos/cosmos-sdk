@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -29,44 +31,49 @@ var (
 
 // AppModuleBasic defines the basic application module used by the bank module.
 type AppModuleBasic struct {
-	cdc Codec
+	cdc codec.Marshaler
 }
 
 // Name returns the bank module's name.
-func (AppModuleBasic) Name() string { return ModuleName }
+func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterCodec registers the bank module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) { RegisterCodec(cdc) }
+func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) { types.RegisterCodec(cdc) }
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the bank module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var data GenesisState
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return ValidateGenesis(data)
+	return types.ValidateGenesis(data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the bank module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterHandlers(clientCtx, rtr)
 }
 
 // GetTxCmd returns the root tx command for the bank module.
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(cdc)
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the bank module.
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(cdc)
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
+}
+
+// RegisterInterfaces registers interfaces and implementations of the bank module.
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 //____________________________________________________________________________
@@ -75,12 +82,18 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        Keeper
+	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
+}
+
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc Codec, keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -89,7 +102,7 @@ func NewAppModule(cdc Codec, keeper Keeper, accountKeeper types.AccountKeeper) A
 }
 
 // Name returns the bank module's name.
-func (AppModule) Name() string { return ModuleName }
+func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterInvariants registers the bank module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
@@ -97,32 +110,32 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route returns the message routing key for the bank module.
-func (AppModule) Route() string { return RouterKey }
-
-// NewHandler returns an sdk.Handler for the bank module.
-func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+}
 
 // QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string { return RouterKey }
+func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// NewQuerierHandler returns the bank module sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
+// LegacyQuerierHandler returns the bank module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState GenesisState
+	var genesisState types.GenesisState
+
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, genesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the bank
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -156,7 +169,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -19,19 +20,19 @@ type Config struct {
 	mtx                 sync.RWMutex
 	coinType            uint32
 	sealed              bool
+	sealedch            chan struct{}
 }
 
 // cosmos-sdk wide global singleton
-var sdkConfig *Config
+var (
+	sdkConfig  *Config
+	initConfig sync.Once
+)
 
-// GetConfig returns the config instance for the SDK.
-func GetConfig() *Config {
-	if sdkConfig != nil {
-		return sdkConfig
-	}
-
-	sdkConfig = &Config{
-		sealed: false,
+// New returns a new Config with default values.
+func NewConfig() *Config {
+	return &Config{
+		sealedch: make(chan struct{}),
 		bech32AddressPrefix: map[string]string{
 			"account_addr":   Bech32PrefixAccAddr,
 			"validator_addr": Bech32PrefixValAddr,
@@ -44,7 +45,25 @@ func GetConfig() *Config {
 		fullFundraiserPath: FullFundraiserPath,
 		txEncoder:          nil,
 	}
+}
+
+// GetConfig returns the config instance for the SDK.
+func GetConfig() *Config {
+	initConfig.Do(func() {
+		sdkConfig = NewConfig()
+	})
 	return sdkConfig
+}
+
+// GetSealedConfig returns the config instance for the SDK if/once it is sealed.
+func GetSealedConfig(ctx context.Context) (*Config, error) {
+	config := GetConfig()
+	select {
+	case <-config.sealedch:
+		return config, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }
 
 func (config *Config) assertNotSealed() {
@@ -108,9 +127,17 @@ func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
-	defer config.mtx.Unlock()
 
+	if config.sealed {
+		config.mtx.Unlock()
+		return config
+	}
+
+	// signal sealed after state exposed/unlocked
 	config.sealed = true
+	config.mtx.Unlock()
+	close(config.sealedch)
+
 	return config
 }
 

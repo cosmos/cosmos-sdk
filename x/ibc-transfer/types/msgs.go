@@ -64,10 +64,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 	// NOTE: this should always pass since validation checks should be the
 	// same. Please open an issue if you encounter an error on this line.
 	packet := NewFungibleTokenPacketData(msg.Token.Denom, msg.Token.Amount.Uint64(), msg.Sender.String(), msg.Receiver)
-	if err := packet.ValidateBasic(); err != nil {
-		return err
-	}
-	return nil
+	return packet.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg

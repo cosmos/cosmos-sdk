@@ -3,8 +3,9 @@ package tx
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -17,17 +18,19 @@ type generator struct {
 	encoder     sdk.TxEncoder
 	jsonDecoder sdk.TxDecoder
 	jsonEncoder sdk.TxEncoder
+	protoCodec  *codec.ProtoCodec
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided Marshaler, PublicKeyCodec and SignModeHandler.
-func NewTxConfig(anyUnpacker codectypes.AnyUnpacker, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
+// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec, PublicKeyCodec and SignModeHandler.
+func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
 	return &generator{
 		pubkeyCodec: pubkeyCodec,
 		handler:     signModeHandler,
-		decoder:     DefaultTxDecoder(anyUnpacker, pubkeyCodec),
+		decoder:     DefaultTxDecoder(protoCodec, pubkeyCodec),
 		encoder:     DefaultTxEncoder(),
-		jsonDecoder: DefaultJSONTxDecoder(anyUnpacker, pubkeyCodec),
+		jsonDecoder: DefaultJSONTxDecoder(protoCodec, pubkeyCodec),
 		jsonEncoder: DefaultJSONTxEncoder(),
+		protoCodec:  protoCodec,
 	}
 }
 

@@ -17,6 +17,8 @@ type (
 		TxDecoder() sdk.TxDecoder
 		TxJSONEncoder() sdk.TxEncoder
 		TxJSONDecoder() sdk.TxDecoder
+		MarshalSignatureJSON([]signingtypes.SignatureV2) ([]byte, error)
+		UnmarshalSignatureJSON([]byte) ([]signingtypes.SignatureV2, error)
 	}
 
 	// TxConfig defines an interface a client can utilize to generate an

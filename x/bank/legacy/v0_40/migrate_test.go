@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
+	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_40"
 
@@ -31,16 +32,23 @@ func TestMigrate(t *testing.T) {
 		1580309972,
 	)
 
+	supply := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+
 	bankGenState := v038bank.GenesisState{
 		SendEnabled: true,
 	}
 	authGenState := v039auth.GenesisState{
 		Accounts: v038auth.GenesisAccounts{acc1, vaac},
 	}
+	supplyGenState := v036supply.GenesisState{
+		Supply: supply,
+	}
 
-	migrated := v040bank.Migrate(bankGenState, authGenState)
+	migrated := v040bank.Migrate(bankGenState, authGenState, supplyGenState)
 	expected := `{
-  "send_enabled": true,
+  "params": {
+    "default_send_enabled": true
+  },
   "balances": [
     {
       "address": "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u",
@@ -60,7 +68,14 @@ func TestMigrate(t *testing.T) {
         }
       ]
     }
-  ]
+  ],
+  "supply": [
+    {
+      "denom": "stake",
+      "amount": "1000"
+    }
+  ],
+  "denom_metadata": []
 }`
 
 	bz, err := v040Codec.MarshalJSONIndent(migrated, "", "  ")

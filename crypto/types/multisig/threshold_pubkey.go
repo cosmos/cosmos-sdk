@@ -154,3 +154,8 @@ func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
 	}
 	return true
 }
+
+// GetThreshold implements the PubKey.GetThreshold method
+func (pk PubKeyMultisigThreshold) GetThreshold() uint {
+	return pk.K
+}

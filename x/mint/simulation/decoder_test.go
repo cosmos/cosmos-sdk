@@ -6,10 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -20,9 +19,9 @@ func TestDecodeStore(t *testing.T) {
 
 	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryBare(&minter)},
-		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		kv.Pair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryBare(&minter)},
+		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 	tests := []struct {
 		name        string

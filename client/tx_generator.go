@@ -1,7 +1,10 @@
 package client
 
 import (
+	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -14,6 +17,8 @@ type (
 		TxDecoder() sdk.TxDecoder
 		TxJSONEncoder() sdk.TxEncoder
 		TxJSONDecoder() sdk.TxDecoder
+		MarshalSignatureJSON([]signingtypes.SignatureV2) ([]byte, error)
+		UnmarshalSignatureJSON([]byte) ([]signingtypes.SignatureV2, error)
 	}
 
 	// TxConfig defines an interface a client can utilize to generate an
@@ -35,6 +40,7 @@ type (
 		GetTx() signing.SigFeeMemoTx
 
 		SetMsgs(msgs ...sdk.Msg) error
+		SetSignerInfo(pubKey crypto.PubKey, modeInfo *txtypes.ModeInfo) error
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)

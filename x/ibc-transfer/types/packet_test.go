@@ -6,6 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	denom  = "atom"
+	amount = uint64(100)
+)
+
 // TestFungibleTokenPacketDataValidateBasic tests ValidateBasic for FungibleTokenPacketData
 func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
 	testCases := []struct {
@@ -13,11 +18,11 @@ func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
 		packetData FungibleTokenPacketData
 		expPass    bool
 	}{
-		{"valid packet", NewFungibleTokenPacketData(coin, addr1.String(), addr2, true), true},
-		{"invalid amount", NewFungibleTokenPacketData(invalidDenomCoin, addr1.String(), addr2, true), false},
-		{"amount contains negative coin", NewFungibleTokenPacketData(negativeCoin, addr1.String(), addr2, true), false},
-		{"missing sender address", NewFungibleTokenPacketData(coin, emptyAddr.String(), addr2, false), false},
-		{"missing recipient address", NewFungibleTokenPacketData(coin, addr1.String(), emptyAddr.String(), false), false},
+		{"valid packet", NewFungibleTokenPacketData(denom, amount, addr1.String(), addr2, true), true},
+		{"invalid denom", NewFungibleTokenPacketData("", amount, addr1.String(), addr2, true), false},
+		{"invalid amount", NewFungibleTokenPacketData(denom, 0, addr1.String(), addr2, true), false},
+		{"missing sender address", NewFungibleTokenPacketData(denom, amount, emptyAddr.String(), addr2, false), false},
+		{"missing recipient address", NewFungibleTokenPacketData(denom, amount, addr1.String(), emptyAddr.String(), false), false},
 	}
 
 	for i, tc := range testCases {

@@ -597,7 +597,8 @@ func (chain *TestChain) ChanCloseInit(
 // callback testing
 func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
 	packet := ibctransfertypes.FungibleTokenPacketData{
-		Token:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+		Denom:    sdk.DefaultBondDenom,
+		Amount:   100,
 		Sender:   chain.SenderAccount.GetAddress().String(),
 		Receiver: counterparty.SenderAccount.GetAddress().String(),
 		Source:   false,

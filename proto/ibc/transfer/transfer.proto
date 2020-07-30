@@ -36,18 +36,20 @@ message MsgTransfer {
 // See FungibleTokenPacketData spec:
 // https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message FungibleTokenPacketData {
-  // the token to be transferred
-  cosmos.Coin token = 1 [(gogoproto.nullable) = false];
+  // the token denomination to be transferred
+  string denom = 1;
+  // the token amount to be transferred
+  uint64 amount = 2;
   // the sender address
-  string sender = 2;
+  string sender = 3;
   // the recipient address on the destination chain
-  string receiver = 3;
+  string receiver = 4;
   // flag indicating if the sender chain is acting as a source zone or a sink
   // zone. A source zone will escrow the sending tokens while a sink zone
   // will burn the vouchers that were minted for the tokens. The Source bool
   // should only be false if the tokens are being sent back to the chain that
   // cause them to be created on the sender chain.
-  bool source = 4;
+  bool source = 5;
 }
 
 // FungibleTokenPacketAcknowledgement contains a boolean success flag and an

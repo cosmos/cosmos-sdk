@@ -65,7 +65,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 	// sanity check that validate basic on fungible token packet passes
 	// NOTE: this should always pass since validation checks should be the
 	// same. Please open an issue if you encounter an error on this line.
-	packet := NewFungibleTokenPacketData(msg.Token, msg.Sender.String(), msg.Receiver, msg.Source)
+	packet := NewFungibleTokenPacketData(msg.Token.Denom, msg.Token.Amount.Uint64(), msg.Sender.String(), msg.Receiver, msg.Source)
 	if err := packet.ValidateBasic(); err != nil {
 		return err
 	}

@@ -103,7 +103,7 @@ func (k Keeper) SendTransfer(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		token, sender.String(), receiver, source,
+		token.Denom, token.Amount.Uint64(), sender.String(), receiver, source,
 	)
 
 	packet := channeltypes.NewPacket(
@@ -122,7 +122,7 @@ func (k Keeper) SendTransfer(
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
-	token := data.Token
+	token := sdk.NewCoin(data.Denom, sdk.NewIntFromUint64(data.Amount))
 
 	// decode the receiver address
 	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
@@ -182,7 +182,7 @@ func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, dat
 func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
-	token := data.Token
+	token := sdk.NewCoin(data.Denom, sdk.NewIntFromUint64(data.Amount))
 
 	// decode the sender address
 	sender, err := sdk.AccAddressFromBech32(data.Sender)

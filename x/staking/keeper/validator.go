@@ -390,27 +390,29 @@ func (k Keeper) InsertUnbondingValidatorQueue(ctx sdk.Context, val types.Validat
 	k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, addrs)
 }
 
-// Deletes a specific validator queue timeslice.
-func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Time) {
+// DeleteValidatorQueueTimeSlice deletes all entries in the queue indexed by a
+// given height and time.
+func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, endTime time.Time, endHeight int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetValidatorQueueTimeKey(timestamp))
+	store.Delete(types.GetValidatorQueueKey(endTime, endHeight))
 }
 
-// Delete a validator address from the validator queue
+// DeleteValidatorQueue removes a validator by address from the unbonding queue
+// indexed by a given height and time.
 func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
-	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingTime)
-	newTimeSlice := []sdk.ValAddress{}
+	addrs := k.GetUnbondingValidators(ctx, val.UnbondingTime, val.UnbondingHeight)
+	newAddrs := []sdk.ValAddress{}
 
-	for _, addr := range timeSlice {
+	for _, addr := range addrs {
 		if !bytes.Equal(addr, val.OperatorAddress) {
-			newTimeSlice = append(newTimeSlice, addr)
+			newAddrs = append(newAddrs, addr)
 		}
 	}
 
-	if len(newTimeSlice) == 0 {
-		k.DeleteValidatorQueueTimeSlice(ctx, val.UnbondingTime)
+	if len(newAddrs) == 0 {
+		k.DeleteValidatorQueueTimeSlice(ctx, val.UnbondingTime, val.UnbondingHeight)
 	} else {
-		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingTime, newTimeSlice)
+		k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, newAddrs)
 	}
 }
 

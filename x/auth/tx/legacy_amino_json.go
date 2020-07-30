@@ -35,24 +35,26 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	}
 
 	if protoTx.txBodyHasUnknownNonCriticals {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
-			fmt.Sprintf(aminoNonCriticalFieldsError))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, aminoNonCriticalFieldsError)
 	}
 
 	body := protoTx.tx.Body
 
 	if len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
-			fmt.Sprintf("SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options."))
+			"SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options.")
 	}
 
 	if body.TimeoutHeight != 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
-			fmt.Sprintf("SIGN_MODE_LEGACY_AMINO_JSON does not support timeout height."))
+			"SIGN_MODE_LEGACY_AMINO_JSON does not support timeout height.")
 	}
 
 	return types.StdSignBytes(
-		data.ChainID, data.AccountNumber, data.AccountSequence, types.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()}, tx.GetMsgs(), protoTx.GetMemo(),
+		data.ChainID, data.AccountNumber, data.AccountSequence,
+		//nolint:staticcheck
+		types.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
+		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil
 }
 

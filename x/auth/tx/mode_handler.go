@@ -7,6 +7,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+var DefaultSignModes = []signingtypes.SignMode{
+	signingtypes.SignMode_SIGN_MODE_DIRECT,
+	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+}
+
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
 // SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO_JSON.
 func makeSignModeHandler(modes []signingtypes.SignMode) signing.SignModeHandler {

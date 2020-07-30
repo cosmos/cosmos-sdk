@@ -1,6 +1,6 @@
 syntax = "proto3";
 package tendermint.libs.kv;
-option  go_package = "github.com/cosmos/cosmos-sdk/types/kv";
+option  go_package = "github.com/tendermint/tendermint/libs/kv";
 
 import "gogoproto/gogo.proto";
 

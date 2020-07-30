@@ -3,6 +3,8 @@ package tx
 import (
 	"github.com/tendermint/tendermint/crypto"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
@@ -19,18 +21,18 @@ func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Public
 		var raw tx.TxRaw
 		err := cdc.UnmarshalBinaryBare(txBytes, &raw)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		var theTx tx.Tx
 		err = cdc.UnmarshalBinaryBare(txBytes, &theTx)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		pks, err := extractPubKeys(theTx, keyCodec)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		return &builder{
@@ -50,12 +52,12 @@ func DefaultJSONTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Pu
 		var theTx tx.Tx
 		err := cdc.UnmarshalJSON(txBytes, &theTx)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		pks, err := extractPubKeys(theTx, keyCodec)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		return &builder{

@@ -129,8 +129,6 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 			}
 			protoMessageName = any.TypeUrl
 			fieldBytes = any.Value
-		} else {
-			// remove
 		}
 
 		msg, err := protoMessageForTypeName(protoMessageName[1:])

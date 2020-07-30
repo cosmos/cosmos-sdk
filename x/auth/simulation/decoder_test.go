@@ -7,10 +7,10 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -31,16 +31,16 @@ func TestDecodeStore(t *testing.T) {
 
 	globalAccNumber := gogotypes.UInt64Value{Value: 10}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := sdkkv.Pairs{
+		sdkkv.Pair{
 			Key:   types.AddressStoreKey(delAddr1),
 			Value: accBz,
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   types.GlobalAccountNumberKey,
 			Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

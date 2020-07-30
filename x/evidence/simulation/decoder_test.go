@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -31,12 +31,12 @@ func TestDecodeStore(t *testing.T) {
 	evBz, err := app.EvidenceKeeper.MarshalEvidence(ev)
 	require.NoError(t, err)
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := sdkkv.Pairs{
+		sdkkv.Pair{
 			Key:   types.KeyPrefixEvidence,
 			Value: evBz,
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -28,16 +28,16 @@ func TestDecodeStore(t *testing.T) {
 		Paths: []string{connectionID},
 	}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := sdkkv.Pairs{
+		sdkkv.Pair{
 			Key:   host.KeyClientConnections(connection.ClientID),
 			Value: cdc.MustMarshalBinaryBare(&paths),
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   host.KeyConnection(connectionID),
 			Value: cdc.MustMarshalBinaryBare(&connection),
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

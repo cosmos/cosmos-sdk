@@ -8,12 +8,12 @@ import (
 	"sync"
 	"time"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -181,13 +181,13 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
-	unsorted := make([]*tmkv.Pair, 0)
+	unsorted := make([]*sdkkv.Pair, 0)
 
 	for key := range store.unsortedCache {
 		cacheValue := store.cache[key]
 
 		if dbm.IsKeyInDomain([]byte(key), start, end) {
-			unsorted = append(unsorted, &tmkv.Pair{Key: []byte(key), Value: cacheValue.value})
+			unsorted = append(unsorted, &sdkkv.Pair{Key: []byte(key), Value: cacheValue.value})
 
 			delete(store.unsortedCache, key)
 		}
@@ -199,7 +199,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 	for e := store.sortedCache.Front(); e != nil && len(unsorted) != 0; {
 		uitem := unsorted[0]
-		sitem := e.Value.(*tmkv.Pair)
+		sitem := e.Value.(*sdkkv.Pair)
 		comp := bytes.Compare(uitem.Key, sitem.Key)
 
 		switch comp {

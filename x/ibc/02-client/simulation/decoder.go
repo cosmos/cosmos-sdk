@@ -4,16 +4,15 @@ import (
 	"bytes"
 	"fmt"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding client type.
-func NewDecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) (string, bool) {
+func NewDecodeStore(cdc *codec.Codec, kvA, kvB sdkkv.Pair) (string, bool) {
 	switch {
 	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.HasSuffix(kvA.Key, host.KeyClientState()):
 		var clientStateA, clientStateB exported.ClientState

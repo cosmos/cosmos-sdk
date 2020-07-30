@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -28,32 +28,32 @@ func TestDecodeStore(t *testing.T) {
 
 	bz := []byte{0x1, 0x2, 0x3}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := sdkkv.Pairs{
+		sdkkv.Pair{
 			Key:   host.KeyChannel(portID, channelID),
 			Value: cdc.MustMarshalBinaryBare(&channel),
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   host.KeyNextSequenceSend(portID, channelID),
 			Value: sdk.Uint64ToBigEndian(1),
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   host.KeyNextSequenceRecv(portID, channelID),
 			Value: sdk.Uint64ToBigEndian(1),
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   host.KeyNextSequenceAck(portID, channelID),
 			Value: sdk.Uint64ToBigEndian(1),
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   host.KeyPacketCommitment(portID, channelID, 1),
 			Value: bz,
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   host.KeyPacketAcknowledgement(portID, channelID, 1),
 			Value: bz,
 		},
-		tmkv.Pair{
+		sdkkv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

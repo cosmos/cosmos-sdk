@@ -1,4 +1,4 @@
-package v039_test
+package v040_test
 
 import (
 	"testing"
@@ -7,16 +7,17 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
+	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
-	v039bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_39"
+	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_40"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestMigrate(t *testing.T) {
-	v039Codec := codec.New()
-	cryptocodec.RegisterCrypto(v039Codec)
-	v038auth.RegisterCodec(v039Codec)
+	v040Codec := codec.New()
+	cryptocodec.RegisterCrypto(v040Codec)
+	v039auth.RegisterCodec(v040Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")
@@ -33,11 +34,11 @@ func TestMigrate(t *testing.T) {
 	bankGenState := v038bank.GenesisState{
 		SendEnabled: true,
 	}
-	authGenState := v038auth.GenesisState{
+	authGenState := v039auth.GenesisState{
 		Accounts: v038auth.GenesisAccounts{acc1, vaac},
 	}
 
-	migrated := v039bank.Migrate(bankGenState, authGenState)
+	migrated := v040bank.Migrate(bankGenState, authGenState)
 	expected := `{
   "send_enabled": true,
   "balances": [
@@ -62,7 +63,7 @@ func TestMigrate(t *testing.T) {
   ]
 }`
 
-	bz, err := v039Codec.MarshalJSONIndent(migrated, "", "  ")
+	bz, err := v040Codec.MarshalJSONIndent(migrated, "", "  ")
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))
 }

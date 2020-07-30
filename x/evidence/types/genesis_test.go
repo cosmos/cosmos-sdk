@@ -1,12 +1,16 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -17,36 +21,168 @@ func TestDefaultGenesisState(t *testing.T) {
 	require.Len(t, gs.Evidence, 0)
 }
 
-func TestGenesisStateValidate_Valid(t *testing.T) {
-	pk := ed25519.GenPrivKey()
+func TestNewGenesisState(t *testing.T) {
+	var (
+		evidence []exported.Evidence
+	)
 
-	evidence := make([]exported.Evidence, 100)
-	for i := 0; i < 100; i++ {
-		evidence[i] = &types.Equivocation{
-			Height:           int64(i) + 1,
-			Power:            100,
-			Time:             time.Now().UTC(),
-			ConsensusAddress: pk.PubKey().Address().Bytes(),
-		}
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"cannot proto marshal",
+			func() {
+				evidence = []exported.Evidence{&TestEvidence{}}
+			},
+			false,
+		},
 	}
 
-	gs := types.NewGenesisState(evidence)
-	require.NoError(t, gs.Validate())
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
+			tc.malleate()
+
+			if tc.expPass {
+				require.NotPanics(t, func() {
+					types.NewGenesisState(evidence)
+				})
+			} else {
+				require.Panics(t, func() {
+					types.NewGenesisState(evidence)
+				})
+			}
+		})
+	}
 }
 
-func TestGenesisStateValidate_Invalid(t *testing.T) {
-	pk := ed25519.GenPrivKey()
+func TestGenesisStateValidate(t *testing.T) {
+	var (
+		genesisState types.GenesisState
+		testEvidence []exported.Evidence
+		pk           = ed25519.GenPrivKey()
+	)
 
-	evidence := make([]exported.Evidence, 100)
-	for i := 0; i < 100; i++ {
-		evidence[i] = &types.Equivocation{
-			Height:           int64(i),
-			Power:            100,
-			Time:             time.Now().UTC(),
-			ConsensusAddress: pk.PubKey().Address().Bytes(),
-		}
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"valid",
+			func() {
+				testEvidence = make([]exported.Evidence, 100)
+				for i := 0; i < 100; i++ {
+					testEvidence[i] = &types.Equivocation{
+						Height:           int64(i + 1),
+						Power:            100,
+						Time:             time.Now().UTC(),
+						ConsensusAddress: pk.PubKey().Address().Bytes(),
+					}
+				}
+				genesisState = types.NewGenesisState(testEvidence)
+			},
+			true,
+		},
+		{
+			"invalid",
+			func() {
+				testEvidence = make([]exported.Evidence, 100)
+				for i := 0; i < 100; i++ {
+					testEvidence[i] = &types.Equivocation{
+						Height:           int64(i),
+						Power:            100,
+						Time:             time.Now().UTC(),
+						ConsensusAddress: pk.PubKey().Address().Bytes(),
+					}
+				}
+				genesisState = types.NewGenesisState(testEvidence)
+			},
+			false,
+		},
+		{
+			"expected evidence",
+			func() {
+				genesisState = types.GenesisState{
+					Evidence: []*codectypes.Any{&codectypes.Any{}},
+				}
+			},
+			false,
+		},
 	}
 
-	gs := types.NewGenesisState(evidence)
-	require.Error(t, gs.Validate())
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
+			tc.malleate()
+
+			if tc.expPass {
+				require.NoError(t, genesisState.Validate())
+			} else {
+				require.Error(t, genesisState.Validate())
+			}
+		})
+	}
+}
+
+func TestUnpackInterfaces(t *testing.T) {
+	var gs = types.GenesisState{
+		Evidence: []*codectypes.Any{&codectypes.Any{}},
+	}
+
+	testCases := []struct {
+		msg      string
+		unpacker codectypes.AnyUnpacker
+		expPass  bool
+	}{
+		{
+			"success",
+			codectypes.NewInterfaceRegistry(),
+			true,
+		},
+		{
+			"error",
+			codec.New(),
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
+
+			if tc.expPass {
+				require.NoError(t, gs.UnpackInterfaces(tc.unpacker))
+			} else {
+				require.Error(t, gs.UnpackInterfaces(tc.unpacker))
+			}
+		})
+	}
+}
+
+type TestEvidence struct{}
+
+var _ exported.Evidence = &TestEvidence{}
+
+func (*TestEvidence) Route() string {
+	return "test-route"
+}
+
+func (*TestEvidence) Type() string {
+	return "test-type"
+}
+
+func (*TestEvidence) String() string {
+	return "test-string"
+}
+
+func (*TestEvidence) Hash() tmbytes.HexBytes {
+	return tmbytes.HexBytes([]byte("test-hash"))
+}
+
+func (*TestEvidence) ValidateBasic() error {
+	return nil
+}
+
+func (*TestEvidence) GetHeight() int64 {
+	return 0
 }

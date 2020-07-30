@@ -3,28 +3,27 @@ package store
 import (
 	"bytes"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // Gets the first item.
-func First(st KVStore, start, end []byte) (kv tmkv.Pair, ok bool) {
+func First(st KVStore, start, end []byte) (kv sdkkv.Pair, ok bool) {
 	iter := st.Iterator(start, end)
 	if !iter.Valid() {
 		return kv, false
 	}
 	defer iter.Close()
 
-	return tmkv.Pair{Key: iter.Key(), Value: iter.Value()}, true
+	return sdkkv.Pair{Key: iter.Key(), Value: iter.Value()}, true
 }
 
 // Gets the last item.  `end` is exclusive.
-func Last(st KVStore, start, end []byte) (kv tmkv.Pair, ok bool) {
+func Last(st KVStore, start, end []byte) (kv sdkkv.Pair, ok bool) {
 	iter := st.ReverseIterator(end, start)
 	if !iter.Valid() {
 		if v := st.Get(start); v != nil {
-			return tmkv.Pair{Key: sdk.CopyBytes(start), Value: sdk.CopyBytes(v)}, true
+			return sdkkv.Pair{Key: sdk.CopyBytes(start), Value: sdk.CopyBytes(v)}, true
 		}
 		return kv, false
 	}
@@ -38,5 +37,5 @@ func Last(st KVStore, start, end []byte) (kv tmkv.Pair, ok bool) {
 		}
 	}
 
-	return tmkv.Pair{Key: iter.Key(), Value: iter.Value()}, true
+	return sdkkv.Pair{Key: iter.Key(), Value: iter.Value()}, true
 }

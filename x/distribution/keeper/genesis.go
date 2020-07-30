@@ -37,7 +37,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		k.SetDelegatorStartingInfo(ctx, del.ValidatorAddress, del.DelegatorAddress, del.StartingInfo)
 	}
 	for _, evt := range data.ValidatorSlashEvents {
-		k.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Period, evt.Event)
+		k.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Period, evt.ValidatorSlashEvent)
 	}
 
 	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
@@ -136,10 +136,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
 	k.IterateValidatorSlashEvents(ctx,
 		func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool) {
 			slashes = append(slashes, types.ValidatorSlashEventRecord{
-				ValidatorAddress: val,
-				Height:           height,
-				Period:           event.ValidatorPeriod,
-				Event:            event,
+				ValidatorAddress:    val,
+				Height:              height,
+				Period:              event.ValidatorPeriod,
+				ValidatorSlashEvent: event,
 			})
 			return false
 		},

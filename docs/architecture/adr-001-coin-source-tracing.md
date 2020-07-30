@@ -24,7 +24,7 @@ The Packet relay works as follows (per
 > - When acting as the **sink** zone, the bridge module burns local vouchers on the sending chains
 >   and unescrows the local asset denomination on the receiving chain.
 
-In this context, when the sender of a cross-chain transfer is **not** the source where the tokens
+In this context, when the sender of a cross-chain transfer *is* the source where the tokens
 were originated, the protocol prefixes the denomination with the port and channel identifiers in the
 following format:
 
@@ -63,7 +63,7 @@ of a coin's denom is performed according to a
 [Regex](https://github.com/cosmos/cosmos-sdk/blob/a940214a4923a3bf9a9161cd14bd3072299cd0c9/types/coin.go#L583),
 where only lowercase alphanumeric characters are accepted. While this is desirable for native denoms
 to keep a clean UX, it presents a challenge for IBC as ports and channels might be randomly
-generated with special carracters and uppercases as per the [ICS 024 - Host
+generated with special characters and uppercases as per the [ICS 024 - Host
 Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements#paths-identifiers-separators)
 specification.
 
@@ -122,10 +122,11 @@ func (dt *DenomTrace) RemovePrefix() error {
 
   var err error
   switch {
-  case len(traceSplit) == 0, traceSplit[0] == dt.Trace:
+  case len(traceSplit) == 1 && traceSplit[0] == dt.Trace:
     err = Wrapf(ErrInvalidDenomForTransfer, "trace info %s must contain '/' separators", dt.Trace)
   case len(traceSplit) == 1:
-    err = Wrapf(ErrInvalidDenomForTransfer, "trace info %s must come in pairs of '{portID}/channelID}'", dt.Trace)
+    // trace only contains one identifier
+    err = Wrapf(ErrInvalidDenomForTransfer, "trace info %s must come in pairs of identifiers '{portID}/{channelID}'", dt.Trace)
   case len(traceSplit) == 2:
     dt.Trace = ""
   case len(traceSplit) == 3:
@@ -181,10 +182,7 @@ To mitigate this a new `Trace` field needs to be added to the `FungibleTokenPack
 ```protobuf
 message FungibleTokenPacketData {
   // the tokens to be transferred
-  repeated cosmos.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+
   // coins denomination trace for tracking the source
   DenomTrace denom_trace = 2;
   // the sender address
@@ -199,33 +197,43 @@ The `MsgTransfer` will validate that the Coins from the `Amount` field contain t
 ```golang
 func (msg MsgTransfer) ValidateBasic() error {
   // ...
-  if len(msg.Amount) != len(msg.DenomTraces) {
-    //  error
-  }
-  // tokens length should be 1
-  hash, err := GetTraceHashFromDenom(msg.Amount[0].Denom)
-  if err != nil {
+  if err := msg.Trace.Validate(); err != nil {
     return err
   }
-  if hash != msg.DenomTrace.Hash() {
-    // error
+  // Only validate the ibc denomination when trace info is not provided
+  if msg.Trace.Trace != "" {
+    denomTraceHash, err := ValidateIBCDenom(msg.Token.Denom)
+    if err != nil {
+      return err
+    }
+    traceHash := msg.Trace.Hash()
+    if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
+      return fmt.Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
+    }
+  } else if msg.Trace.BaseDenom != msg.Amount[0].Denom {
+    // otherwise, validate that denominations are equal
+    return sdkerrors.Wrapf(
+      ErrInvalidDenomForTransfer,
+      "token denom must match the trace base denom (%s ≠ %s)",
+      msg.Amount, msg.Trace.BaseDenom,
+    )
   }
+  // ...
 }
 ```
 
 ```golang
-func GetTraceHashFromDenom(rawDenom string) (tmbytes.HexBytes, error) {
-  denomSplit := strings.SplitN(denom, "/", 3)
+// ValidateIBCDenom checks that the denomination for an IBC fungible token is valid. It returns the hash of denomination on success.
+func ValidateIBCDenom(rawDenom string) (tmbytes.HexBytes, error) {
+  denomSplit := strings.SplitN(denom, "/", 2)
 
   switch {
-    case len(denomSplit) == 0:
-      err = Wrap(ErrInvalidDenomForTransfer, denom)
     case denomSplit[0] == denom:
       err = Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
     case denomSplit[0] != "ibc":
-      err = Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
-    case len(denomSplit) == 2  && len(denomSplit[1]) != 32:
-      err = Wrapf(ErrInvalidDenomForTransfer, "invalid SHA256 hash %s", denomSplit[1])
+      err = Wrapf(ErrInvalidDenomForTransfer, "denomination %s must be prefixed with 'ibc'", denom)
+    case len(denomSplit) == 2:
+      err = tmtypes.ValidateHash([]byte(denomSplit[1]))
     default:
       err = Wrap(ErrInvalidDenomForTransfer, denom)
   }
@@ -343,7 +351,7 @@ for i, coin := range data.Amount {
 The coin denomination validation will need to be updated to reflect these changes. In particular, the denomination validation
 function will now accept slash separators (`"/"`) and will bump the maximum character length to 64.
 
-Additional validation logic, such as verifying the kenght of the hash, the  may be added to the bank module in the future if the [custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755) is integrated into the SDK.
+Additional validation logic, such as verifying the length of the hash, the  may be added to the bank module in the future if the [custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755) is integrated into the SDK.
 
 ### Positive
 
@@ -356,7 +364,7 @@ Additional validation logic, such as verifying the kenght of the hash, the  may 
 ### Negative
 
 - Store each set of tracing denomination identifiers on the `ibc-transfer` module store
-- Clients will have to fetch the base denomination everytime they receive a new relayed fungible token over IBC. This can be mitigated using a map/cache for already seen hashes on the client side.
+- Clients will have to fetch the base denomination everytime they receive a new relayed fungible token over IBC. This can be mitigated using a map/cache for already seen hashes on the client side. Other forms of mitgation, would be opening a websocket connection subscribe to incoming events.
 
 ### Neutral
 

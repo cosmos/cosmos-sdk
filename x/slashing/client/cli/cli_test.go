@@ -60,9 +60,10 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 	}{
 		{"invalid address", []string{"foo"}, true, ``},
 		{
-			"valid address (default output)",
+			"valid address (json output)",
 			[]string{
 				valConsPubKey,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -116,8 +117,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		expectedOutput string
 	}{
 		{
-			"default output",
-			[]string{},
+			"json output",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			`{"signed_blocks_window":"100","min_signed_per_window":"0.500000000000000000","downtime_jail_duration":"600000000000","slash_fraction_double_sign":"0.050000000000000000","slash_fraction_downtime":"0.010000000000000000"}`,
 		},
 		{

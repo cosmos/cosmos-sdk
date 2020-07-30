@@ -378,7 +378,7 @@ proto-update-deps:
 ###############################################################################
 
 build-docker-local-simapp:
-	@$(MAKE) -C networks/local
+	docker build -t cosmos-sdk/simapp .
 
 # Run a 4-node testnet locally
 localnet-start: build-simd-linux localnet-stop

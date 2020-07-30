@@ -18,11 +18,11 @@ func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
 		packetData FungibleTokenPacketData
 		expPass    bool
 	}{
-		{"valid packet", NewFungibleTokenPacketData(denom, amount, addr1.String(), addr2, true), true},
-		{"invalid denom", NewFungibleTokenPacketData("", amount, addr1.String(), addr2, true), false},
-		{"invalid amount", NewFungibleTokenPacketData(denom, 0, addr1.String(), addr2, true), false},
-		{"missing sender address", NewFungibleTokenPacketData(denom, amount, emptyAddr.String(), addr2, false), false},
-		{"missing recipient address", NewFungibleTokenPacketData(denom, amount, addr1.String(), emptyAddr.String(), false), false},
+		{"valid packet", NewFungibleTokenPacketData(denom, amount, addr1.String(), addr2), true},
+		{"invalid denom", NewFungibleTokenPacketData("", amount, addr1.String(), addr2), false},
+		{"invalid amount", NewFungibleTokenPacketData(denom, 0, addr1.String(), addr2), false},
+		{"missing sender address", NewFungibleTokenPacketData(denom, amount, emptyAddr.String(), addr2), false},
+		{"missing recipient address", NewFungibleTokenPacketData(denom, amount, addr1.String(), emptyAddr.String()), false},
 	}
 
 	for i, tc := range testCases {

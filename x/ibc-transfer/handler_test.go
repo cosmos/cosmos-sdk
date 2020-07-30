@@ -35,14 +35,13 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	// send from chainA to chainB
-	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), true, 110, 0)
+	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0)
 
 	err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
 	suite.Require().NoError(err) // message committed
 
 	// relay send
-	prefixedCoin := types.GetPrefixedCoin(channelB.PortID, channelB.ID, coinToSendToB)
-	fungibleTokenPacket := types.NewFungibleTokenPacketData(prefixedCoin.Denom, prefixedCoin.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), true)
+	fungibleTokenPacket := types.NewFungibleTokenPacketData(coinToSendToB.Denom, coinToSendToB.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
 	packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 110, 0)
 	ack := types.FungibleTokenPacketAcknowledgement{Success: true}
 	err = suite.coordinator.RelayPacket(suite.chainA, suite.chainB, clientA, clientB, packet, ack.GetBytes())
@@ -51,13 +50,13 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	coinToSendBackToA := types.GetTransferCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
 
 	// send from chainB back to chainA
-	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), false, 110, 0)
+	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
 
 	err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, clientA, msg)
 	suite.Require().NoError(err) // message committed
 
 	// relay send
-	fungibleTokenPacket = types.NewFungibleTokenPacketData(coinToSendBackToA.Denom, coinToSendBackToA.Amount.Uint64(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), false)
+	fungibleTokenPacket = types.NewFungibleTokenPacketData(coinToSendBackToA.Denom, coinToSendBackToA.Amount.Uint64(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
 	packet = channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
 	err = suite.coordinator.RelayPacket(suite.chainB, suite.chainA, clientB, clientA, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed

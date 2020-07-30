@@ -25,14 +25,12 @@ var (
 func NewFungibleTokenPacketData(
 	denom string, amount uint64,
 	sender, receiver string,
-	source bool,
 ) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
 		Denom:    denom,
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,
-		Source:   source,
 	}
 }
 

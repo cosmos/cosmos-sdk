@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -25,14 +24,13 @@ const (
 // NewTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func NewTransferTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "transfer [src-port] [src-channel] [receiver] [source] [amount]",
+		Use:   "transfer [src-port] [src-channel] [receiver] [amount]",
 		Short: "Transfer a fungible token through IBC",
 		Long: strings.TrimSpace(`Transfer a fungible token through IBC. Timeouts can be specified
 as absolute or relative using the "absolute-timeouts" flag. Relative timeouts are added to
 the block height and block timestamp queried from the latest consensus state corresponding
-to the counterparty channel. Any timeout set to 0 is disabled. The source argument is false
-if the token is being sent to chain it was received from.`),
-		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [source] [amount]", version.AppName),
+to the counterparty channel. Any timeout set to 0 is disabled.`),
+		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),
 		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -46,12 +44,7 @@ if the token is being sent to chain it was received from.`),
 			srcChannel := args[1]
 			receiver := args[2]
 
-			source, err := strconv.ParseBool(args[3])
-			if err != nil {
-				return err
-			}
-
-			coin, err := sdk.ParseCoin(args[4])
+			coin, err := sdk.ParseCoin(args[3])
 			if err != nil {
 				return err
 			}
@@ -89,7 +82,7 @@ if the token is being sent to chain it was received from.`),
 			}
 
 			msg := types.NewMsgTransfer(
-				srcPort, srcChannel, coin, sender, receiver, source, timeoutHeight, timeoutTimestamp,
+				srcPort, srcChannel, coin, sender, receiver, timeoutHeight, timeoutTimestamp,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

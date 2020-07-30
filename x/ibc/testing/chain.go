@@ -594,14 +594,13 @@ func (chain *TestChain) ChanCloseInit(
 }
 
 // GetPacketData returns a ibc-transfer marshalled packet to be used for
-// callback testing
+// callback testing.
 func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
 	packet := ibctransfertypes.FungibleTokenPacketData{
 		Denom:    sdk.DefaultBondDenom,
 		Amount:   100,
 		Sender:   chain.SenderAccount.GetAddress().String(),
 		Receiver: counterparty.SenderAccount.GetAddress().String(),
-		Source:   false,
 	}
 
 	return packet.GetBytes()

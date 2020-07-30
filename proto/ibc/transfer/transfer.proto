@@ -21,8 +21,6 @@ message MsgTransfer {
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // the recipient address on the destination chain
   string receiver = 5;
-  // flag indicating if the token came from the source chain
-  bool source = 6;
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
   uint64 timeout_height = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
@@ -44,12 +42,6 @@ message FungibleTokenPacketData {
   string sender = 3;
   // the recipient address on the destination chain
   string receiver = 4;
-  // flag indicating if the sender chain is acting as a source zone or a sink
-  // zone. A source zone will escrow the sending tokens while a sink zone
-  // will burn the vouchers that were minted for the tokens. The Source bool
-  // should only be false if the tokens are being sent back to the chain that
-  // cause them to be created on the sender chain.
-  bool source = 5;
 }
 
 // FungibleTokenPacketAcknowledgement contains a boolean success flag and an

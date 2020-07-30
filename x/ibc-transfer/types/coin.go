@@ -2,9 +2,21 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// SenderChainIsSource returns false if the denomination originally came
+// from the receiving chain and true otherwise.
+func SenderChainIsSource(sourcePort, sourceChannel, denom string) bool {
+	// This is the prefix that would have been prefixed to the denomination
+	// on sender chain IF and only if the token originally came from the
+	// receiving chain.
+
+	voucherPrefix := GetDenomPrefix(sourcePort, sourceChannel)
+	return !strings.HasPrefix(denom, voucherPrefix)
+}
 
 // GetDenomPrefix returns the receiving denomination prefix
 func GetDenomPrefix(portID, channelID string) string {

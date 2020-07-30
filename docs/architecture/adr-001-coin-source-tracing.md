@@ -32,19 +32,19 @@ following format:
 prefix + denom = {destPortN}/{destChannelN}/.../{destPort0}/{destChannel0}/denom
 ```
 
-Example: transfering `100 uatom` from port `HubPort` and channel `HubChannel` on the Hub to
+Example: transferring `100 uatom` from port `HubPort` and channel `HubChannel` on the Hub to
 Ethermint's port `EthermintPort` and channel `EthermintChannel` results in `100
 EthermintPort/EthermintChannel/uatom`, where `EthermintPort/EthermintChannel/uatom` is the new
 denomination on the receiving chain.
 
-In the case those tokens are transfered back to the Hub (i.e the **source** chain), the prefix is
+In the case those tokens are transferred back to the Hub (i.e the **source** chain), the prefix is
 trimmed and the token denomination updated to the original one.
 
 ### Problem
 
 The problem of adding additional information to the coin denomination is twofold:
 
-1. The ever increasing length if tokens are transfered to zones other than the source:
+1. The ever increasing length if tokens are transferred to zones other than the source:
 
 If a token is transferred `n` times via IBC to a sink chain, the token denom will contain `n` pairs
 of prefixes, as shown on the format example above. This poses a problem because, while port and
@@ -61,9 +61,9 @@ validation failing on the receiving chain.
 In the SDK every time a `Coin` is initialized through the constructor function `NewCoin`, a validation
 of a coin's denom is performed according to a
 [Regex](https://github.com/cosmos/cosmos-sdk/blob/a940214a4923a3bf9a9161cd14bd3072299cd0c9/types/coin.go#L583),
-where only lowercase alphanumeric characters are accepted. While this is desirable for native denoms
+where only lowercase alphanumeric characters are accepted. While this is desirable for native denominations
 to keep a clean UX, it presents a challenge for IBC as ports and channels might be randomly
-generated with special characters and uppercases as per the [ICS 024 - Host
+generated with special and uppercase characters as per the [ICS 024 - Host
 Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements#paths-identifiers-separators)
 specification.
 
@@ -80,7 +80,7 @@ ibcDenom = "ibc/" + hash(trace + "/" + base denom)
 The hash function will be a SHA256 hash of the fields of the `DenomTrace`:
 
 ```protobuf
-// DenomTrace contains the base denomination for ICS20 fungible tokens and the souce tracing
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the source tracing
 // information
 message DenomTrace {
   // chain of port/channel identifiers used for tracing the source of the fungible token
@@ -143,12 +143,12 @@ func (dt *DenomTrace) RemovePrefix() error {
 
 ### `x/ibc-transfer` Changes
 
-In order to retreive the trace information from an IBC denomination, a lookup table needs to be
+In order to retrieve the trace information from an IBC denomination, a lookup table needs to be
 added to the `ibc-transfer` module. These values need to also be persisted between upgrades, meaning
 that a new `[]DenomTrace` `GenesisState` field state needs to be added to the module:
 
 ```golang
-// GetDenom retreives the full identifiers trace and base denomination from the store.
+// GetDenom retrieves the full identifiers trace and base denomination from the store.
 func (k Keeper) GetDenomTrace(ctx Context, denomTraceHash []byte) (DenomTrace, bool) {
   store := ctx.KVStore(k.storeKey)
   bz := store.Get(types.KeyDenomTrace(traceHash))
@@ -364,7 +364,7 @@ Additional validation logic, such as verifying the length of the hash, the  may 
 ### Negative
 
 - Store each set of tracing denomination identifiers on the `ibc-transfer` module store
-- Clients will have to fetch the base denomination everytime they receive a new relayed fungible token over IBC. This can be mitigated using a map/cache for already seen hashes on the client side. Other forms of mitgation, would be opening a websocket connection subscribe to incoming events.
+- Clients will have to fetch the base denomination everytime they receive a new relayed fungible token over IBC. This can be mitigated using a map/cache for already seen hashes on the client side. Other forms of mitigation, would be opening a websocket connection subscribe to incoming events.
 
 ### Neutral
 

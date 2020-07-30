@@ -172,3 +172,14 @@ func (f Factory) WithSimulateAndExecute(sim bool) Factory {
 	f.simulateAndExecute = sim
 	return f
 }
+
+// SignMode returns the sign mode configured in the Factory
+func (f Factory) SignMode() signing.SignMode {
+	return f.signMode
+}
+
+// WithSignMode returns a copy of the Factory with an updated sign mode value.
+func (f Factory) WithSignMode(mode signing.SignMode) Factory {
+	f.signMode = mode
+	return f
+}

@@ -32,7 +32,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x01,
 													},
@@ -47,7 +47,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x02,
 													},
@@ -87,7 +87,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x01,
 													},
@@ -102,7 +102,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x02,
 													},
@@ -311,13 +311,13 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 				Sum: &testdata.TestVersion2_E{
 					E: 100,
 				},
-				H: []*testdata.TestVersion2{
+				H: []*testdata.TestVersion1{
 					{X: 999},
 					{X: -55},
 					{
 						X: 102,
-						Sum: &testdata.TestVersion2_F{
-							F: &testdata.TestVersion2{
+						Sum: &testdata.TestVersion1_F{
+							F: &testdata.TestVersion1{
 								X: 4,
 							},
 						},

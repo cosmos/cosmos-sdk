@@ -5,8 +5,9 @@ import (
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -19,18 +20,20 @@ type config struct {
 	encoder     sdk.TxEncoder
 	jsonDecoder sdk.TxDecoder
 	jsonEncoder sdk.TxEncoder
+	protoCodec  *codec.ProtoCodec
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided Marshaler, PublicKeyCodec and sign modes. The
+// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec, PublicKeyCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
-func NewTxConfig(anyUnpacker codectypes.AnyUnpacker, pubkeyCodec types.PublicKeyCodec, enabledSignModes []signingtypes.SignMode) client.TxConfig {
+func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec, enabledSignModes []signingtypes.SignMode) client.TxConfig {
 	return &config{
 		pubkeyCodec: pubkeyCodec,
 		handler:     makeSignModeHandler(enabledSignModes),
-		decoder:     DefaultTxDecoder(anyUnpacker, pubkeyCodec),
+		decoder:     DefaultTxDecoder(protoCodec, pubkeyCodec),
 		encoder:     DefaultTxEncoder(),
-		jsonDecoder: DefaultJSONTxDecoder(anyUnpacker, pubkeyCodec),
+		jsonDecoder: DefaultJSONTxDecoder(protoCodec, pubkeyCodec),
 		jsonEncoder: DefaultJSONTxEncoder(),
+		protoCodec:  protoCodec,
 	}
 }
 

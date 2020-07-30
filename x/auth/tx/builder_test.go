@@ -3,26 +3,23 @@ package tx
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
-	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
-	tx := newBuilder(std.DefaultPublicKeyCodec{})
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}
 
@@ -33,12 +30,12 @@ func TestTxBuilder(t *testing.T) {
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)
 
-	var signerInfo []*tx2.SignerInfo
-	signerInfo = append(signerInfo, &tx2.SignerInfo{
+	var signerInfo []*txtypes.SignerInfo
+	signerInfo = append(signerInfo, &txtypes.SignerInfo{
 		PublicKey: pk,
-		ModeInfo: &tx2.ModeInfo{
-			Sum: &tx2.ModeInfo_Single_{
-				Single: &tx2.ModeInfo_Single{
+		ModeInfo: &txtypes.ModeInfo{
+			Sum: &txtypes.ModeInfo_Single_{
+				Single: &txtypes.ModeInfo_Single{
 					Mode: signing.SignMode_SIGN_MODE_DIRECT,
 				},
 			},
@@ -54,10 +51,10 @@ func TestTxBuilder(t *testing.T) {
 		},
 	}
 
-	fee := tx2.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
+	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
 	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from getAuthInfoBytes")
-	authInfo := &tx2.AuthInfo{
+	authInfo := &txtypes.AuthInfo{
 		Fee:         &fee,
 		SignerInfos: signerInfo,
 	}
@@ -77,43 +74,43 @@ func TestTxBuilder(t *testing.T) {
 		}
 	}
 
-	txBody := &tx2.TxBody{
+	txBody := &txtypes.TxBody{
 		Memo:     memo,
 		Messages: anys,
 	}
 	bodyBytes := marshaler.MustMarshalBinaryBare(txBody)
 	require.NotEmpty(t, bodyBytes)
-	require.Empty(t, tx.getBodyBytes())
+	require.Empty(t, txBuilder.getBodyBytes())
 
 	t.Log("verify that calling the SetMsgs, SetMemo results in the correct getBodyBytes")
-	require.NotEqual(t, bodyBytes, tx.getBodyBytes())
-	err = tx.SetMsgs(msgs...)
+	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
+	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
-	require.NotEqual(t, bodyBytes, tx.getBodyBytes())
-	tx.SetMemo(memo)
-	require.Equal(t, bodyBytes, tx.getBodyBytes())
-	require.Equal(t, len(msgs), len(tx.GetMsgs()))
-	require.Equal(t, 0, len(tx.GetPubKeys()))
+	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
+	txBuilder.SetMemo(memo)
+	require.Equal(t, bodyBytes, txBuilder.getBodyBytes())
+	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
+	require.Equal(t, 0, len(txBuilder.GetPubKeys()))
 
 	t.Log("verify that updated AuthInfo  results in the correct getAuthInfoBytes and GetPubKeys")
-	require.NotEqual(t, authInfoBytes, tx.getAuthInfoBytes())
-	tx.SetFeeAmount(fee.Amount)
-	require.NotEqual(t, authInfoBytes, tx.getAuthInfoBytes())
-	tx.SetGasLimit(fee.GasLimit)
-	require.NotEqual(t, authInfoBytes, tx.getAuthInfoBytes())
-	err = tx.SetSignatures(sig)
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
+	txBuilder.SetFeeAmount(fee.Amount)
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
+	txBuilder.SetGasLimit(fee.GasLimit)
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
+	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
 
 	// once fee, gas and signerInfos are all set, AuthInfo bytes should match
-	require.Equal(t, authInfoBytes, tx.getAuthInfoBytes())
+	require.Equal(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 
-	require.Equal(t, len(msgs), len(tx.GetMsgs()))
-	require.Equal(t, 1, len(tx.GetPubKeys()))
-	require.Equal(t, pubkey.Bytes(), tx.GetPubKeys()[0].Bytes())
+	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
+	require.Equal(t, 1, len(txBuilder.GetPubKeys()))
+	require.Equal(t, pubkey.Bytes(), txBuilder.GetPubKeys()[0].Bytes())
 
-	tx = &builder{}
+	txBuilder = &builder{}
 	require.NotPanics(t, func() {
-		_ = tx.GetMsgs()
+		_ = txBuilder.GetMsgs()
 	})
 }
 
@@ -130,7 +127,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
 	badFeeAmount[0].Amount = sdk.NewInt(-5)
-	bldr := newBuilder(std.DefaultPublicKeyCodec{})
+	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{
@@ -149,87 +146,108 @@ func TestBuilderValidateBasic(t *testing.T) {
 		},
 	}
 
-	err := bldr.SetMsgs(msgs...)
+	err := txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
-	bldr.SetGasLimit(200000)
-	err = bldr.SetSignatures(sig1, sig2)
+	txBuilder.SetGasLimit(200000)
+	err = txBuilder.SetSignatures(sig1, sig2)
 	require.NoError(t, err)
-	bldr.SetFeeAmount(badFeeAmount)
-	err = bldr.ValidateBasic()
+	txBuilder.SetFeeAmount(badFeeAmount)
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ := sdkerrors.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrInsufficientFee.ABCICode(), code)
 
 	// require to fail validation when no signatures exist
-	err = bldr.SetSignatures()
+	err = txBuilder.SetSignatures()
 	require.NoError(t, err)
-	bldr.SetFeeAmount(feeAmount)
-	err = bldr.ValidateBasic()
+	txBuilder.SetFeeAmount(feeAmount)
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
 
 	// require to fail with nil values for tx, authinfo
-	err = bldr.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
-	err = bldr.ValidateBasic()
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
 
 	// require to fail validation when signatures do not match expected signers
-	err = bldr.SetSignatures(sig1)
+	err = txBuilder.SetSignatures(sig1)
 	require.NoError(t, err)
 
-	err = bldr.ValidateBasic()
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
 	_, code, _ = sdkerrors.ABCIInfo(err, false)
 	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
 
 	require.Error(t, err)
-	bldr.SetFeeAmount(feeAmount)
-	err = bldr.SetSignatures(sig1, sig2)
+	txBuilder.SetFeeAmount(feeAmount)
+	err = txBuilder.SetSignatures(sig1, sig2)
 	require.NoError(t, err)
-	err = bldr.ValidateBasic()
+	err = txBuilder.ValidateBasic()
 	require.NoError(t, err)
 
 	// gas limit too high
-	bldr.SetGasLimit(MaxGasWanted + 1)
-	err = bldr.ValidateBasic()
+	txBuilder.SetGasLimit(MaxGasWanted + 1)
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	bldr.SetGasLimit(MaxGasWanted - 1)
-	err = bldr.ValidateBasic()
+	txBuilder.SetGasLimit(MaxGasWanted - 1)
+	err = txBuilder.ValidateBasic()
 	require.NoError(t, err)
 
 	// bad builder structs
 
 	// missing body
-	body := bldr.tx.Body
-	bldr.tx.Body = nil
-	err = bldr.ValidateBasic()
+	body := txBuilder.tx.Body
+	txBuilder.tx.Body = nil
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	bldr.tx.Body = body
-	err = bldr.ValidateBasic()
+	txBuilder.tx.Body = body
+	err = txBuilder.ValidateBasic()
 	require.NoError(t, err)
 
 	// missing fee
-	f := bldr.tx.AuthInfo.Fee
-	bldr.tx.AuthInfo.Fee = nil
-	err = bldr.ValidateBasic()
+	f := txBuilder.tx.AuthInfo.Fee
+	txBuilder.tx.AuthInfo.Fee = nil
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	bldr.tx.AuthInfo.Fee = f
-	err = bldr.ValidateBasic()
+	txBuilder.tx.AuthInfo.Fee = f
+	err = txBuilder.ValidateBasic()
 	require.NoError(t, err)
 
 	// missing AuthInfo
-	authInfo := bldr.tx.AuthInfo
-	bldr.tx.AuthInfo = nil
-	err = bldr.ValidateBasic()
+	authInfo := txBuilder.tx.AuthInfo
+	txBuilder.tx.AuthInfo = nil
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	bldr.tx.AuthInfo = authInfo
-	err = bldr.ValidateBasic()
+	txBuilder.tx.AuthInfo = authInfo
+	err = txBuilder.ValidateBasic()
 	require.NoError(t, err)
 
 	// missing tx
-	bldr.tx = nil
-	err = bldr.ValidateBasic()
+	txBuilder.tx = nil
+	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
+}
+
+func TestDefaultTxDecoderError(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	pubKeyCdc := std.DefaultPublicKeyCodec{}
+	encoder := DefaultTxEncoder()
+	decoder := DefaultTxDecoder(registry, pubKeyCdc)
+
+	builder := newBuilder(pubKeyCdc)
+	err := builder.SetMsgs(testdata.NewTestMsg())
+	require.NoError(t, err)
+
+	txBz, err := encoder(builder.GetTx())
+	require.NoError(t, err)
+
+	_, err = decoder(txBz)
+	require.EqualError(t, err, "no registered implementations of type types.Msg: tx parse error")
+
+	registry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	_, err = decoder(txBz)
+	require.NoError(t, err)
 }

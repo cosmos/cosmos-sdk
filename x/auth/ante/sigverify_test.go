@@ -2,9 +2,6 @@ package ante_test
 
 import (
 	"fmt"
-	"testing"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
@@ -42,7 +39,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
-	suite.txBuilder.SetMsgs(msgs...)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
@@ -50,7 +47,8 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd)
@@ -76,7 +74,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
-		stdSig := types.StdSignature{PubKey: pkSet1[i].Bytes(), Signature: sigSet1[i]}
+		stdSig := types.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
 		sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
 		suite.Require().NoError(err)
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
@@ -143,7 +141,7 @@ func (suite *AnteTestSuite) TestSigVerification() {
 	gasLimit := testdata.NewTestGasLimit()
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.legacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
@@ -167,13 +165,14 @@ func (suite *AnteTestSuite) TestSigVerification() {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
-		suite.txBuilder.SetMsgs(msgs...)
+		suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 
-		tx := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID())
+		tx, err := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID())
+		suite.Require().NoError(err)
 
-		_, err := antehandler(suite.ctx, tx, false)
+		_, err = antehandler(suite.ctx, tx, false)
 		if tc.shouldErr {
 			suite.Require().NotNil(err, "TestCase %d: %s did not error as expected", i, tc.name)
 		} else {
@@ -219,18 +218,19 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 		accNums[i] = uint64(i)
 		accSeqs[i] = uint64(0)
 	}
-	suite.txBuilder.SetMsgs(msgs...)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
-	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, types.legacyAminoJSONHandler{})
+	svd := ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params
@@ -251,7 +251,7 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	suite.txBuilder.SetMsgs(msgs...)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 	privs := []crypto.PrivKey{priv}
 	accNums := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetAccountNumber()}
 	accSeqs := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetSequence()}
@@ -260,7 +260,8 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	isd := ante.NewIncrementSequenceDecorator(suite.app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(isd)
@@ -282,8 +283,4 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 		suite.Require().NoError(err, "unexpected error; tc #%d, %v", i, tc)
 		suite.Require().Equal(tc.expectedSeq, suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetSequence())
 	}
-}
-
-func TestAnteSigverifyTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

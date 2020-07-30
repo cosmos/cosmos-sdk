@@ -7,11 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/cosmos/cosmos-sdk/types/tx"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler and PublicKeyCodec
@@ -23,7 +22,7 @@ func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Public
 		// reject all unknown proto fields in the root TxRaw
 		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		err = cdc.UnmarshalBinaryBare(txBytes, &raw)
@@ -36,7 +35,7 @@ func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Public
 		// allow non-critical unknown fields in TxBody
 		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		err = cdc.UnmarshalBinaryBare(raw.BodyBytes, &body)
@@ -65,7 +64,7 @@ func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Public
 
 		pks, err := extractPubKeys(theTx, keyCodec)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		return &builder{
@@ -86,12 +85,12 @@ func DefaultJSONTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Pu
 		var theTx tx.Tx
 		err := cdc.UnmarshalJSON(txBytes, &theTx)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		pks, err := extractPubKeys(&theTx, keyCodec)
 		if err != nil {
-			return nil, err
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		return &builder{

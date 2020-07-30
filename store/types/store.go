@@ -5,8 +5,9 @@ import (
 	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 type Store interface {
@@ -381,7 +382,7 @@ func (key *MemoryStoreKey) String() string {
 //----------------------------------------
 
 // key-value result for iterator queries
-type KVPair tmkv.Pair
+type KVPair kv.Pair
 
 //----------------------------------------
 

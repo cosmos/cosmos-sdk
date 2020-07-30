@@ -11,11 +11,11 @@ import (
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
 type AccountRetriever struct {
-	codec codec.Marshaler
+	codec codec.JSONMarshaler
 }
 
 // NewAccountRetriever initialises a new AccountRetriever instance.
-func NewAccountRetriever(codec codec.Marshaler) AccountRetriever {
+func NewAccountRetriever(codec codec.JSONMarshaler) AccountRetriever {
 	return AccountRetriever{codec: codec}
 }
 
@@ -30,7 +30,7 @@ func (ar AccountRetriever) GetAccount(querier client.NodeQuerier, addr sdk.AccAd
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
 func (ar AccountRetriever) GetAccountWithHeight(querier client.NodeQuerier, addr sdk.AccAddress) (AccountI, int64, error) {
-	bs, err := ar.codec.MarshalJSON(NewQueryAccountParams(addr))
+	bs, err := ar.codec.MarshalJSON(QueryAccountRequest{Address: addr})
 	if err != nil {
 		return nil, 0, err
 	}

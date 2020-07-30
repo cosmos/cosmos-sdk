@@ -1,16 +1,16 @@
 package cli
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -18,7 +18,7 @@ import (
 
 // GetQueryCmd returns the CLI command with all evidence module query commands
 // mounted.
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   types.ModuleName,
 		Short: "Query for evidence by hash or for all (paginated) submitted evidence",
@@ -29,82 +29,94 @@ Example:
 $ %s query %s DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
 $ %s query %s --page=2 --limit=50
 `,
-				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args:                       cobra.MaximumNArgs(1),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       QueryEvidenceCmd(cdc),
+		RunE:                       QueryEvidenceCmd(),
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of evidence to to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of evidence to query for")
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "evidence")
 
-	return flags.GetCommands(cmd)[0]
+	return cmd
 }
 
 // QueryEvidenceCmd returns the command handler for evidence querying. Evidence
 // can be queried for by hash or paginated evidence can be returned.
-func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
+func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := client.ValidateCmd(cmd, args); err != nil {
 			return err
 		}
 
-		clientCtx := client.NewContext().WithCodec(cdc).WithJSONMarshaler(cdc)
-
-		if hash := args[0]; hash != "" {
-			return queryEvidence(cdc, clientCtx, hash)
+		clientCtx := client.GetClientContextFromCmd(cmd)
+		clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
 		}
 
-		return queryAllEvidence(cdc, clientCtx)
+		if hash := args[0]; hash != "" {
+			return queryEvidence(clientCtx, hash)
+		}
+
+		pageReq, err := client.ReadPageRequest(cmd.Flags())
+		if err != nil {
+			return err
+		}
+
+		return queryAllEvidence(clientCtx, pageReq)
 	}
 }
 
-func queryEvidence(cdc *codec.Codec, clientCtx client.Context, hash string) error {
-	if _, err := hex.DecodeString(hash); err != nil {
+func queryEvidence(clientCtx client.Context, hash string) error {
+	decodedHash, err := hex.DecodeString(hash)
+	if err != nil {
 		return fmt.Errorf("invalid evidence hash: %w", err)
 	}
 
-	params := types.NewQueryEvidenceParams(hash)
-	bz, err := cdc.MarshalJSON(params)
-	if err != nil {
-		return fmt.Errorf("failed to marshal query params: %w", err)
-	}
+	queryClient := types.NewQueryClient(clientCtx)
 
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryEvidence)
-	res, _, err := clientCtx.QueryWithData(route, bz)
+	params := &types.QueryEvidenceRequest{EvidenceHash: decodedHash}
+	res, err := queryClient.Evidence(context.Background(), params)
+
 	if err != nil {
 		return err
 	}
 
 	var evidence exported.Evidence
-	err = cdc.UnmarshalJSON(res, &evidence)
+	err = clientCtx.InterfaceRegistry.UnpackAny(res.Evidence, &evidence)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal evidence: %w", err)
+		return err
 	}
 
 	return clientCtx.PrintOutput(evidence)
 }
 
-func queryAllEvidence(cdc *codec.Codec, clientCtx client.Context) error {
-	params := types.NewQueryAllEvidenceParams(viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
-	bz, err := cdc.MarshalJSON(params)
-	if err != nil {
-		return fmt.Errorf("failed to marshal query params: %w", err)
+func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) error {
+	queryClient := types.NewQueryClient(clientCtx)
+
+	params := &types.QueryAllEvidenceRequest{
+		Pagination: pageReq,
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllEvidence)
-	res, _, err := clientCtx.QueryWithData(route, bz)
+	res, err := queryClient.AllEvidence(context.Background(), params)
+
 	if err != nil {
 		return err
 	}
 
-	var evidence []exported.Evidence
-	err = cdc.UnmarshalJSON(res, &evidence)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal evidence: %w", err)
+	evidence := make([]exported.Evidence, 0, len(res.Evidence))
+	for _, eviAny := range res.Evidence {
+		var evi exported.Evidence
+		err = clientCtx.InterfaceRegistry.UnpackAny(eviAny, &evi)
+		if err != nil {
+			return err
+		}
+
+		evidence = append(evidence, evi)
 	}
 
 	return clientCtx.PrintOutput(evidence)

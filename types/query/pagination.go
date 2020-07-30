@@ -14,13 +14,19 @@ const defaultLimit = 100
 // provided PageRequest. onResult should be used to do actual unmarshaling.
 func Paginate(
 	prefixStore types.KVStore,
-	req *PageRequest,
+	pageRequest *PageRequest,
 	onResult func(key []byte, value []byte) error,
 ) (*PageResponse, error) {
-	offset := req.Offset
-	key := req.Key
-	limit := req.Limit
-	countTotal := req.CountTotal
+
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
+	}
+
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
 
 	if offset > 0 && key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
@@ -45,7 +51,9 @@ func Paginate(
 				nextKey = iterator.Key()
 				break
 			}
-
+			if iterator.Error() != nil {
+				return nil, iterator.Error()
+			}
 			err := onResult(iterator.Key(), iterator.Value())
 			if err != nil {
 				return nil, err
@@ -78,9 +86,15 @@ func Paginate(
 			if err != nil {
 				return nil, err
 			}
-		} else if !countTotal {
+		} else if count == end+1 {
 			nextKey = iterator.Key()
-			break
+
+			if !countTotal {
+				break
+			}
+		}
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
 		}
 	}
 

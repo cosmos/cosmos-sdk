@@ -2,7 +2,7 @@ package types_test
 
 import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -87,7 +87,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name        string
@@ -130,13 +130,13 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyChannelState() {
-	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(channel.OPEN, channel.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
+	ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name        string
 		clientState types.ClientState
-		channel     channel.Channel
+		channel     channeltypes.Channel
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool

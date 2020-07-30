@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -16,11 +18,13 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -29,26 +33,29 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
+// Default params constants used to create a TM client
 const (
-	// Default params used to create a TM client
 	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ConnectionVersion = "1.0.0"
-	ChannelVersion    = "ics20-1"
-	InvalidID         = "IDisInvalid"
+	ChannelVersion = ibctransfertypes.Version
+	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
 
 	maxInt = int(^uint(0) >> 1)
 )
 
+// Default params variables used to create a TM client
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
+
+	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -63,7 +70,9 @@ type TestChain struct {
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
 	CurrentHeader abci.Header       // header for current block height
-	Querier       sdk.Querier
+	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
+	QueryServer   types.QueryServer
+	TxConfig      client.TxConfig
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -104,6 +113,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	}
 
 	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// create current header and call begin block
 	header := abci.Header{
@@ -111,13 +121,17 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Time:   globalStartTime,
 	}
 
+	txConfig := simapp.MakeEncodingConfig().TxConfig
+
 	// create an account to send transactions from
 	chain := &TestChain{
 		t:             t,
 		ChainID:       chainID,
 		App:           app,
 		CurrentHeader: header,
-		Querier:       keeper.NewQuerier(*app.IBCKeeper),
+		Querier:       keeper.NewQuerier(*app.IBCKeeper, legacyQuerierCdc),
+		QueryServer:   app.IBCKeeper,
+		TxConfig:      txConfig,
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -159,6 +173,20 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	return proof, uint64(res.Height) + 1
 }
 
+// QueryConsensusStateProof performs an abci query for a consensus state
+// stored on the given clientID. The proof and consensusHeight are returned.
+func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, uint64) {
+	// retrieve consensus state to provide proof for
+	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
+	require.True(chain.t, found)
+
+	consensusHeight := consState.GetHeight()
+	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
+	proofConsensus, _ := chain.QueryProof(consensusKey)
+
+	return proofConsensus, consensusHeight
+}
+
 // NextBlock sets the last header to the current header and increments the current header to be
 // at the next block height. It does not update the time as that is handled by the Coordinator.
 //
@@ -180,15 +208,15 @@ func (chain *TestChain) NextBlock() {
 
 }
 
-// SendMsg delivers a transaction through the application. It updates the senders sequence
+// SendMsgs delivers a transaction through the application. It updates the senders sequence
 // number and updates the TestChain's headers.
-func (chain *TestChain) SendMsg(msg sdk.Msg) error {
+func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) error {
 	_, _, err := simapp.SignCheckDeliver(
 		chain.t,
-		chain.App.Codec(),
+		chain.TxConfig,
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
-		[]sdk.Msg{msg},
+		msgs,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
 		true, true, chain.senderPrivKey,
@@ -206,7 +234,7 @@ func (chain *TestChain) SendMsg(msg sdk.Msg) error {
 	return nil
 }
 
-// GetClientState retreives the client state for the provided clientID. The client is
+// GetClientState retrieves the client state for the provided clientID. The client is
 // expected to exist otherwise testing will fail.
 func (chain *TestChain) GetClientState(clientID string) clientexported.ClientState {
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
@@ -215,7 +243,7 @@ func (chain *TestChain) GetClientState(clientID string) clientexported.ClientSta
 	return clientState
 }
 
-// GetConnection retreives an IBC Connection for the provided TestConnection. The
+// GetConnection retrieves an IBC Connection for the provided TestConnection. The
 // connection is expected to exist otherwise testing will fail.
 func (chain *TestChain) GetConnection(testConnection *TestConnection) connectiontypes.ConnectionEnd {
 	connection, found := chain.App.IBCKeeper.ConnectionKeeper.GetConnection(chain.GetContext(), testConnection.ID)
@@ -224,7 +252,7 @@ func (chain *TestChain) GetConnection(testConnection *TestConnection) connection
 	return connection
 }
 
-// GetChannel retreives an IBC Channel for the provided TestChannel. The channel
+// GetChannel retrieves an IBC Channel for the provided TestChannel. The channel
 // is expected to exist otherwise testing will fail.
 func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel {
 	channel, found := chain.App.IBCKeeper.ChannelKeeper.GetChannel(chain.GetContext(), testChannel.PortID, testChannel.ID)
@@ -233,7 +261,7 @@ func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel
 	return channel
 }
 
-// GetAcknowledgement retreives an acknowledgement for the provided packet. If the
+// GetAcknowledgement retrieves an acknowledgement for the provided packet. If the
 // acknowledgement does not exist then testing will fail.
 func (chain *TestChain) GetAcknowledgement(packet channelexported.PacketI) []byte {
 	ack, found := chain.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(chain.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -255,19 +283,36 @@ func (chain *TestChain) NewClientID(counterpartyChainID string) string {
 	return clientID
 }
 
-// NewConnection appends a new TestConnection which contains references to the connection id,
-// client id and counterparty client id. The connection id format:
+// AddTestConnection appends a new TestConnection which contains references
+// to the connection id, client id and counterparty client id.
+func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	conn := chain.ConstructNextTestConnection(clientID, counterpartyClientID)
+
+	chain.Connections = append(chain.Connections, conn)
+	return conn
+}
+
+// ConstructNextTestConnection constructs the next test connection to be
+// created given a clientID and counterparty clientID. The connection id
+// format:
 // connectionid<index>
-func (chain *TestChain) NewTestConnection(clientID, counterpartyClientID string) *TestConnection {
+func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
 	connectionID := ConnectionIDPrefix + strconv.Itoa(len(chain.Connections))
-	conn := &TestConnection{
+	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
 		CounterpartyClientID: counterpartyClientID,
 	}
+}
 
-	chain.Connections = append(chain.Connections, conn)
-	return conn
+// GetFirstTestConnection returns the first test connection for a given clientID.
+// The connection may or may not exist in the chain state.
+func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID string) *TestConnection {
+	if len(chain.Connections) > 0 {
+		return chain.Connections[0]
+	}
+
+	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
@@ -280,7 +325,7 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 		commitmenttypes.GetSDKSpecs(), chain.SenderAccount.GetAddress(),
 	)
 
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
@@ -291,7 +336,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 		chain.SenderAccount.GetAddress(),
 	)
 
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // CreateTMClientHeader creates a TM header to update the TM client.
@@ -333,7 +378,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 	}
 }
 
-// Copied unimported test functions from tmtypes to use them here
+// MakeBlockID copied unimported test functions from tmtypes to use them here
 func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
@@ -355,7 +400,7 @@ func (chain *TestChain) ConnectionOpenInit(
 		counterparty.GetPrefix(),
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // ConnectionOpenTry will construct and execute a MsgConnectionOpenTry.
@@ -366,13 +411,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retrieve consensus state to provide proof for
-	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
-	require.True(chain.t, found)
-
-	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
-	proofConsensus, _ := counterparty.QueryProof(consensusKey)
+	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
@@ -382,7 +421,7 @@ func (chain *TestChain) ConnectionOpenTry(
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // ConnectionOpenAck will construct and execute a MsgConnectionOpenAck.
@@ -393,13 +432,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
-	// retrieve consensus state to provide proof for
-	consState, found := counterparty.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(counterparty.GetContext(), counterpartyConnection.ClientID)
-	require.True(chain.t, found)
-
-	consensusHeight := consState.GetHeight()
-	consensusKey := prefixedClientKey(counterpartyConnection.ClientID, host.KeyConsensusState(consensusHeight))
-	proofConsensus, _ := counterparty.QueryProof(consensusKey)
+	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
 		connection.ID,
@@ -408,7 +441,7 @@ func (chain *TestChain) ConnectionOpenAck(
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // ConnectionOpenConfirm will construct and execute a MsgConnectionOpenConfirm.
@@ -424,7 +457,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // CreatePortCapability binds and claims a capability for the given portID if it does not
@@ -492,7 +525,7 @@ func (chain *TestChain) ChanOpenInit(
 		counterparty.PortID, counterparty.ID,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // ChanOpenTry will construct and execute a MsgChannelOpenTry.
@@ -512,7 +545,7 @@ func (chain *TestChain) ChanOpenTry(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // ChanOpenAck will construct and execute a MsgChannelOpenAck.
@@ -528,7 +561,7 @@ func (chain *TestChain) ChanOpenAck(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // ChanOpenConfirm will construct and execute a MsgChannelOpenConfirm.
@@ -543,7 +576,7 @@ func (chain *TestChain) ChanOpenConfirm(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
 }
 
 // ChanCloseInit will construct and execute a MsgChannelCloseInit.
@@ -557,7 +590,15 @@ func (chain *TestChain) ChanCloseInit(
 		channel.PortID, channel.ID,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsg(msg)
+	return chain.SendMsgs(msg)
+}
+
+// GetPacketData returns a ibc-transfer marshalled packet to be used for
+// callback testing
+func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
+	packet := ibctransfertypes.NewFungibleTokenPacketData(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))), chain.SenderAccount.GetAddress().String(), counterparty.SenderAccount.GetAddress().String())
+
+	return packet.GetBytes()
 }
 
 // SendPacket simulates sending a packet through the channel keeper. No message needs to be
@@ -580,14 +621,34 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// PacketExecuted simulates receiving and wiritng an acknowledgement to the chain.
+// PacketExecuted simulates receiving and writing an acknowledgement to the chain.
 func (chain *TestChain) PacketExecuted(
+	packet channelexported.PacketI,
+) error {
+	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
+
+	// no need to send message, acting as a handler
+	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
+}
+
+// AcknowledgementExecuted simulates deleting a packet commitment with the
+// given packet sequence.
+func (chain *TestChain) AcknowledgementExecuted(
 	packet channelexported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.AcknowledgementExecuted(chain.GetContext(), channelCap, packet)
 	if err != nil {
 		return err
 	}

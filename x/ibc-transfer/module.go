@@ -25,16 +25,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
 	_ module.AppModule      = AppModule{}
-	_ port.IBCModule        = AppModule{}
+	_ porttypes.IBCModule   = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
@@ -58,7 +56,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the ibc transfer module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -73,17 +71,17 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // GetTxCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
-	return cli.NewTxCmd(clientCtx)
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }
 
 // GetQueryCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(clientCtx)
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return nil
 }
 
-// RegisterInterfaceTypes registers module concrete types into protobuf Any.
-func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+// RegisterInterfaces registers module concrete types into protobuf Any.
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -115,11 +113,13 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler implements the AppModule interface
-func (am AppModule) NewQuerierHandler() sdk.Querier {
+// LegacyQuerierHandler implements the AppModule interface
+func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 	return nil
 }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the ibc transfer module. It returns
@@ -197,12 +197,12 @@ func (am AppModule) OnChanOpenInit(
 	}
 
 	if version != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
 	}
 
 	// Claim channel capability passed back by IBC module
 	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
-		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
+		return err
 	}
 
 	// TODO: escrow
@@ -229,16 +229,16 @@ func (am AppModule) OnChanOpenTry(
 	}
 
 	if version != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got: %s, expected %s", version, types.Version)
 	}
 
 	if counterpartyVersion != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
 	}
 
 	// Claim channel capability passed back by IBC module
 	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
-		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
+		return err
 	}
 
 	// TODO: escrow
@@ -252,7 +252,7 @@ func (am AppModule) OnChanOpenAck(
 	counterpartyVersion string,
 ) error {
 	if counterpartyVersion != types.Version {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: %s, expected %s", counterpartyVersion, types.Version)
 	}
 	return nil
 }
@@ -373,9 +373,9 @@ func (am AppModule) OnTimeoutPacket(
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTimeout,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
 			sdk.NewAttribute(types.AttributeKeyRefundValue, data.Amount.String()),
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
 

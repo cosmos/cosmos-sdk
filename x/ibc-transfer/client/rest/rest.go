@@ -9,13 +9,12 @@ import (
 )
 
 const (
-	RestChannelID = "channel-id"
-	RestPortID    = "port-id"
+	restChannelID = "channel-id"
+	restPortID    = "port-id"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
-	registerQueryRoutes(clientCtx, r)
 	registerTxRoutes(clientCtx, r)
 }
 

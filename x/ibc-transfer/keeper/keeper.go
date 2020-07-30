@@ -12,15 +12,15 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // Keeper defines the IBC fungible transfer keeper
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      codec.Marshaler
+	cdc      codec.BinaryMarshaler
 
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
@@ -31,7 +31,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey,
 	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
@@ -64,11 +64,11 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function
 // in order to expose it to the ICS20 transfer handler.
-// Keeper retreives channel capability and passes it into channel keeper for authentication
+// Keeper retrieves channel capability and passes it into channel keeper for authentication
 func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
 	chanCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel()))
 	if !ok {
-		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
+		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
 	}
 	return k.channelKeeper.PacketExecuted(ctx, chanCap, packet, acknowledgement)
 }
@@ -79,7 +79,7 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 	capName := host.ChannelCapabilityPath(portID, channelID)
 	chanCap, ok := k.scopedKeeper.GetCapability(ctx, capName)
 	if !ok {
-		return sdkerrors.Wrapf(channel.ErrChannelCapabilityNotFound, "could not retrieve channel capability at: %s", capName)
+		return sdkerrors.Wrapf(channeltypes.ErrChannelCapabilityNotFound, "could not retrieve channel capability at: %s", capName)
 	}
 	return k.channelKeeper.ChanCloseInit(ctx, portID, channelID, chanCap)
 }

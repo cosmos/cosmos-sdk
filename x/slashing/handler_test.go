@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -162,7 +164,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := slashing.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, strings.Contains(err.Error(), "unrecognized slashing message type"))

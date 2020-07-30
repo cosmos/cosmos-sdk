@@ -179,3 +179,17 @@ message DelegatorStartingInfo {
   uint64 height = 3
       [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
 }
+
+// DelegationDelegatorReward defines the properties
+// of a delegator's delegation reward.
+message DelegationDelegatorReward {
+  bytes validator_address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.moretags) = "yaml:\"validator_address\""
+  ];
+
+  repeated cosmos.DecCoin reward = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false
+  ];
+}

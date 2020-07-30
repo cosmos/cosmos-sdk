@@ -17,8 +17,8 @@ import (
 
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
 // a parameter change proposal governance transaction.
-func NewSubmitParamChangeProposalTxCmd(clientCtx client.Context) *cobra.Command {
-	cmd := &cobra.Command{
+func NewSubmitParamChangeProposalTxCmd() *cobra.Command {
+	return &cobra.Command{
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a parameter change proposal",
@@ -53,11 +53,15 @@ Where proposal.json contains:
   "deposit": "1000stake"
 }
 `,
-				version.ClientName,
+				version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			proposal, err := paramscutils.ParseParamChangeProposalJSON(clientCtx.JSONMarshaler, args[0])
 			if err != nil {
@@ -82,9 +86,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	return cmd
 }

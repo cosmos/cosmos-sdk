@@ -10,10 +10,9 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,81 +35,6 @@ type GasEstimateResponse struct {
 
 func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
-}
-
-// GenerateOrBroadcastMsgs creates a StdTx given a series of messages. If
-// the provided context has generate-only enabled, the tx will only be printed
-// to STDOUT in a fully offline manner. Otherwise, the tx will be signed and
-// broadcasted.
-func GenerateOrBroadcastMsgs(clientCtx client.Context, txBldr authtypes.TxBuilder, msgs []sdk.Msg) error {
-	if clientCtx.GenerateOnly {
-		return PrintUnsignedStdTx(txBldr, clientCtx, msgs)
-	}
-
-	return CompleteAndBroadcastTxCLI(txBldr, clientCtx, msgs)
-}
-
-// CompleteAndBroadcastTxCLI implements a utility function that facilitates
-// sending a series of messages in a signed transaction given a TxBuilder and a
-// QueryContext. It ensures that the account exists, has a proper number and
-// sequence set. In addition, it builds and signs a transaction with the
-// supplied messages. Finally, it broadcasts the signed transaction to a node.
-func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) error {
-	txBldr, err := PrepareTxBuilder(txBldr, clientCtx)
-	if err != nil {
-		return err
-	}
-
-	fromName := clientCtx.GetFromName()
-
-	if txBldr.SimulateAndExecute() || clientCtx.Simulate {
-		txBldr, err = EnrichWithGas(txBldr, clientCtx, msgs)
-		if err != nil {
-			return err
-		}
-
-		gasEst := GasEstimateResponse{GasEstimate: txBldr.Gas()}
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", gasEst.String())
-	}
-
-	if clientCtx.Simulate {
-		return nil
-	}
-
-	if !clientCtx.SkipConfirm {
-		stdSignMsg, err := txBldr.BuildSignMsg(msgs)
-		if err != nil {
-			return err
-		}
-
-		json, err := clientCtx.JSONMarshaler.MarshalJSON(stdSignMsg)
-		if err != nil {
-			return err
-		}
-
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
-
-		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
-		if err != nil || !ok {
-			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
-			return err
-		}
-	}
-
-	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(fromName, msgs)
-	if err != nil {
-		return err
-	}
-
-	// broadcast to a Tendermint node
-	res, err := clientCtx.BroadcastTx(txBytes)
-	if err != nil {
-		return err
-	}
-
-	return clientCtx.PrintOutput(res)
 }
 
 // EnrichWithGas calculates the gas estimate that would be consumed by the
@@ -138,7 +62,7 @@ func CalculateGas(
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	simRes, err := parseQueryResponse(rawRes)
+	simRes, err := ParseQueryResponse(rawRes)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
@@ -148,74 +72,52 @@ func CalculateGas(
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
-func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) error {
-	stdTx, err := buildUnsignedStdTxOffline(txBldr, clientCtx, msgs)
-	if err != nil {
-		return err
-	}
-
-	json, err := clientCtx.JSONMarshaler.MarshalJSON(stdTx)
-	if err != nil {
-		return err
-	}
-
-	_, _ = fmt.Fprintf(clientCtx.Output, "%s\n", json)
-	return nil
+func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) error {
+	err := tx.GenerateOrBroadcastTxWithFactory(clientCtx, txBldr, msgs...)
+	return err
 }
 
-// SignStdTx appends a signature to a StdTx and returns a copy of it. If appendSig
+// SignTx appends a signature to a transaction. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(
-	txBldr authtypes.TxBuilder, clientCtx client.Context, name string,
-	stdTx authtypes.StdTx, appendSig bool, offline bool,
-) (authtypes.StdTx, error) {
-
-	var signedStdTx authtypes.StdTx
-
-	info, err := txBldr.Keybase().Key(name)
+func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline bool) error {
+	info, err := txFactory.Keybase().Key(name)
 	if err != nil {
-		return signedStdTx, err
+		return err
 	}
-
-	addr := info.GetPubKey().Address()
-
-	// check whether the address is a signer
-	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	addr := sdk.AccAddress(info.GetPubKey().Address())
+	if !isTxSigner(addr, stdTx.GetTx().GetSigners()) {
+		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
-
 	if !offline {
-		txBldr, err = populateAccountFromState(txBldr, clientCtx, sdk.AccAddress(addr))
+		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
 		if err != nil {
-			return signedStdTx, err
+			return err
 		}
 	}
 
-	return txBldr.SignStdTx(name, stdTx, appendSig)
+	return tx.Sign(txFactory, name, stdTx)
 }
 
-// SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
+// SignTxWithSignerAddress attaches a signature to a transaction.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func SignStdTxWithSignerAddress(
-	txBldr authtypes.TxBuilder, clientCtx client.Context,
-	addr sdk.AccAddress, name string, stdTx authtypes.StdTx, offline bool,
-) (signedStdTx authtypes.StdTx, err error) {
+func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
+	name string, txBuilder client.TxBuilder, offline bool) (err error) {
 
 	// check whether the address is a signer
-	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
+	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
+		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
-		txBldr, err = populateAccountFromState(txBldr, clientCtx, addr)
+		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
 		if err != nil {
-			return signedStdTx, err
+			return err
 		}
 	}
 
-	return txBldr.SignStdTx(name, stdTx, false)
+	return tx.Sign(txFactory, name, txBuilder)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
@@ -232,25 +134,25 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 		return
 	}
 
-	return ctx.TxGenerator.TxJSONDecoder()(bytes)
+	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
-func NewBatchScanner(cdc *codec.Codec, r io.Reader) *BatchScanner {
-	return &BatchScanner{Scanner: bufio.NewScanner(r), cdc: cdc}
+func NewBatchScanner(cfg client.TxConfig, r io.Reader) *BatchScanner {
+	return &BatchScanner{Scanner: bufio.NewScanner(r), cfg: cfg}
 }
 
 // BatchScanner provides a convenient interface for reading batch data such as a file
 // of newline-delimited JSON encoded StdTx.
 type BatchScanner struct {
 	*bufio.Scanner
-	stdTx        authtypes.StdTx
-	cdc          *codec.Codec
+	theTx        sdk.Tx
+	cfg          client.TxConfig
 	unmarshalErr error
 }
 
-// StdTx returns the most recent StdTx unmarshalled by a call to Scan.
-func (bs BatchScanner) StdTx() authtypes.StdTx { return bs.stdTx }
+// Tx returns the most recent Tx unmarshalled by a call to Scan.
+func (bs BatchScanner) Tx() sdk.Tx { return bs.theTx }
 
 // UnmarshalErr returns the first unmarshalling error that was encountered by the scanner.
 func (bs BatchScanner) UnmarshalErr() error { return bs.unmarshalErr }
@@ -261,7 +163,9 @@ func (bs *BatchScanner) Scan() bool {
 		return false
 	}
 
-	if err := bs.cdc.UnmarshalJSON(bs.Bytes(), &bs.stdTx); err != nil && bs.unmarshalErr == nil {
+	tx, err := bs.cfg.TxJSONDecoder()(bs.Bytes())
+	bs.theTx = tx
+	if err != nil && bs.unmarshalErr == nil {
 		bs.unmarshalErr = err
 		return false
 	}
@@ -270,8 +174,8 @@ func (bs *BatchScanner) Scan() bool {
 }
 
 func populateAccountFromState(
-	txBldr authtypes.TxBuilder, clientCtx client.Context, addr sdk.AccAddress,
-) (authtypes.TxBuilder, error) {
+	txBldr tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
+) (tx.Factory, error) {
 
 	num, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 	if err != nil {
@@ -307,63 +211,13 @@ func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
 	return uint64(adjustment * float64(estimate))
 }
 
-func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
+func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	var simRes sdk.SimulationResponse
 	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
 		return sdk.SimulationResponse{}, err
 	}
 
 	return simRes, nil
-}
-
-// PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
-func PrepareTxBuilder(txBldr authtypes.TxBuilder, clientCtx client.Context) (authtypes.TxBuilder, error) {
-	from := clientCtx.GetFromAddress()
-	accGetter := clientCtx.AccountRetriever
-	if err := accGetter.EnsureExists(clientCtx, from); err != nil {
-		return txBldr, err
-	}
-
-	txbldrAccNum, txbldrAccSeq := txBldr.AccountNumber(), txBldr.Sequence()
-	// TODO: (ref #1903) Allow for user supplied account number without
-	// automatically doing a manual lookup.
-	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
-		num, seq, err := accGetter.GetAccountNumberSequence(clientCtx, from)
-		if err != nil {
-			return txBldr, err
-		}
-
-		if txbldrAccNum == 0 {
-			txBldr = txBldr.WithAccountNumber(num)
-		}
-		if txbldrAccSeq == 0 {
-			txBldr = txBldr.WithSequence(seq)
-		}
-	}
-
-	return txBldr, nil
-}
-
-func buildUnsignedStdTxOffline(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (stdTx authtypes.StdTx, err error) {
-	if txBldr.SimulateAndExecute() {
-		if clientCtx.Offline {
-			return stdTx, errors.New("cannot estimate gas in offline mode")
-		}
-
-		txBldr, err = EnrichWithGas(txBldr, clientCtx, msgs)
-		if err != nil {
-			return stdTx, err
-		}
-
-		_, _ = fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas())
-	}
-
-	stdSignMsg, err := txBldr.BuildSignMsg(msgs)
-	if err != nil {
-		return stdTx, err
-	}
-
-	return authtypes.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
 }
 
 func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {

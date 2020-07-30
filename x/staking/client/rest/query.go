@@ -328,7 +328,7 @@ func historicalInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQueryHistoricalInfoParams(height)
+		params := types.QueryHistoricalInfoRequest{Height: height}
 
 		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckInternalServerError(w, err) {

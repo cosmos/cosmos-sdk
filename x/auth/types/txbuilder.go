@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/pflag"
+
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -50,28 +52,40 @@ func NewTxBuilder(
 	}
 }
 
-// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
-// the command line using Viper.
-func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
+// NewTxBuilderFromFlags returns a new initialized TxBuilder with parameters extracted from
+// FlagSet.
+func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath string) (TxBuilder, error) {
+	backend, _ := fs.GetString(flags.FlagKeyringBackend)
+	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
+	accNum, _ := fs.GetUint64(flags.FlagAccountNumber)
+	seq, _ := fs.GetUint64(flags.FlagSequence)
+	gasAdjustment, _ := fs.GetFloat64(flags.FlagGasAdjustment)
+	chainID, _ := fs.GetString(flags.FlagChainID)
+	memo, _ := fs.GetString(flags.FlagMemo)
+	fees, _ := fs.GetString(flags.FlagFees)
+	gasPrices, _ := fs.GetString(flags.FlagGasPrices)
+
+	gasStr, _ := fs.GetString(flags.FlagGas)
+	gasSetting, err := flags.ParseGasSetting(gasStr)
 	if err != nil {
-		panic(err)
+		return TxBuilder{}, err
 	}
+
 	txbldr := TxBuilder{
 		keybase:            kb,
-		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
-		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                flags.GasFlagVar.Gas,
-		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		simulateAndExecute: flags.GasFlagVar.Simulate,
-		chainID:            viper.GetString(flags.FlagChainID),
-		memo:               viper.GetString(flags.FlagMemo),
+		accountNumber:      accNum,
+		sequence:           seq,
+		gas:                gasSetting.Gas,
+		simulateAndExecute: gasSetting.Simulate,
+		gasAdjustment:      gasAdjustment,
+		chainID:            chainID,
+		memo:               memo,
 	}
 
-	txbldr = txbldr.WithFees(viper.GetString(flags.FlagFees))
-	txbldr = txbldr.WithGasPrices(viper.GetString(flags.FlagGasPrices))
+	txbldr = txbldr.WithFees(fees)
+	txbldr = txbldr.WithGasPrices(gasPrices)
 
-	return txbldr
+	return txbldr, nil
 }
 
 // TxEncoder returns the transaction encoder
@@ -286,7 +300,7 @@ func MakeSignature(kr keyring.Keyring, name string, msg StdSignMsg) (sig StdSign
 	}
 
 	return StdSignature{
-		PubKey:    pubkey.Bytes(),
+		PubKey:    pubkey,
 		Signature: sigBytes,
 	}, nil
 }

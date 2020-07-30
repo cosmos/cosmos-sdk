@@ -1,7 +1,6 @@
 package codec
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"strings"
@@ -17,7 +16,9 @@ type ProtoCodec struct {
 	anyUnpacker types.AnyUnpacker
 }
 
-func NewProtoCodec(anyUnpacker types.AnyUnpacker) Marshaler {
+var _ Marshaler = &ProtoCodec{}
+
+func NewProtoCodec(anyUnpacker types.AnyUnpacker) *ProtoCodec {
 	return &ProtoCodec{anyUnpacker: anyUnpacker}
 }
 
@@ -40,16 +41,9 @@ func (pc *ProtoCodec) MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, err
 		return nil, err
 	}
 
-	buf := new(bytes.Buffer)
-	if err := encodeUvarint(buf, uint64(o.Size())); err != nil {
-		return nil, err
-	}
-
-	if _, err := buf.Write(bz); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+	var sizeBuf [binary.MaxVarintLen64]byte
+	n := binary.PutUvarint(sizeBuf[:], uint64(o.Size()))
+	return append(sizeBuf[:n], bz...), nil
 }
 
 func (pc *ProtoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {
@@ -125,7 +119,12 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
 	}
 
-	return jsonpb.Unmarshal(strings.NewReader(string(bz)), m)
+	err := jsonpb.Unmarshal(strings.NewReader(string(bz)), m)
+	if err != nil {
+		return err
+	}
+
+	return types.UnpackInterfaces(ptr, pc.anyUnpacker)
 }
 
 func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {

@@ -26,19 +26,8 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 		expectsDefaultErr bool
 		errMsg            string
 	}{
-		{"client - QuerierClientState",
-			[]string{clienttypes.SubModuleName, clienttypes.QueryClientState},
-			false,
-			"",
-		},
 		{"client - QuerierClients",
 			[]string{clienttypes.SubModuleName, clienttypes.QueryAllClients},
-			false,
-			"",
-		},
-		{
-			"client - QuerierConsensusState",
-			[]string{clienttypes.SubModuleName, clienttypes.QueryConsensusState},
 			false,
 			"",
 		},
@@ -49,68 +38,14 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			fmt.Sprintf("unknown IBC %s query endpoint", clienttypes.SubModuleName),
 		},
 		{
-			"connection - QuerierConnections",
-			[]string{connectiontypes.SubModuleName, connectiontypes.QueryAllConnections},
-			false,
-			"",
-		},
-		{
-			"connection - QuerierAllClientConnections",
-			[]string{connectiontypes.SubModuleName, connectiontypes.QueryAllClientConnections},
-			false,
-			"",
-		},
-		{
-			"connection - QuerierClientConnections",
-			[]string{connectiontypes.SubModuleName, connectiontypes.QueryClientConnections},
-			false,
-			"",
-		},
-		{
 			"connection - invalid query",
 			[]string{connectiontypes.SubModuleName, "foo"},
 			true,
 			fmt.Sprintf("unknown IBC %s query endpoint", connectiontypes.SubModuleName),
 		},
 		{
-			"channel - QuerierChannel",
-			[]string{channeltypes.SubModuleName, channeltypes.QueryChannel},
-			false,
-			"",
-		},
-		{
-			"channel - QuerierChannels",
-			[]string{channeltypes.SubModuleName, channeltypes.QueryAllChannels},
-			false,
-			"",
-		},
-		{
-			"channel - QuerierConnectionChannels",
-			[]string{channeltypes.SubModuleName, channeltypes.QueryConnectionChannels},
-			false,
-			"",
-		},
-		{
 			"channel - QuerierChannelClientState",
 			[]string{channeltypes.SubModuleName, channeltypes.QueryChannelClientState},
-			false,
-			"",
-		},
-		{
-			"channel - QuerierPacketCommitments",
-			[]string{channeltypes.SubModuleName, channeltypes.QueryPacketCommitments},
-			false,
-			"",
-		},
-		{
-			"channel - QuerierUnrelayedAcknowledgements",
-			[]string{channeltypes.SubModuleName, channeltypes.QueryUnrelayedAcknowledgements},
-			false,
-			"",
-		},
-		{
-			"channel - QuerierUnrelayedPacketSends",
-			[]string{channeltypes.SubModuleName, channeltypes.QueryUnrelayedPacketSends},
 			false,
 			"",
 		},

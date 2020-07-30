@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	ics23 "github.com/confio/ics23/go"
+	iavltree "github.com/cosmos/iavl"
 	"github.com/pkg/errors"
-	iavltree "github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"

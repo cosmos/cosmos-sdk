@@ -8,7 +8,7 @@ import (
 
 	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/iavl"
+	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"

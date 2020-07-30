@@ -555,3 +555,19 @@ func splitPath(requestPath string) (path []string) {
 
 	return path
 }
+
+func (app *BaseApp) ListSnapshots(abci.RequestListSnapshots) abci.ResponseListSnapshots {
+	return abci.ResponseListSnapshots{}
+}
+
+func (app *BaseApp) OfferSnapshot(abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
+	return abci.ResponseOfferSnapshot{}
+}
+
+func (app *BaseApp) LoadSnapshotChunk(abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
+	return abci.ResponseLoadSnapshotChunk{}
+}
+
+func (app *BaseApp) ApplySnapshotChunk(abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
+	return abci.ResponseApplySnapshotChunk{}
+}

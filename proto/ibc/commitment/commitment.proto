@@ -4,7 +4,7 @@ package ibc.commitment;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types";
 
 import "gogoproto/gogo.proto";
-import "tendermint/crypto/merkle/merkle.proto";
+import "tendermint/crypto/proof.proto";
 
 // MerkleRoot defines a merkle root hash.
 // In the Cosmos SDK, the AppHash of a block header becomes the root.
@@ -38,7 +38,7 @@ message MerklePath {
 message MerkleProof {
   option (gogoproto.equal) = true;
 
-  tendermint.crypto.merkle.Proof proof = 1;
+  tendermint.crypto.ProofOps proof = 1;
 }
 
 // KeyPath defines a slice of keys

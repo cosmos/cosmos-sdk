@@ -1,16 +1,16 @@
-package client
+package client_test
 
 import (
-	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -37,12 +37,12 @@ func TestParseQueryResponse(t *testing.T) {
 	bz, err := codec.ProtoMarshalJSON(simRes)
 	require.NoError(t, err)
 
-	res, err := parseQueryResponse(bz)
+	res, err := authclient.ParseQueryResponse(bz)
 	require.NoError(t, err)
 	require.Equal(t, 10, int(res.GasInfo.GasUsed))
 	require.NotNil(t, res.Result)
 
-	res, err = parseQueryResponse([]byte("fuzzy"))
+	res, err = authclient.ParseQueryResponse([]byte("fuzzy"))
 	require.Error(t, err)
 }
 
@@ -84,7 +84,7 @@ func TestCalculateGas(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(tt.args.queryFuncGasUsed, tt.args.queryFuncWantErr)
-			simRes, gotAdjusted, err := CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
+			simRes, gotAdjusted, err := authclient.CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
 			if tt.expPass {
 				require.NoError(t, err)
 				require.Equal(t, simRes.GasInfo.GasUsed, tt.wantEstimate)
@@ -102,50 +102,44 @@ func TestDefaultTxEncoder(t *testing.T) {
 	cdc := makeCodec()
 
 	defaultEncoder := authtypes.DefaultTxEncoder(cdc)
-	encoder := GetTxEncoder(cdc)
+	encoder := authclient.GetTxEncoder(cdc)
 
 	compareEncoders(t, defaultEncoder, encoder)
 }
 
-func TestConfiguredTxEncoder(t *testing.T) {
-	cdc := makeCodec()
-
-	customEncoder := func(tx sdk.Tx) ([]byte, error) {
-		return json.Marshal(tx)
-	}
-
-	config := sdk.GetConfig()
-	config.SetTxEncoder(customEncoder)
-
-	encoder := GetTxEncoder(cdc)
-
-	compareEncoders(t, customEncoder, encoder)
-}
-
-func TestReadStdTxFromFile(t *testing.T) {
+func TestReadTxFromFile(t *testing.T) {
 	t.Parallel()
+	encodingConfig := simapp.MakeEncodingConfig()
 
-	encodingConfig := simappparams.MakeEncodingConfig()
-	sdk.RegisterCodec(encodingConfig.Amino)
-
-	txGen := encodingConfig.TxConfig
+	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithTxConfig(txGen)
+	clientCtx = clientCtx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
+	clientCtx = clientCtx.WithTxConfig(txCfg)
 
-	// Build a test transaction
-	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
+	gasLimit := uint64(50000)
+	memo := "foomemo"
+
+	txBuilder := txCfg.NewTxBuilder()
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo(memo)
 
 	// Write it to the file
-	encodedTx, err := txGen.TxJSONEncoder()(stdTx)
+	encodedTx, err := txCfg.TxJSONEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
 	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
 	t.Cleanup(cleanup)
 
 	// Read it back
-	decodedTx, err := ReadTxFromFile(clientCtx, jsonTxFile.Name())
+	decodedTx, err := authclient.ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
-	require.Equal(t, decodedTx.(authtypes.StdTx).Memo, "foomemo")
+	txBldr, err := txCfg.WrapTxBuilder(decodedTx)
+	require.NoError(t, err)
+	t.Log(txBuilder.GetTx())
+	t.Log(txBldr.GetTx())
+	require.Equal(t, txBuilder.GetTx().GetMemo(), txBldr.GetTx().GetMemo())
+	require.Equal(t, txBuilder.GetTx().GetFee(), txBldr.GetTx().GetFee())
 }
 
 func TestBatchScanner_Scan(t *testing.T) {
@@ -187,12 +181,11 @@ malformed
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			scanner, i := NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
+			scanner, i := authclient.NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
 			for scanner.Scan() {
 				_ = scanner.Tx()
 				i++
 			}
-			t.Log(scanner.theTx)
 			require.Equal(t, tt.wantScannerError, scanner.Err() != nil)
 			require.Equal(t, tt.wantUnmarshalError, scanner.UnmarshalErr() != nil)
 			require.Equal(t, tt.numTxs, i)

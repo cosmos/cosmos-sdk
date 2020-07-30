@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,13 +29,14 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		err = clientCtx.JSONMarshaler.UnmarshalJSON(body, &req)
+		// NOTE: amino is used intentionally here, don't migrate it
+		err = clientCtx.Codec.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		// re-encode it via the Amino wire protocol
-		txBytes, err := clientCtx.Codec.MarshalBinaryBare(req)
+		// re-encode it in the chain's native binary format
+		txBytes, err := tx.ConvertAndEncodeStdTx(clientCtx.TxConfig, req)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -42,6 +45,8 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 		response := EncodeResp{Tx: txBytesBase64}
+
+		// NOTE: amino is set intentionally here, don't migrate it
 		rest.PostProcessResponseBare(w, clientCtx, response)
 	}
 }

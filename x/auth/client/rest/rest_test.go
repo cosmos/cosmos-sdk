@@ -44,6 +44,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestEncodeDecode() {
 	val := s.network.Validators[0]
 
+	// NOTE: this uses StdTx explicitly, don't migrate it!
 	stdTx := authtypes.StdTx{
 		Msgs: []sdk.Msg{&types.MsgSend{}},
 		Fee: authtypes.StdFee{
@@ -79,6 +80,43 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	err = cdc.UnmarshalJSON(respWithHeight.Result, &decodeResp)
 	s.Require().NoError(err)
 	s.Require().Equal(stdTx, authtypes.StdTx(decodeResp))
+}
+
+func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
+	// NOTE: this uses StdTx explicitly, don't migrate it!
+	stdTx := authtypes.StdTx{
+		Msgs: []sdk.Msg{&types.MsgSend{}},
+		Fee: authtypes.StdFee{
+			Amount: sdk.Coins{sdk.NewInt64Coin("foo", 10)},
+			Gas:    10000,
+		},
+		Memo: "FOOBAR",
+	}
+
+	// we just test with async mode because this tx will fail - all we care about is that it got encoded and broadcast correctly
+	res, err := s.broadcastReq(stdTx, "async")
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	// NOTE: this uses amino explicitly, don't migrate it!
+	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
+	s.Require().NotEmpty(txRes.TxHash)
+}
+
+func (s *IntegrationTestSuite) broadcastReq(stdTx authtypes.StdTx, mode string) ([]byte, error) {
+	val := s.network.Validators[0]
+
+	// NOTE: this uses amino explicitly, don't migrate it!
+	cdc := val.ClientCtx.Codec
+
+	req := rest2.BroadcastReq{
+		Tx:   stdTx,
+		Mode: mode,
+	}
+	bz, err := cdc.MarshalJSON(req)
+	s.Require().NoError(err)
+
+	return rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", bz)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

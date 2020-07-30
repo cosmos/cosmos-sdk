@@ -1,7 +1,7 @@
 package ibc_test
 
 import (
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -32,7 +32,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+							clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						),
 						clienttypes.NewGenesisClientState(
 							exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
@@ -92,7 +92,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+							clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
 						),
 						clienttypes.NewGenesisClientState(
 							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),

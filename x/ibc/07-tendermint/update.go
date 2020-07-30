@@ -3,7 +3,7 @@ package tendermint
 import (
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -88,7 +88,7 @@ func checkValidity(
 	}
 
 	// Verify next header with the last header's validatorset as trusted validatorset
-	err := lite.Verify(
+	err := light.Verify(
 		clientState.GetChainID(), &clientState.LastHeader.SignedHeader,
 		clientState.LastHeader.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel,

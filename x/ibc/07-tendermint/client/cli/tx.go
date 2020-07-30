@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -69,7 +69,7 @@ func NewCreateClientCmd() *cobra.Command {
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
-				trustLevel = lite.DefaultTrustLevel
+				trustLevel = light.DefaultTrustLevel
 			} else {
 				trustLevel, err = parseFraction(lvl)
 				if err != nil {

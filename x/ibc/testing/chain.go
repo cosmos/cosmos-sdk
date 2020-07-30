@@ -14,7 +14,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 
@@ -52,7 +52,7 @@ const (
 
 // Default params variables used to create a TM client
 var (
-	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
+	DefaultTrustLevel tmmath.Fraction = light.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]

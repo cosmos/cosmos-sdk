@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -38,12 +38,12 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 		i := i
 		if tc.expPanic {
 			suite.Require().Panics(func() {
-				clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+				clientState, err := ibctmtypes.Initialize(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 				suite.Require().NoError(err, "err on client state initialization")
 				suite.keeper.CreateClient(suite.ctx, tc.clientID, clientState, suite.consensusState)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
-			clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+			clientState, err := ibctmtypes.Initialize(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 			if tc.expPass {
 				suite.Require().NoError(err, "errored on initialization")
 				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		expPass  bool
 	}{
 		{"valid update", func() error {
-			clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+			clientState, err := ibctmtypes.Initialize(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 			if err != nil {
 				return err
 			}
@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return nil
 		}, false},
 		{"invalid header", func() error {
-			clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+			clientState, err := ibctmtypes.Initialize(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 			if err != nil {
 				return err
 			}
@@ -228,7 +228,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+				clientState, err := ibctmtypes.Initialize(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 				if err != nil {
 					return err
 				}
@@ -248,7 +248,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+				clientState, err := ibctmtypes.Initialize(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 				if err != nil {
 					return err
 				}
@@ -303,7 +303,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState, err := ibctmtypes.Initialize(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
+				clientState, err := ibctmtypes.Initialize(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs())
 				if err != nil {
 					return err
 				}

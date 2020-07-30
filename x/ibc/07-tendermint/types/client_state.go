@@ -5,7 +5,7 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -116,7 +116,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
+	if err := light.ValidateTrustLevel(cs.TrustLevel); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {

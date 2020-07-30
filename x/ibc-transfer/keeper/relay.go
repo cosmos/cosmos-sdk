@@ -118,7 +118,7 @@ func (k Keeper) SendTransfer(
 
 // OnRecvPacket processes a cross chain fungible token transfer. If the
 // sender chain is the source of minted tokens then vouchers will be minted
-// and sent to the receving address. Otherwise if the sender chain is sending
+// and sent to the receiving address. Otherwise if the sender chain is sending
 // back tokens this chain originally transferred to it, the tokens are
 // unescrowed and sent to the receiving address.
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {

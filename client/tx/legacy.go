@@ -11,20 +11,15 @@ import (
 )
 
 // ConvertTxToStdTx converts a transaction to the legacy StdTx format
-func ConvertTxToStdTx(codec *codec.Codec, tx sdk.Tx) (types.StdTx, error) {
+func ConvertTxToStdTx(codec *codec.Codec, tx signing.SigFeeMemoTx) (types.StdTx, error) {
 	if stdTx, ok := tx.(types.StdTx); ok {
 		return stdTx, nil
-	}
-
-	sigFeeMemoTx, ok := tx.(signing.SigFeeMemoTx)
-	if !ok {
-		return types.StdTx{}, fmt.Errorf("cannot convert %+v to StdTx", tx)
 	}
 
 	aminoTxConfig := types.StdTxConfig{Cdc: codec}
 	builder := aminoTxConfig.NewTxBuilder()
 
-	err := CopyTx(sigFeeMemoTx, builder)
+	err := CopyTx(tx, builder)
 	if err != nil {
 
 		return types.StdTx{}, err

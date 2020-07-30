@@ -2,8 +2,11 @@ package rest
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -49,7 +52,13 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.Codec, tx)
+		sigFeeMemoTx, ok := tx.(signing.SigFeeMemoTx)
+		if !ok {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, authtypes.StdTx{}))
+			return
+		}
+
+		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.Codec, sigFeeMemoTx)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

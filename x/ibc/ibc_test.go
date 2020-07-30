@@ -5,8 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -61,7 +60,7 @@ func (suite *IBCTestSuite) SetupTest() {
 	suite.header = ibctmtypes.CreateTestHeader("chainID", 10, now, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.cdc = suite.app.Codec()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 }
 
 func TestIBCTestSuite(t *testing.T) {

@@ -15,6 +15,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	"github.com/tendermint/tendermint/light"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 
@@ -69,7 +70,7 @@ type TestChain struct {
 	App           *simapp.SimApp
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
-	CurrentHeader abci.Header       // header for current block height
+	CurrentHeader tmproto.Header    // header for current block height
 	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
 	QueryServer   types.QueryServer
 	TxConfig      client.TxConfig
@@ -116,7 +117,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// create current header and call begin block
-	header := abci.Header{
+	header := tmproto.Header{
 		Height: 1,
 		Time:   globalStartTime,
 	}
@@ -196,7 +197,7 @@ func (chain *TestChain) NextBlock() {
 	chain.LastHeader = chain.CreateTMClientHeader()
 
 	// increment the current header
-	chain.CurrentHeader = abci.Header{
+	chain.CurrentHeader = tmproto.Header{
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,7 +87,7 @@ func SimulateFromSeed(
 
 	nextValidators := validators
 
-	header := abci.Header{
+	header := tmproto.Header{
 		ChainID:         config.ChainID,
 		Height:          1,
 		Time:            genesisTimestamp,
@@ -240,7 +241,7 @@ func SimulateFromSeed(
 //______________________________________________________________________________
 
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []simulation.Account, header abci.Header) (opCount int)
+	accounts []simulation.Account, header tmproto.Header) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
@@ -254,7 +255,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, w io.Writer, params P
 	selectOp := ops.getSelectOpFn()
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account, header abci.Header,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account, header tmproto.Header,
 	) (opCount int) {
 		_, _ = fmt.Fprintf(
 			w, "\rSimulating... block %d/%d, operation %d/%d.",

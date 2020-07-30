@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,6 +45,6 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 	return ctx
 }

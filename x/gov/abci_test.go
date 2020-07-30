@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,10 +17,10 @@ import (
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -68,10 +69,10 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -145,10 +146,10 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 
 func TestTickPassedDepositPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -198,12 +199,12 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 func TestTickPassedVotingPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	SortAddresses(addrs)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -262,7 +263,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 func TestProposalPassedEndblocker(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	SortAddresses(addrs)
@@ -270,7 +271,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	handler := gov.NewHandler(app.GovKeeper)
 	stakingHandler := staking.NewHandler(app.StakingKeeper)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])
@@ -315,7 +316,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 1, valTokens)
 
 	SortAddresses(addrs)
@@ -323,7 +324,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	handler := gov.NewHandler(app.GovKeeper)
 	stakingHandler := staking.NewHandler(app.StakingKeeper)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])

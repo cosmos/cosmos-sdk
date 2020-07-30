@@ -3,7 +3,7 @@ package types
 import (
 	"bytes"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,6 +59,6 @@ func (h Header) ValidateBasic(chainID string) error {
 
 // ToABCIHeader parses the header to an ABCI header type.
 // NOTE: only for testing use.
-func (h Header) ToABCIHeader() abci.Header {
+func (h Header) ToABCIHeader() tmproto.Header {
 	return tmtypes.TM2PB.Header(h.SignedHeader.Header)
 }

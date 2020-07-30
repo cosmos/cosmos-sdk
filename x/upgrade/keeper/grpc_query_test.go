@@ -7,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +23,7 @@ type UpgradeTestSuite struct {
 
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.app = simapp.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.UpgradeKeeper)

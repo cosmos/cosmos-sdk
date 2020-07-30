@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -83,7 +84,7 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.OperatorAddress, val0AccAddress, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
@@ -103,7 +104,7 @@ func TestSimulateMsgUnjail(t *testing.T) {
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 
-	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
 	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 

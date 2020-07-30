@@ -5,8 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +14,7 @@ import (
 
 func TestGetSetValidatorSigningInfo(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.TokensFromConsensusPower(200))
 
 	info, found := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
@@ -39,7 +38,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 
 func TestGetSetValidatorMissedBlockBitArray(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.TokensFromConsensusPower(200))
 
 	missed := app.SlashingKeeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrDels[0]), 0)
@@ -51,7 +50,7 @@ func TestGetSetValidatorMissedBlockBitArray(t *testing.T) {
 
 func TestTombstoned(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.TokensFromConsensusPower(200))
 
 	require.Panics(t, func() { app.SlashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[0])) })
@@ -75,7 +74,7 @@ func TestTombstoned(t *testing.T) {
 
 func TestJailUntil(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.TokensFromConsensusPower(200))
 
 	require.Panics(t, func() { app.SlashingKeeper.JailUntil(ctx, sdk.ConsAddress(addrDels[0]), time.Now()) })

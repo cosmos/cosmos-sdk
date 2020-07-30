@@ -128,7 +128,7 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: 2}})
+			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
 			res := app.Commit()
 			require.NotNil(t, res.Data)
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -19,7 +20,7 @@ import (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	initHeader := abci.Header{ChainID: req.ChainId, Time: req.Time}
+	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)

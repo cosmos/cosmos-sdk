@@ -3,15 +3,13 @@ package types
 import (
 	"sort"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewHistoricalInfo will create a historical information struct from header and valset
 // it will first sort valset before inclusion into historical info
-func NewHistoricalInfo(header abci.Header, valSet Validators) HistoricalInfo {
+func NewHistoricalInfo(header tmproto.Header, valSet Validators) HistoricalInfo {
 	sort.Sort(valSet)
 
 	return HistoricalInfo{

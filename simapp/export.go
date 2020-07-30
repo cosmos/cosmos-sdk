@@ -5,6 +5,7 @@ import (
 	"log"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,7 +23,7 @@ func (app *SimApp) ExportAppStateAndValidators(
 ) (appState json.RawMessage, validators []tmtypes.GenesisValidator, cp *abci.ConsensusParams, err error) {
 
 	// as if they could withdraw from the start of the next block
-	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	if forZeroHeight {
 		app.prepForZeroHeightGenesis(ctx, jailWhiteList)

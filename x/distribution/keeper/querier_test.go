@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -116,7 +117,7 @@ func TestQueries(t *testing.T) {
 	legacyQuerierCdc := codec.NewAminoCodec(cdc)
 
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)

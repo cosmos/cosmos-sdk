@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/supervisor
+module github.com/cosmos/cosmos-sdk/cosmovisor
 
 go 1.14
 

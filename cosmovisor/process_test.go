@@ -1,6 +1,6 @@
 // +build linux
 
-package supervisor
+package cosmovisor
 
 import (
 	"bytes"

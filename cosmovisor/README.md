@@ -1,16 +1,16 @@
-# Cosmos Supervisor
+# Cosmovisor
 
 This is a tiny shim around Cosmos SDK binaries that use the upgrade
 module that allows for smooth and configurable management of upgrading
 binaries as a live chain is upgraded, and can be used to simplify validator
 devops while doing upgrades or to make syncing a full node for genesis
-simple. The `supervisor` will monitor the stdout of the daemon to look 
+simple. The `cosmovisor` will monitor the stdout of the daemon to look 
 for messages from the upgrade module indicating a pending or required upgrade 
 and act appropriately. (With better integrations possible in the future).
 
 ## Arguments
 
-`supervisor` is a shim around a native binary. All arguments passed to the `supervisor` 
+`cosmovisor` is a shim around a native binary. All arguments passed to the `cosmovisor` 
 command will be passed to the current daemon binary (as a subprocess).
  It will return stdout and stderr of the subprocess as
 it's own. Because of that, it cannot accept any command line arguments, nor
@@ -24,12 +24,12 @@ be `$HOME/.gaiad` or `$HOME/.xrnd`)
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (optional) if set to `on` will enable auto-downloading of new binaries
 (for security reasons, this is intended for fullnodes rather than validators)
 * `DAEMON_RESTART_AFTER_UPGRADE` (optional) if set to `on` it will restart the sub-process with the same args
-(but new binary) after a successful upgrade. By default, the `supervisor` dies afterward and allows the supervisor
+(but new binary) after a successful upgrade. By default, the `cosmovisor` dies afterward and allows the cosmovisor
 to restart it if needed. Note that this will not auto-restart the child if there was an error.
 
 ## Folder Layout
 
-`$DAEMON_HOME/supervisor` is expected to belong completely to the supervisor and 
+`$DAEMON_HOME/cosmovisor` is expected to belong completely to the cosmovisor and 
 subprocesses
 controlled by it. Under this folder, we will see the following:
 
@@ -51,8 +51,8 @@ active folder (so `current/bin/$DAEMON_NAME` is the binary)
 
 Note: the `<name>` after `upgrades` is the URI-encoded name of the upgrade as specified in the upgrade module plan.
 
-Please note that `$DAEMON_HOME/supervisor` just stores the *binaries* and associated *program code*.
-The `supervisor` binary can be stored in any typical location (eg `/usr/local/bin`). The actual blockchain
+Please note that `$DAEMON_HOME/cosmovisor` just stores the *binaries* and associated *program code*.
+The `cosmovisor` binary can be stored in any typical location (eg `/usr/local/bin`). The actual blockchain
 program will store it's data under `$GAIA_HOME` etc, which is independent of the `$DAEMON_HOME`. You can
 choose to export `GAIA_HOME=$DAEMON_HOME` and then end up with a configuation like the following, but this
 is left as a choice to the admin for best directory layout.
@@ -61,20 +61,20 @@ is left as a choice to the admin for best directory layout.
 .gaiad
 ├── config
 ├── data
-└── supervisor
+└── cosmovisor
 ```
 
 ## Usage
 
 Basic Usage:
 
-* The admin is responsible for installing the `supervisor` and setting it as a eg. systemd service to auto-restart, along with proper environmental variables
+* The admin is responsible for installing the `cosmovisor` and setting it as a eg. systemd service to auto-restart, along with proper environmental variables
 * The admin is responsible for installing the `genesis` folder manually
-* The `supervisor` will set the `current` link to point to `genesis` at first start (when no `current` link exists)
+* The `cosmovisor` will set the `current` link to point to `genesis` at first start (when no `current` link exists)
 * The admin is (generally) responsible for installing the `upgrades/<name>` folders manually
-* The `supervisor` handles switching over the binaries at the correct points, so the admin can prepare days in advance and relax at upgrade time
+* The `cosmovisor` handles switching over the binaries at the correct points, so the admin can prepare days in advance and relax at upgrade time
 
-Note that chains that wish to support upgrades may package up a genesis `supervisor` tar file with this info, just as they
+Note that chains that wish to support upgrades may package up a genesis `cosmovisor` tar file with this info, just as they
 prepare the genesis binary tar file. In fact, they may offer a tar file will all upgrades up to current point for easy download
 for those who wish to sync a fullnode from start.
 
@@ -83,7 +83,7 @@ The same eg. `GAIA_HOME` directives and command-line flags work, just the binary
 
 ## Upgradeable Binary Specification
 
-In the basic version, the `supervisor` will read the stdout log messages
+In the basic version, the `cosmovisor` will read the stdout log messages
 to determine when an upgrade is needed. We are considering more complex solutions
 via signaling of some sort, but starting with the simple design:
 
@@ -96,7 +96,7 @@ The name (first regexp) will be used to select the new binary to run. If it is p
 the current subprocess will be killed, `current` will be upgraded to the new directory, 
 and the new binary will be launched.
 
-**Question** should we just kill the `supervisor` after it does the updates?
+**Question** should we just kill the `cosmovisor` after it does the updates?
 so it gets a clean restart and just runs the new binary (under `current`).
 it should be safe to restart (as a service).
 
@@ -108,7 +108,7 @@ control and want an easier setup (maybe they are syncing a non-validating fullno
 and want to  do little maintenance), there is another option.
 
 If you set `DAEMON_ALLOW_DOWNLOAD_BINARIES=on` then when an upgrade is triggered and no local binary
-can be found, the `supervisor` will attempt to download and install the binary itself.
+can be found, the `cosmovisor` will attempt to download and install the binary itself.
 The plan stored in the upgrade module has an info field for arbitrary json.
 This info is expected to be outputed on the halt log message. There are two
 valid format to specify a download in such a message:
@@ -131,7 +131,7 @@ This file contained in link will be retrieved by [go-getter](https://github.com/
 and the "binaries" field will be parsed as above.
 
 If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can access a canonical url for the new binary,
-then the `supervisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and
+then the `cosmovisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and
 unpack it into the `upgrades/<name>` folder to be run as if we installed it manually
 
 Note that for this mechanism to provide strong security guarantees, all URLS should include a

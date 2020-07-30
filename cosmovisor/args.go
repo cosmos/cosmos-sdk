@@ -1,4 +1,4 @@
-package supervisor
+package cosmovisor
 
 import (
 	"net/url"
@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	rootName    = "supervisor"
+	rootName    = "cosmovisor"
 	genesisDir  = "genesis"
 	upgradesDir = "upgrades"
 	currentLink = "current"
@@ -104,7 +104,7 @@ func GetConfigFromEnv() (*Config, error) {
 }
 
 // validate returns an error if this config is invalid.
-// it enforces Home/supervisor is a valid directory and exists,
+// it enforces Home/cosmovisor is a valid directory and exists,
 // and that Name is set
 func (cfg *Config) validate() error {
 	if cfg.Name == "" {

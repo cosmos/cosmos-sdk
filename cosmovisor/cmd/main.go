@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/supervisor"
+	cosmovisor "github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
 func main() {
@@ -17,15 +17,15 @@ func main() {
 
 // Run is the main loop, but returns an error
 func Run(args []string) error {
-	cfg, err := supervisor.GetConfigFromEnv()
+	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err
 	}
-	doUpgrade, err := supervisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
+	doUpgrade, err := cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
 
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		doUpgrade, err = supervisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
+		doUpgrade, err = cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
 	}
 	return err
 }

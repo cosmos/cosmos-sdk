@@ -15,7 +15,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
 
-  test-supervisor:
+  test-cosmovisor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -23,13 +23,13 @@ jobs:
         id: git_diff
         with:
           PREFIX_FILTER: |
-              supervisor
+              cosmovisor
           SUFFIX_FILTER: |
             .go
             .mod
             .sum
-      - name: Run supervisor tests
-        run: cd supervisor; go test .
+      - name: Run cosmovisor tests
+        run: cd cosmovisor; go test .
         if: "env.GIT_DIFF != ''"
   split-test-files:
     runs-on: ubuntu-latest

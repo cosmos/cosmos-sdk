@@ -1,4 +1,4 @@
-package supervisor
+package cosmovisor
 
 import (
 	"bufio"

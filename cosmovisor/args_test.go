@@ -1,6 +1,7 @@
-package supervisor
+package cosmovisor
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -18,16 +19,16 @@ func TestConfigPaths(t *testing.T) {
 		"simple": {
 			cfg:           Config{Home: "/foo", Name: "myd"},
 			upgradeName:   "bar",
-			expectRoot:    "/foo/supervisor",
-			expectGenesis: "/foo/supervisor/genesis/bin/myd",
-			expectUpgrade: "/foo/supervisor/upgrades/bar/bin/myd",
+			expectRoot:    fmt.Sprintf("/foo/%s", rootName),
+			expectGenesis: fmt.Sprintf("/foo/%s/genesis/bin/myd", rootName),
+			expectUpgrade: fmt.Sprintf("/foo/%s/upgrades/bar/bin/myd", rootName),
 		},
 		"handle space": {
 			cfg:           Config{Home: "/longer/prefix/", Name: "yourd"},
 			upgradeName:   "some spaces",
-			expectRoot:    "/longer/prefix/supervisor",
-			expectGenesis: "/longer/prefix/supervisor/genesis/bin/yourd",
-			expectUpgrade: "/longer/prefix/supervisor/upgrades/some%20spaces/bin/yourd",
+			expectRoot:    fmt.Sprintf("/longer/prefix/%s", rootName),
+			expectGenesis: fmt.Sprintf("/longer/prefix/%s/genesis/bin/yourd", rootName),
+			expectUpgrade: "/longer/prefix/cosmovisor/upgrades/some%20spaces/bin/yourd",
 		},
 	}
 

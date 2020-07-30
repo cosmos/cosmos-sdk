@@ -77,8 +77,15 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 }
 
 // ReadPersistentCommandFlags returns a Context with fields set for "persistent"
-// flags that do not necessarily change with context. These must be checked if
-// the caller explicitly changed the values.
+// or common flags that do not necessarily change with context.
+//
+// Note, the provided clientCtx may have field pre-populated. The following order
+// of precedence occurs:
+//
+// - client.Context field not pre-populated & flag not set: uses default flag value
+// - client.Context field not pre-populated & flag set: uses set flag value
+// - client.Context field pre-populated & flag not set: uses pre-populated value
+// - client.Context field pre-populated & flag set: uses set flag value
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
 	if clientCtx.OutputFormat == "" || flagSet.Changed(cli.OutputFlag) {
 		output, _ := flagSet.GetString(cli.OutputFlag)
@@ -119,12 +126,15 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 }
 
 // ReadQueryCommandFlags returns an updated Context with fields set based on flags
-// defined in GetCommands. An error is returned if any flag query fails.
+// defined in AddQueryFlagsToCmd. An error is returned if any flag query fails.
 //
-// Certain flags are naturally command and context dependent, so for these flags
-// we do not check if they've been explicitly set by the caller. Other flags can
-// be considered "persistent" (e.g. KeyBase or Client) and these should be checked
-// if the caller explicitly set those.
+// Note, the provided clientCtx may have field pre-populated. The following order
+// of precedence occurs:
+//
+// - client.Context field not pre-populated & flag not set: uses default flag value
+// - client.Context field not pre-populated & flag set: uses set flag value
+// - client.Context field pre-populated & flag not set: uses pre-populated value
+// - client.Context field pre-populated & flag set: uses set flag value
 func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
 	if clientCtx.Height == 0 || flagSet.Changed(flags.FlagHeight) {
 		height, _ := flagSet.GetInt64(flags.FlagHeight)
@@ -140,12 +150,15 @@ func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, 
 }
 
 // ReadTxCommandFlags returns an updated Context with fields set based on flags
-// defined in PostCommands. An error is returned if any flag query fails.
+// defined in AddTxFlagsToCmd. An error is returned if any flag query fails.
 //
-// Certain flags are naturally command and context dependent, so for these flags
-// we do not check if they've been explicitly set by the caller. Other flags can
-// be considered "persistent" (e.g. KeyBase or Client) and these should be checked
-// if the caller explicitly set those.
+// Note, the provided clientCtx may have field pre-populated. The following order
+// of precedence occurs:
+//
+// - client.Context field not pre-populated & flag not set: uses default flag value
+// - client.Context field not pre-populated & flag set: uses set flag value
+// - client.Context field pre-populated & flag not set: uses pre-populated value
+// - client.Context field pre-populated & flag set: uses set flag value
 func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
 	clientCtx, err := ReadPersistentCommandFlags(clientCtx, flagSet)
 	if err != nil {

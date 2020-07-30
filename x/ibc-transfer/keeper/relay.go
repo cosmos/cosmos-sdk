@@ -33,7 +33,7 @@ import (
 //
 // Example:
 // These steps of transfer occur: A -> B -> C -> A -> C
-// 
+//
 // 1. A -> B : sender chain is source zone. Denom upon receiving: 'A/denom'
 // 2. B -> C : sender chain is source zone. Denom upon receiving: 'B/A/denom'
 // 3. C -> A : sender chain is source zone. Denom upon receiving: 'A/C/B/A/denom'

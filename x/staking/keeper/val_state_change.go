@@ -26,8 +26,8 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	// UnbondAllMatureValidatorQueue).
 	validatorUpdates := k.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	// Unbond all mature validators from the unbonding queue.
-	k.UnbondAllMatureValidatorQueue(ctx)
+	// unbond all mature validators from the unbonding queue
+	k.UnbondAllMatureValidators(ctx)
 
 	// Remove all mature unbonding delegations from the ubd queue.
 	matureUnbonds := k.DequeueAllMatureUBDQueue(ctx, ctx.BlockHeader().Time)
@@ -283,7 +283,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.SetValidatorByPowerIndex(ctx, validator)
 
 	// Adds to unbonding validator queue
-	k.InsertValidatorQueue(ctx, validator)
+	k.InsertUnbondingValidatorQueue(ctx, validator)
 
 	// trigger hook
 	k.AfterValidatorBeginUnbonding(ctx, validator.GetConsAddr(), validator.OperatorAddress)

@@ -230,25 +230,3 @@ func TestBuilderValidateBasic(t *testing.T) {
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
 }
-
-func TestDefaultTxDecoderError(t *testing.T) {
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
-	pubKeyCdc := std.DefaultPublicKeyCodec{}
-	encoder := DefaultTxEncoder()
-	decoder := DefaultTxDecoder(cdc, pubKeyCdc)
-
-	builder := newBuilder(pubKeyCdc)
-	err := builder.SetMsgs(testdata.NewTestMsg())
-	require.NoError(t, err)
-
-	txBz, err := encoder(builder.GetTx())
-	require.NoError(t, err)
-
-	_, err = decoder(txBz)
-	require.EqualError(t, err, "no registered implementations of type types.Msg: tx parse error")
-
-	registry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
-	_, err = decoder(txBz)
-	require.NoError(t, err)
-}

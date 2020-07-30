@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 
@@ -9,10 +8,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -61,12 +60,13 @@ account key. It implies --signature-only.
 func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx := client.GetClientContextFromCmd(cmd)
-
-		txBldr, err := types.NewTxBuilderFromFlags(bufio.NewReader(cmd.InOrStdin()), cmd.Flags(), clientCtx.HomeDir)
+		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 		if err != nil {
 			return err
 		}
+		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
+		txCfg := clientCtx.TxConfig
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
 		var (
@@ -97,34 +97,34 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
+		scanner := authclient.NewBatchScanner(txCfg, infile)
 
-		scanner := authclient.NewBatchScanner(clientCtx.JSONMarshaler, infile)
-
-		for sequence := txBldr.Sequence(); scanner.Scan(); sequence++ {
-			var stdTx types.StdTx
-
-			unsignedStdTx := scanner.StdTx()
-			txBldr = txBldr.WithSequence(sequence)
-
+		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
+			unsignedStdTx := scanner.Tx()
+			txFactory = txFactory.WithSequence(sequence)
+			txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)
+			if err != nil {
+				return err
+			}
 			if multisigAddr.Empty() {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
-				_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
+				_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
-
-				stdTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, unsignedStdTx, false, true)
+				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true)
 				if err != nil {
 					return err
 				}
 			} else {
-				stdTx, err = authclient.SignStdTxWithSignerAddress(txBldr, clientCtx, multisigAddr, clientCtx.GetFromName(), unsignedStdTx, true)
-				if err != nil {
-					return err
-				}
+				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, true)
 			}
 
-			json, err := getSignatureJSON(clientCtx.JSONMarshaler, stdTx, generateSignatureOnly)
+			if err != nil {
+				return err
+			}
+
+			json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -206,20 +206,31 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx := client.GetClientContextFromCmd(cmd)
-
-		clientCtx, txBldr, tx, err := readStdTxAndInitContexts(clientCtx, cmd, args[0])
+		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 		if err != nil {
 			return err
 		}
-		stdTx := tx.(types.StdTx)
+		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+
+		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
+		if err != nil {
+			return err
+		}
+		if txF.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+			txF = txF.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		}
+		txCfg := clientCtx.TxConfig
+		txBuilder, err := txCfg.WrapTxBuilder(newTx)
+		if err != nil {
+			return err
+		}
 
 		// if --signature-only is on, then override --append
-		var newTx types.StdTx
 		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
 
 		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, err := client.GetFromFields(txBldr.Keybase(), from, clientCtx.GenerateOnly)
+		_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}
@@ -232,23 +243,22 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			newTx, err = authclient.SignStdTxWithSignerAddress(
-				txBldr, clientCtx, multisigAddr, fromName, stdTx, clientCtx.Offline,
+			err = authclient.SignTxWithSignerAddress(
+				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {
-			append, _ := cmd.Flags().GetBool(flagAppend)
-			appendSig := append && !generateSignatureOnly
-			newTx, err = authclient.SignStdTx(txBldr, clientCtx, fromName, stdTx, appendSig, clientCtx.Offline)
-			if err != nil {
-				return err
+			flagAppend, _ := cmd.Flags().GetBool(flagAppend)
+			appendSig := flagAppend && !generateSignatureOnly
+			if appendSig {
+				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
 		}
 		if err != nil {
 			return err
 		}
 
-		json, err := getSignatureJSON(clientCtx.JSONMarshaler, newTx, generateSignatureOnly)
+		json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
 		if err != nil {
 			return err
 		}
@@ -265,15 +275,20 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		defer fp.Close()
 
-		fmt.Fprintf(fp, "%s\n", json)
-		return nil
+		return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 	}
 }
 
-func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, generateSignatureOnly bool) ([]byte, error) {
+func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, generateSignatureOnly bool) ([]byte, error) {
+	parsedTx := txBldr.GetTx()
+
 	if generateSignatureOnly {
-		return cdc.MarshalJSON(newTx.Signatures[0])
+		sigs, err := parsedTx.GetSignaturesV2()
+		if err != nil {
+			return nil, err
+		}
+		return txConfig.MarshalSignatureJSON(sigs)
 	}
 
-	return cdc.MarshalJSON(newTx)
+	return txConfig.TxJSONEncoder()(parsedTx)
 }

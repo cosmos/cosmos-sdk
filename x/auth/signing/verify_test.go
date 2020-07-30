@@ -54,7 +54,7 @@ func TestVerifySignature(t *testing.T) {
 	signature, err := priv.Sign(signBytes)
 	require.NoError(t, err)
 
-	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: signature}
+	stdSig := types.StdSignature{PubKey: pubKey, Signature: signature}
 	sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
 	require.NoError(t, err)
 
@@ -72,13 +72,13 @@ func TestVerifySignature(t *testing.T) {
 
 	sig1, err := priv.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig1 := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sig1}
+	stdSig1 := types.StdSignature{PubKey: pubKey, Signature: sig1}
 	sig1V2, err := types.StdSignatureToSignatureV2(cdc, stdSig1)
 	require.NoError(t, err)
 
 	sig2, err := priv1.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig2 := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sig2}
+	stdSig2 := types.StdSignature{PubKey: pubKey, Signature: sig2}
 	sig2V2, err := types.StdSignatureToSignatureV2(cdc, stdSig2)
 	require.NoError(t, err)
 

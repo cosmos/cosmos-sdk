@@ -308,20 +308,6 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	return txf, nil
 }
 
-// Helper function to retrieve sign bytes.
-func getSignBytes(
-	signMode signing.SignMode, signerData authsigning.SignerData,
-	txBuilder client.TxBuilder, pubKey crypto.PubKey, txConfig client.TxConfig,
-) ([]byte, error) {
-	// generate the bytes to be signed
-	signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
-	if err != nil {
-		return nil, err
-	}
-
-	return signBytes, nil
-}
-
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(

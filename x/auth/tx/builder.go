@@ -8,12 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/cosmos/cosmos-sdk/types/tx"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 )
 
 type builder struct {

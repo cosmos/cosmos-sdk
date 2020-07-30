@@ -14,8 +14,7 @@ import (
 )
 
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler and PublicKeyCodec
-func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
-	cdc := codec.NewProtoCodec(anyUnpacker)
+func DefaultTxDecoder(cdc *codec.ProtoCodec, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw tx.TxRaw
 

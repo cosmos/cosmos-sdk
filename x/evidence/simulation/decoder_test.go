@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -31,12 +31,12 @@ func TestDecodeStore(t *testing.T) {
 	evBz, err := app.EvidenceKeeper.MarshalEvidence(ev)
 	require.NoError(t, err)
 
-	kvPairs := sdkkv.Pairs{
-		sdkkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   types.KeyPrefixEvidence,
 			Value: evBz,
 		},
-		sdkkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

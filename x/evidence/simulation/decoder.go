@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -15,8 +15,8 @@ type EvidenceUnmarshaler interface {
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding evidence type.
-func NewDecodeStore(cdc EvidenceUnmarshaler) func(kvA, kvB sdkkv.Pair) string {
-	return func(kvA, kvB sdkkv.Pair) string {
+func NewDecodeStore(cdc EvidenceUnmarshaler) func(kvA, kvB kv.Pair) string {
+	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.KeyPrefixEvidence):
 			evidenceA, err := cdc.UnmarshalEvidence(kvA.Value)

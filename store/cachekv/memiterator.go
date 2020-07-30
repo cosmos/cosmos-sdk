@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"errors"
 
-	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -13,17 +13,17 @@ import (
 // Implements Iterator.
 type memIterator struct {
 	start, end []byte
-	items      []*sdkkv.Pair
+	items      []*kv.Pair
 	ascending  bool
 }
 
 func newMemIterator(start, end []byte, items *list.List, ascending bool) *memIterator {
-	itemsInDomain := make([]*sdkkv.Pair, 0)
+	itemsInDomain := make([]*kv.Pair, 0)
 
 	var entered bool
 
 	for e := items.Front(); e != nil; e = e.Next() {
-		item := e.Value.(*sdkkv.Pair)
+		item := e.Value.(*kv.Pair)
 		if !dbm.IsKeyInDomain(item.Key, start, end) {
 			if entered {
 				break

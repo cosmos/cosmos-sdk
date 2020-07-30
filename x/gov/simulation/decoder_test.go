@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -39,12 +39,12 @@ func TestDecodeStore(t *testing.T) {
 	proposalBz, err := cdc.MarshalBinaryBare(&proposal)
 	require.NoError(t, err)
 
-	kvPairs := sdkkv.Pairs{
-		sdkkv.Pair{Key: types.ProposalKey(1), Value: proposalBz},
-		sdkkv.Pair{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
-		sdkkv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&deposit)},
-		sdkkv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&vote)},
-		sdkkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		kv.Pair{Key: types.ProposalKey(1), Value: proposalBz},
+		kv.Pair{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
+		kv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&deposit)},
+		kv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&vote)},
+		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

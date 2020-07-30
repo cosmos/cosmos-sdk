@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -28,16 +28,16 @@ func TestDecodeStore(t *testing.T) {
 		Paths: []string{connectionID},
 	}
 
-	kvPairs := sdkkv.Pairs{
-		sdkkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   host.KeyClientConnections(connection.ClientID),
 			Value: cdc.MustMarshalBinaryBare(&paths),
 		},
-		sdkkv.Pair{
+		kv.Pair{
 			Key:   host.KeyConnection(connectionID),
 			Value: cdc.MustMarshalBinaryBare(&connection),
 		},
-		sdkkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

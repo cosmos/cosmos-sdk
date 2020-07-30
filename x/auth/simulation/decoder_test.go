@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -31,16 +31,16 @@ func TestDecodeStore(t *testing.T) {
 
 	globalAccNumber := gogotypes.UInt64Value{Value: 10}
 
-	kvPairs := sdkkv.Pairs{
-		sdkkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   types.AddressStoreKey(delAddr1),
 			Value: accBz,
 		},
-		sdkkv.Pair{
+		kv.Pair{
 			Key:   types.GlobalAccountNumberKey,
 			Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
 		},
-		sdkkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

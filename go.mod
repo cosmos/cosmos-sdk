@@ -10,7 +10,7 @@ require (
 	github.com/confio/ics23-iavl v0.6.0
 	github.com/confio/ics23/go v0.0.0-20200610201322-18c7bd6b2dd3
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
-	github.com/cosmos/iavl v0.13.4-0.20200714154344-89524cdc51be
+	github.com/cosmos/iavl v0.15.0-rc1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gibson042/canonicaljson-go v1.0.3

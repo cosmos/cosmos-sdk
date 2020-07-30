@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos;
 
 import "gogoproto/gogo.proto";
-import "tendermint/abci/types/types.proto";
+import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
@@ -70,7 +70,7 @@ message Result {
 
   // Events contains a slice of Event objects that were emitted during message or
   // handler execution.
-  repeated tendermint.abci.types.Event events = 3 [(gogoproto.nullable) = false];
+  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
 }
 
 // SimulationResponse defines the response generated when a transaction is
@@ -101,18 +101,18 @@ message TxData {
 message TxResponse {
   option (gogoproto.goproto_getters) = false;
 
-  int64 height = 1;
-  string txhash = 2 [(gogoproto.customname) = "TxHash"];
-  string codespace = 3;
-  uint32 code = 4;
-  string data = 5;
-  string raw_log = 6;
-  repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
-  string info = 8;
-  int64 gas_wanted = 9;
-  int64 gas_used = 10;
-  google.protobuf.Any tx = 11;
-  string timestamp = 12;
+  int64                   height     = 1;
+  string                  txhash     = 2 [(gogoproto.customname) = "TxHash"];
+  string                  codespace  = 3;
+  uint32                  code       = 4;
+  string                  data       = 5;
+  string                  raw_log    = 6;
+  repeated ABCIMessageLog logs       = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
+  string                  info       = 8;
+  int64                   gas_wanted = 9;
+  int64                   gas_used   = 10;
+  google.protobuf.Any     tx         = 11;
+  string                  timestamp  = 12;
 }
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
@@ -120,7 +120,7 @@ message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
   uint32 msg_index = 1;
-  string log = 2;
+  string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
   // execution.
@@ -132,13 +132,13 @@ message ABCIMessageLog {
 message StringEvent {
   option (gogoproto.stringer) = true;
 
-  string type = 1;
+  string             type       = 1;
   repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
 }
 
 // Attribute defines an attribute wrapper where the key and value are
 // strings instead of raw bytes.
 message Attribute {
-  string key = 1;
+  string key   = 1;
   string value = 2;
 }

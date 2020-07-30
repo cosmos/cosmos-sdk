@@ -220,18 +220,15 @@ func ClientTypeFromString(clientType string) ClientType {
 
 // Height is a monotonically increasing data type
 // that can be compared against another Height for the purposes of updating and freezing clients
-// Compare implements a method to compare two heights. When comparing two heights a, b
-// we can call a.Compare(b) which will return
-// negative if a < b
-// zero     if a = b
-// positive if a > b
 //
-// Decrement will return a decremented height from the given height. If this is not possible,
-// an error is returned
-// Valid returns true if height is valid, false otherwise
+// Normally the EpochHeight is incremented at each height while keeping epoch number the same
+// However some consensus algorithms may choose to reset the height in certain conditions
+// e.g. hard forks, state-machine breaking changes
+// In these cases, the epoch number is incremented so that height continues to be monitonically increasing
+// even as the EpochHeight gets reset
 type Height struct {
-	EpochNumber uint64 `json:"epoch_number" yaml:"epoch_number"`
-	EpochHeight uint64 `json:"epoch_height" yaml:"epoch_height"`
+	EpochNumber uint64 `json:"epoch_number" yaml:"epoch_number"` // The current epoch of the chain
+	EpochHeight uint64 `json:"epoch_height" yaml:"epoch_height"` // The height of the chain at the given epoch
 }
 
 // NewHeight creates a new client Height instance from the epoch values.
@@ -242,7 +239,12 @@ func NewHeight(epochNumber, epochHeight uint64) Height {
 	}
 }
 
-// Compare implements clientexported.Height
+/// Compare implements a method to compare two heights. When comparing two heights a, b
+// we can call a.Compare(b) which will return
+// -1 if a < b
+// 0  if a = b
+// 1  if a > b
+//
 // It first compares based on epoch numbers, whichever has the higher epoch number is the higher height
 // If epoch number is the same, then the epoch height is compared
 func (h Height) Compare(other Height) int64 {
@@ -275,7 +277,8 @@ func (h Height) EQ(other Height) bool {
 	return h.Compare(other) == 0
 }
 
-// Decrement implements clientexported.Height
+// Decrement will return a decremented height from the given height. If this is not possible,
+// an error is returned
 // Decrement will return a new height with the EpochHeight decremented
 // If the EpochHeight is already at lowest value (1), then false success flag is returend
 func (h Height) Decrement() (decremented Height, success bool) {
@@ -285,7 +288,7 @@ func (h Height) Decrement() (decremented Height, success bool) {
 	return NewHeight(h.EpochNumber, h.EpochHeight-1), true
 }
 
-// Valid implements clientexported.Height
+// Valid returns true if height is valid, false otherwise
 // Returns false if EpochHeight is 0
 func (h Height) Valid() bool {
 	return h.EpochHeight != 0

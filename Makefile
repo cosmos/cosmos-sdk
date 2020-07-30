@@ -343,7 +343,7 @@ TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci
 TM_TYPES     			  = third_party/proto/tendermint/types
 TM_VERSION 					= third_party/proto/tendermint/version
-TM_LIBS							= third_party/proto/tendermint/libs/bit
+TM_LIBS							= third_party/proto/tendermint/libs/bits
 
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto

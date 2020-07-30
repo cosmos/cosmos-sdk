@@ -14,17 +14,3 @@ func RegisterHandlers(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/bank/total", totalSupplyHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(clientCtx)).Methods("GET")
 }
-
-// ---------------------------------------------------------------------------
-// Deprecated
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ---------------------------------------------------------------------------
-
-// RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(clientCtx)).Methods("POST")
-	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc("/bank/total", totalSupplyHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(clientCtx)).Methods("GET")
-}

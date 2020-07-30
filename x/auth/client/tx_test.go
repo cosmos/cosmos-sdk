@@ -2,12 +2,11 @@ package client_test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -144,27 +143,26 @@ func TestReadTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simappparams.MakeEncodingConfig()
-	std.RegisterCodec(encodingConfig.Amino)
+	encodingConfig := simapp.MakeEncodingConfig()
 
 	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txGen)
 
-	batch1 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
-{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
-{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
-`
-	batch2 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
-malformed
-{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
-`
-	batch3 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
-{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}`
-	batch4 := `{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"150"}],"gas":"50000"},"signatures":[],"memo":"foomemo"}
+	// generate some tx JSON
+	bldr := txGen.NewTxBuilder()
+	bldr.SetGasLimit(50000)
+	bldr.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	bldr.SetMemo("foomemo")
+	txJson, err := txGen.TxJSONEncoder()(bldr.GetTx())
+	require.NoError(t, err)
 
-{"msg":[],"fee":{"amount":[{"denom":"atom","amount":"1"}],"gas":"10000"},"signatures":[],"memo":"foomemo"}
-`
+	// use the tx JSON to generate some tx batches (it doesn't matter that we use the same JSON because we don't care about the actual context)
+	goodBatchOf3Txs := fmt.Sprintf("%s\n%s\n%s\n", txJson, txJson, txJson)
+	malformedBatch := fmt.Sprintf("%s\nmalformed\n%s\n", txJson, txJson)
+	batchOf2TxsWithNoNewline := fmt.Sprintf("%s\n%s", txJson, txJson)
+	batchWithEmptyLine := fmt.Sprintf("%s\n\n%s", txJson, txJson)
+
 	tests := []struct {
 		name               string
 		batch              string
@@ -172,10 +170,10 @@ malformed
 		wantUnmarshalError bool
 		numTxs             int
 	}{
-		{"good batch", batch1, false, false, 3},
-		{"malformed", batch2, false, true, 1},
-		{"missing trailing newline", batch3, false, false, 2},
-		{"empty line", batch4, false, true, 1},
+		{"good batch", goodBatchOf3Txs, false, false, 3},
+		{"malformed", malformedBatch, false, true, 1},
+		{"missing trailing newline", batchOf2TxsWithNoNewline, false, false, 2},
+		{"empty line", batchWithEmptyLine, false, true, 1},
 	}
 
 	for _, tt := range tests {

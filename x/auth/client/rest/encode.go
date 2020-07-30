@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,7 +36,7 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// re-encode it in the chain's native binary format
-		txBytes, err := convertAndEncodeStdTx(clientCtx.TxConfig, req)
+		txBytes, err := tx.ConvertAndEncodeStdTx(clientCtx.TxConfig, req)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -51,24 +49,4 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		// NOTE: amino is set intentionally here, don't migrate it
 		rest.PostProcessResponseBare(w, clientCtx, response)
 	}
-}
-
-func convertAndEncodeStdTx(txConfig client.TxConfig, stdTx types.StdTx) ([]byte, error) {
-	builder := txConfig.NewTxBuilder()
-
-	var theTx sdk.Tx
-
-	// check if we need a StdTx anyway, in that case don't copy
-	if _, ok := builder.GetTx().(types.StdTx); ok {
-		theTx = stdTx
-	} else {
-		err := tx.CopyTx(stdTx, builder)
-		if err != nil {
-			return nil, err
-		}
-
-		theTx = builder.GetTx()
-	}
-
-	return txConfig.TxEncoder()(theTx)
 }

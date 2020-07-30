@@ -3,6 +3,8 @@ package tx_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/stretchr/testify/require"
 
 	tx2 "github.com/cosmos/cosmos-sdk/client/tx"
@@ -99,4 +101,29 @@ func TestConvertTxToStdTx(t *testing.T) {
 	require.Equal(t, msg, stdTx.Msgs[0])
 	require.Equal(t, sig.PubKey.Bytes(), stdTx.Signatures[0].PubKey)
 	require.Equal(t, sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
+}
+
+func TestConvertAndEncodeStdTx(t *testing.T) {
+	encCfg := simapp.MakeEncodingConfig()
+	protoCfg := tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), std.DefaultPublicKeyCodec{}, tx.DefaultSignModeHandler())
+	aminoCfg := types3.StdTxConfig{Cdc: encCfg.Amino}
+
+	// convert amino -> proto -> amino
+	aminoBuilder := aminoCfg.NewTxBuilder()
+	buildTestTx(t, aminoBuilder)
+	stdTx := aminoBuilder.GetTx().(types3.StdTx)
+	txBz, err := tx2.ConvertAndEncodeStdTx(protoCfg, stdTx)
+	require.NoError(t, err)
+	decodedTx, err := protoCfg.TxDecoder()(txBz)
+	require.NoError(t, err)
+	aminoBuilder2 := aminoCfg.NewTxBuilder()
+	require.NoError(t, tx2.CopyTx(decodedTx.(signing.SigFeeMemoTx), aminoBuilder2))
+	require.Equal(t, stdTx, aminoBuilder2.GetTx())
+
+	// just use amino everywhere
+	txBz, err = tx2.ConvertAndEncodeStdTx(aminoCfg, stdTx)
+	require.NoError(t, err)
+	decodedTx, err = aminoCfg.TxDecoder()(txBz)
+	require.NoError(t, err)
+	require.Equal(t, stdTx, decodedTx)
 }

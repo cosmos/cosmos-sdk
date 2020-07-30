@@ -62,3 +62,23 @@ func CopyTx(tx signing.SigFeeMemoTx, builder client.TxBuilder) error {
 
 	return nil
 }
+
+func ConvertAndEncodeStdTx(txConfig client.TxConfig, stdTx types.StdTx) ([]byte, error) {
+	builder := txConfig.NewTxBuilder()
+
+	var theTx sdk.Tx
+
+	// check if we need a StdTx anyway, in that case don't copy
+	if _, ok := builder.GetTx().(types.StdTx); ok {
+		theTx = stdTx
+	} else {
+		err := CopyTx(stdTx, builder)
+		if err != nil {
+			return nil, err
+		}
+
+		theTx = builder.GetTx()
+	}
+
+	return txConfig.TxEncoder()(theTx)
+}

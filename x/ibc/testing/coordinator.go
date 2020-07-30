@@ -259,11 +259,7 @@ func (coord *Coordinator) RecvPacket(
 	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
 
 	// receive on counterparty and update source client
-	if err := coord.SendMsgs(counterparty, source, sourceClient, recvMsg); err != nil {
-		return err
-	}
-
-	return nil
+	return coord.SendMsgs(counterparty, source, sourceClient, recvMsg)
 }
 
 // AcknowledgePacket acknowledges on the source chain the packet received on
@@ -281,11 +277,7 @@ func (coord *Coordinator) AcknowledgePacket(
 	proof, proofHeight := counterparty.QueryProof(packetKey)
 
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
-	if err := coord.SendMsgs(source, counterparty, counterpartyClient, ackMsg); err != nil {
-		return err
-	}
-
-	return nil
+	return coord.SendMsgs(source, counterparty, counterpartyClient, ackMsg)
 }
 
 // RelayPacket receives a channel packet on counterparty, queries the ack
@@ -299,11 +291,7 @@ func (coord *Coordinator) RelayPacket(
 		return err
 	}
 
-	if err := coord.AcknowledgePacket(source, counterparty, counterpartyClient, packet, ack); err != nil {
-		return err
-	}
-
-	return nil
+	return coord.AcknowledgePacket(source, counterparty, counterpartyClient, packet, ack)
 }
 
 // IncrementTime iterates through all the TestChain's and increments their current header time

@@ -37,7 +37,7 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		// re-encode it
+		// re-encode it in the chain's native binary format
 		txBytes, err := convertAndEncodeStdTx(clientCtx.TxConfig, req)
 		if rest.CheckInternalServerError(w, err) {
 			return

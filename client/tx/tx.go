@@ -184,6 +184,10 @@ func WriteGeneratedTxResponse(
 	}
 
 	stdTx, err := ConvertTxToStdTx(ctx.Codec, tx.GetTx())
+	if rest.CheckInternalServerError(w, err) {
+		return
+	}
+
 	output, err := ctx.Codec.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return

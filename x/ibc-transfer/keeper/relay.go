@@ -33,11 +33,13 @@ import (
 //
 // Example:
 // These steps of transfer occur: A -> B -> C -> A -> C
-// 1. A -> B :: sender chain is source zone
-// 2. B -> C :: sender chain is source zone
-// 3. C -> A :: sender chain is source zone
-// 4. A -> C :: sender chain is sink zone
-// token has final prefix of C/B/A/denom
+// 
+// 1. A -> B : sender chain is source zone. Denom upon receiving: 'A/denom'
+// 2. B -> C : sender chain is source zone. Denom upon receiving: 'B/A/denom'
+// 3. C -> A : sender chain is source zone. Denom upon receiving: 'A/C/B/A/denom'
+// 4. A -> C : sender chain is sink zone
+//
+// The token has a final denomination of 'C/B/A/denom', where 'C/B/A' is the trace information.
 
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,

@@ -113,9 +113,8 @@ func (m *SignatureDescriptors) GetSignatures() []*SignatureDescriptor {
 // itself. It is primarily used for coordinating signatures between clients.
 type SignatureDescriptor struct {
 	// public_key is the public key of the signer
-	PublicKey *types.PublicKey `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
-	// data represents the signature data
-	Data *SignatureDescriptor_Data `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	PublicKey *types.PublicKey          `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
+	Data      *SignatureDescriptor_Data `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 }
 
 func (m *SignatureDescriptor) Reset()         { *m = SignatureDescriptor{} }
@@ -165,6 +164,7 @@ func (m *SignatureDescriptor) GetData() *SignatureDescriptor_Data {
 	return nil
 }
 
+// Data represents signature data
 type SignatureDescriptor_Data struct {
 	// sum is the oneof that specifies whether this represents single or multi-signature data
 	//

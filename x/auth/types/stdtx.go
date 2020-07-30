@@ -71,12 +71,7 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 
 // Deprecated
 func NewStdSignature(pk crypto.PubKey, sig []byte) StdSignature {
-	var pkBz []byte
-	if pk != nil {
-		pkBz = pk.Bytes()
-	}
-
-	return StdSignature{PubKey: pkBz, Signature: sig}
+	return StdSignature{PubKey: pk, Signature: sig}
 }
 
 // GetSignature returns the raw signature bytes.
@@ -86,13 +81,8 @@ func (ss StdSignature) GetSignature() []byte {
 
 // GetPubKey returns the public key of a signature as a crypto.PubKey using the
 // Amino codec.
-func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
-	if len(ss.PubKey) == 0 {
-		return nil
-	}
-
-	amino.MustUnmarshalBinaryBare(ss.PubKey, &pk)
-	return pk
+func (ss StdSignature) GetPubKey() crypto.PubKey {
+	return ss.PubKey
 }
 
 // MarshalYAML returns the YAML representation of the signature.
@@ -319,8 +309,8 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 
 // Deprecated: StdSignature represents a sig
 type StdSignature struct {
-	PubKey    []byte `json:"pub_key" yaml:"pub_key"` // optional
-	Signature []byte `json:"signature" yaml:"signature"`
+	crypto.PubKey `json:"pub_key" yaml:"pub_key"` // optional
+	Signature     []byte                          `json:"signature" yaml:"signature"`
 }
 
 // DefaultTxDecoder logic for standard transaction decoding
@@ -397,13 +387,6 @@ func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.Sign
 
 // SignatureV2ToStdSignature converts a SignatureV2 to a StdSignature
 func SignatureV2ToStdSignature(cdc *codec.Codec, sig signing.SignatureV2) (StdSignature, error) {
-	var pubKeyBz []byte
-
-	pubKey := sig.PubKey
-	if pubKey != nil {
-		pubKeyBz = pubKey.Bytes()
-	}
-
 	var (
 		sigBz []byte
 		err   error
@@ -417,7 +400,7 @@ func SignatureV2ToStdSignature(cdc *codec.Codec, sig signing.SignatureV2) (StdSi
 	}
 
 	return StdSignature{
-		PubKey:    pubKeyBz,
+		PubKey:    sig.PubKey,
 		Signature: sigBz,
 	}, nil
 }

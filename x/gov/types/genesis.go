@@ -7,17 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GenesisState - all staking state that must be provided at genesis
-type GenesisState struct {
-	StartingProposalID uint64        `json:"starting_proposal_id" yaml:"starting_proposal_id"`
-	Deposits           Deposits      `json:"deposits" yaml:"deposits"`
-	Votes              Votes         `json:"votes" yaml:"votes"`
-	Proposals          Proposals     `json:"proposals" yaml:"proposals"`
-	DepositParams      DepositParams `json:"deposit_params" yaml:"deposit_params"`
-	VotingParams       VotingParams  `json:"voting_params" yaml:"voting_params"`
-	TallyParams        TallyParams   `json:"tally_params" yaml:"tally_params"`
-}
-
 // NewGenesisState creates a new genesis state for the governance module
 func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
 	return GenesisState{

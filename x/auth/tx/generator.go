@@ -1,38 +1,51 @@
 package tx
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type generator struct {
-	marshaler   codec.Marshaler
 	pubkeyCodec types.PublicKeyCodec
 	handler     signing.SignModeHandler
 	decoder     sdk.TxDecoder
 	encoder     sdk.TxEncoder
 	jsonDecoder sdk.TxDecoder
 	jsonEncoder sdk.TxEncoder
+	protoCodec  *codec.ProtoCodec
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided Marshaler, PublicKeyCodec and SignModeHandler.
-func NewTxConfig(marshaler codec.Marshaler, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
+// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec, PublicKeyCodec and SignModeHandler.
+func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
 	return &generator{
-		marshaler:   marshaler,
 		pubkeyCodec: pubkeyCodec,
 		handler:     signModeHandler,
-		decoder:     DefaultTxDecoder(marshaler, pubkeyCodec),
-		encoder:     DefaultTxEncoder(marshaler),
-		jsonDecoder: DefaultJSONTxDecoder(marshaler, pubkeyCodec),
-		jsonEncoder: DefaultJSONTxEncoder(marshaler),
+		decoder:     DefaultTxDecoder(protoCodec, pubkeyCodec),
+		encoder:     DefaultTxEncoder(),
+		jsonDecoder: DefaultJSONTxDecoder(protoCodec, pubkeyCodec),
+		jsonEncoder: DefaultJSONTxEncoder(),
+		protoCodec:  protoCodec,
 	}
 }
 
 func (g generator) NewTxBuilder() client.TxBuilder {
-	return newBuilder(g.marshaler, g.pubkeyCodec)
+	return newBuilder(g.pubkeyCodec)
+}
+
+// WrapTxBuilder returns a builder from provided transaction
+func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+	newBuilder, ok := newTx.(*builder)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", &builder{}, newTx)
+	}
+
+	return newBuilder, nil
 }
 
 func (g generator) SignModeHandler() signing.SignModeHandler {

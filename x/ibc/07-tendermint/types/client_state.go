@@ -26,9 +26,6 @@ var _ clientexported.ClientState = ClientState{}
 // ClientState from Tendermint tracks the current validator set, latest height,
 // and a possible frozen height.
 type ClientState struct {
-	// Client ID
-	ID string `json:"id" yaml:"id"`
-
 	TrustLevel tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
 
 	// Duration of the period since the LastestTimestamp during which the
@@ -52,9 +49,9 @@ type ClientState struct {
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
+func InitializeFromMsg(msg *MsgCreateClient) (ClientState, error) {
 	return Initialize(
-		msg.GetClientID(), msg.TrustLevel,
+		msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
 		msg.Header, msg.ProofSpecs,
 	)
@@ -63,23 +60,22 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustLevel tmmath.Fraction,
+	trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header, specs []*ics23.ProofSpec,
 ) (ClientState, error) {
-	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
+	clientState := NewClientState(trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
 
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustLevel tmmath.Fraction,
+	trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header, specs []*ics23.ProofSpec,
 ) ClientState {
 	return ClientState{
-		ID:              id,
 		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
@@ -88,11 +84,6 @@ func NewClientState(
 		FrozenHeight:    0,
 		ProofSpecs:      specs,
 	}
-}
-
-// GetID returns the tendermint client state identifier.
-func (cs ClientState) GetID() string {
-	return cs.ID
 }
 
 // GetChainID returns the chain-id from the last header
@@ -125,9 +116,6 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
-		return err
-	}
 	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
 		return err
 	}
@@ -169,7 +157,7 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	aminoCdc *codec.Codec,
 	provingRoot commitmentexported.Root,
 	height uint64,
@@ -206,7 +194,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -245,7 +233,7 @@ func (cs ClientState) VerifyConnectionState(
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -285,7 +273,7 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -316,7 +304,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -348,7 +336,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -378,7 +366,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	_ sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -410,7 +398,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 // shared between the verification functions and returns the unmarshalled
 // merkle proof and an error if one occurred.
 func sanitizeVerificationArgs(
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	cs ClientState,
 	height uint64,
 	prefix commitmentexported.Prefix,
@@ -420,7 +408,7 @@ func sanitizeVerificationArgs(
 	if cs.GetLatestHeight() < height {
 		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height,
+			"client state height < proof height (%d < %d)", cs.GetLatestHeight(), height,
 		)
 	}
 

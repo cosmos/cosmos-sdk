@@ -41,11 +41,9 @@ var (
 	disabledTimeout   = uint64(0)
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
-	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
 
 	packet        = types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 	unknownPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
-	invalidAck    = invalidAckData
 
 	emptyProof     = []byte{}
 	invalidProofs1 = commitmentexported.Proof(nil)
@@ -416,7 +414,7 @@ func (suite *MsgTestSuite) TestMsgRecvPacketGetSignBytes() {
 	res := msg.GetSignBytes()
 
 	expected := fmt.Sprintf(
-		`{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100","timeout_timestamp":"100"},"proof":"Co0BCi4KCmljczIzOmlhdmwSA0tFWRobChkKA0tFWRIFVkFMVUUaCwgBGAEgASoDAAICClsKDGljczIzOnNpbXBsZRIMaWF2bFN0b3JlS2V5Gj0KOwoMaWF2bFN0b3JlS2V5EiAcIiDXSHQRSvh/Wa07MYpTK0B4XtbaXtzxBED76xk0WhoJCAEYASABKgEA","proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`,
+		`{"type":"ibc/channel/MsgRecvPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100","timeout_timestamp":"100"},"proof":"Co0BCi4KCmljczIzOmlhdmwSA0tFWRobChkKA0tFWRIFVkFMVUUaCwgBGAEgASoDAAICClsKDGljczIzOnNpbXBsZRIMaWF2bFN0b3JlS2V5Gj0KOwoMaWF2bFN0b3JlS2V5EiAcIiDXSHQRSvh/Wa07MYpTK0B4XtbaXtzxBED76xk0WhoJCAEYASABKgEA","proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
 		string(msg.GetDataSignBytes()),
 	)
 	suite.Equal(expected, string(res))
@@ -471,7 +469,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, 1, emptyAddr),
 		types.NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
 		types.NewMsgAcknowledgement(unknownPacket, packet.GetData(), suite.proof, 1, addr),
-		types.NewMsgAcknowledgement(packet, invalidAck, suite.proof, 1, addr),
 	}
 
 	testCases := []struct {
@@ -484,7 +481,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		{testMsgs[2], false, "missing signer address"},
 		{testMsgs[3], false, "cannot submit an empty proof"},
 		{testMsgs[4], false, "invalid packet"},
-		{testMsgs[5], false, "invalid acknowledgement"},
 	}
 
 	for i, tc := range testCases {

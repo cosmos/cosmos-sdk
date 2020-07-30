@@ -5,9 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as

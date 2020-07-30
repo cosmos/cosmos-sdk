@@ -43,7 +43,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		seqNum  uint64 = 7
 	)
 
-	handler := legacyAminoJSONHandler{}
+	handler := stdTxSignModeHandler{}
 	signingData := signing.SignerData{
 		ChainID:         chainId,
 		AccountNumber:   accNum,
@@ -62,11 +62,11 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
-	handler := legacyAminoJSONHandler{}
+	handler := stdTxSignModeHandler{}
 	require.Equal(t, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
 func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
-	handler := legacyAminoJSONHandler{}
+	handler := stdTxSignModeHandler{}
 	require.Equal(t, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
 }

@@ -8,38 +8,37 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// legacyAminoJSONHandler is a SignModeHandler that handles SIGN_MODE_LEGACY_AMINO_JSON
-type legacyAminoJSONHandler struct{}
+// stdTxSignModeHandler is a SignModeHandler that handles SIGN_MODE_LEGACY_AMINO_JSON
+type stdTxSignModeHandler struct{}
 
-var _ signing.SignModeHandler = legacyAminoJSONHandler{}
+func NewStdTxSignModeHandler() signing.SignModeHandler {
+	return &stdTxSignModeHandler{}
+}
+
+var _ signing.SignModeHandler = stdTxSignModeHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
-func (h legacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
+func (h stdTxSignModeHandler) DefaultMode() signingtypes.SignMode {
 	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 // Modes implements SignModeHandler.Modes
-func (legacyAminoJSONHandler) Modes() []signingtypes.SignMode {
+func (stdTxSignModeHandler) Modes() []signingtypes.SignMode {
 	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes
-func (legacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+func (stdTxSignModeHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
 	}
 
-	feeTx, ok := tx.(sdk.FeeTx)
+	stdTx, ok := tx.(StdTx)
 	if !ok {
-		return nil, fmt.Errorf("expected FeeTx, got %T", tx)
-	}
-
-	memoTx, ok := tx.(sdk.TxWithMemo)
-	if !ok {
-		return nil, fmt.Errorf("expected TxWithMemo, got %T", tx)
+		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, tx)
 	}
 
 	return StdSignBytes(
-		data.ChainID, data.AccountNumber, data.AccountSequence, StdFee{Amount: feeTx.GetFee(), Gas: feeTx.GetGas()}, tx.GetMsgs(), memoTx.GetMemo(),
+		data.ChainID, data.AccountNumber, data.AccountSequence, StdFee{Amount: stdTx.GetFee(), Gas: stdTx.GetGas()}, tx.GetMsgs(), stdTx.GetMemo(),
 	), nil
 }

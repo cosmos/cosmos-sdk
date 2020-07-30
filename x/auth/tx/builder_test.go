@@ -233,9 +233,10 @@ func TestBuilderValidateBasic(t *testing.T) {
 
 func TestDefaultTxDecoderError(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
 	pubKeyCdc := std.DefaultPublicKeyCodec{}
 	encoder := DefaultTxEncoder()
-	decoder := DefaultTxDecoder(registry, pubKeyCdc)
+	decoder := DefaultTxDecoder(cdc, pubKeyCdc)
 
 	builder := newBuilder(pubKeyCdc)
 	err := builder.SetMsgs(testdata.NewTestMsg())

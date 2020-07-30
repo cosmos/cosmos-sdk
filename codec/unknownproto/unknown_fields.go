@@ -43,8 +43,8 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 	}
 
 	for len(b) > 0 {
-		tagNum, wireType, n := protowire.ConsumeField(b)
-		if n < 0 {
+		tagNum, wireType, m := protowire.ConsumeTag(b)
+		if m < 0 {
 			return hasUnknownNonCriticals, errors.New("invalid length")
 		}
 
@@ -78,10 +78,6 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 			}
 		}
 
-		// Skip over the 2 bytes that store fieldNumber and wireType bytes.
-		fieldBytes := b[2:n]
-		b = b[n:]
-
 		// An unknown but non-critical field or just a scalar type (aka *INT and BYTES like).
 		if fieldDescProto == nil || fieldDescProto.IsScalar() {
 			continue
@@ -102,9 +98,15 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 
 		// Let's recursively traverse and typecheck the field.
 
+		// Skip over the bytes that store fieldNumber and wireType bytes.
+		b = b[m:]
+		n := protowire.ConsumeFieldValue(tagNum, wireType, b)
+		fieldBytes := b[:n]
+		b = b[n:]
+
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			if hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals); err != nil {
+			if hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, &types.Any{}, allowUnknownNonCriticals); err != nil {
 				return hasUnknownNonCriticals || hasUnknownNonCriticalsChild, err
 			}
 			// And finally we can extract the TypeURL containing the protoMessageName.

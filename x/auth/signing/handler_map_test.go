@@ -18,7 +18,7 @@ func MakeTestHandlerMap() signing.SignModeHandler {
 	return signing.NewSignModeHandlerMap(
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		[]signing.SignModeHandler{
-			authtypes.legacyAminoJSONHandler{},
+			authtypes.NewStdTxSignModeHandler(),
 		},
 	)
 }
@@ -58,7 +58,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	)
 
 	handler := MakeTestHandlerMap()
-	aminoJSONHandler := authtypes.legacyAminoJSONHandler{}
+	aminoJSONHandler := authtypes.NewStdTxSignModeHandler()
 
 	signingData := signing.SignerData{
 		ChainID:         chainId,

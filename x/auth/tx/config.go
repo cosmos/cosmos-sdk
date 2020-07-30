@@ -70,11 +70,3 @@ func (g config) TxJSONEncoder() sdk.TxEncoder {
 func (g config) TxJSONDecoder() sdk.TxDecoder {
 	return g.jsonDecoder
 }
-
-func (g config) MarshalSignatureJSON(v2s []signingtypes.SignatureV2) ([]byte, error) {
-	panic("implement me")
-}
-
-func (g config) UnmarshalSignatureJSON(bytes []byte) ([]signingtypes.SignatureV2, error) {
-	panic("implement me")
-}

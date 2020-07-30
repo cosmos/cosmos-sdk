@@ -62,7 +62,7 @@ func CalculateGas(
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	simRes, err := parseQueryResponse(rawRes)
+	simRes, err := ParseQueryResponse(rawRes)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
@@ -211,7 +211,7 @@ func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
 	return uint64(adjustment * float64(estimate))
 }
 
-func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
+func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	var simRes sdk.SimulationResponse
 	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
 		return sdk.SimulationResponse{}, err

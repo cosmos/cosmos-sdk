@@ -172,7 +172,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 		{testMsgs[2], false, "empty proofConsensus"},
 		{testMsgs[3], false, "invalid proofHeight"},
 		{testMsgs[4], false, "invalid consensusHeight"},
-		{testMsgs[5], true, "success"},
+		{testMsgs[5], false, "invalid version"},
 		{testMsgs[6], false, "empty signer"},
 		{testMsgs[7], true, "success"},
 	}

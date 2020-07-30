@@ -24,6 +24,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgWithdrawDelegatorReward{},
 		&MsgWithdrawValidatorCommission{},
 		&MsgSetWithdrawAddress{},
+		&MsgFundCommunityPool{},
 	)
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

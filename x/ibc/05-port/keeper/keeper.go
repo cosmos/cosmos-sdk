@@ -53,7 +53,7 @@ func (k *Keeper) BindPort(ctx sdk.Context, portID string) *capabilitytypes.Capab
 		panic(err.Error())
 	}
 
-	k.Logger(ctx).Info("port %s binded", portID)
+	k.Logger(ctx).Info(fmt.Sprintf("port '%s' binded", portID))
 	return key
 }
 

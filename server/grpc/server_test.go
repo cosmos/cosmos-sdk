@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -31,7 +30,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), network.DefaultConfig())
 	s.Require().NotNil(s.network)
 
-	_, err := s.network.WaitForHeightWithTimeout(2, 60*time.Second)
+	_, err := s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 }
 

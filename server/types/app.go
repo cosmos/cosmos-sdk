@@ -1,18 +1,16 @@
-package server
+package types
 
 import (
 	"encoding/json"
 	"io"
-	"os"
-	"path/filepath"
 
+	"github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
@@ -34,6 +32,10 @@ type (
 		abci.Application
 
 		RegisterAPIRoutes(*api.Server)
+
+		// RegisterGRPCServer registers gRPC services directly with the gRPC
+		// server.
+		RegisterGRPCServer(grpc.Server)
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an
@@ -44,21 +46,3 @@ type (
 	// JSON-serializable structure and returns the current validator set.
 	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error)
 )
-
-func openDB(rootDir string) (dbm.DB, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := sdk.NewLevelDB("application", dataDir)
-	return db, err
-}
-
-func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
-	if traceWriterFile != "" {
-		w, err = os.OpenFile(
-			traceWriterFile,
-			os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-			0666,
-		)
-		return
-	}
-	return
-}

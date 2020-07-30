@@ -93,7 +93,12 @@ $ <appcli> query slashing signing-infos
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QuerySigningInfosRequest{Pagination: client.ReadPageRequest(cmd.Flags())}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			params := &types.QuerySigningInfosRequest{Pagination: pageReq}
 			res, err := queryClient.SigningInfos(context.Background(), params)
 			if err != nil {
 				return err

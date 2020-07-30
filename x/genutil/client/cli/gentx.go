@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -31,7 +32,7 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mbm module.BasicManager, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
+func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -93,7 +94,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
-			if err = mbm.ValidateGenesis(cdc, genesisState); err != nil {
+			if err = mbm.ValidateGenesis(cdc, txEncCfg, genesisState); err != nil {
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
@@ -133,16 +134,17 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr, err := authtypes.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientCtx.HomeDir)
+			txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}
 
-			txBldr = txBldr.WithTxEncoder(authclient.GetTxEncoder(clientCtx.Codec))
+			txGen := clientCtx.TxConfig
+			txBuilder := txGen.NewTxBuilder()
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
 
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txBldr, true)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}
@@ -167,7 +169,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			// sign the transaction and write it to the output file
-			signedTx, err := authclient.SignStdTx(txBldr, clientCtx, name, stdTx, false, true)
+			err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to sign std tx")
 			}
@@ -180,7 +182,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				}
 			}
 
-			if err := writeSignedGenTx(cdc, outputDocument, signedTx); err != nil {
+			if err := writeSignedGenTx(cdc, outputDocument, stdTx); err != nil {
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 
@@ -219,7 +221,7 @@ func readUnsignedGenTxFile(cdc codec.JSONMarshaler, r io.Reader) (authtypes.StdT
 	return stdTx, err
 }
 
-func writeSignedGenTx(cdc codec.JSONMarshaler, outputDocument string, tx authtypes.StdTx) error {
+func writeSignedGenTx(cdc codec.JSONMarshaler, outputDocument string, tx sdk.Tx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

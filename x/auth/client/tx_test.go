@@ -97,6 +97,7 @@ func TestCalculateGas(t *testing.T) {
 	}
 }
 
+// TODO: remove this and authclient.GetTxEncoder after the proto tx migration is complete
 func TestDefaultTxEncoder(t *testing.T) {
 	cdc := makeCodec()
 

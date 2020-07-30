@@ -529,6 +529,8 @@ github.com/tendermint/tendermint v0.33.6/go.mod h1:0yUs9eIuuDq07nQql9BmI30FtYGcE
 github.com/tendermint/tendermint v0.34.0-dev1.0.20200714110441-6ccccb0933d4/go.mod h1:sMOYRN9Sc+vnasY8HjSLlQx2/kL686dlOXtwcFmqpnE=
 github.com/tendermint/tendermint v0.34.0-rc1 h1:DwGGbiqs9iWkWw7pVjVZdx0YhwRhlOhgoCAPf3/p1Ug=
 github.com/tendermint/tendermint v0.34.0-rc1/go.mod h1:+AG8ftE2PD4uMVzGSB7c0oH9xbTlIyMeoX0M9r89x3Y=
+github.com/tendermint/tendermint v0.34.0-rc2 h1:kYyHum2Ys05qv0i5j/X47icRSO1zVbQrvVK6hjllQnY=
+github.com/tendermint/tendermint v0.34.0-rc2/go.mod h1:+AG8ftE2PD4uMVzGSB7c0oH9xbTlIyMeoX0M9r89x3Y=
 github.com/tendermint/tm-db v0.4.1/go.mod h1:JsJ6qzYkCGiGwm5GHl/H5GLI9XLb6qZX7PRe425dHAY=
 github.com/tendermint/tm-db v0.5.0/go.mod h1:lSq7q5WRR/njf1LnhiZ/lIJHk2S8Y1Zyq5oP/3o9C2U=
 github.com/tendermint/tm-db v0.5.1 h1:H9HDq8UEA7Eeg13kdYckkgwwkQLBnJGgX4PgLJRhieY=

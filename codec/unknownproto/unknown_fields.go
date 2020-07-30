@@ -22,13 +22,20 @@ type descriptorIface interface {
 	Descriptor() ([]byte, []int)
 }
 
-func RejectUnknownFieldsStrict(b []byte, msg proto.Message) error {
-	_, err := RejectUnknownFields(b, msg, false)
+// RejectUnknownFieldsStrict rejects any bytes bz with an error that has unknown fields for the provided proto.Message type.
+// This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
+func RejectUnknownFieldsStrict(bz []byte, msg proto.Message) error {
+	_, err := RejectUnknownFields(bz, msg, false)
 	return err
 }
 
-func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals bool) (hasUnknownNonCriticals bool, err error) {
-	if len(b) == 0 {
+// RejectUnknownFields rejects any bytes bz with an error that has unknown fields for the provided proto.Message type with an
+// option to allow non-critical fields (specified as those fields with bit 11) to pass through. In either case, the
+// hasUnknownNonCriticals will be set to true if non-critical fields were encountered during traversal. This flag can be
+// used to treat a message with non-critical field different in different security contexts (such as transaction signing).
+// This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
+func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals bool) (hasUnknownNonCriticals bool, err error) {
+	if len(bz) == 0 {
 		return hasUnknownNonCriticals, nil
 	}
 
@@ -42,8 +49,8 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 		return hasUnknownNonCriticals, err
 	}
 
-	for len(b) > 0 {
-		tagNum, wireType, m := protowire.ConsumeTag(b)
+	for len(bz) > 0 {
+		tagNum, wireType, m := protowire.ConsumeTag(bz)
 		if m < 0 {
 			return hasUnknownNonCriticals, errors.New("invalid length")
 		}
@@ -79,10 +86,10 @@ func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals b
 		}
 
 		// Skip over the bytes that store fieldNumber and wireType bytes.
-		b = b[m:]
-		n := protowire.ConsumeFieldValue(tagNum, wireType, b)
-		fieldBytes := b[:n]
-		b = b[n:]
+		bz = bz[m:]
+		n := protowire.ConsumeFieldValue(tagNum, wireType, bz)
+		fieldBytes := bz[:n]
+		bz = bz[n:]
 
 		// An unknown but non-critical field or just a scalar type (aka *INT and BYTES like).
 		if fieldDescProto == nil || fieldDescProto.IsScalar() {

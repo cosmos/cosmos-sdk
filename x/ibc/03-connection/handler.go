@@ -38,6 +38,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenTry) (*sdk.Result, error) {
 	// For now, convert uint64 heights to clientexported.Height
+	// See issue here: https://github.com/cosmos/cosmos-sdk/issues/6888
 	proofHeight := clientexported.NewHeight(msg.ProofEpoch, msg.ProofHeight)
 	consensusHeight := clientexported.NewHeight(msg.ConsensusEpoch, msg.ConsensusHeight)
 	if err := k.ConnOpenTry(

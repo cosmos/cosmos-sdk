@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -54,33 +56,19 @@ func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func convertAndEncodeStdTx(txConfig client.TxConfig, stdTx types.StdTx) ([]byte, error) {
 	builder := txConfig.NewTxBuilder()
 
-	err := copyTx(stdTx, builder)
-	if err != nil {
-		return nil, err
+	var theTx sdk.Tx
+
+	// check if we need a StdTx anyway, in that case don't copy
+	if _, ok := builder.GetTx().(types.StdTx); ok {
+		theTx = stdTx
+	} else {
+		err := tx.CopyTx(stdTx, builder)
+		if err != nil {
+			return nil, err
+		}
+
+		theTx = builder.GetTx()
 	}
 
-	return txConfig.TxEncoder()(builder.GetTx())
-}
-
-func copyTx(tx signing.SigFeeMemoTx, builder client.TxBuilder) error {
-	err := builder.SetMsgs(tx.GetMsgs()...)
-	if err != nil {
-		return err
-	}
-
-	sigs, err := tx.GetSignaturesV2()
-	if err != nil {
-		return err
-	}
-
-	err = builder.SetSignatures(sigs...)
-	if err != nil {
-		return err
-	}
-
-	builder.SetMemo(tx.GetMemo())
-	builder.SetFeeAmount(tx.GetFee())
-	builder.SetGasLimit(tx.GetGas())
-
-	return nil
+	return txConfig.TxEncoder()(theTx)
 }

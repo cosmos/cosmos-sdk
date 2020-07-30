@@ -2,19 +2,13 @@ package rest
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -55,7 +49,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		stdTx, err := convertTxToStdTx(clientCtx.Codec, tx)
+		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.Codec, tx)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -66,27 +60,4 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.Codec)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
-}
-
-func convertTxToStdTx(codec *codec.Codec, tx sdk.Tx) (types.StdTx, error) {
-	sigFeeMemoTx, ok := tx.(signing.SigFeeMemoTx)
-	if !ok {
-		return types.StdTx{}, fmt.Errorf("cannot convert %+v to StdTx", tx)
-	}
-
-	aminoTxConfig := types.StdTxConfig{Cdc: codec}
-	builder := aminoTxConfig.NewTxBuilder()
-
-	err := copyTx(sigFeeMemoTx, builder)
-	if err != nil {
-
-		return types.StdTx{}, err
-	}
-
-	stdTx, ok := builder.GetTx().(types.StdTx)
-	if !ok {
-		return types.StdTx{}, fmt.Errorf("expected %T, got %+v", types.StdTx{}, builder.GetTx())
-	}
-
-	return stdTx, nil
 }

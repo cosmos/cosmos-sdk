@@ -134,6 +134,8 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
+// Note that this function returns the legacy StdTx Amino JSON format for compatibility
+// with legacy clients.
 func WriteGeneratedTxResponse(
 	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
@@ -171,7 +173,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.JSONMarshaler, txf.Gas())
+			rest.WriteSimulationResponse(w, ctx.Codec, txf.Gas())
 			return
 		}
 	}
@@ -181,7 +183,8 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	output, err := ctx.JSONMarshaler.MarshalJSON(tx.GetTx())
+	stdTx, err := ConvertTxToStdTx(ctx.Codec, tx.GetTx())
+	output, err := ctx.Codec.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}

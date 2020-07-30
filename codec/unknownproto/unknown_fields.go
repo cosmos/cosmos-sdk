@@ -22,30 +22,30 @@ type descriptorIface interface {
 	Descriptor() ([]byte, []int)
 }
 
-type Checker struct {
-	// AllowUnknownNonCriticals when set will skip over non-critical fields that are unknown.
-	AllowUnknownNonCriticals bool
+func RejectUnknownFieldsStrict(b []byte, msg proto.Message) error {
+	_, err := RejectUnknownFields(b, msg, false)
+	return err
 }
 
-func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
+func RejectUnknownFields(b []byte, msg proto.Message, allowUnknownNonCriticals bool) (hasUnknownNonCriticals bool, err error) {
 	if len(b) == 0 {
-		return nil
+		return hasUnknownNonCriticals, nil
 	}
 
 	desc, ok := msg.(descriptorIface)
 	if !ok {
-		return fmt.Errorf("%T does not have a Descriptor() method", msg)
+		return hasUnknownNonCriticals, fmt.Errorf("%T does not have a Descriptor() method", msg)
 	}
 
 	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)
 	if err != nil {
-		return err
+		return hasUnknownNonCriticals, err
 	}
 
 	for len(b) > 0 {
 		tagNum, wireType, n := protowire.ConsumeField(b)
 		if n < 0 {
-			return errors.New("invalid length")
+			return hasUnknownNonCriticals, errors.New("invalid length")
 		}
 
 		fieldDescProto, ok := fieldDescProtoFromTagNum[int32(tagNum)]
@@ -53,7 +53,7 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 		case ok:
 			// Assert that the wireTypes match.
 			if !canEncodeType(wireType, fieldDescProto.GetType()) {
-				return &errMismatchedWireType{
+				return hasUnknownNonCriticals, &errMismatchedWireType{
 					Type:         reflect.ValueOf(msg).Type().String(),
 					TagNum:       tagNum,
 					GotWireType:  wireType,
@@ -62,9 +62,15 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 			}
 
 		default:
-			if !ckr.AllowUnknownNonCriticals || tagNum&bit11NonCritical == 0 {
+			isCriticalField := tagNum&bit11NonCritical == 0
+
+			if !isCriticalField {
+				hasUnknownNonCriticals = true
+			}
+
+			if isCriticalField || !allowUnknownNonCriticals {
 				// The tag is critical, so report it.
-				return &errUnknownField{
+				return hasUnknownNonCriticals, &errUnknownField{
 					Type:     reflect.ValueOf(msg).Type().String(),
 					TagNum:   tagNum,
 					WireType: wireType,
@@ -89,7 +95,7 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 				// TYPE_BYTES and TYPE_STRING as per
 				// https://github.com/gogo/protobuf/blob/5628607bb4c51c3157aacc3a50f0ab707582b805/protoc-gen-gogo/descriptor/descriptor.go#L95-L118
 			default:
-				return fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
+				return false, fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
 			}
 			continue
 		}
@@ -98,13 +104,13 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			if err := ckr.RejectUnknownFields(fieldBytes, (*types.Any)(nil)); err != nil {
-				return err
+			if hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals); err != nil {
+				return hasUnknownNonCriticals || hasUnknownNonCriticalsChild, err
 			}
 			// And finally we can extract the TypeURL containing the protoMessageName.
 			any := new(types.Any)
 			if err := proto.Unmarshal(fieldBytes, any); err != nil {
-				return err
+				return hasUnknownNonCriticals, err
 			}
 			protoMessageName = any.TypeUrl
 			fieldBytes = any.Value
@@ -112,14 +118,14 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 
 		msg, err := protoMessageForTypeName(protoMessageName[1:])
 		if err != nil {
-			return err
+			return hasUnknownNonCriticals, err
 		}
-		if err := ckr.RejectUnknownFields(fieldBytes, msg); err != nil {
-			return err
+		if hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals); err != nil {
+			return hasUnknownNonCriticals || hasUnknownNonCriticalsChild, err
 		}
 	}
 
-	return nil
+	return hasUnknownNonCriticals, nil
 }
 
 var protoMessageForTypeNameMu sync.RWMutex

@@ -18,13 +18,10 @@ import (
 func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
 	cdc := codec.NewProtoCodec(anyUnpacker)
 	return func(txBytes []byte) (sdk.Tx, error) {
-		strictChecker := &unknownproto.Checker{AllowUnknownNonCriticals: false}
-		allowNonCriticalFieldsChecker := &unknownproto.Checker{AllowUnknownNonCriticals: true}
-
 		var raw tx.TxRaw
 
 		// reject all unknown proto fields in the root TxRaw
-		err := strictChecker.RejectUnknownFields(txBytes, &raw)
+		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw)
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +34,7 @@ func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Public
 		var body tx.TxBody
 
 		// allow non-critical unknown fields in TxBody
-		err = allowNonCriticalFieldsChecker.RejectUnknownFields(raw.BodyBytes, &body)
+		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true)
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +47,7 @@ func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Public
 		var authInfo tx.AuthInfo
 
 		// reject all unknown proto fields in AuthInfo
-		err = strictChecker.RejectUnknownFields(raw.AuthInfoBytes, &authInfo)
+		err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -72,11 +69,12 @@ func DefaultTxDecoder(anyUnpacker types.AnyUnpacker, keyCodec cryptotypes.Public
 		}
 
 		return &builder{
-			tx:          theTx,
-			bodyBz:      raw.BodyBytes,
-			authInfoBz:  raw.AuthInfoBytes,
-			pubKeys:     pks,
-			pubkeyCodec: keyCodec,
+			tx:                           theTx,
+			bodyBz:                       raw.BodyBytes,
+			authInfoBz:                   raw.AuthInfoBytes,
+			pubKeys:                      pks,
+			pubkeyCodec:                  keyCodec,
+			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 		}, nil
 	}
 }

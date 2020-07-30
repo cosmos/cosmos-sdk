@@ -39,6 +39,8 @@ type builder struct {
 	pubKeys []crypto.PubKey
 
 	pubkeyCodec types.PublicKeyCodec
+
+	txBodyHasUnknownNonCriticals bool
 }
 
 var (

@@ -385,6 +385,33 @@ func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.Sign
 	}, nil
 }
 
+// SignatureV2ToStdSignature converts a SignatureV2 to a StdSignature
+func SignatureV2ToStdSignature(cdc *codec.Codec, sig signing.SignatureV2) (StdSignature, error) {
+	var pubKeyBz []byte
+
+	pubKey := sig.PubKey
+	if pubKey != nil {
+		pubKeyBz = pubKey.Bytes()
+	}
+
+	var (
+		sigBz []byte
+		err   error
+	)
+
+	if sig.Data != nil {
+		sigBz, err = SignatureDataToAminoSignature(cdc, sig.Data)
+		if err != nil {
+			return StdSignature{}, err
+		}
+	}
+
+	return StdSignature{
+		PubKey:    pubKeyBz,
+		Signature: sigBz,
+	}, nil
+}
+
 func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
 	multiPK, ok := key.(multisig.PubKey)
 	if !ok {

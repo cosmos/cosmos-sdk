@@ -74,7 +74,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
-		stdSig := types.StdSignature{PubKey: pkSet1[i].Bytes(), Signature: sigSet1[i]}
+		stdSig := types.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
 		sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
 		suite.Require().NoError(err)
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)

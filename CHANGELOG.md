@@ -200,6 +200,7 @@ invalid or incomplete requests.
 
 ### State Machine Breaking
 
+* (x/staking) [\#6844](https://github.com/cosmos/cosmos-sdk/pull/6844) Validators are now inserted into the unbonding queue based on their unbonding time and height. The relevant keeper APIs are modified to reflect these changes by now also requiring a height.
 * (x/bank) [\#6518](https://github.com/cosmos/cosmos-sdk/pull/6518) Support for global and per-denomination send enabled flags.
   * Existing send_enabled global flag has been moved into a Params structure as `default_send_enabled`.
   * An array of: `{denom: string, enabled: bool}` is added to bank Params to support per-denomination override of global default value.
@@ -305,6 +306,7 @@ pagination.
 * (baseapp) [\#6053](https://github.com/cosmos/cosmos-sdk/pull/6053) Customizable panic recovery handling added for `app.runTx()` method (as proposed in the [ADR 22](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-022-custom-panic-handling.md)). Adds ability for developers to register custom panic handlers extending standard ones.
 * (store) [\#6481](https://github.com/cosmos/cosmos-sdk/pull/6481) Move `SimpleProofsFromMap` from Tendermint into the SDK.
 * (store) [\#6719](https://github.com/cosmos/cosmos-sdk/6754) Add validity checks to stores for nil and empty keys.
+* (types) \#6897 Add KV type from tendermint to `types` directory. 
 
 ## [v0.39.0] - 2020-07-20
 

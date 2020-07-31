@@ -366,7 +366,7 @@ func convertProofs(mproof MerkleProof) ([]*ics23.CommitmentProof, error) {
 
 // Empty returns true if the root is empty
 func (proof MerkleProof) Empty() bool {
-	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
+	return proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
 }
 
 // ValidateBasic checks if the proof is empty.

@@ -94,7 +94,7 @@ func (s *IntegrationTestSuite) TestGRPC() {
 		servicesMap[s.Name] = true
 	}
 	// Make sure the following services are present
-	s.Require().True(servicesMap["cosmos.bank.Query"])
+	s.Require().True(servicesMap["cosmos.bank.beta.Query"])
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

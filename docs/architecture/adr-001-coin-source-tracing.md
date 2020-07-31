@@ -44,12 +44,12 @@ is acting as the sink zone.
 
 These steps of transfer occur: `A -> B -> C -> A -> C`
 
-1. `A -> B` : sender chain is source zone. Denom upon receiving: `A/denom`
-2. `B -> C` : sender chain is source zone. Denom upon receiving: `B/A/denom`
-3. `C -> A` : sender chain is source zone. Denom upon receiving: `C/B/A/denom`
-4. `A -> C` : sender chain is sink zone
+1. `A -> B` : sender chain is source zone. `A` sends packet with `denom` (escrowed on `A`), `B` receives `denom` and mints and sends voucher `A/denom` to recipient.
+2. `B -> C` : sender chain is source zone. `B` sends packet with `A/denom` (escrowed on `B`), `C` receives `A/denom` and mints and sends voucher `B/A/denom` to recipient.
+3. `C -> A` : sender chain is source zone. `C` sends packet with `B/A/denom` (escrowed on `C`), `A` receives `B/A/denom` and mints and sends voucher `C/B/A/denom` to recipient.
+4. `A -> C` : sender chain is sink zone. `A` sends packet with `C/B/A/denom` (burned on `A`), `C` receives `C/B/A/denom`, and unescrows and sends `B/A/denom` to recipient.
 
-The token has a final denomination of `B/A/denom`, where `B/A` is the trace information.
+The token has a final denomination on chain `C` of `B/A/denom`, where `B/A` is the trace information.
 
 In this context, when the sender of a cross-chain transfer *is* the source where the tokens
 were originated, the protocol prefixes the denomination with the port and channel identifiers in the

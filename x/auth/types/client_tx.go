@@ -24,7 +24,7 @@ type StdTxBuilder struct {
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() authsigning.SigFeeMemoTx {
+func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
 }
 

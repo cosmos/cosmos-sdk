@@ -133,7 +133,7 @@ func (s *TestSuite) TestConvertAndEncodeStdTx() {
 	decodedTx, err := s.protoCfg.TxDecoder()(txBz)
 	s.Require().NoError(err)
 	aminoBuilder2 := s.aminoCfg.NewTxBuilder()
-	s.Require().NoError(tx2.CopyTx(decodedTx.(signing.SigFeeMemoTx), aminoBuilder2))
+	s.Require().NoError(tx2.CopyTx(decodedTx.(signing.Tx), aminoBuilder2))
 	s.Require().Equal(stdTx, aminoBuilder2.GetTx())
 
 	// just use amino everywhere

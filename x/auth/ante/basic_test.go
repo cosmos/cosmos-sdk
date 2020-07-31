@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -162,6 +163,27 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 }
 
-func TestTxHeightTimeoutDecorator(t *testing.T) {
-	// TODO: Wait for a standard type to implement TxWithHeightTimeout.
+func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
+	suite.SetupTest(true) // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
+
+	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	fmt.Printf("%T", tx)
 }

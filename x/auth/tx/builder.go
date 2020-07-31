@@ -37,9 +37,9 @@ type builder struct {
 }
 
 var (
-	_ authsigning.SigFeeMemoTx = &builder{}
-	_ client.TxBuilder         = &builder{}
-	_ direct.ProtoTx           = &builder{}
+	_ authsigning.Tx   = &builder{}
+	_ client.TxBuilder = &builder{}
+	_ direct.ProtoTx   = &builder{}
 )
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
@@ -375,6 +375,6 @@ func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t *builder) GetTx() authsigning.SigFeeMemoTx {
+func (t *builder) GetTx() authsigning.Tx {
 	return t
 }

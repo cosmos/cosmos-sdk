@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -29,20 +29,20 @@ func TestDecodeStore(t *testing.T) {
 		Timestamp: time.Now().UTC(),
 	}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
 			Value: cdc.MustMarshalBinaryBare(clientState),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
 			Value: []byte(exported.Tendermint.String()),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
 			Value: cdc.MustMarshalBinaryBare(consState),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

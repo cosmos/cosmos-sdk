@@ -46,7 +46,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 			panic(err)
 		}
 
-		sigs[i] = StdSignature{PubKey: priv.PubKey().Bytes(), Signature: sig}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
@@ -184,11 +184,11 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 			"|\n  pubkey: \"\"\n  signature: \"\"\n",
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: []byte("dummySig")},
+			StdSignature{PubKey: pubKey, Signature: []byte("dummySig")},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: 64756D6D79536967\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: nil},
+			StdSignature{PubKey: pubKey, Signature: nil},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 	}
@@ -206,7 +206,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
 	dummy := []byte("dummySig")
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: pubKey, Signature: dummy}
 
 	sigV2, err := StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, err)
@@ -247,7 +247,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 	require.NoError(t, err)
 
 	sigV2, err = StdSignatureToSignatureV2(cdc, StdSignature{
-		PubKey:    multiPK.Bytes(),
+		PubKey:    multiPK,
 		Signature: msig,
 	})
 	require.NoError(t, err)
@@ -264,7 +264,7 @@ func TestGetSignaturesV2(t *testing.T) {
 	RegisterCodec(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: pubKey, Signature: dummy}
 	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
 
 	sigs, err := stdTx.GetSignaturesV2()

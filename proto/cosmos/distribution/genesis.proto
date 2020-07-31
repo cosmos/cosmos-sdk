@@ -5,7 +5,7 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/type
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/base.proto";
 import "cosmos/distribution/distribution.proto";
 
 // genesis types
@@ -33,7 +33,7 @@ message ValidatorOutstandingRewardsRecord {
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
-  repeated cosmos.DecCoin outstanding_rewards = 2 [
+  repeated cosmos.base.DecCoin outstanding_rewards = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"outstanding_rewards\""

@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos.bank;
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/base.proto";
 import "cosmos/bank/bank.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
@@ -19,7 +19,7 @@ message GenesisState {
     (gogoproto.nullable) = false
   ];
 
-  repeated cosmos.Coin supply = 3 [
+  repeated cosmos.base.Coin supply = 3 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
@@ -38,7 +38,7 @@ message Balance {
 
   bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
-  repeated cosmos.Coin coins = 2 [
+  repeated cosmos.base.Coin coins = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];

@@ -3,7 +3,7 @@ package cosmos.distribution;
 
 import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/base.proto";
 import "cosmos/distribution/distribution.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
@@ -89,7 +89,7 @@ message QueryDelegationRewardsRequest {
 
 // QueryDelegationRewardsResponse is the response type for the Query/DelegationRewards RPC method
 message QueryDelegationRewardsResponse {
-  repeated cosmos.DecCoin rewards = 1 [
+  repeated cosmos.base.DecCoin rewards = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
@@ -103,7 +103,7 @@ message QueryDelegationTotalRewardsRequest {
 // QueryDelegationTotalRewardsResponse is the response type for the Query/DelegationTotalRewards RPC method
 message QueryDelegationTotalRewardsResponse {
   repeated DelegationDelegatorReward rewards = 1 [(gogoproto.nullable) = false];
-  repeated cosmos.DecCoin total = 2 [
+  repeated cosmos.base.DecCoin total = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
@@ -134,7 +134,7 @@ message QueryCommunityPoolRequest {}
 
 // QueryCommunityPoolResponse is the response type for the Query/CommunityPool RPC method
 message QueryCommunityPoolResponse {
-  repeated cosmos.DecCoin pool = 1 [
+  repeated cosmos.base.DecCoin pool = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];

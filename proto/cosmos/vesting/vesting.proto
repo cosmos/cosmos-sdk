@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos.vesting;
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/base.proto";
 import "cosmos/auth/auth.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
@@ -14,17 +14,17 @@ message BaseVestingAccount {
   option (gogoproto.goproto_stringer) = false;
 
   cosmos.auth.BaseAccount base_account = 1 [(gogoproto.embed) = true];
-  repeated cosmos.Coin original_vesting  = 2 [
+  repeated cosmos.base.Coin original_vesting  = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"original_vesting\""
   ];
-  repeated cosmos.Coin delegated_free = 3 [
+  repeated cosmos.base.Coin delegated_free = 3 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"delegated_free\""
   ];
-  repeated cosmos.Coin delegated_vesting = 4 [
+  repeated cosmos.base.Coin delegated_vesting = 4 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"delegated_vesting\""
@@ -57,7 +57,7 @@ message Period {
   option (gogoproto.goproto_stringer) = false;
 
   int64    length                    = 1;
-  repeated cosmos.Coin amount = 2 [
+  repeated cosmos.base.Coin amount = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];

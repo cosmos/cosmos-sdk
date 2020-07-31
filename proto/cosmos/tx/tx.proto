@@ -3,7 +3,7 @@ package cosmos.tx;
 
 import "gogoproto/gogo.proto";
 import "cosmos/crypto/crypto.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/base.proto";
 import "cosmos/tx/signing/signing.proto";
 import "google/protobuf/any.proto";
 
@@ -149,7 +149,7 @@ message ModeInfo {
 // which must be above some miminum to be accepted into the mempool.
 message Fee {
   // amount is the amount of coins to be paid as a fee
-  repeated cosmos.Coin amount = 1
+  repeated cosmos.base.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // gas_limit is the maximum gas that can be used in transaction processing

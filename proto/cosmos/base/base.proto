@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos;
+package cosmos.base;
 
 import "gogoproto/gogo.proto";
 import "tendermint/abci/types/types.proto";
@@ -39,13 +39,6 @@ message IntProto {
 // DecProto defines a Protobuf wrapper around a Dec object.
 message DecProto {
   string dec = 1 [(gogoproto.customtype) = "Dec", (gogoproto.nullable) = false];
-}
-
-// ValAddresses defines a repeated set of validator addresses.
-message ValAddresses {
-  option (gogoproto.stringer) = true;
-
-  repeated bytes addresses = 1 [(gogoproto.casttype) = "ValAddress"];
 }
 
 // GasInfo defines tx execution gas context.

@@ -3,7 +3,7 @@ package cosmos.bank;
 
 import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/base.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -34,7 +34,7 @@ message QueryBalanceRequest {
 // QueryBalanceResponse is the response type for the Query/Balance RPC method
 message QueryBalanceResponse {
   // balance is the balance of the coin
-  cosmos.Coin balance = 1;
+  cosmos.base.Coin balance = 1;
 }
 
 // QueryBalanceRequest is the request type for the Query/AllBalances RPC method
@@ -48,7 +48,7 @@ message QueryAllBalancesRequest {
 // QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method
 message QueryAllBalancesResponse {
   // balances is the balances of the coins
-  repeated cosmos.Coin balances = 1
+  repeated cosmos.base.Coin balances = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   cosmos.query.PageResponse pagination = 2;
@@ -60,7 +60,7 @@ message QueryTotalSupplyRequest {}
 // QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method
 message QueryTotalSupplyResponse {
   // supply is the supply of the coins
-  repeated cosmos.Coin supply = 1
+  repeated cosmos.base.Coin supply = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
@@ -72,6 +72,6 @@ message QuerySupplyOfRequest {
 // QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method
 message QuerySupplyOfResponse {
   // amount is the supply of the coin
-  cosmos.Coin amount = 1
+  cosmos.base.Coin amount = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
 }

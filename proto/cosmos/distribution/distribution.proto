@@ -5,7 +5,7 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/type
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/base.proto";
 
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
 message MsgSetWithdrawAddress {
@@ -42,7 +42,7 @@ message MsgWithdrawValidatorCommission {
 // MsgFundCommunityPool defines a Msg type that allows an account to directly
 // fund the community pool.
 message MsgFundCommunityPool {
-  repeated cosmos.Coin amount = 1 [
+  repeated cosmos.base.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
@@ -83,7 +83,7 @@ message Params {
 //  + number of slashes which ended the associated period (and might need to read that record)
 //  + one per validator for the zeroeth period, set on initialization
 message ValidatorHistoricalRewards {
-  repeated cosmos.DecCoin cumulative_reward_ratio = 1 [
+  repeated cosmos.base.DecCoin cumulative_reward_ratio = 1 [
     (gogoproto.moretags)     = "yaml:\"cumulative_reward_ratio\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
@@ -95,7 +95,7 @@ message ValidatorHistoricalRewards {
 // kept as a running counter and incremented each block
 // as long as the validator's tokens remain constant
 message ValidatorCurrentRewards {
-  repeated cosmos.DecCoin rewards = 1 [
+  repeated cosmos.base.DecCoin rewards = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
@@ -105,7 +105,7 @@ message ValidatorCurrentRewards {
 // accumulated commission for a validator
 // kept as a running counter, can be withdrawn at any time
 message ValidatorAccumulatedCommission {
-  repeated cosmos.DecCoin commission = 1 [
+  repeated cosmos.base.DecCoin commission = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
@@ -114,7 +114,7 @@ message ValidatorAccumulatedCommission {
 // outstanding (un-withdrawn) rewards for a validator
 // inexpensive to track, allows simple sanity checks
 message ValidatorOutstandingRewards {
-  repeated cosmos.DecCoin rewards = 1 [
+  repeated cosmos.base.DecCoin rewards = 1 [
     (gogoproto.moretags)     = "yaml:\"rewards\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
@@ -142,7 +142,7 @@ message ValidatorSlashEvents {
 
 // global fee pool for distribution
 message FeePool {
-  repeated cosmos.DecCoin community_pool = 1 [
+  repeated cosmos.base.DecCoin community_pool = 1 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.moretags)     = "yaml:\"community_pool\""
@@ -156,7 +156,7 @@ message CommunityPoolSpendProposal {
   string   title                      = 1;
   string   description                = 2;
   bytes    recipient = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  repeated cosmos.Coin amount = 4 [
+  repeated cosmos.base.Coin amount = 4 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
@@ -188,7 +188,7 @@ message DelegationDelegatorReward {
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
-  repeated cosmos.DecCoin reward = 2 [
+  repeated cosmos.base.DecCoin reward = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];

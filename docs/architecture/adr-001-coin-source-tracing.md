@@ -46,10 +46,10 @@ These steps of transfer occur: `A -> B -> C -> A -> C`
 
 1. `A -> B` : sender chain is source zone. Denom upon receiving: `A/denom`
 2. `B -> C` : sender chain is source zone. Denom upon receiving: `B/A/denom`
-3. `C -> A` : sender chain is source zone. Denom upon receiving: `A/C/B/A/denom`
+3. `C -> A` : sender chain is source zone. Denom upon receiving: `C/B/A/denom`
 4. `A -> C` : sender chain is sink zone
 
-The token has a final denomination of `C/B/A/denom`, where `C/B/A` is the trace information.
+The token has a final denomination of `B/A/denom`, where `B/A` is the trace information.
 
 In this context, when the sender of a cross-chain transfer *is* the source where the tokens
 were originated, the protocol prefixes the denomination with the port and channel identifiers in the
@@ -171,7 +171,7 @@ added to the `ibc-transfer` module. These values need to also be persisted betwe
 that a new `[]DenomTrace` `GenesisState` field state needs to be added to the module:
 
 ```golang
-// GetDenom retrieves the full identifiers trace and base denomination from the store.
+// GetDenomTrace retrieves the full identifiers trace and base denomination from the store.
 func (k Keeper) GetDenomTrace(ctx Context, denomTraceHash []byte) (DenomTrace, bool) {
   store := ctx.KVStore(k.storeKey)
   bz := store.Get(types.KeyDenomTrace(traceHash))
@@ -184,40 +184,22 @@ func (k Keeper) GetDenomTrace(ctx Context, denomTraceHash []byte) (DenomTrace, b
   return denomTrace, true
 }
 
-// HasTrace checks if a the key with the given trace hash exists on the store.
+// HasDenomTrace checks if a the key with the given trace hash exists on the store.
 func (k Keeper) HasDenomTrace(ctx Context, denomTraceHash []byte)  bool {
   store := ctx.KVStore(k.storeKey)
   return store.Has(types.KeyTrace(denomTraceHash))
 }
 
-// SetTrace sets a new {trace hash -> trace} pair to the store.
-func (k Keeper) SetTrace(ctx Context, denomTrace DenomTrace) {
+// SetDenomTrace sets a new {trace hash -> trace} pair to the store.
+func (k Keeper) SetDenomTrace(ctx Context, denomTrace DenomTrace) {
   store := ctx.KVStore(k.storeKey)
   bz := k.cdc.MustMarshalBinaryBare(&denomTrace)
   store.Set(types.KeyTrace(denomTrace.Hash()), bz)
 }
 ```
 
-The problem with this approach is that when a token is received for the first time, the full trace
-info will need to be passed in order to construct the hash and set it to the mapping on the store.
-To mitigate this a new `DenomTrace` field needs to be added to the `FungibleTokenPacketData`:
-
-```protobuf
-message FungibleTokenPacketData {
-  // the token denomination to be transferred
-  string denom = 1;
-  // the token amount to be transferred
-  uint64 amount = 2;
-  // coins denomination trace for tracking the source
-  DenomTrace denom_trace = 3;
-  // the sender address
-  string sender = 4;
-  // the recipient address on the destination chain
-  string receiver = 5;
-}
-```
-
-The `MsgTransfer` will validate that the `Coin` denomination from the `Token` field contains a valid hash:
+The `MsgTransfer` will validate that the `Coin` denomination from the `Token` field contains a valid
+hash, if the trace info is provided, or that the base denominations matches:
 
 ```golang
 func (msg MsgTransfer) ValidateBasic() error {
@@ -225,23 +207,8 @@ func (msg MsgTransfer) ValidateBasic() error {
   if err := msg.Trace.Validate(); err != nil {
     return err
   }
-  // Only validate the ibc denomination when trace info is provided
-  if msg.Trace.Trace != "" {
-    denomTraceHash, err := ValidateIBCDenom(msg.Token.Denom)
-    if err != nil {
-      return err
-    }
-    traceHash := msg.Trace.Hash()
-    if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
-      return Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
-    }
-  } else if msg.Trace.BaseDenom != msg.Token.Denom {
-    // otherwise, validate that base denominations are equal
-    return Wrapf(
-      ErrInvalidDenomForTransfer,
-      "token denom must match the trace base denom (%s ≠ %s)",
-      msg.Token.Denom, msg.Trace.BaseDenom,
-    )
+  if err := ValidateIBCDenom(msg.Token.Denom, msg.Trace); err != nil {
+    return err
   }
   // ...
 }
@@ -249,79 +216,42 @@ func (msg MsgTransfer) ValidateBasic() error {
 
 ```golang
 // ValidateIBCDenom checks that the denomination for an IBC fungible token is valid. It returns the hash of denomination on success.
-func ValidateIBCDenom(rawDenom string) (tmbytes.HexBytes, error) {
+func ValidateIBCDenom(denom string, trace DenomTrace) error {
+  // Validate that base denominations are equal if the trace info is not provided
+  if trace.Trace == "" {
+    if trace.BaseDenom != denom {
+      return Wrapf(
+        ErrInvalidDenomForTransfer,
+        "token denom must match the trace base denom (%s ≠ %s)",
+        denom, trace.BaseDenom,
+      )
+    }
+    return nil
+  }
+
   denomSplit := strings.SplitN(denom, "/", 2)
 
   switch {
-    case denomSplit[0] == denom:
-      err = Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
     case denomSplit[0] != "ibc":
-      err = Wrapf(ErrInvalidDenomForTransfer, "denomination %s must be prefixed with 'ibc'", denom)
+      return Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
     case len(denomSplit) == 2:
-      err = tmtypes.ValidateHash([]byte(denomSplit[1]))
-    default:
-      err = Wrap(ErrInvalidDenomForTransfer, denom)
+      return tmtypes.ValidateHash([]byte(denomSplit[1]))
   }
 
-  if err != nil {
-    return nil, err
+  denomTraceHash := denomSplit[1]
+  traceHash := trace.Hash()
+  if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
+    return Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
   }
 
-  return denomSplit[1], nil
+  return nil
 }
 ```
 
-When a fungible token is sent to from a source chain, the trace information needs to be stored with the
-new port and channel identifiers:
-
-```golang
-// SendTransfer
-// ...
-
-// NOTE: SendTransfer simply sends the denomination as it exists on its own
-// chain inside the packet data. The receiving chain will perform denom
-// prefixing as necessary.
-
-if types.SenderChainIsSource(sourcePort, sourceChannel, token.Denom) {
-  // create the escrow address for the tokens
-  escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
-
-  // escrow source tokens. It fails if balance insufficient.
-  if err := k.bankKeeper.SendCoins(
-    ctx, sender, escrowAddress, sdk.NewCoins(token),
-  ); err != nil {
-    return err
-  }
-} else {
-  // set the value to the lookup table if not stored already
-  traceHash := denomTrace.Hash()
-  if !k.HasDenomTrace(ctx, traceHash) {
-    k.SetDenomTrace(ctx, traceHash, denomTrace)
-  }
-
-  // transfer the coins to the module account and burn them
-  if err := k.bankKeeper.SendCoinsFromAccountToModule(
-    ctx, sender, types.ModuleName, sdk.NewCoins(token),
-  ); err != nil {
-    return err
-  }
-
-  if err := k.bankKeeper.BurnCoins(
-    ctx, types.ModuleName, sdk.NewCoins(token),
-  ); err != nil {
-    // NOTE: should not happen as the module account was
-    // retrieved on the step above and it has enough balance
-    // to burn.
-    return err
-  }
-}
-// ...
-```
-
-The denomination trace info also needs to be updated when token is received in both cases:
+The denomination trace info only needs to be updated when token is received, in both scenarios:
 
 - Sender is **sink** chain: Store the received denomination, i.e in the [example](#example) above,
-  during step 4, when chain `C` receives the `A/C/B/A/denom`. As there the trimmed trace info is
+  during step 4, when chain `C` receives the `B/A/denom`. As there the trimmed trace info is
   already known by the chain we don't need to store it (i.e `C/B/A/denom`).
 - Sender is **source** chain: Store the received info. For example, during step 1, when chain `B` receives `A/denom`.
 
@@ -363,7 +293,10 @@ if types.ReceiverChainIsSource(voucherPrefix, data.Denom) {
 
 // sender chain is the source, mint vouchers
 
-// since SendPacket did not prefix the denomination, we must prefix denomination here
+// construct the denomination trace from the full raw denomination
+denomTrace := NewDenomTraceFromRawDenom(data.Denom)
+
+// since SendPacket did not prefix the denomination with the voucherPrefix, we must add it here
 denomTrace.AddPrefix(packet.GetDestPort(), packet.GetDestChannel())
 
 // set the value to the lookup table if not stored already
@@ -386,6 +319,22 @@ return k.bankKeeper.SendCoinsFromModuleToAccount(
   ctx, types.ModuleName, receiver, sdk.NewCoins(voucher),
 )
 ```
+
+```golang
+func NewDenomTraceFromRawDenom(denom string) DenomTrace{
+  denomSplit := strings.Split(denom, "/")
+  trace := ""
+  if len(denomSplit) > 1 {
+    trace = strings.Join(denomSplit[:len(denomSplit)-1], "/")
+  }
+  return DenomTrace{
+    BaseDenom: denomSplit[len(denomSplit)-1],
+    Trace:     trace,
+  }
+}
+```
+
+One final remark is that the `FungibleTokenPacketData` will remain the same, i.e with the prefixed full denomination, since the receiving chain may not be an SDK-based chain.
 
 ### Coin Changes
 

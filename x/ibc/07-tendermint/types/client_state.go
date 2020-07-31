@@ -131,7 +131,7 @@ func (cs ClientState) Validate() error {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
 	if cs.LatestHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidHeight, "tendermint height cannot be zero")
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "tendermint height cannot be zero")
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(

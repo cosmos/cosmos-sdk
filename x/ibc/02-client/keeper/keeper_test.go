@@ -47,11 +47,13 @@ type KeeperTestSuite struct {
 	valSet         *tmtypes.ValidatorSet
 	privVal        tmtypes.PrivValidator
 	now            time.Time
+	past           time.Time
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	suite.past = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 	now2 := suite.now.Add(time.Hour)
 	app := simapp.Setup(isCheckTx)
 

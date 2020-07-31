@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			// store previous consensus state
 			prevConsState := ibctmtypes.ConsensusState{
 				Height:             1,
-				Timestamp:          suite.header.Time,
+				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSet.Hash(),
 				ValidatorSet:       suite.valSet,
 			}

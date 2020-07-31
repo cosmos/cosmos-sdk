@@ -87,7 +87,7 @@ func checkValidity(
 	if header.Time.Unix() <= consState.Timestamp.Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header blocktime ≤ latest client state block time (%s ≤ %s)",
+			"header blocktime ≤ consensus state block time (%s ≤ %s)",
 			header.Time.UTC(), consState.Timestamp.UTC(),
 		)
 	}

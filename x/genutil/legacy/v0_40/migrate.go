@@ -62,13 +62,13 @@ func Migrate(appState types.AppMap) types.AppMap {
 	}
 
 	// Migrate x/evidence.
-	if appState[v38evidence.ModuleName] {
+	if appState[v038evidence.ModuleName] != nil {
 		// unmarshal relative source genesis application state
 		var evidenceGenState v038evidence.GenesisState
 		v039Codec.MustUnmarshalJSON(appState[v038bank.ModuleName], &evidenceGenState)
 
 		// delete deprecated x/evidence genesis state
-		delete(appState, v38evidence.ModuleName)
+		delete(appState, v038evidence.ModuleName)
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.

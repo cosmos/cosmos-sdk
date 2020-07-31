@@ -195,7 +195,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 		{testMsgs[11], false, "too short connection id"},
 		{testMsgs[12], false, "too long connection id"},
 		{testMsgs[13], false, "connection id contains non-alpha"},
-		{testMsgs[14], false, "empty channel version"},
+		{testMsgs[14], true, "empty channel version"},
 		{testMsgs[15], false, "invalid counterparty port id"},
 		{testMsgs[16], false, "invalid counterparty channel id"},
 		{testMsgs[17], false, "empty proof"},

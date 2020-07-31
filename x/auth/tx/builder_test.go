@@ -18,7 +18,7 @@ import (
 func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
-	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}
@@ -229,4 +229,25 @@ func TestBuilderValidateBasic(t *testing.T) {
 	txBuilder.tx = nil
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
+}
+
+func TestDefaultTxDecoderError(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	pubKeyCdc := std.DefaultPublicKeyCodec{}
+	encoder := DefaultTxEncoder()
+	decoder := DefaultTxDecoder(registry, pubKeyCdc)
+
+	builder := newBuilder(pubKeyCdc)
+	err := builder.SetMsgs(testdata.NewTestMsg())
+	require.NoError(t, err)
+
+	txBz, err := encoder(builder.GetTx())
+	require.NoError(t, err)
+
+	_, err = decoder(txBz)
+	require.EqualError(t, err, "no registered implementations of type types.Msg: tx parse error")
+
+	registry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	_, err = decoder(txBz)
+	require.NoError(t, err)
 }

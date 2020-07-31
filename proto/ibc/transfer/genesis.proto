@@ -7,9 +7,9 @@ import "gogoproto/gogo.proto";
 
 // GenesisState is currently only used to ensure that the InitGenesis gets run
 // by the module manager
-message GenesisState{
-	string port_id  = 1 [
-	  (gogoproto.customname) = "PortID",
-	  (gogoproto.moretags) = "yaml:\"port_id\""
-	];
+message GenesisState {
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)   = "yaml:\"port_id\""
+  ];
 }

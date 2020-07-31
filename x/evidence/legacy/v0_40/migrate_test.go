@@ -2,7 +2,6 @@ package v040_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -26,7 +25,6 @@ func TestMigrate(t *testing.T) {
 		Evidence: []exported.Evidence{&types.Equivocation{
 			Height:           20,
 			Power:            100,
-			Time:             time.Date(2020, 01, 01, 01, 01, 01, 01, time.Local).UTC(),
 			ConsensusAddress: addr1.Bytes(),
 		}},
 	}
@@ -36,7 +34,7 @@ func TestMigrate(t *testing.T) {
   "evidence": [
     {
       "height": "20",
-      "time": "2020-01-01T00:01:01.000000001Z",
+      "time": "0001-01-01T00:00:00Z",
       "power": "100",
       "consensus_address": "cosmosvalcons1xxkueklal9vejv9unqu80w9vptyepfa99x2a3w"
     }

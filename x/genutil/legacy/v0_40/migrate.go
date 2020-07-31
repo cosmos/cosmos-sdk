@@ -8,6 +8,8 @@ import (
 	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_40"
+	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_38"
+	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_40"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -58,5 +60,20 @@ func Migrate(appState types.AppMap) types.AppMap {
 		// the respective key.
 		appState[v040bank.ModuleName] = v040Codec.MustMarshalJSON(v040bank.Migrate(bankGenState, authGenState, supplyGenState))
 	}
+
+	// Migrate x/evidence.
+	if appState[v38evidence.ModuleName] {
+		// unmarshal relative source genesis application state
+		var evidenceGenState v038evidence.GenesisState
+		v039Codec.MustUnmarshalJSON(appState[v038bank.ModuleName], &evidenceGenState)
+
+		// delete deprecated x/evidence genesis state
+		delete(appState, v38evidence.ModuleName)
+
+		// Migrate relative source genesis application state and marshal it into
+		// the respective key.
+		appState[v040evidence.ModuleName] = v040Codec.MustMarshalJSON(v040evidence.Migrate(evidenceGenState))
+	}
+
 	return appState
 }

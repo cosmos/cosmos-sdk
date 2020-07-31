@@ -56,8 +56,6 @@ func CheckValidityAndUpdateState(
 }
 
 // checkValidity checks if the Tendermint header is valid.
-//
-// CONTRACT: assumes header.Height > consensusState.Height
 func checkValidity(
 	clientState types.ClientState, consState types.ConsensusState, header types.Header, currentTimestamp time.Time,
 ) error {
@@ -78,7 +76,7 @@ func checkValidity(
 		)
 	}
 
-	// assert header timestamp is past latest clientstate timestamp
+	// assert header timestamp is past latest consensus state timestamp
 	if header.Time.Unix() <= consState.Timestamp.Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,

@@ -64,7 +64,7 @@ func (cs ConsensusState) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "validator set cannot be nil")
 	}
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "next validators hash is invalid: %v", err)
+		return sdkerrors.Wrap(err, "next validators hash is invalid")
 	}
 	if cs.Height == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "height cannot be 0")

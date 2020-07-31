@@ -93,7 +93,7 @@ func NewClientState(
 	}
 }
 
-// GetChainID returns the chain-id from the last header
+// GetChainID returns the chain-id
 func (cs ClientState) GetChainID() string {
 	return cs.ChainID
 }

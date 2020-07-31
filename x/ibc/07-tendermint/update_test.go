@@ -129,7 +129,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 				consensusState = ibctmtypes.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
 				// make current time pass trusting period from last timestamp on clientstate
-				currentTime = suite.now.Add(ubdPeriod)
+				currentTime = suite.now.Add(trustingPeriod)
 			},
 			expPass: false,
 		},

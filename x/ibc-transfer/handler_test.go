@@ -31,6 +31,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 // and sends the same coin back from chainB to chainA.
 func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+	originalBalance := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), sdk.DefaultBondDenom)
 
 	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
@@ -47,7 +48,12 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	err = suite.coordinator.RelayPacket(suite.chainA, suite.chainB, clientA, clientB, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed
 
+	// check that voucher exists on chain
+	voucherDenom := types.GetPrefixedDenom(packet.GetDestPort(), packet.GetDestChannel(), sdk.DefaultBondDenom)
+	balance := suite.chainB.App.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), voucherDenom)
+
 	coinToSendBackToA := types.GetTransferCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
+	suite.Require().Equal(coinToSendBackToA, balance)
 
 	// send from chainB back to chainA
 	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
@@ -60,6 +66,16 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	packet = channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
 	err = suite.coordinator.RelayPacket(suite.chainB, suite.chainA, clientB, clientA, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed
+
+	balance = suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), sdk.DefaultBondDenom)
+
+	// check that the balance on chainA returned back to the original state
+	suite.Require().Equal(originalBalance, balance)
+
+	// check that module account escrow address is empty
+	escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
+	balance = suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	suite.Require().Equal(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()), balance)
 }
 
 func TestHandlerTestSuite(t *testing.T) {

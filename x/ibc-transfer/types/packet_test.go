@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	denom  = "atom"
+const (
+	denom  = "transfer/gaiachannel/atom"
 	amount = uint64(100)
 )
 

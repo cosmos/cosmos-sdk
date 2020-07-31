@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -314,8 +313,6 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 // the 04-channel/keeper/timeout_test.go.
 func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 	var (
-		coin = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
-
 		packet    channeltypes.Packet
 		packetKey []byte
 	)
@@ -331,7 +328,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 
 			// send from chainA to chainB
-			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, coin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
 			suite.Require().NoError(err) // message committed
 
@@ -345,7 +342,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 
 			// send from chainA to chainB
-			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, coin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
 			suite.Require().NoError(err) // message committed
 
@@ -363,7 +360,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
 
 				// send from chainA to chainB
-				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, coin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 				err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
 				suite.Require().NoError(err) // message committed
 			}
@@ -381,7 +378,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
 
 				// send from chainA to chainB
-				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, coin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 				err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
 				suite.Require().NoError(err) // message committed
 			}

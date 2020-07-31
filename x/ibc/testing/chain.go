@@ -54,6 +54,7 @@ const (
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
+	TestCoin                          = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
@@ -597,8 +598,8 @@ func (chain *TestChain) ChanCloseInit(
 // callback testing.
 func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
 	packet := ibctransfertypes.FungibleTokenPacketData{
-		Denom:    sdk.DefaultBondDenom,
-		Amount:   100,
+		Denom:    TestCoin.Denom,
+		Amount:   TestCoin.Amount.Uint64(),
 		Sender:   chain.SenderAccount.GetAddress().String(),
 		Receiver: counterparty.SenderAccount.GetAddress().String(),
 	}

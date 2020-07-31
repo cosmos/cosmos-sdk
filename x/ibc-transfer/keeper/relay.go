@@ -32,14 +32,16 @@ import (
 // is acting as the sink zone.
 //
 // Example:
-// These steps of transfer occur: A -> B -> C -> A -> C
+// These steps of transfer occur: A -> B -> C -> A -> C -> B -> A
 //
-// 1. A -> B : sender chain is source zone. Denom upon receiving: 'A/denom'
-// 2. B -> C : sender chain is source zone. Denom upon receiving: 'B/A/denom'
-// 3. C -> A : sender chain is source zone. Denom upon receiving: 'A/C/B/A/denom'
-// 4. A -> C : sender chain is sink zone
+// 1. A -> B : sender chain is source zone. Denom upon receiving: 'B/denom'
+// 2. B -> C : sender chain is source zone. Denom upon receiving: 'C/B/denom'
+// 3. C -> A : sender chain is source zone. Denom upon receiving: 'A/C/B/denom'
+// 4. A -> C : sender chain is sink zone. Denom upon receiving: 'C/B/denom'
+// 5. C -> B : sender chain is sink zone. Denom upon receiving: 'B/denom'
+// 6. B -> A : sender chain is sink zone. Denom upon receiving: 'denom'
 //
-// The token has a final denomination of 'C/B/A/denom', where 'C/B/A' is the trace information.
+// At step 4, the token has a denomination of 'C/B/denom', where 'C/B' is the trace information.
 
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
@@ -148,12 +150,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	// NOTE: We use SourcePort and SourceChannel here, because the counterparty
 	// chain would have prefixed with DestPort and DestChannel when originally
 	// receiving this coin as seen in the "sender chain is the source" condition.
-	voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 
-	if types.ReceiverChainIsSource(voucherPrefix, data.Denom) {
+	if types.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
 		// sender chain is not the source, unescrow tokens
 
 		// remove prefix added by sender chain
+		voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 		unprefixedDenom := data.Denom[len(voucherPrefix):]
 		token := sdk.NewCoin(unprefixedDenom, sdk.NewIntFromUint64(data.Amount))
 

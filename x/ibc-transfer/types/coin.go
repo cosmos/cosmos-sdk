@@ -20,13 +20,13 @@ func SenderChainIsSource(sourcePort, sourceChannel, denom string) bool {
 
 // ReceiverChainIsSource returns true if the denomination orgininally came
 // from the receiving chain and false otherwise.
-func ReceiverChainIsSource(prefix, denom string) bool {
+func ReceiverChainIsSource(sourcePort, sourceChannel, denom string) bool {
 	// The prefix passed in should contain the SourcePort and SourceChannel.
 	// If  the receiver chain originally sent the token to the sender chain
 	// the denom will have the sender's SourcePort and SourceChannel as the
 	// prefix.
 
-	return strings.HasPrefix(denom, prefix)
+	return !SenderChainIsSource(sourcePort, sourceChannel, denom)
 }
 
 // GetDenomPrefix returns the receiving denomination prefix

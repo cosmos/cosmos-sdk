@@ -3,6 +3,8 @@ package v040_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,8 +13,6 @@ import (
 	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_40"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestMigrate(t *testing.T) {

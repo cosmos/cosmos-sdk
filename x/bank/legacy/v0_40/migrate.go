@@ -11,6 +11,7 @@ import (
 // migrates it to v0.40 x/bank genesis state. The migration includes:
 //
 // - Moving balances from x/auth to x/bank genesis state.
+// - Moving supply from x/supply to x/bank genesis state.
 func Migrate(
 	bankGenState v038bank.GenesisState,
 	authGenState v039auth.GenesisState,

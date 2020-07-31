@@ -15,20 +15,28 @@ message TxResponse {
   option (gogoproto.goproto_getters) = false;
   // The block height
   int64 height = 1;
-  // 
+  // The transaction hash.
   string txhash = 2 [(gogoproto.customname) = "TxHash"];
   // Namespace for the Code
   string codespace = 3;
+  // Response code.
   uint32 code = 4;
+  // Result bytes, if any.
   string data = 5;
-  // The output of the application's logger. May be non-deterministic.
+  // The output of the application's logger (raw string). May be non-deterministic.
   string raw_log = 6;
+  // The output of the application's logger (typed). May be non-deterministic.
   repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
   // Additional information. May be non-deterministic.
   string info = 8;
+  // Amount of gas requested for transaction.
   int64 gas_wanted = 9;
+  // Amount of gas consumed by transaction.
   int64 gas_used = 10;
+  // The request transaction bytes.
   google.protobuf.Any tx = 11;
+  // Time of the previous block. For heights > 1, it's the weighted median of the 
+  // timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time.
   string timestamp = 12;
 }
 

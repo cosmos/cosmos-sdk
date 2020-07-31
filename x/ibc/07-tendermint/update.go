@@ -13,13 +13,20 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-// CheckValidityAndUpdateState checks if the provided header is valid and updates
-// the consensus state if appropriate. It returns an error if:
+// CheckValidityAndUpdateState checks if the provided header is valid, and if valid it will:
+// create the consensus state for the header.Height
+// and updated the client state if appropriate
+// It returns an error if:
 // - the client or header provided are not parseable to tendermint types
 // - the header is invalid
-// - header height is lower than the latest client height
+// - header height is lower than consensusstate height
 // - header valset commit verification fails
 //
+// UpdateClient may be used to either create a consensus state for a height > latest client state
+// or to fill in the consensus state for a past height that was skipped during bisection
+// If we are updating to a past height, a consensus state is created for that height to be persisted in client store
+// If we are updating to a future height, the consensus state is created and the client state is updated to reflect
+// the new latest height
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
@@ -63,7 +70,7 @@ func checkValidity(
 	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
 			types.ErrTrustingPeriodExpired,
-			"current timestamp minus the latest trusted client state timestamp is greater than or equal to the trusting period (%s >= %s)",
+			"current timestamp minus the consensus state timestamp is greater than or equal to the trusting period (%s >= %s)",
 			currentTimestamp.Sub(consState.Timestamp), clientState.TrustingPeriod,
 		)
 	}

@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	createPastUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testChainID, suite.header.Height-3, suite.header.Time.Add(time.Minute),
+		return ibctmtypes.CreateTestHeader(testChainID, suite.header.Height-3, suite.header.Time,
 			suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	var (

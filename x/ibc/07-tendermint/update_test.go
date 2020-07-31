@@ -85,9 +85,9 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "successful update for a previous height",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height+10, commitmenttypes.GetSDKSpecs())
-				consensusState = ibctmtypes.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, bothValSet.Hash(), suite.valSet)
-				newHeader = ibctmtypes.CreateTestHeader(chainID, height+5, suite.headerTime, bothValSet, bothSigners)
+				clientState = ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
+				consensusState = ibctmtypes.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height-3, bothValSet.Hash(), suite.valSet)
+				newHeader = ibctmtypes.CreateTestHeader(chainID, height-1, suite.headerTime, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
 			expPass: true,

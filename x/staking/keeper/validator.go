@@ -378,7 +378,7 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx sdk.Context, endTime time.Time, endHeight int64, addrs []sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&types.ValAddresses{Addresses: keys})
+	bz := k.cdc.MustMarshalBinaryBare(&types.ValAddresses{Addresses: addrs})
 	store.Set(types.GetValidatorQueueKey(endTime, endHeight), bz)
 }
 

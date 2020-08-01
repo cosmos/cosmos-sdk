@@ -17,7 +17,7 @@ func SenderChainIsSource(sourcePort, sourceChannel, denom string) bool {
 	return !ReceiverChainIsSource(sourcePort, sourceChannel, denom)
 }
 
-// ReceiverChainIsSource returns true if the denomination orgininally came
+// ReceiverChainIsSource returns true if the denomination originally came
 // from the receiving chain and false otherwise.
 func ReceiverChainIsSource(sourcePort, sourceChannel, denom string) bool {
 	// The prefix passed in should contain the SourcePort and SourceChannel.

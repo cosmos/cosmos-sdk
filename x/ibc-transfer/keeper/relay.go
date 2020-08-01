@@ -40,8 +40,6 @@ import (
 // 4. A -> C : sender chain is sink zone. Denom upon receiving: 'C/B/denom'
 // 5. C -> B : sender chain is sink zone. Denom upon receiving: 'B/denom'
 // 6. B -> A : sender chain is sink zone. Denom upon receiving: 'denom'
-//
-// At step 4, the token has a denomination of 'C/B/denom', where 'C/B' is the trace information.
 
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,

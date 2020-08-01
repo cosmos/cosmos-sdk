@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.crisis;
+package cosmos.crisis.beta;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
 

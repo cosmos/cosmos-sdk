@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.capability;
+package cosmos.capability.beta;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/capability/types";
 

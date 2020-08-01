@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.slashing;
+package cosmos.slashing.beta;
 
 option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 option (gogoproto.equal_all) = true;

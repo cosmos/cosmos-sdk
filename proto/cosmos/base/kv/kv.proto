@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.kv;
+package cosmos.base.kv;
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/kv";
 

@@ -33,7 +33,7 @@ type InterfaceRegistry interface {
 	// as implementations of iface.
 	//
 	// Ex:
-	//   registry.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
+	//   registry.RegisterInterface("cosmos.Msg", (*sdk.Msg)(nil))
 	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
 
 	// RegisterImplementations registers impls as concrete implementations of

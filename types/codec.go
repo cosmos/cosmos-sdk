@@ -16,7 +16,7 @@ func RegisterCodec(cdc *codec.Codec) {
 
 // Register the sdk message type
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterInterface("cosmos_sdk.v1.Msg", (*Msg)(nil))
+	registry.RegisterInterface("cosmos.Msg", (*Msg)(nil))
 }
 
 // CanonicalSignBytes returns a canonical JSON encoding of a Proto message that

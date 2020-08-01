@@ -434,7 +434,7 @@ func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...stri
 }
 
 func (ma ModuleAccount) Validate() error {
-	if err := validatePermissions(ma.Permissions...); err != nil {
+	if err := ValidatePermissions(ma.Permissions...); err != nil {
 		return err
 	}
 
@@ -476,7 +476,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-func validatePermissions(permissions ...string) error {
+func ValidatePermissions(permissions ...string) error {
 	for _, perm := range permissions {
 		if strings.TrimSpace(perm) == "" {
 			return fmt.Errorf("module permission is empty")

@@ -35,7 +35,7 @@ func TestMigrate(t *testing.T) {
 		SendEnabled: true,
 	}
 	authGenState := v039auth.GenesisState{
-		Accounts: v039auth.GenesisAccounts{acc1, vaac},
+		Accounts: v038auth.GenesisAccounts{acc1, vaac},
 	}
 
 	migrated := v040bank.Migrate(bankGenState, authGenState)

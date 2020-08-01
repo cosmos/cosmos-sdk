@@ -3,7 +3,7 @@ package cosmos.bank.beta;
 
 import "cosmos/base/query/pagination.proto";
 import "gogoproto/gogo.proto";
-import "cosmos/base/base.proto";
+import "cosmos/base/coin.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 

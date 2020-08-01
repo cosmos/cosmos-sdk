@@ -4,7 +4,7 @@ package cosmos.crisis.beta;
 option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
 
 import "gogoproto/gogo.proto";
-import "cosmos/base/base.proto";
+import "cosmos/base/coin.proto";
 
 // GenesisState - genesis state of x/crisis
 message GenesisState {

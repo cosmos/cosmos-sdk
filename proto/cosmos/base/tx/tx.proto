@@ -3,7 +3,7 @@ package cosmos.base.tx;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/crypto/crypto.proto";
-import "cosmos/base/base.proto";
+import "cosmos/base/coin.proto";
 import "cosmos/base/tx/signing/signing.proto";
 import "google/protobuf/any.proto";
 

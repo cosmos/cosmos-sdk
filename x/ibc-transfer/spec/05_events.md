@@ -19,7 +19,8 @@ order: 5
 |-----------------------|---------------|-----------------|
 | fungible_token_packet | module        | transfer        |
 | fungible_token_packet | receiver      | {receiver}      |
-| fungible_token_packet | value         | {amount}        |
+| fungible_token_packet | denom         | {denom}         |
+| fungible_token_packet | amount        | {amount}        |
 
 ## OnAcknowledgePacket callback
 
@@ -27,7 +28,8 @@ order: 5
 |-----------------------|---------------|-----------------|
 | fungible_token_packet | module        | transfer        |
 | fungible_token_packet | receiver      | {receiver}      |
-| fungible_token_packet | value         | {amount}        |
+| fungible_token_packet | denom         | {denom}         |
+| fungible_token_packet | amount        | {amount}        |
 | fungible_token_packet | success       | {ackSuccess}    |
 
 ## OnTimeoutPacket callback
@@ -36,8 +38,8 @@ order: 5
 |-----------------------|-----------------|-----------------|
 | fungible_token_packet | module          | transfer        |
 | fungible_token_packet | refund_receiver | {receiver}      |
-| fungible_token_packet | value           | {amount}        |
-
+| fungible_token_packet | denom           | {denom}         |
+| fungible_token_packet | amount          | {amount}        |
 
 
 

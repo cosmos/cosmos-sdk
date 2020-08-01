@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -12,19 +10,42 @@ import (
 
 // SendTransfer handles transfer sending logic. There are 2 possible cases:
 //
-// 1. Sender chain is the source chain of the coins (i.e where they were minted): the coins
-// are transferred to an escrow address (i.e locked) on the sender chain and then
-// transferred to the destination chain (i.e not the source chain) via a packet
-// with the corresponding fungible token data.
+// 1. Sender chain is acting as the source zone. The coins are transferred
+// to an escrow address (i.e locked) on the sender chain and then transferred
+// to the receiving chain through IBC TAO logic. It is expected that the
+// receiving chain will mint vouchers to the receiving address.
 //
-// 2. Coins are not native from the sender chain (i.e tokens sent where transferred over
-// through IBC already): the coins are burned and then a packet is sent to the
-// source chain of the tokens.
+// 2. Sender chain is acting as the sink zone. The coins (vouchers) are burned
+// on the sender chain and then transferred to the receiving chain though IBC
+// TAO logic. It is expected that the receiving chain, which had previously
+// sent the original denomination, will unescrow the fungible token and send
+// it to the receiving address.
+//
+// Another way of thinking of source and sink zones is through the token's
+// timeline. Each send to any chain other than the one it was previously
+// received from is a movement forwards in the token's timeline. This causes
+// trace to be added to the token's history and the destination port and
+// destination channel to be prefixed to the denomination. In these instances
+// the sender chain is acting as the source zone. When the token is sent back
+// to the chain it previously received from, the prefix is removed. This is
+// a backwards movement in the token's timeline and the sender chain
+// is acting as the sink zone.
+//
+// Example:
+// These steps of transfer occur: A -> B -> C -> A -> C -> B -> A
+//
+// 1. A -> B : sender chain is source zone. Denom upon receiving: 'B/denom'
+// 2. B -> C : sender chain is source zone. Denom upon receiving: 'C/B/denom'
+// 3. C -> A : sender chain is source zone. Denom upon receiving: 'A/C/B/denom'
+// 4. A -> C : sender chain is sink zone. Denom upon receiving: 'C/B/denom'
+// 5. C -> B : sender chain is sink zone. Denom upon receiving: 'B/denom'
+// 6. B -> A : sender chain is sink zone. Denom upon receiving: 'denom'
+
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
 	sourceChannel string,
-	amount sdk.Coins,
+	token sdk.Coin,
 	sender sdk.AccAddress,
 	receiver string,
 	timeoutHeight,
@@ -47,81 +68,39 @@ func (k Keeper) SendTransfer(
 		)
 	}
 
-	return k.createOutgoingPacket(
-		ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel,
-		amount, sender, receiver, timeoutHeight, timeoutTimestamp,
-	)
-}
+	// begin createOutgoingPacket logic
+	// See spec for this logic: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 
-// See spec for this function: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-func (k Keeper) createOutgoingPacket(
-	ctx sdk.Context,
-	seq uint64,
-	sourcePort, sourceChannel,
-	destinationPort, destinationChannel string,
-	amount sdk.Coins,
-	sender sdk.AccAddress,
-	receiver string,
-	timeoutHeight, timeoutTimestamp uint64,
-) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
-	// NOTE:
-	// - Coins transferred from the destination chain should have their denomination
-	// prefixed with source port and channel IDs.
-	// - Coins transferred from the source chain can have their denomination
-	// clear from prefixes when transferred to the escrow account (i.e when they are
-	// locked) BUT MUST have the destination port and channel ID when constructing
-	// the packet data.
-	if len(amount) != 1 {
-		return sdkerrors.Wrapf(types.ErrOnlyOneDenomAllowed, "%d denoms included", len(amount))
-	}
 
-	prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
-	source := strings.HasPrefix(amount[0].Denom, prefix)
+	// NOTE: SendTransfer simply sends the denomination as it exists on its own
+	// chain inside the packet data. The receiving chain will perform denom
+	// prefixing as necessary.
 
-	if source {
-		// clear the denomination from the prefix to send the coins to the escrow account
-		coins := make(sdk.Coins, len(amount))
-		for i, coin := range amount {
-			if strings.HasPrefix(coin.Denom, prefix) {
-				coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
-			} else {
-				coins[i] = coin
-			}
-		}
-
-		// escrow tokens if the destination chain is the same as the sender's
+	if types.SenderChainIsSource(sourcePort, sourceChannel, token.Denom) {
+		// create the escrow address for the tokens
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
 		// escrow source tokens. It fails if balance insufficient.
 		if err := k.bankKeeper.SendCoins(
-			ctx, sender, escrowAddress, coins,
+			ctx, sender, escrowAddress, sdk.NewCoins(token),
 		); err != nil {
 			return err
 		}
 
 	} else {
-		// build the receiving denomination prefix if it's not present
-		prefix = types.GetDenomPrefix(sourcePort, sourceChannel)
-		for _, coin := range amount {
-			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdkerrors.Wrapf(types.ErrInvalidDenomForTransfer, "denom was: %s", coin.Denom)
-			}
-		}
-
 		// transfer the coins to the module account and burn them
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(
-			ctx, sender, types.ModuleName, amount,
+			ctx, sender, types.ModuleName, sdk.NewCoins(token),
 		); err != nil {
 			return err
 		}
 
-		// burn vouchers from the sender's balance if the source is from another chain
 		if err := k.bankKeeper.BurnCoins(
-			ctx, types.ModuleName, amount,
+			ctx, types.ModuleName, sdk.NewCoins(token),
 		); err != nil {
 			// NOTE: should not happen as the module account was
 			// retrieved on the step above and it has enough balace
@@ -131,12 +110,12 @@ func (k Keeper) createOutgoingPacket(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		amount, sender.String(), receiver,
+		token.Denom, token.Amount.Uint64(), sender.String(), receiver,
 	)
 
 	packet := channeltypes.NewPacket(
 		packetData.GetBytes(),
-		seq,
+		sequence,
 		sourcePort,
 		sourceChannel,
 		destinationPort,
@@ -148,15 +127,13 @@ func (k Keeper) createOutgoingPacket(
 	return k.channelKeeper.SendPacket(ctx, channelCap, packet)
 }
 
+// OnRecvPacket processes a cross chain fungible token transfer. If the
+// sender chain is the source of minted tokens then vouchers will be minted
+// and sent to the receiving address. Otherwise if the sender chain is sending
+// back tokens this chain originally transferred to it, the tokens are
+// unescrowed and sent to the receiving address.
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
-
-	if len(data.Amount) != 1 {
-		return sdkerrors.Wrapf(types.ErrOnlyOneDenomAllowed, "%d denoms included", len(data.Amount))
-	}
-
-	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
-	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
 
 	// decode the receiver address
 	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
@@ -164,60 +141,73 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		return err
 	}
 
-	if source {
+	// This is the prefix that would have been prefixed to the denomination
+	// on sender chain IF and only if the token originally came from the
+	// receiving chain.
+	//
+	// NOTE: We use SourcePort and SourceChannel here, because the counterparty
+	// chain would have prefixed with DestPort and DestChannel when originally
+	// receiving this coin as seen in the "sender chain is the source" condition.
 
-		// mint new tokens if the source of the transfer is the same chain
-		if err := k.bankKeeper.MintCoins(
-			ctx, types.ModuleName, data.Amount,
-		); err != nil {
-			return err
-		}
+	if types.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
+		// sender chain is not the source, unescrow tokens
 
-		// send to receiver
-		return k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.ModuleName, receiver, data.Amount,
-		)
+		// remove prefix added by sender chain
+		voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+		unprefixedDenom := data.Denom[len(voucherPrefix):]
+		token := sdk.NewCoin(unprefixedDenom, sdk.NewIntFromUint64(data.Amount))
+
+		// unescrow tokens
+		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
+		return k.bankKeeper.SendCoins(ctx, escrowAddress, receiver, sdk.NewCoins(token))
 	}
 
-	// check the denom prefix
-	prefix = types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-	coins := make(sdk.Coins, len(data.Amount))
-	for i, coin := range data.Amount {
-		if !strings.HasPrefix(coin.Denom, prefix) {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidCoins,
-				"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
-			)
-		}
-		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
+	// sender chain is the source, mint vouchers
+
+	// since SendPacket did not prefix the denomination, we must prefix denomination here
+	sourcePrefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+	// NOTE: sourcePrefix contains the trailing "/"
+	prefixedDenom := sourcePrefix + data.Denom
+	voucher := sdk.NewCoin(prefixedDenom, sdk.NewIntFromUint64(data.Amount))
+
+	// mint new tokens if the source of the transfer is the same chain
+	if err := k.bankKeeper.MintCoins(
+		ctx, types.ModuleName, sdk.NewCoins(voucher),
+	); err != nil {
+		return err
 	}
 
-	// unescrow tokens
-	escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
-	return k.bankKeeper.SendCoins(ctx, escrowAddress, receiver, coins)
+	// send to receiver
+	return k.bankKeeper.SendCoinsFromModuleToAccount(
+		ctx, types.ModuleName, receiver, sdk.NewCoins(voucher),
+	)
 }
 
+// OnAcknowledgementPacket responds to the the success or failure of a packet
+// acknowledgement written on the receiving chain. If the acknowledgement
+// was a success then nothing occurs. If the acknowledgement failed, then
+// the sender is refunded their tokens using the refundPacketToken function.
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData, ack types.FungibleTokenPacketAcknowledgement) error {
 	if !ack.Success {
-		return k.refundPacketAmount(ctx, packet, data)
+		return k.refundPacketToken(ctx, packet, data)
 	}
 	return nil
 }
 
+// OnTimeoutPacket refunds the sender since the original packet sent was
+// never received and has been timed out.
 func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
-	return k.refundPacketAmount(ctx, packet, data)
+	return k.refundPacketToken(ctx, packet, data)
 }
 
-func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
+// refundPacketToken will unescrow and send back the tokens back to sender
+// if the sending chain was the source chain. Otherwise, the sent tokens
+// were burnt in the original send so new tokens are minted and sent to
+// the sending address.
+func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
-	if len(data.Amount) != 1 {
-		return sdkerrors.Wrapf(types.ErrOnlyOneDenomAllowed, "%d denoms included", len(data.Amount))
-	}
-
-	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
-	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
+	token := sdk.NewCoin(data.Denom, sdk.NewIntFromUint64(data.Amount))
 
 	// decode the sender address
 	sender, err := sdk.AccAddressFromBech32(data.Sender)
@@ -225,27 +215,18 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channeltypes.Packet, 
 		return err
 	}
 
-	if source {
-		coins := make(sdk.Coins, len(data.Amount))
-		for i, coin := range data.Amount {
-			coin := coin
-			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "%s doesn't contain the prefix '%s'", coin.Denom, prefix)
-			}
-			coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
-		}
-
+	if types.SenderChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), token.Denom) {
 		// unescrow tokens back to sender
 		escrowAddress := types.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
-		return k.bankKeeper.SendCoins(ctx, escrowAddress, sender, coins)
+		return k.bankKeeper.SendCoins(ctx, escrowAddress, sender, sdk.NewCoins(token))
 	}
 
 	// mint vouchers back to sender
 	if err := k.bankKeeper.MintCoins(
-		ctx, types.ModuleName, data.Amount,
+		ctx, types.ModuleName, sdk.NewCoins(token),
 	); err != nil {
 		return err
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, data.Amount)
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(token))
 }

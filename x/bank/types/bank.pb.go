@@ -131,67 +131,6 @@ func (m *SendEnabled) GetEnabled() bool {
 	return false
 }
 
-// MsgSend - high level transaction of the coin module
-type MsgSend struct {
-	FromAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"from_address,omitempty" yaml:"from_address"`
-	ToAddress   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"to_address,omitempty" yaml:"to_address"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-}
-
-func (m *MsgSend) Reset()         { *m = MsgSend{} }
-func (m *MsgSend) String() string { return proto.CompactTextString(m) }
-func (*MsgSend) ProtoMessage()    {}
-func (*MsgSend) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c8bb2bea050c40fc, []int{2}
-}
-func (m *MsgSend) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSend) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSend.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSend) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSend.Merge(m, src)
-}
-func (m *MsgSend) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSend) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSend.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSend proto.InternalMessageInfo
-
-func (m *MsgSend) GetFromAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.FromAddress
-	}
-	return nil
-}
-
-func (m *MsgSend) GetToAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.ToAddress
-	}
-	return nil
-}
-
-func (m *MsgSend) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
-	if m != nil {
-		return m.Amount
-	}
-	return nil
-}
-
 // Input models transaction input
 type Input struct {
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
@@ -202,7 +141,7 @@ func (m *Input) Reset()         { *m = Input{} }
 func (m *Input) String() string { return proto.CompactTextString(m) }
 func (*Input) ProtoMessage()    {}
 func (*Input) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c8bb2bea050c40fc, []int{3}
+	return fileDescriptor_c8bb2bea050c40fc, []int{2}
 }
 func (m *Input) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -255,7 +194,7 @@ func (m *Output) Reset()         { *m = Output{} }
 func (m *Output) String() string { return proto.CompactTextString(m) }
 func (*Output) ProtoMessage()    {}
 func (*Output) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c8bb2bea050c40fc, []int{4}
+	return fileDescriptor_c8bb2bea050c40fc, []int{3}
 }
 func (m *Output) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -298,59 +237,6 @@ func (m *Output) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
-// MsgMultiSend - high level transaction of the coin module
-type MsgMultiSend struct {
-	Inputs  []Input  `protobuf:"bytes,1,rep,name=inputs,proto3" json:"inputs"`
-	Outputs []Output `protobuf:"bytes,2,rep,name=outputs,proto3" json:"outputs"`
-}
-
-func (m *MsgMultiSend) Reset()         { *m = MsgMultiSend{} }
-func (m *MsgMultiSend) String() string { return proto.CompactTextString(m) }
-func (*MsgMultiSend) ProtoMessage()    {}
-func (*MsgMultiSend) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c8bb2bea050c40fc, []int{5}
-}
-func (m *MsgMultiSend) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgMultiSend) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgMultiSend.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgMultiSend) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgMultiSend.Merge(m, src)
-}
-func (m *MsgMultiSend) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgMultiSend) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgMultiSend.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgMultiSend proto.InternalMessageInfo
-
-func (m *MsgMultiSend) GetInputs() []Input {
-	if m != nil {
-		return m.Inputs
-	}
-	return nil
-}
-
-func (m *MsgMultiSend) GetOutputs() []Output {
-	if m != nil {
-		return m.Outputs
-	}
-	return nil
-}
-
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
 type Supply struct {
@@ -360,7 +246,7 @@ type Supply struct {
 func (m *Supply) Reset()      { *m = Supply{} }
 func (*Supply) ProtoMessage() {}
 func (*Supply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c8bb2bea050c40fc, []int{6}
+	return fileDescriptor_c8bb2bea050c40fc, []int{4}
 }
 func (m *Supply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -401,7 +287,7 @@ func (m *DenomUnits) Reset()         { *m = DenomUnits{} }
 func (m *DenomUnits) String() string { return proto.CompactTextString(m) }
 func (*DenomUnits) ProtoMessage()    {}
 func (*DenomUnits) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c8bb2bea050c40fc, []int{7}
+	return fileDescriptor_c8bb2bea050c40fc, []int{5}
 }
 func (m *DenomUnits) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -464,7 +350,7 @@ func (m *Metadata) Reset()         { *m = Metadata{} }
 func (m *Metadata) String() string { return proto.CompactTextString(m) }
 func (*Metadata) ProtoMessage()    {}
 func (*Metadata) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c8bb2bea050c40fc, []int{8}
+	return fileDescriptor_c8bb2bea050c40fc, []int{6}
 }
 func (m *Metadata) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -524,10 +410,8 @@ func (m *Metadata) GetDisplay() string {
 func init() {
 	proto.RegisterType((*Params)(nil), "cosmos.bank.beta.Params")
 	proto.RegisterType((*SendEnabled)(nil), "cosmos.bank.beta.SendEnabled")
-	proto.RegisterType((*MsgSend)(nil), "cosmos.bank.beta.MsgSend")
 	proto.RegisterType((*Input)(nil), "cosmos.bank.beta.Input")
 	proto.RegisterType((*Output)(nil), "cosmos.bank.beta.Output")
-	proto.RegisterType((*MsgMultiSend)(nil), "cosmos.bank.beta.MsgMultiSend")
 	proto.RegisterType((*Supply)(nil), "cosmos.bank.beta.Supply")
 	proto.RegisterType((*DenomUnits)(nil), "cosmos.bank.beta.DenomUnits")
 	proto.RegisterType((*Metadata)(nil), "cosmos.bank.beta.Metadata")
@@ -536,51 +420,44 @@ func init() {
 func init() { proto.RegisterFile("cosmos/bank/beta/bank.proto", fileDescriptor_c8bb2bea050c40fc) }
 
 var fileDescriptor_c8bb2bea050c40fc = []byte{
-	// 704 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x55, 0xcd, 0x6b, 0x13, 0x4f,
-	0x18, 0xce, 0xa4, 0x69, 0x92, 0x4e, 0xf2, 0x83, 0x5f, 0xc7, 0xa2, 0x6b, 0xb5, 0xd9, 0xb8, 0x20,
-	0xa4, 0x62, 0x37, 0x7e, 0x50, 0x90, 0x80, 0x87, 0xa6, 0x56, 0x2d, 0x12, 0x94, 0x2d, 0x82, 0xda,
-	0x43, 0x98, 0xec, 0x4e, 0xe3, 0xd2, 0xdd, 0x9d, 0x25, 0x33, 0x0b, 0xcd, 0x1f, 0x20, 0x78, 0xf4,
-	0xa8, 0xb7, 0x9e, 0x7b, 0x56, 0xcf, 0x1e, 0x7b, 0x2c, 0x9e, 0x3c, 0x45, 0x69, 0x2f, 0x9e, 0x73,
-	0xf4, 0x24, 0xf3, 0xb1, 0x4d, 0x6a, 0x55, 0xaa, 0xf4, 0xe2, 0x25, 0x99, 0xf7, 0xeb, 0x79, 0x9e,
-	0x79, 0xdf, 0xbc, 0x13, 0x78, 0xc1, 0xa5, 0x2c, 0xa4, 0xac, 0xde, 0xc1, 0xd1, 0x66, 0xbd, 0x43,
-	0x38, 0x96, 0x27, 0x3b, 0xee, 0x51, 0x4e, 0xd1, 0xff, 0x2a, 0x68, 0x4b, 0x97, 0x08, 0xce, 0xce,
-	0x74, 0x69, 0x97, 0xca, 0x60, 0x5d, 0x9c, 0x54, 0xde, 0xec, 0x79, 0x95, 0xd7, 0x56, 0x01, 0x5d,
-	0xa4, 0x42, 0x67, 0x0f, 0xf1, 0x19, 0x91, 0x1f, 0xca, 0x6f, 0xed, 0x01, 0x98, 0x7f, 0x84, 0x7b,
-	0x38, 0x64, 0xc8, 0x85, 0x65, 0x46, 0x22, 0xaf, 0x4d, 0x22, 0xdc, 0x09, 0x88, 0x67, 0x80, 0xea,
-	0x44, 0xad, 0x74, 0x63, 0xce, 0xfe, 0x91, 0xdc, 0x5e, 0x23, 0x91, 0xb7, 0xa2, 0x92, 0x9a, 0x97,
-	0x86, 0x03, 0x73, 0xae, 0x8f, 0xc3, 0xa0, 0x61, 0x8d, 0x17, 0x5f, 0xa5, 0xa1, 0xcf, 0x49, 0x18,
-	0xf3, 0xbe, 0xe5, 0x94, 0xd8, 0x28, 0x1f, 0xad, 0xc3, 0x19, 0x8f, 0x6c, 0xe0, 0x24, 0xe0, 0xed,
-	0x23, 0x64, 0xd9, 0x2a, 0xa8, 0x15, 0x9b, 0xf3, 0xc3, 0x81, 0x79, 0x59, 0xa1, 0xfd, 0x2c, 0x6b,
-	0x1c, 0x15, 0xe9, 0x84, 0x31, 0x31, 0x8d, 0xdc, 0xeb, 0x6d, 0x33, 0x63, 0xdd, 0x83, 0xa5, 0x31,
-	0x27, 0x9a, 0x81, 0x93, 0x1e, 0x89, 0x68, 0x68, 0x80, 0x2a, 0xa8, 0x4d, 0x39, 0xca, 0x40, 0x06,
-	0x2c, 0x1c, 0xa1, 0x76, 0x52, 0xb3, 0x51, 0x14, 0x20, 0x5f, 0xb7, 0x4d, 0x60, 0x7d, 0xc8, 0xc2,
-	0x42, 0x8b, 0x75, 0x05, 0x18, 0xda, 0x84, 0xe5, 0x8d, 0x1e, 0x0d, 0xdb, 0xd8, 0xf3, 0x7a, 0x84,
-	0x31, 0x09, 0x56, 0x6e, 0xde, 0x1f, 0x0e, 0xcc, 0x33, 0x4a, 0xef, 0x78, 0xd4, 0xfa, 0x36, 0x30,
-	0x17, 0xba, 0x3e, 0x7f, 0x9e, 0x74, 0x6c, 0x97, 0x86, 0x7a, 0x12, 0xfa, 0x6b, 0x81, 0x79, 0x9b,
-	0x75, 0xde, 0x8f, 0x09, 0xb3, 0x97, 0x5c, 0x77, 0x49, 0x55, 0x38, 0x25, 0x51, 0xaf, 0x0d, 0x44,
-	0x20, 0xe4, 0xf4, 0x90, 0x2a, 0x2b, 0xa9, 0xee, 0x0e, 0x07, 0xe6, 0xb4, 0xa2, 0x1a, 0xc5, 0xfe,
-	0x82, 0x68, 0x8a, 0xd3, 0x94, 0x66, 0x1d, 0xe6, 0x71, 0x48, 0x93, 0x88, 0x1b, 0x13, 0x72, 0xd4,
-	0xd3, 0xa3, 0x51, 0x33, 0x62, 0x2f, 0x53, 0x3f, 0x6a, 0x5e, 0xdb, 0x1d, 0x98, 0x99, 0x9d, 0xcf,
-	0x66, 0xed, 0x04, 0x24, 0xa2, 0x80, 0x39, 0x1a, 0xb2, 0x91, 0x93, 0x2d, 0x7c, 0x07, 0xe0, 0xe4,
-	0x6a, 0x14, 0x27, 0x1c, 0x3d, 0x80, 0x85, 0xa3, 0xbd, 0xbb, 0xfe, 0xe7, 0xda, 0x53, 0x04, 0xf4,
-	0x14, 0x4e, 0xba, 0x82, 0xcd, 0xc8, 0x9e, 0x9e, 0x70, 0x85, 0xa8, 0x75, 0xbf, 0x07, 0x30, 0xff,
-	0x30, 0xe1, 0xff, 0x9e, 0xf0, 0x17, 0x00, 0x96, 0x5b, 0xac, 0xdb, 0x4a, 0x02, 0xee, 0xcb, 0x1f,
-	0xee, 0x22, 0xcc, 0xfb, 0x62, 0x00, 0x4c, 0xef, 0xf3, 0xb9, 0xe3, 0xfb, 0x2c, 0x07, 0xd4, 0xcc,
-	0x09, 0x62, 0x47, 0x27, 0xa3, 0x5b, 0xb0, 0x40, 0xe5, 0xfd, 0x53, 0xa9, 0xc6, 0xf1, 0x3a, 0xd5,
-	0x20, 0x5d, 0x98, 0xa6, 0x6b, 0x1d, 0x3b, 0x00, 0xe6, 0xd7, 0x92, 0x38, 0x0e, 0xfa, 0xe2, 0xce,
-	0x9c, 0x72, 0x1c, 0x68, 0x01, 0xa7, 0x73, 0x67, 0x89, 0xd8, 0x58, 0x79, 0xb9, 0x6d, 0x66, 0xd2,
-	0x7d, 0xfd, 0xf8, 0x76, 0x61, 0xf1, 0xca, 0x6f, 0x11, 0xb6, 0xd4, 0xf3, 0x4a, 0xb6, 0x62, 0xda,
-	0xe3, 0xc4, 0xb3, 0x95, 0xc0, 0x55, 0xeb, 0x09, 0x84, 0x77, 0xc4, 0xab, 0xf0, 0x38, 0xf2, 0x39,
-	0xfb, 0xc5, 0x83, 0x31, 0x0b, 0x8b, 0xa2, 0x2e, 0x22, 0x11, 0x97, 0x1b, 0xf9, 0x9f, 0x73, 0x68,
-	0x8b, 0xc7, 0x04, 0x07, 0x3e, 0x66, 0x84, 0xc9, 0x4d, 0x9a, 0x72, 0x52, 0xd3, 0x7a, 0x03, 0x60,
-	0xb1, 0x45, 0x38, 0xf6, 0x30, 0xc7, 0xa8, 0x0a, 0x4b, 0x1e, 0x61, 0x6e, 0xcf, 0x8f, 0xb9, 0x4f,
-	0x23, 0x0d, 0x3f, 0xee, 0x42, 0xb7, 0x45, 0x46, 0x44, 0xc3, 0x76, 0x22, 0x94, 0xe8, 0xce, 0x5f,
-	0x3c, 0xde, 0xf9, 0x91, 0x5a, 0x07, 0x7a, 0x23, 0xe5, 0x08, 0xe6, 0x44, 0x53, 0x8d, 0x09, 0x89,
-	0x2c, 0xcf, 0x42, 0x9b, 0xe7, 0xb3, 0x38, 0xc0, 0x7d, 0x23, 0x27, 0xdd, 0xa9, 0xd9, 0x5c, 0xde,
-	0xdd, 0xaf, 0x80, 0xbd, 0xfd, 0x0a, 0xf8, 0xb2, 0x5f, 0x01, 0xaf, 0x0e, 0x2a, 0x99, 0xbd, 0x83,
-	0x4a, 0xe6, 0xd3, 0x41, 0x25, 0xf3, 0x6c, 0xfe, 0x24, 0x5d, 0x94, 0xe3, 0xe8, 0xe4, 0xe5, 0xdf,
-	0xc8, 0xcd, 0xef, 0x01, 0x00, 0x00, 0xff, 0xff, 0x3d, 0x3f, 0x1e, 0x91, 0xc0, 0x06, 0x00, 0x00,
+	// 582 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x54, 0x3b, 0x6f, 0x13, 0x4d,
+	0x14, 0xdd, 0x89, 0x1d, 0xc7, 0x19, 0xe7, 0x93, 0x3e, 0x46, 0x11, 0x5a, 0x0c, 0xd9, 0x35, 0x2b,
+	0x21, 0x39, 0x08, 0xaf, 0x79, 0x88, 0xc6, 0x12, 0x45, 0x1c, 0x22, 0x14, 0x21, 0x04, 0xda, 0x08,
+	0x89, 0x47, 0x61, 0x8d, 0x77, 0x06, 0xb3, 0xca, 0xee, 0xcc, 0xca, 0x33, 0x2b, 0xc5, 0xff, 0x80,
+	0x92, 0x12, 0x3a, 0xd7, 0xa9, 0x81, 0xdf, 0x90, 0xd2, 0xa2, 0xa2, 0x32, 0xc8, 0x6e, 0xa8, 0x53,
+	0x52, 0xa1, 0x99, 0x59, 0xc7, 0x0e, 0x2f, 0xa5, 0xa0, 0xa1, 0xb1, 0xe7, 0xde, 0x7b, 0xee, 0x39,
+	0x47, 0x77, 0xee, 0x2c, 0xbc, 0x18, 0x72, 0x91, 0x70, 0xd1, 0xec, 0x62, 0xb6, 0xdf, 0xec, 0x52,
+	0x89, 0xf5, 0xc9, 0x4f, 0xfb, 0x5c, 0x72, 0xf4, 0xbf, 0x29, 0xfa, 0x3a, 0xa5, 0x8a, 0xd5, 0xf5,
+	0x1e, 0xef, 0x71, 0x5d, 0x6c, 0xaa, 0x93, 0xc1, 0x55, 0x2f, 0x18, 0x5c, 0xc7, 0x14, 0xf2, 0x26,
+	0x53, 0x3a, 0x7f, 0xc2, 0x2f, 0xa8, 0xfe, 0x31, 0x79, 0x6f, 0x04, 0x60, 0xe9, 0x11, 0xee, 0xe3,
+	0x44, 0xa0, 0x10, 0xae, 0x09, 0xca, 0x48, 0x87, 0x32, 0xdc, 0x8d, 0x29, 0xb1, 0x41, 0xad, 0x50,
+	0xaf, 0xdc, 0xdc, 0xf0, 0x7f, 0x14, 0xf7, 0xf7, 0x28, 0x23, 0x3b, 0x06, 0xd4, 0xbe, 0x7c, 0x3c,
+	0x76, 0x37, 0x06, 0x38, 0x89, 0x5b, 0xde, 0x62, 0xf3, 0x35, 0x9e, 0x44, 0x92, 0x26, 0xa9, 0x1c,
+	0x78, 0x41, 0x45, 0xcc, 0xf1, 0xe8, 0x39, 0x5c, 0x27, 0xf4, 0x05, 0xce, 0x62, 0xd9, 0x39, 0x25,
+	0xb6, 0x54, 0x03, 0xf5, 0x72, 0x7b, 0xf3, 0x78, 0xec, 0x5e, 0x31, 0x6c, 0xbf, 0x42, 0x2d, 0xb2,
+	0xa2, 0x1c, 0xb0, 0x60, 0xa6, 0x55, 0x7c, 0x33, 0x74, 0x2d, 0xef, 0x1e, 0xac, 0x2c, 0x24, 0xd1,
+	0x3a, 0x5c, 0x26, 0x94, 0xf1, 0xc4, 0x06, 0x35, 0x50, 0x5f, 0x0d, 0x4c, 0x80, 0x6c, 0xb8, 0x72,
+	0x4a, 0x3a, 0x98, 0x85, 0xad, 0xb2, 0x22, 0xf9, 0x3a, 0x74, 0x81, 0xf7, 0x1e, 0xc0, 0xe5, 0x5d,
+	0x96, 0x66, 0x12, 0xdd, 0x87, 0x2b, 0x98, 0x90, 0x3e, 0x15, 0x42, 0xb3, 0xac, 0xb5, 0x6f, 0x7c,
+	0x1b, 0xbb, 0x8d, 0x5e, 0x24, 0x5f, 0x66, 0x5d, 0x3f, 0xe4, 0x49, 0x3e, 0xeb, 0xfc, 0xaf, 0x21,
+	0xc8, 0x7e, 0x53, 0x0e, 0x52, 0x2a, 0xfc, 0xad, 0x30, 0xdc, 0x32, 0x8d, 0xc1, 0x8c, 0x01, 0x3d,
+	0x85, 0xcb, 0x21, 0x8f, 0x98, 0xb0, 0x97, 0xf4, 0x80, 0xcf, 0xcd, 0x07, 0x2c, 0xa8, 0xbf, 0xcd,
+	0x23, 0xd6, 0xbe, 0x7e, 0x34, 0x76, 0xad, 0xc3, 0xcf, 0x6e, 0xfd, 0x0c, 0x0a, 0xaa, 0x41, 0x04,
+	0x86, 0xb1, 0x55, 0xd4, 0xbe, 0x3f, 0x00, 0x58, 0x7a, 0x98, 0xc9, 0x7f, 0xcf, 0xf8, 0x21, 0x80,
+	0xa5, 0xbd, 0x2c, 0x4d, 0xe3, 0x81, 0xd2, 0x92, 0x5c, 0xe2, 0x38, 0xdf, 0xc2, 0xbf, 0xa3, 0xa5,
+	0x19, 0x5b, 0x3b, 0xaf, 0x86, 0xae, 0x35, 0xbb, 0xe4, 0x8f, 0xef, 0x1a, 0xb7, 0xaf, 0xfe, 0x91,
+	0xe1, 0xc0, 0xbc, 0x49, 0x7a, 0x90, 0xf2, 0xbe, 0xa4, 0xc4, 0x37, 0x06, 0x77, 0xbd, 0x27, 0x10,
+	0xde, 0x55, 0xab, 0xf4, 0x98, 0x45, 0x52, 0xfc, 0x66, 0xcb, 0xaa, 0xb0, 0xac, 0xfa, 0x18, 0x65,
+	0x52, 0xaf, 0xd9, 0x7f, 0xc1, 0x49, 0xac, 0x36, 0x10, 0xc7, 0x11, 0x16, 0x54, 0xd8, 0x85, 0x5a,
+	0xa1, 0xbe, 0x1a, 0xcc, 0x42, 0xef, 0x2d, 0x80, 0xe5, 0x07, 0x54, 0x62, 0x82, 0x25, 0x46, 0x35,
+	0x58, 0x21, 0x54, 0x84, 0xfd, 0x28, 0x95, 0x11, 0x67, 0x39, 0xfd, 0x62, 0x0a, 0xdd, 0x51, 0x08,
+	0xc6, 0x93, 0x4e, 0xa6, 0x9c, 0xe4, 0x97, 0x73, 0xe9, 0xe7, 0x67, 0x3b, 0x77, 0x1b, 0x40, 0x32,
+	0x77, 0x8e, 0x60, 0x51, 0x0d, 0xd5, 0x2e, 0x68, 0x66, 0x7d, 0x56, 0xde, 0x48, 0x24, 0xd2, 0x18,
+	0x0f, 0xec, 0xa2, 0x4e, 0xcf, 0xc2, 0xf6, 0xf6, 0xd1, 0xc4, 0x01, 0xa3, 0x89, 0x03, 0xbe, 0x4c,
+	0x1c, 0xf0, 0x7a, 0xea, 0x58, 0xa3, 0xa9, 0x63, 0x7d, 0x9a, 0x3a, 0xd6, 0xb3, 0xcd, 0xb3, 0x4c,
+	0x51, 0x5f, 0x47, 0xb7, 0xa4, 0xbf, 0x3d, 0xb7, 0xbe, 0x07, 0x00, 0x00, 0xff, 0xff, 0x14, 0x98,
+	0xad, 0x67, 0xf5, 0x04, 0x00, 0x00,
 }
 
 func (this *SendEnabled) Equal(that interface{}) bool {
@@ -607,41 +484,6 @@ func (this *SendEnabled) Equal(that interface{}) bool {
 	}
 	if this.Enabled != that1.Enabled {
 		return false
-	}
-	return true
-}
-func (this *MsgSend) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgSend)
-	if !ok {
-		that2, ok := that.(MsgSend)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.FromAddress, that1.FromAddress) {
-		return false
-	}
-	if !bytes.Equal(this.ToAddress, that1.ToAddress) {
-		return false
-	}
-	if len(this.Amount) != len(that1.Amount) {
-		return false
-	}
-	for i := range this.Amount {
-		if !this.Amount[i].Equal(&that1.Amount[i]) {
-			return false
-		}
 	}
 	return true
 }
@@ -704,43 +546,6 @@ func (this *Output) Equal(that interface{}) bool {
 	}
 	for i := range this.Coins {
 		if !this.Coins[i].Equal(&that1.Coins[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (this *MsgMultiSend) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgMultiSend)
-	if !ok {
-		that2, ok := that.(MsgMultiSend)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if len(this.Inputs) != len(that1.Inputs) {
-		return false
-	}
-	for i := range this.Inputs {
-		if !this.Inputs[i].Equal(&that1.Inputs[i]) {
-			return false
-		}
-	}
-	if len(this.Outputs) != len(that1.Outputs) {
-		return false
-	}
-	for i := range this.Outputs {
-		if !this.Outputs[i].Equal(&that1.Outputs[i]) {
 			return false
 		}
 	}
@@ -862,57 +667,6 @@ func (m *SendEnabled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgSend) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSend) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Amount) > 0 {
-		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBank(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if len(m.ToAddress) > 0 {
-		i -= len(m.ToAddress)
-		copy(dAtA[i:], m.ToAddress)
-		i = encodeVarintBank(dAtA, i, uint64(len(m.ToAddress)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.FromAddress) > 0 {
-		i -= len(m.FromAddress)
-		copy(dAtA[i:], m.FromAddress)
-		i = encodeVarintBank(dAtA, i, uint64(len(m.FromAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *Input) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -997,57 +751,6 @@ func (m *Output) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintBank(dAtA, i, uint64(len(m.Address)))
 		i--
 		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgMultiSend) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgMultiSend) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgMultiSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Outputs) > 0 {
-		for iNdEx := len(m.Outputs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Outputs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBank(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.Inputs) > 0 {
-		for iNdEx := len(m.Inputs) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Inputs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBank(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -1236,29 +939,6 @@ func (m *SendEnabled) Size() (n int) {
 	return n
 }
 
-func (m *MsgSend) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.FromAddress)
-	if l > 0 {
-		n += 1 + l + sovBank(uint64(l))
-	}
-	l = len(m.ToAddress)
-	if l > 0 {
-		n += 1 + l + sovBank(uint64(l))
-	}
-	if len(m.Amount) > 0 {
-		for _, e := range m.Amount {
-			l = e.Size()
-			n += 1 + l + sovBank(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *Input) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1290,27 +970,6 @@ func (m *Output) Size() (n int) {
 	}
 	if len(m.Coins) > 0 {
 		for _, e := range m.Coins {
-			l = e.Size()
-			n += 1 + l + sovBank(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgMultiSend) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Inputs) > 0 {
-		for _, e := range m.Inputs {
-			l = e.Size()
-			n += 1 + l + sovBank(uint64(l))
-		}
-	}
-	if len(m.Outputs) > 0 {
-		for _, e := range m.Outputs {
 			l = e.Size()
 			n += 1 + l + sovBank(uint64(l))
 		}
@@ -1600,161 +1259,6 @@ func (m *SendEnabled) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgSend) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBank
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSend: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSend: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthBank
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.FromAddress = append(m.FromAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.FromAddress == nil {
-				m.FromAddress = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ToAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthBank
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ToAddress = append(m.ToAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ToAddress == nil {
-				m.ToAddress = []byte{}
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBank
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = append(m.Amount, types.Coin{})
-			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBank(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBank
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBank
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *Input) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1970,127 +1474,6 @@ func (m *Output) Unmarshal(dAtA []byte) error {
 			}
 			m.Coins = append(m.Coins, types.Coin{})
 			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBank(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBank
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBank
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgMultiSend) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBank
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgMultiSend: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgMultiSend: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Inputs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBank
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Inputs = append(m.Inputs, Input{})
-			if err := m.Inputs[len(m.Inputs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Outputs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBank
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Outputs = append(m.Outputs, Output{})
-			if err := m.Outputs[len(m.Outputs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -26,211 +26,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// msg struct for changing the withdraw address for a delegator (or validator self-delegation)
-type MsgSetWithdrawAddress struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	WithdrawAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
-}
-
-func (m *MsgSetWithdrawAddress) Reset()         { *m = MsgSetWithdrawAddress{} }
-func (m *MsgSetWithdrawAddress) String() string { return proto.CompactTextString(m) }
-func (*MsgSetWithdrawAddress) ProtoMessage()    {}
-func (*MsgSetWithdrawAddress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{0}
-}
-func (m *MsgSetWithdrawAddress) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSetWithdrawAddress) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSetWithdrawAddress.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSetWithdrawAddress) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSetWithdrawAddress.Merge(m, src)
-}
-func (m *MsgSetWithdrawAddress) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSetWithdrawAddress) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSetWithdrawAddress.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSetWithdrawAddress proto.InternalMessageInfo
-
-func (m *MsgSetWithdrawAddress) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddress
-	}
-	return nil
-}
-
-func (m *MsgSetWithdrawAddress) GetWithdrawAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.WithdrawAddress
-	}
-	return nil
-}
-
-// msg struct for delegation withdraw from a single validator
-type MsgWithdrawDelegatorReward struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-}
-
-func (m *MsgWithdrawDelegatorReward) Reset()         { *m = MsgWithdrawDelegatorReward{} }
-func (m *MsgWithdrawDelegatorReward) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawDelegatorReward) ProtoMessage()    {}
-func (*MsgWithdrawDelegatorReward) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{1}
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawDelegatorReward.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawDelegatorReward.Merge(m, src)
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawDelegatorReward) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawDelegatorReward.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawDelegatorReward proto.InternalMessageInfo
-
-func (m *MsgWithdrawDelegatorReward) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddress
-	}
-	return nil
-}
-
-func (m *MsgWithdrawDelegatorReward) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-// msg struct for validator withdraw
-type MsgWithdrawValidatorCommission struct {
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-}
-
-func (m *MsgWithdrawValidatorCommission) Reset()         { *m = MsgWithdrawValidatorCommission{} }
-func (m *MsgWithdrawValidatorCommission) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawValidatorCommission) ProtoMessage()    {}
-func (*MsgWithdrawValidatorCommission) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{2}
-}
-func (m *MsgWithdrawValidatorCommission) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawValidatorCommission) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawValidatorCommission.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawValidatorCommission) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawValidatorCommission.Merge(m, src)
-}
-func (m *MsgWithdrawValidatorCommission) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawValidatorCommission) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawValidatorCommission.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawValidatorCommission proto.InternalMessageInfo
-
-func (m *MsgWithdrawValidatorCommission) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-// MsgFundCommunityPool defines a Msg type that allows an account to directly
-// fund the community pool.
-type MsgFundCommunityPool struct {
-	Amount    github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
-}
-
-func (m *MsgFundCommunityPool) Reset()         { *m = MsgFundCommunityPool{} }
-func (m *MsgFundCommunityPool) String() string { return proto.CompactTextString(m) }
-func (*MsgFundCommunityPool) ProtoMessage()    {}
-func (*MsgFundCommunityPool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{3}
-}
-func (m *MsgFundCommunityPool) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgFundCommunityPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgFundCommunityPool.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgFundCommunityPool) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgFundCommunityPool.Merge(m, src)
-}
-func (m *MsgFundCommunityPool) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgFundCommunityPool) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgFundCommunityPool.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgFundCommunityPool proto.InternalMessageInfo
-
-func (m *MsgFundCommunityPool) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
-	if m != nil {
-		return m.Amount
-	}
-	return nil
-}
-
-func (m *MsgFundCommunityPool) GetDepositor() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Depositor
-	}
-	return nil
-}
-
 // Params defines the set of distribution parameters.
 type Params struct {
 	CommunityTax        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"community_tax" yaml:"community_tax"`
@@ -242,7 +37,7 @@ type Params struct {
 func (m *Params) Reset()      { *m = Params{} }
 func (*Params) ProtoMessage() {}
 func (*Params) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{4}
+	return fileDescriptor_fe829cf07ad6efdd, []int{0}
 }
 func (m *Params) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -299,7 +94,7 @@ func (m *ValidatorHistoricalRewards) Reset()         { *m = ValidatorHistoricalR
 func (m *ValidatorHistoricalRewards) String() string { return proto.CompactTextString(m) }
 func (*ValidatorHistoricalRewards) ProtoMessage()    {}
 func (*ValidatorHistoricalRewards) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{5}
+	return fileDescriptor_fe829cf07ad6efdd, []int{1}
 }
 func (m *ValidatorHistoricalRewards) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -354,7 +149,7 @@ func (m *ValidatorCurrentRewards) Reset()         { *m = ValidatorCurrentRewards
 func (m *ValidatorCurrentRewards) String() string { return proto.CompactTextString(m) }
 func (*ValidatorCurrentRewards) ProtoMessage()    {}
 func (*ValidatorCurrentRewards) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{6}
+	return fileDescriptor_fe829cf07ad6efdd, []int{2}
 }
 func (m *ValidatorCurrentRewards) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -407,7 +202,7 @@ func (m *ValidatorAccumulatedCommission) Reset()         { *m = ValidatorAccumul
 func (m *ValidatorAccumulatedCommission) String() string { return proto.CompactTextString(m) }
 func (*ValidatorAccumulatedCommission) ProtoMessage()    {}
 func (*ValidatorAccumulatedCommission) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{7}
+	return fileDescriptor_fe829cf07ad6efdd, []int{3}
 }
 func (m *ValidatorAccumulatedCommission) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -453,7 +248,7 @@ func (m *ValidatorOutstandingRewards) Reset()         { *m = ValidatorOutstandin
 func (m *ValidatorOutstandingRewards) String() string { return proto.CompactTextString(m) }
 func (*ValidatorOutstandingRewards) ProtoMessage()    {}
 func (*ValidatorOutstandingRewards) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{8}
+	return fileDescriptor_fe829cf07ad6efdd, []int{4}
 }
 func (m *ValidatorOutstandingRewards) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -502,7 +297,7 @@ func (m *ValidatorSlashEvent) Reset()         { *m = ValidatorSlashEvent{} }
 func (m *ValidatorSlashEvent) String() string { return proto.CompactTextString(m) }
 func (*ValidatorSlashEvent) ProtoMessage()    {}
 func (*ValidatorSlashEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{9}
+	return fileDescriptor_fe829cf07ad6efdd, []int{5}
 }
 func (m *ValidatorSlashEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -546,7 +341,7 @@ type ValidatorSlashEvents struct {
 func (m *ValidatorSlashEvents) Reset()      { *m = ValidatorSlashEvents{} }
 func (*ValidatorSlashEvents) ProtoMessage() {}
 func (*ValidatorSlashEvents) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{10}
+	return fileDescriptor_fe829cf07ad6efdd, []int{6}
 }
 func (m *ValidatorSlashEvents) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -591,7 +386,7 @@ func (m *FeePool) Reset()         { *m = FeePool{} }
 func (m *FeePool) String() string { return proto.CompactTextString(m) }
 func (*FeePool) ProtoMessage()    {}
 func (*FeePool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{11}
+	return fileDescriptor_fe829cf07ad6efdd, []int{7}
 }
 func (m *FeePool) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -638,7 +433,7 @@ type CommunityPoolSpendProposal struct {
 func (m *CommunityPoolSpendProposal) Reset()      { *m = CommunityPoolSpendProposal{} }
 func (*CommunityPoolSpendProposal) ProtoMessage() {}
 func (*CommunityPoolSpendProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{12}
+	return fileDescriptor_fe829cf07ad6efdd, []int{8}
 }
 func (m *CommunityPoolSpendProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -684,7 +479,7 @@ func (m *DelegatorStartingInfo) Reset()         { *m = DelegatorStartingInfo{} }
 func (m *DelegatorStartingInfo) String() string { return proto.CompactTextString(m) }
 func (*DelegatorStartingInfo) ProtoMessage()    {}
 func (*DelegatorStartingInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{13}
+	return fileDescriptor_fe829cf07ad6efdd, []int{9}
 }
 func (m *DelegatorStartingInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -738,7 +533,7 @@ func (m *DelegationDelegatorReward) Reset()         { *m = DelegationDelegatorRe
 func (m *DelegationDelegatorReward) String() string { return proto.CompactTextString(m) }
 func (*DelegationDelegatorReward) ProtoMessage()    {}
 func (*DelegationDelegatorReward) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe829cf07ad6efdd, []int{14}
+	return fileDescriptor_fe829cf07ad6efdd, []int{10}
 }
 func (m *DelegationDelegatorReward) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -782,10 +577,6 @@ func (m *DelegationDelegatorReward) GetReward() github_com_cosmos_cosmos_sdk_typ
 }
 
 func init() {
-	proto.RegisterType((*MsgSetWithdrawAddress)(nil), "cosmos.distribution.beta.MsgSetWithdrawAddress")
-	proto.RegisterType((*MsgWithdrawDelegatorReward)(nil), "cosmos.distribution.beta.MsgWithdrawDelegatorReward")
-	proto.RegisterType((*MsgWithdrawValidatorCommission)(nil), "cosmos.distribution.beta.MsgWithdrawValidatorCommission")
-	proto.RegisterType((*MsgFundCommunityPool)(nil), "cosmos.distribution.beta.MsgFundCommunityPool")
 	proto.RegisterType((*Params)(nil), "cosmos.distribution.beta.Params")
 	proto.RegisterType((*ValidatorHistoricalRewards)(nil), "cosmos.distribution.beta.ValidatorHistoricalRewards")
 	proto.RegisterType((*ValidatorCurrentRewards)(nil), "cosmos.distribution.beta.ValidatorCurrentRewards")
@@ -804,190 +595,72 @@ func init() {
 }
 
 var fileDescriptor_fe829cf07ad6efdd = []byte{
-	// 1133 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0xbd, 0x6f, 0x1b, 0x37,
-	0x14, 0x17, 0x1d, 0x45, 0x89, 0x19, 0xc7, 0x8e, 0xcf, 0x92, 0xed, 0xca, 0xad, 0xce, 0x20, 0xd0,
-	0xc2, 0x40, 0x60, 0xb9, 0x69, 0x36, 0x0f, 0x05, 0x2c, 0x7f, 0xa0, 0x2d, 0xe2, 0xda, 0x38, 0xbb,
-	0x29, 0xd0, 0x0e, 0x02, 0x75, 0x47, 0xcb, 0x84, 0x4f, 0xc7, 0x03, 0xc9, 0xf3, 0x47, 0x96, 0x02,
-	0x5d, 0xfa, 0x39, 0x74, 0x48, 0x8b, 0x0e, 0x1d, 0x02, 0x74, 0x69, 0xf3, 0x77, 0x74, 0xc8, 0x98,
-	0xad, 0x45, 0x07, 0xa5, 0xb0, 0xb7, 0x8e, 0xde, 0x9a, 0xa9, 0x38, 0x92, 0x77, 0x27, 0xc9, 0xaa,
-	0x61, 0x19, 0x46, 0xb3, 0xd8, 0xe2, 0xe3, 0xe3, 0xef, 0xfd, 0xf8, 0xe3, 0xe3, 0x7b, 0x3c, 0x78,
-	0xd7, 0x65, 0xa2, 0xc5, 0xc4, 0x82, 0x47, 0x85, 0xe4, 0xb4, 0x11, 0x49, 0xca, 0x82, 0x85, 0x06,
-	0x91, 0xb8, 0xcb, 0x52, 0x0d, 0x39, 0x93, 0xcc, 0x9a, 0xd6, 0xce, 0xd5, 0xae, 0xa9, 0xd8, 0xb9,
-	0x5c, 0x6c, 0xb2, 0x26, 0x53, 0x4e, 0x0b, 0xf1, 0x2f, 0xed, 0x5f, 0x9e, 0x34, 0xe0, 0x0d, 0x2c,
-	0x88, 0xfa, 0xa3, 0xed, 0xe8, 0xdb, 0x21, 0x58, 0x5a, 0x17, 0xcd, 0x2d, 0x22, 0x3f, 0xa6, 0x72,
-	0xd7, 0xe3, 0xf8, 0x60, 0xc9, 0xf3, 0x38, 0x11, 0xc2, 0x7a, 0x04, 0xc7, 0x3d, 0xe2, 0x93, 0x26,
-	0x96, 0x8c, 0xd7, 0xb1, 0x36, 0x4e, 0x83, 0x59, 0x30, 0x37, 0x52, 0x5b, 0x3f, 0x6d, 0xdb, 0xd3,
-	0x47, 0xb8, 0xe5, 0x2f, 0xa2, 0x33, 0x2e, 0xe8, 0x65, 0xdb, 0x9e, 0x6f, 0x52, 0xb9, 0x1b, 0x35,
-	0xaa, 0x2e, 0x6b, 0x2d, 0x98, 0xb8, 0xfa, 0xdf, 0xbc, 0xf0, 0xf6, 0x16, 0xe4, 0x51, 0x48, 0x44,
-	0x75, 0xc9, 0x75, 0x4d, 0x24, 0xe7, 0x4e, 0x0a, 0x92, 0xc4, 0x3e, 0x80, 0x77, 0x0e, 0x0c, 0x9d,
-	0x34, 0xf4, 0x90, 0x0a, 0xfd, 0xe0, 0xb4, 0x6d, 0x4f, 0xe9, 0xd0, 0xbd, 0x1e, 0x97, 0x88, 0x3c,
-	0x76, 0xd0, 0xbd, 0x69, 0xf4, 0x78, 0x08, 0x96, 0xd7, 0x45, 0x33, 0xd1, 0x62, 0x25, 0x21, 0xe6,
-	0x90, 0x03, 0xcc, 0xbd, 0x57, 0xaa, 0xc9, 0x23, 0x38, 0xbe, 0x8f, 0x7d, 0xea, 0x75, 0xc5, 0x1e,
-	0xea, 0x8d, 0x7d, 0xc6, 0xe5, 0xa2, 0xb1, 0x1f, 0x62, 0x3f, 0x8d, 0x9d, 0x82, 0x24, 0xb2, 0xfc,
-	0x04, 0x60, 0xa5, 0x43, 0x96, 0x87, 0xc9, 0xfc, 0x32, 0x6b, 0xb5, 0xa8, 0x10, 0x94, 0x05, 0xfd,
-	0xe9, 0x81, 0xff, 0x87, 0xde, 0x6f, 0x00, 0x16, 0xd7, 0x45, 0x73, 0x2d, 0x0a, 0xbc, 0x98, 0x51,
-	0x14, 0x50, 0x79, 0xb4, 0xc9, 0x98, 0x6f, 0x7d, 0x0a, 0x0b, 0xb8, 0xc5, 0xa2, 0x40, 0x4e, 0x83,
-	0xd9, 0x6b, 0x73, 0xb7, 0xde, 0x19, 0xaf, 0x9a, 0x6b, 0xa3, 0x6e, 0xc0, 0x32, 0xa3, 0x41, 0xed,
-	0xed, 0x67, 0x6d, 0x3b, 0xf7, 0xf4, 0x85, 0x3d, 0x77, 0x01, 0x12, 0xf1, 0x02, 0xe1, 0x18, 0x48,
-	0x6b, 0x03, 0x0e, 0x7b, 0x24, 0x64, 0x82, 0x4a, 0xc6, 0xcd, 0x41, 0xdc, 0x1b, 0xfc, 0xa0, 0x33,
-	0x0c, 0xf4, 0xfb, 0x35, 0x58, 0xd8, 0xc4, 0x1c, 0xb7, 0x84, 0xb5, 0x07, 0x6f, 0xbb, 0xc9, 0x4e,
-	0xea, 0x12, 0x1f, 0x2a, 0x25, 0x87, 0x6b, 0x6b, 0x31, 0xd9, 0x3f, 0xdb, 0xf6, 0x5b, 0x17, 0x88,
-	0xb1, 0x42, 0xdc, 0xd3, 0xb6, 0x5d, 0xd4, 0xba, 0x77, 0x81, 0x21, 0x67, 0x24, 0x1d, 0x6f, 0xe3,
-	0x43, 0xeb, 0x33, 0x58, 0x8c, 0xf5, 0xa8, 0x87, 0x9c, 0x85, 0x4c, 0x10, 0x5e, 0xe7, 0x2a, 0xdb,
-	0xd5, 0x9e, 0x86, 0x6b, 0xeb, 0x03, 0xc7, 0x9c, 0xd1, 0x31, 0xfb, 0x61, 0x22, 0xc7, 0x8a, 0xcd,
-	0x9b, 0xc6, 0x6a, 0xae, 0xd5, 0xe7, 0x00, 0x96, 0x1a, 0x2c, 0x88, 0xc4, 0x19, 0x0a, 0xd7, 0x14,
-	0x85, 0x0f, 0x07, 0xa6, 0xf0, 0xba, 0xa1, 0xd0, 0x0f, 0x14, 0x39, 0x13, 0xca, 0xde, 0x43, 0x62,
-	0x1b, 0x96, 0xba, 0x2a, 0x4a, 0x9d, 0x04, 0xb8, 0xe1, 0x13, 0x6f, 0x3a, 0x3f, 0x0b, 0xe6, 0x6e,
-	0xd6, 0x66, 0x33, 0xd4, 0xbe, 0x6e, 0xc8, 0x99, 0xe8, 0x2c, 0x26, 0xab, 0xda, 0xba, 0x98, 0xff,
-	0xf1, 0x89, 0x9d, 0x43, 0x5f, 0x0c, 0xc1, 0x72, 0x7a, 0x69, 0xde, 0xa3, 0x42, 0x32, 0x4e, 0x5d,
-	0xec, 0xeb, 0xc8, 0xc2, 0xfa, 0x19, 0xc0, 0x29, 0x37, 0x6a, 0x45, 0x3e, 0x96, 0x74, 0x9f, 0x18,
-	0x9a, 0x75, 0x8e, 0x25, 0x65, 0x26, 0x71, 0x8b, 0x5d, 0x89, 0xbb, 0x42, 0x5c, 0x95, 0xbb, 0x1f,
-	0xc5, 0xba, 0x9c, 0xb6, 0xed, 0x8a, 0x39, 0xe4, 0xfe, 0x10, 0xe8, 0xe9, 0x0b, 0xfb, 0xee, 0xc5,
-	0x94, 0xd3, 0x09, 0x5e, 0xca, 0x80, 0x34, 0x43, 0x27, 0x86, 0xb1, 0x96, 0xe1, 0x18, 0x27, 0x3b,
-	0x84, 0x93, 0xc0, 0x25, 0x75, 0x57, 0xdd, 0xaa, 0x38, 0x43, 0x6e, 0xd7, 0xca, 0xa7, 0x6d, 0x7b,
-	0x52, 0x53, 0xe8, 0x71, 0x40, 0xce, 0x68, 0x6a, 0x59, 0x56, 0x86, 0x1f, 0x00, 0x9c, 0xca, 0xca,
-	0x47, 0xc4, 0x39, 0x09, 0x64, 0x22, 0x83, 0x0b, 0x6f, 0x68, 0xde, 0xe2, 0xdc, 0x5d, 0xdf, 0x37,
-	0x37, 0x76, 0xa0, 0x3d, 0x25, 0xc8, 0xd6, 0x24, 0x2c, 0x84, 0x84, 0x53, 0xa6, 0xd3, 0x3b, 0xef,
-	0x98, 0x11, 0xfa, 0x06, 0xc0, 0x4a, 0x4a, 0x6c, 0xc9, 0x35, 0x12, 0x10, 0xaf, 0xa3, 0xc4, 0x51,
-	0x08, 0xdd, 0x74, 0x74, 0xf5, 0x14, 0x3b, 0xc0, 0xd1, 0x63, 0x00, 0x67, 0x52, 0x36, 0x1b, 0x91,
-	0x14, 0x12, 0x07, 0x1e, 0x0d, 0x9a, 0x89, 0x54, 0xd1, 0xc5, 0xa4, 0x5a, 0x35, 0x09, 0x32, 0x9a,
-	0x9c, 0x8e, 0x5a, 0x82, 0x2e, 0x2b, 0x1e, 0xfa, 0x15, 0xc0, 0x89, 0x94, 0xd6, 0x96, 0x8f, 0xc5,
-	0xee, 0xea, 0x3e, 0x09, 0xa4, 0xb5, 0x06, 0xb3, 0xa2, 0x5c, 0x37, 0xf2, 0xc6, 0x15, 0x2b, 0x5f,
-	0x9b, 0xc9, 0xfa, 0x75, 0xaf, 0x07, 0x72, 0xc6, 0x52, 0xd3, 0xa6, 0xb2, 0x58, 0x1f, 0xc0, 0x9b,
-	0x3b, 0x1c, 0xbb, 0xf1, 0x63, 0xc6, 0x54, 0x9f, 0xea, 0x60, 0x57, 0xdf, 0x49, 0xd7, 0xc7, 0x5c,
-	0x8b, 0x7d, 0xb8, 0x0a, 0xeb, 0x6b, 0x00, 0x27, 0x33, 0x2e, 0x22, 0x9e, 0xa9, 0x13, 0x35, 0x65,
-	0xb4, 0x9c, 0xaf, 0xfe, 0xd7, 0xe3, 0xaa, 0xda, 0x07, 0xb0, 0xf6, 0xa6, 0x11, 0xf9, 0x8d, 0xde,
-	0x6d, 0x76, 0x42, 0x23, 0xa7, 0xb8, 0xdf, 0x87, 0x8c, 0xa9, 0x0f, 0xdf, 0x03, 0x78, 0x63, 0x8d,
-	0x10, 0xd5, 0xb3, 0xbe, 0x02, 0x70, 0x34, 0x2b, 0xd7, 0x21, 0x63, 0xfe, 0xb9, 0x47, 0xfc, 0xc0,
-	0x44, 0x2f, 0xf5, 0x16, 0xfa, 0x78, 0xe5, 0xc0, 0x27, 0x9d, 0x75, 0x9d, 0x98, 0x4b, 0xfc, 0x3a,
-	0x2c, 0x77, 0x75, 0xd4, 0xad, 0x90, 0x04, 0x9e, 0x2e, 0x9c, 0xd8, 0xb7, 0x8a, 0xf0, 0xba, 0xa4,
-	0xd2, 0x27, 0xba, 0x3b, 0x39, 0x7a, 0x60, 0xcd, 0xc2, 0x5b, 0x1e, 0x11, 0x2e, 0xa7, 0x61, 0x76,
-	0x8e, 0x4e, 0xa7, 0x29, 0xee, 0x9c, 0x9c, 0xb8, 0x34, 0xa4, 0x24, 0x90, 0xaa, 0xc4, 0x5f, 0xae,
-	0x73, 0xa6, 0x18, 0x1d, 0x7d, 0x3e, 0x7f, 0xe5, 0x7d, 0x7e, 0xf1, 0xe6, 0x97, 0x4f, 0xec, 0x9c,
-	0x3a, 0xa6, 0x7f, 0x00, 0x2c, 0xa5, 0x4f, 0xc2, 0x2d, 0x89, 0xb9, 0xa4, 0x41, 0xf3, 0xfd, 0x60,
-	0x47, 0xd5, 0xc6, 0x90, 0x93, 0x7d, 0xca, 0xe2, 0x76, 0xd3, 0x99, 0xff, 0x1d, 0xb5, 0xb1, 0xc7,
-	0x01, 0x39, 0xa3, 0x89, 0xc5, 0x64, 0xff, 0x36, 0xbc, 0x2e, 0x24, 0xde, 0x23, 0x26, 0xf5, 0xdf,
-	0x1d, 0xb8, 0xeb, 0x8d, 0xe8, 0x40, 0x0a, 0x04, 0x39, 0x1a, 0xcc, 0x5a, 0x85, 0x85, 0x5d, 0x42,
-	0x9b, 0xbb, 0x5a, 0xe9, 0x7c, 0x6d, 0xfe, 0xef, 0xb6, 0x3d, 0xe6, 0x72, 0x12, 0xd7, 0xf4, 0xa0,
-	0xae, 0xa7, 0x32, 0x92, 0x3d, 0x13, 0xc8, 0x31, 0x8b, 0xd1, 0x4b, 0x00, 0x5f, 0x33, 0x7b, 0xa7,
-	0x2c, 0xe8, 0xf3, 0x30, 0x7e, 0x55, 0xaf, 0x3f, 0x0b, 0xc3, 0x42, 0xfa, 0x60, 0xb9, 0xe2, 0x92,
-	0x6c, 0x80, 0x6b, 0x1b, 0xbf, 0x1c, 0x57, 0xc0, 0xb3, 0xe3, 0x0a, 0x78, 0x7e, 0x5c, 0x01, 0x7f,
-	0x1d, 0x57, 0xc0, 0x77, 0x27, 0x95, 0xdc, 0xf3, 0x93, 0x4a, 0xee, 0x8f, 0x93, 0x4a, 0xee, 0x93,
-	0x7b, 0xe7, 0x42, 0x1e, 0x76, 0x7f, 0xd0, 0xa9, 0x08, 0x8d, 0x82, 0xfa, 0xfa, 0xba, 0xff, 0x6f,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x02, 0x08, 0x75, 0x3b, 0xf4, 0x0d, 0x00, 0x00,
+	// 1005 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcf, 0x6f, 0xe3, 0x44,
+	0x14, 0x8e, 0xdb, 0x6c, 0xb6, 0x3b, 0xdb, 0x6d, 0x59, 0x37, 0x6d, 0x43, 0x0b, 0x71, 0x34, 0x12,
+	0xa8, 0xd2, 0xaa, 0x09, 0xcb, 0xde, 0x7a, 0x40, 0xaa, 0xd3, 0x56, 0x80, 0x58, 0x5a, 0x79, 0xcb,
+	0x1e, 0xe0, 0x60, 0x4d, 0xec, 0x69, 0x32, 0xaa, 0xed, 0xb1, 0x66, 0xc6, 0x69, 0xcb, 0x05, 0x89,
+	0x0b, 0x3f, 0x0f, 0x1c, 0x00, 0x71, 0x5c, 0x89, 0x0b, 0xf0, 0x97, 0xec, 0x71, 0x6f, 0x20, 0x0e,
+	0x01, 0xb5, 0x37, 0x8e, 0xb9, 0xb1, 0x27, 0xe4, 0x99, 0x89, 0x9d, 0x84, 0x50, 0x25, 0x68, 0x2f,
+	0x6d, 0xfc, 0xcd, 0x9b, 0xef, 0x7d, 0xf3, 0xbd, 0xe7, 0x37, 0x06, 0xf7, 0x3c, 0xca, 0x43, 0xca,
+	0x1b, 0x3e, 0xe1, 0x82, 0x91, 0x56, 0x22, 0x08, 0x8d, 0x1a, 0x2d, 0x2c, 0xd0, 0x08, 0x52, 0x8f,
+	0x19, 0x15, 0xd4, 0xac, 0xa8, 0xe0, 0xfa, 0xc8, 0x52, 0x1a, 0xbc, 0x51, 0x6e, 0xd3, 0x36, 0x95,
+	0x41, 0x8d, 0xf4, 0x97, 0x8a, 0xdf, 0x58, 0xd3, 0xe4, 0x2d, 0xc4, 0xb1, 0xfc, 0xa3, 0x70, 0xf8,
+	0xeb, 0x3c, 0x28, 0x1d, 0x21, 0x86, 0x42, 0x6e, 0x9e, 0x82, 0x3b, 0x1e, 0x0d, 0xc3, 0x24, 0x22,
+	0xe2, 0xc2, 0x15, 0xe8, 0xbc, 0x62, 0xd4, 0x8c, 0xad, 0x5b, 0xf6, 0xc1, 0xd3, 0x9e, 0x55, 0xf8,
+	0xbd, 0x67, 0xbd, 0xde, 0x26, 0xa2, 0x93, 0xb4, 0xea, 0x1e, 0x0d, 0x1b, 0x9a, 0x4c, 0xfd, 0xdb,
+	0xe6, 0xfe, 0x69, 0x43, 0x5c, 0xc4, 0x98, 0xd7, 0xf7, 0xb0, 0xd7, 0xef, 0x59, 0xe5, 0x0b, 0x14,
+	0x06, 0x3b, 0x70, 0x84, 0x0c, 0x3a, 0x8b, 0xd9, 0xf3, 0x31, 0x3a, 0x37, 0x3f, 0x01, 0xe5, 0x54,
+	0x85, 0x1b, 0x33, 0x1a, 0x53, 0x8e, 0x99, 0xcb, 0xf0, 0x19, 0x62, 0x7e, 0x65, 0x4e, 0xe6, 0x7c,
+	0x38, 0x73, 0xce, 0x4d, 0x95, 0x73, 0x12, 0x27, 0x74, 0xcc, 0x14, 0x3e, 0xd2, 0xa8, 0x23, 0x41,
+	0xf3, 0x53, 0x03, 0xac, 0xb6, 0x68, 0x94, 0xf0, 0x7f, 0x49, 0x98, 0x97, 0x12, 0xde, 0x9f, 0x59,
+	0xc2, 0x2b, 0x5a, 0xc2, 0x24, 0x52, 0xe8, 0xac, 0x48, 0x7c, 0x4c, 0xc4, 0x31, 0x58, 0x3d, 0x23,
+	0xa2, 0xe3, 0x33, 0x74, 0xe6, 0x22, 0xdf, 0x67, 0x2e, 0x8e, 0x50, 0x2b, 0xc0, 0x7e, 0xa5, 0x58,
+	0x33, 0xb6, 0x16, 0xec, 0x5a, 0xce, 0x3a, 0x31, 0x0c, 0x3a, 0x2b, 0x03, 0x7c, 0xd7, 0xf7, 0xd9,
+	0xbe, 0x42, 0x77, 0x8a, 0x3f, 0x3c, 0xb1, 0x0a, 0xf0, 0xb3, 0x39, 0xb0, 0xf1, 0x18, 0x05, 0xc4,
+	0x47, 0x82, 0xb2, 0xb7, 0x09, 0x17, 0x94, 0x11, 0x0f, 0x05, 0x2a, 0x33, 0x37, 0x7f, 0x34, 0xc0,
+	0xba, 0x97, 0x84, 0x49, 0x80, 0x04, 0xe9, 0x62, 0x2d, 0xd3, 0x65, 0x48, 0x10, 0x5a, 0x31, 0x6a,
+	0xf3, 0x5b, 0xb7, 0xdf, 0x2c, 0xd7, 0x75, 0x8f, 0xc9, 0x76, 0xd9, 0xc3, 0x5e, 0x93, 0x92, 0xc8,
+	0xfe, 0x20, 0xf5, 0xa5, 0xdf, 0xb3, 0xaa, 0xba, 0xc8, 0x93, 0x29, 0xe0, 0x2f, 0x7f, 0x58, 0xf7,
+	0xa6, 0x73, 0x2e, 0x65, 0xe5, 0xce, 0x6a, 0x4e, 0xa4, 0x14, 0x3a, 0x29, 0x8d, 0xd9, 0x04, 0xcb,
+	0x0c, 0x9f, 0x60, 0x86, 0x23, 0x0f, 0xbb, 0x1e, 0x4d, 0x22, 0x21, 0x3b, 0xe4, 0x8e, 0xbd, 0xd1,
+	0xef, 0x59, 0x6b, 0x4a, 0xc2, 0x58, 0x00, 0x74, 0x96, 0x32, 0xa4, 0x29, 0x81, 0xef, 0x0d, 0xb0,
+	0x9e, 0x39, 0xd1, 0x4c, 0x18, 0xc3, 0x91, 0x18, 0xd8, 0xe0, 0x81, 0x9b, 0x4a, 0x37, 0xbf, 0xf6,
+	0xd4, 0x0f, 0xd2, 0x53, 0xcf, 0x7a, 0xa6, 0x01, 0xb3, 0xb9, 0x06, 0x4a, 0x31, 0x66, 0x84, 0xaa,
+	0xf6, 0x2e, 0x3a, 0xfa, 0x09, 0x7e, 0x65, 0x80, 0x6a, 0x26, 0x6c, 0xd7, 0xd3, 0x16, 0x60, 0xbf,
+	0x49, 0xc3, 0x90, 0x70, 0x4e, 0x68, 0x64, 0x12, 0x00, 0xbc, 0xec, 0xe9, 0xc5, 0x4b, 0x1c, 0x22,
+	0x87, 0xdf, 0x1a, 0x60, 0x33, 0x53, 0x73, 0x98, 0x08, 0x2e, 0x50, 0xe4, 0x93, 0xa8, 0x3d, 0xb0,
+	0x2a, 0x99, 0xce, 0xaa, 0x7d, 0xdd, 0x20, 0x4b, 0x83, 0xea, 0xc8, 0x2d, 0xf0, 0xff, 0x9a, 0x07,
+	0x7f, 0x36, 0xc0, 0x4a, 0x26, 0xeb, 0x51, 0x80, 0x78, 0x67, 0xbf, 0x8b, 0x23, 0x61, 0x1e, 0x80,
+	0x97, 0xba, 0x03, 0xd8, 0xd5, 0xf6, 0xa6, 0x13, 0xab, 0x68, 0x6f, 0xf6, 0x7b, 0xd6, 0xba, 0xca,
+	0x3e, 0x1e, 0x01, 0x9d, 0xe5, 0x0c, 0x3a, 0x92, 0x88, 0xf9, 0x2e, 0x58, 0x38, 0x61, 0xc8, 0x4b,
+	0x07, 0xa8, 0x9e, 0x3e, 0xf5, 0xd9, 0x5e, 0x7d, 0x27, 0xdb, 0x9f, 0x6a, 0x2d, 0x4f, 0xd0, 0xca,
+	0xcd, 0x2f, 0x0d, 0xb0, 0x96, 0x6b, 0xe1, 0xe9, 0x8a, 0x8b, 0xe5, 0x92, 0xf6, 0x72, 0xbb, 0xfe,
+	0x5f, 0x03, 0xbd, 0x3e, 0x81, 0xd0, 0x7e, 0x4d, 0x9b, 0xfc, 0xea, 0xf8, 0x31, 0x87, 0xa9, 0xa1,
+	0x53, 0xee, 0x4e, 0x10, 0xa3, 0xe7, 0xc3, 0x77, 0x06, 0xb8, 0x79, 0x80, 0xf1, 0x11, 0xa5, 0x81,
+	0xf9, 0x85, 0x01, 0x96, 0xf2, 0x71, 0x1d, 0x53, 0x1a, 0x5c, 0x5b, 0xe2, 0xf7, 0x74, 0xf6, 0xd5,
+	0xf1, 0x41, 0x9f, 0xee, 0x9c, 0xb9, 0xd2, 0xf9, 0xad, 0x93, 0x6a, 0x81, 0x5f, 0xcf, 0x81, 0x8d,
+	0xe6, 0x30, 0xf2, 0x28, 0xc6, 0x91, 0xaf, 0x06, 0x27, 0x0a, 0xcc, 0x32, 0xb8, 0x21, 0x88, 0x08,
+	0xb0, 0xba, 0x9d, 0x1c, 0xf5, 0x60, 0xd6, 0xc0, 0x6d, 0x1f, 0x73, 0x8f, 0x91, 0x38, 0xaf, 0xa3,
+	0x33, 0x0c, 0x99, 0x87, 0xe0, 0x16, 0xc3, 0x1e, 0x89, 0x09, 0x8e, 0x84, 0x1c, 0xf1, 0x8b, 0xf6,
+	0xfd, 0xe7, 0x3d, 0x6b, 0x7b, 0x0a, 0xa5, 0xbb, 0x9e, 0x97, 0x8e, 0x57, 0xcc, 0xb9, 0x93, 0x73,
+	0x98, 0x1f, 0x81, 0x12, 0x0a, 0xe5, 0x44, 0x2a, 0x4a, 0xab, 0xee, 0x8e, 0x58, 0x25, 0x7d, 0x7a,
+	0x43, 0xbf, 0x92, 0x5b, 0x53, 0x24, 0x51, 0x5e, 0x68, 0xca, 0x9d, 0x85, 0xcf, 0x9f, 0x58, 0x05,
+	0x59, 0xa6, 0xbf, 0x0d, 0xb0, 0xba, 0x87, 0x03, 0xdc, 0x96, 0x55, 0x14, 0x88, 0x09, 0x12, 0xb5,
+	0xdf, 0x89, 0x4e, 0xe4, 0x6c, 0x8c, 0x19, 0xee, 0x12, 0x9a, 0x5e, 0x37, 0xc3, 0xfd, 0x3f, 0x34,
+	0x1b, 0xc7, 0x02, 0xa0, 0xb3, 0x34, 0x40, 0x74, 0xf7, 0x1f, 0x83, 0x1b, 0x5c, 0xa0, 0x53, 0xac,
+	0x5b, 0xff, 0xad, 0x99, 0x6f, 0xbd, 0x45, 0x95, 0x48, 0x92, 0x40, 0x47, 0x91, 0x99, 0xfb, 0xa0,
+	0xd4, 0xc1, 0xa4, 0xdd, 0x51, 0x4e, 0x17, 0xed, 0xed, 0xbf, 0x7a, 0xd6, 0xb2, 0xc7, 0x70, 0x3a,
+	0xd3, 0x23, 0x57, 0x2d, 0xe5, 0x22, 0xc7, 0x16, 0xa0, 0xa3, 0x37, 0xc3, 0xe7, 0x06, 0x78, 0x59,
+	0x9f, 0x9d, 0xd0, 0x28, 0x73, 0x41, 0x5f, 0x9e, 0x1f, 0x83, 0xbb, 0x79, 0xdf, 0x23, 0x55, 0x20,
+	0xe9, 0xc0, 0xa2, 0xfd, 0xb0, 0xdf, 0xb3, 0x2a, 0xe3, 0xaf, 0x86, 0x0e, 0x81, 0x53, 0x56, 0xfd,
+	0x31, 0x0a, 0x06, 0x55, 0xcf, 0x07, 0x8d, 0x46, 0x4c, 0x04, 0x4a, 0xd9, 0x07, 0xcb, 0x0b, 0x1e,
+	0xc9, 0x9a, 0xd8, 0x3e, 0xfc, 0xe9, 0xb2, 0x6a, 0x3c, 0xbd, 0xac, 0x1a, 0xcf, 0x2e, 0xab, 0xc6,
+	0x9f, 0x97, 0x55, 0xe3, 0x9b, 0xab, 0x6a, 0xe1, 0xd9, 0x55, 0xb5, 0xf0, 0xdb, 0x55, 0xb5, 0xf0,
+	0xe1, 0xfd, 0x6b, 0x29, 0xcf, 0x47, 0x3f, 0x22, 0x65, 0x86, 0x56, 0x49, 0x7e, 0xf1, 0x3d, 0xf8,
+	0x27, 0x00, 0x00, 0xff, 0xff, 0x68, 0xf6, 0x5f, 0x5b, 0x68, 0x0a, 0x00, 0x00,
 }
 
-func (this *MsgSetWithdrawAddress) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgSetWithdrawAddress)
-	if !ok {
-		that2, ok := that.(MsgSetWithdrawAddress)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.DelegatorAddress, that1.DelegatorAddress) {
-		return false
-	}
-	if !bytes.Equal(this.WithdrawAddress, that1.WithdrawAddress) {
-		return false
-	}
-	return true
-}
-func (this *MsgWithdrawDelegatorReward) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgWithdrawDelegatorReward)
-	if !ok {
-		that2, ok := that.(MsgWithdrawDelegatorReward)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.DelegatorAddress, that1.DelegatorAddress) {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	return true
-}
-func (this *MsgWithdrawValidatorCommission) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgWithdrawValidatorCommission)
-	if !ok {
-		that2, ok := that.(MsgWithdrawValidatorCommission)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	return true
-}
-func (this *MsgFundCommunityPool) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgFundCommunityPool)
-	if !ok {
-		that2, ok := that.(MsgFundCommunityPool)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if len(this.Amount) != len(that1.Amount) {
-		return false
-	}
-	for i := range this.Amount {
-		if !this.Amount[i].Equal(&that1.Amount[i]) {
-			return false
-		}
-	}
-	if !bytes.Equal(this.Depositor, that1.Depositor) {
-		return false
-	}
-	return true
-}
 func (this *Params) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -1328,154 +1001,6 @@ func (this *DelegationDelegatorReward) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *MsgSetWithdrawAddress) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSetWithdrawAddress) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSetWithdrawAddress) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.WithdrawAddress) > 0 {
-		i -= len(m.WithdrawAddress)
-		copy(dAtA[i:], m.WithdrawAddress)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.WithdrawAddress)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.DelegatorAddress) > 0 {
-		i -= len(m.DelegatorAddress)
-		copy(dAtA[i:], m.DelegatorAddress)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.DelegatorAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawDelegatorReward) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawDelegatorReward) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawDelegatorReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.ValidatorAddress) > 0 {
-		i -= len(m.ValidatorAddress)
-		copy(dAtA[i:], m.ValidatorAddress)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.ValidatorAddress)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.DelegatorAddress) > 0 {
-		i -= len(m.DelegatorAddress)
-		copy(dAtA[i:], m.DelegatorAddress)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.DelegatorAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawValidatorCommission) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawValidatorCommission) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawValidatorCommission) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.ValidatorAddress) > 0 {
-		i -= len(m.ValidatorAddress)
-		copy(dAtA[i:], m.ValidatorAddress)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.ValidatorAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgFundCommunityPool) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgFundCommunityPool) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgFundCommunityPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Depositor) > 0 {
-		i -= len(m.Depositor)
-		copy(dAtA[i:], m.Depositor)
-		i = encodeVarintDistribution(dAtA, i, uint64(len(m.Depositor)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Amount) > 0 {
-		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintDistribution(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *Params) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1965,72 +1490,6 @@ func encodeVarintDistribution(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgSetWithdrawAddress) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.DelegatorAddress)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	l = len(m.WithdrawAddress)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgWithdrawDelegatorReward) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.DelegatorAddress)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	l = len(m.ValidatorAddress)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgWithdrawValidatorCommission) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ValidatorAddress)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgFundCommunityPool) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Amount) > 0 {
-		for _, e := range m.Amount {
-			l = e.Size()
-			n += 1 + l + sovDistribution(uint64(l))
-		}
-	}
-	l = len(m.Depositor)
-	if l > 0 {
-		n += 1 + l + sovDistribution(uint64(l))
-	}
-	return n
-}
-
 func (m *Params) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2227,456 +1686,6 @@ func sovDistribution(x uint64) (n int) {
 }
 func sozDistribution(x uint64) (n int) {
 	return sovDistribution(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *MsgSetWithdrawAddress) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDistribution
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSetWithdrawAddress: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSetWithdrawAddress: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDistribution
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddress == nil {
-				m.DelegatorAddress = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDistribution
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.WithdrawAddress = append(m.WithdrawAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.WithdrawAddress == nil {
-				m.WithdrawAddress = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDistribution(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDistribution
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawDelegatorReward: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawDelegatorReward: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDistribution
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddress == nil {
-				m.DelegatorAddress = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDistribution
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDistribution(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWithdrawValidatorCommission) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDistribution
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawValidatorCommission: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawValidatorCommission: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDistribution
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDistribution(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgFundCommunityPool) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDistribution
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgFundCommunityPool: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgFundCommunityPool: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDistribution
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = append(m.Amount, types.Coin{})
-			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Depositor", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDistribution
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Depositor = append(m.Depositor[:0], dAtA[iNdEx:postIndex]...)
-			if m.Depositor == nil {
-				m.Depositor = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDistribution(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthDistribution
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *Params) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

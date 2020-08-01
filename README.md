@@ -41,10 +41,14 @@ parent:
 </div>
 
 
+Cosmos-SDK is a framework for building blockchain applications in Golang.
 
+Cosmos-SDK has been used to build a number of high value public blockchains, including:
 
-The Cosmos-SDK is a framework for building blockchain applications in Golang.
-It is being used to build [`Gaia`](https://github.com/cosmos/gaia), the first implementation of the Cosmos Hub.
+* [`Gaia`](https://github.com/cosmos/gaia), the original Cosmos Hub.
+* [`Kava`](https://github.com/Kava-Labs/kava), a blockchain for cross-chain DeFi
+* [`Sentinel`](https://github.com/sentinel-official/sentinel), a decentralized VPN
+* [`Binance Chain`](https://github.com/binance-chain/), a DEX
 
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
@@ -59,13 +63,9 @@ If you want to get started quickly and learn how to build on top of the SDK, ple
 
 For more, please go to the [Cosmos SDK Docs](./docs/).
 
-## Cosmos Hub Mainnet
+## Scaffolding with Starport
 
-The Cosmos Hub application, `gaia`, has moved to its [own repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
-
-## Scaffolding
-
-If you are starting a new app or a new module we provide a [scaffolding tool](https://github.com/cosmos/scaffold) to help you get started and speed up development. If you have any questions or find a bug, feel free to open an issue in the repo.
+If you are starting a new app or module, you may wish to check out [Starport](https://github.com/tendermint/starport).  Starport will help you get started and speed up development by giving you a good application layout and generating simple modules and simple front end interfaces for you.  
 
 ## Disambiguation
 

@@ -3,6 +3,7 @@ package cosmos.auth;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
 import "cosmos/auth/auth.proto";
 import "cosmos_proto/cosmos.proto";
 
@@ -10,11 +11,15 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
 // Query defines the gRPC querier service.
 service Query{
-    // Account returns account details based on address.
-    rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {}
+    // Account returns account details based on address
+    rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {
+      option (google.api.http).get = "/cosmos/auth/account/{address}";
+    }
 
-    // Params queries all parameters.
-    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {}
+    // Params queries all parameters
+    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+      option (google.api.http).get = "/cosmos/auth/params";
+    }
 }
 
 // QueryAccountRequest is the request type for the Query/Account RPC method.

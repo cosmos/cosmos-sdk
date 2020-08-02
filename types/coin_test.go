@@ -1,8 +1,11 @@
 package types
 
 import (
+	"fmt"
+	"regexp"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,6 +54,7 @@ func TestIsEqualCoin(t *testing.T) {
 }
 
 func TestCoinIsValid(t *testing.T) {
+
 	cases := []struct {
 		coin       Coin
 		expectPass bool
@@ -64,9 +68,18 @@ func TestCoinIsValid(t *testing.T) {
 		{Coin{"atOm", NewInt(1)}, false},
 		{Coin{"     ", NewInt(1)}, false},
 	}
+	cases = append(cases, allEmojis...)
+	reDnm_ := regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString_))
 
+	ValidateDenom = func(denom string) error {
+		if !reDnm_.MatchString(denom) {
+			return fmt.Errorf("invalid denom: %s", denom)
+		}
+		return nil
+	}
 	for i, tc := range cases {
-		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
+		r, s := utf8.DecodeRuneInString(tc.coin.Denom)
+		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d '%s' (%s) [%s]", i, tc.coin.Denom, r, s)
 	}
 }
 

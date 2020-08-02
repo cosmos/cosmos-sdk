@@ -52,7 +52,7 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
 
 		balances = append(balances, types.Balance{
 			Address: addr,
-			Coins:   coins,
+			Coins:   coins.Sort(),
 		})
 	}
 

@@ -4,22 +4,31 @@ package cosmos.bank;
 import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/cosmos.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Balance queries the balance of a single coin for a single account.
-  rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {}
+  // Balance queries the balance of a single coin for a single account
+  rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
+    option (google.api.http).get = "/cosmos/bank/balance/{address}/{denom}";
+  }
 
-  // AllBalances queries the balance of all coins for a single account.
-  rpc AllBalances(QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {}
+  // AllBalances queries the balance of all coins for a single account
+  rpc AllBalances(QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
+    option (google.api.http).get = "/cosmos/bank/balances/{address}";
+  }
 
-  // TotalSupply queries the total supply of all coins.
-  rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {}
+  // TotalSupply queries the total supply of all coins
+  rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
+    option (google.api.http).get = "/cosmos/bank/total-supply";
+  }
 
-  // SupplyOf queries the supply of a single coin.
-  rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {}
+  // SupplyOf queries the supply of a single coin
+  rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
+    option (google.api.http).get = "/cosmos/bank/supply/{denom}";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.

@@ -186,6 +186,10 @@ func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	if s == "" {
+		*aa = AccAddress{}
+		return nil
+	}
 
 	aa2, err := AccAddressFromBech32(s)
 	if err != nil {
@@ -202,6 +206,10 @@ func (aa *AccAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*aa = AccAddress{}
+		return nil
 	}
 
 	aa2, err := AccAddressFromBech32(s)
@@ -332,6 +340,10 @@ func (va *ValAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	if s == "" {
+		*va = ValAddress{}
+		return nil
+	}
 
 	va2, err := ValAddressFromBech32(s)
 	if err != nil {
@@ -349,6 +361,10 @@ func (va *ValAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*va = ValAddress{}
+		return nil
 	}
 
 	va2, err := ValAddressFromBech32(s)
@@ -484,6 +500,10 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	if s == "" {
+		*ca = ConsAddress{}
+		return nil
+	}
 
 	ca2, err := ConsAddressFromBech32(s)
 	if err != nil {
@@ -501,6 +521,10 @@ func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*ca = ConsAddress{}
+		return nil
 	}
 
 	ca2, err := ConsAddressFromBech32(s)

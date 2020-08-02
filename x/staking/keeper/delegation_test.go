@@ -528,7 +528,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 	// unbond the validator
 	ctx = ctx.WithBlockTime(validator.UnbondingTime)
-	app.StakingKeeper.UnbondAllMatureValidatorQueue(ctx)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Make sure validator is still in state because there is still an outstanding delegation
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
@@ -619,7 +619,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 
 	// unbond the validator
 	ctx = ctx.WithBlockTime(validator.UnbondingTime)
-	app.StakingKeeper.UnbondAllMatureValidatorQueue(ctx)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// validator should now be deleted from state
 	_, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])

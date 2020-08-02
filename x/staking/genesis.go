@@ -48,7 +48,7 @@ func InitGenesis(
 
 		// update timeslice if necessary
 		if validator.IsUnbonding() {
-			keeper.InsertValidatorQueue(ctx, validator)
+			keeper.InsertUnbondingValidatorQueue(ctx, validator)
 		}
 
 		switch validator.GetStatus() {

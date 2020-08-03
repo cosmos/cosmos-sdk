@@ -23,15 +23,17 @@ func TestGetCommandEncode(t *testing.T) {
 	authtypes.RegisterCodec(encodingConfig.Amino)
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxConfig
+	txCfg := encodingConfig.TxConfig
 
 	// Build a test transaction
-	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
-	JSONEncoded, err := txGen.TxJSONEncoder()(stdTx)
+	builder := txCfg.NewTxBuilder()
+	builder.SetGasLimit(50000)
+	builder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	builder.SetMemo("foomemo")
+	jsonEncoded, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
-	txFile, cleanup := testutil.WriteToNewTempFile(t, string(JSONEncoded))
+	txFile, cleanup := testutil.WriteToNewTempFile(t, string(jsonEncoded))
 	txFileName := txFile.Name()
 	t.Cleanup(cleanup)
 
@@ -58,15 +60,17 @@ func TestGetCommandDecode(t *testing.T) {
 
 	sdk.RegisterCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxConfig
-	clientCtx = clientCtx.WithTxConfig(txGen)
+	txCfg := encodingConfig.TxConfig
+	clientCtx = clientCtx.WithTxConfig(txCfg)
 
 	// Build a test transaction
-	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	builder := txCfg.NewTxBuilder()
+	builder.SetGasLimit(50000)
+	builder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	builder.SetMemo("foomemo")
 
 	// Encode transaction
-	txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
 	// Convert the transaction into base64 encoded string

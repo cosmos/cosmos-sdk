@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -46,29 +45,12 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
 
 	for i, sig := range signatures {
-		var pubKeyBz []byte
-
-		pubKey := sig.PubKey
-		if pubKey != nil {
-			pubKeyBz = pubKey.Bytes()
+		stdSig, err := SignatureV2ToStdSignature(s.cdc, sig)
+		if err != nil {
+			return err
 		}
 
-		var (
-			sigBz []byte
-			err   error
-		)
-
-		if sig.Data != nil {
-			sigBz, err = SignatureDataToAminoSignature(legacy.Cdc, sig.Data)
-			if err != nil {
-				return err
-			}
-		}
-
-		sigs[i] = StdSignature{
-			PubKey:    pubKeyBz,
-			Signature: sigBz,
-		}
+		sigs[i] = stdSig
 	}
 
 	s.Signatures = sigs
@@ -131,6 +113,38 @@ func (s StdTxConfig) TxJSONDecoder() sdk.TxDecoder {
 	return DefaultJSONTxDecoder(s.Cdc)
 }
 
+func (s StdTxConfig) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error) {
+	stdSigs := make([]StdSignature, len(sigs))
+	for i, sig := range sigs {
+		stdSig, err := SignatureV2ToStdSignature(s.Cdc, sig)
+		if err != nil {
+			return nil, err
+		}
+
+		stdSigs[i] = stdSig
+	}
+	return s.Cdc.MarshalJSON(stdSigs)
+}
+
+func (s StdTxConfig) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error) {
+	var stdSigs []StdSignature
+	err := s.Cdc.UnmarshalJSON(bz, &stdSigs)
+	if err != nil {
+		return nil, err
+	}
+
+	sigs := make([]signing.SignatureV2, len(stdSigs))
+	for i, stdSig := range stdSigs {
+		sig, err := StdSignatureToSignatureV2(s.Cdc, stdSig)
+		if err != nil {
+			return nil, err
+		}
+		sigs[i] = sig
+	}
+
+	return sigs, nil
+}
+
 func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
-	return LegacyAminoJSONHandler{}
+	return stdTxSignModeHandler{}
 }

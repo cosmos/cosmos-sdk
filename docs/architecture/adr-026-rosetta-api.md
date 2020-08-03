@@ -29,8 +29,7 @@ use an external repository that will hold the libraries that can be integrated i
 different applications if they want to embed it into their own application and a
 main.go that will provide a binary that will run as a standalone.
 
-This can be achieved providing a Server struct that is configured throught some options
-like:
+### Implementation
 
 ```
 type Server struct {}

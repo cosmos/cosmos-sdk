@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.slashing;
 
 option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
-option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos/slashing/slashing.proto";
@@ -14,8 +13,8 @@ message GenesisState {
     (gogoproto.nullable) = false
   ];
 
-  repeated SigningInfos signing_infos = 2 [
-    (gogoproto.moretags) = "yaml:\"signing_infos\"",
+  repeated SigningInfo signing_info = 2 [
+    (gogoproto.moretags) = "yaml:\"signing_info\"",
     (gogoproto.nullable) = false
   ];
 
@@ -25,26 +24,26 @@ message GenesisState {
   ];
 }
 
-// SigningInfos 
-message SigningInfos {
+// SigningInfo stores validator signing info of corresponding address
+message SigningInfo {
   string address = 1;
-  ValidatorSigningInfo signing_infos = 2 [
+  ValidatorSigningInfo validator_signing_info = 2 [
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"signing_infos\""
+    (gogoproto.moretags) = "yaml:\"validator_signing_info\""
   ];
 }
 
-//ValidatorMissedBlocks
+// ValidatorMissedBlocks contains array of missed blocks of corresponding address
 message ValidatorMissedBlocks {
   string address = 1;
-  repeated MissedBlock missed_blocks = 2 [
+  repeated MissedBlocks missed_blocks = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"missed_blocks\""
   ];
 }
 
-// MissedBlock
-message MissedBlock {
+// MissedBlock contains height and missed status as boolean
+message MissedBlocks {
   int64 index = 1;
   bool missed = 2; 
 }

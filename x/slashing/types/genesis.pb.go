@@ -26,7 +26,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState - all slashing state that must be provided at genesis
 type GenesisState struct {
 	Params       Params                  `protobuf:"bytes,1,opt,name=params,proto3,casttype=Params" json:"params"`
-	SigningInfos []SigningInfos          `protobuf:"bytes,2,rep,name=signing_infos,json=signingInfos,proto3" json:"signing_infos" yaml:"signing_infos"`
+	SigningInfo  []SigningInfo           `protobuf:"bytes,2,rep,name=signing_info,json=signingInfo,proto3" json:"signing_info" yaml:"signing_info"`
 	MissedBlocks []ValidatorMissedBlocks `protobuf:"bytes,3,rep,name=missed_blocks,json=missedBlocks,proto3" json:"missed_blocks" yaml:"missed_blocks"`
 }
 
@@ -70,9 +70,9 @@ func (m *GenesisState) GetParams() Params {
 	return Params{}
 }
 
-func (m *GenesisState) GetSigningInfos() []SigningInfos {
+func (m *GenesisState) GetSigningInfo() []SigningInfo {
 	if m != nil {
-		return m.SigningInfos
+		return m.SigningInfo
 	}
 	return nil
 }
@@ -84,24 +84,24 @@ func (m *GenesisState) GetMissedBlocks() []ValidatorMissedBlocks {
 	return nil
 }
 
-// SigningInfos
-type SigningInfos struct {
-	Address      string               `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	SigningInfos ValidatorSigningInfo `protobuf:"bytes,2,opt,name=signing_infos,json=signingInfos,proto3" json:"signing_infos" yaml:"signing_infos"`
+// SigningInfo stores validator signing info of corresponding address
+type SigningInfo struct {
+	Address              string               `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	ValidatorSigningInfo ValidatorSigningInfo `protobuf:"bytes,2,opt,name=validator_signing_info,json=validatorSigningInfo,proto3" json:"validator_signing_info" yaml:"validator_signing_info"`
 }
 
-func (m *SigningInfos) Reset()         { *m = SigningInfos{} }
-func (m *SigningInfos) String() string { return proto.CompactTextString(m) }
-func (*SigningInfos) ProtoMessage()    {}
-func (*SigningInfos) Descriptor() ([]byte, []int) {
+func (m *SigningInfo) Reset()         { *m = SigningInfo{} }
+func (m *SigningInfo) String() string { return proto.CompactTextString(m) }
+func (*SigningInfo) ProtoMessage()    {}
+func (*SigningInfo) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4742afabdd32b41b, []int{1}
 }
-func (m *SigningInfos) XXX_Unmarshal(b []byte) error {
+func (m *SigningInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SigningInfos) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SigningInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SigningInfos.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SigningInfo.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -111,33 +111,33 @@ func (m *SigningInfos) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *SigningInfos) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SigningInfos.Merge(m, src)
+func (m *SigningInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SigningInfo.Merge(m, src)
 }
-func (m *SigningInfos) XXX_Size() int {
+func (m *SigningInfo) XXX_Size() int {
 	return m.Size()
 }
-func (m *SigningInfos) XXX_DiscardUnknown() {
-	xxx_messageInfo_SigningInfos.DiscardUnknown(m)
+func (m *SigningInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_SigningInfo.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SigningInfos proto.InternalMessageInfo
+var xxx_messageInfo_SigningInfo proto.InternalMessageInfo
 
-func (m *SigningInfos) GetAddress() string {
+func (m *SigningInfo) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *SigningInfos) GetSigningInfos() ValidatorSigningInfo {
+func (m *SigningInfo) GetValidatorSigningInfo() ValidatorSigningInfo {
 	if m != nil {
-		return m.SigningInfos
+		return m.ValidatorSigningInfo
 	}
 	return ValidatorSigningInfo{}
 }
 
-//ValidatorMissedBlocks
+// ValidatorMissedBlocks contains array of missed blocks of corresponding address
 type ValidatorMissedBlocks struct {
 	Address      string        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	MissedBlocks []MissedBlock `protobuf:"bytes,2,rep,name=missed_blocks,json=missedBlocks,proto3" json:"missed_blocks" yaml:"missed_blocks"`
@@ -190,7 +190,7 @@ func (m *ValidatorMissedBlocks) GetMissedBlocks() []MissedBlock {
 	return nil
 }
 
-// MissedBlock
+// MissedBlock contains height and missed status as boolean
 type MissedBlock struct {
 	Index  int64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
 	Missed bool  `protobuf:"varint,2,opt,name=missed,proto3" json:"missed,omitempty"`
@@ -245,7 +245,7 @@ func (m *MissedBlock) GetMissed() bool {
 
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "cosmos.slashing.GenesisState")
-	proto.RegisterType((*SigningInfos)(nil), "cosmos.slashing.SigningInfos")
+	proto.RegisterType((*SigningInfo)(nil), "cosmos.slashing.SigningInfo")
 	proto.RegisterType((*ValidatorMissedBlocks)(nil), "cosmos.slashing.ValidatorMissedBlocks")
 	proto.RegisterType((*MissedBlock)(nil), "cosmos.slashing.MissedBlock")
 }
@@ -253,161 +253,36 @@ func init() {
 func init() { proto.RegisterFile("cosmos/slashing/genesis.proto", fileDescriptor_4742afabdd32b41b) }
 
 var fileDescriptor_4742afabdd32b41b = []byte{
-	// 403 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4d, 0xce, 0x2f, 0xce,
-	0xcd, 0x2f, 0xd6, 0x2f, 0xce, 0x49, 0x2c, 0xce, 0xc8, 0xcc, 0x4b, 0xd7, 0x4f, 0x4f, 0xcd, 0x4b,
-	0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x87, 0x48, 0xeb, 0xc1, 0xa4,
-	0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x72, 0xfa, 0x20, 0x16, 0x44, 0x99, 0x94, 0x1c, 0xba,
-	0x29, 0x30, 0x06, 0x44, 0x5e, 0x69, 0x0e, 0x13, 0x17, 0x8f, 0x3b, 0xc4, 0xe0, 0xe0, 0x92, 0xc4,
-	0x92, 0x54, 0x21, 0x7b, 0x2e, 0xb6, 0x82, 0xc4, 0xa2, 0xc4, 0xdc, 0x62, 0x09, 0x46, 0x05, 0x46,
-	0x0d, 0x6e, 0x23, 0x71, 0x3d, 0x34, 0x8b, 0xf4, 0x02, 0xc0, 0xd2, 0x4e, 0x7c, 0x27, 0xee, 0xc9,
-	0x33, 0xfc, 0xba, 0x27, 0xcf, 0x06, 0xe1, 0x07, 0x41, 0xb5, 0x09, 0x25, 0x70, 0xf1, 0x16, 0x67,
-	0xa6, 0xe7, 0x65, 0xe6, 0xa5, 0xc7, 0x67, 0xe6, 0xa5, 0xe5, 0x17, 0x4b, 0x30, 0x29, 0x30, 0x6b,
-	0x70, 0x1b, 0xc9, 0x62, 0x98, 0x13, 0x0c, 0x51, 0xe5, 0x09, 0x52, 0xe4, 0x24, 0x03, 0x32, 0xed,
-	0xd3, 0x3d, 0x79, 0x91, 0xca, 0xc4, 0xdc, 0x1c, 0x2b, 0x25, 0x14, 0x13, 0x94, 0x82, 0x78, 0x8a,
-	0x91, 0xd4, 0x0a, 0x65, 0x72, 0xf1, 0xe6, 0x66, 0x16, 0x17, 0xa7, 0xa6, 0xc4, 0x27, 0xe5, 0xe4,
-	0x27, 0x67, 0x17, 0x4b, 0x30, 0x83, 0x6d, 0x50, 0xc3, 0xb0, 0x21, 0x2c, 0x31, 0x27, 0x33, 0x25,
-	0xb1, 0x24, 0xbf, 0xc8, 0x17, 0xac, 0xdc, 0x09, 0xac, 0x1a, 0xdd, 0x2a, 0x14, 0xa3, 0x94, 0x82,
-	0x78, 0x72, 0x91, 0xd4, 0x2a, 0x4d, 0x62, 0xe4, 0xe2, 0x41, 0x76, 0xa7, 0x90, 0x04, 0x17, 0x7b,
-	0x62, 0x4a, 0x4a, 0x51, 0x6a, 0x31, 0x24, 0x7c, 0x38, 0x83, 0x60, 0x5c, 0xa1, 0x0c, 0x4c, 0x7f,
-	0x83, 0xc2, 0x4f, 0x15, 0xb7, 0xab, 0x90, 0x0c, 0x26, 0xc5, 0xff, 0x20, 0x47, 0x89, 0x62, 0xf5,
-	0x1a, 0x1e, 0xd7, 0xc5, 0xa3, 0x87, 0x19, 0x24, 0x56, 0x64, 0x30, 0x5c, 0x87, 0x64, 0x1e, 0x49,
-	0x21, 0x65, 0xcd, 0xc5, 0x8d, 0xa4, 0x55, 0x48, 0x84, 0x8b, 0x35, 0x33, 0x2f, 0x25, 0xb5, 0x02,
-	0xec, 0x0e, 0xe6, 0x20, 0x08, 0x47, 0x48, 0x8c, 0x8b, 0x0d, 0xa2, 0x09, 0x1c, 0x38, 0x1c, 0x41,
-	0x50, 0x9e, 0x93, 0xf7, 0x8a, 0x47, 0x72, 0x8c, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7,
-	0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c,
-	0xc7, 0x10, 0xa5, 0x9b, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x0f, 0x4d,
-	0xce, 0x10, 0x4a, 0xb7, 0x38, 0x25, 0x5b, 0xbf, 0x02, 0x91, 0xb6, 0x4b, 0x2a, 0x0b, 0x52, 0x8b,
-	0x93, 0xd8, 0xc0, 0x29, 0xdb, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xb4, 0x47, 0x2e, 0xe5, 0x41,
-	0x03, 0x00, 0x00,
+	// 421 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0x3f, 0xcb, 0xda, 0x40,
+	0x1c, 0xce, 0x29, 0x4d, 0xdb, 0x8b, 0x6d, 0xe1, 0x9a, 0xda, 0x60, 0x35, 0x4a, 0xc0, 0xe2, 0x62,
+	0x02, 0x76, 0x6b, 0x87, 0x42, 0x16, 0xe9, 0x50, 0x28, 0x11, 0x3a, 0x94, 0x42, 0x38, 0x4d, 0x8c,
+	0x87, 0x49, 0x4e, 0x72, 0xa9, 0xe8, 0xda, 0x4f, 0x50, 0x3a, 0xf5, 0x43, 0xf4, 0x83, 0x38, 0x3a,
+	0x76, 0x92, 0xa2, 0xdf, 0xa0, 0x63, 0xa7, 0x17, 0xef, 0x12, 0xcc, 0x1b, 0xf5, 0x85, 0x77, 0xca,
+	0xfd, 0x78, 0xfe, 0xfc, 0x9e, 0x7b, 0x72, 0xb0, 0x35, 0xa1, 0x2c, 0xa2, 0xcc, 0x62, 0x21, 0x66,
+	0x33, 0x12, 0x07, 0x56, 0xe0, 0xc7, 0x3e, 0x23, 0xcc, 0x5c, 0x24, 0x34, 0xa5, 0xe8, 0x99, 0x80,
+	0xcd, 0x1c, 0x6e, 0xa8, 0x01, 0x0d, 0x28, 0xc7, 0xac, 0xe3, 0x49, 0xd0, 0x1a, 0x7a, 0xd9, 0x25,
+	0x3f, 0x08, 0xdc, 0xf8, 0x55, 0x81, 0xb5, 0xa1, 0x30, 0x1e, 0xa5, 0x38, 0xf5, 0xd1, 0x7b, 0x28,
+	0x2f, 0x70, 0x82, 0x23, 0xa6, 0x81, 0x0e, 0xe8, 0x29, 0x83, 0x97, 0x66, 0x69, 0x91, 0xf9, 0x89,
+	0xc3, 0xf6, 0xd3, 0xcd, 0xae, 0x2d, 0xfd, 0xdf, 0xb5, 0x65, 0x31, 0x3b, 0x99, 0x0c, 0x7d, 0x85,
+	0x35, 0x46, 0x82, 0x98, 0xc4, 0x81, 0x4b, 0xe2, 0x29, 0xd5, 0x2a, 0x9d, 0x6a, 0x4f, 0x19, 0x34,
+	0xcf, 0x6c, 0x46, 0x82, 0xf4, 0x21, 0x9e, 0x52, 0xfb, 0xd5, 0xd1, 0xeb, 0xdf, 0xae, 0xfd, 0x7c,
+	0x8d, 0xa3, 0xf0, 0xad, 0x51, 0xd4, 0x1b, 0x8e, 0xc2, 0x4e, 0x4c, 0x44, 0xe0, 0x93, 0x88, 0x30,
+	0xe6, 0x7b, 0xee, 0x38, 0xa4, 0x93, 0x39, 0xd3, 0xaa, 0xdc, 0xfe, 0xf5, 0x99, 0xfd, 0x67, 0x1c,
+	0x12, 0x0f, 0xa7, 0x34, 0xf9, 0xc8, 0xe9, 0x36, 0x67, 0xdb, 0xcd, 0x6c, 0x91, 0x2a, 0x16, 0xdd,
+	0xb2, 0x32, 0x9c, 0x5a, 0x54, 0xe0, 0x1a, 0xbf, 0x01, 0x54, 0x0a, 0x21, 0x91, 0x06, 0x1f, 0x62,
+	0xcf, 0x4b, 0x7c, 0x26, 0xaa, 0x79, 0xec, 0xe4, 0x23, 0xfa, 0x0e, 0x60, 0x7d, 0x99, 0xef, 0x73,
+	0x4b, 0xb7, 0x3f, 0x96, 0xd8, 0xbd, 0x1e, 0xaf, 0x58, 0x43, 0x37, 0x4b, 0xd7, 0x12, 0xe9, 0x2e,
+	0x5b, 0x1a, 0x8e, 0xba, 0xbc, 0x20, 0x36, 0x7e, 0x02, 0xf8, 0xe2, 0xe2, 0xa5, 0xef, 0x08, 0xee,
+	0x96, 0xdb, 0xbc, 0xf6, 0xb3, 0x0a, 0x7e, 0xf7, 0xea, 0xf0, 0x1d, 0x54, 0x0a, 0x52, 0xa4, 0xc2,
+	0x07, 0x24, 0xf6, 0xfc, 0x15, 0xcf, 0x51, 0x75, 0xc4, 0x80, 0xea, 0x50, 0x16, 0x22, 0xde, 0xd6,
+	0x23, 0x27, 0x9b, 0xec, 0xe1, 0x66, 0xaf, 0x83, 0xed, 0x5e, 0x07, 0x7f, 0xf7, 0x3a, 0xf8, 0x71,
+	0xd0, 0xa5, 0xed, 0x41, 0x97, 0xfe, 0x1c, 0x74, 0xe9, 0x4b, 0x3f, 0x20, 0xe9, 0xec, 0xdb, 0xd8,
+	0x9c, 0xd0, 0xc8, 0xca, 0x1e, 0xb8, 0xf8, 0xf4, 0x99, 0x37, 0xb7, 0x56, 0xa7, 0xd7, 0x9e, 0xae,
+	0x17, 0x3e, 0x1b, 0xcb, 0xfc, 0xad, 0xbf, 0xb9, 0x09, 0x00, 0x00, 0xff, 0xff, 0xd7, 0x5a, 0x9c,
+	0xa2, 0x53, 0x03, 0x00, 0x00,
 }
 
-func (this *GenesisState) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*GenesisState)
-	if !ok {
-		that2, ok := that.(GenesisState)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Params.Equal(&that1.Params) {
-		return false
-	}
-	if len(this.SigningInfos) != len(that1.SigningInfos) {
-		return false
-	}
-	for i := range this.SigningInfos {
-		if !this.SigningInfos[i].Equal(&that1.SigningInfos[i]) {
-			return false
-		}
-	}
-	if len(this.MissedBlocks) != len(that1.MissedBlocks) {
-		return false
-	}
-	for i := range this.MissedBlocks {
-		if !this.MissedBlocks[i].Equal(&that1.MissedBlocks[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (this *SigningInfos) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*SigningInfos)
-	if !ok {
-		that2, ok := that.(SigningInfos)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Address != that1.Address {
-		return false
-	}
-	if !this.SigningInfos.Equal(&that1.SigningInfos) {
-		return false
-	}
-	return true
-}
-func (this *ValidatorMissedBlocks) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ValidatorMissedBlocks)
-	if !ok {
-		that2, ok := that.(ValidatorMissedBlocks)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Address != that1.Address {
-		return false
-	}
-	if len(this.MissedBlocks) != len(that1.MissedBlocks) {
-		return false
-	}
-	for i := range this.MissedBlocks {
-		if !this.MissedBlocks[i].Equal(&that1.MissedBlocks[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (this *MissedBlock) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MissedBlock)
-	if !ok {
-		that2, ok := that.(MissedBlock)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Index != that1.Index {
-		return false
-	}
-	if this.Missed != that1.Missed {
-		return false
-	}
-	return true
-}
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -442,10 +317,10 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x1a
 		}
 	}
-	if len(m.SigningInfos) > 0 {
-		for iNdEx := len(m.SigningInfos) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.SigningInfo) > 0 {
+		for iNdEx := len(m.SigningInfo) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.SigningInfos[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.SigningInfo[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -469,7 +344,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SigningInfos) Marshal() (dAtA []byte, err error) {
+func (m *SigningInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -479,18 +354,18 @@ func (m *SigningInfos) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SigningInfos) MarshalTo(dAtA []byte) (int, error) {
+func (m *SigningInfo) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SigningInfos) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SigningInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.SigningInfos.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ValidatorSigningInfo.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -610,8 +485,8 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
-	if len(m.SigningInfos) > 0 {
-		for _, e := range m.SigningInfos {
+	if len(m.SigningInfo) > 0 {
+		for _, e := range m.SigningInfo {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
@@ -625,7 +500,7 @@ func (m *GenesisState) Size() (n int) {
 	return n
 }
 
-func (m *SigningInfos) Size() (n int) {
+func (m *SigningInfo) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -635,7 +510,7 @@ func (m *SigningInfos) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGenesis(uint64(l))
 	}
-	l = m.SigningInfos.Size()
+	l = m.ValidatorSigningInfo.Size()
 	n += 1 + l + sovGenesis(uint64(l))
 	return n
 }
@@ -744,7 +619,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SigningInfos", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SigningInfo", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -771,8 +646,8 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SigningInfos = append(m.SigningInfos, SigningInfos{})
-			if err := m.SigningInfos[len(m.SigningInfos)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.SigningInfo = append(m.SigningInfo, SigningInfo{})
+			if err := m.SigningInfo[len(m.SigningInfo)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -834,7 +709,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SigningInfos) Unmarshal(dAtA []byte) error {
+func (m *SigningInfo) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -857,10 +732,10 @@ func (m *SigningInfos) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SigningInfos: wiretype end group for non-group")
+			return fmt.Errorf("proto: SigningInfo: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SigningInfos: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SigningInfo: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -897,7 +772,7 @@ func (m *SigningInfos) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SigningInfos", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorSigningInfo", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -924,7 +799,7 @@ func (m *SigningInfos) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SigningInfos.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ValidatorSigningInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

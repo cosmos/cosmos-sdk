@@ -10,9 +10,11 @@
 
 ## Context
 
-There is the need to provide an option to expose the Cosmos SDK applications to use
-the Rosetta API. This is an open Standard designed to simplify and integrate different
-blockchains.
+We think it'd be greatly valuable to application developers to have the Cosmos SDK
+provide them with out-of-the-box Rosetta API support.
+According to [the project's website](https://www.rosetta-api.org/), Rosetta API is an open
+standard designed to simplify blockchain deployment and interaction. The latest specifications are
+available at [this URL](https://www.rosetta-api.org/docs/Reference.html).
 
 Our use case need to be able to provide:
 

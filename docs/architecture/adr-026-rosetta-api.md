@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- {date}: {changelog}
+- August 3rd, 2020: Initial Draft.
 
 ## Status
 

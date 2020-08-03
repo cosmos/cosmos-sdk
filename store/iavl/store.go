@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -301,14 +300,14 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 
 	if exists {
 		// value was found
-		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
+		commitmentProof, err = tree.GetMembershipProof(tree, key)
 		if err != nil {
 			// sanity check: If value was found, membership proof must be creatable
 			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
 		}
 	} else {
 		// value wasn't found
-		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
+		commitmentProof, err = tree.GetNonMembershipProof(tree, key)
 		if err != nil {
 			// sanity check: If value wasn't found, nonmembership proof must be creatable
 			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))

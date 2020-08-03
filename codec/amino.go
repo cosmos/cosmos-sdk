@@ -32,8 +32,16 @@ func New() *Codec {
 // RegisterEvidences registers Tendermint evidence types with the provided Amino
 // codec.
 func RegisterEvidences(cdc *Codec) {
-	tmtypes.RegisterEvidences(cdc.Amino)
+	cdc.Amino.RegisterInterface((*tmtypes.Evidence)(nil), nil)
+	cdc.Amino.RegisterConcrete(&tmtypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence", nil)
+	cdc.Amino.RegisterConcrete(&tmtypes.ConflictingHeadersEvidence{}, "tendermint/ConflictingHeadersEvidence")
+	cdc.Amino.RegisterConcrete(&tmtypes.LunaticValidatorEvidence{}, "tendermint/LunaticValidatorEvidence")
+	cdc.Amino.RegisterConcrete(&tmtypes.PotentialAmnesiaEvidence{}, "tendermint/PotentialAmnesiaEvidence")
+	cdc.Amino.RegisterConcrete(&tmtypes.AmnesiaEvidence{}, "tendermint/AmnesiaEvidence")
 }
+
+// 	tmtypes.RegisterEvidences(cdc.Amino)
+// }
 
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object
 // via an Amino codec. It returns an error if it cannot serialize or indent as

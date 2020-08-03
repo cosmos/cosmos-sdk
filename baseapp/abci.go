@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -57,7 +58,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		sort.Sort(abci.ValidatorUpdates(res.Validators))
 
 		for i, val := range res.Validators {
-			if !val.Equal(req.Validators[i]) {
+			if proto.Equal(&val, &req.Validators[i]) {
 				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
 			}
 		}

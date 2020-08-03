@@ -347,7 +347,6 @@ GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
 CONFIO_TYPES        = third_party/proto/confio
 
-
 proto-update-deps:	
 	@mkdir -p $(GOGO_PROTO_TYPES)
 	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
@@ -375,7 +374,7 @@ proto-update-deps:
 
 	@mkdir -p $(CONFIO_TYPES)
 	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto
-# insert go package option into proofs.proto file
+## insert go package option into proofs.proto file
 	@sed -i '4ioption go_package="github.com/confio/ics23/go"' $(CONFIO_TYPES)/proofs.proto
 
 

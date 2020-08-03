@@ -8,6 +8,7 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -19,9 +20,8 @@ type mockValidator struct {
 }
 
 func (mv mockValidator) String() string {
-	return fmt.Sprintf("mockValidator{%s:%X power:%v state:%v}",
-		mv.val.PubKey.Type,
-		mv.val.PubKey.Data,
+	return fmt.Sprintf("mockValidator{%s power:%v state:%v}",
+		mv.val.PubKey.String(),
 		mv.val.Power,
 		mv.livenessState)
 }
@@ -73,7 +73,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
 	key := keys[r.Intn(len(keys))]
 
 	proposer := vals[key].val
-	pk, err := tmtypes.PB2TM.PubKey(proposer.PubKey)
+	pk, err := cryptoenc.PubKeyFromProto(proposer.PubKey)
 	if err != nil { //nolint:wsl
 		panic(err)
 	}
@@ -150,7 +150,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 			event("begin_block", "signing", "missed")
 		}
 
-		pubkey, err := tmtypes.PB2TM.PubKey(mVal.val.PubKey)
+		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
 		if err != nil {
 			panic(err)
 		}

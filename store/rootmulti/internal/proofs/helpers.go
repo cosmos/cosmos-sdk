@@ -3,15 +3,17 @@ package proofs
 import (
 	"sort"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/libs/rand"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
 )
 
 // SimpleResult contains a merkle.SimpleProof along with all data needed to build the confio/proof
 type SimpleResult struct {
 	Key      []byte
 	Value    []byte
-	Proof    *merkle.SimpleProof
+	Proof    *tmcrypto.Proof
 	RootHash []byte
 }
 
@@ -20,7 +22,7 @@ type SimpleResult struct {
 // returns a range proof and the root hash of the tree
 func GenerateRangeProof(size int, loc Where) *SimpleResult {
 	data := BuildMap(size)
-	root, proofs, allkeys := merkle.SimpleProofsFromMap(data)
+	root, proofs, allkeys := sdkmaps.ProofsFromMap(data)
 
 	key := GetKey(allkeys, loc)
 	proof := proofs[key]
@@ -55,7 +57,7 @@ func SortedKeys(data map[string][]byte) []string {
 }
 
 func CalcRoot(data map[string][]byte) []byte {
-	root, _, _ := merkle.SimpleProofsFromMap(data)
+	root, _, _ := sdkmaps.ProofsFromMap(data)
 	return root
 }
 

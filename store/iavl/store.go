@@ -6,11 +6,10 @@ import (
 	"sync"
 	"time"
 
-	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -267,7 +266,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 
 		// get proof from tree and convert to merkle.Proof before adding to result
-		res.Proof = getProofFromTree(mtree, req.Data, res.Value != nil)
+		res.ProofOps = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
 		var KVs []types.KVPair
@@ -293,7 +292,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto.ProofOps {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -301,14 +300,14 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 
 	if exists {
 		// value was found
-		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
+		commitmentProof, err = tree.GetMembershipProof(key)
 		if err != nil {
 			// sanity check: If value was found, membership proof must be creatable
 			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
 		}
 	} else {
 		// value wasn't found
-		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
+		commitmentProof, err = tree.GetNonMembershipProof(key)
 		if err != nil {
 			// sanity check: If value wasn't found, nonmembership proof must be creatable
 			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
@@ -316,7 +315,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 	}
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
+	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
 }
 
 //----------------------------------------
@@ -439,11 +438,13 @@ func (iter *iavlIterator) Value() []byte {
 
 // Close closes the IAVL iterator by closing the quit channel and waiting for
 // the iterCh to finish/close.
-func (iter *iavlIterator) Close() {
+func (iter *iavlIterator) Close() error {
 	close(iter.quitCh)
 	// wait iterCh to close
 	for range iter.iterCh {
 	}
+
+	return nil
 }
 
 // Error performs a no-op.

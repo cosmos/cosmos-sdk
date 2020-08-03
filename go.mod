@@ -7,7 +7,6 @@ require (
 	github.com/armon/go-metrics v0.3.3
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
-	github.com/confio/ics23-iavl v0.6.0
 	github.com/confio/ics23/go v0.0.0-20200610201322-18c7bd6b2dd3
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/iavl v0.15.0-rc1
@@ -37,7 +36,6 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/iavl v0.14.0 // indirect
 	github.com/tendermint/tendermint v0.34.0-rc2
 	github.com/tendermint/tm-db v0.6.0
 	google.golang.org/grpc v1.31.0

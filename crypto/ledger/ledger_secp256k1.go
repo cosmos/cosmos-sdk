@@ -161,6 +161,8 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 	return false
 }
 
+func (pkl PrivKeyLedgerSecp256k1) Type() string { return "PrivKeyLedgerSecp256k1" }
+
 // warnIfErrors wraps a function and writes a warning to stderr. This is required
 // to avoid ignoring errors when defer is used. Using defer may result in linter warnings.
 func warnIfErrors(f func() error) {

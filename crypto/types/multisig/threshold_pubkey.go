@@ -159,3 +159,5 @@ func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
 func (pk PubKeyMultisigThreshold) GetThreshold() uint {
 	return pk.K
 }
+
+func (pk PubKeyMultisigThreshold) Type() string { return "PubKeyMultisigThreshold" }

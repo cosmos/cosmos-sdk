@@ -594,5 +594,5 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 			},
 		}.GetHash()
 	}
-	return sdkmaps.SimpleHashFromMap(m)
+	return sdkmaps.HashFromMap(m)
 }

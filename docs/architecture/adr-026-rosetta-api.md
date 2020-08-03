@@ -1,4 +1,4 @@
-# ADR 26: Rosetta API
+# ADR 26: Rosetta API Support
 
 ## Changelog
 

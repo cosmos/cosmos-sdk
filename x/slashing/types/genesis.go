@@ -9,12 +9,12 @@ import (
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(
-	params Params, signingInfo []SigningInfo, missedBlocks []ValidatorMissedBlocks,
+	params Params, signingInfos []SigningInfo, missedBlocks []ValidatorMissedBlocks,
 ) GenesisState {
 
 	return GenesisState{
 		Params:       params,
-		SigningInfo:  signingInfo,
+		SigningInfos: signingInfos,
 		MissedBlocks: missedBlocks,
 	}
 }
@@ -31,7 +31,7 @@ func NewMissedBlock(index int64, missed bool) MissedBlock {
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Params:       DefaultParams(),
-		SigningInfo:  []SigningInfo{},
+		SigningInfos: []SigningInfo{},
 		MissedBlocks: []ValidatorMissedBlocks{},
 	}
 }

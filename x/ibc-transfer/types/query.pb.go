@@ -121,7 +121,7 @@ func (m *QueryDenomTraceResponse) GetDenomTrace() *DenomTrace {
 	return nil
 }
 
-// QueryConnectionsRequest is the request type for the Query/Connections RPC method
+// QueryConnectionsRequest is the request type for the Query/DenomTraces RPC method
 type QueryDenomTracesRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -166,7 +166,7 @@ func (m *QueryDenomTracesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryConnectionsResponse is the response type for the Query/Connections RPC method.
+// QueryConnectionsResponse is the response type for the Query/DenomTraces RPC method.
 type QueryDenomTracesResponse struct {
 	// list of stored connections of the chain.
 	DenomTraces Traces `protobuf:"bytes,1,rep,name=denom_traces,json=denomTraces,proto3,castrepeated=Traces" json:"denom_traces"`
@@ -270,9 +270,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// DenomTrace queries an IBC connection end.
+	// DenomTrace queries a denomination trace info.
 	DenomTrace(ctx context.Context, in *QueryDenomTraceRequest, opts ...grpc.CallOption) (*QueryDenomTraceResponse, error)
-	// DenomTraces queries all the IBC connections of a chain.
+	// DenomTraces queries all denomination traces.
 	DenomTraces(ctx context.Context, in *QueryDenomTracesRequest, opts ...grpc.CallOption) (*QueryDenomTracesResponse, error)
 }
 
@@ -304,9 +304,9 @@ func (c *queryClient) DenomTraces(ctx context.Context, in *QueryDenomTracesReque
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// DenomTrace queries an IBC connection end.
+	// DenomTrace queries a denomination trace info.
 	DenomTrace(context.Context, *QueryDenomTraceRequest) (*QueryDenomTraceResponse, error)
-	// DenomTraces queries all the IBC connections of a chain.
+	// DenomTraces queries all denomination traces.
 	DenomTraces(context.Context, *QueryDenomTracesRequest) (*QueryDenomTracesResponse, error)
 }
 

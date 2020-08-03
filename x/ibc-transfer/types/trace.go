@@ -123,7 +123,7 @@ func (t Traces) Validate() error {
 		}
 
 		if err := trace.Validate(); err != nil {
-			sdkerrors.Wrapf(err, "failed denom trace %d validation", i)
+			return sdkerrors.Wrapf(err, "failed denom trace %d validation", i)
 		}
 		seenTraces[hash] = true
 	}

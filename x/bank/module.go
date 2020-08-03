@@ -65,6 +65,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 	rest.RegisterHandlers(clientCtx, rtr)
 	// TODO: registerQueryHandler
 	// types.RegisterQueryHandlerFromEndpoint(context.Background(), &runtime.ServeMux{})
+	// types.RegisterQueryHandler(context.Background(), runtime.NewServeMux(), )
 }
 
 // GetTxCmd returns the root tx command for the bank module.

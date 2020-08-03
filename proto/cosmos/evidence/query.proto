@@ -4,21 +4,26 @@ package cosmos.evidence;
 import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/evidence/types";
 
 // Query defines the gRPC querier service
 service Query {
   // Evidence queries evidence based on evidence hash
-  rpc Evidence(QueryEvidenceRequest) returns (QueryEvidenceResponse) {}
+  rpc Evidence(QueryEvidenceRequest) returns (QueryEvidenceResponse) {
+    option (google.api.http).get = "/cosmos/evidence/evidence/{evidence_hash}";
+  }
 
   // AllEvidence queries all evidence
-  rpc AllEvidence(QueryAllEvidenceRequest) returns (QueryAllEvidenceResponse) {}
+  rpc AllEvidence(QueryAllEvidenceRequest) returns (QueryAllEvidenceResponse) {
+    option (google.api.http).get = "/cosmos/evidence/evidences/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+  }
 }
 
 // QueryEvidenceRequest is the request type for the Query/Evidence RPC method
 message QueryEvidenceRequest {
-  bytes evidence_hash = 1  [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];;
+  bytes evidence_hash = 1  [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
 }
 
 // QueryEvidenceResponse is the response type for the Query/Evidence RPC method

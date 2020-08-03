@@ -24,10 +24,11 @@ We want to achieve the following objectives:
 
 ## Decision
 
-In order to provide this use cases we have decided that the best approach will be to 
-use an external repository that will hold the libraries that can be integrated in
-different applications if they want to embed it into their own application and a
-main.go that will provide a binary that will run as a standalone.
+We intend to develop a library that could be extended and used by application
+developers to integrate an in-process Rosetta API-compliant server with the
+application main binaries. We also intend to provide a standalone gateway server
+program that supports a Cosmos SDK's minimum feature set. Such program could
+run alongside the client applications main binaries.
 
 ### Implementation
 

@@ -349,30 +349,31 @@ CONFIO_TYPES        = third_party/proto/confio
 
 
 proto-update-deps:	
+# TODO: uncomment
 
-	@mkdir -p $(GOGO_PROTO_TYPES)
-	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
+#	@mkdir -p $(GOGO_PROTO_TYPES)
+#	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
 
-	@mkdir -p $(COSMOS_PROTO_TYPES)
-	@curl -sSL $(COSMOS_PROTO_URL)/cosmos.proto > $(COSMOS_PROTO_TYPES)/cosmos.proto
+#	@mkdir -p $(COSMOS_PROTO_TYPES)
+#	@curl -sSL $(COSMOS_PROTO_URL)/cosmos.proto > $(COSMOS_PROTO_TYPES)/cosmos.proto
 
 ## Importing of tendermint protobuf definitions currently requires the
 ## use of `sed` in order to build properly with cosmos-sdk's proto file layout
 ## (which is the standard Buf.build FILE_LAYOUT)
 ## Issue link: https://github.com/tendermint/tendermint/issues/5021
-	@mkdir -p $(TM_ABCI_TYPES)
-	@curl -sSL $(TM_URL)/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '7 s|third_party/proto/||g' $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '8 s|crypto/merkle/merkle.proto|tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '9 s|libs/kv/types.proto|tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
+#	@mkdir -p $(TM_ABCI_TYPES)
+#	@curl -sSL $(TM_URL)/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
+#	@sed -i '' '7 s|third_party/proto/||g' $(TM_ABCI_TYPES)/types.proto
+#	@sed -i '' '8 s|crypto/merkle/merkle.proto|tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
+#	@sed -i '' '9 s|libs/kv/types.proto|tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
 
-	@mkdir -p $(TM_KV_TYPES)
-	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto
-	@sed -i '' '5 s|third_party/proto/||g' $(TM_KV_TYPES)/types.proto
+#	@mkdir -p $(TM_KV_TYPES)
+#	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto
+#	@sed -i '' '5 s|third_party/proto/||g' $(TM_KV_TYPES)/types.proto
 
-	@mkdir -p $(TM_MERKLE_TYPES)
-	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
-	@sed -i '' '7 s|third_party/proto/||g' $(TM_MERKLE_TYPES)/merkle.proto
+#	@mkdir -p $(TM_MERKLE_TYPES)
+#	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
+#	@sed -i '' '7 s|third_party/proto/||g' $(TM_MERKLE_TYPES)/merkle.proto
 
 	@mkdir -p $(CONFIO_TYPES)
 	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto

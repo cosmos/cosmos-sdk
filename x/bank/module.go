@@ -2,7 +2,6 @@ package bank
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"math/rand"
 
@@ -28,9 +27,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-
-	// TODO: change it to use port from config
-	endpoint = flag.String("", "localhost:9090", "gRPC bank")
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.

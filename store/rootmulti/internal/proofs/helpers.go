@@ -3,8 +3,8 @@ package proofs
 import (
 	"sort"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/libs/rand"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
 )
@@ -13,7 +13,7 @@ import (
 type SimpleResult struct {
 	Key      []byte
 	Value    []byte
-	Proof    *merkle.Proof
+	Proof    *tmcrypto.Proof
 	RootHash []byte
 }
 

@@ -36,8 +36,6 @@ message MerklePath {
 // verifiable in conjunction with a known commitment root. Proofs should be
 // succinct.
 message MerkleProof {
-  option (gogoproto.equal) = true;
-
   tendermint.crypto.ProofOps proof = 1;
 }
 

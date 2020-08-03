@@ -17,7 +17,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 		},
 	)
 
-	for _, info := range data.SigningInfo {
+	for _, info := range data.SigningInfos {
 		address, err := sdk.ConsAddressFromBech32(info.Address)
 		if err != nil {
 			panic(err)

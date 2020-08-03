@@ -32,6 +32,6 @@ func TestExportGenesis(t *testing.T) {
 	genesisState := slashing.ExportGenesis(ctx, app.SlashingKeeper)
 
 	assert.Equal(t, genesisState.Params, keeper.TestParams())
-	assert.Len(t, genesisState.SigningInfo, 2)
-	assert.Equal(t, genesisState.SigningInfo[0].ValidatorSigningInfo, info1)
+	assert.Len(t, genesisState.SigningInfos, 2)
+	assert.Equal(t, genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
 }

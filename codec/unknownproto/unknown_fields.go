@@ -117,7 +117,7 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, &types.Any{}, allowUnknownNonCriticals)
+			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals)
 			hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
 			if err != nil {
 				return hasUnknownNonCriticals, err

@@ -53,10 +53,10 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 
 // GetBytes is a helper for serialising
 func (ftpd FungibleTokenPacketData) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ftpd))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&ftpd))
 }
 
 // GetBytes is a helper for serialising
 func (ack FungibleTokenPacketAcknowledgement) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ack))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&ack))
 }

@@ -59,14 +59,13 @@ func (dt DenomTrace) IBCDenom() string {
 // RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already
 // empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators
 // it will return an error.
-func (dt *DenomTrace) RemovePrefix() error {
+func (dt *DenomTrace) RemovePrefix() {
 	if dt.Trace == "" {
-		return nil
+		return
 	}
 
 	traceSplit := strings.SplitN(dt.Trace, "/", 3)
 
-	var err error
 	switch {
 	// NOTE: other cases are checked during msg validation
 	case len(traceSplit) == 2:
@@ -74,12 +73,6 @@ func (dt *DenomTrace) RemovePrefix() error {
 	case len(traceSplit) == 3:
 		dt.Trace = traceSplit[2]
 	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func validateTraceIdentifiers(identifiers []string) error {
@@ -107,6 +100,8 @@ func (dt DenomTrace) Validate() error {
 		return nil
 	case strings.TrimSpace(dt.Trace) == "" && strings.TrimSpace(dt.BaseDenom) == "":
 		return fmt.Errorf("cannot have an empty trace and empty base denomination")
+	case dt.Trace != "" && strings.TrimSpace(dt.BaseDenom) == "":
+		return sdkerrors.Wrap(ErrInvalidDenomForTransfer, "denomination cannot be blank")
 	}
 
 	// NOTE: no base denomination validation
@@ -138,9 +133,13 @@ func (t Traces) Validate() error {
 // ValidateIBCDenom checks that the denomination for an IBC fungible token packet denom is valid.
 func ValidateIBCDenom(denom string) error {
 	denomSplit := strings.Split(denom, "/")
-	if denomSplit[0] == denom {
+	if denomSplit[0] == denom && strings.TrimSpace(denom) != "" {
 		// NOTE: no base denomination validation
 		return nil
+	}
+
+	if strings.TrimSpace(denomSplit[len(denomSplit)-1]) == "" {
+		return sdkerrors.Wrap(ErrInvalidDenomForTransfer, "base denomination cannot be blank")
 	}
 
 	identifiers := denomSplit[:len(denomSplit)-1]

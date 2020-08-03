@@ -413,7 +413,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "slashing", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_SigningInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"cosmos", "slashing", "v1", "cons_address", "signing-info"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SigningInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "slashing", "v1", "signing-info", "cons_address"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_SigningInfos_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "slashing", "v1", "signing-infos", "pagination.key", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
 )

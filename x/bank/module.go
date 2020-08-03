@@ -59,9 +59,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 // RegisterRESTRoutes registers the REST routes for the bank module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
-	// TODO: registerQueryHandler
-	// types.RegisterQueryHandlerFromEndpoint(context.Background(), &runtime.ServeMux{})
-	// types.RegisterQueryHandler(context.Background(), runtime.NewServeMux(), )
 }
 
 // GetTxCmd returns the root tx command for the bank module.

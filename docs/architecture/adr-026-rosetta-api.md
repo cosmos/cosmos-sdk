@@ -16,13 +16,11 @@ According to [the project's website](https://www.rosetta-api.org/), Rosetta API 
 standard designed to simplify blockchain deployment and interaction. The latest specifications are
 available at [this URL](https://www.rosetta-api.org/docs/Reference.html).
 
-Our use case need to be able to provide:
+We want to achieve the following objectives:
 
-- Support for the different versions of the Cosmos SDK.
-- Support for different versions of the Cosmos Hub.
-- Support to be able to provide an abstraction in order to provide querying data, let's say
-we have a TxHash which we don't know if it is in cosmos hub 1, 2, 3. But queryng the Data
-API will return us the transaction without the need to query 3 versions.
+- Support multiple versions of Cosmos SDK.
+- Support Cosmos Hub.
+- Implement querying of historical data sets.
 
 ## Decision
 

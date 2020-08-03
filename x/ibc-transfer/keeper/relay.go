@@ -40,13 +40,11 @@ import (
 // 4. A -> C : sender chain is sink zone. Denom upon receiving: 'C/B/denom'
 // 5. C -> B : sender chain is sink zone. Denom upon receiving: 'B/denom'
 // 6. B -> A : sender chain is sink zone. Denom upon receiving: 'denom'
-
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
 	sourceChannel string,
 	token sdk.Coin,
-	denomTrace types.DenomTrace,
 	sender sdk.AccAddress,
 	receiver string,
 	timeoutHeight,
@@ -134,7 +132,10 @@ func (k Keeper) SendTransfer(
 // back tokens this chain originally transferred to it, the tokens are
 // unescrowed and sent to the receiving address.
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
-	// NOTE: packet data type already checked in handler.go
+	// validate packet data upon receiving
+	if err := data.ValidateBasic(); err != nil {
+		return err
+	}
 
 	// decode the receiver address
 	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
@@ -169,7 +170,15 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	sourcePrefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 	// NOTE: sourcePrefix contains the trailing "/"
 	prefixedDenom := sourcePrefix + data.Denom
-	voucher := sdk.NewCoin(prefixedDenom, sdk.NewIntFromUint64(data.Amount))
+
+	denomTrace := types.ParseDenomTrace(prefixedDenom)
+
+	traceHash := denomTrace.Hash()
+	if !k.HasDenomTrace(ctx, traceHash) {
+		k.SetDenomTrace(ctx, denomTrace)
+	}
+
+	voucher := sdk.NewCoin(denomTrace.IBCDenom(), sdk.NewIntFromUint64(data.Amount))
 
 	// mint new tokens if the source of the transfer is the same chain
 	if err := k.bankKeeper.MintCoins(

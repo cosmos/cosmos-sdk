@@ -57,11 +57,10 @@ message FungibleTokenPacketAcknowledgement {
   string error = 2;
 }
 
-// DenomTrace contains the base denomination for ICS20 fungible tokens and the souce tracing
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the source tracing
 // information
 message DenomTrace {
   // chain of port/channel identifiers used for tracing the source of the fungible token
   string trace = 1;
   // base denomination of the relayed fungible token
-  string base_denom = 2 [(gogoproto.moretags) = "yaml:\"base_denom\""];
-}
+  string base_denom = 2;

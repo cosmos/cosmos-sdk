@@ -6,12 +6,33 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
+
+// ParseDenomTrace parses a string with the ibc prefix (denom trace) and the base denomination
+// into a DenomTrace type.
+//
+// Examples:
+//
+// 	- "portidone/channelidone/uatom" => DenomTrace{Trace: "portidone/channelidone", BaseDenom: "uatom"}
+// 	- "uatom" => DenomTrace{Trace: "", BaseDenom: "uatom"}
+func ParseDenomTrace(rawDenom string) DenomTrace {
+	denomSplit := strings.Split(denom, "/")
+
+	if denomSplit[0] == denom {
+		return DenomTrace{
+			Trace:     "",
+			BaseDenom: denom,
+		}
+	}
+
+	return DenomTrace{
+		Trace:     strings.Join(denomSplit[:len(denomSplit)-1], "/"),
+		BaseDenom: denomSplit[len(denomSplit)-1],
+	}
+}
 
 // Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields using the following formula:
 //
@@ -25,7 +46,8 @@ func (dt DenomTrace) GetPrefix() string {
 	return dt.Trace + "/"
 }
 
-// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace + "/" + baseDenom)}'. If the trace is empty, it will return the base denomination.
+// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace +
+// baseDenom)}'. If the trace is empty, it will return the base denomination.
 func (dt DenomTrace) IBCDenom() string {
 	if dt.Trace != "" {
 		return fmt.Sprintf("ibc/%s", dt.Hash())
@@ -33,7 +55,9 @@ func (dt DenomTrace) IBCDenom() string {
 	return dt.BaseDenom
 }
 
-// RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators it will return an error.
+// RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already
+// empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators
+// it will return an error.
 func (dt *DenomTrace) RemovePrefix() error {
 	if dt.Trace == "" {
 		return nil
@@ -43,10 +67,7 @@ func (dt *DenomTrace) RemovePrefix() error {
 
 	var err error
 	switch {
-	case len(traceSplit) == 0, traceSplit[0] == dt.Trace:
-		err = sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "trace info %s must contain '/' separators", dt.Trace)
-	case len(traceSplit) == 1:
-		err = sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "trace info %s must come in pairs of '{portID}/channelID}'", dt.Trace)
+	// NOTE: other cases are checked during msg validation
 	case len(traceSplit) == 2:
 		dt.Trace = ""
 	case len(traceSplit) == 3:
@@ -60,31 +81,17 @@ func (dt *DenomTrace) RemovePrefix() error {
 	return nil
 }
 
-func (dt DenomTrace) validateTrace() error {
-	// empty trace is accepted when token lives on the original chain
-
-	switch {
-	case dt.Trace == "" && dt.BaseDenom != "":
-		return nil
-	case strings.TrimSpace(dt.Trace) == "":
-		return fmt.Errorf("cannot have an empty trace and empty base denomination")
-	}
-
-	traceSplit := strings.Split(dt.Trace, "/")
-
-	switch {
-	case traceSplit[0] == dt.Trace:
-		return fmt.Errorf("trace %s must contain '/' separators", dt.Trace)
-	case len(traceSplit)%2 != 0:
+func validateTraceIdentifiers(identifiers []string) error {
+	if len(identifiers)%2 != 0 {
 		return fmt.Errorf("trace info %s must come in pairs of port and channel identifiers '{portID}/{channelID}'", dt.Trace)
 	}
 
 	// validate correctness of port and channel identifiers
-	for i := 0; i < len(traceSplit); i += 2 {
-		if err := host.PortIdentifierValidator(traceSplit[i]); err != nil {
+	for i := 0; i < len(identifiers); i += 2 {
+		if err := host.PortIdentifierValidator(identifiers[i]); err != nil {
 			return sdkerrors.Wrapf(err, "invalid port ID at position %d", i)
 		}
-		if err := host.ChannelIdentifierValidator(traceSplit[i+1]); err != nil {
+		if err := host.ChannelIdentifierValidator(identifiers[i+1]); err != nil {
 			return sdkerrors.Wrapf(err, "invalid channel ID at position %d", i)
 		}
 	}
@@ -93,11 +100,18 @@ func (dt DenomTrace) validateTrace() error {
 
 // Validate performs a basic validation of the DenomTrace fields.
 func (dt DenomTrace) Validate() error {
-	if err := sdk.ValidateDenom(dt.BaseDenom); err != nil {
-		return err
+	// empty trace is accepted when token lives on the original chain
+	switch {
+	case dt.Trace == "" && dt.BaseDenom != "":
+		return nil
+	case strings.TrimSpace(dt.Trace) == "" && strings.TrimSpace(dt.BaseDenom) == "":
+		return fmt.Errorf("cannot have an empty trace and empty base denomination")
 	}
 
-	return dt.validateTrace()
+	// NOTE: no base denomination validation
+
+	identifiers := strings.Split(dt.Trace, "/")
+	return validateTraceIdentifiers(identifiers)
 }
 
 // Traces defines a wrapper type for a slice of IdentifiedDenomTraces.
@@ -120,39 +134,14 @@ func (t Traces) Validate() error {
 	return nil
 }
 
-// ValidateIBCDenom checks that the denomination for an IBC fungible token is valid.
-func ValidateIBCDenom(denom string) (tmbytes.HexBytes, error) {
-	denomSplit := strings.SplitN(denom, "/", 3)
-
-	var err error
-	switch {
-	case len(denomSplit) == 0:
-		err = sdkerrors.Wrap(ErrInvalidDenomForTransfer, denom)
-	case denomSplit[0] == denom:
-		err = sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
-	case denomSplit[0] != "ibc":
-		err = sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination %s must start with 'ibc'", denom)
-	case len(denomSplit) == 2:
-		err = tmtypes.ValidateHash([]byte(denomSplit[1]))
-	default:
-		err = sdkerrors.Wrap(ErrInvalidDenomForTransfer, denom)
+// ValidateIBCDenom checks that the denomination for an IBC fungible token packet denom is valid.
+func ValidateIBCDenom(denom string) error {
+	denomSplit := strings.Split(denom, "/")
+	if denomSplit[0] == denom {
+		// NOTE: no base denomination validation
+		return nil
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return tmbytes.HexBytes(denomSplit[1]), nil
-}
-
-// ParseDenomTrace parses a string with the ibc prefix (denom trace) and the base denomination
-// into a DenomTrace type. The parsing will fail if the base denom is invalid or if the trace is not correctly constructed
-// in pairs of valid port and channel identifiers.
-//
-// Valid examples:
-// 	- "portidone/channelidone/uatom" => DenomTrace{Trace: "portidone/channelidone", BaseDenom: "uatom"}
-// 	- "uatom" => DenomTrace{Trace: "", BaseDenom: "uatom"}
-func ParseDenomTrace(trace string) (DenomTrace, error) {
-	// TODO: use ParseCoin as reference
-	return DenomTrace{}, nil
+	identifiers := denomSplit[:len(denomSplit)-1]
+	return validateTraceIdentifiers(identifiers)
 }

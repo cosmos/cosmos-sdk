@@ -36,14 +36,8 @@ func NewFungibleTokenPacketData(
 
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
-	if strings.TrimSpace(ftpd.Denom) == "" {
-		return sdkerrors.Wrap(ErrInvalidDenomForTransfer, "denom cannot be empty")
-	}
 	if ftpd.Amount == 0 {
 		return sdkerrors.Wrap(ErrInvalidAmount, "amount cannot be 0")
-	}
-	if err := ftpd.Trace.Validate(); err != nil {
-		return err
 	}
 	if strings.TrimSpace(ftpd.Sender) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
@@ -51,7 +45,7 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if strings.TrimSpace(ftpd.Receiver) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "receiver address cannot be blank")
 	}
-	return nil
+	return ValidateIBCDenom(ftpd.Denom)
 }
 
 // GetBytes is a helper for serialising

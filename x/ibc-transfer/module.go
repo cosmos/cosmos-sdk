@@ -290,10 +290,12 @@ func (am AppModule) OnRecvPacket(
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
+
 	acknowledgement := types.FungibleTokenPacketAcknowledgement{
 		Success: true,
 		Error:   "",
 	}
+
 	if err := am.keeper.OnRecvPacket(ctx, packet, data); err != nil {
 		acknowledgement = types.FungibleTokenPacketAcknowledgement{
 			Success: false,

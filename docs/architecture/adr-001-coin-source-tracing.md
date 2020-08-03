@@ -277,19 +277,13 @@ The denomination trace info only needs to be updated when token is received:
 // NOTE: We use SourcePort and SourceChannel here, because the counterparty
 // chain would have prefixed with DestPort and DestChannel when originally
 // receiving this coin as seen in the "sender chain is the source" condition.
-voucherPrefix := GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-
 if ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
   // sender chain is not the source, unescrow tokens
 
   // remove prefix added by sender chain
-  if err := denomTrace.RemovePrefix(); err != nil {
-    return err
-  }
-
-  // NOTE: since the sender is a sink chain, we already know the unprefixed denomination trace info
-
-  token := sdk.NewCoin(denomTrace.IBCDenom(), sdk.NewIntFromUint64(data.Amount))
+  voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+  unprefixedDenom := data.Denom[len(voucherPrefix):]
+  token := sdk.NewCoin(unprefixedDenom, sdk.NewIntFromUint64(data.Amount))
 
   // unescrow tokens
   escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
@@ -299,7 +293,7 @@ if ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data
 // sender chain is the source, mint vouchers
 
 // construct the denomination trace from the full raw denomination
-denomTrace := NewDenomTraceFromRawDenom(data.Denom)
+denomTrace := NewDenomTrace(data.Denom)
 
 // since SendPacket did not prefix the denomination with the voucherPrefix, we must add it here
 denomTrace.AddPrefix(packet.GetDestPort(), packet.GetDestChannel())

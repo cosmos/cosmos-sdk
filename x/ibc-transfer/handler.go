@@ -29,7 +29,7 @@ func handleMsgTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgTransfer)
 		return nil, err
 	}
 
-	k.Logger(ctx).Info("IBC transfer: %s from %s to %s", msg.Token, msg.Sender, msg.Receiver)
+	k.Logger(ctx).Info("IBC fungible token transfer", "token", msg.Token, "sender", msg.Sender, "receiver", msg.Receiver)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

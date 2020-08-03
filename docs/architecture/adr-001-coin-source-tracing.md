@@ -42,14 +42,20 @@ is acting as the sink zone.
 
 ### Example
 
-These steps of transfer occur: `A -> B -> C -> A -> C`
+Assume the following channel connections exist and that all channels use the port ID `transfer`:
 
-1. `A -> B` : sender chain is source zone. `A` sends packet with `denom` (escrowed on `A`), `B` receives `denom` and mints and sends voucher `A/denom` to recipient.
-2. `B -> C` : sender chain is source zone. `B` sends packet with `A/denom` (escrowed on `B`), `C` receives `A/denom` and mints and sends voucher `B/A/denom` to recipient.
-3. `C -> A` : sender chain is source zone. `C` sends packet with `B/A/denom` (escrowed on `C`), `A` receives `B/A/denom` and mints and sends voucher `C/B/A/denom` to recipient.
-4. `A -> C` : sender chain is sink zone. `A` sends packet with `C/B/A/denom` (burned on `A`), `C` receives `C/B/A/denom`, and unescrows and sends `B/A/denom` to recipient.
+- chain `A` has channels with chain `B` and chain `C` with the IDs `channelToB` and `channelToC`, respectively
+- chain `B` has channels with chain `A` and chain `C` with the IDs `channelToA` and `channelToC`, respectively
+- chain `C` has channels with chain `A` and chain `B` with the IDs `channelToA` and `channelToB`, respectively
 
-The token has a final denomination on chain `C` of `B/A/denom`, where `B/A` is the trace information.
+These steps of transfer between chains occur in the following order: `A -> B -> C -> A -> C`. In particular:
+
+1. `A -> B`: sender chain is source zone. `A` sends packet with `denom` (escrowed on `A`), `B` receives `denom` and mints and sends voucher `transfer/channelToA/denom` to recipient.
+2. `B -> C`: sender chain is source zone. `B` sends packet with `transfer/channelToA/denom` (escrowed on `B`), `C` receives `transfer/channelToA/denom` and mints and sends voucher `transfer/channelToB/transfer/channelToA/denom` to recipient.
+3. `C -> A`: sender chain is source zone. `C` sends packet with `transfer/channelToB/transfer/channelToA/denom` (escrowed on `C`), `A` receives `transfer/channelToB/transfer/channelToA/denom` and mints and sends voucher `transfer/channelToC/transfer/channelToB/transfer/channelToA/denom` to recipient.
+4. `A -> C`: sender chain is sink zone. `A` sends packet with `transfer/channelToC/transfer/channelToB/transfer/channelToA/denom` (burned on `A`), `C` receives `transfer/channelToC/transfer/channelToB/transfer/channelToA/denom`, and unescrows and sends `transfer/channelToB/transfer/channelToA/denom` to recipient.
+
+The token has a final denomination on chain `C` of `transfer/channelToB/transfer/channelToA/denom`, where `transfer/channelToB/transfer/channelToA` is the trace information.
 
 In this context, when the sender of a cross-chain transfer *is* the source where the tokens
 were originated, the protocol prefixes the denomination with the port and channel identifiers in the
@@ -96,9 +102,18 @@ specification.
 
 ## Decision
 
+The issues outlined above, are applicable only to SDK-based chains, and thus the proposed solution
+are do not require specification changes that would result in modification to other implementations
+of the ICS20 spec.
+
 Instead of adding the identifiers on the coin denomination directly, the proposed solution hashes
 the denomination prefix in order to get a consistent length for all the cross-chain fungible tokens.
-The new format will be the following:
+
+This will be used for internal storage only, and when transferred via IBC to a different chain, the
+denomination specified on the packed data will be the full prefix path of the identifiers needed to
+trace the token back to the originating chain, as specified on ICS20.
+
+The new proposed format will be the following:
 
 ```golang
 ibcDenom = "ibc/" + hash(trace + "/" + base denom)
@@ -248,12 +263,10 @@ func ValidateIBCDenom(denom string, trace DenomTrace) error {
 }
 ```
 
-The denomination trace info only needs to be updated when token is received, in both scenarios:
+The denomination trace info only needs to be updated when token is received:
 
-- Sender is **sink** chain: Store the received denomination, i.e in the [example](#example) above,
-  during step 4, when chain `C` receives the `B/A/denom`. As there the trimmed trace info is
-  already known by the chain we don't need to store it (i.e `C/B/A/denom`).
-- Sender is **source** chain: Store the received info. For example, during step 1, when chain `B` receives `A/denom`.
+- Receiver is **source** chain: The receiver created the token and must have the trace lookup already stored (if necessary _ie_ native token case wouldn't need a lookup).
+- Receiver is **not source** chain: Store the received info. For example, during step 1, when chain `B` receives `transfer/channelToA/denom`.
 
 ```golang
 // OnRecvPacket
@@ -266,16 +279,10 @@ The denomination trace info only needs to be updated when token is received, in 
 // NOTE: We use SourcePort and SourceChannel here, because the counterparty
 // chain would have prefixed with DestPort and DestChannel when originally
 // receiving this coin as seen in the "sender chain is the source" condition.
-voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+voucherPrefix := GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 
-if types.ReceiverChainIsSource(voucherPrefix, data.Denom) {
+if ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
   // sender chain is not the source, unescrow tokens
-
-  // set the value to the lookup table if not stored already
-  traceHash := denomTrace.Hash()
-  if !k.HasDenomTrace(ctx, traceHash) {
-    k.SetDenomTrace(ctx, traceHash, denomTrace)
-  }
 
   // remove prefix added by sender chain
   if err := denomTrace.RemovePrefix(); err != nil {

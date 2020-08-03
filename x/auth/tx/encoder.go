@@ -19,8 +19,8 @@ func DefaultTxEncoder() types.TxEncoder {
 		}
 
 		raw := &txtypes.TxRaw{
-			BodyBytes:     wrapper.GetBodyBytes(),
-			AuthInfoBytes: wrapper.GetAuthInfoBytes(),
+			BodyBytes:     wrapper.getBodyBytes(),
+			AuthInfoBytes: wrapper.getAuthInfoBytes(),
 			Signatures:    wrapper.tx.Signatures,
 		}
 

@@ -215,7 +215,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 ```
 
 ```golang
-// ValidateIBCDenom checks that the denomination for an IBC fungible token is valid. It returns the hash of denomination on success.
+// ValidateIBCDenom checks that the denomination for an IBC fungible token is valid. It returns error if the trace `hash` is invalid
 func ValidateIBCDenom(denom string, trace DenomTrace) error {
   // Validate that base denominations are equal if the trace info is not provided
   if trace.Trace == "" {

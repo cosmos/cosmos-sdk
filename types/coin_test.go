@@ -67,7 +67,8 @@ func TestCoinIsValid(t *testing.T) {
 		{Coin{"Atom", NewInt(1)}, false},
 		{Coin{"a", NewInt(1)}, false},
 		{Coin{"a very long coin denom", NewInt(1)}, false},
-		{Coin{"atOm", NewInt(1)}, false},
+		{Coin{"atOm", NewInt(1)}, true},
+		{Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", NewInt(1)}, true},
 		{Coin{"     ", NewInt(1)}, false},
 	}
 
@@ -403,6 +404,10 @@ func TestCoins(t *testing.T) {
 	mixedCase3 := Coins{
 		{"gAs", NewInt(1)},
 	}
+	multipleIBCDenoms := Coins{
+		{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", NewInt(1)},
+		{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", NewInt(2)},
+	}
 	empty := NewCoins()
 	badSort1 := Coins{
 		{"tree", NewInt(1)},
@@ -433,8 +438,9 @@ func TestCoins(t *testing.T) {
 
 	assert.True(t, good.IsValid(), "Coins are valid")
 	assert.False(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
-	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
-	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
+	assert.True(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
+	assert.True(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
+	assert.True(t, multipleIBCDenoms.IsValid(), "IBC denominations as per ADR001 should be valid")
 	assert.True(t, good.IsAllPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, empty.IsAllPositive(), "Expected coins to not be positive: %v", empty)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)

@@ -51,10 +51,7 @@ func validate(denom string, amount Int) error {
 
 // IsValid returns true if the Coin has a non-negative amount and the denom is vaild.
 func (coin Coin) IsValid() bool {
-	if err := validate(coin.Denom, coin.Amount); err != nil {
-		return false
-	}
-	return true
+	return validate(coin.Denom, coin.Amount) == nil
 }
 
 // IsZero returns if this represents no money
@@ -91,7 +88,7 @@ func (coin Coin) IsEqual(other Coin) bool {
 	return coin.Amount.Equal(other.Amount)
 }
 
-// Adds amounts of two coins with same denom. If the coins differ in denom then
+// Add adds amounts of two coins with same denom. If the coins differ in denom then
 // it panics.
 func (coin Coin) Add(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
@@ -101,7 +98,7 @@ func (coin Coin) Add(coinB Coin) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
-// Subtracts amounts of two coins with same denom. If the coins differ in denom
+// Sub subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
 func (coin Coin) Sub(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
@@ -201,7 +198,7 @@ func (coins Coins) IsValid() bool {
 
 		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
-			if strings.ToLower(coin.Denom) != coin.Denom {
+			if err := ValidateDenom(coin.Denom); err != nil {
 				return false
 			}
 			if coin.Denom <= lowDenom {
@@ -463,7 +460,7 @@ func (coins Coins) Empty() bool {
 	return len(coins) == 0
 }
 
-// Returns the amount of a denom from coins
+// AmountOf returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
 	mustValidateDenom(denom)
 
@@ -576,8 +573,8 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can be 3 ~ 64 characters long.
-	reDnmString = `[a-z][a-zA-Z0-9/]{2,63}`
+	// Denominations can be 3 ~ 128 characters long.
+	reDnmString = `[a-z][a-zA-Z0-9/]{2,127}`
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`

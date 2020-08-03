@@ -32,7 +32,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.7.0
+	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
@@ -40,7 +40,7 @@ require (
 	github.com/tendermint/iavl v0.14.0
 	github.com/tendermint/tendermint v0.33.6
 	github.com/tendermint/tm-db v0.5.1
-	google.golang.org/grpc v1.30.0
+	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.3.0
 )

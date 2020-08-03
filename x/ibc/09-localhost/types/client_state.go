@@ -67,45 +67,13 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
-// VerifyClientConsensusState verifies a proof of the consensus
-// state of the loop-back client.
-// VerifyClientConsensusState verifies a proof of the consensus state of the
-// Tendermint client stored on the target machine.
+// VerifyClientConsensusState returns an error since a local host client does not store consensus
+// states.
 func (cs ClientState) VerifyClientConsensusState(
-	store sdk.KVStore,
-	_ codec.BinaryMarshaler,
-	aminoCdc *codec.Codec,
-	_ commitmentexported.Root,
-	height uint64,
-	_ string,
-	consensusHeight uint64,
-	prefix commitmentexported.Prefix,
-	_ []byte,
-	consensusState clientexported.ConsensusState,
+	sdk.KVStore, codec.BinaryMarshaler, *codec.Codec, commitmentexported.Root,
+	uint64, string, uint64, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientexported.ClientTypeLocalHost)
-	if err != nil {
-		return err
-	}
-
-	data := store.Get([]byte(path.String()))
-	if len(data) == 0 {
-		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
-	}
-
-	var prevConsensusState clientexported.ConsensusState
-	if err := aminoCdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
-		return err
-	}
-
-	if consensusState != prevConsensusState {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrFailedClientConsensusStateVerification,
-			"consensus state ≠ previous stored consensus state: \n%v\n≠\n%v", consensusState, prevConsensusState,
-		)
-	}
-
-	return nil
+	return ErrConsensusStatesNotStored
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the

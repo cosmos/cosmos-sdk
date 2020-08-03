@@ -7,12 +7,8 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
-const (
-	// SubModuleName for the localhost (loopback) client
-	SubModuleName = "localhost"
-)
-
-// on the provided Amino codec. These types are used for Amino JSON serialization.
+// RegisterCodec registers client state on the provided Amino codec. This type is used for
+// Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ClientState{}, "ibc/client/localhost/ClientState", nil)
 }

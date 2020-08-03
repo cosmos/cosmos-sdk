@@ -17,14 +17,14 @@ const (
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
-	amount sdk.Coins, trace DenomTrace,
+	token sdk.Coin, trace DenomTrace,
 	sender sdk.AccAddress, receiver string,
 	timeoutHeight, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,
 		SourceChannel:    sourceChannel,
-		Amount:           amount,
+		Token:            token,
 		Trace:            trace,
 		Sender:           sender,
 		Receiver:         receiver,
@@ -44,7 +44,7 @@ func (MsgTransfer) Type() string {
 }
 
 // ValidateBasic performs a basic check of the MsgTransfer fields.
-// NOTE: timeout height and timestamp values can be 0 to disable the timeout.
+// NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
@@ -52,18 +52,18 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
 		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
-	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Amount.String())
+	if !msg.Token.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Token.String())
 	}
-	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	if !msg.Token.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Token.String())
 	}
 	if err := msg.Trace.Validate(); err != nil {
 		return err
 	}
 	// Only validate the ibc denomination when trace info is not provided
 	if msg.Trace.Trace != "" {
-		denomTraceHash, err := ValidateIBCDenom(msg.Amount[0].Denom)
+		denomTraceHash, err := ValidateIBCDenom(msg.Token.Denom)
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 		if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
 			return fmt.Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
 		}
-	} else if msg.Trace.BaseDenom != msg.Amount[0].Denom {
+	} else if msg.Trace.BaseDenom != msg.Token.Denom {
 		// otherwise, validate that denominations are equal
 		return sdkerrors.Wrapf(
 			ErrInvalidDenomForTransfer,
@@ -85,12 +85,17 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
-	return nil
+
+	// sanity check that validate basic on fungible token packet passes
+	// NOTE: this should always pass since validation checks should be the
+	// same. Please open an issue if you encounter an error on this line.
+	packet := NewFungibleTokenPacketData(msg.Token.Denom, msg.Token.Amount.Uint64(), msg.Sender.String(), msg.Receiver)
+	return packet.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgTransfer) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

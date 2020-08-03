@@ -338,8 +338,6 @@ type TxBuilder interface {
   SetFee(sdk.Fee)
   GetMemo() string
   SetMemo(string)
-
-  CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
 }
 ```
 

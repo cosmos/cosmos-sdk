@@ -1,8 +1,6 @@
 package types
 
 import (
-	"bytes"
-	"fmt"
 	"strings"
 	"time"
 
@@ -25,10 +23,12 @@ var (
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coins, trace DenomTrace, sender, receiver string) FungibleTokenPacketData {
+	denom string, amount uint64,
+	sender, receiver string,
+) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
+		Denom:    denom,
 		Amount:   amount,
-		Trace:    trace,
 		Sender:   sender,
 		Receiver: receiver,
 	}
@@ -36,33 +36,14 @@ func NewFungibleTokenPacketData(
 
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
-	if !ftpd.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
+	if strings.TrimSpace(ftpd.Denom) == "" {
+		return sdkerrors.Wrap(ErrInvalidDenomForTransfer, "denom cannot be empty")
 	}
-	if !ftpd.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Amount.String())
+	if ftpd.Amount == 0 {
+		return sdkerrors.Wrap(ErrInvalidAmount, "amount cannot be 0")
 	}
 	if err := ftpd.Trace.Validate(); err != nil {
 		return err
-	}
-	// Only validate the ibc denomination when trace info is not provided
-	if ftpd.Trace.Trace != "" {
-		denomTraceHash, err := ValidateIBCDenom(ftpd.Amount[0].Denom)
-		if err != nil {
-			return err
-		}
-
-		traceHash := ftpd.Trace.Hash()
-		if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
-			return fmt.Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
-		}
-	} else if ftpd.Trace.BaseDenom != ftpd.Amount[0].Denom {
-		// otherwise, validate that denominations are equal
-		return sdkerrors.Wrapf(
-			ErrInvalidDenomForTransfer,
-			"token denom must match the trace base denom (%s ≠ %s)",
-			ftpd.Amount, ftpd.Trace.BaseDenom,
-		)
 	}
 	if strings.TrimSpace(ftpd.Sender) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
@@ -75,10 +56,10 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 
 // GetBytes is a helper for serialising
 func (ftpd FungibleTokenPacketData) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ftpd))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&ftpd))
 }
 
 // GetBytes is a helper for serialising
 func (ack FungibleTokenPacketAcknowledgement) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ack))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&ack))
 }

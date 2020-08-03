@@ -49,18 +49,19 @@ func (ModeHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerD
 	bodyBz := protoTx.GetBodyBytes()
 	authInfoBz := protoTx.GetAuthInfoBytes()
 
-	return SignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.AccountSequence)
+	return SignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.AccountSequence, data.TimeoutHeight)
 }
 
 // SignBytes returns the SIGN_MODE_DIRECT sign bytes for the provided TxBody bytes, AuthInfo bytes, chain ID,
 // account number and sequence.
-func SignBytes(bodyBytes, authInfoBytes []byte, chainID string, accnum, sequence uint64) ([]byte, error) {
+func SignBytes(bodyBytes, authInfoBytes []byte, chainID string, accnum, sequence, timeout uint64) ([]byte, error) {
 	signDoc := types.SignDoc{
 		BodyBytes:       bodyBytes,
 		AuthInfoBytes:   authInfoBytes,
 		ChainId:         chainID,
 		AccountNumber:   accnum,
 		AccountSequence: sequence,
+		TimeoutHeight:   timeout,
 	}
 	return signDoc.Marshal()
 }

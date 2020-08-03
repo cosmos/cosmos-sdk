@@ -32,4 +32,8 @@ type SignerData struct {
 	// AccountSequence is the account sequence number of the signer that is used
 	// for replay protection
 	AccountSequence uint64
+
+	// TimeoutHeight defines the block height after which a transaction will
+	// not be processed by the chain.
+	TimeoutHeight uint64
 }

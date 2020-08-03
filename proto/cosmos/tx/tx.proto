@@ -58,6 +58,10 @@ message SignDoc {
   // account_sequence starts at 1 rather than 0 to avoid the case where
   // the default 0 value must be omitted in protobuf serialization
   uint64 account_sequence = 5;
+
+  // timeout_height defines the block height after which this transaction will
+  // not be processed by the chain.
+  uint64 timeout_height = 6;
 }
 
 // TxBody is the body of a transaction that all signers sign over

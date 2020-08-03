@@ -31,7 +31,7 @@ as absolute or relative using the "absolute-timeouts" flag. Relative timeouts ar
 the block height and block timestamp queried from the latest consensus state corresponding
 to the counterparty channel. Any timeout set to 0 is disabled.`),
 		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),
-		Args:    cobra.ExactArgs(5),
+		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())

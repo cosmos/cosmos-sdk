@@ -55,7 +55,7 @@ func (s secp256k1Algo) Derive() DeriveFn {
 		}
 		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
 
-		return derivedKey[:], err
+		return derivedKey, err
 	}
 }
 

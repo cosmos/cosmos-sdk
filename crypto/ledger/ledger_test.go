@@ -107,7 +107,7 @@ func TestPublicKeySafe(t *testing.T) {
 	require.Nil(t, ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
 
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
-		fmt.Sprintf("%x", priv.PubKey().Bytes()),
+		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())

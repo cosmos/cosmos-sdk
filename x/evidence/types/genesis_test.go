@@ -105,7 +105,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			"expected evidence",
 			func() {
 				genesisState = types.GenesisState{
-					Evidence: []*codectypes.Any{&codectypes.Any{}},
+					Evidence: []*codectypes.Any{},
 				}
 			},
 			false,
@@ -127,7 +127,7 @@ func TestGenesisStateValidate(t *testing.T) {
 
 func TestUnpackInterfaces(t *testing.T) {
 	var gs = types.GenesisState{
-		Evidence: []*codectypes.Any{&codectypes.Any{}},
+		Evidence: []*codectypes.Any{},
 	}
 
 	testCases := []struct {

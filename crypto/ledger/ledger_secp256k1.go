@@ -115,7 +115,7 @@ func ShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 		return err
 	}
 
-	if pubKey != expectedPubKey {
+	if !pubKey.Equals(expectedPubKey) {
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 

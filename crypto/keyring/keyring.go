@@ -18,6 +18,7 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -687,7 +688,7 @@ func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.Pub
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
-	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
+	info := newLocalInfo(name, pub, string(legacy.Cdc.Amino.MustMarshalBinaryBare(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}

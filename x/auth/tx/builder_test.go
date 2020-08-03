@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -47,8 +48,7 @@ func TestTxBuilder(t *testing.T) {
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey)
-			,
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey),
 		},
 	}
 
@@ -135,7 +135,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 		PubKey: pubKey1,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey1),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey1),
 		},
 	}
 
@@ -143,7 +143,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 		PubKey: pubKey2,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey2),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey2),
 		},
 	}
 

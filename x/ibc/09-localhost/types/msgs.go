@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient = &MsgCreateClient{}
+	_ clientexported.MsgCreateClient = (*MsgCreateClient)(nil)
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance

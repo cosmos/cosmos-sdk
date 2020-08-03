@@ -96,16 +96,10 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
-			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 
-			kr, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
-			if err != nil {
-				return errors.Wrap(err, "failed to initialize keyring")
-			}
-
 			name := args[0]
-			key, err := kr.Key(name)
+			key, err := clientCtx.Keyring.Key(name)
 			if err != nil {
 				return errors.Wrapf(err, "failed to fetch '%s' from the keyring", name)
 			}

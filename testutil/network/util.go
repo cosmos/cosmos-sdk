@@ -136,7 +136,12 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
 
-	authGenState.Accounts = genAccounts
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	if err != nil {
+		return err
+	}
+
+	authGenState.Accounts = accounts
 	cfg.GenesisState[authtypes.ModuleName] = cfg.Codec.MustMarshalJSON(authGenState)
 
 	// set the balances in the genesis state

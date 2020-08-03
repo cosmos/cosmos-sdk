@@ -41,11 +41,9 @@ var (
 	disabledTimeout   = uint64(0)
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
-	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
 
 	packet        = types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 	unknownPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
-	invalidAck    = invalidAckData
 
 	emptyProof     = []byte{}
 	invalidProofs1 = commitmentexported.Proof(nil)
@@ -140,7 +138,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
 		{testMsgs[9], false, "too short connection id"},
 		{testMsgs[10], false, "too long connection id"},
 		{testMsgs[11], false, "connection id contains non-alpha"},
-		{testMsgs[12], false, "empty channel version"},
+		{testMsgs[12], true, ""},
 		{testMsgs[13], false, "invalid counterparty port id"},
 		{testMsgs[14], false, "invalid counterparty channel id"},
 	}
@@ -190,14 +188,14 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 		{testMsgs[4], false, "too short channel id"},
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
-		{testMsgs[7], false, "empty counterparty version"},
+		{testMsgs[7], true, ""},
 		{testMsgs[8], false, "proof height is zero"},
 		{testMsgs[9], false, "invalid channel order"},
 		{testMsgs[10], false, "connection hops more than 1 "},
 		{testMsgs[11], false, "too short connection id"},
 		{testMsgs[12], false, "too long connection id"},
 		{testMsgs[13], false, "connection id contains non-alpha"},
-		{testMsgs[14], false, "empty channel version"},
+		{testMsgs[14], true, ""},
 		{testMsgs[15], false, "invalid counterparty port id"},
 		{testMsgs[16], false, "invalid counterparty channel id"},
 		{testMsgs[17], false, "empty proof"},
@@ -240,7 +238,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 		{testMsgs[4], false, "too short channel id"},
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
-		{testMsgs[7], false, "empty counterparty version"},
+		{testMsgs[7], true, ""},
 		{testMsgs[8], false, "empty proof"},
 		{testMsgs[9], false, "proof height is zero"},
 	}
@@ -471,7 +469,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, 1, emptyAddr),
 		types.NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
 		types.NewMsgAcknowledgement(unknownPacket, packet.GetData(), suite.proof, 1, addr),
-		types.NewMsgAcknowledgement(packet, invalidAck, suite.proof, 1, addr),
 	}
 
 	testCases := []struct {
@@ -484,7 +481,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		{testMsgs[2], false, "missing signer address"},
 		{testMsgs[3], false, "cannot submit an empty proof"},
 		{testMsgs[4], false, "invalid packet"},
-		{testMsgs[5], false, "invalid acknowledgement"},
 	}
 
 	for i, tc := range testCases {

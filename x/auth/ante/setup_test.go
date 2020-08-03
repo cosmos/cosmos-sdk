@@ -1,10 +1,6 @@
 package ante_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -25,12 +21,13 @@ func (suite *AnteTestSuite) TestSetup() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetMsgs(msg)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	sud := ante.NewSetUpContextDecorator()
 	antehandler := sdk.ChainAnteDecorators(sud)
@@ -59,12 +56,13 @@ func (suite *AnteTestSuite) TestRecoverPanic() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetMsgs(msg)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	sud := ante.NewSetUpContextDecorator()
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
@@ -100,8 +98,4 @@ type PanicDecorator struct{}
 
 func (pd PanicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	panic("random error")
-}
-
-func TestAnteSetupTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

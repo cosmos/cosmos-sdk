@@ -13,8 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
-
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -29,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -63,6 +62,7 @@ func NewSimApp(val Validator) servertypes.Application {
 // in-process local testing network.
 type Config struct {
 	Codec            codec.Marshaler
+	LegacyAmino      *codec.Codec
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
@@ -89,6 +89,7 @@ func DefaultConfig() Config {
 	return Config{
 		Codec:            encCfg.Marshaler,
 		TxConfig:         encCfg.TxConfig,
+		LegacyAmino:      encCfg.Amino,
 		AccountRetriever: authtypes.NewAccountRetriever(encCfg.Marshaler),
 		AppConstructor:   NewSimApp,
 		GenesisState:     simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
@@ -313,6 +314,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithJSONMarshaler(cfg.Codec).
+			WithCodec(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)
 

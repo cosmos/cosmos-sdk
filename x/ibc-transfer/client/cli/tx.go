@@ -44,7 +44,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			srcChannel := args[1]
 			receiver := args[2]
 
-			coins, err := sdk.ParseCoins(args[3])
+			coin, err := sdk.ParseCoin(args[3])
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			}
 
 			msg := types.NewMsgTransfer(
-				srcPort, srcChannel, coins, sender, receiver, timeoutHeight, timeoutTimestamp,
+				srcPort, srcChannel, coin, sender, receiver, timeoutHeight, timeoutTimestamp,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

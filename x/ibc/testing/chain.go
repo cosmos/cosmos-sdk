@@ -55,6 +55,7 @@ const (
 var (
 	DefaultTrustLevel tmmath.Fraction = light.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
+	TestCoin                          = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
@@ -595,9 +596,14 @@ func (chain *TestChain) ChanCloseInit(
 }
 
 // GetPacketData returns a ibc-transfer marshalled packet to be used for
-// callback testing
+// callback testing.
 func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
-	packet := ibctransfertypes.NewFungibleTokenPacketData(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))), chain.SenderAccount.GetAddress().String(), counterparty.SenderAccount.GetAddress().String())
+	packet := ibctransfertypes.FungibleTokenPacketData{
+		Denom:    TestCoin.Denom,
+		Amount:   TestCoin.Amount.Uint64(),
+		Sender:   chain.SenderAccount.GetAddress().String(),
+		Receiver: counterparty.SenderAccount.GetAddress().String(),
+	}
 
 	return packet.GetBytes()
 }

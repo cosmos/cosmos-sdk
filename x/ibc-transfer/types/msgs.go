@@ -14,13 +14,13 @@ const (
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
-	amount sdk.Coins, sender sdk.AccAddress, receiver string,
+	token sdk.Coin, sender sdk.AccAddress, receiver string,
 	timeoutHeight, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,
 		SourceChannel:    sourceChannel,
-		Amount:           amount,
+		Token:            token,
 		Sender:           sender,
 		Receiver:         receiver,
 		TimeoutHeight:    timeoutHeight,
@@ -39,7 +39,7 @@ func (MsgTransfer) Type() string {
 }
 
 // ValidateBasic performs a basic check of the MsgTransfer fields.
-// NOTE: timeout height and timestamp values can be 0 to disable the timeout.
+// NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
@@ -47,11 +47,11 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
 		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
-	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Amount.String())
+	if !msg.Token.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Token.String())
 	}
-	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	if !msg.Token.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Token.String())
 	}
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
@@ -59,7 +59,12 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
-	return nil
+
+	// sanity check that validate basic on fungible token packet passes
+	// NOTE: this should always pass since validation checks should be the
+	// same. Please open an issue if you encounter an error on this line.
+	packet := NewFungibleTokenPacketData(msg.Token.Denom, msg.Token.Amount.Uint64(), msg.Sender.String(), msg.Receiver)
+	return packet.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg

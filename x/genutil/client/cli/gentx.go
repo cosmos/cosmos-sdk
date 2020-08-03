@@ -137,8 +137,6 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "error creating tx builder")
 			}
 
-			txGen := clientCtx.TxConfig
-			txBuilder := txGen.NewTxBuilder()
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
 
 			// create a 'create-validator' message
@@ -167,7 +165,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			// sign the transaction and write it to the output file
-			txBuilder, err = clientCtx.TxConfig.WrapTxBuilder(stdTx)
+			txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(stdTx)
 			if err != nil {
 				return fmt.Errorf("error creating tx builder")
 			}

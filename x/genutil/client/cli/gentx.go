@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -163,7 +162,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			// read the transaction
-			stdTx, err := readUnsignedGenTxFile(cdc, w)
+			stdTx, err := readUnsignedGenTxFile(clientCtx, w)
 			if err != nil {
 				return errors.Wrap(err, "failed to read unsigned gen tx file")
 			}
@@ -209,16 +208,20 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
 }
 
-func readUnsignedGenTxFile(cdc codec.JSONMarshaler, r io.Reader) (authtypes.StdTx, error) {
-	var stdTx authtypes.StdTx
-
-	bytes, err := ioutil.ReadAll(r)
+func readUnsignedGenTxFile(clientCtx client.Context, r io.Reader) (sdk.Tx, error) {
+	bz, err := ioutil.ReadAll(r)
 	if err != nil {
-		return stdTx, err
+		return nil, err
 	}
 
-	err = cdc.UnmarshalJSON(bytes, &stdTx)
-	return stdTx, err
+	fmt.Printf("%s\n", bz)
+
+	aTx, err := clientCtx.TxConfig.TxDecoder()(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return aTx, err
 }
 
 func writeSignedGenTx(cdc codec.JSONMarshaler, outputDocument string, tx sdk.Tx) error {

@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/base64"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -98,9 +97,6 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
-	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
@@ -155,9 +151,6 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	}
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
-	}
-	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")

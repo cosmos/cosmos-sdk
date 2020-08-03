@@ -182,9 +182,9 @@ func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
 		expectErr bool
 	}{
 		{"default value", 0, 10, false},
-		{"no timeout", 15, 10, false},
-		{"timeout (same height)", 10, 10, false},
-		{"timeout (greater height)", 9, 10, true},
+		{"no timeout (greater height)", 15, 10, false},
+		{"no timeout (same height)", 10, 10, false},
+		{"timeout (smaller height)", 9, 10, true},
 	}
 
 	for _, tc := range testCases {

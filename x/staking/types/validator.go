@@ -226,7 +226,7 @@ func (d Description) EnsureLength() (Description, error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	pk, err := cryptoenc.PubKeyToProto(v.GetConsPubKey())
 	if err != nil {
-		panic(err) //todo:error
+		panic(err)
 	}
 
 	return abci.ValidatorUpdate{
@@ -240,7 +240,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	pk, err := cryptoenc.PubKeyToProto(v.GetConsPubKey())
 	if err != nil {
-		panic(err) //todo:error
+		panic(err)
 	}
 
 	return abci.ValidatorUpdate{

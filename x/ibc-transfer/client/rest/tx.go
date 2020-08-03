@@ -56,8 +56,7 @@ func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		msg := types.NewMsgTransfer(
 			portID,
 			channelID,
-			req.Amount,
-			req.DenomTrace,
+			req.Token,
 			fromAddr,
 			req.Receiver,
 			req.TimeoutHeight,

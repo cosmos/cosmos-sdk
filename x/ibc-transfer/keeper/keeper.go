@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -140,7 +139,7 @@ func (k Keeper) SetDenomTrace(ctx sdk.Context, denomTrace types.DenomTrace) {
 // GetAllDenomTraces returns the trace information for all the denominations.
 func (k Keeper) GetAllDenomTraces(ctx sdk.Context) types.Traces {
 	traces := types.Traces{}
-	k.IterateDenomTraces(ctx, func(_ tmbytes.HexBytes, denomTrace types.DenomTrace) bool {
+	k.IterateDenomTraces(ctx, func(denomTrace types.DenomTrace) bool {
 		traces = append(traces, denomTrace)
 		return false
 	})
@@ -150,7 +149,7 @@ func (k Keeper) GetAllDenomTraces(ctx sdk.Context) types.Traces {
 
 // IterateDenomTraces iterates over the denomination traces in the store
 // and performs a callback function.
-func (k Keeper) IterateDenomTraces(ctx sdk.Context, cb func(hash tmbytes.HexBytes, denomTrace types.DenomTrace) bool) {
+func (k Keeper) IterateDenomTraces(ctx sdk.Context, cb func(denomTrace types.DenomTrace) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DenomTraceKey)
 
@@ -160,7 +159,7 @@ func (k Keeper) IterateDenomTraces(ctx sdk.Context, cb func(hash tmbytes.HexByte
 		var denomTrace types.DenomTrace
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &denomTrace)
 
-		if cb(iterator.Key(), denomTrace) {
+		if cb(denomTrace) {
 			break
 		}
 	}

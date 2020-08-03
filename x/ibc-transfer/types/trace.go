@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -19,12 +20,12 @@ import (
 // 	- "portidone/channelidone/uatom" => DenomTrace{Trace: "portidone/channelidone", BaseDenom: "uatom"}
 // 	- "uatom" => DenomTrace{Trace: "", BaseDenom: "uatom"}
 func ParseDenomTrace(rawDenom string) DenomTrace {
-	denomSplit := strings.Split(denom, "/")
+	denomSplit := strings.Split(rawDenom, "/")
 
-	if denomSplit[0] == denom {
+	if denomSplit[0] == rawDenom {
 		return DenomTrace{
 			Trace:     "",
-			BaseDenom: denom,
+			BaseDenom: rawDenom,
 		}
 	}
 
@@ -83,7 +84,7 @@ func (dt *DenomTrace) RemovePrefix() error {
 
 func validateTraceIdentifiers(identifiers []string) error {
 	if len(identifiers)%2 != 0 {
-		return fmt.Errorf("trace info %s must come in pairs of port and channel identifiers '{portID}/{channelID}'", dt.Trace)
+		return errors.New("trace info must come in pairs of port and channel identifiers '{portID}/{channelID}'")
 	}
 
 	// validate correctness of port and channel identifiers

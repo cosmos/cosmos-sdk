@@ -178,7 +178,16 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		k.SetDenomTrace(ctx, denomTrace)
 	}
 
-	voucher := sdk.NewCoin(denomTrace.IBCDenom(), sdk.NewIntFromUint64(data.Amount))
+	voucherDenom := denomTrace.IBCDenom()
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeDenomTrace,
+			sdk.NewAttribute(types.AttributeKeyTraceHash, traceHash.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, voucherDenom),
+		),
+	)
+
+	voucher := sdk.NewCoin(voucherDenom, sdk.NewIntFromUint64(data.Amount))
 
 	// mint new tokens if the source of the transfer is the same chain
 	if err := k.bankKeeper.MintCoins(

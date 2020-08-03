@@ -43,7 +43,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.Height)
+	return cs.Height
 }
 
 // IsFrozen returns false.

@@ -57,9 +57,7 @@ These steps of transfer between chains occur in the following order: `A -> B -> 
 
 The token has a final denomination on chain `C` of `transfer/channelToB/transfer/channelToA/denom`, where `transfer/channelToB/transfer/channelToA` is the trace information.
 
-In this context, when the sender of a cross-chain transfer *is* the source where the tokens
-were originated, the protocol prefixes the denomination with the port and channel identifiers in the
-following format:
+In this context, upon a receive of a cross-chain fungible token transfer, if the sender chain is the source of the token, the protocol prefixes the denomination with the port and channel identifiers in the following format:
 
 ```typescript
 prefix + denom = {destPortN}/{destChannelN}/.../{destPort0}/{destChannel0}/denom

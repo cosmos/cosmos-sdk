@@ -41,5 +41,6 @@ type (
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)
 		SetGasLimit(limit uint64)
+		SetHeightTimeout(height uint64)
 	}
 )

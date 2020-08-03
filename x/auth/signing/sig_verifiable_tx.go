@@ -21,6 +21,8 @@ type SigVerifiableTx interface {
 // fee, memo, and auxiliary interfaces.
 type Tx interface {
 	SigVerifiableTx
+
 	types.TxWithMemo
 	types.FeeTx
+	types.TxWithHeightTimeout
 }

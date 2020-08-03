@@ -1,7 +1,6 @@
 package ante_test
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -164,8 +163,9 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 }
 
 func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
-	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	suite.SetupTest(true)
+
+	antehandler := sdk.ChainAnteDecorators(ante.TxHeightTimeoutDecorator{})
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -175,15 +175,38 @@ func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	testCases := []struct {
+		name      string
+		timeout   uint64
+		height    int64
+		expectErr bool
+	}{
+		{"default value", 0, 10, false},
+		{"no timeout", 15, 10, false},
+		{"timeout (same height)", 10, 10, false},
+		{"timeout (greater height)", 9, 10, true},
+	}
 
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
+	for _, tc := range testCases {
+		tc := tc
 
-	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+		suite.Run(tc.name, func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	fmt.Printf("%T", tx)
+			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+
+			suite.txBuilder.SetFeeAmount(feeAmount)
+			suite.txBuilder.SetGasLimit(gasLimit)
+			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
+			suite.txBuilder.SetHeightTimeout(tc.timeout)
+
+			privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+			suite.Require().NoError(err)
+
+			ctx := suite.ctx.WithBlockHeight(tc.height)
+			_, err = antehandler(ctx, tx, true)
+			suite.Require().Equal(tc.expectErr, err != nil, err)
+		})
+	}
 }

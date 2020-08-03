@@ -70,6 +70,11 @@ func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
 }
 
+// SetHeightTimeout sets the transaction's height timeout.
+func (s *StdTxBuilder) SetHeightTimeout(height uint64) {
+	s.TimeoutHeight = height
+}
+
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {
 	Cdc *codec.Codec

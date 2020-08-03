@@ -139,10 +139,11 @@ var _ sdk.Tx = (*StdTx)(nil)
 // It only works with Amino, please prefer the new protobuf Tx in types/tx.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
-	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`
-	Fee        StdFee         `json:"fee" yaml:"fee"`
-	Signatures []StdSignature `json:"signatures" yaml:"signatures"`
-	Memo       string         `json:"memo" yaml:"memo"`
+	Msgs          []sdk.Msg      `json:"msg" yaml:"msg"`
+	Fee           StdFee         `json:"fee" yaml:"fee"`
+	Signatures    []StdSignature `json:"signatures" yaml:"signatures"`
+	Memo          string         `json:"memo" yaml:"memo"`
+	TimeoutHeight uint64         `json:"timeout_height" yaml:"timeout_height"`
 }
 
 // Deprecated
@@ -211,6 +212,11 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 
 // GetMemo returns the memo
 func (tx StdTx) GetMemo() string { return tx.Memo }
+
+// GetHeightTimeout returns the transaction's timeout height (if set).
+func (tx StdTx) GetHeightTimeout() uint64 {
+	return tx.TimeoutHeight
+}
 
 // GetSignatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of

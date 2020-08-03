@@ -21,19 +21,13 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
-
-// ClientState requires (read-only) access to keys outside the client prefix.
-type ClientState struct {
-	ChainID string `json:"chain_id" yaml:"chain_id"`
-	Height  int64  `json:"height" yaml:"height"`
-}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
 func NewClientState(chainID string, height int64) ClientState {
 	return ClientState{
 		ChainID: chainID,
-		Height:  height,
+		Height:  uint64(height),
 	}
 }
 

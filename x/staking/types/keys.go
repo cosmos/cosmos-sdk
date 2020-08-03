@@ -1,7 +1,9 @@
 package types
 
 import (
+	"bytes"
 	"encoding/binary"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -120,13 +122,49 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	return operAddr
 }
 
-// gets the prefix for all unbonding delegations from a delegator
-func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
-	bz := sdk.FormatTimeBytes(timestamp)
-	return append(ValidatorQueueKey, bz...)
+// GetValidatorQueueKey returns the prefix key used for getting a set of unbonding
+// validators whose unbonding completion occurs at the given time and height.
+func GetValidatorQueueKey(timestamp time.Time, height int64) []byte {
+	heightBz := sdk.Uint64ToBigEndian(uint64(height))
+	timeBz := sdk.FormatTimeBytes(timestamp)
+	timeBzL := len(timeBz)
+	prefixL := len(ValidatorQueueKey)
+
+	bz := make([]byte, prefixL+8+timeBzL+8)
+
+	// copy the prefix
+	copy(bz[:prefixL], ValidatorQueueKey)
+
+	// copy the encoded time bytes length
+	copy(bz[prefixL:prefixL+8], sdk.Uint64ToBigEndian(uint64(timeBzL)))
+
+	// copy the encoded time bytes
+	copy(bz[prefixL+8:prefixL+8+timeBzL], timeBz)
+
+	// copy the encoded height
+	copy(bz[prefixL+8+timeBzL:], heightBz)
+
+	return bz
 }
 
-//______________________________________________________________________________
+// ParseValidatorQueueKey returns the encoded time and height from a key created
+// from GetValidatorQueueKey.
+func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
+	prefixL := len(ValidatorQueueKey)
+	if prefix := bz[:prefixL]; !bytes.Equal(prefix, ValidatorQueueKey) {
+		return time.Time{}, 0, fmt.Errorf("invalid prefix; expected: %X, got: %X", ValidatorQueueKey, prefix)
+	}
+
+	timeBzL := sdk.BigEndianToUint64(bz[prefixL : prefixL+8])
+	ts, err := sdk.ParseTimeBytes(bz[prefixL+8 : prefixL+8+int(timeBzL)])
+	if err != nil {
+		return time.Time{}, 0, err
+	}
+
+	height := sdk.BigEndianToUint64(bz[prefixL+8+int(timeBzL):])
+
+	return ts, int64(height), nil
+}
 
 // gets the key for delegator bond with validator
 // VALUE: staking/Delegation
@@ -138,8 +176,6 @@ func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
 	return append(DelegationKey, delAddr.Bytes()...)
 }
-
-//______________________________________________________________________________
 
 // gets the key for an unbonding delegation by delegator and validator addr
 // VALUE: staking/UnbondingDelegation
@@ -168,8 +204,6 @@ func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
 	return GetUBDKey(delAddr, valAddr)
 }
 
-//______________
-
 // gets the prefix for all unbonding delegations from a delegator
 func GetUBDsKey(delAddr sdk.AccAddress) []byte {
 	return append(UnbondingDelegationKey, delAddr.Bytes()...)
@@ -186,10 +220,8 @@ func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 	return append(UnbondingQueueKey, bz...)
 }
 
-//________________________________________________________________________________
-
-// gets the key for a redelegation
-// VALUE: staking/RedelegationKey
+// GetREDKey returns a key prefix for indexing a redelegation from a delegator
+// and source validator to a destination validator.
 func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
 	key := make([]byte, 1+sdk.AddrLen*3)
 
@@ -258,38 +290,38 @@ func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 
-// gets the prefix for all unbonding delegations from a delegator
+// GetRedelegationTimeKey returns a key prefix for indexing an unbonding
+// redelegation based on a completion time.
 func GetRedelegationTimeKey(timestamp time.Time) []byte {
 	bz := sdk.FormatTimeBytes(timestamp)
 	return append(RedelegationQueueKey, bz...)
 }
 
-//______________
-
-// gets the prefix keyspace for redelegations from a delegator
+// GetREDsKey returns a key prefix for indexing a redelegation from a delegator
+// address.
 func GetREDsKey(delAddr sdk.AccAddress) []byte {
 	return append(RedelegationKey, delAddr.Bytes()...)
 }
 
-// gets the prefix keyspace for all redelegations redelegating away from a source validator
+// GetREDsFromValSrcIndexKey returns a key prefix for indexing a redelegation to
+// a source validator.
 func GetREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
 	return append(RedelegationByValSrcIndexKey, valSrcAddr.Bytes()...)
 }
 
-// gets the prefix keyspace for all redelegations redelegating towards a destination validator
+// GetREDsToValDstIndexKey returns a key prefix for indexing a redelegation to a
+// destination (target) validator.
 func GetREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
 	return append(RedelegationByValDstIndexKey, valDstAddr.Bytes()...)
 }
 
-// gets the prefix keyspace for all redelegations redelegating towards a destination validator
-// from a particular delegator
+// GetREDsByDelToValDstIndexKey returns a key prefix for indexing a redelegation
+// from an address to a source validator.
 func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) []byte {
 	return append(GetREDsToValDstIndexKey(valDstAddr), delAddr.Bytes()...)
 }
 
-//________________________________________________________________________________
-
-// GetHistoricalInfoKey gets the key for the historical info
+// GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
 }

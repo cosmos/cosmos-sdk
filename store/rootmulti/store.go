@@ -614,13 +614,13 @@ func (ci commitInfo) Hash() []byte {
 	if len(ci.StoreInfos) == 0 {
 		return nil
 	}
-	rootHash, _, _ := sdkmaps.SimpleProofsFromMap(ci.toMap())
+	rootHash, _, _ := sdkmaps.ProofsFromMap(ci.toMap())
 	return rootHash
 }
 
 func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
 	cmap := ci.toMap()
-	_, proofs, _ := sdkmaps.SimpleProofsFromMap(cmap)
+	_, proofs, _ := sdkmaps.ProofsFromMap(cmap)
 	proof := proofs[storeName]
 	if proof == nil {
 		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))

@@ -37,7 +37,7 @@ message QueryDenomTracesRequest {
 message QueryDenomTracesResponse {
   // list of stored connections of the chain.
   repeated DenomTrace denom_traces = 1 [
-		(gogoproto.castrepeated) = "Traces",
+    (gogoproto.castrepeated) = "Traces",
     (gogoproto.nullable) = false
   ];
   // pagination response

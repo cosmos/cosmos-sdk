@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -186,7 +185,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				}
 			}
 
-			if err := writeSignedGenTx(cdc, outputDocument, stdTx); err != nil {
+			if err := writeSignedGenTx(clientCtx, outputDocument, stdTx); err != nil {
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 
@@ -227,14 +226,14 @@ func readUnsignedGenTxFile(clientCtx client.Context, r io.Reader) (sdk.Tx, error
 	return aTx, err
 }
 
-func writeSignedGenTx(cdc codec.JSONMarshaler, outputDocument string, tx sdk.Tx) error {
+func writeSignedGenTx(clientCtx client.Context, outputDocument string, tx sdk.Tx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 	defer outputFile.Close()
 
-	json, err := cdc.MarshalJSON(tx)
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(tx)
 	if err != nil {
 		return err
 	}

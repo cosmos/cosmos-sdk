@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -24,12 +26,18 @@ func (q Keeper) DenomTrace(c context.Context, req *types.QueryDenomTraceRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if err := tmtypes.ValidateHash([]byte(req.Hash)); err != nil {
+	hash, err := hex.DecodeString(req.Hash)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	hash = tmbytes.HexBytes(hash)
+	if err := tmtypes.ValidateHash(hash); err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid denom trace hash %s, %s", req.Hash, err))
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	denomTrace, found := q.GetDenomTrace(ctx, []byte(req.Hash))
+	denomTrace, found := q.GetDenomTrace(ctx, hash)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,

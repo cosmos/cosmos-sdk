@@ -9,29 +9,13 @@ import (
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(
-	params Params, signingInfos map[string]ValidatorSigningInfo, missedBlocks map[string][]MissedBlock,
+	params Params, signingInfos []SigningInfos, missedBlocks []ValidatorMissedBlocks,
 ) GenesisState {
-
-	var si = make([]SigningInfos, 0)
-	for address, signingInfo := range signingInfos {
-		si = append(si, SigningInfos{
-			Address:      address,
-			SigningInfos: signingInfo,
-		})
-	}
-
-	var validatorMissedBlocks = make([]ValidatorMissedBlocks, 0)
-	for address, validatorMissedBlock := range missedBlocks {
-		validatorMissedBlocks = append(validatorMissedBlocks, ValidatorMissedBlocks{
-			Address:      address,
-			MissedBlocks: validatorMissedBlock,
-		})
-	}
 
 	return GenesisState{
 		Params:       params,
-		SigningInfos: si,
-		MissedBlocks: validatorMissedBlocks,
+		SigningInfos: signingInfos,
+		MissedBlocks: missedBlocks,
 	}
 }
 

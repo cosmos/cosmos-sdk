@@ -43,18 +43,26 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 // with InitGenesis
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data types.GenesisState) {
 	params := keeper.GetParams(ctx)
-	signingInfos := make(map[string]types.ValidatorSigningInfo)
-	missedBlocks := make(map[string][]types.MissedBlock)
+	signingInfos := make([]types.SigningInfos, 0)
+	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
 	keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
-		signingInfos[bechAddr] = info
+		signingInfos = append(signingInfos, types.SigningInfos{
+			Address:      bechAddr,
+			SigningInfos: info,
+		})
+
 		localMissedBlocks := []types.MissedBlock{}
 
 		keeper.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
 			localMissedBlocks = append(localMissedBlocks, types.NewMissedBlock(index, missed))
 			return false
 		})
-		missedBlocks[bechAddr] = localMissedBlocks
+
+		missedBlocks = append(missedBlocks, types.ValidatorMissedBlocks{
+			Address:      bechAddr,
+			MissedBlocks: localMissedBlocks,
+		})
 
 		return false
 	})

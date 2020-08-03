@@ -9,10 +9,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 
 // Query provides defines the gRPC querier service
 service Query {
-  // DenomTrace queries an IBC connection end.
+  // DenomTrace queries a denomination trace info.
   rpc DenomTrace(QueryDenomTraceRequest) returns (QueryDenomTraceResponse) {}
 
-  // DenomTraces queries all the IBC connections of a chain.
+  // DenomTraces queries all denomination traces.
   rpc DenomTraces(QueryDenomTracesRequest) returns (QueryDenomTracesResponse) {}
 }
 
@@ -28,12 +28,12 @@ message QueryDenomTraceResponse {
   DenomTrace denom_trace = 1;
 }
 
-// QueryConnectionsRequest is the request type for the Query/Connections RPC method
+// QueryConnectionsRequest is the request type for the Query/DenomTraces RPC method
 message QueryDenomTracesRequest {
   cosmos.query.PageRequest pagination = 1;
 }
 
-// QueryConnectionsResponse is the response type for the Query/Connections RPC method.
+// QueryConnectionsResponse is the response type for the Query/DenomTraces RPC method.
 message QueryDenomTracesResponse {
   // list of stored connections of the chain.
   repeated DenomTrace denom_traces = 1 [

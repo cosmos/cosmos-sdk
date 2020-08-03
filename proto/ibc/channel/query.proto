@@ -4,34 +4,51 @@ package ibc.channel;
 import "gogoproto/gogo.proto";
 import "cosmos/query/pagination.proto";
 import "ibc/channel/channel.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 // Query provides defines the gRPC querier service
 service Query {
   // Channel queries an IBC Channel.
-  rpc Channel(QueryChannelRequest) returns (QueryChannelResponse) {}
+  rpc Channel(QueryChannelRequest) returns (QueryChannelResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/channel/{port_id}/{channel_id}";
+  }
 
   // Channels queries all the IBC channels of a chain.
-  rpc Channels(QueryChannelsRequest) returns (QueryChannelsResponse) {}
+  rpc Channels(QueryChannelsRequest) returns (QueryChannelsResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/channels/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+  }
 
   // ConnectionChannels queries all the channels associated with a connection end.
-  rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {}
+  rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/connection-channels/{connection}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+  }
 
   // PacketCommitment queries a stored packet commitment hash.
-  rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {}
+  rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/packet-commitment/{port_id}/{channel_id}/{sequence}";
+  }
 
   // PacketCommitments returns the all the packet commitments hashes associated with a channel.
-  rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {}
+  rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/packet-commitments/{port_id}/{channel_id}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+  }
 
   // PacketAcknowledgement queries a stored packet acknowledgement hash.
-  rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {}
+  rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/packet-acknowledgement/{port_id}/{channel_id}/{sequence}";
+  }
 
   // UnrelayedPackets returns all the unrelayed IBC packets associated with a channel and sequences.
-  rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {}
+  rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/unrelayed-packets/{port_id}/{channel_id}/{packet_commitment_sequences}/{acknowledgements}";
+  }
 
   // NextSequenceReceive returns the next receive sequence for a given channel
-  rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {}
+  rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/next-sequence/{port_id}/{channel_id}";
+  }
 
   // TODO: blocked by client proto migration
   // rpc ChannelClientState(QueryChannelClientStateRequest) returns (QueryChannelClientStateRequest) {}

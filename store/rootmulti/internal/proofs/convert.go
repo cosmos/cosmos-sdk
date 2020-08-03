@@ -69,7 +69,7 @@ func convertInnerOps(p *crypto.Proof) ([]*ics23.InnerOp, error) {
 // buildPath returns a list of steps from leaf to root
 // in each step, true means index is left side, false index is right side
 // code adapted from merkle/simple_proof.go:computeHashFromAunts
-func buildPath(idx int64, total int64) []bool {
+func buildPath(idx, total int64) []bool {
 	if total < 2 {
 		return nil
 	}

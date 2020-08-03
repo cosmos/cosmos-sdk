@@ -166,7 +166,7 @@ func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 
 // DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
 // using the given chainCode.
-func DerivePrivateKeyForPath(privKeyBytes [32]byte, chainCode [32]byte, path string) ([]byte, error) {
+func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
 	data := privKeyBytes
 	parts := strings.Split(path, "/")
 

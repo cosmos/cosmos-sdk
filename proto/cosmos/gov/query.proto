@@ -12,42 +12,42 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 service Query {
   // Proposal queries proposal details based on ProposalID
   rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {
-    option (google.api.http).get = "/cosmos/gov/proposal/{proposal_id}";
+    option (google.api.http).get = "/cosmos/gov/v1/proposal/{proposal_id}";
   }
 
   // Proposals queries all proposals based on given status
   rpc Proposals (QueryProposalsRequest) returns (QueryProposalsResponse) {
-    option (google.api.http).get = "/cosmos/gov/proposals/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
   }
 
   // Vote queries Voted information based on proposalID, voterAddr
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
-    option (google.api.http).get = "/cosmos/gov/{proposal_id}/vote/{voter}";
+    option (google.api.http).get = "/cosmos/gov/v1/{proposal_id}/vote/{voter}";
   }
 
   // Votes queries votes of a given proposal
   rpc Votes (QueryVotesRequest) returns (QueryVotesResponse) {
-    option (google.api.http).get = "/cosmos/gov/{proposal_id}/votes/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/gov/v1/{proposal_id}/votes/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
   }
 
   // Params queries all parameters of the gov module
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/gov/params/{params_type}";
+    option (google.api.http).get = "/cosmos/gov/v1/params/{params_type}";
   }
 
   // Deposit queries single deposit information based proposalID, depositAddr
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
-    option (google.api.http).get = "/cosmos/gov/{proposal_id}/deposit/{depositor}";
+    option (google.api.http).get = "/cosmos/gov/v1/{proposal_id}/deposit/{depositor}";
   }
 
   // Deposits queries all deposits of a single proposal
   rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
-    option (google.api.http).get = "/cosmos/gov/{proposal_id}/deposits/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/gov/v1/{proposal_id}/deposits/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
   }
 
   // TallyResult queries the tally of a proposal vote
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
-    option (google.api.http).get = "/cosmos/gov/{proposal_id}/tally";
+    option (google.api.http).get = "/cosmos/gov/v1/{proposal_id}/tally";
   }
 }
 

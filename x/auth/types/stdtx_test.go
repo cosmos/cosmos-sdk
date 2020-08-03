@@ -12,6 +12,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -258,6 +259,7 @@ func TestGetSignaturesV2(t *testing.T) {
 
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	RegisterCodec(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
@@ -268,7 +270,7 @@ func TestGetSignaturesV2(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, len(sigs), 1)
 
-	require.Equal(t, sigs[0].PubKey.Bytes(), sig.GetPubKey().Bytes())
+	require.Equal(t, cdc.MustMarshalBinaryBare(sigs[0].PubKey), cdc.MustMarshalBinaryBare(sig.GetPubKey()))
 	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
 		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: sig.GetSignature(),

@@ -67,11 +67,11 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
 	switch key := key.(type) {
 	case secp256k1.PubKey:
-		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key[:]}}, nil
+		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key}}, nil
 	case ed255192.PubKey:
-		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key[:]}}, nil
+		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key}}, nil
 	case sr25519.PubKey:
-		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key[:]}}, nil
+		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key}}, nil
 	case multisig.PubKeyMultisigThreshold:
 		pubKeys := key.PubKeys
 		resKeys := make([]*types.PublicKey, len(pubKeys))

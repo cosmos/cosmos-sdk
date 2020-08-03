@@ -415,7 +415,7 @@ func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
-	var pkEd ed25519.PubKey
-	copy(pkEd[:], pkBytes)
+	pkEd := make(ed25519.PubKey, ed25519.PubKeySize)
+	copy(pkEd, pkBytes)
 	return pkEd
 }

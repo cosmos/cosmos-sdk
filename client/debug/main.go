@@ -34,7 +34,7 @@ func Cmd() *cobra.Command {
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
 func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
-	var pubKey ed25519.PubKey
+	pubKey := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {

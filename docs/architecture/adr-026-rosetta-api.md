@@ -128,7 +128,8 @@ func (CosmosLaunchpad) GetBlock(req RosettaGetBlockRequest) {
 The adapters that come out-of-the-box can be easily overriden by application-specific implementations.
 
 This way we offer developers the opportunity to embed
-a new server in their applications or just using the binary that can be build from the
+a new server instance in their applications. Developers always retain the possiblity to using the simple binary
+that come with the Cosmos SDK.
 repository.
 
 ## References

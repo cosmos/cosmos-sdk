@@ -238,6 +238,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(txf.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(txf.gas)
+	tx.SetTimeoutHeight(txf.TimeoutHeight())
 
 	return tx, nil
 }

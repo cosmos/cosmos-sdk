@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	flagTimeoutHeight    = "timeout-height"
-	flagTimeoutTimestamp = "timeout-timestamp"
-	flagAbsoluteTimeouts = "absolute-timeouts"
+	flagRelativeTimeoutHeight    = "relative-timeout-height"
+	flagRelativeTimeoutTimestamp = "relative-timeout-timestamp"
+	flagAbsoluteTimeouts         = "absolute-timeouts"
 )
 
 // NewTransferTxCmd returns the command to create a NewMsgTransfer transaction
@@ -49,12 +49,12 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 				return err
 			}
 
-			timeoutHeight, err := cmd.Flags().GetUint64(flagTimeoutHeight)
+			timeoutHeight, err := cmd.Flags().GetUint64(flagRelativeTimeoutHeight)
 			if err != nil {
 				return err
 			}
 
-			timeoutTimestamp, err := cmd.Flags().GetUint64(flagTimeoutHeight)
+			timeoutTimestamp, err := cmd.Flags().GetUint64(flagRelativeTimeoutTimestamp)
 			if err != nil {
 				return err
 			}
@@ -92,8 +92,8 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 		},
 	}
 
-	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultRelativePacketTimeoutHeight, "Timeout block height. The timeout is disabled when set to 0.")
-	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultRelativePacketTimeoutTimestamp, "Timeout timestamp in nanoseconds. Default is 10 minutes. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagRelativeTimeoutHeight, types.DefaultRelativePacketTimeoutHeight, "Timeout block height. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagRelativeTimeoutTimestamp, types.DefaultRelativePacketTimeoutTimestamp, "Timeout timestamp in nanoseconds. Default is 10 minutes. The timeout is disabled when set to 0.")
 	cmd.Flags().Bool(flagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
 	flags.AddTxFlagsToCmd(cmd)
 

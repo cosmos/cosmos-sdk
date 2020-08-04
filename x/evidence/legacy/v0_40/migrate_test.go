@@ -15,6 +15,8 @@ import (
 
 func TestMigrate(t *testing.T) {
 	v040Codec := codec.New()
+	v040Codec.RegisterInterface((*v038evidence.Evidence)(nil), nil)
+	v040Codec.RegisterConcrete(&v038evidence.Equivocation{}, "cosmos-sdk/Equivocation", nil)
 	cryptocodec.RegisterCrypto(v040Codec)
 
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")

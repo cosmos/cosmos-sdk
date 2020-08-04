@@ -16,7 +16,7 @@ const (
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 	registerQueryRoutes(clientCtx, r)
-	registerTxRoutes(clientCtx, r)
+	registerTxHandlers(clientCtx, r)
 }
 
 // ChannelOpenInitReq defines the properties of a channel open init request's body.

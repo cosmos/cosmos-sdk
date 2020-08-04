@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+	v034 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v040 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_40"
@@ -30,7 +30,7 @@ func TestMigrate(t *testing.T) {
 	)
 
 	gs := v039auth.GenesisState{
-		Params: v0_34.Params{
+		Params: v034.Params{
 			MaxMemoCharacters:      10,
 			TxSigLimit:             10,
 			TxSizeCostPerByte:      10,

@@ -1,4 +1,4 @@
-package v0_36
+package v036
 
 import (
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"

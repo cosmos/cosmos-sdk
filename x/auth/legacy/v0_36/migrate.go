@@ -1,6 +1,6 @@
 // DONTCOVER
 // nolint
-package v0_36
+package v036
 
 import (
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"

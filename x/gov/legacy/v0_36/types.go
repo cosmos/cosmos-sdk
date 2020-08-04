@@ -1,6 +1,6 @@
 // DONTCOVER
 // nolint
-package v0_36
+package v036
 
 import (
 	"fmt"

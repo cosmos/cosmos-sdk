@@ -1,4 +1,4 @@
-package v0_36
+package v036
 
 import (
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"

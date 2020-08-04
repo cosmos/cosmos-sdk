@@ -1,6 +1,6 @@
 // DONTCOVER
 // nolint
-package v0_34
+package v034
 
 import (
 	"encoding/json"

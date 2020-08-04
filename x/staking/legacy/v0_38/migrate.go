@@ -1,6 +1,6 @@
 // DONTCOVER
 // nolint
-package v0_38
+package v038
 
 import (
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"

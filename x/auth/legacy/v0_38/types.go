@@ -223,11 +223,6 @@ func NewBaseVestingAccount(
 }
 
 func (bva BaseVestingAccount) Validate() error {
-	if (bva.Coins.IsZero() && !bva.OriginalVesting.IsZero()) ||
-		bva.OriginalVesting.IsAnyGT(bva.Coins) {
-		return errors.New("vesting amount cannot be greater than total amount")
-	}
-
 	return bva.BaseAccount.Validate()
 }
 

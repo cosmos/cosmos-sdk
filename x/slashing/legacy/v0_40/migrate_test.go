@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v039slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v0_39"
 	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v0_40"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func TestMigrate(t *testing.T) {
@@ -23,8 +22,8 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, err)
 
 	gs := v039slashing.GenesisState{
-		Params: types.DefaultParams(),
-		SigningInfos: map[string]types.ValidatorSigningInfo{
+		Params: v039slashing.DefaultParams(),
+		SigningInfos: map[string]v039slashing.ValidatorSigningInfo{
 			"cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph": {
 				Address:             addr2,
 				IndexOffset:         615501,
@@ -38,7 +37,7 @@ func TestMigrate(t *testing.T) {
 				Tombstoned:          false,
 			},
 		},
-		MissedBlocks: map[string][]types.MissedBlock{
+		MissedBlocks: map[string][]v039slashing.MissedBlock{
 			"cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph": {
 				{
 					Index:  2,

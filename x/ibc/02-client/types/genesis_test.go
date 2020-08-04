@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -17,7 +16,10 @@ import (
 )
 
 const (
+	chainID  = "chainID"
 	clientID = "ethbridge"
+
+	height = 10
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -34,7 +36,7 @@ func TestValidateGenesis(t *testing.T) {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	header := ibctmtypes.CreateTestHeader("chainID", 10, now, valSet, []tmtypes.PrivValidator{privVal})
+	header := ibctmtypes.CreateTestHeader(chainID, height, now, valSet, []tmtypes.PrivValidator{privVal})
 
 	testCases := []struct {
 		name     string
@@ -51,7 +53,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
@@ -62,7 +64,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet.Hash(), header.ValidatorSet,
 							),
 						},
 					},
@@ -76,7 +78,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						"/~@$*", ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
+						"/~@$*", ibctmtypes.NewClientState(chainID, light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
@@ -87,7 +89,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet.Hash(), header.ValidatorSet,
 							),
 						},
 					},
@@ -102,7 +104,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 0)),
 				},
@@ -116,7 +118,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
@@ -127,7 +129,7 @@ func TestValidateGenesis(t *testing.T) {
 						"CLIENTID2",
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet.Hash(), header.ValidatorSet,
 							),
 						},
 					},
@@ -141,7 +143,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
@@ -152,7 +154,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet.Hash(), header.ValidatorSet,
 							),
 						},
 					),

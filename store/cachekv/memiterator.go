@@ -4,8 +4,9 @@ import (
 	"container/list"
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // Iterates over iterKVCache items.

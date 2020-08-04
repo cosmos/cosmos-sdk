@@ -1,12 +1,8 @@
-package direct_test
+package tx
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
@@ -30,8 +26,8 @@ func TestDirectModeHandler(t *testing.T) {
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	pubKeyCdc := std.DefaultPublicKeyCodec{}
 
-	txGen := tx.NewTxConfig(marshaler, pubKeyCdc, tx.DefaultSignModeHandler())
-	txBuilder := txGen.NewTxBuilder()
+	txConfig := NewTxConfig(marshaler, pubKeyCdc, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT})
+	txBuilder := txConfig.NewTxBuilder()
 
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
@@ -71,9 +67,9 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("verify modes and default-mode")
-	directModeHandler := direct.ModeHandler{}
-	require.Equal(t, directModeHandler.DefaultMode(), signingtypes.SignMode_SIGN_MODE_DIRECT)
-	require.Len(t, directModeHandler.Modes(), 1)
+	modeHandler := txConfig.SignModeHandler()
+	require.Equal(t, modeHandler.DefaultMode(), signingtypes.SignMode_SIGN_MODE_DIRECT)
+	require.Len(t, modeHandler.Modes(), 1)
 
 	signingData := signing.SignerData{
 		ChainID:         "test-chain",
@@ -81,7 +77,7 @@ func TestDirectModeHandler(t *testing.T) {
 		AccountSequence: 1,
 	}
 
-	signBytes, err := directModeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
+	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
 
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
@@ -127,7 +123,7 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
-	signBytes, err = directModeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
+	signBytes, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.Equal(t, expectedSignBytes, signBytes)
 
@@ -146,7 +142,7 @@ func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 	}
 	for _, invalidMode := range invalidModes {
 		t.Run(invalidMode.String(), func(t *testing.T) {
-			var dh direct.ModeHandler
+			var dh signModeDirectHandler
 			var signingData signing.SignerData
 			_, err := dh.GetSignBytes(invalidMode, signingData, nil)
 			require.Error(t, err)
@@ -164,11 +160,11 @@ func (npt *nonProtoTx) ValidateBasic() error { return nil }
 var _ sdk.Tx = (*nonProtoTx)(nil)
 
 func TestDirectModeHandler_nonProtoTx(t *testing.T) {
-	var dh direct.ModeHandler
+	var dh signModeDirectHandler
 	var signingData signing.SignerData
 	tx := new(nonProtoTx)
 	_, err := dh.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
-	wantErr := fmt.Errorf("can only get direct sign bytes for a ProtoTx, got %T", tx)
+	wantErr := fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	require.Equal(t, err, wantErr)
 }

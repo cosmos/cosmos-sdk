@@ -7,16 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GenesisState - all slashing state that must be provided at genesis
-type GenesisState struct {
-	Params       Params                          `json:"params" yaml:"params"`
-	SigningInfos map[string]ValidatorSigningInfo `json:"signing_infos" yaml:"signing_infos"`
-	MissedBlocks map[string][]MissedBlock        `json:"missed_blocks" yaml:"missed_blocks"`
-}
-
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(
-	params Params, signingInfos map[string]ValidatorSigningInfo, missedBlocks map[string][]MissedBlock,
+	params Params, signingInfos []SigningInfo, missedBlocks []ValidatorMissedBlocks,
 ) GenesisState {
 
 	return GenesisState{
@@ -24,12 +17,6 @@ func NewGenesisState(
 		SigningInfos: signingInfos,
 		MissedBlocks: missedBlocks,
 	}
-}
-
-// MissedBlock
-type MissedBlock struct {
-	Index  int64 `json:"index" yaml:"index"`
-	Missed bool  `json:"missed" yaml:"missed"`
 }
 
 // NewMissedBlock creates a new MissedBlock instance
@@ -44,8 +31,8 @@ func NewMissedBlock(index int64, missed bool) MissedBlock {
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Params:       DefaultParams(),
-		SigningInfos: make(map[string]ValidatorSigningInfo),
-		MissedBlocks: make(map[string][]MissedBlock),
+		SigningInfos: []SigningInfo{},
+		MissedBlocks: []ValidatorMissedBlocks{},
 	}
 }
 

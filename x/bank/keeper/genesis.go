@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -42,9 +43,16 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
 		return false
 	})
 
+	addrs := make([]string, 0, len(balancesSet))
+	for a := range balancesSet {
+		addrs = append(addrs, a)
+	}
+	sort.Strings(addrs)
+
 	balances := []types.Balance{}
 
-	for addrStr, coins := range balancesSet {
+	for _, addrStr := range addrs {
+		coins := balancesSet[addrStr]
 		addr, err := sdk.AccAddressFromBech32(addrStr)
 		if err != nil {
 			panic(fmt.Errorf("failed to convert address from string: %w", err))

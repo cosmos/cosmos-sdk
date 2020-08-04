@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -15,7 +14,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
@@ -208,14 +206,12 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		return nil, false
 	}
 
-	valSet := stakingtypes.Validators(histInfo.Valset)
-
 	consensusState := ibctmtypes.ConsensusState{
 		Height:             height,
 		Timestamp:          histInfo.Header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
-		ValidatorSet:       tmtypes.NewValidatorSet(valSet.ToTmValidators()),
+		ValidatorsHash:     histInfo.Header.ValidatorsHash,
 	}
 	return consensusState, true
 }

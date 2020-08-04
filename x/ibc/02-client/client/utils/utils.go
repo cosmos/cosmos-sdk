@@ -147,7 +147,8 @@ func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusStat
 		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	nextVals, err := node.Validators(&(height + 1), 0, 10000)
+	nextHeight := height + 1
+	nextVals, err := node.Validators(&nextHeight, 0, 10000)
 	if err != nil {
 		return ibctmtypes.ConsensusState{}, 0, err
 	}

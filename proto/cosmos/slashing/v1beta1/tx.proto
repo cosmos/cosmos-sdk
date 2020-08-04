@@ -1,0 +1,16 @@
+syntax = "proto3";
+package cosmos.slashing.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+
+// MsgUnjail - struct for unjailing jailed validator
+message MsgUnjail {
+  bytes validator_addr = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.moretags) = "yaml:\"address\"",
+    (gogoproto.jsontag)  = "address"
+  ];
+}

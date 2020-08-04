@@ -2,7 +2,7 @@ syntax = "proto3";
 package ibc.channel;
 
 import "gogoproto/gogo.proto";
-import "cosmos/base/query/pagination.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/channel/channel.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
@@ -63,7 +63,7 @@ message QueryChannelResponse {
 // QueryChannelsRequest is the request type for the Query/Channels RPC method
 message QueryChannelsRequest {
   // pagination request
-  cosmos.base.query.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryChannelsResponse is the response type for the Query/Channels RPC method.
@@ -71,7 +71,7 @@ message QueryChannelsResponse {
   // list of stored channels of the chain.
   repeated ibc.channel.IdentifiedChannel channels = 1;
   // pagination response
-  cosmos.base.query.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
   int64 height = 3;
 }
@@ -81,7 +81,7 @@ message QueryConnectionChannelsRequest {
   // connection unique identifier
   string connection = 1;
   // pagination request
-  cosmos.base.query.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryConnectionChannelsResponse is the Response type for the Query/QueryConnectionChannels RPC method
@@ -89,7 +89,7 @@ message QueryConnectionChannelsResponse {
   // list of channels associated with a connection.
   repeated ibc.channel.IdentifiedChannel channels = 1;
   // pagination response
-  cosmos.base.query.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
   int64 height = 3;
 }
@@ -124,14 +124,14 @@ message QueryPacketCommitmentsRequest {
   // channel unique identifier
   string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
   // pagination request
-  cosmos.base.query.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 // QueryPacketCommitmentsResponse is the request type for the Query/QueryPacketCommitments RPC method
 message QueryPacketCommitmentsResponse {
   repeated ibc.channel.PacketAckCommitment commitments = 1;
   // pagination response
-  cosmos.base.query.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
   int64 height = 3;
 }

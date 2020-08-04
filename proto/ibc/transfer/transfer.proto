@@ -4,7 +4,7 @@ package ibc.transfer;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 
 import "gogoproto/gogo.proto";
-import "cosmos/base/coin.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 // MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between
 // ICS20 enabled chains. See ICS Spec here:
@@ -15,7 +15,7 @@ message MsgTransfer {
   // the channel by which the packet will be sent
   string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
   // the tokens to be transferred
-  cosmos.base.Coin token = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin token = 3 [(gogoproto.nullable) = false];
   // the sender address
   bytes sender = 4
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];

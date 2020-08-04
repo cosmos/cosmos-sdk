@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_38"
 	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_40"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -22,7 +21,7 @@ func TestMigrate(t *testing.T) {
 
 	evidenceGenState := v038evidence.GenesisState{
 		Params: v038evidence.Params{MaxEvidenceAge: v038evidence.DefaultMaxEvidenceAge},
-		Evidence: []exported.Evidence{&types.Equivocation{
+		Evidence: []v038evidence.Evidence{&types.Equivocation{
 			Height:           20,
 			Power:            100,
 			ConsensusAddress: addr1.Bytes(),

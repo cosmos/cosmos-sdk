@@ -9,5 +9,6 @@ import (
 //
 // - Removing the `Params` field.
 func Migrate(evidenceState v038evidence.GenesisState) GenesisState {
-	return GenesisState{Evidence: evidenceState.Evidence}
+
+	return NewGenesisState(evidenceState.Evidence)
 }

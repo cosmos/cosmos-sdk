@@ -130,7 +130,6 @@ The adapters that come out-of-the-box can be easily overriden by application-spe
 This way we offer developers the opportunity to embed
 a new server instance in their applications. Developers always retain the possiblity to using the simple binary
 that come with the Cosmos SDK.
-repository.
 
 ## References
 

@@ -67,16 +67,16 @@ func checkMisbehaviour(
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()
 	ageDuration := currentTimestamp.Sub(infractionTime)
-	ageBlocks := height - uint64(infractionHeight)
+	ageBlocks := uint64(infractionHeight) - height
 
 	// assert that trustedVals is NextValidators of last trusted header
 	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
-	tvalHash := evidence.TrustedVals.Hash()
+	tvalHash := evidence.Header1.TrustedValidators.Hash()
 	if !bytes.Equal(consensusState.NextValidatorsHash, tvalHash) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidValidators,
-			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
-			evidence.TrustedVals, consensusState.NextValidatorsHash, tvalHash,
+			"header's trusted validators %s, does not hash to trusted validators of consensus state. Expected: %X, got: %X",
+			evidence.Header1.TrustedValidators, consensusState.NextValidatorsHash, tvalHash,
 		)
 	}
 
@@ -120,18 +120,18 @@ func checkMisbehaviour(
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := evidence.TrustedVals.VerifyCommitLightTrusting(
+	if err := evidence.Header1.TrustedValidators.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
 		evidence.Header1.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from trusted validator set: %v", err)
 	}
 
-	if err := evidence.TrustedVals.VerifyCommitLightTrusting(
+	if err := evidence.Header2.TrustedValidators.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
 		evidence.Header2.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from trusted validator set: %v", err)
 	}
 
 	return nil

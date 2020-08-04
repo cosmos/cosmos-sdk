@@ -15,7 +15,6 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	var (
 		clientState    types.ClientState
 		consensusState types.ConsensusState
-		trustedVals    *tmtypes.ValidatorSet
 		newHeader      types.Header
 		currentTime    time.Time
 	)
@@ -57,8 +56,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: true,
@@ -68,8 +66,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+5, suite.headerTime, bothValSet, bothSigners)
+				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
 			expPass: true,
@@ -79,8 +76,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), bothValSet.Hash())
-				trustedVals = bothValSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.headerTime, bothValSet, bothSigners)
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, bothValSet, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
 			expPass: true,
@@ -90,8 +86,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height-3, suite.valSet.Hash(), bothValSet.Hash())
-				trustedVals = bothValSet
-				newHeader = types.CreateTestHeader(chainID, height-1, suite.headerTime, bothValSet, bothSigners)
+				newHeader = types.CreateTestHeader(chainID, height-1, height-3, suite.headerTime, bothValSet, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
 			expPass: true,
@@ -101,8 +96,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.headerTime, bothValSet, bothSigners)
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -111,9 +105,8 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			name: "unsuccessful update with next height: update header mismatches different nextValSetHash",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, bothValSet.Hash(), suite.valSet.Hash())
-				trustedVals = bothValSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), bothValSet.Hash())
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, bothValSet, signers)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -123,8 +116,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+5, suite.headerTime, altValSet, altSigners)
+				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, altValSet, suite.valSet, altSigners)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -134,8 +126,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				// make current time pass trusting period from last timestamp on clientstate
 				currentTime = suite.now.Add(trustingPeriod)
 			},
@@ -146,8 +137,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.now.Add(time.Minute), suite.valSet, signers)
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -157,8 +147,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.clientTime, suite.valSet, signers)
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.clientTime, suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -168,8 +157,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
-				newHeader = types.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
+				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				// cause new header to fail validatebasic by changing commit height to mismatch header height
 				newHeader.SignedHeader.Commit.Height = height - 1
 				currentTime = suite.now
@@ -181,9 +169,8 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height+5, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
-				trustedVals = suite.valSet
 				// Make new header at height less than latest client state
-				newHeader = types.CreateTestHeader(chainID, height-1, suite.headerTime, suite.valSet, signers)
+				newHeader = types.CreateTestHeader(chainID, height-1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: false,
@@ -203,7 +190,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			ValidatorsHash:     newHeader.ValidatorsHash,
 		}
 
-		newClientState, consensusState, err := tendermint.CheckValidityAndUpdateState(clientState, consensusState, trustedVals, newHeader, currentTime)
+		newClientState, consensusState, err := tendermint.CheckValidityAndUpdateState(clientState, consensusState, newHeader, currentTime)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

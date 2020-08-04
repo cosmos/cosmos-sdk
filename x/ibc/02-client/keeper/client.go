@@ -41,13 +41,7 @@ func (k Keeper) CreateClient(
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header
-func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, msg exported.MsgUpdateClient) (exported.ClientState, error) {
-	// Get Header from msg unless it is nil, which only happens on update LocalHost
-	var header exported.Header
-	if msg != nil {
-		header = msg.GetHeader()
-	}
-
+func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) (exported.ClientState, error) {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
@@ -77,16 +71,12 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, msg exported.MsgU
 
 	switch clientType {
 	case exported.Tendermint:
-		tmUpdateMsg, ok := msg.(*ibctmtypes.MsgUpdateClient)
-		if !ok {
-			err = sdkerrors.Wrap(types.ErrInvalidClientType, "update msg must be Tendermint UpdateMsg to update Tendermint client")
-		}
 		trustedConsState, found := k.GetClientConsensusStateLTE(ctx, clientID, header.GetHeight())
 		if !found {
 			return nil, sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find consensus state less than header height: %d to verify header against", header.GetHeight())
 		}
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, trustedConsState, tmUpdateMsg.TrustedVals, header, ctx.BlockTime(),
+			clientState, trustedConsState, header, ctx.BlockTime(),
 		)
 		if err != nil {
 			err = sdkerrors.Wrapf(err, "failed to update client using trusted consensus state height %d", trustedConsState.GetHeight())

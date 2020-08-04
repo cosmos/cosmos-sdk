@@ -14,7 +14,7 @@ import (
 func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())
-	invalidHeader := types.CreateTestHeader(suite.header.ChainID, height, suite.now, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	invalidHeader := types.CreateTestHeader(suite.header.ChainID, height, 0, suite.now, suite.valSet, nil, []tmtypes.PrivValidator{suite.privVal})
 	invalidHeader.ValidatorSet = nil
 
 	cases := []struct {
@@ -54,10 +54,9 @@ func (suite *TendermintTestSuite) TestMsgUpdateClient() {
 		expPass bool
 		errMsg  string
 	}{
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.valSet, types.Header{}, signer), true, "success msg should pass"},
-		{types.NewMsgUpdateClient("(badClient)", suite.valSet, types.Header{}, signer), false, "invalid client id passed"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, nil, types.Header{}, signer), false, "invalid trusted validator set"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.valSet, types.Header{}, nil), false, "Empty address passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, signer), true, "success msg should pass"},
+		{types.NewMsgUpdateClient("(badClient)", types.Header{}, signer), false, "invalid client id passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, nil), false, "Empty address passed"},
 	}
 
 	for i, tc := range cases {

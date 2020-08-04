@@ -35,7 +35,7 @@ import (
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, consState clientexported.ConsensusState,
-	trustedVals *tmtypes.ValidatorSet, header clientexported.Header, currentTimestamp time.Time,
+	header clientexported.Header, currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
@@ -58,7 +58,7 @@ func CheckValidityAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmConsState, trustedVals, tmHeader, currentTimestamp); err != nil {
+	if err := checkValidity(tmClientState, tmConsState, tmHeader, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
@@ -67,18 +67,19 @@ func CheckValidityAndUpdateState(
 }
 
 // checkValidity checks if the Tendermint header is valid.
+// CONTRACT: consState.Height == header.TrustedHeight
 func checkValidity(
 	clientState types.ClientState, consState types.ConsensusState,
-	trustedVals *tmtypes.ValidatorSet, header types.Header, currentTimestamp time.Time,
+	header types.Header, currentTimestamp time.Time,
 ) error {
 	// assert that trustedVals is NextValidators of last trusted header
 	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
-	tvalHash := trustedVals.Hash()
+	tvalHash := header.TrustedValidators.Hash()
 	if !bytes.Equal(consState.NextValidatorsHash, tvalHash) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidValidators,
 			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
-			trustedVals, consState.NextValidatorsHash, tvalHash,
+			header.TrustedValidators, consState.NextValidatorsHash, tvalHash,
 		)
 	}
 	// assert trusting period has not yet passed
@@ -129,7 +130,7 @@ func checkValidity(
 	// Verify next header with the passed-in trustedVals
 	err := lite.Verify(
 		clientState.GetChainID(), &signedHeader,
-		trustedVals, &header.SignedHeader, header.ValidatorSet,
+		header.TrustedValidators, &header.SignedHeader, header.ValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {

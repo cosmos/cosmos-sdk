@@ -5,7 +5,6 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	lite "github.com/tendermint/tendermint/lite2"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -152,10 +151,9 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 
 // MsgUpdateClient defines a message to update an IBC client
 type MsgUpdateClient struct {
-	ClientID    string                `json:"client_id" yaml:"client_id"`
-	TrustedVals *tmtypes.ValidatorSet `json:"trusted_vals" yaml:"trusted_vals"`
-	Header      Header                `json:"header" yaml:"header"`
-	Signer      sdk.AccAddress        `json:"address" yaml:"address"`
+	ClientID string         `json:"client_id" yaml:"client_id"`
+	Header   Header         `json:"header" yaml:"header"`
+	Signer   sdk.AccAddress `json:"address" yaml:"address"`
 }
 
 // dummy implementation of proto.Message
@@ -164,12 +162,11 @@ func (msg *MsgUpdateClient) String() string { return TODO }
 func (msg *MsgUpdateClient) ProtoMessage()  {}
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, tvals *tmtypes.ValidatorSet, header Header, signer sdk.AccAddress) *MsgUpdateClient {
+func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) *MsgUpdateClient {
 	return &MsgUpdateClient{
-		ClientID:    id,
-		TrustedVals: tvals,
-		Header:      header,
-		Signer:      signer,
+		ClientID: id,
+		Header:   header,
+		Signer:   signer,
 	}
 }
 
@@ -185,9 +182,6 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
-	if msg.TrustedVals == nil {
-		return sdkerrors.Wrap(ErrInvalidValidators, "validator set cannot be empty")
-	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}

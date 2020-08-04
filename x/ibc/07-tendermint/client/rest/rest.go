@@ -5,7 +5,6 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/gorilla/mux"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -39,9 +38,8 @@ type CreateClientReq struct {
 
 // UpdateClientReq defines the properties of a update client request's body.
 type UpdateClientReq struct {
-	BaseReq     rest.BaseReq          `json:"base_req" yaml:"base_req"`
-	TrustedVals *tmtypes.ValidatorSet `json:"trusted_valset" yaml:"trusted_valset"`
-	Header      ibctmtypes.Header     `json:"header" yaml:"header"`
+	BaseReq rest.BaseReq      `json:"base_req" yaml:"base_req"`
+	Header  ibctmtypes.Header `json:"header" yaml:"header"`
 }
 
 // SubmitMisbehaviourReq defines the properties of a submit misbehaviour request's body.

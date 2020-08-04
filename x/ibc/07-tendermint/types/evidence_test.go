@@ -26,7 +26,7 @@ func (suite *TendermintTestSuite) TestEvidence() {
 	suite.Require().Equal(ev.GetClientID(), "gaiamainnet")
 	suite.Require().Equal(ev.Route(), "client")
 	suite.Require().Equal(ev.Type(), "client_misbehaviour")
-	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(ibctmtypes.SubModuleCdc.MustMarshalBinaryBare(ev))))
+	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.aminoCdc.MustMarshalBinaryBare(ev))))
 	suite.Require().Equal(ev.GetHeight(), int64(height))
 }
 

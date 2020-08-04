@@ -12,12 +12,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/evidence/types";
 service Query {
   // Evidence queries evidence based on evidence hash
   rpc Evidence(QueryEvidenceRequest) returns (QueryEvidenceResponse) {
-    option (google.api.http).get = "/cosmos/evidence/v1/evidence/{evidence_hash}";
+    option (google.api.http).get = "/cosmos/evidence/v1beta/evidence/{evidence_hash}";
   }
 
   // AllEvidence queries all evidence
   rpc AllEvidence(QueryAllEvidenceRequest) returns (QueryAllEvidenceResponse) {
-    option (google.api.http).get = "/cosmos/evidence/v1/evidences";
+    option (google.api.http).get = "/cosmos/evidence/v1beta/evidences";
   }
 }
 

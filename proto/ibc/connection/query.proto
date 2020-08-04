@@ -12,17 +12,17 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 service Query {
   // Connection queries an IBC connection end.
   rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {
-		option (google.api.http).get = "/cosmos/ibc/connection/v1/connection/{connection_id}";
+		option (google.api.http).get = "/cosmos/ibc/connection/v1beta/connection/{connection_id}";
   }
 
   // Connections queries all the IBC connections of a chain.
   rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/connection/v1/connections";
+		option (google.api.http).get = "/cosmos/ibc/connection/v1beta/connections";
   }
 
   // ClientConnections queries the connection paths associated with a client state.
   rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/connection/v1/client-connections/{client_id}";
+		option (google.api.http).get = "/cosmos/ibc/connection/v1beta/client-connections/{client_id}";
   }
 }
 

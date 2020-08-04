@@ -167,15 +167,24 @@ func ValidateIBCDenom(denom string) error {
 		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
 	}
 
-	hash, err := hex.DecodeString(denomSplit[1])
-	if err != nil {
-		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "invalid denom trace hash %s: %s", denomSplit[1], err)
-	}
-
-	hash = tmbytes.HexBytes(hash)
-	if err := tmtypes.ValidateHash(hash); err != nil {
+	if _, err := ParseHexHash(denomSplit[1]); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "invalid denom trace hash %s: %s", denomSplit[1], err)
 	}
 
 	return nil
+}
+
+// ParseHexHash parses a hex hash in string format to bytes and validates its correctness.
+func ParseHexHash(hexHash string) (tmbytes.HexBytes, error) {
+	hash, err := hex.DecodeString(hexHash)
+	if err != nil {
+		return nil, err
+	}
+
+	hash = tmbytes.HexBytes(hash)
+	if err := tmtypes.ValidateHash(hash); err != nil {
+		return nil, err
+	}
+
+	return hash, nil
 }

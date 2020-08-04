@@ -22,30 +22,37 @@ type descriptorIface interface {
 	Descriptor() ([]byte, []int)
 }
 
-type Checker struct {
-	// AllowUnknownNonCriticals when set will skip over non-critical fields that are unknown.
-	AllowUnknownNonCriticals bool
+// RejectUnknownFieldsStrict rejects any bytes bz with an error that has unknown fields for the provided proto.Message type.
+// This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
+func RejectUnknownFieldsStrict(bz []byte, msg proto.Message) error {
+	_, err := RejectUnknownFields(bz, msg, false)
+	return err
 }
 
-func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
-	if len(b) == 0 {
-		return nil
+// RejectUnknownFields rejects any bytes bz with an error that has unknown fields for the provided proto.Message type with an
+// option to allow non-critical fields (specified as those fields with bit 11) to pass through. In either case, the
+// hasUnknownNonCriticals will be set to true if non-critical fields were encountered during traversal. This flag can be
+// used to treat a message with non-critical field different in different security contexts (such as transaction signing).
+// This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
+func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals bool) (hasUnknownNonCriticals bool, err error) {
+	if len(bz) == 0 {
+		return hasUnknownNonCriticals, nil
 	}
 
 	desc, ok := msg.(descriptorIface)
 	if !ok {
-		return fmt.Errorf("%T does not have a Descriptor() method", msg)
+		return hasUnknownNonCriticals, fmt.Errorf("%T does not have a Descriptor() method", msg)
 	}
 
 	fieldDescProtoFromTagNum, _, err := getDescriptorInfo(desc, msg)
 	if err != nil {
-		return err
+		return hasUnknownNonCriticals, err
 	}
 
-	for len(b) > 0 {
-		tagNum, wireType, n := protowire.ConsumeField(b)
-		if n < 0 {
-			return errors.New("invalid length")
+	for len(bz) > 0 {
+		tagNum, wireType, m := protowire.ConsumeTag(bz)
+		if m < 0 {
+			return hasUnknownNonCriticals, errors.New("invalid length")
 		}
 
 		fieldDescProto, ok := fieldDescProtoFromTagNum[int32(tagNum)]
@@ -53,7 +60,7 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 		case ok:
 			// Assert that the wireTypes match.
 			if !canEncodeType(wireType, fieldDescProto.GetType()) {
-				return &errMismatchedWireType{
+				return hasUnknownNonCriticals, &errMismatchedWireType{
 					Type:         reflect.ValueOf(msg).Type().String(),
 					TagNum:       tagNum,
 					GotWireType:  wireType,
@@ -62,9 +69,15 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 			}
 
 		default:
-			if !ckr.AllowUnknownNonCriticals || tagNum&bit11NonCritical == 0 {
+			isCriticalField := tagNum&bit11NonCritical == 0
+
+			if !isCriticalField {
+				hasUnknownNonCriticals = true
+			}
+
+			if isCriticalField || !allowUnknownNonCriticals {
 				// The tag is critical, so report it.
-				return &errUnknownField{
+				return hasUnknownNonCriticals, &errUnknownField{
 					Type:     reflect.ValueOf(msg).Type().String(),
 					TagNum:   tagNum,
 					WireType: wireType,
@@ -72,9 +85,11 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 			}
 		}
 
-		// Skip over the 2 bytes that store fieldNumber and wireType bytes.
-		fieldBytes := b[2:n]
-		b = b[n:]
+		// Skip over the bytes that store fieldNumber and wireType bytes.
+		bz = bz[m:]
+		n := protowire.ConsumeFieldValue(tagNum, wireType, bz)
+		fieldBytes := bz[:n]
+		bz = bz[n:]
 
 		// An unknown but non-critical field or just a scalar type (aka *INT and BYTES like).
 		if fieldDescProto == nil || fieldDescProto.IsScalar() {
@@ -89,22 +104,28 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 				// TYPE_BYTES and TYPE_STRING as per
 				// https://github.com/gogo/protobuf/blob/5628607bb4c51c3157aacc3a50f0ab707582b805/protoc-gen-gogo/descriptor/descriptor.go#L95-L118
 			default:
-				return fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
+				return hasUnknownNonCriticals, fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
 			}
 			continue
 		}
 
 		// Let's recursively traverse and typecheck the field.
 
+		// consume length prefix of nested message
+		_, o := protowire.ConsumeVarint(fieldBytes)
+		fieldBytes = fieldBytes[o:]
+
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			if err := ckr.RejectUnknownFields(fieldBytes, (*types.Any)(nil)); err != nil {
-				return err
+			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals)
+			hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
+			if err != nil {
+				return hasUnknownNonCriticals, err
 			}
 			// And finally we can extract the TypeURL containing the protoMessageName.
 			any := new(types.Any)
 			if err := proto.Unmarshal(fieldBytes, any); err != nil {
-				return err
+				return hasUnknownNonCriticals, err
 			}
 			protoMessageName = any.TypeUrl
 			fieldBytes = any.Value
@@ -112,14 +133,17 @@ func (ckr *Checker) RejectUnknownFields(b []byte, msg proto.Message) error {
 
 		msg, err := protoMessageForTypeName(protoMessageName[1:])
 		if err != nil {
-			return err
+			return hasUnknownNonCriticals, err
 		}
-		if err := ckr.RejectUnknownFields(fieldBytes, msg); err != nil {
-			return err
+
+		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals)
+		hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
+		if err != nil {
+			return hasUnknownNonCriticals, err
 		}
 	}
 
-	return nil
+	return hasUnknownNonCriticals, nil
 }
 
 var protoMessageForTypeNameMu sync.RWMutex

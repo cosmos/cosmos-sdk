@@ -48,9 +48,9 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	err = suite.coordinator.RelayPacket(suite.chainA, suite.chainB, clientA, clientB, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed
 
-	// check that voucher exists on chain
-	voucherDenom := types.GetPrefixedDenom(packet.GetDestPort(), packet.GetDestChannel(), sdk.DefaultBondDenom)
-	balance := suite.chainB.App.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), voucherDenom)
+	// check that voucher exists on chain B
+	voucherDenomTrace := types.ParseDenomTrace(types.GetPrefixedDenom(packet.GetDestPort(), packet.GetDestChannel(), sdk.DefaultBondDenom))
+	balance := suite.chainB.App.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), voucherDenomTrace.IBCDenom())
 
 	coinToSendBackToA := types.GetTransferCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
 	suite.Require().Equal(coinToSendBackToA, balance)
@@ -76,6 +76,10 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 	balance = suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
 	suite.Require().Equal(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()), balance)
+
+	// check that balance on chain B is empty
+	balance = suite.chainB.App.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), voucherDenomTrace.IBCDenom())
+	suite.Require().Equal(0, balance.Amount.Int64())
 }
 
 func TestHandlerTestSuite(t *testing.T) {

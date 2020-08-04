@@ -17,7 +17,7 @@ service Query {
 
   // Connections queries all the IBC connections of a chain.
   rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/connection/v1/connections/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/ibc/connection/v1/connections";
   }
 
   // ClientConnections queries the connection paths associated with a client state.

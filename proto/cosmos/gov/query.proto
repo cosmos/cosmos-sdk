@@ -17,7 +17,7 @@ service Query {
 
   // Proposals queries all proposals based on given status
   rpc Proposals (QueryProposalsRequest) returns (QueryProposalsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/gov/v1/proposals";
   }
 
   // Vote queries Voted information based on proposalID, voterAddr

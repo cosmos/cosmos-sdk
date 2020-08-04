@@ -28,7 +28,7 @@ service Query {
 
   // ValidatorSlashes queries slash events of a validator
   rpc ValidatorSlashes (QueryValidatorSlashesRequest) returns (QueryValidatorSlashesResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1/validator-slashes/{validator_address}/{starting_height}/{ending_height}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/distribution/v1/validator-slashes/{validator_address}/{starting_height}/{ending_height}";
   }
 
   // DelegationRewards the total rewards accrued by a delegation

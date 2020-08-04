@@ -3,6 +3,8 @@ package types_test
 import (
 	"testing"
 
+	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/cosmos/cosmos-sdk/client/testutil"
@@ -17,6 +19,7 @@ import (
 func testCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
+	cryptoAmino.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }

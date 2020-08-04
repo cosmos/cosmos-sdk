@@ -75,7 +75,7 @@ type (
 	TxWithHeightTimeout interface {
 		Tx
 
-		GetHeightTimeout() uint64
+		GetTimeoutHeight() uint64
 	}
 )
 

@@ -212,8 +212,8 @@ func (t *builder) GetSignatures() [][]byte {
 	return t.tx.Signatures
 }
 
-// GetHeightTimeout returns the transaction's timeout height (if set).
-func (t *builder) GetHeightTimeout() uint64 {
+// GetTimeoutHeight returns the transaction's timeout height (if set).
+func (t *builder) GetTimeoutHeight() uint64 {
 	return t.tx.Body.TimeoutHeight
 }
 
@@ -258,8 +258,8 @@ func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
-// SetHeightTimeout sets the transaction's height timeout.
-func (t *builder) SetHeightTimeout(height uint64) {
+// SetTimeoutHeight sets the transaction's height timeout.
+func (t *builder) SetTimeoutHeight(height uint64) {
 	t.tx.Body.TimeoutHeight = height
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body

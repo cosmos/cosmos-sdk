@@ -198,7 +198,7 @@ func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
 			suite.txBuilder.SetFeeAmount(feeAmount)
 			suite.txBuilder.SetGasLimit(gasLimit)
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-			suite.txBuilder.SetHeightTimeout(tc.timeout)
+			suite.txBuilder.SetTimeoutHeight(tc.timeout)
 
 			privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())

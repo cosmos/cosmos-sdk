@@ -213,8 +213,8 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 // GetMemo returns the memo
 func (tx StdTx) GetMemo() string { return tx.Memo }
 
-// GetHeightTimeout returns the transaction's timeout height (if set).
-func (tx StdTx) GetHeightTimeout() uint64 {
+// GetTimeoutHeight returns the transaction's timeout height (if set).
+func (tx StdTx) GetTimeoutHeight() uint64 {
 	return tx.TimeoutHeight
 }
 

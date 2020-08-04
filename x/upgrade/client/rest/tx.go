@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// nolint
 func registerTxHandlers(
 	clientCtx client.Context,
 	r *mux.Router) {
@@ -59,7 +58,6 @@ func ProposalCancelRESTHandler(clientCtx client.Context) govrest.ProposalRESTHan
 	}
 }
 
-// nolint
 func newPostPlanHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
@@ -100,7 +98,6 @@ func newPostPlanHandler(clientCtx client.Context) http.HandlerFunc {
 	}
 }
 
-// nolint
 func newCancelPlanHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest

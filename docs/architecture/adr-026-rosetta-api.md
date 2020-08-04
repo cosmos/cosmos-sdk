@@ -47,8 +47,6 @@ func NewServer(opt Options,  rosettaAdapter RosettaAPIAdapter) {
 
 Server is the main struct, it can be configured by an options struct.
 
-This server exposes a Start method. 
-
 ```
 func (s Server) Start() error {
     ...

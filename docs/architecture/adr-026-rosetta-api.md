@@ -125,8 +125,7 @@ func (CosmosLaunchpad) GetBlock(req RosettaGetBlockRequest) {
 
 ```
 
-If our provided adapters don't work for a specific project because they changed their 
-API they can always create another adapter and inject it into the server.
+The adapters that come out-of-the-box can be easily overriden by application-specific implementations.
 
 This way we offer the possibility to offer developers the opportunity to instantiate
 a new server in their applications or just using the binary that can be build from the

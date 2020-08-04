@@ -50,9 +50,3 @@ type Equivocation struct {
 	Power            int64           `protobuf:"varint,3,opt,name=power,proto3" json:"power,omitempty"`
 	ConsensusAddress sdk.ConsAddress `protobuf:"bytes,4,opt,name=consensus_address,json=consensusAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"consensus_address,omitempty" yaml:"consensus_address"`
 }
-
-func (m *Equivocation) Reset()      { *m = Equivocation{} }
-func (*Equivocation) ProtoMessage() {}
-func (*Equivocation) Descriptor() ([]byte, []int) {
-	return []byte{}, []int{1}
-}

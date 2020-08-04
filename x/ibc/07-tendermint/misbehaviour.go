@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	"bytes"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -68,6 +69,17 @@ func checkMisbehaviour(
 	ageDuration := currentTimestamp.Sub(infractionTime)
 	ageBlocks := height - uint64(infractionHeight)
 
+	// assert that trustedVals is NextValidators of last trusted header
+	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
+	tvalHash := evidence.TrustedVals.Hash()
+	if !bytes.Equal(consensusState.NextValidatorsHash, tvalHash) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidValidators,
+			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
+			evidence.TrustedVals, consensusState.NextValidatorsHash, tvalHash,
+		)
+	}
+
 	// Reject misbehaviour if the age is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
@@ -108,14 +120,14 @@ func checkMisbehaviour(
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
+	if err := evidence.TrustedVals.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
 		evidence.Header1.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
-	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
+	if err := evidence.TrustedVals.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
 		evidence.Header2.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {

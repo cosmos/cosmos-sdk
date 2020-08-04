@@ -28,10 +28,11 @@ func (h Header) ClientType() clientexported.ClientType {
 // ConsensusState returns the consensus state associated with the header
 func (h Header) ConsensusState() ConsensusState {
 	return ConsensusState{
-		Height:       uint64(h.Height),
-		Timestamp:    h.Time,
-		Root:         commitmenttypes.NewMerkleRoot(h.AppHash),
-		ValidatorSet: h.ValidatorSet,
+		Height:             uint64(h.Height),
+		Timestamp:          h.Time,
+		Root:               commitmenttypes.NewMerkleRoot(h.AppHash),
+		ValidatorsHash:     h.ValidatorsHash,
+		NextValidatorsHash: h.NextValidatorsHash,
 	}
 }
 

@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	"bytes"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
@@ -34,7 +35,7 @@ import (
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, consState clientexported.ConsensusState,
-	header clientexported.Header, currentTimestamp time.Time,
+	trustedVals *tmtypes.ValidatorSet, header clientexported.Header, currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
@@ -57,7 +58,7 @@ func CheckValidityAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmConsState, tmHeader, currentTimestamp); err != nil {
+	if err := checkValidity(tmClientState, tmConsState, trustedVals, tmHeader, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
@@ -67,8 +68,19 @@ func CheckValidityAndUpdateState(
 
 // checkValidity checks if the Tendermint header is valid.
 func checkValidity(
-	clientState types.ClientState, consState types.ConsensusState, header types.Header, currentTimestamp time.Time,
+	clientState types.ClientState, consState types.ConsensusState,
+	trustedVals *tmtypes.ValidatorSet, header types.Header, currentTimestamp time.Time,
 ) error {
+	// assert that trustedVals is NextValidators of last trusted header
+	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
+	tvalHash := trustedVals.Hash()
+	if !bytes.Equal(consState.NextValidatorsHash, tvalHash) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidValidators,
+			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
+			trustedVals, consState.NextValidatorsHash, tvalHash,
+		)
+	}
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
@@ -114,10 +126,10 @@ func checkValidity(
 		Header: &trustedHeader,
 	}
 
-	// Verify next header with the last header's validatorset as trusted validatorset
+	// Verify next header with the passed-in trustedVals
 	err := lite.Verify(
 		clientState.GetChainID(), &signedHeader,
-		consState.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
+		trustedVals, &header.SignedHeader, header.ValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
@@ -135,8 +147,8 @@ func update(clientState types.ClientState, header types.Header) (types.ClientSta
 		Height:             uint64(header.Height),
 		Timestamp:          header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(header.AppHash),
+		ValidatorsHash:     header.ValidatorsHash,
 		NextValidatorsHash: header.NextValidatorsHash,
-		ValidatorSet:       header.ValidatorSet,
 	}
 
 	return clientState, consensusState

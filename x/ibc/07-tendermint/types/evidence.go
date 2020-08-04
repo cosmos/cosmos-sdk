@@ -25,10 +25,11 @@ var (
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
-	ClientID string `json:"client_id" yaml:"client_id"`
-	Header1  Header `json:"header1" yaml:"header1"`
-	Header2  Header `json:"header2" yaml:"header2"`
-	ChainID  string `json:"chain_id" yaml:"chain_id"`
+	ClientID    string                `json:"client_id" yaml:"client_id"`
+	TrustedVals *tmtypes.ValidatorSet `json:"trusted_vals" yaml:"trusted_vals"`
+	Header1     Header                `json:"header1" yaml:"header1"`
+	Header2     Header                `json:"header2" yaml:"header2"`
+	ChainID     string                `json:"chain_id" yaml:"chain_id"`
 }
 
 // ClientType is Tendermint light client
@@ -85,6 +86,9 @@ func (ev Evidence) GetTime() time.Time {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
+	if ev.TrustedVals == nil {
+		return sdkerrors.Wrap(ErrInvalidValidators, "validator set cannot be empty")
+	}
 	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "evidence client ID is invalid")
 	}

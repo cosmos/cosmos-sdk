@@ -147,10 +147,16 @@ func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusStat
 		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
+	nextVals, err := node.Validators(&(height + 1), 0, 10000)
+	if err != nil {
+		return ibctmtypes.ConsensusState{}, 0, err
+	}
+
 	state := ibctmtypes.ConsensusState{
-		Timestamp:    commit.Time,
-		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+		Timestamp:          commit.Time,
+		Root:               commitmenttypes.NewMerkleRoot(commit.AppHash),
+		ValidatorsHash:     tmtypes.NewValidatorSet(validators.Validators).Hash(),
+		NextValidatorsHash: tmtypes.NewValidatorSet(nextVals.Validators).Hash(),
 	}
 
 	return state, height, nil

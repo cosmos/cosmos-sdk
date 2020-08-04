@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
@@ -26,6 +27,8 @@ var _ clientexported.ClientState = ClientState{}
 // ClientState from Tendermint tracks the current validator set, latest height,
 // and a possible frozen height.
 type ClientState struct {
+	ChainID string `json:"chain_id" yaml:"chain_id"`
+
 	TrustLevel tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
 
 	// Duration of the period since the LastestTimestamp during which the
@@ -42,8 +45,8 @@ type ClientState struct {
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
 
-	// Last Header that was stored by client
-	LastHeader Header `json:"last_header" yaml:"last_header"`
+	// Latest height the client was updated up to
+	LatestHeight uint64 `json:"latest_height" yaml:"latest_height"`
 
 	ProofSpecs []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
 }
@@ -51,47 +54,48 @@ type ClientState struct {
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(msg *MsgCreateClient) (ClientState, error) {
 	return Initialize(
+		msg.Header.ChainID,
 		msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header, msg.ProofSpecs,
+		uint64(msg.Header.Height), msg.ProofSpecs,
 	)
 }
 
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
+	chainID string,
 	trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header, specs []*ics23.ProofSpec,
+	latestHeight uint64, specs []*ics23.ProofSpec,
 ) (ClientState, error) {
-	clientState := NewClientState(trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
+	clientState := NewClientState(chainID, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, latestHeight, specs)
 
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
+	chainID string,
 	trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	header Header, specs []*ics23.ProofSpec,
+	latestHeight uint64, specs []*ics23.ProofSpec,
 ) ClientState {
 	return ClientState{
+		ChainID:         chainID,
 		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
-		LastHeader:      header,
+		LatestHeight:    latestHeight,
 		FrozenHeight:    0,
 		ProofSpecs:      specs,
 	}
 }
 
-// GetChainID returns the chain-id from the last header
+// GetChainID returns the chain-id
 func (cs ClientState) GetChainID() string {
-	if cs.LastHeader.SignedHeader.Header == nil {
-		return ""
-	}
-	return cs.LastHeader.SignedHeader.Header.ChainID
+	return cs.ChainID
 }
 
 // ClientType is tendermint.
@@ -101,12 +105,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns latest block height.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.LastHeader.Height)
-}
-
-// GetLatestTimestamp returns latest block time.
-func (cs ClientState) GetLatestTimestamp() time.Time {
-	return cs.LastHeader.Time
+	return cs.LatestHeight
 }
 
 // IsFrozen returns true if the frozen height has been set.
@@ -114,8 +113,17 @@ func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
 }
 
+// FrozenHeight returns the height at which client is frozen
+// NOTE: FrozenHeight is 0 if client is unfrozen
+func (cs ClientState) GetFrozenHeight() uint64 {
+	return cs.FrozenHeight
+}
+
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
+	if strings.TrimSpace(cs.ChainID) == "" {
+		return sdkerrors.Wrap(ErrInvalidChainID, "chain id cannot be empty string")
+	}
 	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
 		return err
 	}
@@ -127,6 +135,9 @@ func (cs ClientState) Validate() error {
 	}
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
+	}
+	if cs.LatestHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "tendermint height cannot be zero")
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(
@@ -144,7 +155,7 @@ func (cs ClientState) Validate() error {
 		}
 	}
 
-	return cs.LastHeader.ValidateBasic(cs.GetChainID())
+	return nil
 }
 
 // GetProofSpecs returns the format the client expects for proof verification

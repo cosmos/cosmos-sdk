@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -21,13 +24,27 @@ var (
 	_ ModuleAccountI = (*ModuleAccount)(nil)
 )
 
+// BaseAccount defines a base account type. It contains all the necessary fields
+// for basic account functionality. Any custom account type should extend this
+// type for additional functionality (e.g. vesting).
+type BaseAccount struct {
+	Address       sdk.AccAddress   `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
+	PubKey        *types.PublicKey `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"public_key,omitempty" yaml:"public_key"`
+	AccountNumber uint64           `protobuf:"varint,3,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty" yaml:"account_number"`
+	Sequence      uint64           `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
+
+	// NOTE: this is somewhat of a hack to not have to break the AccountI.Get/SetPubKey interface methods. It should
+	// likely be replaced with something less hacky in the future (this involves re-enabled gogoproto.typedecl).
+	decodedPubKey crypto.PubKey
+}
+
 // NewBaseAccount creates a new BaseAccount object
-func NewBaseAccount(address sdk.AccAddress, pubKey *types.PublicKey, accountNumber, sequence uint64) *BaseAccount {
+func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
 		Address:       address,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
-		PubKey:        pubKey,
+		decodedPubKey: pubKey,
 	}
 
 	return acc
@@ -61,13 +78,13 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 }
 
 // GetPubKey - Implements sdk.AccountI.
-func (acc BaseAccount) GetPubKey() (pk *types.PublicKey) {
-	return acc.PubKey
+func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
+	panic("TODO")
 }
 
 // SetPubKey - Implements sdk.AccountI.
-func (acc *BaseAccount) SetPubKey(pubKey *types.PublicKey) error {
-	acc.PubKey = pubKey
+func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
+	panic("TODO")
 	return nil
 }
 
@@ -112,26 +129,10 @@ type baseAccountPretty struct {
 
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	alias := baseAccountPretty{
-		Address:       acc.Address,
-		AccountNumber: acc.AccountNumber,
-		Sequence:      acc.Sequence,
-	}
-
-	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.GetPubKey())
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
+	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), acc)
 	if err != nil {
 		return nil, err
 	}
-
 	return string(bz), err
 }
 
@@ -190,7 +191,7 @@ func (ma ModuleAccount) GetPermissions() []string {
 }
 
 // SetPubKey - Implements AccountI
-func (ma ModuleAccount) SetPubKey(pubKey *types.PublicKey) error {
+func (ma ModuleAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
@@ -280,8 +281,8 @@ type AccountI interface {
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
 
-	GetPubKey() *types.PublicKey // can return nil.
-	SetPubKey(*types.PublicKey) error
+	GetPubKey() crypto.PubKey // can return nil.
+	SetPubKey(crypto.PubKey) error
 
 	GetAccountNumber() uint64
 	SetAccountNumber(uint64) error

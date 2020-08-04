@@ -1,14 +1,12 @@
 package client
 
 import (
-	"encoding/json"
 	"io"
 	"os"
 
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -199,22 +197,16 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
 func (ctx Context) PrintOutput(toPrint interface{}) error {
-	// always serialize JSON initially because proto json can't be directly YAML encoded
-	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
-	if err != nil {
-		return err
-	}
+	var out []byte
+	var err error
 
 	if ctx.OutputFormat == "text" {
-		// handle text format by decoding and re-encoding JSON as YAML
-		var j interface{}
-
-		err = json.Unmarshal(out, &j)
+		out, err = codec.MarshalYAML(ctx.JSONMarshaler, toPrint)
 		if err != nil {
 			return err
 		}
-
-		out, err = yaml.Marshal(j)
+	} else {
+		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
 		if err != nil {
 			return err
 		}

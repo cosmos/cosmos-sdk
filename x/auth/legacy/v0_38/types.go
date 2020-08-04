@@ -524,7 +524,7 @@ func ValidateGenAccounts(genAccounts GenesisAccounts) error {
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*Account)(nil), nil)
-	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
+	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)

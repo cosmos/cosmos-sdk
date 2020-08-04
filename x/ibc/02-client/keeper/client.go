@@ -78,6 +78,9 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
 			clientState, trustedConsState, header, ctx.BlockTime(),
 		)
+		if err != nil {
+			err = sdkerrors.Wrapf(err, "failed to update client using trusted consensus state height %d", trustedConsState.GetHeight())
+		}
 	case exported.Localhost:
 		// override client state and update the block height
 		clientState = localhosttypes.NewClientState(

@@ -21,9 +21,12 @@ import (
 // - the header is invalid
 // - header height is lower than consensusstate height
 // - header valset commit verification fails
+// - header timestamp is past the trusting period in relation to the consensus state
+// - header timestamp is less than or equal to the consensus state timestamp
 //
-// UpdateClient may be used to either create a consensus state for a height > latest client state
-// or to fill in the consensus state for a past height that was skipped during bisection
+// UpdateClient may be used to either create a consensus state for:
+// - a future height greater than the latest client state height
+// - a past height that was skipped during bisection
 // If we are updating to a past height, a consensus state is created for that height to be persisted in client store
 // If we are updating to a future height, the consensus state is created and the client state is updated to reflect
 // the new latest height

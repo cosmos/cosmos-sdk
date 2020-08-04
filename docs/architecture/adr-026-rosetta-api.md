@@ -33,10 +33,16 @@ run alongside the client applications main binaries.
 ### Implementation
 
 ```
-type Server struct {}
-func NewServer(opt Options)
+type Server struct {
+    options
+    router
+}
 
 type Options struct {}
+
+func NewServer(opt Options,  rosettaAdapter RosettaAPIAdapter) {
+    return Server{opt, newRouter(rosettaAdapter)}    
+}
 ```
 
 Server is the main struct, it can be configured by an options struct.
@@ -54,12 +60,12 @@ func (s Server) Start() error {
 We have another struct which is the Router that will expose the rosetta endpoints.
 
 ```
-type Router struct {
+type router struct {
     muxRouter mux.router
     rosettaAdapter RosettaAPIAdapter
 }
 
-func NewRouter(adapter RosettaAPIAdapter) {
+func newRouter(adapter RosettaAPIAdapter) {
     router := &Router{
         mux: mux.NewRouter(),
         rosettaAdapter: adapter,
@@ -120,6 +126,9 @@ func (CosmosLaunchpad) GetBlock(req RosettaGetBlockRequest) {
 ...
 
 ```
+
+If our provided adapters don't work for a specific project because they changed their 
+API they can always create another adapter and inject it into the server.
 
 This way we offer the possibility to offer developers the opportunity to instantiate
 a new server in their applications or just using the binary that can be build from the

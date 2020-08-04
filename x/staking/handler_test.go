@@ -195,7 +195,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 1000)
 	handler := staking.NewHandler(app.StakingKeeper)
 	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
-		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}},
+		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}},
 	})
 
 	addr := valAddrs[0]
@@ -207,9 +207,9 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
-		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeSecp256k1}},
-	})
+	// ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+	// 	Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.}},
+	// })
 
 	res, err = handler(ctx, msgCreateValidator)
 	require.NoError(t, err)

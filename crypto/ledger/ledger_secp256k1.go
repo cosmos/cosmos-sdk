@@ -124,7 +124,7 @@ func ShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 		return err
 	}
 
-	if pubKey2 != expectedPubKey {
+	if !pubKey2.Equals(expectedPubKey) {
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
@@ -246,8 +246,8 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, er
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKey
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return compressedPublicKey, nil
 }

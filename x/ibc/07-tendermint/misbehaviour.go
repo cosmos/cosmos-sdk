@@ -110,14 +110,14 @@ func checkMisbehaviour(
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
-		evidence.Header1.Commit, clientState.TrustLevel,
+		evidence.Header1.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
-		evidence.Header2.Commit, clientState.TrustLevel,
+		evidence.Header2.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
 	}

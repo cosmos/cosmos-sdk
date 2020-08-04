@@ -35,7 +35,10 @@ func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber,
 
 // ProtoBaseAccount - a prototype function for BaseAccount
 func ProtoBaseAccount() AccountI {
-	return &BaseAccount{}
+	return &BaseAccount{
+		AccountNumber: 1,
+		Sequence:      1,
+	}
 }
 
 // NewBaseAccountWithAddress - returns a new base account with a given address
@@ -108,6 +111,14 @@ func (acc BaseAccount) Validate() error {
 	if len(acc.PubKey) != 0 && acc.Address != nil &&
 		!bytes.Equal(acc.GetPubKey().Address().Bytes(), acc.Address.Bytes()) {
 		return errors.New("account address and pubkey address do not match")
+	}
+
+	if acc.AccountNumber == 0 {
+		return errors.New("account number should be non-zero")
+	}
+
+	if acc.Sequence == 0 {
+		return errors.New("account sequence should be non-zero")
 	}
 
 	return nil

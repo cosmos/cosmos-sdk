@@ -84,7 +84,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			var genAccount authtypes.GenesisAccount
 
 			balances := banktypes.Balance{Address: addr, Coins: coins.Sort()}
-			baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
+			baseAccount := authtypes.NewBaseAccount(addr, nil, 1, 1)
 
 			if !vestingAmt.IsZero() {
 				baseVestingAccount := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)

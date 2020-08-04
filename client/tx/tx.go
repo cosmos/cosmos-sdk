@@ -369,10 +369,19 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	}
 
 	pubKey := key.GetPubKey()
+	accNum := txf.accountNumber
+	// start account and sequence numbers from 1
+	if accNum == 0 {
+		accNum = 1
+	}
+	accSeq := txf.sequence
+	if accSeq == 0 {
+		accSeq = 1
+	}
 	signerData := authsigning.SignerData{
 		ChainID:         txf.chainID,
-		AccountNumber:   txf.accountNumber,
-		AccountSequence: txf.sequence,
+		AccountNumber:   accNum,
+		AccountSequence: accSeq,
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on

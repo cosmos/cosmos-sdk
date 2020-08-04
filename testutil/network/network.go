@@ -271,7 +271,7 @@ func New(t *testing.T, cfg Config) *Network {
 
 		genFiles = append(genFiles, tmCfg.GenesisFile())
 		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: balances.Sort()})
-		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 1, 1))
 
 		commission, err := sdk.NewDecFromStr("0.5")
 		require.NoError(t, err)

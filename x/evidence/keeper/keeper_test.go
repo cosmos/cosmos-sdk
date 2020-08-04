@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	for i, addr := range valAddresses {
 		addr := sdk.AccAddress(addr)
-		app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+		app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i)+1, 1))
 	}
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())

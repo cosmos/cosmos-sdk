@@ -84,7 +84,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
-	baseAcc := types.NewBaseAccount(addr, pubkey, 0, 0)
+	baseAcc := types.NewBaseAccount(addr, pubkey, 1, 1)
 
 	tests := []struct {
 		name   string
@@ -98,7 +98,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"invalid base valid account",
-			types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
+			types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 1, 1),
 			true,
 		},
 	}
@@ -147,7 +147,7 @@ func TestHasPermissions(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	baseAcc := types.NewBaseAccount(addr, nil, 0, 0)
+	baseAcc := types.NewBaseAccount(addr, nil, 1, 1)
 	tests := []struct {
 		name   string
 		acc    types.GenesisAccount
@@ -199,7 +199,7 @@ func TestModuleAccountJSON(t *testing.T) {
 func TestGenesisAccountsContains(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
-	acc := types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0)
+	acc := types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 1, 1)
 
 	genAccounts := types.GenesisAccounts{}
 	require.False(t, genAccounts.Contains(acc.GetAddress()))

@@ -86,7 +86,13 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	bz := store.Get(types.GlobalAccountNumberKey)
 	if bz == nil {
 		// initialize the account numbers
-		accNumber = 0
+		// it may seem counter-intuitive, but we start account numbers with 2 for two reasons:
+		// - we do not want clients to have to encode 0 into SignDoc with protobuf because encoding of default values
+		//   varies from client to client (see ADR 020)
+		// - we want to have a zero value for account numbers to allow for certain situations (ex. fee grants) where
+		//   accounts that are not present in state are signing transactions. Given the above, that zero value should
+		//   actually be 1 and thus the first real account will be number 2, weird I know
+		accNumber = 2
 	} else {
 		val := gogotypes.UInt64Value{}
 

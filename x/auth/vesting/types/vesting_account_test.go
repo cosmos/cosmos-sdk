@@ -582,7 +582,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
-	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 0, 0)
+	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 1, 1)
 	initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
 	baseVestingWithCoins := types.NewBaseVestingAccount(baseAcc, initialVesting, 100)
 	tests := []struct {
@@ -597,7 +597,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"invalid base valid account",
-			authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
+			authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 1, 1),
 			true,
 		},
 		{

@@ -194,7 +194,7 @@ func InitTestnet(
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: coins.Sort()})
-		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 1, 1))
 
 		valTokens := sdk.TokensFromConsensusPower(100)
 		createValMsg := stakingtypes.NewMsgCreateValidator(

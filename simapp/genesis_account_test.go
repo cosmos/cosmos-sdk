@@ -20,7 +20,7 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 	vestingStart := time.Now().UTC()
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
-	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 0, 0)
+	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 1, 1)
 
 	testCases := []struct {
 		name    string
@@ -37,14 +37,14 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 		{
 			"invalid basic account with mismatching address/pubkey",
 			simapp.SimGenesisAccount{
-				BaseAccount: authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
+				BaseAccount: authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 1, 1),
 			},
 			true,
 		},
 		{
 			"valid basic account with module name",
 			simapp.SimGenesisAccount{
-				BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(crypto.AddressHash([]byte("testmod"))), nil, 0, 0),
+				BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(crypto.AddressHash([]byte("testmod"))), nil, 1, 1),
 				ModuleName:  "testmod",
 			},
 			false,

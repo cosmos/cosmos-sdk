@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -54,7 +53,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
@@ -79,7 +78,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						"/~@$*", ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+						"/~@$*", ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
@@ -105,7 +104,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 0)),
 				},
@@ -119,7 +118,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
@@ -144,7 +143,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.GenesisClientState{
 					types.NewGenesisClientState(
-						clientID, ibctmtypes.NewClientState(chainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 					),
 					types.NewGenesisClientState(
 						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),

@@ -32,7 +32,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+							clientID, ibctmtypes.NewClientState(chainID, light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
 						clienttypes.NewGenesisClientState(
 							exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
@@ -43,7 +43,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID,
 							[]exported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet,
+									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet.Hash(), suite.header.ValidatorSet,
 								),
 							},
 						),
@@ -92,7 +92,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+							clientID, ibctmtypes.NewClientState(chainID, light.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
 						clienttypes.NewGenesisClientState(
 							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),

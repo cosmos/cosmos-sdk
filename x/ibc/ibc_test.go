@@ -16,6 +16,8 @@ import (
 )
 
 const (
+	chainID = "chainID"
+
 	connectionID  = "connectionidone"
 	clientID      = "clientidone"
 	connectionID2 = "connectionidtwo"
@@ -29,6 +31,8 @@ const (
 
 	channelOrder   = channeltypes.ORDERED
 	channelVersion = "1.0"
+
+	height = 10
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -57,7 +61,7 @@ func (suite *IBCTestSuite) SetupTest() {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	suite.header = ibctmtypes.CreateTestHeader("chainID", 10, now, valSet, []tmtypes.PrivValidator{privVal})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, now, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.cdc = suite.app.Codec()
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})

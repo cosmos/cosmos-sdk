@@ -55,7 +55,7 @@ func (s Server) Start() error {
 }
 ```
 
-We have another struct which is the Router that will expose the rosetta endpoints.
+An internal `router` type exposes the Rosetta API endpoints:
 
 ```
 type router struct {

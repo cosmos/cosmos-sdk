@@ -77,7 +77,7 @@ func newRouter(adapter RosettaAPIAdapter) {
 }
 ```
 
-This router has a handler function by every Rosetta endpoint. The blocks handler looks like this:
+Each API endpoint has an associated handler, e.g.:
 
 ```
 func (r router) blocksApi(w http.ResponseWriter, r *http.Request) {

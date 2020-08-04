@@ -45,3 +45,5 @@ require (
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
+
+replace github.com/confio/ics23/go => github.com/colin-axner/ics23/go v0.0.0-20200803100013-75870b3ef25b

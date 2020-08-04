@@ -15,16 +15,16 @@ import (
 //
 // - Chaning SigningInfos and MissedBlocks from map to array.
 func Migrate(oldGenState v039slashing.GenesisState) types.GenesisState {
-	// Note that the two following for loops loop of a map's keys, so are not
+	// Note that the two following `for` loop over a map's keys, so are not
 	// deterministic.
-	var si []types.SigningInfo
+	var si = make([]types.SigningInfo, 0, len(oldGenState.SigningInfos))
 	for address, signingInfo := range oldGenState.SigningInfos {
 		si = append(si, types.SigningInfo{
 			Address:              address,
 			ValidatorSigningInfo: signingInfo,
 		})
 	}
-	var mb []types.ValidatorMissedBlocks
+	var mb = make([]types.ValidatorMissedBlocks, 0, len(oldGenState.MissedBlocks))
 	for address, missedBlocks := range oldGenState.MissedBlocks {
 		mb = append(mb, types.ValidatorMissedBlocks{
 			Address:      address,

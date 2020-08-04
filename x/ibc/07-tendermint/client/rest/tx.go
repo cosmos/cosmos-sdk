@@ -100,6 +100,7 @@ func updateClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		// create the message
 		msg := ibctmtypes.NewMsgUpdateClient(
 			clientID,
+			req.TrustedVals,
 			req.Header,
 			fromAddr,
 		)

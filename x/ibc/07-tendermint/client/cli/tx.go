@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	lite "github.com/tendermint/tendermint/lite2"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -132,7 +133,7 @@ func NewUpdateClientCmd() *cobra.Command {
 		Short: "update existing client with a header",
 		Long:  "update existing tendermint client with a tendermint header",
 		Example: fmt.Sprintf(
-			"$ %s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
+			"$ %s tx ibc %s update [client-id] [path/to/trusted_val_set.json] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
 			version.AppName, ibctmtypes.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
@@ -144,6 +145,18 @@ func NewUpdateClientCmd() *cobra.Command {
 			}
 
 			clientID := args[0]
+
+			var trustedValSet tmtypes.ValidatorSet
+			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &trustedValSet); err != nil {
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return errors.New("neither JSON input nor path to .json file were provided")
+				}
+				if err := clientCtx.Codec.UnmarshalJSON(contents, &trustedValSet); err != nil {
+					return errors.Wrap(err, "error unmarshalling validator set file")
+				}
+			}
 
 			var header ibctmtypes.Header
 			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &header); err != nil {
@@ -157,7 +170,7 @@ func NewUpdateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := ibctmtypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			msg := ibctmtypes.NewMsgUpdateClient(clientID, &trustedValSet, header, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

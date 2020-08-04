@@ -54,9 +54,10 @@ func (suite *TendermintTestSuite) TestMsgUpdateClient() {
 		expPass bool
 		errMsg  string
 	}{
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, signer), true, "success msg should pass"},
-		{types.NewMsgUpdateClient("(badClient)", types.Header{}, signer), false, "invalid client id passed"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, nil), false, "Empty address passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.valSet, types.Header{}, signer), true, "success msg should pass"},
+		{types.NewMsgUpdateClient("(badClient)", suite.valSet, types.Header{}, signer), false, "invalid client id passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, nil, types.Header{}, signer), false, "invalid trusted validator set"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.valSet, types.Header{}, nil), false, "Empty address passed"},
 	}
 
 	for i, tc := range cases {

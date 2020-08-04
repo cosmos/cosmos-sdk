@@ -164,11 +164,12 @@ func (msg *MsgUpdateClient) String() string { return TODO }
 func (msg *MsgUpdateClient) ProtoMessage()  {}
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) *MsgUpdateClient {
+func NewMsgUpdateClient(id string, tvals *tmtypes.ValidatorSet, header Header, signer sdk.AccAddress) *MsgUpdateClient {
 	return &MsgUpdateClient{
-		ClientID: id,
-		Header:   header,
-		Signer:   signer,
+		ClientID:    id,
+		TrustedVals: tvals,
+		Header:      header,
+		Signer:      signer,
 	}
 }
 

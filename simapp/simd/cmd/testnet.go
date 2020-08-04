@@ -233,32 +233,6 @@ func InitTestnet(
 			return err
 		}
 
-		// tx := authtypes.NewStdTx([]sdk.Msg{msg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
-		// txBldr, err := authtypes.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientDir)
-		// if err != nil {
-		// 	return fmt.Errorf("error creating tx: %w", err)
-		// }
-
-		// txBldr = txBldr.WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
-
-		// signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
-		// if err != nil {
-		// 	_ = os.RemoveAll(outputDir)
-		// 	return err
-		// }
-
-		// txBytes, err := cdc.MarshalJSON(signedTx)
-		// if err != nil {
-		// 	_ = os.RemoveAll(outputDir)
-		// 	return err
-		// }
-
-		// // gather gentxs folder
-		// if err := writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBytes); err != nil {
-		// 	_ = os.RemoveAll(outputDir)
-		// 	return err
-		// }
-
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 

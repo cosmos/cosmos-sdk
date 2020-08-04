@@ -273,22 +273,12 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body int
 		err  error
 	)
 
-	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-	var marshaler codec.JSONMarshaler
-
-	if ctx.JSONMarshaler != nil {
-		marshaler = ctx.JSONMarshaler
-	} else {
-		marshaler = ctx.Codec
-	}
-
 	switch b := body.(type) {
 	case []byte:
 		resp = b
 
 	default:
-		resp, err = marshaler.MarshalJSON(body)
+		resp, err = ctx.JSONMarshaler.MarshalJSON(body)
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -312,22 +302,12 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 		return
 	}
 
-	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-	var marshaler codec.JSONMarshaler
-
-	if ctx.JSONMarshaler != nil {
-		marshaler = ctx.JSONMarshaler
-	} else {
-		marshaler = ctx.Codec
-	}
-
 	switch res := resp.(type) {
 	case []byte:
 		result = res
 
 	default:
-		result, err = marshaler.MarshalJSON(resp)
+		result, err = ctx.JSONMarshaler.MarshalJSON(resp)
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -335,7 +315,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 
 	wrappedResp := NewResponseWithHeight(ctx.Height, result)
 
-	output, err := marshaler.MarshalJSON(wrappedResp)
+	output, err := ctx.JSONMarshaler.MarshalJSON(wrappedResp)
 	if CheckInternalServerError(w, err) {
 		return
 	}

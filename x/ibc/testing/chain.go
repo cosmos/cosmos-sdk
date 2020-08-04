@@ -333,7 +333,7 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 // client will be updated on the (target) chain.
 func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) error {
 	msg := ibctmtypes.NewMsgUpdateClient(
-		clientID, counterparty.LastHeader,
+		clientID, counterparty.Vals, counterparty.LastHeader,
 		chain.SenderAccount.GetAddress(),
 	)
 

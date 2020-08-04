@@ -64,7 +64,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorsHash, header.NextValidatorsHash,
 							),
 						},
 					},
@@ -89,7 +89,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorsHash, header.NextValidatorsHash,
 							),
 						},
 					},
@@ -129,7 +129,7 @@ func TestValidateGenesis(t *testing.T) {
 						"CLIENTID2",
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorsHash, header.NextValidatorsHash,
 							),
 						},
 					},
@@ -154,7 +154,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorsHash, header.NextValidatorsHash,
 							),
 						},
 					),

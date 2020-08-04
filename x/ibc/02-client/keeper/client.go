@@ -42,7 +42,11 @@ func (k Keeper) CreateClient(
 
 // UpdateClient updates the consensus state and the state root from a provided header
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, msg exported.MsgUpdateClient) (exported.ClientState, error) {
-	header := msg.GetHeader()
+	// Get Header from msg unless it is nil, which only happens on update LocalHost
+	var header exported.Header
+	if msg != nil {
+		header = msg.GetHeader()
+	}
 
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {

@@ -83,10 +83,11 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
-github.com/colin-axner/ics23/go v0.0.0-20200803100013-75870b3ef25b h1:CygIeIPpzJJyhsOVuFx+ejtvEmMWjtMHK1QUk1cLBLo=
-github.com/colin-axner/ics23/go v0.0.0-20200803100013-75870b3ef25b/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
 github.com/confio/ics23-iavl v0.6.0 h1:vVRCuVaP38FCw1kTeEdFuGuiY+2vAGTBQoH7Zxkq/ws=
 github.com/confio/ics23-iavl v0.6.0/go.mod h1:mmXAxD1vWoO0VP8YHu6mM1QHGv71NQqa1iSVm4HeKcY=
+github.com/confio/ics23/go v0.0.0-20200323120010-7d9a00f0a2fa/go.mod h1:W1I3XC8d9N8OTu/ct5VJ84ylcOunZwMXsWkd27nvVts=
+github.com/confio/ics23/go v0.0.0-20200804135649-a9fbc744ca3d h1:VbtIIE3NDC6/aIRUR9FdmRE4l0B5IDgYHiFi8pw0QOc=
+github.com/confio/ics23/go v0.0.0-20200804135649-a9fbc744ca3d/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=

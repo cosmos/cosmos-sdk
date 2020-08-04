@@ -90,6 +90,7 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 	}
 }
 
+// GetValidatorMissedBlocks returns array of missed blocks for given validator Cons address
 func (k Keeper) GetValidatorMissedBlocks(ctx sdk.Context, address sdk.ConsAddress) []types.MissedBlock {
 	missedBlocks := []types.MissedBlock{}
 	k.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {

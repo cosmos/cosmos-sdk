@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -31,29 +31,29 @@ func TestExportAndInitGenesis(t *testing.T) {
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
 	genesisState := slashing.ExportGenesis(ctx, app.SlashingKeeper)
 
-	assert.Equal(t, genesisState.Params, keeper.TestParams())
-	assert.Len(t, genesisState.SigningInfos, 2)
-	assert.Equal(t, genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
+	require.Equal(t, genesisState.Params, keeper.TestParams())
+	require.Len(t, genesisState.SigningInfos, 2)
+	require.Equal(t, genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
 
 	// Tombstone validators after genesis shouldn't effect genesis state
 	app.SlashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[0]))
 	app.SlashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[1]))
 
 	ok := app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[0]))
-	assert.True(t, ok)
+	require.True(t, ok)
 
 	newInfo1, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
-	assert.NotEqual(t, info1, newInfo1)
+	require.NotEqual(t, info1, newInfo1)
 	// Initialise genesis with genesis state before tombstone
 	slashing.InitGenesis(ctx, app.SlashingKeeper, app.StakingKeeper, genesisState)
 
 	// Validator isTombstoned should return false as GenesisState is initialised
 	ok = app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[0]))
-	assert.False(t, ok)
+	require.False(t, ok)
 
 	newInfo1, ok = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
 	newInfo2, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]))
-	assert.True(t, ok)
-	assert.Equal(t, info1, newInfo1)
-	assert.Equal(t, info2, newInfo2)
+	require.True(t, ok)
+	require.Equal(t, info1, newInfo1)
+	require.Equal(t, info2, newInfo2)
 }

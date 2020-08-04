@@ -181,7 +181,6 @@ func ParseHexHash(hexHash string) (tmbytes.HexBytes, error) {
 		return nil, err
 	}
 
-	hash = tmbytes.HexBytes(hash)
 	if err := tmtypes.ValidateHash(hash); err != nil {
 		return nil, err
 	}

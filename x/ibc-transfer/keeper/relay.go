@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -69,17 +71,30 @@ func (k Keeper) SendTransfer(
 
 	// begin createOutgoingPacket logic
 	// See spec for this logic: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+	}
+
+	prefixedDenom := token.Denom
+
+	// NOTE: denomination and hex hash correctness checked during msg.ValidateBasic
+	if strings.HasPrefix(token.Denom, "ibc/") {
+		hexHash := token.Denom[4:]
+		hash, _ := types.ParseHexHash(hexHash)
+
+		denomTrace, found := k.GetDenomTrace(ctx, hash)
+		if !found {
+			return sdkerrors.Wrap(types.ErrTraceNotFound, hexHash)
+		}
+		prefixedDenom = denomTrace.GetPrefix() + denomTrace.BaseDenom
 	}
 
 	// NOTE: SendTransfer simply sends the denomination as it exists on its own
 	// chain inside the packet data. The receiving chain will perform denom
 	// prefixing as necessary.
 
-	if types.SenderChainIsSource(sourcePort, sourceChannel, token.Denom) {
+	if types.SenderChainIsSource(sourcePort, sourceChannel, prefixedDenom) {
 		// create the escrow address for the tokens
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
@@ -109,7 +124,7 @@ func (k Keeper) SendTransfer(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		token.Denom, token.Amount.Uint64(), sender.String(), receiver,
+		prefixedDenom, token.Amount.Uint64(), sender.String(), receiver,
 	)
 
 	packet := channeltypes.NewPacket(

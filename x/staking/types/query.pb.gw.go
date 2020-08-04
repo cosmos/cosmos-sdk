@@ -1561,33 +1561,33 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Validators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "validators", "status"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Validators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "validators", "status"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Validator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "validator", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Validator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "validator", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ValidatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "delegations", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ValidatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "delegations", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ValidatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "unbonding-delegations", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ValidatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "unbonding-delegations", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Delegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1", "delegation", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Delegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1beta", "delegation", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_UnbondingDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1", "unbonding-delegation", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnbondingDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1beta", "unbonding-delegation", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "delegator-delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "delegator-delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "unbonding-delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "unbonding-delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Redelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "staking", "v1", "redelegations", "delegator_addr", "src_validator_addr", "dst_validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Redelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "staking", "v1beta", "redelegations", "delegator_addr", "src_validator_addr", "dst_validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "delegator-validators", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "delegator-validators", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1", "delegator-validator", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1beta", "delegator-validator", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_HistoricalInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1", "historical-info", "height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_HistoricalInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "historical-info", "height"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Pool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1", "pool"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Pool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta", "pool"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

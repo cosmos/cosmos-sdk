@@ -1027,21 +1027,21 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Proposal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1", "proposal", "proposal_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Proposal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1beta", "proposal", "proposal_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Proposals_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "gov", "v1", "proposals"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Proposals_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "gov", "v1beta", "proposals"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Vote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "gov", "v1", "vote", "proposal_id", "voter"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Vote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "gov", "v1beta", "vote", "proposal_id", "voter"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Votes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "gov", "v1", "votes", "proposal_id", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Votes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "gov", "v1beta", "votes", "proposal_id", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1", "params", "params_type"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1beta", "params", "params_type"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Deposit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "gov", "v1", "deposit", "proposal_id", "depositor"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Deposit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "gov", "v1beta", "deposit", "proposal_id", "depositor"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Deposits_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "gov", "v1", "deposits", "proposal_id", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Deposits_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "gov", "v1beta", "deposits", "proposal_id", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_TallyResult_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1", "tally", "proposal_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_TallyResult_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1beta", "tally", "proposal_id"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

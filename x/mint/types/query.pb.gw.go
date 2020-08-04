@@ -255,11 +255,11 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "mint", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "mint", "v1beta", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Inflation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "mint", "v1", "inflation"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Inflation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "mint", "v1beta", "inflation"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AnnualProvisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "mint", "v1", "annual-provisions"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AnnualProvisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "mint", "v1beta", "annual-provisions"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

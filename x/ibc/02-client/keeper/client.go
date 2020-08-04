@@ -58,8 +58,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
-	// addition to spec: prevent update if the client is frozen
-	if clientState.IsFrozen() {
+	// prevent update if the client is frozen before or at header height
+	if clientState.IsFrozen() && clientState.GetFrozenHeight() <= header.GetHeight() {
 		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
@@ -71,9 +71,16 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	switch clientType {
 	case exported.Tendermint:
+		trustedConsState, found := k.GetClientConsensusStateLTE(ctx, clientID, header.GetHeight())
+		if !found {
+			return nil, sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find consensus state less than header height: %d to verify header against", header.GetHeight())
+		}
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, header, ctx.BlockTime(),
+			clientState, trustedConsState, header, ctx.BlockTime(),
 		)
+		if err != nil {
+			err = sdkerrors.Wrapf(err, "failed to update client using trusted consensus state height %d", trustedConsState.GetHeight())
+		}
 	case exported.Localhost:
 		// override client state and update the block height
 		clientState = localhosttypes.NewClientState(

@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -68,9 +66,6 @@ func (ch Channel) ValidateBasic() error {
 	}
 	if err := host.ConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection hop ID")
-	}
-	if strings.TrimSpace(ch.Version) == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "channel version can't be blank")
 	}
 	return ch.Counterparty.ValidateBasic()
 }

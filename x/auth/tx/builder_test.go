@@ -18,7 +18,7 @@ import (
 func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
-	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}
@@ -53,7 +53,7 @@ func TestTxBuilder(t *testing.T) {
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
-	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetAuthInfoBytes")
+	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from getAuthInfoBytes")
 	authInfo := &txtypes.AuthInfo{
 		Fee:         &fee,
 		SignerInfos: signerInfo,
@@ -63,7 +63,7 @@ func TestTxBuilder(t *testing.T) {
 
 	require.NotEmpty(t, authInfoBytes)
 
-	t.Log("verify that body bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetBodyBytes")
+	t.Log("verify that body bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from getBodyBytes")
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {
@@ -80,29 +80,29 @@ func TestTxBuilder(t *testing.T) {
 	}
 	bodyBytes := marshaler.MustMarshalBinaryBare(txBody)
 	require.NotEmpty(t, bodyBytes)
-	require.Empty(t, txBuilder.GetBodyBytes())
+	require.Empty(t, txBuilder.getBodyBytes())
 
-	t.Log("verify that calling the SetMsgs, SetMemo results in the correct GetBodyBytes")
-	require.NotEqual(t, bodyBytes, txBuilder.GetBodyBytes())
+	t.Log("verify that calling the SetMsgs, SetMemo results in the correct getBodyBytes")
+	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
 	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
-	require.NotEqual(t, bodyBytes, txBuilder.GetBodyBytes())
+	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
 	txBuilder.SetMemo(memo)
-	require.Equal(t, bodyBytes, txBuilder.GetBodyBytes())
+	require.Equal(t, bodyBytes, txBuilder.getBodyBytes())
 	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
 	require.Equal(t, 0, len(txBuilder.GetPubKeys()))
 
-	t.Log("verify that updated AuthInfo  results in the correct GetAuthInfoBytes and GetPubKeys")
-	require.NotEqual(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	t.Log("verify that updated AuthInfo  results in the correct getAuthInfoBytes and GetPubKeys")
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 	txBuilder.SetFeeAmount(fee.Amount)
-	require.NotEqual(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 	txBuilder.SetGasLimit(fee.GasLimit)
-	require.NotEqual(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
 
 	// once fee, gas and signerInfos are all set, AuthInfo bytes should match
-	require.Equal(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	require.Equal(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 
 	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
 	require.Equal(t, 1, len(txBuilder.GetPubKeys()))

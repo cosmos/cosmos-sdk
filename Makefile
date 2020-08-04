@@ -182,13 +182,13 @@ test-ledger-mock:
 test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
-test-unit: test-unit-amino # TODO switch test-unit-proto to be default here after proto Tx is fully tested
+test-unit: test-unit-proto
 
 test-unit-proto:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_proto'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-unit-amino:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_amino'
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
@@ -338,12 +338,14 @@ proto-check-breaking-docker:
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/master
 
 TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
 TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
+CONFIO_TYPES        = third_party/proto/confio
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -369,6 +371,14 @@ proto-update-deps:
 	@mkdir -p $(TM_MERKLE_TYPES)
 	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
 	@sed -i '' '7 s|third_party/proto/||g' $(TM_MERKLE_TYPES)/merkle.proto
+
+	@mkdir -p $(CONFIO_TYPES)
+	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto
+## insert go package option into proofs.proto file
+## Issue link: https://github.com/confio/ics23/issues/32
+	@sed -i '4ioption go_package = "github.com/confio/ics23/go";' $(CONFIO_TYPES)/proofs.proto
+
+
 
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps

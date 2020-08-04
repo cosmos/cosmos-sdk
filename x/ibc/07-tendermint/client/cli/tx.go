@@ -12,7 +12,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -62,14 +61,14 @@ func NewCreateClientCmd() *cobra.Command {
 			}
 
 			var (
-				trustLevel tmmath.Fraction
+				trustLevel ibctmtypes.Fraction
 				specs      []*ics23.ProofSpec
 			)
 
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
-				trustLevel = lite.DefaultTrustLevel
+				trustLevel = ibctmtypes.NewFractionFromTm(lite.DefaultTrustLevel)
 			} else {
 				trustLevel, err = parseFraction(lvl)
 				if err != nil {
@@ -218,23 +217,23 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 	return cmd
 }
 
-func parseFraction(fraction string) (tmmath.Fraction, error) {
+func parseFraction(fraction string) (ibctmtypes.Fraction, error) {
 	fr := strings.Split(fraction, "/")
 	if len(fr) != 2 || fr[0] == fraction {
-		return tmmath.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
+		return ibctmtypes.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
 	}
 
 	numerator, err := strconv.ParseInt(fr[0], 10, 64)
 	if err != nil {
-		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
+		return ibctmtypes.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
 	}
 
 	denominator, err := strconv.ParseInt(fr[1], 10, 64)
 	if err != nil {
-		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
+		return ibctmtypes.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
 	}
 
-	return tmmath.Fraction{
+	return ibctmtypes.Fraction{
 		Numerator:   numerator,
 		Denominator: denominator,
 	}, nil

@@ -461,13 +461,13 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Balance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "bank", "v1", "balance", "address", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Balance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "bank", "v1beta", "balance", "address", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllBalances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1", "balances", "address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllBalances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta", "balances", "address"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_TotalSupply_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1", "total-supply"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_TotalSupply_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta", "total-supply"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_SupplyOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1", "supply", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SupplyOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta", "supply", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

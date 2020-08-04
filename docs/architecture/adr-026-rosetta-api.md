@@ -39,15 +39,59 @@ func NewServer(opt Options)
 type Options struct {}
 ```
 
-This struct once started will listen to the port specified by the options and will
-expose the Rosetta API.
+Server is the main struct, it can be configured by an options struct.
 
-Internally we will have an interface that will abstract the different calls that Rosetta supports.
-
-Example:
+This server exposes a Start method. 
 
 ```
-type RosettaDataAPI interface {
+func (s Server) Start() error {
+    ...
+    s.ListenAndServe(s.options.endpoint, s.router)
+    ...
+}
+```
+
+We have another struct which is the Router that will expose the rosetta endpoints.
+
+```
+type Router struct {
+    muxRouter mux.router
+    rosettaAdapter RosettaAPIAdapter
+}
+
+func NewRouter(adapter RosettaAPIAdapter) {
+    router := &Router{
+        mux: mux.NewRouter(),
+        rosettaAdapter: adapter,
+    }
+
+    router.mux.HandleFunc("/blocks/", router.blocksApi)
+    ...
+    ...
+
+    return router
+}
+```
+
+This router has a handler function by every Rosetta endpoint. The blocks handler looks like this:
+
+```
+func (r router) blocksApi(w http.ResponseWriter, r *http.Request) {
+    // We build the RosettaGetBlockRequest
+    req := ....
+
+    res := r.rosettaAdapter.GetBlocks(req) 
+    ...
+
+    // We write the response. 
+}
+``` 
+
+The router just translates a rest request into the data struct that the interface of an adapter needs to run.
+The RosettaAdapter interface looks like this:
+
+```
+type RosettaAdapterInterface interface {
     GetBlock(req RosettaGetBlockRequest) RosettaGetBlockResponse
     ...
 }
@@ -55,6 +99,27 @@ type RosettaDataAPI interface {
 
 And we will provide different implementations of this `adapter` like for 0.38, for 0.39
 and even a `CosmosHub` implementation that will call different versions of the hub.
+
+An example of an adapter implementation looks like this:
+
+```
+type CosmosLaunchpad struct {}
+
+func (CosmosLaunchpad) GetBlock(req RosettaGetBlockRequest) {
+    // Here we would just convert the RosettaGetBlockRequest 
+    // into the data we need to get the block information
+    // from a node that uses Launchpad.
+
+    res := client.Get(...)
+
+    // The adapter is responsable to build the response in the type
+    // specified by the Interface.
+
+    return RosettaGetBlockResponse{...}
+}
+...
+
+```
 
 This way we offer the possibility to offer developers the opportunity to instantiate
 a new server in their applications or just using the binary that can be build from the

@@ -73,7 +73,7 @@ func CalculateGas(
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) error {
-	err := tx.GenerateOrBroadcastTxWithFactory(clientCtx, txBldr, msgs...)
+	err := tx.GenerateTx(clientCtx, txBldr, msgs...)
 	return err
 }
 

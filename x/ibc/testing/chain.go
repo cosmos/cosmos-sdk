@@ -54,6 +54,7 @@ const (
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
 	TestHash                          = []byte("TESTING HASH")
+	TestCoin                          = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
@@ -201,7 +202,9 @@ func (chain *TestChain) NextBlock() {
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
 		// chains.
-		Time: chain.CurrentHeader.Time,
+		Time:               chain.CurrentHeader.Time,
+		ValidatorsHash:     chain.Vals.Hash(),
+		NextValidatorsHash: chain.Vals.Hash(),
 	}
 
 	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
@@ -594,9 +597,14 @@ func (chain *TestChain) ChanCloseInit(
 }
 
 // GetPacketData returns a ibc-transfer marshalled packet to be used for
-// callback testing
+// callback testing.
 func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
-	packet := ibctransfertypes.NewFungibleTokenPacketData(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))), chain.SenderAccount.GetAddress().String(), counterparty.SenderAccount.GetAddress().String())
+	packet := ibctransfertypes.FungibleTokenPacketData{
+		Denom:    TestCoin.Denom,
+		Amount:   TestCoin.Amount.Uint64(),
+		Sender:   chain.SenderAccount.GetAddress().String(),
+		Receiver: counterparty.SenderAccount.GetAddress().String(),
+	}
 
 	return packet.GetBytes()
 }

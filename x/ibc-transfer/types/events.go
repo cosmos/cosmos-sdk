@@ -8,9 +8,11 @@ const (
 	EventTypeChannelClose = "channel_closed"
 
 	AttributeKeyReceiver       = "receiver"
-	AttributeKeyValue          = "value"
+	AttributeKeyDenom          = "denom"
+	AttributeKeyAmount         = "amount"
 	AttributeKeyRefundReceiver = "refund_receiver"
-	AttributeKeyRefundValue    = "refund_value"
+	AttributeKeyRefundDenom    = "refund_denom"
+	AttributeKeyRefundAmount   = "refund_amount"
 	AttributeKeyAckSuccess     = "success"
 	AttributeKeyAckError       = "error"
 )

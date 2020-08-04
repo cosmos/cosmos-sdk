@@ -111,6 +111,18 @@ rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
 enabled-unsafe-cors = {{ .API.EnableUnsafeCORS }}
+
+###############################################################################
+###                           GRPC Configuration                            ###
+###############################################################################
+
+[grpc]
+
+# Enable defines if the API server should be enabled.
+enable = {{ .GRPC.Enable }}
+
+# Address defines the API server to listen on
+address = "{{ .GRPC.Address }}"
 `
 
 var configTemplate *template.Template

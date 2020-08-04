@@ -145,7 +145,7 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:  false,
+			Enable:  true,
 			Address: "0.0.0.0:9090",
 		},
 	}

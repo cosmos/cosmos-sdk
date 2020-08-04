@@ -113,6 +113,12 @@ func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
 }
 
+// FrozenHeight returns the height at which client is frozen
+// NOTE: FrozenHeight is 0 if client is unfrozen
+func (cs ClientState) GetFrozenHeight() uint64 {
+	return cs.FrozenHeight
+}
+
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainID) == "" {

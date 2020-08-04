@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 
 			return nil
 		}, false},
-		{"frozen client", func() error {
+		{"frozen client before update", func() error {
 			clientState = ibctmtypes.ClientState{FrozenHeight: 1, LatestHeight: testClientHeight}
 			suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
@@ -149,6 +149,28 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 
 			return nil
 		}, false},
+		{"valid past update before client was frozen", func() error {
+			clientState, err = ibctmtypes.Initialize(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
+			if err != nil {
+				return err
+			}
+			clientState.FrozenHeight = testClientHeight - 1
+			_, err = suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
+
+			// store previous consensus state
+			prevConsState := ibctmtypes.ConsensusState{
+				Height:             1,
+				Timestamp:          suite.past,
+				NextValidatorsHash: suite.valSet.Hash(),
+				ValidatorSet:       suite.valSet,
+			}
+			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 1, prevConsState)
+
+			// updateHeader will fill in consensus state between prevConsState and suite.consState
+			// clientState should not be updated
+			updateHeader = createPastUpdateFn(suite)
+			return nil
+		}, true},
 		{"invalid header", func() error {
 			clientState, err = ibctmtypes.Initialize(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
 			if err != nil {

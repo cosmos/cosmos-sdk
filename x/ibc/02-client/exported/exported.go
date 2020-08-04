@@ -21,6 +21,7 @@ type ClientState interface {
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
+	GetFrozenHeight() uint64
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 

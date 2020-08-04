@@ -58,8 +58,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
-	// addition to spec: prevent update if the client is frozen
-	if clientState.IsFrozen() {
+	// prevent update if the client is frozen before or at header height
+	if clientState.IsFrozen() && clientState.GetFrozenHeight() <= header.GetHeight() {
 		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 

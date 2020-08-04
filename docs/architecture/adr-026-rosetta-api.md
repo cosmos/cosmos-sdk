@@ -45,7 +45,7 @@ func NewServer(opt Options,  rosettaAdapter RosettaAPIAdapter) {
 }
 ```
 
-Server is the main struct, it can be configured by an options struct.
+Server is the main type that the client application needs to instantiate. It embeds an `Options` type and exposes a `Start()` method:
 
 ```
 func (s Server) Start() error {

@@ -45,11 +45,6 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 			"SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options.")
 	}
 
-	if body.TimeoutHeight != 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
-			"SIGN_MODE_LEGACY_AMINO_JSON does not support timeout height.")
-	}
-
 	return types.StdSignBytes(
 		data.ChainID, data.AccountNumber, data.AccountSequence,
 		//nolint:staticcheck

@@ -38,8 +38,8 @@ type builder struct {
 }
 
 var (
-	_ authsigning.SigFeeMemoTx = &builder{}
-	_ client.TxBuilder         = &builder{}
+	_ authsigning.Tx   = &builder{}
+	_ client.TxBuilder = &builder{}
 )
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {

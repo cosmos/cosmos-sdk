@@ -3,10 +3,9 @@ package tx
 import (
 	"testing"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/stretchr/testify/require"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,14 +60,6 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 	// expect error with wrong sign mode
 	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
-	require.Error(t, err)
-
-	// expect error with timeout height
-	bldr = newBuilder(std.DefaultPublicKeyCodec{})
-	buildTx(t, bldr)
-	bldr.tx.Body.TimeoutHeight = 10
-	tx = bldr.GetTx()
-	signBz, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
 
 	// expect error with extension options

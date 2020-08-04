@@ -151,5 +151,5 @@ func (s StdTxConfig) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, e
 }
 
 func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
-	return LegacyAminoJSONHandler{}
+	return stdTxSignModeHandler{}
 }

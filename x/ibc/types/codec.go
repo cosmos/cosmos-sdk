@@ -15,8 +15,6 @@ import (
 // on the provided Amino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {
 	clienttypes.RegisterCodec(cdc)
-	connectiontypes.RegisterCodec(cdc)
-	channeltypes.RegisterCodec(cdc)
 	ibctmtypes.RegisterCodec(cdc)
 	localhosttypes.RegisterCodec(cdc)
 	commitmenttypes.RegisterCodec(cdc)
@@ -26,4 +24,5 @@ func RegisterCodec(cdc *codec.Codec) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	connectiontypes.RegisterInterfaces(registry)
 	channeltypes.RegisterInterfaces(registry)
+	commitmenttypes.RegisterInterfaces(registry)
 }

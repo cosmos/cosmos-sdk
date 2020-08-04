@@ -53,11 +53,10 @@ func benchmarkRejectUnknownFields(b *testing.B, parallel bool) {
 	b.ReportAllocs()
 
 	if !parallel {
-		ckr := new(unknownproto.Checker)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			n1A := new(testdata.Nested1A)
-			if err := ckr.RejectUnknownFields(n1BBlob, n1A); err == nil {
+			if err := unknownproto.RejectUnknownFieldsStrict(n1BBlob, n1A); err == nil {
 				b.Fatal("expected an error")
 			}
 			b.SetBytes(int64(len(n1BBlob)))
@@ -66,11 +65,10 @@ func benchmarkRejectUnknownFields(b *testing.B, parallel bool) {
 		var mu sync.Mutex
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
-			ckr := new(unknownproto.Checker)
 			for pb.Next() {
 				// To simulate the conditions of multiple transactions being processed in parallel.
 				n1A := new(testdata.Nested1A)
-				if err := ckr.RejectUnknownFields(n1BBlob, n1A); err == nil {
+				if err := unknownproto.RejectUnknownFieldsStrict(n1BBlob, n1A); err == nil {
 					b.Fatal("expected an error")
 				}
 				mu.Lock()

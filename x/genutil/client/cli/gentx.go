@@ -18,14 +18,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -98,16 +96,10 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
-			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 
-			kr, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
-			if err != nil {
-				return errors.Wrap(err, "failed to initialize keyring")
-			}
-
 			name := args[0]
-			key, err := kr.Key(name)
+			key, err := clientCtx.Keyring.Key(name)
 			if err != nil {
 				return errors.Wrapf(err, "failed to fetch '%s' from the keyring", name)
 			}
@@ -139,8 +131,6 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "error creating tx builder")
 			}
 
-			txGen := clientCtx.TxConfig
-			txBuilder := txGen.NewTxBuilder()
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
 
 			// create a 'create-validator' message
@@ -163,12 +153,17 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			// read the transaction
-			stdTx, err := readUnsignedGenTxFile(cdc, w)
+			stdTx, err := readUnsignedGenTxFile(clientCtx, w)
 			if err != nil {
 				return errors.Wrap(err, "failed to read unsigned gen tx file")
 			}
 
 			// sign the transaction and write it to the output file
+			txBuilder, err := clientCtx.TxConfig.WrapTxBuilder(stdTx)
+			if err != nil {
+				return fmt.Errorf("error creating tx builder: %w", err)
+			}
+
 			err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to sign std tx")
@@ -182,7 +177,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				}
 			}
 
-			if err := writeSignedGenTx(cdc, outputDocument, stdTx); err != nil {
+			if err := writeSignedGenTx(clientCtx, outputDocument, stdTx); err != nil {
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 
@@ -209,26 +204,28 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
 }
 
-func readUnsignedGenTxFile(cdc codec.JSONMarshaler, r io.Reader) (authtypes.StdTx, error) {
-	var stdTx authtypes.StdTx
-
-	bytes, err := ioutil.ReadAll(r)
+func readUnsignedGenTxFile(clientCtx client.Context, r io.Reader) (sdk.Tx, error) {
+	bz, err := ioutil.ReadAll(r)
 	if err != nil {
-		return stdTx, err
+		return nil, err
 	}
 
-	err = cdc.UnmarshalJSON(bytes, &stdTx)
-	return stdTx, err
+	aTx, err := clientCtx.TxConfig.TxJSONDecoder()(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return aTx, err
 }
 
-func writeSignedGenTx(cdc codec.JSONMarshaler, outputDocument string, tx sdk.Tx) error {
+func writeSignedGenTx(clientCtx client.Context, outputDocument string, tx sdk.Tx) error {
 	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 	defer outputFile.Close()
 
-	json, err := cdc.MarshalJSON(tx)
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(tx)
 	if err != nil {
 		return err
 	}

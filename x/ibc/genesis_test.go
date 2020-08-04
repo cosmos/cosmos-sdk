@@ -1,8 +1,6 @@
 package ibc_test
 
 import (
-	lite "github.com/tendermint/tendermint/lite2"
-
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -32,7 +30,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
 						clienttypes.NewGenesisClientState(
 							exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
@@ -43,7 +41,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID,
 							[]exported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet,
+									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet.Hash(), suite.header.ValidatorSet,
 								),
 							},
 						),
@@ -92,7 +90,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
 						clienttypes.NewGenesisClientState(
 							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),

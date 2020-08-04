@@ -53,7 +53,7 @@ const (
 // Default params variables used to create a TM client
 var (
 	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
-	TestHash                          = []byte("TESTING HASH")
+	TestHash                          = tmhash.Sum("TESTING HASH")
 	TestCoin                          = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]

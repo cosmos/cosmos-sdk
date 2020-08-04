@@ -220,7 +220,7 @@ func (msg MsgTransfer) ValidateBasic() error {
   if err := msg.Trace.Validate(); err != nil {
     return err
   }
-  if err := ValidateIBCDenom(msg.Token.Denom, msg.Trace); err != nil {
+  if err := ValidatePrefixedDenom(msg.Token.Denom, msg.Trace); err != nil {
     return err
   }
   // ...
@@ -228,8 +228,8 @@ func (msg MsgTransfer) ValidateBasic() error {
 ```
 
 ```golang
-// ValidateIBCDenom checks that the denomination for an IBC fungible token is valid. It returns error if the trace `hash` is invalid
-func ValidateIBCDenom(denom string, trace DenomTrace) error {
+// ValidatePrefixedDenom checks that the denomination for an IBC fungible token is valid. It returns error if the trace `hash` is invalid
+func ValidatePrefixedDenom(denom string, trace DenomTrace) error {
   // Validate that base denominations are equal if the trace info is not provided
   if trace.Trace == "" {
     if trace.BaseDenom != denom {

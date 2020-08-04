@@ -81,3 +81,55 @@ func TestDenomTrace_Validate(t *testing.T) {
 		require.NoError(t, err, tc.name)
 	}
 }
+
+func TestValidatePrefixedDenom(t *testing.T) {
+	testCases := []struct {
+		name     string
+		denom    string
+		expError bool
+	}{
+		{"prefixed denom", "transfer/channelToA/uatom", false},
+		{"base denom", "uatom", false},
+		{"empty denom", "", true},
+		{"empty prefix", "/uatom", true},
+		{"empty identifiers", "//uatom", true},
+		{"single trace identifier", "transfer/", true},
+		{"invalid port ID", "(transfer)/channelToA/uatom", true},
+		{"invalid channel ID", "transfer/(channelToA)/uatom", true},
+	}
+
+	for _, tc := range testCases {
+		err := ValidatePrefixedDenom(tc.denom)
+		if tc.expError {
+			require.Error(t, err, tc.name)
+			continue
+		}
+		require.NoError(t, err, tc.name)
+	}
+}
+
+func TestValidateIBCDenom(t *testing.T) {
+	testCases := []struct {
+		name     string
+		denom    string
+		expError bool
+	}{
+		{"denom with trace hash", "ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", false},
+		{"base denom", "uatom", false},
+		{"empty denom", "", true},
+		{"invalid prefixed denom", "transfer/channelToA/uatom", true},
+		{"denom 'ibc'", "ibc", true},
+		{"denom 'ibc/'", "ibc/", true},
+		{"invald prefix", "notibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true},
+		{"invald hash", "ibc/!@#$!@#", true},
+	}
+
+	for _, tc := range testCases {
+		err := ValidateIBCDenom(tc.denom)
+		if tc.expError {
+			require.Error(t, err, tc.name)
+			continue
+		}
+		require.NoError(t, err, tc.name)
+	}
+}

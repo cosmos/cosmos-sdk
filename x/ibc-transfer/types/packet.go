@@ -45,7 +45,7 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if strings.TrimSpace(ftpd.Receiver) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "receiver address cannot be blank")
 	}
-	return ValidateIBCDenom(ftpd.Denom)
+	return ValidatePrefixedDenom(ftpd.Denom)
 }
 
 // GetBytes is a helper for serialising

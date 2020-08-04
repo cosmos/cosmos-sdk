@@ -1,12 +1,14 @@
 package types
 
 import (
+	"encoding/hex"
 	"errors"
 	fmt "fmt"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -130,8 +132,13 @@ func (t Traces) Validate() error {
 	return nil
 }
 
-// ValidateIBCDenom checks that the denomination for an IBC fungible token packet denom is valid.
-func ValidateIBCDenom(denom string) error {
+// ValidatePrefixedDenom checks that the denomination for an IBC fungible token packet denom is correctly prefixed.
+// The function will return no error if the given string follows one of the two formats:
+//
+// - Prefixed denomination: '{portIDN}/{channelIDN}/.../{portID0}/{channelID0}/baseDenom'
+//
+// - Unprefixed denomination: 'baseDenom'
+func ValidatePrefixedDenom(denom string) error {
 	denomSplit := strings.Split(denom, "/")
 	if denomSplit[0] == denom && strings.TrimSpace(denom) != "" {
 		// NOTE: no base denomination validation
@@ -144,4 +151,33 @@ func ValidateIBCDenom(denom string) error {
 
 	identifiers := denomSplit[:len(denomSplit)-1]
 	return validateTraceIdentifiers(identifiers)
+}
+
+// ValidateIBCDenom validates that the given denomination is either:
+//
+// - A valid base denomination (eg: 'uatom')
+//
+// - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
+func ValidateIBCDenom(denom string) error {
+	denomSplit := strings.SplitN(denom, "/", 2)
+
+	switch {
+	case denomSplit[0] != "ibc" && denomSplit[0] == denom && strings.TrimSpace(denom) != "":
+		// NOTE: coin base denomination already verified
+		return nil
+	case len(denomSplit) != 2, denomSplit[0] != "ibc", strings.TrimSpace(denomSplit[1]) == "":
+		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
+	}
+
+	hash, err := hex.DecodeString(denomSplit[1])
+	if err != nil {
+		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "invalid denom trace hash %s: %s", denomSplit[1], err)
+	}
+
+	hash = tmbytes.HexBytes(hash)
+	if err := tmtypes.ValidateHash(hash); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "invalid denom trace hash %s: %s", denomSplit[1], err)
+	}
+
+	return nil
 }

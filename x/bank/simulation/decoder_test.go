@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -22,9 +22,9 @@ func TestDecodeStore(t *testing.T) {
 	supplyBz, err := app.BankKeeper.MarshalSupply(totalSupply)
 	require.NoError(t, err)
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.SupplyKey, Value: supplyBz},
-		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		kv.Pair{Key: types.SupplyKey, Value: supplyBz},
+		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

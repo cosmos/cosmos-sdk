@@ -15,11 +15,11 @@ import (
 
 // CheckValidityAndUpdateState checks if the provided header is valid, and if valid it will:
 // create the consensus state for the header.Height
-// and updated the client state if appropriate
+// and update the client state if the header height is greater than the latest client state height
 // It returns an error if:
 // - the client or header provided are not parseable to tendermint types
 // - the header is invalid
-// - header height is lower than consensusstate height
+// - header height is less than or equal to the consensus state height
 // - header valset commit verification fails
 // - header timestamp is past the trusting period in relation to the consensus state
 // - header timestamp is less than or equal to the consensus state timestamp
@@ -82,15 +82,15 @@ func checkValidity(
 	if header.Time.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidHeader,
-			"header blocktime is outside trusting period from last client timestamp",
+			"header timestamp is beyond trusting period in relation to the consensus state timestamp",
 		)
 	}
 
-	// assert header timestamp is past latest consensus state timestamp
+	// assert header timestamp is past latest stored consensus state timestamp
 	if header.Time.Unix() <= consState.Timestamp.Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header blocktime ≤ consensus state block time (%s ≤ %s)",
+			"header timestamp ≤ consensus state timestamp (%s ≤ %s)",
 			header.Time.UTC(), consState.Timestamp.UTC(),
 		)
 	}

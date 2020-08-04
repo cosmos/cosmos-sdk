@@ -1,12 +1,9 @@
 package tx
 
 import (
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,7 +18,7 @@ import (
 func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
-	marshaler := codec.NewHybridCodec(codec.New(), codectypes.NewInterfaceRegistry())
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
 
 	cdc := std.DefaultPublicKeyCodec{}
@@ -234,103 +231,23 @@ func TestBuilderValidateBasic(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestBuilderSetSignerInfo(t *testing.T) {
-	// keys and addresses
-	_, pubKey1, addr1 := testdata.KeyTestPubAddr()
-	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+func TestDefaultTxDecoderError(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	pubKeyCdc := std.DefaultPublicKeyCodec{}
+	encoder := DefaultTxEncoder()
+	decoder := DefaultTxDecoder(registry, pubKeyCdc)
 
-	// msg and signatures
-	msg1 := testdata.NewTestMsg(addr1)
-	msg2 := testdata.NewTestMsg(addr2)
+	builder := newBuilder(pubKeyCdc)
+	err := builder.SetMsgs(testdata.NewTestMsg())
+	require.NoError(t, err)
 
-	// Variable data for each test
-	var (
-		pubKey    crypto.PubKey
-		modeInfo  txtypes.ModeInfo
-		txBuilder *builder
-	)
+	txBz, err := encoder(builder.GetTx())
+	require.NoError(t, err)
 
-	testCases := []struct {
-		desc     string
-		malleate func()
-		expPass  bool
-		expErr   error
-	}{
-		{
-			"should fail if no msgs",
-			func() {
-				pubKey = pubKey1
-			},
-			false, sdkerrors.ErrInvalidPubKey,
-		},
-		{
-			"should fail if no public key",
-			func() {
-				pubKey = nil
-				txBuilder.SetMsgs(msg1)
-			},
-			false, sdkerrors.ErrInvalidPubKey,
-		},
-		{
-			"should fail if signer not in msgs",
-			func() {
-				_, pubKey, _ = testdata.KeyTestPubAddr()
-				txBuilder.SetMsgs(msg1, msg2)
-			},
-			false, sdkerrors.ErrInvalidPubKey,
-		},
-		{
-			"should pass with 2 signers",
-			func() {
-				// Run manually for signer 1.
-				txBuilder.SetMsgs(msg1, msg2)
-				modeInfo = txtypes.ModeInfo{Sum: &txtypes.ModeInfo_Single_{Single: &txtypes.ModeInfo_Single{Mode: signing.SignMode_SIGN_MODE_DIRECT}}}
-				txBuilder.SetSignerInfo(pubKey1, &modeInfo)
+	_, err = decoder(txBz)
+	require.EqualError(t, err, "no registered implementations of type types.Msg: tx parse error")
 
-				// Test case will handle signer 2.
-				pubKey = pubKey2
-			},
-			true, nil,
-		},
-		{
-			"should reset cached authInfoBz and pubKeys bytes after each call",
-			func() {
-				// Run manually for signer 1.
-				txBuilder.SetMsgs(msg1, msg2)
-				modeInfo = txtypes.ModeInfo{Sum: &txtypes.ModeInfo_Single_{Single: &txtypes.ModeInfo_Single{Mode: signing.SignMode_SIGN_MODE_DIRECT}}}
-				txBuilder.SetSignerInfo(pubKey1, &modeInfo)
-
-				// This populates the cached bytes.
-				_, _ = txBuilder.GetAuthInfoBytes(), txBuilder.GetPubKeys()
-				require.NotNil(t, txBuilder.authInfoBz)
-				require.NotNil(t, txBuilder.pubKeys)
-
-				// Run again, for signer 2. It should reset the cached bytes
-				// to nil.
-				txBuilder.SetSignerInfo(pubKey2, &modeInfo)
-				require.Nil(t, txBuilder.authInfoBz)
-				require.Nil(t, txBuilder.pubKeys)
-
-				// Run the test case, for fun.
-				pubKey = pubKey2
-			},
-			true, nil,
-		},
-	}
-
-	for _, tc := range testCases {
-		// Fresh txBuilder for each test case
-		txBuilder = newBuilder(std.DefaultPublicKeyCodec{})
-
-		tc.malleate()
-
-		fmt.Println(modeInfo)
-		err := txBuilder.SetSignerInfo(pubKey, &modeInfo)
-		if tc.expPass {
-			require.Nil(t, err, tc.desc)
-		} else {
-			require.Error(t, err, tc.desc)
-			require.True(t, errors.Is(tc.expErr, err), tc.desc)
-		}
-	}
+	registry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	_, err = decoder(txBz)
+	require.NoError(t, err)
 }

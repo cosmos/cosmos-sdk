@@ -182,13 +182,13 @@ test-ledger-mock:
 test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
-test-unit: test-unit-amino # TODO switch test-unit-proto to be default here after proto Tx is fully tested
+test-unit: test-unit-proto
 
 test-unit-proto:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_proto'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-unit-amino:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_amino'
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
@@ -378,7 +378,7 @@ proto-update-deps:
 ###############################################################################
 
 build-docker-local-simapp:
-	@$(MAKE) -C networks/local
+	docker build -t cosmos-sdk/simapp .
 
 # Run a 4-node testnet locally
 localnet-start: build-simd-linux localnet-stop

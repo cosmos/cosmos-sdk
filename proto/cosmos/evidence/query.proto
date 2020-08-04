@@ -17,7 +17,7 @@ service Query {
 
   // AllEvidence queries all evidence
   rpc AllEvidence(QueryAllEvidenceRequest) returns (QueryAllEvidenceResponse) {
-    option (google.api.http).get = "/cosmos/evidence/v1/evidences/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/evidence/v1/evidences";
   }
 }
 

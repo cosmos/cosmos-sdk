@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 service Query {
   // Validators queries all validators that match the given status
   rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1/validators/{status}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/staking/v1/validators/{status}";
   }
 
   // Validator queries validator info for given validator addr
@@ -22,12 +22,12 @@ service Query {
 
   // ValidatorDelegations queries delegate info for given validator
   rpc ValidatorDelegations (QueryValidatorDelegationsRequest) returns (QueryValidatorDelegationsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1/delegations/{validator_addr}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/staking/v1/delegations/{validator_addr}";
   }
 
   // ValidatorUnbondingDelegations queries unbonding delegations of a validator
   rpc ValidatorUnbondingDelegations (QueryValidatorUnbondingDelegationsRequest) returns (QueryValidatorUnbondingDelegationsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1/unbonding-delegations/{validator_addr}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/staking/v1/unbonding-delegations/{validator_addr}";
   }
 
   // Delegation queries delegate info for given validator delegator pair
@@ -42,22 +42,22 @@ service Query {
 
   // DelegatorDelegations queries all delegations of a give delegator address
   rpc DelegatorDelegations (QueryDelegatorDelegationsRequest) returns (QueryDelegatorDelegationsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1/delegator-delegations/{delegator_addr}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/staking/v1/delegator-delegations/{delegator_addr}";
   }
 
   // DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
   rpc DelegatorUnbondingDelegations (QueryDelegatorUnbondingDelegationsRequest) returns (QueryDelegatorUnbondingDelegationsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1/unbonding-delegations/{delegator_addr}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/staking/v1/unbonding-delegations/{delegator_addr}";
   }
 
   // Redelegations queries redelegations of given address
   rpc Redelegations (QueryRedelegationsRequest) returns (QueryRedelegationsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1/redelegations/{delegator_addr}/{src_validator_addr}/{dst_validator_addr}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/staking/v1/redelegations/{delegator_addr}/{src_validator_addr}/{dst_validator_addr}";
   }
 
   // DelegatorValidators queries all validator info for given delegator address
   rpc DelegatorValidators (QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1/delegator-validators/{delegator_addr}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";  
+		option (google.api.http).get = "/cosmos/staking/v1/delegator-validators/{delegator_addr}";  
   }
 
   // DelegatorValidator queries validator info for given delegator validator pair

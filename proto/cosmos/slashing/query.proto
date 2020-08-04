@@ -22,7 +22,7 @@ service Query {
 
 	// SigningInfos queries signing info of all validators
 	rpc SigningInfos (QuerySigningInfosRequest) returns (QuerySigningInfosResponse) {
-		option (google.api.http).get = "/cosmos/slashing/v1/signing-infos/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/slashing/v1/signing-infos";
 	}
 }
 

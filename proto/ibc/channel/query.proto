@@ -17,12 +17,12 @@ service Query {
 
   // Channels queries all the IBC channels of a chain.
   rpc Channels(QueryChannelsRequest) returns (QueryChannelsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1/channels/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/channels";
   }
 
   // ConnectionChannels queries all the channels associated with a connection end.
   rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1/connection-channels/{connection}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/connection-channels/{connection}";
   }
 
   // PacketCommitment queries a stored packet commitment hash.
@@ -32,7 +32,7 @@ service Query {
 
   // PacketCommitments returns the all the packet commitments hashes associated with a channel.
   rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1/packet-commitments/{port_id}/{channel_id}/{pagination.key}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+		option (google.api.http).get = "/cosmos/ibc/channel/v1/packet-commitments/{port_id}/{channel_id}";
   }
 
   // PacketAcknowledgement queries a stored packet acknowledgement hash.

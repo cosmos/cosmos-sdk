@@ -86,63 +86,12 @@ func local_request_Query_Evidence_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 var (
-	filter_Query_AllEvidence_0 = &utilities.DoubleArray{Encoding: map[string]int{"pagination": 0, "key": 1, "offset": 2, "limit": 3, "count_total": 4}, Base: []int{1, 1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 2, 2, 2, 2, 3, 4, 5, 6}}
+	filter_Query_AllEvidence_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
 func request_Query_AllEvidence_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryAllEvidenceRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["pagination.key"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.key")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.key", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.key", err)
-	}
-
-	val, ok = pathParams["pagination.offset"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.offset")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.offset", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.offset", err)
-	}
-
-	val, ok = pathParams["pagination.limit"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.limit")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.limit", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.limit", err)
-	}
-
-	val, ok = pathParams["pagination.count_total"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.count_total")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.count_total", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.count_total", err)
-	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -159,57 +108,6 @@ func request_Query_AllEvidence_0(ctx context.Context, marshaler runtime.Marshale
 func local_request_Query_AllEvidence_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryAllEvidenceRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["pagination.key"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.key")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.key", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.key", err)
-	}
-
-	val, ok = pathParams["pagination.offset"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.offset")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.offset", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.offset", err)
-	}
-
-	val, ok = pathParams["pagination.limit"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.limit")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.limit", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.limit", err)
-	}
-
-	val, ok = pathParams["pagination.count_total"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.count_total")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.count_total", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.count_total", err)
-	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -355,7 +253,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Evidence_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 1, 1, 0, 4, 1, 5, 3}, []string{"cosmos", "evidence", "v1", "evidence_hash"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllEvidence_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "evidence", "v1", "evidences", "pagination.key", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllEvidence_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "evidence", "v1", "evidences"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

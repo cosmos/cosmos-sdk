@@ -2,8 +2,6 @@ package types_test
 
 import (
 	ics23 "github.com/confio/ics23/go"
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	"github.com/tendermint/tendermint/light"
 
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -58,15 +56,11 @@ func (suite *TendermintTestSuite) TestValidate() {
 		},
 		{
 			name:        "invalid height",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		{
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs is nil",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, nil),
-		{
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, []*ics23.ProofSpec{ics23.TendermintSpec, nil}),
 			expPass:     false,
 		},

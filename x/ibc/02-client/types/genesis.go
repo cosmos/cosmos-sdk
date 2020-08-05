@@ -3,19 +3,28 @@ package types
 import (
 	"fmt"
 
+	proto "github.com/gogo/protobuf/proto"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-type GenesisClientState struct {
-	ClientID    string               `json:"client_id" yaml:"client_id"`
-	ClientState exported.ClientState `json:"client_state" yaml:"client_state"`
-}
+// NewGenesisClientState creates a new GenesisClientState instance.
+func NewGenesisClientState(clientID string, clientState exported.ClientState) GenesisClientState {
+	msg, ok := clientState.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("cannot proto marshal %T", clientState))
+	}
 
-func NewGenesisClientState(id string, cs exported.ClientState) GenesisClientState {
+	anyClientState, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+
 	return GenesisClientState{
-		ClientID:    id,
-		ClientState: cs,
+		ClientID:    clientID,
+		ClientState: anyClientState,
 	}
 }
 
@@ -67,7 +76,11 @@ func (gs GenesisState) Validate() error {
 		if err := host.ClientIdentifierValidator(client.ClientID); err != nil {
 			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientID, i, err)
 		}
-		if err := client.ClientState.Validate(); err != nil {
+		cs, ok := client.ClientState.GetCachedValue().(exported.ClientState)
+		if !ok {
+			return fmt.Errorf("invalid client state")
+		}
+		if err := cs.Validate(); err != nil {
 			return fmt.Errorf("invalid client %v index %d: %w", client, i, err)
 		}
 	}

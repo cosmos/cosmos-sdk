@@ -125,11 +125,7 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 // GetAllGenesisClients returns all the clients in state with their client ids returned as GenesisClientState
 func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.GenesisClientState) {
 	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
-		gc := types.GenesisClientState{
-			ClientID:    clientID,
-			ClientState: cs,
-		}
-		genClients = append(genClients, gc)
+		genClients = append(genClients, types.NewGenesisClientState(clientID, cs))
 		return false
 	})
 	return

@@ -21,7 +21,7 @@ func RegisterCodec(cdc *codec.Codec) {
 // Interfaces and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos.vesting.beta.VestingAccount",
+		"cosmos.vesting.v1beta1.VestingAccount",
 		(*exported.VestingAccount)(nil),
 		&ContinuousVestingAccount{},
 		&DelayedVestingAccount{},

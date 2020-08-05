@@ -24,7 +24,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"cosmos.bank.beta.SupplyI",
+		"cosmos.bank.v1beta1.SupplyI",
 		(*exported.SupplyI)(nil),
 		&Supply{},
 	)

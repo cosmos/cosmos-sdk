@@ -24,7 +24,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDeposit{},
 	)
 	registry.RegisterInterface(
-		"cosmos.gov.beta.Content",
+		"cosmos.gov.v1beta1.Content",
 		(*Content)(nil),
 		&TextProposal{},
 	)

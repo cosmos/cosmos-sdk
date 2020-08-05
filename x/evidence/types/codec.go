@@ -19,7 +19,7 @@ func RegisterCodec(cdc *codec.Codec) {
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSubmitEvidence{})
 	registry.RegisterInterface(
-		"cosmos.evidence.beta.Evidence",
+		"cosmos.evidence.v1beta1.Evidence",
 		(*exported.Evidence)(nil),
 		&Equivocation{},
 	)

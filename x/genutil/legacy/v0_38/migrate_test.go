@@ -3,6 +3,7 @@ package v038_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
@@ -138,5 +139,5 @@ func TestMigrate(t *testing.T) {
 		v036staking.ModuleName:     genStakingState,
 	}
 
-	require.NotPanics(t, func() { v038.Migrate(genesis) })
+	require.NotPanics(t, func() { v038.Migrate(genesis, client.Context{}) })
 }

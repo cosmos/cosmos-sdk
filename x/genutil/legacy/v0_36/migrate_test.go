@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -90,7 +91,7 @@ func TestDummyGenesis(t *testing.T) {
 		"foo": {},
 		"bar": []byte(`{"custom": "module"}`),
 	}
-	migratedDummy := Migrate(genesisDummy)
+	migratedDummy := Migrate(genesisDummy, client.Context{})
 
 	// We should not touch custom modules in the map
 	require.Equal(t, genesisDummy["foo"], migratedDummy["foo"])
@@ -102,5 +103,5 @@ func TestGovGenesis(t *testing.T) {
 		"gov": basic034Gov,
 	}
 
-	require.NotPanics(t, func() { Migrate(genesis) })
+	require.NotPanics(t, func() { Migrate(genesis, client.Context{}) })
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
@@ -115,6 +116,6 @@ func TestMigrate(t *testing.T) {
 	}
 
 	var migrated types.AppMap
-	require.NotPanics(t, func() { migrated = v039.Migrate(genesis) })
+	require.NotPanics(t, func() { migrated = v039.Migrate(genesis, client.Context{}) })
 	require.Equal(t, string(expectedGenAuthState), string(migrated[v039auth.ModuleName]))
 }

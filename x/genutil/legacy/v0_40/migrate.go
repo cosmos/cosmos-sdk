@@ -1,6 +1,7 @@
 package v040
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
@@ -16,14 +17,12 @@ import (
 )
 
 // Migrate migrates exported state from v0.39 to a v0.40 genesis state.
-func Migrate(appState types.AppMap) types.AppMap {
+func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039Codec := codec.New()
 	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterCodec(v039Codec)
 
-	v040Codec := codec.New()
-	cryptocodec.RegisterCrypto(v040Codec)
-	v039auth.RegisterCodec(v040Codec)
+	v040Codec := clientCtx.JSONMarshaler
 
 	// remove balances from existing accounts
 	if appState[v039auth.ModuleName] != nil {
@@ -74,7 +73,7 @@ func Migrate(appState types.AppMap) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v040evidence.ModuleName] = v040Codec.MustMarshalJSON(v040evidence.Migrate(evidenceGenState))
+		appState[v040evidence.ModuleName] = v040Codec.MustMarshalJSON(v040evidence.Migrate(evidenceGenState, clientCtx))
 	}
 
 	// Migrate x/slashing.

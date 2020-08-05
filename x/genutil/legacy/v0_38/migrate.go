@@ -1,6 +1,7 @@
 package v038
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
@@ -14,7 +15,7 @@ import (
 )
 
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.
-func Migrate(appState types.AppMap) types.AppMap {
+func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v036Codec := codec.New()
 	cryptocodec.RegisterCrypto(v036Codec)
 

@@ -92,7 +92,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			}
 
 			// TODO: handler error from migrationFunc call
-			newGenState := migrationFunc(initialState)
+			newGenState := migrationFunc(initialState, clientCtx)
 
 			genDoc.AppState, err = cdc.MarshalJSON(newGenState)
 			if err != nil {

@@ -38,7 +38,7 @@ WORKDIR /root
 # Copy over binaries from the build-env
 COPY --from=build-env /go/bin/simd /usr/bin/simd
 
-EXPOSE 26656 26657 1317
+EXPOSE 26656 26657 1317 9090
 
 # Run simd by default, omit entrypoint to ease using container with simcli
 CMD ["simd"]

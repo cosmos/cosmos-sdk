@@ -143,8 +143,10 @@ Experimental functionality to existing stable packages could be added as `alpha`
 Whenever code is released into the wild, especially on a blockchain, there is a high cost to changing things. In some
 cases, for instance with immutable smart contracts, a breaking change may be impossible to fix.
 
-When marking something as `alpha` or `beta`, maintainers should ask the question: what is the cost of
-asking others to change their code vs the benefit of us maintaining the optionality to change it?
+When marking something as `alpha` or `beta`, maintainers should ask the questions:
+* what is the cost of asking others to change their code vs the benefit of us maintaining the optionality to change it?
+* what is the plan for moving this to `v1` and how will that affect users?
+
 `alpha` or `beta` should really be used to communicate "changes are planned".
 
 As a case study, gRPC reflection is in the package `grpc.reflection.v1alpha`. It hasn't been changed since

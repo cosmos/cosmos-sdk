@@ -34,7 +34,7 @@ type Keeper struct {
 func NewKeeper(
 	aminoCdc *codec.Codec, cdc codec.BinaryMarshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
-	clientKeeper := clientkeeper.NewKeeper(aminoCdc, key, stakingKeeper)
+	clientKeeper := clientkeeper.NewKeeper(cdc, aminoCdc, key, stakingKeeper)
 	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
 	portKeeper := portkeeper.NewKeeper(scopedKeeper)
 	channelKeeper := channelkeeper.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)

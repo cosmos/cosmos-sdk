@@ -5,7 +5,6 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,60 +23,17 @@ import (
 
 var _ clientexported.ClientState = ClientState{}
 
-// ClientState from Tendermint tracks the current validator set, latest height,
-// and a possible frozen height.
-type ClientState struct {
-	ChainID string `json:"chain_id" yaml:"chain_id"`
-
-	TrustLevel tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
-
-	// Duration of the period since the LastestTimestamp during which the
-	// submitted headers are valid for upgrade
-	TrustingPeriod time.Duration `json:"trusting_period" yaml:"trusting_period"`
-
-	// Duration of the staking unbonding period
-	UnbondingPeriod time.Duration `json:"unbonding_period" yaml:"unbonding_period"`
-
-	// MaxClockDrift defines how much new (untrusted) header's Time can drift into
-	// the future.
-	MaxClockDrift time.Duration
-
-	// Block height when the client was frozen due to a misbehaviour
-	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
-
-	// Latest height the client was updated up to
-	LatestHeight uint64 `json:"latest_height" yaml:"latest_height"`
-
-	ProofSpecs []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
-}
-
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg *MsgCreateClient) (ClientState, error) {
-	return Initialize(
-		msg.Header.ChainID,
-		msg.TrustLevel,
+func InitializeFromMsg(msg *MsgCreateClient) ClientState {
+	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
 		uint64(msg.Header.Height), msg.ProofSpecs,
 	)
 }
 
-// Initialize creates a client state and validates its contents, checking that
-// the provided consensus state is from the same client type.
-func Initialize(
-	chainID string,
-	trustLevel tmmath.Fraction,
-	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight uint64, specs []*ics23.ProofSpec,
-) (ClientState, error) {
-	clientState := NewClientState(chainID, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, latestHeight, specs)
-
-	return clientState, nil
-}
-
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	chainID string,
-	trustLevel tmmath.Fraction,
+	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight uint64, specs []*ics23.ProofSpec,
 ) ClientState {
@@ -124,7 +80,7 @@ func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainID) == "" {
 		return sdkerrors.Wrap(ErrInvalidChainID, "chain id cannot be empty string")
 	}
-	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
+	if err := lite.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {

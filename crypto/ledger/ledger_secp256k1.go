@@ -270,8 +270,8 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (tmcry
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKey
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return compressedPublicKey, addr, nil
 }

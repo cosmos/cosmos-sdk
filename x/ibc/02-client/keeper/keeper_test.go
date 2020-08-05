@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	validator := tmtypes.NewValidator(pubKey, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, now2, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight-1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:             testClientHeight,
 		Timestamp:          suite.now,
@@ -213,7 +213,8 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 		NextValidatorsHash: suite.valSet.Hash(),
 	}
 
-	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.header.Time.Add(time.Minute), suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, testClientHeight, suite.header.Time.Add(time.Minute),
+		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality
 	clientState.LatestHeight = uint64(header.Height)

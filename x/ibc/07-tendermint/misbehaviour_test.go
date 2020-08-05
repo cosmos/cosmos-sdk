@@ -86,8 +86,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			types.ConsensusState{Timestamp: suite.now, Height: height, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), NextValidatorsHash: suite.valSet.Hash()},
 			types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height+2, height, suite.now, bothValSet, suite.valSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height+2, height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
+				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},

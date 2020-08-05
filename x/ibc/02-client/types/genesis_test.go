@@ -36,7 +36,7 @@ func TestValidateGenesis(t *testing.T) {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	header := ibctmtypes.CreateTestHeader(chainID, height, now, valSet, []tmtypes.PrivValidator{privVal})
+	header := ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	testCases := []struct {
 		name     string

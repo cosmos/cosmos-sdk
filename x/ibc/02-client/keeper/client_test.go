@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	}
 	var (
 		updateHeader ibctmtypes.Header
-		clientState  ibctmtypes.ClientState
+		clientState  *ibctmtypes.ClientState
 	)
 
 	cases := []struct {
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return nil
 		}, false},
 		{"frozen client before update", func() error {
-			clientState = ibctmtypes.ClientState{FrozenHeight: 1, LatestHeight: testClientHeight}
+			clientState = &ibctmtypes.ClientState{FrozenHeight: 1, LatestHeight: testClientHeight}
 			suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			updateHeader = createFutureUpdateFn(suite)
@@ -309,7 +309,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState := ibctmtypes.ClientState{FrozenHeight: 1, LatestHeight: testClientHeight}
+				clientState := &ibctmtypes.ClientState{FrozenHeight: 1, LatestHeight: testClientHeight}
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 				return nil
 			},
@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState := ibctmtypes.ClientState{FrozenHeight: 1, LatestHeight: testClientHeight}
+				clientState := &ibctmtypes.ClientState{FrozenHeight: 1, LatestHeight: testClientHeight}
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 				return nil
 			},

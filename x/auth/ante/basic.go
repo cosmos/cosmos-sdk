@@ -158,7 +158,7 @@ type (
 // AnteHandle implements an AnteHandler decerator for the TxHeightTimeoutDecorator
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
-// height, than an error is returned.
+// height, then an error is returned.
 func (txh TxHeightTimeoutDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	timeoutTx, ok := tx.(TxWithHeightTimeout)
 	if !ok {

@@ -16,6 +16,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.Misbehaviour)(nil), nil)
 }
 
+// RegisterInterfaces registers the client interfaces to protobuf Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"cosmos_sdk.ibc.v1.client.ClientState",

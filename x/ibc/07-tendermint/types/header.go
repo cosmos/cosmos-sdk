@@ -16,6 +16,8 @@ var _ clientexported.Header = Header{}
 
 // Header defines the Tendermint client consensus Header.
 // It encapsulates all the information necessary to update from a trusted Tendermint ConsensusState.
+// The inclusion of TrustedHeight and TrustedValidators allows this update to process correctly, so long
+// as the ConsensusState for the TrustedHeight exists, this removes race conditions among relayers
 // The SignedHeader and ValidatorSet are the new untrusted update fields for the client.
 // The TrustedHeight is the height of a stored ConsensusState on the client that will be used to verify the new untrusted header.
 // The Trusted ConsensusState must be within the unbonding period of current time in order to correctly verify,

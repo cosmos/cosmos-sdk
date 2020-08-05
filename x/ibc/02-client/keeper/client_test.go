@@ -89,6 +89,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			}
 			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+1, intermediateConsState)
 
+			clientState.LatestHeight = testClientHeight + 1
+			suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
+
 			updateHeader = createFutureUpdateFn(suite)
 			return err
 		}, true},
@@ -306,6 +309,9 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 					NextValidatorsHash: suite.valSet.Hash(),
 				}
 				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+3, intermediateConsState)
+
+				clientState.LatestHeight = testClientHeight + 3
+				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				return err
 			},

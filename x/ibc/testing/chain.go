@@ -351,15 +351,18 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
 // client will be updated on the (target) chain.
+// UpdateTMClient mocks the relayer flow necessary for updating a Tendermint client
 func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) error {
-	// inject trusted fields into last header
 	header := counterparty.LastHeader
-	// Get TrustedHeight
+	// Relayer must query for LatestHeight on client to get TrustedHeight
 	trustedHeight := chain.GetClientState(clientID).GetLatestHeight()
 	var (
 		trustedVals *tmtypes.ValidatorSet
 		ok          bool
 	)
+	// Once we get TrustedHeight from client, we must query the validators from the counterparty chain
+	// If the LatestHeight == LastHeader.Height, then TrustedValidators are current validators
+	// If LatestHeight < LastHeader.Height, we can query the historical validator set from HistoricalInfo
 	if trustedHeight == uint64(counterparty.LastHeader.Height) {
 		trustedVals = counterparty.Vals
 	} else {
@@ -372,6 +375,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 			return sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
+	// inject trusted fields into last header
 	header.TrustedHeight = trustedHeight
 	header.TrustedValidators = trustedVals
 

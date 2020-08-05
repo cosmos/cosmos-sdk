@@ -142,7 +142,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 }
 
 type (
-	// TxHeightTimeoutDecorator defines an AnteHandler decerator that checks for a
+	// TxHeightTimeoutDecorator defines an AnteHandler decorator that checks for a
 	// tx height timeout.
 	TxHeightTimeoutDecorator struct{}
 

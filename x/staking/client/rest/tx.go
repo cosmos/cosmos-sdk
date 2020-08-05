@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -146,121 +145,5 @@ func newPostUnbondingDelegationsHandlerFn(clientCtx client.Context) http.Handler
 		}
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Deprecated
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ---------------------------------------------------------------------------
-func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
-	r.HandleFunc(
-		"/staking/delegators/{delegatorAddr}/delegations",
-		postDelegationsHandlerFn(clientCtx),
-	).Methods("POST")
-	r.HandleFunc(
-		"/staking/delegators/{delegatorAddr}/unbonding_delegations",
-		postUnbondingDelegationsHandlerFn(clientCtx),
-	).Methods("POST")
-	r.HandleFunc(
-		"/staking/delegators/{delegatorAddr}/redelegations",
-		postRedelegationsHandlerFn(clientCtx),
-	).Methods("POST")
-}
-
-func postDelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req DelegateRequest
-
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
-			return
-		}
-
-		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
-			return
-		}
-
-		msg := types.NewMsgDelegate(req.DelegatorAddress, req.ValidatorAddress, req.Amount)
-		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
-			return
-		}
-
-		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		if !bytes.Equal(fromAddr, req.DelegatorAddress) {
-			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own delegator address")
-			return
-		}
-
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
-	}
-}
-
-func postRedelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req RedelegateRequest
-
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
-			return
-		}
-
-		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
-			return
-		}
-
-		msg := types.NewMsgBeginRedelegate(req.DelegatorAddress, req.ValidatorSrcAddress, req.ValidatorDstAddress, req.Amount)
-		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
-			return
-		}
-
-		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		if !bytes.Equal(fromAddr, req.DelegatorAddress) {
-			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own delegator address")
-			return
-		}
-
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
-	}
-}
-
-func postUnbondingDelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req UndelegateRequest
-
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
-			return
-		}
-
-		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
-			return
-		}
-
-		msg := types.NewMsgUndelegate(req.DelegatorAddress, req.ValidatorAddress, req.Amount)
-		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
-			return
-		}
-
-		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		if !bytes.Equal(fromAddr, req.DelegatorAddress) {
-			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own delegator address")
-			return
-		}
-
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

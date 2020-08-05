@@ -106,8 +106,8 @@ var (
 	// ErrInvalidType defines an error an invalid type.
 	ErrInvalidType = Register(RootCodespace, 29, "invalid type")
 
-	// ErrTxHeightTimeout defines an error for when a tx timesout due to it's height
-	ErrTxHeightTimeout = Register(RootCodespace, 30, "tx height timeout")
+	// ErrTxTimeoutHeight defines an error for when a tx timesout due to it's height
+	ErrTxTimeoutHeight = Register(RootCodespace, 30, "tx timeout height")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info

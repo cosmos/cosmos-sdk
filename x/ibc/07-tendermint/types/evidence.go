@@ -91,11 +91,11 @@ func (ev Evidence) ValidateBasic() error {
 			ev.Header1.TrustedHeight, ev.Header2.TrustedHeight)
 	}
 	if !bytes.Equal(ev.Header1.TrustedValidators.Hash(), ev.Header2.TrustedValidators.Hash()) {
-		return sdkerrors.Wrapf(ErrInvalidValidators, "trusted validators on both submitted headers must be the same. Got valset1: %s, valset2: %s",
+		return sdkerrors.Wrapf(ErrInvalidValidatorSet, "trusted validators on both submitted headers must be the same. Got valset1: %s, valset2: %s",
 			ev.Header1.TrustedValidators, ev.Header2.TrustedValidators)
 	}
 	if ev.Header1.TrustedValidators == nil {
-		return sdkerrors.Wrap(ErrInvalidValidators, "trusted validator set cannot be empty")
+		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set cannot be empty")
 	}
 	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "evidence client ID is invalid")

@@ -74,7 +74,7 @@ func checkMisbehaviour(
 	tvalHash := evidence.Header1.TrustedValidators.Hash()
 	if !bytes.Equal(consensusState.NextValidatorsHash, tvalHash) {
 		return sdkerrors.Wrapf(
-			types.ErrInvalidValidators,
+			types.ErrInvalidValidatorSet,
 			"header's trusted validators %s, does not hash to trusted validators of consensus state. Expected: %X, got: %X",
 			evidence.Header1.TrustedValidators, consensusState.NextValidatorsHash, tvalHash,
 		)

@@ -5,6 +5,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "confio/proofs.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "ibc/commitment/commitment.proto";
 import "gogoproto/gogo.proto";
 
 // ClientState from Tendermint tracks the current validator set, latest height,
@@ -43,6 +45,23 @@ message ClientState {
   // Proof specifications used in verifying counterparty state
   repeated ics23.ProofSpec proof_specs = 8
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
+}
+
+// ConsensusState defines the consensus state from Tendermint.
+message ConsensusState {
+  option (gogoproto.goproto_getters) = false;
+
+  // timestamp that corresponds to the block height in which the ConsensusState
+  // was stored.
+  google.protobuf.Timestamp timestamp = 1
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // commitment root (i.e app hash)
+  ibc.commitment.MerkleRoot root = 2 [(gogoproto.nullable) = false];
+  // height at which the consensus state was stored.
+  uint64 height = 3;
+  bytes next_validators_hash = 4 [
+    (gogoproto.moretags) = "yaml:\"next_validators_hash\""
+  ];
 }
 
 // Fraction defines the protobuf message type for tmmath.Fraction

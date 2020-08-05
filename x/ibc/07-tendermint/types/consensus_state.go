@@ -3,35 +3,25 @@ package types
 import (
 	"time"
 
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
-
-// ConsensusState defines a Tendermint consensus state
-type ConsensusState struct {
-	Timestamp          time.Time               `json:"timestamp" yaml:"timestamp"`
-	Root               commitmentexported.Root `json:"root" yaml:"root"`
-	Height             uint64                  `json:"height" yaml:"height"`
-	NextValidatorsHash tmbytes.HexBytes        `json:"next_validators_hash"` // validators hash for the next block
-	ValidatorSet       *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
-}
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmentexported.Root, height uint64,
-	nextValsHash tmbytes.HexBytes, valset *tmtypes.ValidatorSet,
+	timestamp time.Time, root commitmenttypes.MerkleRoot, height uint64,
+	nextValsHash []byte,
 ) ConsensusState {
 	return ConsensusState{
 		Timestamp:          timestamp,
 		Root:               root,
 		Height:             height,
 		NextValidatorsHash: nextValsHash,
-		ValidatorSet:       valset,
 	}
 }
 
@@ -57,7 +47,7 @@ func (cs ConsensusState) GetTimestamp() uint64 {
 
 // ValidateBasic defines a basic validation for the tendermint consensus state.
 func (cs ConsensusState) ValidateBasic() error {
-	if cs.Root == nil || cs.Root.Empty() {
+	if cs.Root.Empty() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "root cannot be empty")
 	}
 	if cs.ValidatorSet == nil {

@@ -165,8 +165,8 @@ func (txh TxHeightTimeoutDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithHeightTimeout")
 	}
 
-	heightTimeout := timeoutTx.GetTimeoutHeight()
-	if heightTimeout > 0 && uint64(ctx.BlockHeight()) > heightTimeout {
+	timeoutHeight := timeoutTx.GetTimeoutHeight()
+	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
 		return ctx, sdkerrors.Wrapf(
 			sdkerrors.ErrTxHeightTimeout, "block height: %d, timeout height: %d", ctx.BlockHeight(), heightTimeout,
 		)

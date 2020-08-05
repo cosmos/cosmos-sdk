@@ -22,15 +22,17 @@ import (
 // state information
 type Keeper struct {
 	storeKey      sdk.StoreKey
-	cdc           *codec.Codec
+	cdc           codec.BinaryMarshaler
+	aminoCdc      *codec.Codec
 	stakingKeeper types.StakingKeeper
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, aminoCdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
+		aminoCdc:      aminoCdc,
 		stakingKeeper: sk,
 	}
 }
@@ -48,16 +50,14 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 		return nil, false
 	}
 
-	var clientState exported.ClientState
-	k.cdc.MustUnmarshalBinaryBare(bz, &clientState)
+	clientState := k.MustUnmarshalClientState(bz)
 	return clientState, true
 }
 
 // SetClientState sets a particular Client to the store
 func (k Keeper) SetClientState(ctx sdk.Context, clientID string, clientState exported.ClientState) {
 	store := k.ClientStore(ctx, clientID)
-	bz := k.cdc.MustMarshalBinaryBare(clientState)
-	store.Set(host.KeyClientState(), bz)
+	store.Set(host.KeyClientState(), k.MustMarshalClientState(clientState))
 }
 
 // GetClientType gets the consensus type for a specific client
@@ -86,7 +86,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 	}
 
 	var consensusState exported.ConsensusState
-	k.cdc.MustUnmarshalBinaryBare(bz, &consensusState)
+	k.aminoCdc.MustUnmarshalBinaryBare(bz, &consensusState)
 	return consensusState, true
 }
 
@@ -94,7 +94,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
-	bz := k.cdc.MustMarshalBinaryBare(consensusState)
+	bz := k.aminoCdc.MustMarshalBinaryBare(consensusState)
 	store.Set(host.KeyConsensusState(height), bz)
 }
 
@@ -114,7 +114,7 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 		}
 		clientID := keySplit[1]
 		var consensusState exported.ConsensusState
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
+		k.aminoCdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
 
 		if cb(clientID, consensusState) {
 			break
@@ -233,8 +233,7 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(clientID string, cs expo
 		if keySplit[len(keySplit)-1] != "clientState" {
 			continue
 		}
-		var clientState exported.ClientState
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &clientState)
+		clientState := k.MustUnmarshalClientState(iterator.Value())
 
 		// key is ibc/{clientid}/clientState
 		// Thus, keySplit[1] is clientID

@@ -21,10 +21,10 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg *MsgCreateClient) ClientState {
+func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
 	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
 		uint64(msg.Header.Height), msg.ProofSpecs,
@@ -36,8 +36,8 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight uint64, specs []*ics23.ProofSpec,
-) ClientState {
-	return ClientState{
+) *ClientState {
+	return &ClientState{
 		ChainID:         chainID,
 		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,

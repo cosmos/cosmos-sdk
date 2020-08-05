@@ -439,6 +439,10 @@ func (n *Network) Cleanup() {
 		if v.api != nil {
 			_ = v.api.Close()
 		}
+
+		if v.grpc != nil {
+			v.grpc.Stop()
+		}
 	}
 
 	if n.Config.CleanupDir {

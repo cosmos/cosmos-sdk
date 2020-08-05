@@ -86,6 +86,10 @@ func (ev Evidence) GetTime() time.Time {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
+	if ev.Header1.TrustedHeight != ev.Header2.TrustedHeight {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "evidence headers must share the same trusted height. got height1: %d, height2: %d",
+			ev.Header1.TrustedHeight, ev.Header2.TrustedHeight)
+	}
 	if !bytes.Equal(ev.Header1.TrustedValidators.Hash(), ev.Header2.TrustedValidators.Hash()) {
 		return sdkerrors.Wrapf(ErrInvalidValidators, "trusted validators on both submitted headers must be the same. Got valset1: %s, valset2: %s",
 			ev.Header1.TrustedValidators, ev.Header2.TrustedValidators)

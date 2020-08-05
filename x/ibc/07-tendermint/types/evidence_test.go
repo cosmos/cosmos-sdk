@@ -75,6 +75,28 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			true,
 		},
 		{
+			"trusted heights don't match",
+			ibctmtypes.Evidence{
+				Header1:  suite.header,
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-2, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				ChainID:  chainID,
+				ClientID: "gaiamainnet",
+			},
+			func(ev *ibctmtypes.Evidence) error { return nil },
+			false,
+		},
+		{
+			"trusted valsets don't match",
+			ibctmtypes.Evidence{
+				Header1:  suite.header,
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
+				ChainID:  chainID,
+				ClientID: "gaiamainnet",
+			},
+			func(ev *ibctmtypes.Evidence) error { return nil },
+			false,
+		},
+		{
 			"invalid client ID ",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,

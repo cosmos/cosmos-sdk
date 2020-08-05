@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	SubModuleName = "ibc-tendermint-client"
+	SubModuleName = "tendermint-client"
 )
 
 // IBC tendermint client sentinel errors
@@ -19,5 +19,5 @@ var (
 	ErrTrustingPeriodExpired  = sdkerrors.Register(SubModuleName, 8, "time since latest trusted state has passed the trusting period")
 	ErrUnbondingPeriodExpired = sdkerrors.Register(SubModuleName, 9, "time since latest trusted state has passed the unbonding period")
 	ErrInvalidProofSpecs      = sdkerrors.Register(SubModuleName, 10, "invalid proof specs")
-	ErrInvalidValidators      = sdkerrors.Register(SubModuleName, 11, "invalid validators")
+	ErrInvalidValidatorSet      = sdkerrors.Register(SubModuleName, 11, "invalid validator set")
 )

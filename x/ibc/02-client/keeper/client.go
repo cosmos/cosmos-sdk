@@ -73,7 +73,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	case exported.Tendermint:
 		tmHeader, ok := header.(ibctmtypes.Header)
 		if !ok {
-			err = sdkerrors.Wrapf(types.ErrInvalidHeader, "expected tendermint header: %T got header type: %T", ibctmtypes.Header{}, header)
+			err = sdkerrors.Wrapf(types.ErrInvalidHeader, "expected tendermint header: %T, got header type: %T", ibctmtypes.Header{}, header)
 			break
 		}
 		// Get the consensus state at the trusted height of header

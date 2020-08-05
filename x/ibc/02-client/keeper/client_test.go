@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			clientState = ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
 			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 
-			// store intermediate consensus state to check that trustedHeight does not need to be hightest consensus state before header height
+			// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
 			intermediateConsState := ibctmtypes.ConsensusState{
 				Height:             testClientHeight + 1,
 				Timestamp:          suite.now.Add(time.Minute),
@@ -299,7 +299,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
 				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 
-				// store intermediate consensus state to check that trustedHeight does not need to be hightest consensus state before header height
+				// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
 				intermediateConsState := ibctmtypes.ConsensusState{
 					Height:             testClientHeight + 3,
 					Timestamp:          suite.now.Add(time.Minute),

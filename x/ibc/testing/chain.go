@@ -246,13 +246,14 @@ func (chain *TestChain) GetClientState(clientID string) clientexported.ClientSta
 	return clientState
 }
 
-// GetConsensusState retrieves the consensus state for the provided clientID and height
-// It will return a success boolean depending on if consensus state exists or not
+// GetConsensusState retrieves the consensus state for the provided clientID and height.
+// It will return a success boolean depending on if consensus state exists or not.
 func (chain *TestChain) GetConsensusState(clientID string, height uint64) (clientexported.ConsensusState, bool) {
 	return chain.App.IBCKeeper.ClientKeeper.GetClientConsensusState(chain.GetContext(), clientID, height)
 }
 
-// GetValsAtHeight will return the validator set of the chain at a given height
+// GetValsAtHeight will return the validator set of the chain at a given height. It will return
+// a success boolean depending on if the validator set exists or not at that height.
 func (chain *TestChain) GetValsAtHeight(height int64) (*tmtypes.ValidatorSet, bool) {
 	histInfo, ok := chain.App.StakingKeeper.GetHistoricalInfo(chain.GetContext(), height)
 	if !ok {
@@ -415,8 +416,8 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 		Commit: commit,
 	}
 
-	// Do not set trusted field here, these fields can be inserted before relaying message to a client
-	// the relayer is responsible for querying client and injecting appropriate trusted fields
+	// Do not set trusted field here, these fields can be inserted before relaying messages to a client.
+	// The relayer is responsible for querying client and injecting appropriate trusted fields.
 	return ibctmtypes.Header{
 		SignedHeader: signedHeader,
 		ValidatorSet: chain.Vals,

@@ -1,10 +1,10 @@
 syntax = "proto3";
-package cosmos.slashing;
+package cosmos.slashing.v1beta1;
 
 option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 
 import "gogoproto/gogo.proto";
-import "cosmos/slashing/slashing.proto";
+import "cosmos/slashing/v1beta1/slashing.proto";
 
 // GenesisState - all slashing state that must be provided at genesis
 message GenesisState {

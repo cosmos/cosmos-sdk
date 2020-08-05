@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
@@ -21,7 +21,7 @@ func RegisterCodec(cdc *codec.Codec) {
 
 // RegisterInterfaces registers the tendermint concrete evidence and client-related
 // implementations and interfaces.
-func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*clientexported.ClientState)(nil),
 		&ClientState{},
@@ -37,7 +37,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/07-tendermint and
 	// defined at the application level.
-	SubModuleCdc = codec.NewHybridCodec(amino, cdctypes.NewInterfaceRegistry())
+	SubModuleCdc = codec.NewHybridCodec(amino, codectypes.NewInterfaceRegistry())
 )
 
 func init() {

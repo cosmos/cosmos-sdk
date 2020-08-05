@@ -31,7 +31,7 @@ func (k Keeper) MustMarshalClientState(clientState exported.ClientState) []byte 
 
 // MarshalClientState marshals an ClientState interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
+// serialized that way.
 func (k Keeper) MarshalClientState(clientStateI exported.ClientState) ([]byte, error) {
 	return codec.MarshalAny(k.cdc, clientStateI)
 }

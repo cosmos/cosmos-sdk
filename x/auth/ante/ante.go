@@ -18,7 +18,7 @@ func NewAnteHandler(
 		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
-		TxHeightTimeoutDecorator{},
+		TxTimeoutHeightDecorator{},
 		NewValidateMemoDecorator(ak),
 		NewConsumeGasForTxSizeDecorator(ak),
 		NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators

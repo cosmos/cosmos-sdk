@@ -24,5 +24,5 @@ type Tx interface {
 
 	types.TxWithMemo
 	types.FeeTx
-	types.TxWithHeightTimeout
+	types.TxWithTimeoutHeight
 }

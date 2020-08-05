@@ -70,9 +70,9 @@ type (
 		GetMemo() string
 	}
 
-	// TxWithHeightTimeout extends the Tx interface by allowing a transaction to
+	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
 	// set a height timeout.
-	TxWithHeightTimeout interface {
+	TxWithTimeoutHeight interface {
 		Tx
 
 		GetTimeoutHeight() uint64

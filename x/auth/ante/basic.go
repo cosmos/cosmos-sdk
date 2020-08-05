@@ -142,13 +142,13 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 }
 
 type (
-	// TxHeightTimeoutDecorator defines an AnteHandler decorator that checks for a
+	// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 	// tx height timeout.
-	TxHeightTimeoutDecorator struct{}
+	TxTimeoutHeightDecorator struct{}
 
-	// TxWithHeightTimeout defines the interface a tx must implement in order for
+	// TxWithTimeoutHeight defines the interface a tx must implement in order for
 	// TxHeightTimeoutDecorator to process the tx.
-	TxWithHeightTimeout interface {
+	TxWithTimeoutHeight interface {
 		sdk.Tx
 
 		GetTimeoutHeight() uint64
@@ -159,16 +159,16 @@ type (
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.
-func (txh TxHeightTimeoutDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	timeoutTx, ok := tx.(TxWithHeightTimeout)
+func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	timeoutTx, ok := tx.(TxWithTimeoutHeight)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithHeightTimeout")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
 	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
 		return ctx, sdkerrors.Wrapf(
-			sdkerrors.ErrTxHeightTimeout, "block height: %d, timeout height: %d", ctx.BlockHeight(), heightTimeout,
+			sdkerrors.ErrTxHeightTimeout, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
 		)
 	}
 

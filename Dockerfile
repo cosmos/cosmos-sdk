@@ -24,7 +24,7 @@ COPY . .
 
 # build Cosmos SDK, remove packages
 RUN make build-simd && \
-    cp ./build/sim* /go/bin
+    cp ./build/simd /go/bin
 # make build-sim-linux ??
 
 

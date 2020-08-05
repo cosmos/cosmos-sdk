@@ -17,7 +17,7 @@ const (
 func (suite *LocalhostTestSuite) TestValidate() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		expPass     bool
 	}{
 		{
@@ -61,7 +61,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		connection  connectiontypes.ConnectionEnd
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -105,7 +105,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		channel     channeltypes.Channel
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -153,7 +153,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		commitment  []byte
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -208,7 +208,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		ack         []byte
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -263,7 +263,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool
@@ -294,7 +294,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool

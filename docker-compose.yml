@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   simdnode0:
@@ -7,6 +7,7 @@ services:
     ports:
       - "26656-26657:26656-26657"
       - "1317:1317"
+      - "9090:9090"
     environment:
       - ID=0
       - LOG=${LOG:-simd.log}
@@ -22,6 +23,7 @@ services:
     ports:
       - "26659-26660:26656-26657"
       - "1318:1317"
+      - "9090:9090"
     environment:
       - ID=1
       - LOG=${LOG:-simd.log}
@@ -40,6 +42,7 @@ services:
     ports:
       - "26661-26662:26656-26657"
       - "1319:1317"
+      - "9090:9090"
     volumes:
       - ./build:/simd:Z
     networks:
@@ -55,6 +58,7 @@ services:
     ports:
       - "26663-26664:26656-26657"
       - "1320:1317"
+      - "9090:9090"
     volumes:
       - ./build:/simd:Z
     networks:
@@ -67,5 +71,4 @@ networks:
     ipam:
       driver: default
       config:
-      -
-        subnet: 192.168.10.0/16
+        - subnet: 192.168.10.0/16

@@ -53,7 +53,7 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
 [telemetry]
 
-# Prefixed with keys to separate services
+# Prefixed with keys to separate services.
 service-name = "{{ .Telemetry.ServiceName }}"
 
 # Enabled enables the application telemetry functionality. When enabled,
@@ -61,13 +61,13 @@ service-name = "{{ .Telemetry.ServiceName }}"
 # other sinks such as Prometheus.
 enabled = {{ .Telemetry.Enabled }}
 
-# Enable prefixing gauge values with hostname
+# Enable prefixing gauge values with hostname.
 enable-hostname = {{ .Telemetry.EnableHostname }}
 
-# Enable adding hostname to labels
+# Enable adding hostname to labels.
 enable-hostname-label = {{ .Telemetry.EnableHostnameLabel }}
 
-# Enable adding service to labels
+# Enable adding service to labels.
 enable-service-label = {{ .Telemetry.EnableServiceLabel }}
 
 # PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
@@ -94,23 +94,35 @@ enable = {{ .API.Enable }}
 # Swagger defines if swagger documentation should automatically be registered.
 swagger = {{ .API.Swagger }}
 
-# Address defines the API server to listen on
+# Address defines the API server to listen on.
 address = "{{ .API.Address }}"
 
-# MaxOpenConnections defines the number of maximum open connections
+# MaxOpenConnections defines the number of maximum open connections.
 max-open-connections = {{ .API.MaxOpenConnections }}
 
-# RPCReadTimeout defines the Tendermint RPC read timeout (in seconds)
+# RPCReadTimeout defines the Tendermint RPC read timeout (in seconds).
 rpc-read-timeout = {{ .API.RPCReadTimeout }}
 
-# RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds)
+# RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds).
 rpc-write-timeout = {{ .API.RPCWriteTimeout }}
 
-# RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes)
+# RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes).
 rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 
-# EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
+# EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
 enabled-unsafe-cors = {{ .API.EnableUnsafeCORS }}
+
+###############################################################################
+###                           gRPC Configuration                            ###
+###############################################################################
+
+[grpc]
+
+# Enable defines if the gRPC server should be enabled.
+enable = {{ .GRPC.Enable }}
+
+# Address defines the gRPC server address to bind to.
+address = "{{ .GRPC.Address }}"
 `
 
 var configTemplate *template.Template

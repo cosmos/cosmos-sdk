@@ -122,6 +122,16 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			expPass: false,
 		},
 		{
+			name: "unsuccessful updates, passed in incorrect trusted validators for given consensus state",
+			setup: func() {
+				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valSet.Hash(), suite.valSet.Hash())
+				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, bothValSet, bothValSet, bothSigners)
+				currentTime = suite.now
+			},
+			expPass: false,
+		},
+		{
 			name: "unsuccessful update: trusting period has passed since last client timestamp",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())

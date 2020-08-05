@@ -199,6 +199,21 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			false,
 		},
 		{
+			"trusted validators is incorrect for given consensus state",
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			types.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), NextValidatorsHash: bothValSet.Hash()},
+			types.Evidence{
+				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
+			},
+			simapp.DefaultConsensusParams,
+			height,
+			suite.now,
+			false,
+		},
+		{
 			"first valset has too much change",
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			types.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), NextValidatorsHash: bothValSet.Hash()},

@@ -10,6 +10,7 @@ import (
 // RegisterCodec registers the necessary x/ibc/07-tendermint interfaces and conrete types
 // on the provided Amino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterConcrete(ClientState{}, "ibc/client/tendermint/ClientState", nil)
 	cdc.RegisterConcrete(ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(Header{}, "ibc/client/tendermint/Header", nil)
 	cdc.RegisterConcrete(Evidence{}, "ibc/client/tendermint/Evidence", nil)

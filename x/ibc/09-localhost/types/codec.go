@@ -7,6 +7,13 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
+// RegisterCodec registers client state on the provided Amino codec. This type is used for
+// Amino JSON serialization.
+// TODO: remove after genesis and exporting use proto
+func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterConcrete(ClientState{}, "ibc/client/localhost/ClientState", nil)
+}
+
 // RegisterInterfaces register the ibc interfaces submodule implementations to protobuf
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {

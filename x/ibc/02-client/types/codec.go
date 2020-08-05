@@ -8,6 +8,7 @@ import (
 
 // RegisterCodec registers the IBC client interfaces and types
 func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterInterface((*exported.ClientState)(nil), nil) // remove when exporting uses proto
 	cdc.RegisterInterface((*exported.MsgCreateClient)(nil), nil)
 	cdc.RegisterInterface((*exported.MsgUpdateClient)(nil), nil)
 	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)

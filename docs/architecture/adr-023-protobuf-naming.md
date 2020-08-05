@@ -152,8 +152,7 @@ When marking something as `alpha` or `beta`, maintainers should ask the question
 As a case study, gRPC reflection is in the package `grpc.reflection.v1alpha`. It hasn't been changed since
 2017 and it is now used in other widely used software like gRPCurl. Some folks probably use it in production services
 and so if they actually went and changed the package to `grpc.reflection.v1`, some software would break and
-they probably don't want to do that... So now the `v1alpha` package is more or less the de-facto `v1`. Let's not do
-get in that situation.
+they probably don't want to do that... So now the `v1alpha` package is more or less the de-facto `v1`. Let's not do that.
 
 The following are guidelines for working with non-stable packages:
 * [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)

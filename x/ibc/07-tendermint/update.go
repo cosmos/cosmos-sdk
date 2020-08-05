@@ -37,7 +37,7 @@ func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, consState clientexported.ConsensusState,
 	header clientexported.Header, currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
-	tmClientState, ok := clientState.(types.ClientState)
+	tmClientState, ok := clientState.(*types.ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState,
@@ -69,7 +69,7 @@ func CheckValidityAndUpdateState(
 // checkValidity checks if the Tendermint header is valid.
 // CONTRACT: consState.Height == header.TrustedHeight
 func checkValidity(
-	clientState types.ClientState, consState types.ConsensusState,
+	clientState *types.ClientState, consState types.ConsensusState,
 	header types.Header, currentTimestamp time.Time,
 ) error {
 	// assert that trustedVals is NextValidators of last trusted header
@@ -140,7 +140,7 @@ func checkValidity(
 }
 
 // update the consensus state from a new header
-func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
+func update(clientState *types.ClientState, header types.Header) (*types.ClientState, types.ConsensusState) {
 	if uint64(header.Height) > clientState.LatestHeight {
 		clientState.LatestHeight = uint64(header.Height)
 	}

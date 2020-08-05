@@ -27,7 +27,7 @@ func CheckMisbehaviourAndUpdateState(
 ) (clientexported.ClientState, error) {
 
 	// cast the interface to specific types before checking for misbehaviour
-	tmClientState, ok := clientState.(types.ClientState)
+	tmClientState, ok := clientState.(*types.ClientState)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState)
 	}
@@ -60,7 +60,7 @@ func CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func checkMisbehaviour(
-	clientState types.ClientState, consensusState types.ConsensusState, evidence types.Evidence,
+	clientState *types.ClientState, consensusState types.ConsensusState, evidence types.Evidence,
 	height uint64, currentTimestamp time.Time, consensusParams *abci.ConsensusParams,
 ) error {
 	// calculate the age of the misbehaviour evidence

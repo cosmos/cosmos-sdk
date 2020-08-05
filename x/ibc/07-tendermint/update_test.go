@@ -13,7 +13,7 @@ import (
 
 func (suite *TendermintTestSuite) TestCheckValidity() {
 	var (
-		clientState    types.ClientState
+		clientState    *types.ClientState
 		consensusState types.ConsensusState
 		newHeader      types.Header
 		currentTime    time.Time

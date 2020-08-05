@@ -36,7 +36,7 @@ func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, consState clientexported.ConsensusState,
 	header clientexported.Header, currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
-	tmClientState, ok := clientState.(types.ClientState)
+	tmClientState, ok := clientState.(*types.ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState,
@@ -67,7 +67,7 @@ func CheckValidityAndUpdateState(
 
 // checkValidity checks if the Tendermint header is valid.
 func checkValidity(
-	clientState types.ClientState, consState types.ConsensusState, header types.Header, currentTimestamp time.Time,
+	clientState *types.ClientState, consState types.ConsensusState, header types.Header, currentTimestamp time.Time,
 ) error {
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
@@ -118,7 +118,7 @@ func checkValidity(
 	err := lite.Verify(
 		clientState.GetChainID(), &signedHeader,
 		consState.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
-		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel,
+		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to verify header")
@@ -127,7 +127,7 @@ func checkValidity(
 }
 
 // update the consensus state from a new header
-func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
+func update(clientState *types.ClientState, header types.Header) (*types.ClientState, types.ConsensusState) {
 	if uint64(header.Height) > clientState.LatestHeight {
 		clientState.LatestHeight = uint64(header.Height)
 	}

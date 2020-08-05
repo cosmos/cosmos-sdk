@@ -2,13 +2,13 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterInterfaces register the ibc transfer module interfaces to protobuf
 // Any.
-func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTransfer{})
 }
 
@@ -18,5 +18,5 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc-transfer and
 	// defined at the application level.
-	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
+	ModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )

@@ -193,10 +193,11 @@ func New(t *testing.T, cfg Config) *Network {
 		tmCfg := ctx.Config
 		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
-		// Only allow the first validator to expose an RPC and API server/client
-		// due to Tendermint in-process constraints.
+		// Only allow the first validator to expose an RPC, API and gRPC
+		// server/client due to Tendermint in-process constraints.
 		apiAddr := ""
 		tmCfg.RPC.ListenAddress = ""
+		appCfg.GRPC.Enable = false
 		if i == 0 {
 			apiListenAddr, _, err := server.FreeTCPAddr()
 			require.NoError(t, err)
@@ -438,6 +439,10 @@ func (n *Network) Cleanup() {
 
 		if v.api != nil {
 			_ = v.api.Close()
+		}
+
+		if v.grpc != nil {
+			v.grpc.Stop()
 		}
 	}
 

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,7 +38,8 @@ const (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc            *codec.Codec
+	cdc            codec.Marshaler
+	aminoCdc       *codec.Codec
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
 	consensusState ibctmtypes.ConsensusState
@@ -57,7 +57,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	now2 := suite.now.Add(time.Hour)
 	app := simapp.Setup(isCheckTx)
 
-	suite.cdc = app.Codec()
+	suite.cdc = app.AppCodec()
+	suite.aminoCdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
@@ -95,7 +96,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := ibctmtypes.NewClientState(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs())
+	clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs())
 	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -129,9 +130,9 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 		testClientID2, testClientID3, testClientID,
 	}
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
 	}
 
 	for i := range expClients {
@@ -153,9 +154,9 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 		testClientID2, testClientID3, testClientID,
 	}
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
 	}
 
 	expGenClients := make([]types.GenesisClientState, len(expClients))
@@ -203,8 +204,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState, err := ibctmtypes.Initialize(testChainID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
-	suite.Require().NoError(err)
+	clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
 
 	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)

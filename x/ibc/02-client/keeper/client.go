@@ -74,6 +74,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		tmHeader, ok := header.(ibctmtypes.Header)
 		if !ok {
 			err = sdkerrors.Wrapf(types.ErrInvalidHeader, "expected tendermint header: %T got header type: %T", ibctmtypes.Header{}, header)
+			break
 		}
 		// Get the consensus state at the trusted height of header
 		trustedConsState, found := k.GetClientConsensusState(ctx, clientID, tmHeader.TrustedHeight)
@@ -135,9 +136,8 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	var err error
 	switch e := misbehaviour.(type) {
 	case ibctmtypes.Evidence:
-		tmEvidence := misbehaviour.(ibctmtypes.Evidence)
 		// Get ConsensusState at TrustedHeight
-		consensusState, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), uint64(tmEvidence.Header1.TrustedHeight))
+		consensusState, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header1.TrustedHeight)
 		if !found {
 			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 		}

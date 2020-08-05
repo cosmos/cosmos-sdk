@@ -155,7 +155,7 @@ type (
 	}
 )
 
-// AnteHandle implements an AnteHandler decerator for the TxHeightTimeoutDecorator
+// AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.

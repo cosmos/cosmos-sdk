@@ -2,24 +2,23 @@ name: Nightly Builds
 # Nightly Builds rebuilds the simapp docker image Monday - Friday at midnight
 # and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
 on:
-  # schedule:
-  #   - cron: "0 0 * * 1-5" # deploy at midnight Monday - Friday
-  pull_request:
+  schedule:
+    - cron: "0 0 * * 1-5" # deploy at midnight Monday - Friday
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - run: git fetch -t
+        with:
+          fetch-depth: 0
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-      - run: git describe
-      # - name: Publish to Docker Hub
-      #   uses: docker/build-push-action@v1.1.0
-      #   with:
-      #     repository: interchainio/simapp
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
-      #     tags: nightly-${{ steps.date.outputs.date }}
+      - name: Publish to Docker Hub
+        uses: docker/build-push-action@v1.1.0
+        with:
+          repository: interchainio/simapp
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: nightly-${{ steps.date.outputs.date }}

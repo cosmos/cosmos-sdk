@@ -302,12 +302,22 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 		return
 	}
 
+	// TODO: Remove once PubKey Protobuf migration has been completed.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/6886
+	var marshaler codec.JSONMarshaler
+
+	if ctx.JSONMarshaler != nil {
+		marshaler = ctx.JSONMarshaler
+	} else {
+		marshaler = ctx.Codec
+	}
+
 	switch res := resp.(type) {
 	case []byte:
 		result = res
 
 	default:
-		result, err = ctx.JSONMarshaler.MarshalJSON(resp)
+		result, err = marshaler.MarshalJSON(resp)
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -315,7 +325,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 
 	wrappedResp := NewResponseWithHeight(ctx.Height, result)
 
-	output, err := ctx.JSONMarshaler.MarshalJSON(wrappedResp)
+	output, err := marshaler.MarshalJSON(wrappedResp)
 	if CheckInternalServerError(w, err) {
 		return
 	}

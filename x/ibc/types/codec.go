@@ -16,13 +16,15 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	clienttypes.RegisterCodec(cdc)
 	ibctmtypes.RegisterCodec(cdc)
-	localhosttypes.RegisterCodec(cdc)
 	commitmenttypes.RegisterCodec(cdc)
 }
 
 // RegisterInterfaces registers x/ibc interfaces into protobuf Any.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	clienttypes.RegisterInterfaces(registry)
 	connectiontypes.RegisterInterfaces(registry)
 	channeltypes.RegisterInterfaces(registry)
+	ibctmtypes.RegisterInterfaces(registry)
+	localhosttypes.RegisterInterfaces(registry)
 	commitmenttypes.RegisterInterfaces(registry)
 }

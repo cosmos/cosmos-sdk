@@ -21,7 +21,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(msg *MsgCreateClient) ClientState {

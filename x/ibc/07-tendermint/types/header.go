@@ -39,7 +39,6 @@ func (h Header) ConsensusState() ConsensusState {
 		Height:             uint64(h.Height),
 		Timestamp:          h.Time,
 		Root:               commitmenttypes.NewMerkleRoot(h.AppHash),
-		ValidatorsHash:     h.ValidatorsHash,
 		NextValidatorsHash: h.NextValidatorsHash,
 	}
 }

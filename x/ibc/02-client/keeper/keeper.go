@@ -211,7 +211,6 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		Timestamp:          histInfo.Header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
-		ValidatorsHash:     histInfo.Header.ValidatorsHash,
 	}
 	return consensusState, true
 }

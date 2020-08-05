@@ -86,7 +86,6 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Height:             testClientHeight + 1,
 				Timestamp:          suite.now.Add(time.Minute),
 				NextValidatorsHash: suite.valSet.Hash(),
-				ValidatorsHash:     suite.valSet.Hash(),
 			}
 			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+1, intermediateConsState)
 
@@ -103,7 +102,6 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Height:             1,
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSet.Hash(),
-				ValidatorsHash:     suite.valSet.Hash(),
 			}
 			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 1, prevConsState)
 
@@ -112,7 +110,6 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Height:             2,
 				Timestamp:          suite.past.Add(time.Minute),
 				NextValidatorsHash: suite.valSet.Hash(),
-				ValidatorsHash:     suite.valSet.Hash(),
 			}
 			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 2, intermediateConsState)
 
@@ -165,7 +162,6 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Height:             1,
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSet.Hash(),
-				ValidatorsHash:     suite.valSet.Hash(),
 			}
 			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 1, prevConsState)
 
@@ -205,7 +201,6 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 					Timestamp:          updateHeader.Time,
 					Root:               commitmenttypes.NewMerkleRoot(updateHeader.AppHash),
 					NextValidatorsHash: updateHeader.NextValidatorsHash,
-					ValidatorsHash:     updateHeader.ValidatorSet.Hash(),
 				}
 
 				newClientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -309,7 +304,6 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 					Height:             testClientHeight + 3,
 					Timestamp:          suite.now.Add(time.Minute),
 					NextValidatorsHash: suite.valSet.Hash(),
-					ValidatorsHash:     suite.valSet.Hash(),
 				}
 				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+3, intermediateConsState)
 

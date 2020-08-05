@@ -71,7 +71,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		Height:             testClientHeight,
 		Timestamp:          suite.now,
 		Root:               commitmenttypes.NewMerkleRoot([]byte("hash")),
-		ValidatorsHash:     suite.valSet.Hash(),
 		NextValidatorsHash: suite.valSet.Hash(),
 	}
 
@@ -209,7 +208,6 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 		Height:             testClientHeight + 5,
 		Timestamp:          suite.now,
 		Root:               commitmenttypes.NewMerkleRoot([]byte("next")),
-		ValidatorsHash:     suite.valSet.Hash(),
 		NextValidatorsHash: suite.valSet.Hash(),
 	}
 
@@ -237,10 +235,10 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 			testClientID,
 			[]exported.ConsensusState{
 				ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.consensusState.GetHeight(), nil, nil,
+					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.consensusState.GetHeight(), nil,
 				),
 				ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, nil, nil,
+					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, nil,
 				),
 			},
 		),
@@ -248,7 +246,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 			testClientID2,
 			[]exported.ConsensusState{
 				ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, nil, nil,
+					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, nil,
 				),
 			},
 		),

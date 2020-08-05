@@ -41,7 +41,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID,
 							[]exported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet.Hash(), suite.header.ValidatorSet.Hash(),
+									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.NextValidatorsHash,
 								),
 							},
 						),

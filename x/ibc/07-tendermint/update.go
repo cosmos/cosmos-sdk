@@ -148,7 +148,6 @@ func update(clientState types.ClientState, header types.Header) (types.ClientSta
 		Height:             uint64(header.Height),
 		Timestamp:          header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(header.AppHash),
-		ValidatorsHash:     header.ValidatorsHash,
 		NextValidatorsHash: header.NextValidatorsHash,
 	}
 

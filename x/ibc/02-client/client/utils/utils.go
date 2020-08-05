@@ -142,11 +142,6 @@ func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusStat
 		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, 0, 10000)
-	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
-	}
-
 	nextHeight := height + 1
 	nextVals, err := node.Validators(&nextHeight, 0, 10000)
 	if err != nil {
@@ -156,7 +151,6 @@ func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusStat
 	state := ibctmtypes.ConsensusState{
 		Timestamp:          commit.Time,
 		Root:               commitmenttypes.NewMerkleRoot(commit.AppHash),
-		ValidatorsHash:     tmtypes.NewValidatorSet(validators.Validators).Hash(),
 		NextValidatorsHash: tmtypes.NewValidatorSet(nextVals.Validators).Hash(),
 	}
 

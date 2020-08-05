@@ -63,7 +63,8 @@ func (ev Evidence) String() string {
 
 // Hash implements Evidence interface
 func (ev Evidence) Hash() tmbytes.HexBytes {
-	bz := SubModuleCdc.MustMarshalBinaryBare(ev)
+	// TODO use submodule cdc
+	bz := amino.MustMarshalBinaryBare(ev)
 	return tmhash.Sum(bz)
 }
 

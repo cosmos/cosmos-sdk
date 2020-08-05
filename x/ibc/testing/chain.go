@@ -52,9 +52,9 @@ const (
 
 // Default params variables used to create a TM client
 var (
-	DefaultTrustLevel tmmath.Fraction = light.DefaultTrustLevel
-	TestHash                          = []byte("TESTING HASH")
-	TestCoin                          = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
+	TestHash                              = []byte("TESTING HASH")
+	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )

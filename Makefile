@@ -338,6 +338,7 @@ proto-check-breaking-docker:
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc2/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/master
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci
@@ -347,6 +348,7 @@ TM_LIBS							= third_party/proto/tendermint/libs/bits
 
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
+CONFIO_TYPES        = third_party/proto/confio
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -376,6 +378,14 @@ proto-update-deps:
 
 	@mkdir -p $(TM_LIBS)
 	@curl -sSL $(TM_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
+
+	@mkdir -p $(CONFIO_TYPES)
+	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto
+## insert go package option into proofs.proto file
+## Issue link: https://github.com/confio/ics23/issues/32
+	@sed -i '4ioption go_package = "github.com/confio/ics23/go";' $(CONFIO_TYPES)/proofs.proto
+
+
 
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps

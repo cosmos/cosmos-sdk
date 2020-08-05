@@ -7,7 +7,7 @@ require (
 	github.com/armon/go-metrics v0.3.3
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
-	github.com/confio/ics23/go v0.0.0-20200610201322-18c7bd6b2dd3
+	github.com/confio/ics23/go v0.0.0-20200804135932-65ad804e8539
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/iavl v0.15.0-rc1
 	github.com/cosmos/ledger-cosmos-go v0.11.1

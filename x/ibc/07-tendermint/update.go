@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/light"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -115,9 +116,9 @@ func checkValidity(
 
 	// Verify next header with the last header's validatorset as trusted validatorset
 	err := light.Verify(
-		clientState.GetChainID(), &clientState.LastHeader.SignedHeader,
-		clientState.LastHeader.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
-		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel,
+		clientState.GetChainID(), &signedHeader,
+		consState.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
+		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to verify header")

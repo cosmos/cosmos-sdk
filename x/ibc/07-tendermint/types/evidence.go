@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	_ evidenceexported.Evidence   = Evidence{}
-	_ clientexported.Misbehaviour = Evidence{}
+	_ evidenceexported.Evidence   = &Evidence{}
+	_ clientexported.Misbehaviour = &Evidence{}
 )
 
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence

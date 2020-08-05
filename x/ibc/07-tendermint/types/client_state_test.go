@@ -137,7 +137,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				NextValidatorsHash: suite.valSet.Hash(),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -220,7 +220,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				NextValidatorsHash: suite.valSet.Hash(),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -303,7 +303,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				NextValidatorsHash: suite.valSet.Hash(),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -383,7 +383,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				NextValidatorsHash: suite.valSet.Hash(),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -463,7 +463,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				NextValidatorsHash: suite.valSet.Hash(),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -538,7 +538,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				NextValidatorsHash: suite.valSet.Hash(),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -613,7 +613,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				NextValidatorsHash: suite.valSet.Hash(),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},

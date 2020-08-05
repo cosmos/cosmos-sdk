@@ -46,15 +46,15 @@ func TestEmptyAddresses(t *testing.T) {
 
 	accAddr, err := types.AccAddressFromBech32("")
 	require.True(t, accAddr.Empty())
-	require.Nil(t, err)
+	require.Error(t, err)
 
 	valAddr, err := types.ValAddressFromBech32("")
 	require.True(t, valAddr.Empty())
-	require.Nil(t, err)
+	require.Error(t, err)
 
 	consAddr, err := types.ConsAddressFromBech32("")
 	require.True(t, consAddr.Empty())
-	require.Nil(t, err)
+	require.Error(t, err)
 }
 
 func TestRandBech32PubkeyConsistency(t *testing.T) {

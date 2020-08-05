@@ -74,7 +74,7 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, doUpgrade)
 	assert.Equal(t, "", stderr.String())
-	assert.Equal(t, "Preparing auto-download some args\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: {"binaries":{"linux/amd64":"https://github.com/cosmos/cosmos-sdk/raw/4cfa8e5535f5eb6be28058e81aa4cf17a749e114/cosmovisor/testdata/repo/zip_binary/autod.zip?checksum=sha256:9dbac4b26e693901ef739043bda8b65b2c59d97d60c366e4a20cd3e33104c900"}} module=main`+"\n", stdout.String())
+	assert.Equal(t, "Preparing auto-download some args\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: {"binaries":{"linux/amd64":"https://github.com/cosmos/cosmos-sdk/raw/51249cb93130810033408934454841c98423ed4b/cosmovisor/testdata/repo/zip_binary/autod.zip?checksum=sha256:dc48829b4126ae95bc0db316c66d4e9da5f3db95e212665b6080638cca77e998"}} module=main`+"\n", stdout.String())
 
 	// ensure this is upgraded now and produces new output
 	currentBin, err = cfg.CurrentBin()

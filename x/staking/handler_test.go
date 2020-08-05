@@ -206,14 +206,6 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	res, err := handler(ctx, msgCreateValidator)
 	require.Error(t, err)
 	require.Nil(t, res)
-
-	// ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
-	// 	Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.}},
-	// })
-
-	res, err = handler(ctx, msgCreateValidator)
-	require.NoError(t, err)
-	require.NotNil(t, res)
 }
 
 func TestLegacyValidatorDelegations(t *testing.T) {

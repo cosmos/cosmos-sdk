@@ -9,10 +9,7 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
-
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/client"

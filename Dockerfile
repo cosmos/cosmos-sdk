@@ -23,9 +23,8 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 COPY . .
 
 # build Cosmos SDK, remove packages
-RUN make tools && \
-    make build-simd && \
-    cp ./build/sim* /go/bin
+RUN make build-simd && \
+    cp ./build/simd /go/bin
 # make build-sim-linux ??
 
 

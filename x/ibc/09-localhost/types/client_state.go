@@ -24,8 +24,8 @@ import (
 var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
-func NewClientState(chainID string, height int64) ClientState {
-	return ClientState{
+func NewClientState(chainID string, height int64) *ClientState {
+	return &ClientState{
 		ChainID: chainID,
 		Height:  uint64(height),
 	}

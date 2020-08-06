@@ -35,7 +35,7 @@ func NewKeeper(
 	aminoCdc *codec.Codec, cdc codec.BinaryMarshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
 	clientKeeper := clientkeeper.NewKeeper(cdc, key, stakingKeeper)
-	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
+	connectionKeeper := connectionkeeper.NewKeeper(cdc, key, clientKeeper)
 	portKeeper := portkeeper.NewKeeper(scopedKeeper)
 	channelKeeper := channelkeeper.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 

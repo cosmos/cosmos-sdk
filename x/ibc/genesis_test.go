@@ -6,7 +6,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -266,9 +265,7 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 			})
 
 			suite.NotPanics(func() {
-				registry := codectypes.NewInterfaceRegistry()
-				types.RegisterInterfaces(registry)
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(suite.chainA.App.InterfaceRegistry())
 				genState := cdc.MustMarshalJSON(&gs)
 				cdc.MustUnmarshalJSON(genState, &gs)
 			})

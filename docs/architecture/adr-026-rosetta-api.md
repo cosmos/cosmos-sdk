@@ -95,7 +95,7 @@ The router just translates a rest request into the data struct that the interfac
 The RosettaAdapter interface looks like this:
 
 ```
-type RosettaAdapterInterface interface {
+type Adapter interface {
     GetBlock(req RosettaGetBlockRequest) RosettaGetBlockResponse
     ...
 }

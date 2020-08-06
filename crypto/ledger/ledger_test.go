@@ -252,7 +252,7 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	require.True(t, valid)
 
 	// make sure pubkeys serialize properly as well
-	bs = pub.Bytes()
+	bs = cdc.Amino.MustMarshalBinaryBare(pub)
 	bpub, err := cryptoAmino.PubKeyFromBytes(bs)
 	require.NoError(t, err)
 	require.Equal(t, pub, bpub)

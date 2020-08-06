@@ -1,9 +1,12 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // RegisterCodec registers the IBC client interfaces and types
@@ -43,4 +46,31 @@ var (
 func init() {
 	RegisterCodec(amino)
 	amino.Seal()
+}
+
+// PackConsensusState constructs a new Any packed with the given consensus state value. It returns
+// an error if the consensus state can't be casted to a protobuf message or if the concrete
+// implemention is not registered to the protobuf codec.
+func PackConsensusState(consensusState exported.ConsensusState) (*codectypes.Any, error) {
+	msg, ok := consensusState.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", consensusState)
+	}
+
+	anyConsensusState, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyConsensusState, nil
+}
+
+// MustPackConsensusState calls PackConsensusState and panics on error.
+func MustPackConsensusState(consensusState exported.ConsensusState) *codectypes.Any {
+	anyConsensusState, err := PackConsensusState(consensusState)
+	if err != nil {
+		panic(err)
+	}
+
+	return anyConsensusState
 }

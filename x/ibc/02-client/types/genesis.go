@@ -28,29 +28,6 @@ func NewGenesisClientState(clientID string, clientState exported.ClientState) Ge
 	}
 }
 
-func PackConsensusState(consensusState exported.ConsensusState) (*codectypes.Any, error) {
-	msg, ok := consensusState.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", consensusState)
-	}
-
-	anyConsensusState, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return anyConsensusState, nil
-}
-
-func MustPackConsensusState(consensusState exported.ConsensusState) *codectypes.Any {
-	anyConsensusState, err := PackConsensusState(consensusState)
-	if err != nil {
-		panic(err)
-	}
-
-	return anyConsensusState
-}
-
 // NewClientConsensusStates creates a new ClientConsensusStates instance.
 func NewClientConsensusStates(clientID string, consensusStates []exported.ConsensusState) ClientConsensusStates {
 	anyConsensusStates := make([]*codectypes.Any, len(consensusStates))
@@ -92,6 +69,7 @@ func (gs GenesisState) Validate() error {
 		if err := host.ClientIdentifierValidator(client.ClientID); err != nil {
 			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientID, i, err)
 		}
+
 		clientState, ok := client.ClientState.GetCachedValue().(exported.ClientState)
 		if !ok {
 			return fmt.Errorf("invalid client state")
@@ -109,7 +87,7 @@ func (gs GenesisState) Validate() error {
 		for _, consensusState := range cs.ConsensusStates {
 			cs, ok := consensusState.GetCachedValue().(exported.ConsensusState)
 			if !ok {
-				panic("expected consensus state")
+				return fmt.Errorf("invalid client state")
 			}
 
 			if err := cs.ValidateBasic(); err != nil {

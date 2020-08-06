@@ -40,7 +40,7 @@ type Server struct {
 
 type Options struct {}
 
-func NewServer(opt Options,  rosettaAdapter RosettaAPIAdapter) {
+func NewServer(opt Options,  rosettaAdapter Adapter) {
     return Server{opt, newRouter(rosettaAdapter)}    
 }
 ```

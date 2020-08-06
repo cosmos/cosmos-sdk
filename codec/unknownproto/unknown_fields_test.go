@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,6 +19,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 		recv                     proto.Message
 		wantErr                  error
 		allowUnknownNonCriticals bool
+		hasUnknownNonCriticals   bool
 	}{
 		{
 			name: "Unknown field in midst of repeated values",
@@ -29,7 +32,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x01,
 													},
@@ -44,7 +47,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x02,
 													},
@@ -84,7 +87,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x01,
 													},
@@ -99,7 +102,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 									F: &testdata.TestVersion2{
 										A: &testdata.TestVersion2{
 											B: &testdata.TestVersion2{
-												H: []*testdata.TestVersion2{
+												H: []*testdata.TestVersion1{
 													{
 														X: 0x02,
 													},
@@ -172,6 +175,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 				TagNum:   1031,
 				WireType: 2,
 			},
+			hasUnknownNonCriticals: true,
 		},
 		{
 			name:                     "Unknown field in midst of repeated values, non-critical field ignored",
@@ -213,8 +217,9 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 					},
 				},
 			},
-			recv:    new(testdata.TestVersion1),
-			wantErr: nil,
+			recv:                   new(testdata.TestVersion1),
+			wantErr:                nil,
+			hasUnknownNonCriticals: true,
 		},
 	}
 
@@ -225,11 +230,9 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownNonCriticals}
-			gotErr := ckr.RejectUnknownFields(protoBlob, tt.recv)
-			if !reflect.DeepEqual(gotErr, tt.wantErr) {
-				t.Fatalf("Error mismatch\nGot:\n%v\n\nWant:\n%v", gotErr, tt.wantErr)
-			}
+			hasUnknownNonCriticals, gotErr := RejectUnknownFields(protoBlob, tt.recv, tt.allowUnknownNonCriticals)
+			require.Equal(t, tt.wantErr, gotErr)
+			require.Equal(t, tt.hasUnknownNonCriticals, hasUnknownNonCriticals)
 		})
 	}
 }
@@ -263,7 +266,7 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:                     "Unkown fields that are critical, but with allowUnknownNonCriticals set",
+			name:                     "Unknown fields that are critical, but with allowUnknownNonCriticals set",
 			allowUnknownNonCriticals: true,
 			in: &testdata.Customer2{
 				Id:   289,
@@ -285,9 +288,8 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 				t.Fatalf("Failed to marshal input: %v", err)
 			}
 
-			ckr := &Checker{AllowUnknownNonCriticals: tt.allowUnknownNonCriticals}
 			c1 := new(testdata.Customer1)
-			gotErr := ckr.RejectUnknownFields(blob, c1)
+			_, gotErr := RejectUnknownFields(blob, c1, tt.allowUnknownNonCriticals)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -309,13 +311,13 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 				Sum: &testdata.TestVersion2_E{
 					E: 100,
 				},
-				H: []*testdata.TestVersion2{
+				H: []*testdata.TestVersion1{
 					{X: 999},
 					{X: -55},
 					{
 						X: 102,
-						Sum: &testdata.TestVersion2_F{
-							F: &testdata.TestVersion2{
+						Sum: &testdata.TestVersion1_F{
+							F: &testdata.TestVersion1{
 								X: 4,
 							},
 						},
@@ -498,8 +500,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ckr := new(Checker)
-			gotErr := ckr.RejectUnknownFields(protoBlob, tt.recv)
+			gotErr := RejectUnknownFieldsStrict(protoBlob, tt.recv)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -652,8 +653,7 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 			}
 
 			c1 := new(testdata.Customer1)
-			ckr := new(Checker)
-			gotErr := ckr.RejectUnknownFields(blob, c1)
+			gotErr := RejectUnknownFieldsStrict(blob, c1)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -738,8 +738,7 @@ func TestMismatchedTypes_Nested(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			ckr := new(Checker)
-			gotErr := ckr.RejectUnknownFields(protoBlob, tt.recv)
+			_, gotErr := RejectUnknownFields(protoBlob, tt.recv, false)
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -59,6 +60,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			"total account balance",
 			[]string{
 				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -75,6 +77,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			"total account balance of a specific denom",
 			[]string{
 				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=%s", cli.FlagDenom, s.cfg.BondDenom),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
@@ -84,7 +87,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		},
 		{
 			"total account balance of a bogus denom",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=foobar", cli.FlagDenom)},
+			[]string{val.Address.String(), fmt.Sprintf("--%s=foobar", cli.FlagDenom), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			&sdk.Coin{},
 			sdk.NewCoin("foobar", sdk.ZeroInt()),
@@ -130,7 +133,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	}{
 		{
 			"total supply",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
+			[]string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
 			false,
 			&sdk.Coins{},
 			sdk.NewCoins(
@@ -143,6 +149,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 			[]string{
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 				fmt.Sprintf("--%s=%s", cli.FlagDenom, s.cfg.BondDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
 			&sdk.Coin{},
@@ -153,6 +160,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 			[]string{
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
 			&sdk.Coin{},

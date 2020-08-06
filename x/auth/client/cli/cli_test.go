@@ -211,7 +211,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
 	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
 	s.Require().NoError(err)
 
 	var coins sdk.Coins
@@ -281,7 +281,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
 	// Ensure foo has right amount of funds
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
@@ -304,7 +304,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, account.GetAddress())
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), account.GetAddress())
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
@@ -312,7 +312,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(sendTokens.Amount, coins.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
@@ -448,7 +448,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
 	var coins sdk.Coins
@@ -472,7 +472,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
@@ -564,7 +564,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
 	var coins sdk.Coins
@@ -648,6 +648,7 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	cmd := authcli.GetBroadcastCommand()
+	_, out := testutil.ApplyMockIO(cmd)
 
 	testDir, cleanFunc := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanFunc)
@@ -667,10 +668,8 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	cmd.SetArgs([]string{txFileName})
-	err = cmd.ExecuteContext(ctx)
-
-	// We test it tries to broadcast but we set unsupported tx to get the error.
-	require.EqualError(t, err, "unsupported return type ; supported types: sync, async, block")
+	require.Error(t, cmd.ExecuteContext(ctx))
+	require.Contains(t, out.String(), "unsupported return type ; supported types: sync, async, block")
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -13,14 +13,13 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -34,6 +33,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Default params constants used to create a TM client
@@ -52,8 +52,9 @@ const (
 
 // Default params variables used to create a TM client
 var (
-	DefaultTrustLevel tmmath.Fraction = lite.DefaultTrustLevel
-	TestHash                          = []byte("TESTING HASH")
+	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
+	TestHash                              = []byte("TESTING HASH")
+	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 )
@@ -201,7 +202,9 @@ func (chain *TestChain) NextBlock() {
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
 		// chains.
-		Time: chain.CurrentHeader.Time,
+		Time:               chain.CurrentHeader.Time,
+		ValidatorsHash:     chain.Vals.Hash(),
+		NextValidatorsHash: chain.Vals.Hash(),
 	}
 
 	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
@@ -241,6 +244,24 @@ func (chain *TestChain) GetClientState(clientID string) clientexported.ClientSta
 	require.True(chain.t, found)
 
 	return clientState
+}
+
+// GetConsensusState retrieves the consensus state for the provided clientID and height.
+// It will return a success boolean depending on if consensus state exists or not.
+func (chain *TestChain) GetConsensusState(clientID string, height uint64) (clientexported.ConsensusState, bool) {
+	return chain.App.IBCKeeper.ClientKeeper.GetClientConsensusState(chain.GetContext(), clientID, height)
+}
+
+// GetValsAtHeight will return the validator set of the chain at a given height. It will return
+// a success boolean depending on if the validator set exists or not at that height.
+func (chain *TestChain) GetValsAtHeight(height int64) (*tmtypes.ValidatorSet, bool) {
+	histInfo, ok := chain.App.StakingKeeper.GetHistoricalInfo(chain.GetContext(), height)
+	if !ok {
+		return nil, false
+	}
+
+	valSet := stakingtypes.Validators(histInfo.Valset)
+	return tmtypes.NewValidatorSet(valSet.ToTmValidators()), true
 }
 
 // GetConnection retrieves an IBC Connection for the provided TestConnection. The
@@ -330,9 +351,36 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
 // client will be updated on the (target) chain.
+// UpdateTMClient mocks the relayer flow necessary for updating a Tendermint client
 func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) error {
+	header := counterparty.LastHeader
+	// Relayer must query for LatestHeight on client to get TrustedHeight
+	trustedHeight := chain.GetClientState(clientID).GetLatestHeight()
+	var (
+		trustedVals *tmtypes.ValidatorSet
+		ok          bool
+	)
+	// Once we get TrustedHeight from client, we must query the validators from the counterparty chain
+	// If the LatestHeight == LastHeader.Height, then TrustedValidators are current validators
+	// If LatestHeight < LastHeader.Height, we can query the historical validator set from HistoricalInfo
+	if trustedHeight == uint64(counterparty.LastHeader.Height) {
+		trustedVals = counterparty.Vals
+	} else {
+		// NOTE: We need to get validators from counterparty at height: trustedHeight+1
+		// since the last trusted validators for a header at height h
+		// is the NextValidators at h+1 committed to in header h by
+		// NextValidatorsHash
+		trustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight + 1))
+		if !ok {
+			return sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
+		}
+	}
+	// inject trusted fields into last header
+	header.TrustedHeight = trustedHeight
+	header.TrustedValidators = trustedVals
+
 	msg := ibctmtypes.NewMsgUpdateClient(
-		clientID, counterparty.LastHeader,
+		clientID, header,
 		chain.SenderAccount.GetAddress(),
 	)
 
@@ -372,6 +420,8 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 		Commit: commit,
 	}
 
+	// Do not set trusted field here, these fields can be inserted before relaying messages to a client.
+	// The relayer is responsible for querying client and injecting appropriate trusted fields.
 	return ibctmtypes.Header{
 		SignedHeader: signedHeader,
 		ValidatorSet: chain.Vals,
@@ -594,9 +644,14 @@ func (chain *TestChain) ChanCloseInit(
 }
 
 // GetPacketData returns a ibc-transfer marshalled packet to be used for
-// callback testing
+// callback testing.
 func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
-	packet := ibctransfertypes.NewFungibleTokenPacketData(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))), chain.SenderAccount.GetAddress().String(), counterparty.SenderAccount.GetAddress().String())
+	packet := ibctransfertypes.FungibleTokenPacketData{
+		Denom:    TestCoin.Denom,
+		Amount:   TestCoin.Amount.Uint64(),
+		Sender:   chain.SenderAccount.GetAddress().String(),
+		Receiver: counterparty.SenderAccount.GetAddress().String(),
+	}
 
 	return packet.GetBytes()
 }

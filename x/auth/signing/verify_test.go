@@ -58,7 +58,8 @@ func TestVerifySignature(t *testing.T) {
 	require.NoError(t, err)
 
 	handler := MakeTestHandlerMap()
-	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{stdSig}, memo, 10)
+	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{stdSig}, memo)
+	stdTx.TimeoutHeight = 10
 	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
 

@@ -147,13 +147,12 @@ type StdTx struct {
 }
 
 // Deprecated
-func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string, timeout uint64) StdTx {
+func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
-		Msgs:          msgs,
-		Fee:           fee,
-		Signatures:    sigs,
-		Memo:          memo,
-		TimeoutHeight: timeout,
+		Msgs:       msgs,
+		Fee:        fee,
+		Signatures: sigs,
+		Memo:       memo,
 	}
 }
 
@@ -285,7 +284,7 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 type StdSignDoc struct {
 	AccountNumber uint64            `json:"account_number" yaml:"account_number"`
 	Sequence      uint64            `json:"sequence" yaml:"sequence"`
-	TimeoutHeight uint64            `json:"timeout_height" yaml:"timeout_height"`
+	TimeoutHeight uint64            `json:"timeout_height,omitempty" yaml:"timeout_height"`
 	ChainID       string            `json:"chain_id" yaml:"chain_id"`
 	Memo          string            `json:"memo" yaml:"memo"`
 	Fee           json.RawMessage   `json:"fee" yaml:"fee"`

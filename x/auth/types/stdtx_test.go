@@ -46,7 +46,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, "", 0)
+	tx := NewStdTx(msgs, fee, sigs, "")
 	return tx
 }
 
@@ -55,7 +55,7 @@ func TestStdTx(t *testing.T) {
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msgs, fee, sigs, "", 0)
+	tx := NewStdTx(msgs, fee, sigs, "")
 	require.Equal(t, msgs, tx.GetMsgs())
 	require.Equal(t, sigs, tx.Signatures)
 
@@ -159,7 +159,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msgs, fee, sigs, "", 0)
+	tx := NewStdTx(msgs, fee, sigs, "")
 
 	cdcBytes, err := cdc.MarshalBinaryBare(tx)
 
@@ -263,7 +263,7 @@ func TestGetSignaturesV2(t *testing.T) {
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	sig := StdSignature{PubKey: pubKey, Signature: dummy}
-	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs", 0)
+	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
 
 	sigs, err := stdTx.GetSignaturesV2()
 	require.Nil(t, err)

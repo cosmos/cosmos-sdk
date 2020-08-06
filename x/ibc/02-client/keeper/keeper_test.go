@@ -40,10 +40,9 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	cdc            codec.Marshaler
-	aminoCdc       *codec.Codec
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
-	consensusState ibctmtypes.ConsensusState
+	consensusState *ibctmtypes.ConsensusState
 	header         ibctmtypes.Header
 	valSet         *tmtypes.ValidatorSet
 	valSetHash     tmbytes.HexBytes
@@ -60,7 +59,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.AppCodec()
-	suite.aminoCdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
@@ -72,12 +70,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
 	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight-1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-	suite.consensusState = ibctmtypes.ConsensusState{
-		Height:             testClientHeight,
-		Timestamp:          suite.now,
-		Root:               commitmenttypes.NewMerkleRoot([]byte("hash")),
-		NextValidatorsHash: suite.valSetHash,
-	}
+	suite.consensusState = ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("hash")), testClientHeight, suite.valSetHash)
 
 	var validators stakingtypes.Validators
 	for i := 1; i < 11; i++ {
@@ -120,7 +113,7 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	retrievedConsState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, testClientHeight)
 	suite.Require().True(found, "GetConsensusState failed")
 
-	tmConsState, ok := retrievedConsState.(ibctmtypes.ConsensusState)
+	tmConsState, ok := retrievedConsState.(*ibctmtypes.ConsensusState)
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
@@ -209,12 +202,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
-	nextState := ibctmtypes.ConsensusState{
-		Height:             testClientHeight + 5,
-		Timestamp:          suite.now,
-		Root:               commitmenttypes.NewMerkleRoot([]byte("next")),
-		NextValidatorsHash: suite.valSetHash,
-	}
+	nextState := ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("next")), testClientHeight+5, suite.valSetHash)
 
 	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, testClientHeight, suite.header.Time.Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})

@@ -14,7 +14,7 @@ import (
 func (suite *TendermintTestSuite) TestCheckValidity() {
 	var (
 		clientState    *types.ClientState
-		consensusState types.ConsensusState
+		consensusState *types.ConsensusState
 		newHeader      types.Header
 		currentTime    time.Time
 	)
@@ -192,7 +192,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		// setup test
 		tc.setup()
 
-		expectedConsensus := types.ConsensusState{
+		expectedConsensus := &types.ConsensusState{
 			Height:             uint64(newHeader.Height),
 			Timestamp:          newHeader.Time,
 			Root:               commitmenttypes.NewMerkleRoot(newHeader.AppHash),

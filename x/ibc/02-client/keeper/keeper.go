@@ -21,16 +21,14 @@ import (
 type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           codec.BinaryMarshaler
-	aminoCdc      *codec.Codec
 	stakingKeeper types.StakingKeeper
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(cdc codec.BinaryMarshaler, aminoCdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
-		aminoCdc:      aminoCdc,
 		stakingKeeper: sk,
 	}
 }
@@ -83,8 +81,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 		return nil, false
 	}
 
-	var consensusState exported.ConsensusState
-	k.aminoCdc.MustUnmarshalBinaryBare(bz, &consensusState)
+	consensusState := k.MustUnmarshalConsensusState(bz)
 	return consensusState, true
 }
 
@@ -92,8 +89,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
-	bz := k.aminoCdc.MustMarshalBinaryBare(consensusState)
-	store.Set(host.KeyConsensusState(height), bz)
+	store.Set(host.KeyConsensusState(height), k.MustMarshalConsensusState(consensusState))
 }
 
 // IterateConsensusStates provides an iterator over all stored consensus states.
@@ -111,8 +107,7 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			continue
 		}
 		clientID := keySplit[1]
-		var consensusState exported.ConsensusState
-		k.aminoCdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
+		consensusState := k.MustUnmarshalConsensusState(iterator.Value())
 
 		if cb(clientID, consensusState) {
 			break

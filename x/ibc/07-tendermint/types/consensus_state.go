@@ -18,20 +18,18 @@ type ConsensusState struct {
 	Root               commitmentexported.Root `json:"root" yaml:"root"`
 	Height             uint64                  `json:"height" yaml:"height"`
 	NextValidatorsHash tmbytes.HexBytes        `json:"next_validators_hash"` // validators hash for the next block
-	ValidatorSet       *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
 }
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
 	timestamp time.Time, root commitmentexported.Root, height uint64,
-	nextValsHash tmbytes.HexBytes, valset *tmtypes.ValidatorSet,
+	nextValsHash tmbytes.HexBytes,
 ) ConsensusState {
 	return ConsensusState{
 		Timestamp:          timestamp,
 		Root:               root,
 		Height:             height,
 		NextValidatorsHash: nextValsHash,
-		ValidatorSet:       valset,
 	}
 }
 
@@ -59,9 +57,6 @@ func (cs ConsensusState) GetTimestamp() uint64 {
 func (cs ConsensusState) ValidateBasic() error {
 	if cs.Root == nil || cs.Root.Empty() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "root cannot be empty")
-	}
-	if cs.ValidatorSet == nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "validator set cannot be nil")
 	}
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")

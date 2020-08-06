@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	"bytes"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
@@ -66,9 +67,21 @@ func CheckValidityAndUpdateState(
 }
 
 // checkValidity checks if the Tendermint header is valid.
+// CONTRACT: consState.Height == header.TrustedHeight
 func checkValidity(
-	clientState *types.ClientState, consState types.ConsensusState, header types.Header, currentTimestamp time.Time,
+	clientState *types.ClientState, consState types.ConsensusState,
+	header types.Header, currentTimestamp time.Time,
 ) error {
+	// assert that trustedVals is NextValidators of last trusted header
+	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
+	tvalHash := header.TrustedValidators.Hash()
+	if !bytes.Equal(consState.NextValidatorsHash, tvalHash) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidValidatorSet,
+			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
+			header.TrustedValidators, consState.NextValidatorsHash, tvalHash,
+		)
+	}
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
@@ -114,10 +127,10 @@ func checkValidity(
 		Header: &trustedHeader,
 	}
 
-	// Verify next header with the last header's validatorset as trusted validatorset
+	// Verify next header with the passed-in trustedVals
 	err := lite.Verify(
 		clientState.GetChainID(), &signedHeader,
-		consState.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
+		header.TrustedValidators, &header.SignedHeader, header.ValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
@@ -136,7 +149,6 @@ func update(clientState *types.ClientState, header types.Header) (*types.ClientS
 		Timestamp:          header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(header.AppHash),
 		NextValidatorsHash: header.NextValidatorsHash,
-		ValidatorSet:       header.ValidatorSet,
 	}
 
 	return clientState, consensusState

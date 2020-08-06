@@ -158,7 +158,7 @@ func (gs GenesisState) Validate() error {
 		for _, consensusState := range cs.ConsensusStates {
 			cs, ok := consensusState.GetCachedValue().(exported.ConsensusState)
 			if !ok {
-				return fmt.Errorf("invalid client state")
+				return fmt.Errorf("invalid consensus state")
 			}
 
 			if err := cs.ValidateBasic(); err != nil {

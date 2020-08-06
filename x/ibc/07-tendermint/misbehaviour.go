@@ -74,7 +74,7 @@ func checkMisbehaviour(
 	trustedValsetHash1 := evidence.Header1.TrustedValidators.Hash()
 	trustedValsetHash2 := evidence.Header2.TrustedValidators.Hash()
 
-	if !(bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash1) || bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash2)) {
+	if !bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash1) || !bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash2) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidValidatorSet,
 			"header's trusted validators %s, does not hash to either consensus state's trusted validator set. Expected: %X, got: TrustedValSet Header1 %X, TrustedValSet Header2 %X",

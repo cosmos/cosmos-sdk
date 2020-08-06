@@ -15,9 +15,7 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
   ignore:
-    - tendermint
-    - gogoproto
-    - cosmos_proto
+    - third_party/proto
 breaking:
   use:
     - FILE

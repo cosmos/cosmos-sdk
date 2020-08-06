@@ -29,6 +29,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		"cosmos_sdk.ibc.v1.client.ConsensusState",
 		(*exported.ConsensusState)(nil),
 	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.client.Header",
+		(*exported.Header)(nil),
+	)
 }
 
 var (
@@ -40,7 +44,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/02-client and
 	// defined at the application level.
-	SubModuleCdc = codec.NewHybridCodec(amino, codectypes.NewInterfaceRegistry())
+	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )
 
 func init() {

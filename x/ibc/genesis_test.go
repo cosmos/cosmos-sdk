@@ -231,7 +231,6 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 	}
 }
 
-/*
 // TODO: HandlerTestSuite should replace IBCTestSuite
 func (suite *HandlerTestSuite) TestExportGenesis() {
 	testCases := []struct {
@@ -281,4 +280,3 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 		})
 	}
 }
-*/

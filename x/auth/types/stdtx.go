@@ -147,12 +147,13 @@ type StdTx struct {
 }
 
 // Deprecated
-func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
+func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string, timeout uint64) StdTx {
 	return StdTx{
-		Msgs:       msgs,
-		Fee:        fee,
-		Signatures: sigs,
-		Memo:       memo,
+		Msgs:          msgs,
+		Fee:           fee,
+		Signatures:    sigs,
+		Memo:          memo,
+		TimeoutHeight: timeout,
 	}
 }
 

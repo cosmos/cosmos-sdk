@@ -29,19 +29,20 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		testdata.NewTestMsg(addr1, addr2),
 	}
 
-	tx := StdTx{
-		Msgs:       msgs,
-		Fee:        fee,
-		Signatures: nil,
-		Memo:       memo,
-	}
-
 	var (
 		chainId              = "test-chain"
 		accNum        uint64 = 7
 		seqNum        uint64 = 7
 		timeoutHeight uint64 = 10
 	)
+
+	tx := StdTx{
+		Msgs:          msgs,
+		Fee:           fee,
+		Signatures:    nil,
+		Memo:          memo,
+		TimeoutHeight: timeoutHeight,
+	}
 
 	handler := stdTxSignModeHandler{}
 	signingData := signing.SignerData{

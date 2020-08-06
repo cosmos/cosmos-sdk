@@ -46,7 +46,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, "")
+	tx := NewStdTx(msgs, fee, sigs, "", 0)
 	return tx
 }
 
@@ -55,7 +55,7 @@ func TestStdTx(t *testing.T) {
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msgs, fee, sigs, "")
+	tx := NewStdTx(msgs, fee, sigs, "", 0)
 	require.Equal(t, msgs, tx.GetMsgs())
 	require.Equal(t, sigs, tx.Signatures)
 
@@ -80,7 +80,7 @@ func TestStdSignBytes(t *testing.T) {
 	}{
 		{
 			args{"1234", 3, 6, 10, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
-			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"100000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
+			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"100000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\",\"timeout_height\":\"10\"}", addr),
 		},
 	}
 	for i, tc := range tests {
@@ -159,7 +159,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msgs, fee, sigs, "")
+	tx := NewStdTx(msgs, fee, sigs, "", 0)
 
 	cdcBytes, err := cdc.MarshalBinaryBare(tx)
 
@@ -263,7 +263,7 @@ func TestGetSignaturesV2(t *testing.T) {
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	sig := StdSignature{PubKey: pubKey, Signature: dummy}
-	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
+	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs", 0)
 
 	sigs, err := stdTx.GetSignaturesV2()
 	require.Nil(t, err)

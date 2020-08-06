@@ -11,7 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// signModeLegacyAminoJSONHandler defines the SIGN_MODE_LEGACY_AMINO_JSON SignModeHandler
+const aminoNonCriticalFieldsError = "protobuf transaction contains unknown non-critical fields. This is a transaction malleability issue and SIGN_MODE_LEGACY_AMINO_JSON cannot be used."
+
+var _ signing.SignModeHandler = signModeLegacyAminoJSONHandler{}
+
+// signModeLegacyAminoJSONHandler defines the SIGN_MODE_LEGACY_AMINO_JSON
+// SignModeHandler.
 type signModeLegacyAminoJSONHandler struct{}
 
 func (s signModeLegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
@@ -21,8 +26,6 @@ func (s signModeLegacyAminoJSONHandler) DefaultMode() signingtypes.SignMode {
 func (s signModeLegacyAminoJSONHandler) Modes() []signingtypes.SignMode {
 	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
-
-const aminoNonCriticalFieldsError = "protobuf transaction contains unknown non-critical fields. This is a transaction malleability issue and SIGN_MODE_LEGACY_AMINO_JSON cannot be used."
 
 func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
@@ -41,16 +44,13 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	body := protoTx.tx.Body
 
 	if len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
-			"SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options.")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options.")
 	}
 
+	// nolint: staticcheck
 	return types.StdSignBytes(
-		data.ChainID, data.AccountNumber, data.AccountSequence,
-		//nolint:staticcheck
+		data.ChainID, data.AccountNumber, data.AccountSequence, protoTx.GetTimeoutHeight(),
 		types.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil
 }
-
-var _ signing.SignModeHandler = signModeLegacyAminoJSONHandler{}

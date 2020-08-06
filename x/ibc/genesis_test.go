@@ -265,8 +265,10 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 				ibc.InitGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper, true, gs)
 			})
 
-			genState := codec.MustMarshalJSONIndent(suite.chainA.App.Codec(), gs)
-			suite.chainA.App.Codec().MustUnmarshalJSON(genState, &gs)
+			suite.NotPanics(func() {
+				genState := codec.MustMarshalJSONIndent(suite.chainA.App.Codec(), gs)
+				suite.chainA.App.Codec().MustUnmarshalJSON(genState, &gs)
+			})
 
 			// init genesis based on marshal and unmarshal
 			suite.NotPanics(func() {

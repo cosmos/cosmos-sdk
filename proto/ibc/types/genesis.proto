@@ -10,11 +10,17 @@ import "ibc/channel/genesis.proto";
 
 // GenesisState defines the ibc client submodule's genesis state.
 message GenesisState {
-  ibc.client.GenesisState client_genesis = 1
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"client_genesis\""];
-  ibc.connection.GenesisState connection_genesis = 2
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"connection_genesis\""];
-  ibc.channel.GenesisState channel_genesis = 3
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"channel_genesis\""];
+  ibc.client.GenesisState client_genesis = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"client_genesis\""
+  ];
+  ibc.connection.GenesisState connection_genesis = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"connection_genesis\""
+  ];
+  ibc.channel.GenesisState channel_genesis = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"channel_genesis\""
+  ];
 }
 

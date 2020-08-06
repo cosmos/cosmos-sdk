@@ -4,7 +4,6 @@ package ibc.channel;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 import "gogoproto/gogo.proto";
-
 import "ibc/channel/channel.proto";
 
 // GenesisState defines the ibc channel submodule's genesis state.
@@ -17,9 +16,7 @@ message GenesisState {
     (gogoproto.casttype) = "PacketAckCommitment",
     (gogoproto.nullable) = false
   ];
-  repeated PacketAckCommitment commitments = 3 [
-    (gogoproto.nullable) = false
-  ];
+  repeated PacketAckCommitment commitments = 3 [(gogoproto.nullable) = false];
   repeated PacketSequence send_sequences = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"send_sequences\""
@@ -38,11 +35,11 @@ message GenesisState {
 // next send and receive sequences.
 message PacketSequence {
   string port_id = 1 [
-    (gogoproto.customname) = "PortID", 
+    (gogoproto.customname) = "PortID",
     (gogoproto.moretags) = "yaml:\"port_id\""
   ];
-  string channel_id = 2[
-    (gogoproto.customname) = "ChannelID", 
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
     (gogoproto.moretags) = "yaml:\"channel_id\""
   ];
   uint64 sequence = 3;

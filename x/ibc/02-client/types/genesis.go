@@ -11,6 +11,8 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+var _ codectypes.UnpackInterfacesMessage = GenesisClientState{}
+
 // NewGenesisClientState creates a new GenesisClientState instance.
 func NewGenesisClientState(clientID string, clientState exported.ClientState) GenesisClientState {
 	msg, ok := clientState.(proto.Message)
@@ -27,6 +29,16 @@ func NewGenesisClientState(clientID string, clientState exported.ClientState) Ge
 		ClientID:    clientID,
 		ClientState: anyClientState,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (gs GenesisClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(gs.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 var _ sort.Interface = ClientsConsensusStates{}

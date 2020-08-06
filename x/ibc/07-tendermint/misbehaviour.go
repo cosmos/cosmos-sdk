@@ -123,15 +123,13 @@ func checkMisbehaviour(
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := evidence.Header1.TrustedValidators.VerifyCommitLightTrusting(
-		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
-		evidence.Header1.Commit, clientState.TrustLevel.ToTendermint(),
+		evidence.ChainID, evidence.Header1.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from trusted validator set: %v", err)
 	}
 
 	if err := evidence.Header2.TrustedValidators.VerifyCommitLightTrusting(
-		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
-		evidence.Header2.Commit, clientState.TrustLevel.ToTendermint(),
+		evidence.ChainID, evidence.Header2.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from trusted validator set: %v", err)
 	}

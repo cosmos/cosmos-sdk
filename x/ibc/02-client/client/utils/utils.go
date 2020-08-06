@@ -58,7 +58,7 @@ func QueryClientState(
 		return types.StateResponse{}, err
 	}
 
-	clientStateRes := types.NewClientStateResponse(clientID, clientState, res.Proof, res.Height)
+	clientStateRes := types.NewClientStateResponse(clientID, clientState, res.ProofOps, res.Height)
 
 	return clientStateRes, nil
 }
@@ -86,7 +86,7 @@ func QueryConsensusState(
 		return conStateRes, err
 	}
 
-	return types.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
+	return types.NewConsensusStateResponse(clientID, cs, res.ProofOps, res.Height), nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate
@@ -109,7 +109,10 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 		return ibctmtypes.Header{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, 0, 10000)
+	page := 0
+	count := 10_000
+
+	validators, err := node.Validators(&height, &page, &count)
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
@@ -142,8 +145,11 @@ func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusSta
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
+	page := 0
+	count := 10_000
+
 	nextHeight := height + 1
-	nextVals, err := node.Validators(&nextHeight, 0, 10000)
+	nextVals, err := node.Validators(&nextHeight, &page, &count)
 	if err != nil {
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}

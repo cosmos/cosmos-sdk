@@ -26,6 +26,7 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 		if n != secp256k1.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for secp256k1 public key", n)
 		}
+
 		res := make(secp256k1.PubKey, secp256k1.PubKeySize)
 		copy(res, key.Secp256K1)
 		return res, nil
@@ -34,6 +35,7 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 		if n != ed255192.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for ed25519 public key", n)
 		}
+
 		res := make(ed255192.PubKey, ed255192.PubKeySize)
 		copy(res, key.Ed25519)
 		return res, nil
@@ -42,6 +44,7 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 		if n != sr25519.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for sr25519 public key", n)
 		}
+
 		res := make(sr25519.PubKey, sr25519.PubKeySize)
 		copy(res, key.Sr25519)
 
@@ -67,11 +70,11 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
 	switch key := key.(type) {
 	case secp256k1.PubKey:
-		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key[:]}}, nil
+		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key}}, nil
 	case ed255192.PubKey:
-		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key[:]}}, nil
+		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key}}, nil
 	case sr25519.PubKey:
-		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key[:]}}, nil
+		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key}}, nil
 	case multisig.PubKeyMultisigThreshold:
 		pubKeys := key.PubKeys
 		resKeys := make([]*types.PublicKey, len(pubKeys))

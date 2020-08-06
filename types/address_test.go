@@ -61,7 +61,7 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub[:])
+		rand.Read(pub)
 
 		mustBech32AccPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
 		bech32AccPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
@@ -119,7 +119,7 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 	pub := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub[:])
+		rand.Read(pub)
 
 		acc := types.AccAddress(pub.Address())
 		res := types.AccAddress{}

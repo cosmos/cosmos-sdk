@@ -12,7 +12,7 @@ import (
 )
 
 func Test_writeReadLedgerInfo(t *testing.T) {
-	var tmpKey secp256k1.PubKey
+	tmpKey := make(secp256k1.PubKey, secp256k1.PubKeySize)
 	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
 	copy(tmpKey[:], bz)
 

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"

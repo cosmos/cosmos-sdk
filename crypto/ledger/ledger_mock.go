@@ -77,8 +77,8 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKey
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	// Generate the bech32 addr using existing tmcrypto/etc.
 	addr := sdk.AccAddress(compressedPublicKey.Address()).String()

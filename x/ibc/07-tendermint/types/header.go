@@ -36,8 +36,8 @@ func (h Header) ClientType() clientexported.ClientType {
 }
 
 // ConsensusState returns the updated consensus state associated with the header
-func (h Header) ConsensusState() ConsensusState {
-	return ConsensusState{
+func (h Header) ConsensusState() *ConsensusState {
+	return &ConsensusState{
 		Height:             uint64(h.Height),
 		Timestamp:          h.Time,
 		Root:               commitmenttypes.NewMerkleRoot(h.AppHash),

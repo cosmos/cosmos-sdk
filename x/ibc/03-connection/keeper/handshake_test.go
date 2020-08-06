@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			consState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), clientA)
 			suite.Require().True(found)
 
-			tmConsState, ok := consState.(ibctmtypes.ConsensusState)
+			tmConsState, ok := consState.(*ibctmtypes.ConsensusState)
 			suite.Require().True(ok)
 
 			tmConsState.Timestamp = time.Now()
@@ -304,7 +304,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			consState, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainB.GetContext(), clientB)
 			suite.Require().True(found)
 
-			tmConsState, ok := consState.(ibctmtypes.ConsensusState)
+			tmConsState, ok := consState.(*ibctmtypes.ConsensusState)
 			suite.Require().True(ok)
 
 			tmConsState.Timestamp = time.Now()

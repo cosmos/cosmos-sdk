@@ -50,7 +50,7 @@ func (suite *LocalhostTestSuite) TestValidate() {
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	clientState := types.NewClientState("chainID", 10)
 	err := clientState.VerifyClientConsensusState(
-		nil, nil, nil, nil, 0, "", 0, nil, nil, nil,
+		nil, nil, nil, 0, "", 0, nil, nil, nil,
 	)
 	suite.Require().Error(err)
 }

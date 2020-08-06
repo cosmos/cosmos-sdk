@@ -11,8 +11,12 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ codectypes.UnpackInterfacesMessage = GenesisClientState{}
-var _ codectypes.UnpackInterfacesMessage = ClientConsensusStates{}
+var (
+	_ codectypes.UnpackInterfacesMessage = GenesisClientState{}
+	_ codectypes.UnpackInterfacesMessage = ClientsConsensusStates{}
+	_ codectypes.UnpackInterfacesMessage = ClientConsensusStates{}
+	_ codectypes.UnpackInterfacesMessage = GenesisState{}
+)
 
 // NewGenesisClientState creates a new GenesisClientState instance.
 func NewGenesisClientState(clientID string, clientState exported.ClientState) GenesisClientState {
@@ -62,6 +66,16 @@ func (ccs ClientsConsensusStates) Sort() ClientsConsensusStates {
 	return ccs
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (ccs ClientsConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, clientConsensus := range ccs {
+		if err := clientConsensus.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // NewClientConsensusStates creates a new ClientConsensusStates instance.
 func NewClientConsensusStates(clientID string, consensusStates []exported.ConsensusState) ClientConsensusStates {
 	anyConsensusStates := make([]*codectypes.Any, len(consensusStates))
@@ -77,8 +91,8 @@ func NewClientConsensusStates(clientID string, consensusStates []exported.Consen
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (gs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	for _, any := range gs.ConsensusStates {
+func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, any := range ccs.ConsensusStates {
 		var clientState exported.ClientState
 		err := unpacker.UnpackAny(any, &clientState)
 		if err != nil {
@@ -106,6 +120,17 @@ func DefaultGenesisState() GenesisState {
 		ClientsConsensus: ClientsConsensusStates{},
 		CreateLocalhost:  true,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, client := range gs.Clients {
+		if err := client.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
+	}
+
+	return gs.ClientsConsensus.UnpackInterfaces(unpacker)
 }
 
 // Validate performs basic genesis state validation returning an error upon any

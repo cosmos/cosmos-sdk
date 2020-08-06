@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -130,38 +131,28 @@ func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.Genesi
 }
 
 // GetAllConsensusStates returns all stored client consensus states.
-// NOTE: non deterministic.
-func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (clientConsStates []types.ClientConsensusStates) {
-	var clientIDs []string
-	// create map to add consensus states to the existing clients
-	cons := make(map[string][]exported.ConsensusState)
+func (k Keeper) GetAllConsensusStates(ctx sdk.Context) []types.ClientConsensusStates {
+	clientConsStates := make([]types.ClientConsensusStates, 0)
+	mapClientIDToConsStateIdx := make(map[string]int)
 
 	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
-		consensusStates, ok := cons[clientID]
-		if !ok {
-			clientIDs = append(clientIDs, clientID)
-			cons[clientID] = []exported.ConsensusState{cs}
+		anyClientState := types.MustPackConsensusState(cs)
+
+		idx, ok := mapClientIDToConsStateIdx[clientID]
+		if ok {
+			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, anyClientState)
 			return false
 		}
 
-		cons[clientID] = append(consensusStates, cs)
-		return false
-	})
-
-	// create ClientConsensusStates in the same order of iteration to prevent non-determinism
-	for len(clientIDs) > 0 {
-		id := clientIDs[len(clientIDs)-1]
-		consensusStates, ok := cons[id]
-		if !ok {
-			panic(fmt.Sprintf("consensus states from client id %s not found", id))
+		clientConsState := types.ClientConsensusStates{
+			ClientID:        clientID,
+			ConsensusStates: []*codectypes.Any{anyClientState},
 		}
 
-		clientConsState := types.NewClientConsensusStates(id, consensusStates)
 		clientConsStates = append(clientConsStates, clientConsState)
-
-		// remove the last element
-		clientIDs = clientIDs[:len(clientIDs)-1]
-	}
+		mapClientIDToConsStateIdx[clientID] = len(clientConsStates) - 1
+		return false
+	})
 
 	return clientConsStates
 }

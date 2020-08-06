@@ -24,7 +24,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		for _, consState := range cs.ConsensusStates {
 			consensusState, ok := consState.GetCachedValue().(exported.ConsensusState)
 			if !ok {
-				panic("expected consensus state")
+				panic("invalid consensus state")
 			}
 
 			k.SetClientConsensusState(ctx, cs.ClientID, consensusState.GetHeight(), consensusState)

@@ -28,24 +28,40 @@ func NewGenesisClientState(clientID string, clientState exported.ClientState) Ge
 	}
 }
 
+func PackConsensusState(consensusState exported.ConsensusState) (*codectypes.Any, error) {
+	msg, ok := consensusState.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", consensusState)
+	}
+
+	anyConsensusState, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyConsensusState, nil
+}
+
+func MustPackConsensusState(consensusState exported.ConsensusState) *codectypes.Any {
+	anyConsensusState, err := PackConsensusState(consensusState)
+	if err != nil {
+		panic(err)
+	}
+
+	return anyConsensusState
+}
+
 // NewClientConsensusStates creates a new ClientConsensusStates instance.
-func NewClientConsensusStates(id string, states []exported.ConsensusState) ClientConsensusStates {
-	cs := make([]*codectypes.Any, len(states))
-	for i, s := range states {
-		msg, ok := s.(proto.Message)
-		if !ok {
-			panic(fmt.Errorf("cannot proto marshal %T", s))
-		}
-		any, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			panic(err)
-		}
-		cs[i] = any
+func NewClientConsensusStates(clientID string, consensusStates []exported.ConsensusState) ClientConsensusStates {
+	anyConsensusStates := make([]*codectypes.Any, len(consensusStates))
+
+	for i := range consensusStates {
+		anyConsensusStates[i] = MustPackConsensusState(consensusStates[i])
 	}
 
 	return ClientConsensusStates{
-		ClientID:        id,
-		ConsensusStates: cs,
+		ClientID:        clientID,
+		ConsensusStates: anyConsensusStates,
 	}
 }
 

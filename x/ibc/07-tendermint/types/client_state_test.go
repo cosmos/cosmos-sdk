@@ -21,7 +21,7 @@ const (
 func (suite *TendermintTestSuite) TestValidate() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		expPass     bool
 	}{
 		{
@@ -89,7 +89,7 @@ func (suite *TendermintTestSuite) TestValidate() {
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
+		clientState    *ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte
@@ -125,7 +125,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -136,8 +136,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			name:        "proof verification failed",
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -149,7 +149,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			nil, suite.cdc, suite.aminoCdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
+			nil, suite.cdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -166,7 +166,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
+		clientState    *ibctmtypes.ClientState
 		connection     connectiontypes.ConnectionEnd
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
@@ -206,7 +206,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -219,8 +219,8 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -249,7 +249,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
+		clientState    *ibctmtypes.ClientState
 		channel        channeltypes.Channel
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
@@ -289,7 +289,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -302,8 +302,8 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -329,7 +329,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
+		clientState    *ibctmtypes.ClientState
 		commitment     []byte
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
@@ -369,7 +369,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -382,8 +382,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -409,7 +409,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
+		clientState    *ibctmtypes.ClientState
 		ack            []byte
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
@@ -449,7 +449,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -462,8 +462,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -489,7 +489,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
+		clientState    *ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte
@@ -526,7 +526,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -537,8 +537,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			name:        "proof verification failed",
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -564,7 +564,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
+		clientState    *ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte
@@ -601,7 +601,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -612,8 +612,8 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			name:        "proof verification failed",
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},

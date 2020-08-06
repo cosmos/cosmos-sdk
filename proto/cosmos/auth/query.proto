@@ -19,11 +19,13 @@ service Query{
 
 // QueryAccountRequest is the request type for the Query/Account RPC method.
 message QueryAccountRequest{
+  // address defines the address to query for.
   required bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // QueryAccountResponse is the response type for the Query/Account RPC method.
 message QueryAccountResponse{
+  // address defines the account of the corresponding address.
   required google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
 }
 
@@ -32,5 +34,6 @@ message QueryParamsRequest{ }
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse{
+  // params defines the parameters of the module.
   required cosmos.auth.Params params = 1 [(gogoproto.nullable) = false];
 } 

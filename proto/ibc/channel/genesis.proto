@@ -4,7 +4,7 @@ package ibc.channel;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 import "gogoproto/gogo.proto";
- 
+
 import "ibc/channel/channel.proto";
 
 // GenesisState defines the ibc channel submodule's genesis state.

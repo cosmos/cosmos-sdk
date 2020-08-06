@@ -8,7 +8,6 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -30,7 +29,7 @@ func TestPublicKeyUnsafe(t *testing.T) {
 	require.NotNil(t, priv)
 
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
-		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(cdc.Amino.MustMarshalBinaryBare(priv.PubKey()),
+		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(cdc.Amino.MustMarshalBinaryBare(priv.PubKey()))),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())

@@ -2,7 +2,6 @@ package testing
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"testing"
 	"time"
@@ -395,7 +394,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 		ChainID:            chain.ChainID,
 		Height:             chain.CurrentHeader.Height,
 		Time:               chain.CurrentHeader.Time,
-		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), math.MaxUint32, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), 10_000, make([]byte, tmhash.Size)),
 		LastCommitHash:     chain.App.LastCommitID().Hash,
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -15,7 +14,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
@@ -23,16 +21,14 @@ import (
 type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           codec.BinaryMarshaler
-	aminoCdc      *codec.Codec
 	stakingKeeper types.StakingKeeper
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(cdc codec.BinaryMarshaler, aminoCdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
-		aminoCdc:      aminoCdc,
 		stakingKeeper: sk,
 	}
 }
@@ -85,8 +81,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 		return nil, false
 	}
 
-	var consensusState exported.ConsensusState
-	k.aminoCdc.MustUnmarshalBinaryBare(bz, &consensusState)
+	consensusState := k.MustUnmarshalConsensusState(bz)
 	return consensusState, true
 }
 
@@ -94,8 +89,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
-	bz := k.aminoCdc.MustMarshalBinaryBare(consensusState)
-	store.Set(host.KeyConsensusState(height), bz)
+	store.Set(host.KeyConsensusState(height), k.MustMarshalConsensusState(consensusState))
 }
 
 // IterateConsensusStates provides an iterator over all stored consensus states.
@@ -113,8 +107,7 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			continue
 		}
 		clientID := keySplit[1]
-		var consensusState exported.ConsensusState
-		k.aminoCdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
+		consensusState := k.MustUnmarshalConsensusState(iterator.Value())
 
 		if cb(clientID, consensusState) {
 			break
@@ -208,14 +201,11 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		return nil, false
 	}
 
-	valSet := stakingtypes.Validators(histInfo.Valset)
-
-	consensusState := ibctmtypes.ConsensusState{
+	consensusState := &ibctmtypes.ConsensusState{
 		Height:             height,
 		Timestamp:          histInfo.Header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
-		ValidatorSet:       tmtypes.NewValidatorSet(valSet.ToTmValidators()),
 	}
 	return consensusState, true
 }

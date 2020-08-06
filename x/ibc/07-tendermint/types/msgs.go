@@ -140,12 +140,11 @@ func (msg MsgCreateClient) GetClientType() string {
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
 	root := commitmenttypes.NewMerkleRoot(msg.Header.AppHash)
-	return ConsensusState{
+	return &ConsensusState{
 		Timestamp:          msg.Header.Time,
 		Root:               root,
 		Height:             uint64(msg.Header.Height),
 		NextValidatorsHash: msg.Header.NextValidatorsHash,
-		ValidatorSet:       msg.Header.ValidatorSet,
 	}
 }
 

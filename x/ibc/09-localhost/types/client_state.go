@@ -75,7 +75,7 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 // VerifyClientConsensusState returns an error since a local host client does not store consensus
 // states.
 func (cs ClientState) VerifyClientConsensusState(
-	sdk.KVStore, codec.BinaryMarshaler, *codec.Codec, commitmentexported.Root,
+	sdk.KVStore, codec.BinaryMarshaler, commitmentexported.Root,
 	uint64, string, uint64, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
 ) error {
 	return ErrConsensusStatesNotStored

@@ -126,8 +126,8 @@ func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.Genesi
 }
 
 // GetAllConsensusStates returns all stored client consensus states.
-func (k Keeper) GetAllConsensusStates(ctx sdk.Context) []types.ClientConsensusStates {
-	clientConsStates := make([]types.ClientConsensusStates, 0)
+func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusStates {
+	clientConsStates := make(types.ClientsConsensusStates, 0)
 	mapClientIDToConsStateIdx := make(map[string]int)
 
 	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
@@ -149,7 +149,7 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) []types.ClientConsensusSt
 		return false
 	})
 
-	return clientConsStates
+	return clientConsStates.Sort()
 }
 
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular

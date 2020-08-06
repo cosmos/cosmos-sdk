@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"sort"
 
 	proto "github.com/gogo/protobuf/proto"
 
@@ -28,6 +29,26 @@ func NewGenesisClientState(clientID string, clientState exported.ClientState) Ge
 	}
 }
 
+var _ sort.Interface = ClientsConsensusStates{}
+
+// ClientsConsensusStates defines a slice of ClientConsensusStates that supports the sort interface
+type ClientsConsensusStates []ClientConsensusStates
+
+// Len implements sort.Interface
+func (ccs ClientsConsensusStates) Len() int { return len(ccs) }
+
+// Less implements sort.Interface
+func (ccs ClientsConsensusStates) Less(i, j int) bool { return ccs[i].ClientID < ccs[j].ClientID }
+
+// Swap implements sort.Interface
+func (ccs ClientsConsensusStates) Swap(i, j int) { ccs[i], ccs[j] = ccs[j], ccs[i] }
+
+// Sort is a helper function to sort the set of ClientsConsensusStates in place
+func (ccs ClientsConsensusStates) Sort() ClientsConsensusStates {
+	sort.Sort(ccs)
+	return ccs
+}
+
 // NewClientConsensusStates creates a new ClientConsensusStates instance.
 func NewClientConsensusStates(clientID string, consensusStates []exported.ConsensusState) ClientConsensusStates {
 	anyConsensusStates := make([]*codectypes.Any, len(consensusStates))
@@ -44,7 +65,7 @@ func NewClientConsensusStates(clientID string, consensusStates []exported.Consen
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []GenesisClientState, clientsConsensus []ClientConsensusStates, createLocalhost bool,
+	clients []GenesisClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
@@ -57,7 +78,7 @@ func NewGenesisState(
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Clients:          []GenesisClientState{},
-		ClientsConsensus: []ClientConsensusStates{},
+		ClientsConsensus: ClientsConsensusStates{},
 		CreateLocalhost:  true,
 	}
 }

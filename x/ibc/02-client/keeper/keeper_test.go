@@ -238,10 +238,10 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 		),
 	}
 
-	expAnyConsensus := []types.ClientConsensusStates{
+	expAnyConsensus := types.ClientsConsensusStates{
 		types.NewClientConsensusStates(testClientID, expConsensus),
 		types.NewClientConsensusStates(testClientID2, expConsensus2),
-	}
+	}.Sort()
 
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, expConsensus[0].GetHeight(), expConsensus[0])
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, expConsensus[1].GetHeight(), expConsensus[1])

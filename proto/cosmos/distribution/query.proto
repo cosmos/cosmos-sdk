@@ -33,22 +33,22 @@ service Query {
 
   // DelegationRewards the total rewards accrued by a delegation
   rpc DelegationRewards (QueryDelegationRewardsRequest) returns (QueryDelegationRewardsResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1beta/rewards/{delegator_address}/{validator_address}";
+    option (google.api.http).get = "/cosmos/distribution/v1beta/delegators/{delegator_address}/validators/{validator_address}/rewards";
   }
 
   // DelegationTotalRewards the total rewards accrued by a each validator
   rpc DelegationTotalRewards (QueryDelegationTotalRewardsRequest) returns (QueryDelegationTotalRewardsResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1beta/total-rewards/{delegator_address}";
+    option (google.api.http).get = "/cosmos/distribution/v1beta/delegators/{delegator_address}/rewards";
   }
 
   // DelegatorValidators queries the validators of a delegator
   rpc DelegatorValidators (QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1beta/validators/{delegator_address}";
+    option (google.api.http).get = "/cosmos/distribution/v1beta/delegators/{delegator_address}/validators";
   }
 
   // DelegatorWithdrawAddress queries withdraw address of a delegator
   rpc DelegatorWithdrawAddress (QueryDelegatorWithdrawAddressRequest) returns (QueryDelegatorWithdrawAddressResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1beta/withdraw-address/{delegator_address}";
+    option (google.api.http).get = "/cosmos/distribution/v1beta/delegators/{delegator_address}/withdraw-address";
   }
 
   // CommunityPool queries the community pool coins

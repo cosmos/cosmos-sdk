@@ -198,7 +198,7 @@ func local_request_Query_Vote_0(ctx context.Context, marshaler runtime.Marshaler
 }
 
 var (
-	filter_Query_Votes_0 = &utilities.DoubleArray{Encoding: map[string]int{"proposal_id": 0, "pagination": 1, "offset": 2, "limit": 3, "count_total": 4}, Base: []int{1, 1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 3, 3, 3, 2, 4, 5, 6}}
+	filter_Query_Votes_0 = &utilities.DoubleArray{Encoding: map[string]int{"proposal_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_Query_Votes_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -221,39 +221,6 @@ func request_Query_Votes_0(ctx context.Context, marshaler runtime.Marshaler, cli
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "proposal_id", err)
-	}
-
-	val, ok = pathParams["pagination.offset"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.offset")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.offset", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.offset", err)
-	}
-
-	val, ok = pathParams["pagination.limit"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.limit")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.limit", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.limit", err)
-	}
-
-	val, ok = pathParams["pagination.count_total"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.count_total")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.count_total", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.count_total", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -288,39 +255,6 @@ func local_request_Query_Votes_0(ctx context.Context, marshaler runtime.Marshale
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "proposal_id", err)
-	}
-
-	val, ok = pathParams["pagination.offset"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.offset")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.offset", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.offset", err)
-	}
-
-	val, ok = pathParams["pagination.limit"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.limit")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.limit", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.limit", err)
-	}
-
-	val, ok = pathParams["pagination.count_total"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.count_total")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.count_total", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.count_total", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -466,7 +400,7 @@ func local_request_Query_Deposit_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 var (
-	filter_Query_Deposits_0 = &utilities.DoubleArray{Encoding: map[string]int{"proposal_id": 0, "pagination": 1, "offset": 2, "limit": 3, "count_total": 4}, Base: []int{1, 1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 3, 3, 3, 2, 4, 5, 6}}
+	filter_Query_Deposits_0 = &utilities.DoubleArray{Encoding: map[string]int{"proposal_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_Query_Deposits_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -489,39 +423,6 @@ func request_Query_Deposits_0(ctx context.Context, marshaler runtime.Marshaler, 
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "proposal_id", err)
-	}
-
-	val, ok = pathParams["pagination.offset"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.offset")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.offset", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.offset", err)
-	}
-
-	val, ok = pathParams["pagination.limit"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.limit")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.limit", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.limit", err)
-	}
-
-	val, ok = pathParams["pagination.count_total"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.count_total")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.count_total", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.count_total", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -556,39 +457,6 @@ func local_request_Query_Deposits_0(ctx context.Context, marshaler runtime.Marsh
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "proposal_id", err)
-	}
-
-	val, ok = pathParams["pagination.offset"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.offset")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.offset", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.offset", err)
-	}
-
-	val, ok = pathParams["pagination.limit"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.limit")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.limit", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.limit", err)
-	}
-
-	val, ok = pathParams["pagination.count_total"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pagination.count_total")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "pagination.count_total", val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pagination.count_total", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -1027,19 +895,19 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Proposal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1beta", "proposal", "proposal_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Proposal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1beta", "proposals", "proposal_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Proposals_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "gov", "v1beta", "proposals"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Vote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "gov", "v1beta", "vote", "proposal_id", "voter"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Vote_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "gov", "v1beta", "proposals", "proposal_id", "votes", "voter"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Votes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "gov", "v1beta", "votes", "proposal_id", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Votes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "gov", "v1beta", "proposals", "proposal_id", "votes"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1beta", "params", "params_type"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Deposit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "gov", "v1beta", "deposit", "proposal_id", "depositor"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Deposit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "gov", "v1beta", "proposals", "proposal_id", "deposits", "depositor"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Deposits_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"cosmos", "gov", "v1beta", "deposits", "proposal_id", "pagination.offset", "pagination.limit", "pagination.count_total"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Deposits_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "gov", "v1beta", "proposals", "proposal_id", "deposits"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_TallyResult_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "gov", "v1beta", "tally", "proposal_id"}, "", runtime.AssumeColonVerbOpt(true)))
 )

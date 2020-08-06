@@ -17,7 +17,7 @@ service Query {
 
 	// SigningInfo queries the signing info of given cons address
 	rpc SigningInfo (QuerySigningInfoRequest) returns (QuerySigningInfoResponse) {
-		option (google.api.http).get = "/cosmos/slashing/v1beta/signing-info/{cons_address}";
+		option (google.api.http).get = "/cosmos/slashing/v1beta/signing-infos/{cons_address}";
 	}
 
 	// SigningInfos queries signing info of all validators

@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 service Query {
   // Proposal queries proposal details based on ProposalID
   rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta/proposal/{proposal_id}";
+    option (google.api.http).get = "/cosmos/gov/v1beta/proposals/{proposal_id}";
   }
 
   // Proposals queries all proposals based on given status
@@ -22,12 +22,12 @@ service Query {
 
   // Vote queries Voted information based on proposalID, voterAddr
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta/vote/{proposal_id}/{voter}";
+    option (google.api.http).get = "/cosmos/gov/v1beta/proposals/{proposal_id}/votes/{voter}";
   }
 
   // Votes queries votes of a given proposal
   rpc Votes (QueryVotesRequest) returns (QueryVotesResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta/votes/{proposal_id}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/gov/v1beta/proposals/{proposal_id}/votes";
   }
 
   // Params queries all parameters of the gov module
@@ -37,12 +37,12 @@ service Query {
 
   // Deposit queries single deposit information based proposalID, depositAddr
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta/deposit/{proposal_id}/{depositor}";
+    option (google.api.http).get = "/cosmos/gov/v1beta/proposals/{proposal_id}/deposits/{depositor}";
   }
 
   // Deposits queries all deposits of a single proposal
   rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta/deposits/{proposal_id}/{pagination.offset}/{pagination.limit}/{pagination.count_total}";
+    option (google.api.http).get = "/cosmos/gov/v1beta/proposals/{proposal_id}/deposits";
   }
 
   // TallyResult queries the tally of a proposal vote

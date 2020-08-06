@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,7 +16,7 @@ import (
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
 	timestamp time.Time, root commitmenttypes.MerkleRoot, height uint64,
-	nextValsHash []byte,
+	nextValsHash tmbytes.HexBytes,
 ) ConsensusState {
 	return ConsensusState{
 		Timestamp:          timestamp,

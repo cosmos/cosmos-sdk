@@ -25,10 +25,10 @@ service Query {
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
 message QueryBalanceRequest {
   // address is the address to query balances for.
-  required bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   // denom is the coin denom to query balances for.
-  required string denom = 2;
+  string denom = 2;
 }
 
 // QueryBalanceResponse is the response type for the Query/Balance RPC method.
@@ -40,7 +40,7 @@ message QueryBalanceResponse {
 // QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
 message QueryAllBalancesRequest {
   // address is the address to query balances for.
-  required bytes address = 1
+  bytes address = 1
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   // pagination defines an optional pagination for the request.

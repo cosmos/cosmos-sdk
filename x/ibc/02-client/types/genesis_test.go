@@ -33,7 +33,7 @@ func TestValidateGenesis(t *testing.T) {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	header := ibctmtypes.CreateTestHeader(chainID, height, now, valSet, []tmtypes.PrivValidator{privVal})
+	header := ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	testCases := []struct {
 		name     string
@@ -61,7 +61,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.NextValidatorsHash,
 							),
 						},
 					},
@@ -86,7 +86,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.NextValidatorsHash,
 							),
 						},
 					},
@@ -126,7 +126,7 @@ func TestValidateGenesis(t *testing.T) {
 						"(CLIENTID2)",
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.NextValidatorsHash,
 							),
 						},
 					},
@@ -151,7 +151,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet.Hash(), header.ValidatorSet,
+								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.NextValidatorsHash,
 							),
 						},
 					),

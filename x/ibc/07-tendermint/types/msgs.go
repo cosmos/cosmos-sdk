@@ -145,7 +145,6 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 		Root:               root,
 		Height:             uint64(msg.Header.Height),
 		NextValidatorsHash: msg.Header.NextValidatorsHash,
-		ValidatorSet:       msg.Header.ValidatorSet,
 	}
 }
 

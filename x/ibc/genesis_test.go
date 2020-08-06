@@ -1,6 +1,10 @@
 package ibc_test
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -143,3 +147,129 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		}
 	}
 }
+
+func (suite *IBCTestSuite) TestInitGenesis() {
+	testCases := []struct {
+		name     string
+		genState types.GenesisState
+	}{
+		{
+			name:     "default",
+			genState: types.DefaultGenesisState(),
+		},
+		{
+			name: "valid genesis",
+			genState: types.GenesisState{
+				ClientGenesis: clienttypes.NewGenesisState(
+					[]clienttypes.GenesisClientState{
+						clienttypes.NewGenesisClientState(
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+						),
+						clienttypes.NewGenesisClientState(
+							exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+						),
+					},
+					[]clienttypes.ClientConsensusStates{
+						clienttypes.NewClientConsensusStates(
+							clientID,
+							[]exported.ConsensusState{
+								ibctmtypes.NewConsensusState(
+									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet.Hash(),
+								),
+							},
+						),
+					},
+					true,
+				),
+				ConnectionGenesis: connectiontypes.NewGenesisState(
+					[]connectiontypes.IdentifiedConnection{
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion})),
+					},
+					[]connectiontypes.ConnectionPaths{
+						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
+					},
+				),
+				ChannelGenesis: channeltypes.NewGenesisState(
+					[]channeltypes.IdentifiedChannel{
+						channeltypes.NewIdentifiedChannel(
+							port1, channel1, channeltypes.NewChannel(
+								channeltypes.INIT, channelOrder,
+								channeltypes.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
+							),
+						),
+					},
+					[]channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
+					},
+					[]channeltypes.PacketAckCommitment{
+						channeltypes.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
+					},
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port1, channel1, 1),
+					},
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port2, channel2, 1),
+					},
+					[]channeltypes.PacketSequence{
+						channeltypes.NewPacketSequence(port2, channel2, 1),
+					},
+				),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		app := simapp.Setup(false)
+
+		suite.NotPanics(func() {
+			ibc.InitGenesis(app.BaseApp.NewContext(false, abci.Header{Height: 1}), *app.IBCKeeper, true, tc.genState)
+		})
+	}
+}
+
+// TODO: HandlerTestSuite should replace IBCTestSuite
+// func (suite *HandlerTestSuite) TestExportGenesis() {
+// 	testCases := []struct {
+// 		msg      string
+// 		malleate func()
+// 	}{
+// 		{
+// 			"success",
+// 			func() {
+// 				// creates clients
+// 				suite.coordinator.Setup(suite.chainA, suite.chainB)
+// 				// create extra clients
+// 				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)
+// 				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)
+// 			},
+// 		},
+// 	}
+
+// 	for _, tc := range testCases {
+// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+// 			suite.SetupTest()
+
+// 			tc.malleate()
+
+// 			var gs types.GenesisState
+// 			suite.NotPanics(func() {
+// 				gs = ibc.ExportGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper)
+// 			})
+
+// 			// init genesis based on export
+// 			suite.NotPanics(func() {
+// 				ibc.InitGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper, true, gs)
+// 			})
+
+// 			suite.NotPanics(func() {
+// 				genState := codec.MustMarshalJSONIndent(suite.chainA.App.Codec(), gs)
+// 				suite.chainA.App.Codec().MustUnmarshalJSON(genState, &gs)
+// 			})
+
+// 			// init genesis based on marshal and unmarshal
+// 			suite.NotPanics(func() {
+// 				ibc.InitGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper, true, gs)
+// 			})
+// 		})
+// 	}
+// }

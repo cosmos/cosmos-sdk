@@ -9,35 +9,26 @@ import "ibc/channel/channel.proto";
 
 // GenesisState defines the ibc channel submodule's genesis state.
 message GenesisState {
-  repeated IdentifiedChannel channels = 1[
+  repeated IdentifiedChannel channels = 1 [
     (gogoproto.casttype) = "IdentifiedChannel",
     (gogoproto.nullable) = false
   ];
-
-  repeated PacketAckCommitment acknowledgements = 2[
+  repeated PacketAckCommitment acknowledgements = 2 [
     (gogoproto.casttype) = "PacketAckCommitment",
     (gogoproto.nullable) = false
   ];
-
-  repeated PacketAckCommitment commitments = 3[
-    (gogoproto.casttype) = "PacketAckCommitment",
+  repeated PacketAckCommitment commitments = 3 [
     (gogoproto.nullable) = false
   ];
-
-  repeated PacketSequence send_sequences = 4[
-    (gogoproto.casttype) = "PacketSequence",
+  repeated PacketSequence send_sequences = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"send_sequences\""
   ];
-
-  repeated PacketSequence recv_sequences = 5[
-    (gogoproto.casttype) = "PacketSequence",
+  repeated PacketSequence recv_sequences = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"recv_sequences\""
   ];
-
-  repeated PacketSequence ack_sequences = 6[
-    (gogoproto.casttype) = "PacketSequence",
+  repeated PacketSequence ack_sequences = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"ack_sequences\""
   ];

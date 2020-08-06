@@ -12,13 +12,12 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, client := range gs.Clients {
-		clientState, ok := client.ClientState.GetCachedValue().(exported.ClientState)
+		cs, ok := client.ClientState.GetCachedValue().(exported.ClientState)
 		if !ok {
-			panic("expected client state")
+			panic("invalid client state")
 		}
-
-		k.SetClientState(ctx, client.ClientID, clientState)
-		k.SetClientType(ctx, client.ClientID, clientState.ClientType())
+		k.SetClientState(ctx, client.ClientID, cs)
+		k.SetClientType(ctx, client.ClientID, cs.ClientType())
 	}
 
 	for _, cs := range gs.ClientsConsensus {

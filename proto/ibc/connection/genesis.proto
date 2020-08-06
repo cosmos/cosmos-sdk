@@ -9,14 +9,11 @@ import "ibc/connection/connection.proto";
 
 // GenesisState defines the ibc connection submodule's genesis state.
 message GenesisState {
-  repeated IdentifiedConnection connections = 1[
-    (gogoproto.nullable) = false,
-    (gogoproto.casttype) = "IdentifiedConnection"
+  repeated IdentifiedConnection connections = 1 [
+    (gogoproto.nullable) = false
   ];
-
-  repeated ConnectionPaths client_connection_paths = 2[
+  repeated ConnectionPaths client_connection_paths = 2 [
     (gogoproto.nullable) = false,
-    (gogoproto.casttype) = "ConnectionPaths",
     (gogoproto.moretags) = "yaml:\"client_connection_paths\""
   ];
 }

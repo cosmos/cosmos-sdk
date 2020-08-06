@@ -22,6 +22,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		"cosmos_sdk.ibc.v1.client.ClientState",
 		(*exported.ClientState)(nil),
 	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.client.ConsensusState",
+		(*exported.ConsensusState)(nil),
+	)
 }
 
 var (

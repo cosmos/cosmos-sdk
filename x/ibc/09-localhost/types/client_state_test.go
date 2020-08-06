@@ -1,8 +1,8 @@
 package types_test
 
 import (
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -17,7 +17,7 @@ const (
 func (suite *LocalhostTestSuite) TestValidate() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		expPass     bool
 	}{
 		{
@@ -48,51 +48,21 @@ func (suite *LocalhostTestSuite) TestValidate() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
-	testCases := []struct {
-		name        string
-		clientState types.ClientState
-		prefix      commitmenttypes.MerklePrefix
-		proof       []byte
-		expPass     bool
-	}{
-		{
-			name:        "ApplyPrefix failed",
-			clientState: types.NewClientState("chainID", 10),
-			prefix:      commitmenttypes.MerklePrefix{},
-			expPass:     false,
-		},
-		{
-			name:        "proof verification failed",
-			clientState: types.NewClientState("chainID", 10),
-			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       []byte{},
-			expPass:     false,
-		},
-	}
-
-	for i, tc := range testCases {
-		tc := tc
-
-		err := tc.clientState.VerifyClientConsensusState(
-			suite.store, suite.cdc, suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
-		)
-
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
-	}
+	clientState := types.NewClientState("chainID", 10)
+	err := clientState.VerifyClientConsensusState(
+		nil, nil, nil, 0, "", 0, nil, nil, nil,
+	)
+	suite.Require().Error(err)
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
-	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connection.NewConnectionEnd(connection.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
-		connection  connection.End
+		clientState *types.ClientState
+		connection  connectiontypes.ConnectionEnd
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool
@@ -130,13 +100,13 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyChannelState() {
-	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(channel.OPEN, channel.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
+	ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
-		channel     channel.Channel
+		clientState *types.ClientState
+		channel     channeltypes.Channel
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool
@@ -183,7 +153,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		commitment  []byte
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -238,7 +208,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		ack         []byte
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -293,7 +263,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool
@@ -324,7 +294,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool

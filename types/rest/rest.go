@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,6 +41,17 @@ func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHei
 		Height: height,
 		Result: result,
 	}
+}
+
+// ParseResponseWithHeight returns the raw result from a JSON-encoded
+// ResponseWithHeight object.
+func ParseResponseWithHeight(cdc codec.JSONMarshaler, bz []byte) ([]byte, error) {
+	r := ResponseWithHeight{}
+	if err := cdc.UnmarshalJSON(bz, &r); err != nil {
+		return nil, err
+	}
+
+	return r.Result, nil
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -261,27 +273,12 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body int
 		err  error
 	)
 
-	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-	var marshaler codec.JSONMarshaler
-
-	if ctx.JSONMarshaler != nil {
-		marshaler = ctx.JSONMarshaler
-	} else {
-		marshaler = ctx.Codec
-	}
-
 	switch b := body.(type) {
 	case []byte:
 		resp = b
 
 	default:
-		resp, err = marshaler.MarshalJSON(body)
-
-		if ctx.Indent && err == nil {
-			resp, err = codec.MarshalIndentFromJSON(resp)
-		}
-
+		resp, err = ctx.JSONMarshaler.MarshalJSON(body)
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -305,8 +302,8 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 		return
 	}
 
-	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+	// TODO: Remove once PubKey Protobuf migration has been completed.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/6886
 	var marshaler codec.JSONMarshaler
 
 	if ctx.JSONMarshaler != nil {
@@ -321,11 +318,6 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 
 	default:
 		result, err = marshaler.MarshalJSON(resp)
-
-		if ctx.Indent && err == nil {
-			result, err = codec.MarshalIndentFromJSON(result)
-		}
-
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -334,10 +326,6 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 	wrappedResp := NewResponseWithHeight(ctx.Height, result)
 
 	output, err := marshaler.MarshalJSON(wrappedResp)
-	if ctx.Indent && err == nil {
-		output, err = codec.MarshalIndentFromJSON(output)
-	}
-
 	if CheckInternalServerError(w, err) {
 		return
 	}
@@ -424,4 +412,44 @@ func ParseQueryParamBool(r *http.Request, param string) bool {
 	}
 
 	return false
+}
+
+// GetRequest defines a wrapper around an HTTP GET request with a provided URL.
+// An error is returned if the request or reading the body fails.
+func GetRequest(url string) ([]byte, error) {
+	res, err := http.Get(url) // nolint:gosec
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+// PostRequest defines a wrapper around an HTTP POST request with a provided URL and data.
+// An error is returned if the request or reading the body fails.
+func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
+	res, err := http.Post(url, contentType, bytes.NewBuffer(data)) // nolint:gosec
+	if err != nil {
+		return nil, fmt.Errorf("error while sending post request: %w", err)
+	}
+
+	bz, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, err
+	}
+
+	return bz, nil
 }

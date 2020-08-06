@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -15,19 +14,18 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
 // state information
 type Keeper struct {
 	storeKey      sdk.StoreKey
-	cdc           *codec.Codec
+	cdc           codec.BinaryMarshaler
 	stakingKeeper types.StakingKeeper
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
@@ -48,16 +46,14 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 		return nil, false
 	}
 
-	var clientState exported.ClientState
-	k.cdc.MustUnmarshalBinaryBare(bz, &clientState)
+	clientState := k.MustUnmarshalClientState(bz)
 	return clientState, true
 }
 
 // SetClientState sets a particular Client to the store
-func (k Keeper) SetClientState(ctx sdk.Context, clientState exported.ClientState) {
-	store := k.ClientStore(ctx, clientState.GetID())
-	bz := k.cdc.MustMarshalBinaryBare(clientState)
-	store.Set(host.KeyClientState(), bz)
+func (k Keeper) SetClientState(ctx sdk.Context, clientID string, clientState exported.ClientState) {
+	store := k.ClientStore(ctx, clientID)
+	store.Set(host.KeyClientState(), k.MustMarshalClientState(clientState))
 }
 
 // GetClientType gets the consensus type for a specific client
@@ -85,8 +81,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 		return nil, false
 	}
 
-	var consensusState exported.ConsensusState
-	k.cdc.MustUnmarshalBinaryBare(bz, &consensusState)
+	consensusState := k.MustUnmarshalConsensusState(bz)
 	return consensusState, true
 }
 
@@ -94,8 +89,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
-	bz := k.cdc.MustMarshalBinaryBare(consensusState)
-	store.Set(host.KeyConsensusState(height), bz)
+	store.Set(host.KeyConsensusState(height), k.MustMarshalConsensusState(consensusState))
 }
 
 // IterateConsensusStates provides an iterator over all stored consensus states.
@@ -113,13 +107,25 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			continue
 		}
 		clientID := keySplit[1]
-		var consensusState exported.ConsensusState
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
+		consensusState := k.MustUnmarshalConsensusState(iterator.Value())
 
 		if cb(clientID, consensusState) {
 			break
 		}
 	}
+}
+
+// GetAllGenesisClients returns all the clients in state with their client ids returned as GenesisClientState
+func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.GenesisClientState) {
+	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
+		gc := types.GenesisClientState{
+			ClientID:    clientID,
+			ClientState: cs,
+		}
+		genClients = append(genClients, gc)
+		return false
+	})
+	return
 }
 
 // GetAllConsensusStates returns all stored client consensus states.
@@ -195,13 +201,11 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		return nil, false
 	}
 
-	valSet := stakingtypes.Validators(histInfo.Valset)
-
-	consensusState := ibctmtypes.ConsensusState{
-		Height:       height,
-		Timestamp:    histInfo.Header.Time,
-		Root:         commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),
+	consensusState := &ibctmtypes.ConsensusState{
+		Height:             height,
+		Timestamp:          histInfo.Header.Time,
+		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
+		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
 	}
 	return consensusState, true
 }
@@ -209,7 +213,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 // IterateClients provides an iterator over all stored light client State
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
-func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bool) {
+func (k Keeper) IterateClients(ctx sdk.Context, cb func(clientID string, cs exported.ClientState) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, host.KeyClientStorePrefix)
 
@@ -219,10 +223,11 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bo
 		if keySplit[len(keySplit)-1] != "clientState" {
 			continue
 		}
-		var clientState exported.ClientState
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &clientState)
+		clientState := k.MustUnmarshalClientState(iterator.Value())
 
-		if cb(clientState) {
+		// key is ibc/{clientid}/clientState
+		// Thus, keySplit[1] is clientID
+		if cb(keySplit[1], clientState) {
 			break
 		}
 	}
@@ -230,7 +235,7 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bo
 
 // GetAllClients returns all stored light client State objects.
 func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
-	k.IterateClients(ctx, func(state exported.ClientState) bool {
+	k.IterateClients(ctx, func(_ string, state exported.ClientState) bool {
 		states = append(states, state)
 		return false
 	})

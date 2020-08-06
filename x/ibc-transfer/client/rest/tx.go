@@ -7,14 +7,14 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
-func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/transfer", RestPortID, RestChannelID), transferHandlerFn(clientCtx)).Methods("POST")
+func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/transfer", restPortID, restChannelID), transferHandlerFn(clientCtx)).Methods("POST")
 }
 
 // transferHandlerFn implements a transfer handler
@@ -33,8 +33,8 @@ func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
 func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		portID := vars[RestPortID]
-		channelID := vars[RestChannelID]
+		portID := vars[restPortID]
+		channelID := vars[restChannelID]
 
 		var req TransferTxReq
 		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
@@ -68,6 +68,6 @@ func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

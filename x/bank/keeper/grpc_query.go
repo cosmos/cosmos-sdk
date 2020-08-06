@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -17,15 +17,15 @@ var _ types.QueryServer = BaseKeeper{}
 // Balance implements the Query/Balance gRPC method
 func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if len(req.Address) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address")
+	if req.Address.Empty() {
+		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
 
 	if req.Denom == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid denom")
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -37,12 +37,12 @@ func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (
 // AllBalances implements the Query/AllBalances gRPC method
 func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	addr := req.Address
-	if len(addr) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address")
+	if addr.Empty() {
+		return nil, status.Errorf(codes.InvalidArgument, "address cannot be empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -52,7 +52,7 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	res, err := query.Paginate(accountStore, req.Req, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
 		var result sdk.Coin
 		err := q.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
@@ -66,7 +66,7 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 		return &types.QueryAllBalancesResponse{}, err
 	}
 
-	return &types.QueryAllBalancesResponse{Balances: balances, Res: res}, nil
+	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
@@ -80,15 +80,15 @@ func (q BaseKeeper) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequ
 // SupplyOf implements the Query/SupplyOf gRPC method
 func (q BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Denom == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid denom")
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	supply := q.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
 
-	return &types.QuerySupplyOfResponse{Amount: supply}, nil
+	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply)}, nil
 }

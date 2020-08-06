@@ -17,11 +17,11 @@ import (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	GetID() string
 	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
+	GetFrozenHeight() uint64
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
@@ -29,8 +29,7 @@ type ClientState interface {
 
 	VerifyClientConsensusState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
-		aminoCdc *codec.Codec,
+		cdc codec.BinaryMarshaler,
 		root commitmentexported.Root,
 		height uint64,
 		counterpartyClientIdentifier string,
@@ -41,7 +40,7 @@ type ClientState interface {
 	) error
 	VerifyConnectionState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -51,7 +50,7 @@ type ClientState interface {
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -62,7 +61,7 @@ type ClientState interface {
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -74,7 +73,7 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -86,7 +85,7 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -97,7 +96,7 @@ type ClientState interface {
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,

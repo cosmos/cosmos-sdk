@@ -26,3 +26,4 @@ write a little note why.
 - [ ] Added relevant `godoc` [comments](https://blog.golang.org/godoc-documenting-go-code).
 - [ ] Added a relevant changelog entry to the `Unreleased` section in `CHANGELOG.md`
 - [ ] Re-reviewed `Files changed` in the Github PR explorer
+- [ ] Review `Codecov Report` in the comment section below once CI passes

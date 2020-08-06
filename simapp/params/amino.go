@@ -1,3 +1,5 @@
+// +build test_amino
+
 package params
 
 import (
@@ -7,17 +9,16 @@ import (
 )
 
 // MakeEncodingConfig creates an EncodingConfig for an amino based test configuration.
-//
-// TODO: this file should add a "+build test_amino" flag for #6190 and a proto.go file with a protobuf configuration
 func MakeEncodingConfig() EncodingConfig {
 	cdc := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
+	// TODO: switch to using AminoCodec here once amino compatibility is fixed
 	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         marshaler,
-		TxGenerator:       authtypes.StdTxGenerator{Cdc: cdc},
+		TxConfig:          authtypes.StdTxConfig{Cdc: cdc},
 		Amino:             cdc,
 	}
 }

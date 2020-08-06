@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -36,8 +37,8 @@ const (
 )
 
 func TestPagination(t *testing.T) {
-	app, ctx := setupTest()
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx)
+	app, ctx, _ := setupTest()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -58,8 +59,8 @@ func TestPagination(t *testing.T) {
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.Equal(t, res.Res.Total, uint64(numBalances))
-	require.Nil(t, res.Res.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(numBalances))
+	require.NotNil(t, res.Pagination.NextKey)
 	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 
 	t.Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
@@ -67,8 +68,8 @@ func TestPagination(t *testing.T) {
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
-	require.Equal(t, res.Res.Total, uint64(0))
-	require.NotNil(t, res.Res.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(0))
+	require.NotNil(t, res.Pagination.NextKey)
 	require.LessOrEqual(t, res.Balances.Len(), overLimit)
 
 	t.Log("verify paginate with custom limit and countTotal true")
@@ -77,8 +78,8 @@ func TestPagination(t *testing.T) {
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Balances.Len(), underLimit)
-	require.Nil(t, res.Res.NextKey)
-	require.Equal(t, res.Res.Total, uint64(numBalances))
+	require.NotNil(t, res.Pagination.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(numBalances))
 
 	t.Log("verify paginate with custom limit and countTotal false")
 	pageReq = &query.PageRequest{Limit: defaultLimit, CountTotal: false}
@@ -86,27 +87,27 @@ func TestPagination(t *testing.T) {
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Balances.Len(), defaultLimit)
-	require.NotNil(t, res.Res.NextKey)
-	require.Equal(t, res.Res.Total, uint64(0))
+	require.NotNil(t, res.Pagination.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(0))
 
 	t.Log("verify paginate with custom limit, key and countTotal false")
-	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: defaultLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, res.Balances.Len(), defaultLimit)
-	require.NotNil(t, res.Res.NextKey)
-	require.Equal(t, res.Res.Total, uint64(0))
+	require.NotNil(t, res.Pagination.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(0))
 
 	t.Log("verify paginate for last page, results in records less than max limit")
-	pageReq = &query.PageRequest{Key: res.Res.NextKey, Limit: defaultLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 	require.Equal(t, res.Balances.Len(), lastPageRecords)
-	require.Nil(t, res.Res.NextKey)
-	require.Equal(t, res.Res.Total, uint64(0))
+	require.Nil(t, res.Pagination.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(0))
 
 	t.Log("verify paginate with offset and limit")
 	pageReq = &query.PageRequest{Offset: 200, Limit: defaultLimit, CountTotal: false}
@@ -115,8 +116,8 @@ func TestPagination(t *testing.T) {
 	require.NoError(t, err)
 	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
 	require.Equal(t, res.Balances.Len(), lastPageRecords)
-	require.Nil(t, res.Res.NextKey)
-	require.Equal(t, res.Res.Total, uint64(0))
+	require.Nil(t, res.Pagination.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(0))
 
 	t.Log("verify paginate with offset and limit")
 	pageReq = &query.PageRequest{Offset: 100, Limit: defaultLimit, CountTotal: false}
@@ -124,11 +125,11 @@ func TestPagination(t *testing.T) {
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
-	require.NotNil(t, res.Res.NextKey)
-	require.Equal(t, res.Res.Total, uint64(0))
+	require.NotNil(t, res.Pagination.NextKey)
+	require.Equal(t, res.Pagination.Total, uint64(0))
 
 	t.Log("verify paginate with offset and key - error")
-	pageReq = &query.PageRequest{Key: res.Res.NextKey, Offset: 100, Limit: defaultLimit, CountTotal: false}
+	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Offset: 100, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.Error(t, err)
@@ -140,11 +141,11 @@ func TestPagination(t *testing.T) {
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	require.NoError(t, err)
 	require.LessOrEqual(t, res.Balances.Len(), 0)
-	require.Nil(t, res.Res.NextKey)
+	require.Nil(t, res.Pagination.NextKey)
 }
 
 func ExamplePaginate() {
-	app, ctx := setupTest()
+	app, ctx, _ := setupTest()
 
 	var balances sdk.Coins
 
@@ -167,7 +168,7 @@ func ExamplePaginate() {
 	authStore := ctx.KVStore(app.GetKey(authtypes.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
-	res, err := query.Paginate(accountStore, request.Req, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
 		var tempRes sdk.Coin
 		err := app.Codec().UnmarshalBinaryBare(value, &tempRes)
 		if err != nil {
@@ -179,12 +180,12 @@ func ExamplePaginate() {
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
-	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
+	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Pagination: pageRes})
 	// Output:
-	// balances:<denom:"foo0denom" amount:"100" > res:<total:2 >
+	// balances:<denom:"foo0denom" amount:"100" > pagination:<next_key:"foo1denom" total:2 >
 }
 
-func setupTest() (*simapp.SimApp, sdk.Context) {
+func setupTest() (*simapp.SimApp, sdk.Context, codec.Marshaler) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
 	appCodec := app.AppCodec()
@@ -209,5 +210,5 @@ func setupTest() (*simapp.SimApp, sdk.Context) {
 		app.GetSubspace(types.ModuleName), make(map[string]bool),
 	)
 
-	return app, ctx
+	return app, ctx, appCodec
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -33,11 +32,11 @@ type Server struct {
 	listener net.Listener
 }
 
-func New(clientCtx client.Context) *Server {
+func New(clientCtx client.Context, logger log.Logger) *Server {
 	return &Server{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
-		logger:    log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "api-server"),
+		logger:    logger,
 	}
 }
 
@@ -75,7 +74,8 @@ func (s *Server) Start(cfg config.Config) error {
 	var h http.Handler = s.Router
 
 	if cfg.API.EnableUnsafeCORS {
-		return tmrpcserver.Serve(s.listener, handlers.CORS()(h), s.logger, tmCfg)
+		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
 	}
 
 	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)

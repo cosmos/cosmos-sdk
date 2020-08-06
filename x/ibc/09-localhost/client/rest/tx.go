@@ -6,14 +6,14 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
+func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/clients/localhost", createClientHandlerFn(clientCtx)).Methods("POST")
 }
 
@@ -51,6 +51,6 @@ func createClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

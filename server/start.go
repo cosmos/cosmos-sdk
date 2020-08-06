@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -17,11 +17,15 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -29,6 +33,7 @@ import (
 const (
 	flagWithTendermint     = "with-tendermint"
 	flagAddress            = "address"
+	flagTransport          = "transport"
 	flagTraceStore         = "trace-store"
 	flagCPUProfile         = "cpu-profile"
 	FlagMinGasPrices       = "minimum-gas-prices"
@@ -36,6 +41,8 @@ const (
 	FlagHaltTime           = "halt-time"
 	FlagInterBlockCache    = "inter-block-cache"
 	FlagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
+	FlagTrace              = "trace"
+	FlagInvCheckPeriod     = "inv-check-period"
 
 	FlagPruning           = "pruning"
 	FlagPruningKeepRecent = "pruning-keep-recent"
@@ -43,9 +50,15 @@ const (
 	FlagPruningInterval   = "pruning-interval"
 )
 
+// GRPC-related flags.
+const (
+	flagGRPCEnable  = "grpc.enable"
+	flagGRPCAddress = "grpc.address"
+)
+
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) *cobra.Command {
+func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -71,68 +84,78 @@ will not be able to commit subsequent blocks.
 For profiling and benchmarking purposes, CPU profiling can be enabled via the '--cpu-profile' flag
 which accepts a path for the resulting pprof file.
 `,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			_, err := GetPruningOptionsFromFlags()
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			serverCtx := GetServerContextFromCmd(cmd)
+
+			// Bind flags to the Context's Viper so the app construction can set
+			// options accordingly.
+			serverCtx.Viper.BindPFlags(cmd.Flags())
+
+			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			return err
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if !viper.GetBool(flagWithTendermint) {
-				ctx.Logger.Info("starting ABCI without Tendermint")
-				return startStandAlone(ctx, appCreator)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			serverCtx := GetServerContextFromCmd(cmd)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
+			if !withTM {
+				serverCtx.Logger.Info("starting ABCI without Tendermint")
+				return startStandAlone(serverCtx, appCreator)
 			}
 
-			ctx.Logger.Info("starting ABCI with Tendermint")
+			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(ctx, cdc, appCreator)
+			err := startInProcess(serverCtx, clientCtx.JSONMarshaler, appCreator)
 			return err
 		},
 	}
 
-	// core flags for the ABCI application
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
+	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
-	cmd.Flags().String(
-		FlagMinGasPrices, "",
-		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
-	)
+	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
 	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
-
+	cmd.Flags().Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
-	viper.BindPFlag(FlagPruning, cmd.Flags().Lookup(FlagPruning))
-	viper.BindPFlag(FlagPruningKeepRecent, cmd.Flags().Lookup(FlagPruningKeepRecent))
-	viper.BindPFlag(FlagPruningKeepEvery, cmd.Flags().Lookup(FlagPruningKeepEvery))
-	viper.BindPFlag(FlagPruningInterval, cmd.Flags().Lookup(FlagPruningInterval))
+	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
+
+	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
+	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
 }
 
-func startStandAlone(ctx *Context, appCreator AppCreator) error {
-	addr := viper.GetString(flagAddress)
-	home := viper.GetString("home")
-	traceWriterFile := viper.GetString(flagTraceStore)
+func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
+	addr := ctx.Viper.GetString(flagAddress)
+	transport := ctx.Viper.GetString(flagTransport)
+	home := ctx.Viper.GetString(flags.FlagHome)
 
 	db, err := openDB(home)
 	if err != nil {
 		return err
 	}
+
+	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	svr, err := server.NewServer(addr, "socket", app)
+	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
@@ -144,10 +167,8 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		tmos.Exit(err.Error())
 	}
 
-	tmos.TrapSignal(ctx.Logger, func() {
-		// cleanup
-		err = svr.Stop()
-		if err != nil {
+	TrapSignal(func() {
+		if err = svr.Stop(); err != nil {
 			tmos.Exit(err.Error())
 		}
 	})
@@ -156,11 +177,11 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) error {
+func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
-	traceWriterFile := viper.GetString(flagTraceStore)
+	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	db, err := openDB(home)
 	if err != nil {
 		return err
@@ -171,7 +192,7 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
@@ -179,8 +200,6 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 	}
 
 	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
-
-	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
@@ -199,35 +218,50 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		return err
 	}
 
-	config := config.GetConfig()
 	var apiSrv *api.Server
+
+	config := config.GetConfig(ctx.Viper)
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
 		}
 
-		// TODO: Since this is running in process, do we need to provide a verifier
-		// and set TrustNode=false? If so, we need to add additional logic that
-		// waits for a block to be committed first before starting the API server.
-		ctx := client.Context{}.
+		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
 			WithJSONMarshaler(cdc).
-			WithClient(local.New(tmNode)).
-			WithTrustNode(true)
+			WithClient(local.New(tmNode))
 
-		apiSrv = api.New(ctx)
+		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
 
-		if err := apiSrv.Start(config); err != nil {
+		errCh := make(chan error)
+
+		go func() {
+			if err := apiSrv.Start(config); err != nil {
+				errCh <- err
+			}
+		}()
+
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
+		}
+	}
+
+	var grpcSrv *grpc.Server
+	if config.GRPC.Enable {
+		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
+		if err != nil {
 			return err
 		}
 	}
 
 	var cpuProfileCleanup func()
 
-	if cpuProfile := viper.GetString(flagCPUProfile); cpuProfile != "" {
+	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
 		if err != nil {
 			return err
@@ -256,6 +290,10 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 		if apiSrv != nil {
 			_ = apiSrv.Close()
+		}
+
+		if grpcSrv != nil {
+			grpcSrv.Stop()
 		}
 
 		ctx.Logger.Info("exiting...")

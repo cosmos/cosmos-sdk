@@ -7,9 +7,6 @@ const (
 	// module name
 	ModuleName = "mint"
 
-	// default paramspace for params keeper
-	DefaultParamspace = ModuleName
-
 	// StoreKey is the default store key for mint
 	StoreKey = ModuleName
 

@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -23,15 +23,14 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(app.IBCKeeper.Codecs())
 
 	clientID := "clientidone"
+	connectionID := "connectionidone"
 	channelID := "channelidone"
 	portID := "portidone"
 
 	clientState := ibctmtypes.ClientState{
-		ID:           clientID,
 		FrozenHeight: 10,
 	}
 	connection := connectiontypes.ConnectionEnd{
-		ID:       clientID,
 		ClientID: "clientidone",
 		Versions: []string{"1.0"},
 	}
@@ -40,20 +39,20 @@ func TestDecodeStore(t *testing.T) {
 		Version: "1.0",
 	}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
 			Value: aminoCdc.MustMarshalBinaryBare(clientState),
 		},
-		tmkv.Pair{
-			Key:   host.KeyConnection(connection.ID),
+		kv.Pair{
+			Key:   host.KeyConnection(connectionID),
 			Value: cdc.MustMarshalBinaryBare(&connection),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   host.KeyChannel(portID, channelID),
 			Value: cdc.MustMarshalBinaryBare(&channel),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},

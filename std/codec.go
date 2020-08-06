@@ -6,7 +6,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 // ----------------------------------------------------------------------------

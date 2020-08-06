@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestPackUnpack(t *testing.T) {
@@ -124,7 +124,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	jm := &jsonpb.Marshaler{}
 	json, err := jm.MarshalToString(any)
 	require.NoError(t, err)
-	require.Equal(t, "{\"@type\":\"/cosmos_sdk.codec.v1.Dog\",\"name\":\"Spot\"}", json)
+	require.Equal(t, "{\"@type\":\"/testdata.Dog\",\"name\":\"Spot\"}", json)
 
 	registry := testdata.NewTestInterfaceRegistry()
 	jum := &jsonpb.Unmarshaler{}
@@ -143,7 +143,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	require.NoError(t, err)
 	json, err = jm.MarshalToString(ha)
 	require.NoError(t, err)
-	require.Equal(t, "{\"animal\":{\"@type\":\"/cosmos_sdk.codec.v1.Dog\",\"name\":\"Spot\"}}", json)
+	require.Equal(t, "{\"animal\":{\"@type\":\"/testdata.Dog\",\"name\":\"Spot\"}}", json)
 
 	require.NoError(t, err)
 	var ha2 testdata.HasAnimal

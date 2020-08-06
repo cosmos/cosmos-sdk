@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 
 			// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
-			intermediateConsState := ibctmtypes.ConsensusState{
+			intermediateConsState := &ibctmtypes.ConsensusState{
 				Height:             testClientHeight + 1,
 				Timestamp:          suite.now.Add(time.Minute),
 				NextValidatorsHash: suite.valSetHash,
@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			suite.Require().NoError(err)
 
 			// store previous consensus state
-			prevConsState := ibctmtypes.ConsensusState{
+			prevConsState := &ibctmtypes.ConsensusState{
 				Height:             1,
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSetHash,
@@ -109,7 +109,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 1, prevConsState)
 
 			// store intermediate consensus state to check that trustedHeight does not need to be hightest consensus state before header height
-			intermediateConsState := ibctmtypes.ConsensusState{
+			intermediateConsState := &ibctmtypes.ConsensusState{
 				Height:             2,
 				Timestamp:          suite.past.Add(time.Minute),
 				NextValidatorsHash: suite.valSetHash,
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			suite.Require().NoError(err)
 
 			// store previous consensus state
-			prevConsState := ibctmtypes.ConsensusState{
+			prevConsState := &ibctmtypes.ConsensusState{
 				Height:             1,
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSetHash,
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			if tc.expPass {
 				suite.Require().NoError(err, err)
 
-				expConsensusState := ibctmtypes.ConsensusState{
+				expConsensusState := &ibctmtypes.ConsensusState{
 					Height:             updateHeader.GetHeight(),
 					Timestamp:          updateHeader.Time,
 					Root:               commitmenttypes.NewMerkleRoot(updateHeader.AppHash),
@@ -303,7 +303,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 
 				// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
-				intermediateConsState := ibctmtypes.ConsensusState{
+				intermediateConsState := &ibctmtypes.ConsensusState{
 					Height:             testClientHeight + 3,
 					Timestamp:          suite.now.Add(time.Minute),
 					NextValidatorsHash: suite.valSetHash,

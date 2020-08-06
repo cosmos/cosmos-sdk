@@ -63,7 +63,7 @@ type router struct {
     rosettaAdapter RosettaAPIAdapter
 }
 
-func newRouter(adapter RosettaAPIAdapter) {
+func newRouter(adapter Adapter) {
     router := &Router{
         mux: mux.NewRouter(),
         rosettaAdapter: adapter,

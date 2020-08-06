@@ -60,9 +60,8 @@ message ConsensusState {
   // height at which the consensus state was stored.
   uint64 height = 3;
   bytes next_validators_hash = 4 [
-    (gogoproto.moretags) = "yaml:\"next_validators_hash\"",
-    (gogoproto.casttype) =
-        "github.com/tendermint/tendermint/libs/bytes.HexBytes"
+    (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes",
+    (gogoproto.moretags) = "yaml:\"next_validators_hash\""
   ];
 }
 

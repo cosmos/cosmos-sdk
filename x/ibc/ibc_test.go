@@ -61,7 +61,7 @@ func (suite *IBCTestSuite) SetupTest() {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, now, valSet, []tmtypes.PrivValidator{privVal})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.cdc = suite.app.Codec()
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})

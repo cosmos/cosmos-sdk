@@ -71,9 +71,15 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	switch clientType {
 	case exported.Tendermint:
-		trustedConsState, found := k.GetClientConsensusStateLTE(ctx, clientID, header.GetHeight())
+		tmHeader, ok := header.(ibctmtypes.Header)
+		if !ok {
+			err = sdkerrors.Wrapf(types.ErrInvalidHeader, "expected tendermint header: %T, got header type: %T", ibctmtypes.Header{}, header)
+			break
+		}
+		// Get the consensus state at the trusted height of header
+		trustedConsState, found := k.GetClientConsensusState(ctx, clientID, tmHeader.TrustedHeight)
 		if !found {
-			return nil, sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find consensus state less than header height: %d to verify header against", header.GetHeight())
+			return nil, sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find consensus state for trusted header height: %d to verify header against for clientID: %s", tmHeader.TrustedHeight, clientID)
 		}
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
 			clientState, trustedConsState, header, ctx.BlockTime(),
@@ -127,14 +133,15 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
 
-	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
-	if !found {
-		return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
-	}
-
 	var err error
 	switch e := misbehaviour.(type) {
 	case ibctmtypes.Evidence:
+		// Get ConsensusState at TrustedHeight
+		consensusState, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header1.TrustedHeight)
+		if !found {
+			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
+		}
+
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
 			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(), ctx.ConsensusParams(),
 		)

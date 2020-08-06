@@ -48,6 +48,7 @@ var (
 	encodingConfig = simapp.MakeEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
+			WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 			WithTxConfig(encodingConfig.TxConfig).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
@@ -87,7 +88,7 @@ func init() {
 		debug.Cmd(),
 	)
 
-	server.AddCommands(rootCmd, newApp, exportAppStateAndTMValidators)
+	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, exportAppStateAndTMValidators)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(

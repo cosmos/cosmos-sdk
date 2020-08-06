@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,6 +30,7 @@ type TendermintTestSuite struct {
 	signers    []tmtypes.PrivValidator
 	privVal    tmtypes.PrivValidator
 	valSet     *tmtypes.ValidatorSet
+	valsHash   tmbytes.HexBytes
 	header     ibctmtypes.Header
 	now        time.Time
 	clientTime time.Time
@@ -55,11 +57,12 @@ func (suite *TendermintTestSuite) SetupTest() {
 
 	val := tmtypes.NewValidator(pubKey, 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
+	suite.valsHash = suite.valSet.Hash()
 
 	// Suite header is intended to be header passed in for initial ClientState
 	// Thus it should have same height and time as ClientState
 	// Note: default header has the same validator set suite.valSet as next validators set
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.clientTime, suite.valSet, suite.signers)
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.clientTime, suite.valSet, suite.valSet, suite.signers)
 }
 
 func TestTendermintTestSuite(t *testing.T) {

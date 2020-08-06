@@ -29,7 +29,7 @@ func CheckMisbehaviourAndUpdateState(
 	// cast the interface to specific types before checking for misbehaviour
 	tmClientState, ok := clientState.(*types.ClientState)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState)
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", &types.ClientState{}, clientState)
 	}
 
 	// If client is already frozen at earlier height than evidence, return with error
@@ -38,9 +38,9 @@ func CheckMisbehaviourAndUpdateState(
 			"client is already frozen at earlier height %d than misbehaviour height %d", tmClientState.FrozenHeight, misbehaviour.GetHeight())
 	}
 
-	tmConsensusState, ok := consensusState.(types.ConsensusState)
+	tmConsensusState, ok := consensusState.(*types.ConsensusState)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", consensusState, types.ConsensusState{})
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", &types.ConsensusState{}, consensusState)
 	}
 
 	tmEvidence, ok := misbehaviour.(types.Evidence)
@@ -60,7 +60,7 @@ func CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func checkMisbehaviour(
-	clientState *types.ClientState, consensusState types.ConsensusState, evidence types.Evidence,
+	clientState *types.ClientState, consensusState *types.ConsensusState, evidence types.Evidence,
 	height uint64, currentTimestamp time.Time, consensusParams *abci.ConsensusParams,
 ) error {
 	// calculate the age of the misbehaviour evidence

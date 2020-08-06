@@ -40,10 +40,9 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	cdc            codec.Marshaler
-	aminoCdc       *codec.Codec
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
-	consensusState ibctmtypes.ConsensusState
+	consensusState *ibctmtypes.ConsensusState
 	header         ibctmtypes.Header
 	valSet         *tmtypes.ValidatorSet
 	valSetHash     tmbytes.HexBytes
@@ -60,7 +59,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.AppCodec()
-	suite.aminoCdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
@@ -72,7 +70,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
 	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight-1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-	suite.consensusState = ibctmtypes.ConsensusState{
+	suite.consensusState = &ibctmtypes.ConsensusState{
 		Height:             testClientHeight,
 		Timestamp:          suite.now,
 		Root:               commitmenttypes.NewMerkleRoot([]byte("hash")),
@@ -120,7 +118,7 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	retrievedConsState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, testClientHeight)
 	suite.Require().True(found, "GetConsensusState failed")
 
-	tmConsState, ok := retrievedConsState.(ibctmtypes.ConsensusState)
+	tmConsState, ok := retrievedConsState.(*ibctmtypes.ConsensusState)
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
@@ -209,7 +207,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
-	nextState := ibctmtypes.ConsensusState{
+	nextState := &ibctmtypes.ConsensusState{
 		Height:             testClientHeight + 5,
 		Timestamp:          suite.now,
 		Root:               commitmenttypes.NewMerkleRoot([]byte("next")),

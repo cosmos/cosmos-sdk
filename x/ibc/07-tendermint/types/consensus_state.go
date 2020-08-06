@@ -17,8 +17,8 @@ import (
 func NewConsensusState(
 	timestamp time.Time, root commitmenttypes.MerkleRoot, height uint64,
 	nextValsHash tmbytes.HexBytes,
-) ConsensusState {
-	return ConsensusState{
+) *ConsensusState {
+	return &ConsensusState{
 		Timestamp:          timestamp,
 		Root:               root,
 		Height:             height,

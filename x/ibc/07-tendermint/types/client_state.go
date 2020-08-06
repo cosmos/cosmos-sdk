@@ -125,7 +125,6 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 func (cs ClientState) VerifyClientConsensusState(
 	_ sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	aminoCdc *codec.Codec,
 	provingRoot commitmentexported.Root,
 	height uint64,
 	counterpartyClientIdentifier string,
@@ -145,7 +144,12 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	bz, err := aminoCdc.MarshalBinaryBare(consensusState)
+	consState, ok := consensusState.(*ConsensusState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
+	}
+
+	bz, err := cdc.MarshalBinaryBare(consState)
 	if err != nil {
 		return err
 	}
@@ -404,9 +408,9 @@ func sanitizeVerificationArgs(
 		return commitmenttypes.MerkleProof{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	_, ok = consensusState.(ConsensusState)
+	_, ok = consensusState.(*ConsensusState)
 	if !ok {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
+		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
 	}
 
 	return merkleProof, nil

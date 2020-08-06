@@ -71,12 +71,14 @@ func checkMisbehaviour(
 
 	// assert that trustedVals is NextValidators of last trusted header
 	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
-	tvalHash := evidence.Header1.TrustedValidators.Hash()
-	if !bytes.Equal(consensusState.NextValidatorsHash, tvalHash) {
+	trustedValsetHash1 := evidence.Header1.TrustedValidators.Hash()
+	trustedValsetHash2 := evidence.Header2.TrustedValidators.Hash()
+
+	if !(bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash1) || bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash2)) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidValidatorSet,
-			"header's trusted validators %s, does not hash to trusted validators of consensus state. Expected: %X, got: %X",
-			evidence.Header1.TrustedValidators, consensusState.NextValidatorsHash, tvalHash,
+			"header's trusted validators %s, does not hash to either consensus state's trusted validator set. Expected: %X, got: TrustedValSet Header1 %X, TrustedValSet Header2 %X",
+			evidence.Header1.TrustedValidators, consensusState.NextValidatorsHash, trustedValsetHash1, trustedValsetHash2,
 		)
 	}
 

@@ -50,9 +50,6 @@ func (cs ConsensusState) ValidateBasic() error {
 	if cs.Root.Empty() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "root cannot be empty")
 	}
-	if cs.ValidatorSet == nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "validator set cannot be nil")
-	}
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")
 	}

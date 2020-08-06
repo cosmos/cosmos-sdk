@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	"bytes"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -66,7 +67,20 @@ func checkMisbehaviour(
 	infractionHeight := evidence.GetHeight()
 	infractionTime := evidence.GetTime()
 	ageDuration := currentTimestamp.Sub(infractionTime)
-	ageBlocks := height - uint64(infractionHeight)
+	ageBlocks := uint64(infractionHeight) - height
+
+	// assert that trustedVals is NextValidators of last trusted header
+	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
+	trustedValsetHash1 := evidence.Header1.TrustedValidators.Hash()
+	trustedValsetHash2 := evidence.Header2.TrustedValidators.Hash()
+
+	if !bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash1) || !bytes.Equal(consensusState.NextValidatorsHash, trustedValsetHash2) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidValidatorSet,
+			"header's trusted validators %s, does not hash to either consensus state's trusted validator set. Expected: %X, got: TrustedValSet Header1 %X, TrustedValSet Header2 %X",
+			evidence.Header1.TrustedValidators, consensusState.NextValidatorsHash, trustedValsetHash1, trustedValsetHash2,
+		)
+	}
 
 	// Reject misbehaviour if the age is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
@@ -108,18 +122,18 @@ func checkMisbehaviour(
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
+	if err := evidence.Header1.TrustedValidators.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
 		evidence.Header1.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from trusted validator set: %v", err)
 	}
 
-	if err := consensusState.ValidatorSet.VerifyCommitLightTrusting(
+	if err := evidence.Header2.TrustedValidators.VerifyCommitLightTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
 		evidence.Header2.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from trusted validator set: %v", err)
 	}
 
 	return nil

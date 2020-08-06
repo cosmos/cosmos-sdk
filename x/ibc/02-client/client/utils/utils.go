@@ -124,31 +124,31 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 
 // QueryNodeConsensusState takes a client context and returns the appropriate
 // tendermint consensus state
-func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusState, int64, error) {
+func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusState, int64, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
 	commit, err := node.Commit(&height)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	nextHeight := height + 1
 	nextVals, err := node.Validators(&nextHeight, 0, 10000)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	state := ibctmtypes.ConsensusState{
+	state := &ibctmtypes.ConsensusState{
 		Timestamp:          commit.Time,
 		Root:               commitmenttypes.NewMerkleRoot(commit.AppHash),
 		NextValidatorsHash: tmtypes.NewValidatorSet(nextVals.Validators).Hash(),

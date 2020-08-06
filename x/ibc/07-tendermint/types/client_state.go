@@ -144,12 +144,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	consState, ok := consensusState.(*ConsensusState)
-	if !ok {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
-	}
-
-	bz, err := cdc.MarshalBinaryBare(consState)
+	bz, err := codec.MarshalAny(cdc, consensusState)
 	if err != nil {
 		return err
 	}

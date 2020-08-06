@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,6 +46,7 @@ type KeeperTestSuite struct {
 	consensusState ibctmtypes.ConsensusState
 	header         ibctmtypes.Header
 	valSet         *tmtypes.ValidatorSet
+	valSetHash     tmbytes.HexBytes
 	privVal        tmtypes.PrivValidator
 	now            time.Time
 	past           time.Time
@@ -68,12 +70,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	validator := tmtypes.NewValidator(pubKey, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.valSetHash = suite.valSetHash
 	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight-1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:             testClientHeight,
 		Timestamp:          suite.now,
 		Root:               commitmenttypes.NewMerkleRoot([]byte("hash")),
-		NextValidatorsHash: suite.valSet.Hash(),
+		NextValidatorsHash: suite.valSetHash,
 	}
 
 	var validators stakingtypes.Validators
@@ -210,7 +213,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 		Height:             testClientHeight + 5,
 		Timestamp:          suite.now,
 		Root:               commitmenttypes.NewMerkleRoot([]byte("next")),
-		NextValidatorsHash: suite.valSet.Hash(),
+		NextValidatorsHash: suite.valSetHash,
 	}
 
 	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, testClientHeight, suite.header.Time.Add(time.Minute),

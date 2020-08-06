@@ -20,7 +20,7 @@ func TestDecodeStore(t *testing.T) {
 	cdc := app.AppCodec()
 	aminoCdc := app.Codec()
 
-	dec := simulation.NewDecodeStore(app.IBCKeeper.Codecs())
+	dec := simulation.NewDecodeStore(*app.IBCKeeper)
 
 	clientID := "clientidone"
 	connectionID := "connectionidone"

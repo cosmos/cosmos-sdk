@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020/06/23: Initial version
+- 2020/08/06: Revisions per review & to reference epoch
 
 ## Status
 
@@ -48,6 +49,8 @@ We elect not to deal with chains which have actually halted, which is necessaril
 
 Note additionally that the header submitted by governance must be new enough that it will be possible to update the light client after the new header is inserted into the client state (which will only happen after the governance proposal has passed).
 
+This ADR does not address planned upgrades, which are handled separately as per the [specification](https://github.com/cosmos/ics/tree/master/spec/ics-007-tendermint-client#upgrades).
+
 ## Consequences
 
 ### Positive
@@ -68,3 +71,5 @@ No neutral consequences.
 ## References
 
 - [Prior discussion](https://github.com/cosmos/ics/issues/421)
+- [Epoch number discussion](https://github.com/cosmos/ics/issues/439)
+- [Upgrade plan discussion](https://github.com/cosmos/ics/issues/445)

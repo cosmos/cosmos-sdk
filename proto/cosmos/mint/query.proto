@@ -21,7 +21,7 @@ service Query {
 
   // AnnualProvisions current minting annual provisions value.
   rpc AnnualProvisions (QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {
-    option (google.api.http).get = "/cosmos/mint/v1beta/annual-provisions";
+    option (google.api.http).get = "/cosmos/mint/v1beta/annual_provisions";
   }
 }
 

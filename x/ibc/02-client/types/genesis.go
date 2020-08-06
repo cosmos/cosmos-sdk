@@ -12,6 +12,7 @@ import (
 )
 
 var _ codectypes.UnpackInterfacesMessage = GenesisClientState{}
+var _ codectypes.UnpackInterfacesMessage = ClientConsensusStates{}
 
 // NewGenesisClientState creates a new GenesisClientState instance.
 func NewGenesisClientState(clientID string, clientState exported.ClientState) GenesisClientState {
@@ -73,6 +74,18 @@ func NewClientConsensusStates(clientID string, consensusStates []exported.Consen
 		ClientID:        clientID,
 		ConsensusStates: anyConsensusStates,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (gs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, any := range gs.ConsensusStates {
+		var clientState exported.ClientState
+		err := unpacker.UnpackAny(any, &clientState)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // NewGenesisState creates a GenesisState instance.

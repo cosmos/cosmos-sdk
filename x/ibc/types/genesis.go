@@ -6,13 +6,6 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// GenesisState defines the ibc module's genesis state.
-type GenesisState struct {
-	ClientGenesis     clienttypes.GenesisState     `json:"client_genesis" yaml:"client_genesis"`
-	ConnectionGenesis connectiontypes.GenesisState `json:"connection_genesis" yaml:"connection_genesis"`
-	ChannelGenesis    channeltypes.GenesisState    `json:"channel_genesis" yaml:"channel_genesis"`
-}
-
 // DefaultGenesisState returns the ibc module's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{

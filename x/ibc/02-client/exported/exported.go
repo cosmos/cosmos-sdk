@@ -30,7 +30,6 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		aminoCdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
 		counterpartyClientIdentifier string,

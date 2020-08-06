@@ -127,22 +127,22 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 
 // QueryNodeConsensusState takes a client context and returns the appropriate
 // tendermint consensus state
-func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusState, int64, error) {
+func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusState, int64, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
 	commit, err := node.Commit(&height)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	page := 0
@@ -150,13 +150,13 @@ func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusStat
 
 	validators, err := node.Validators(&height, &page, &count)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	state := ibctmtypes.ConsensusState{
-		Timestamp:    commit.Time,
-		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+	state := &ibctmtypes.ConsensusState{
+		Timestamp:          commit.Time,
+		Root:               commitmenttypes.NewMerkleRoot(commit.AppHash),
+		NextValidatorsHash: tmtypes.NewValidatorSet(nextVals.Validators).Hash(),
 	}
 
 	return state, height, nil

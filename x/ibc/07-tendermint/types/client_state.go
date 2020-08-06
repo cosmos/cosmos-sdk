@@ -21,10 +21,10 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg *MsgCreateClient) ClientState {
+func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
 	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
 		uint64(msg.Header.Height), msg.ProofSpecs,
@@ -36,8 +36,8 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight uint64, specs []*ics23.ProofSpec,
-) ClientState {
-	return ClientState{
+) *ClientState {
+	return &ClientState{
 		ChainID:         chainID,
 		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
@@ -125,7 +125,6 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 func (cs ClientState) VerifyClientConsensusState(
 	_ sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	aminoCdc *codec.Codec,
 	provingRoot commitmentexported.Root,
 	height uint64,
 	counterpartyClientIdentifier string,
@@ -145,7 +144,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	bz, err := aminoCdc.MarshalBinaryBare(consensusState)
+	bz, err := codec.MarshalAny(cdc, consensusState)
 	if err != nil {
 		return err
 	}
@@ -404,9 +403,9 @@ func sanitizeVerificationArgs(
 		return commitmenttypes.MerkleProof{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	_, ok = consensusState.(ConsensusState)
+	_, ok = consensusState.(*ConsensusState)
 	if !ok {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
+		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
 	}
 
 	return merkleProof, nil

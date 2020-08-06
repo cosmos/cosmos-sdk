@@ -93,7 +93,7 @@ func TestPackAccountsAny(t *testing.T) {
 		{
 			"expected genesis account",
 			func() {
-				accounts = []*codectypes.Any{}
+				accounts = []*codectypes.Any{{}}
 			},
 			false,
 		},

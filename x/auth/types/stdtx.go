@@ -283,15 +283,16 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
 	AccountNumber uint64            `json:"account_number" yaml:"account_number"`
-	ChainID       string            `json:"chain_id" yaml:"chain_id"`
-	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
-	Memo          string            `json:"memo" yaml:"memo"`
-	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
 	Sequence      uint64            `json:"sequence" yaml:"sequence"`
+	TimeoutHeight uint64            `json:"timeout_height" yaml:"timeout_height"`
+	ChainID       string            `json:"chain_id" yaml:"chain_id"`
+	Memo          string            `json:"memo" yaml:"memo"`
+	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
+	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
@@ -304,8 +305,8 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		Memo:          memo,
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
+		TimeoutHeight: timeout,
 	})
-
 	if err != nil {
 		panic(err)
 	}

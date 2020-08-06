@@ -17,6 +17,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		TxEncoder     sdk.TxEncoder
 		AccountNumber uint64
 		Sequence      uint64
+		TimeoutHeight uint64
 		Gas           uint64
 		GasAdjustment float64
 		SimulateGas   bool
@@ -136,7 +137,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			bldr := NewTxBuilder(
-				tt.fields.TxEncoder, tt.fields.AccountNumber, tt.fields.Sequence,
+				tt.fields.TxEncoder, tt.fields.AccountNumber, tt.fields.Sequence, tt.fields.TimeoutHeight,
 				tt.fields.Gas, tt.fields.GasAdjustment, tt.fields.SimulateGas,
 				tt.fields.ChainID, tt.fields.Memo, tt.fields.Fees, tt.fields.GasPrices,
 			)

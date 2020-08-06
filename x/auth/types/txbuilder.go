@@ -23,6 +23,7 @@ type TxBuilder struct {
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
+	timeoutHeight      uint64
 	gasAdjustment      float64
 	simulateAndExecute bool
 	chainID            string
@@ -33,7 +34,7 @@ type TxBuilder struct {
 
 // NewTxBuilder returns a new initialized TxBuilder.
 func NewTxBuilder(
-	txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64,
+	txEncoder sdk.TxEncoder, accNumber, seq, gas, timeout uint64, gasAdj float64,
 	simulateAndExecute bool, chainID, memo string, fees sdk.Coins, gasPrices sdk.DecCoins,
 ) TxBuilder {
 
@@ -42,6 +43,7 @@ func NewTxBuilder(
 		keybase:            nil,
 		accountNumber:      accNumber,
 		sequence:           seq,
+		timeoutHeight:      timeout,
 		gas:                gas,
 		gasAdjustment:      gasAdj,
 		simulateAndExecute: simulateAndExecute,
@@ -59,6 +61,7 @@ func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath strin
 	kb, _ := keyring.New(sdk.KeyringServiceName(), backend, keyringPath, input)
 	accNum, _ := fs.GetUint64(flags.FlagAccountNumber)
 	seq, _ := fs.GetUint64(flags.FlagSequence)
+	timeout, _ := fs.GetUint64(flags.FlagTimeoutHeight)
 	gasAdjustment, _ := fs.GetFloat64(flags.FlagGasAdjustment)
 	chainID, _ := fs.GetString(flags.FlagChainID)
 	memo, _ := fs.GetString(flags.FlagMemo)
@@ -75,6 +78,7 @@ func NewTxBuilderFromFlags(input io.Reader, fs *pflag.FlagSet, keyringPath strin
 		keybase:            kb,
 		accountNumber:      accNum,
 		sequence:           seq,
+		timeoutHeight:      timeout,
 		gas:                gasSetting.Gas,
 		simulateAndExecute: gasSetting.Simulate,
 		gasAdjustment:      gasAdjustment,
@@ -215,6 +219,7 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 		ChainID:       bldr.chainID,
 		AccountNumber: bldr.accountNumber,
 		Sequence:      bldr.sequence,
+		TimeoutHeight: bldr.timeoutHeight,
 		Memo:          bldr.memo,
 		Msgs:          msgs,
 		Fee:           NewStdFee(bldr.gas, fees),
@@ -267,6 +272,7 @@ func (bldr TxBuilder) SignStdTx(name string, stdTx StdTx, appendSig bool) (signe
 		ChainID:       bldr.chainID,
 		AccountNumber: bldr.accountNumber,
 		Sequence:      bldr.sequence,
+		TimeoutHeight: bldr.timeoutHeight,
 		Fee:           stdTx.Fee,
 		Msgs:          stdTx.GetMsgs(),
 		Memo:          stdTx.GetMemo(),

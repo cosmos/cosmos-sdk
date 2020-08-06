@@ -4,13 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -19,8 +12,12 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 var (
@@ -36,10 +33,10 @@ func NewTestStdFee() StdFee {
 }
 
 // Deprecated, use TxBuilder.
-func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee) sdk.Tx {
+func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, timeout uint64, fee StdFee) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], timeout, fee, msgs, "")
 
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
@@ -68,12 +65,13 @@ func TestStdTx(t *testing.T) {
 
 func TestStdSignBytes(t *testing.T) {
 	type args struct {
-		chainID  string
-		accnum   uint64
-		sequence uint64
-		fee      StdFee
-		msgs     []sdk.Msg
-		memo     string
+		chainID       string
+		accnum        uint64
+		sequence      uint64
+		timeoutHeight uint64
+		fee           StdFee
+		msgs          []sdk.Msg
+		memo          string
 	}
 	defaultFee := NewTestStdFee()
 	tests := []struct {
@@ -81,12 +79,12 @@ func TestStdSignBytes(t *testing.T) {
 		want string
 	}{
 		{
-			args{"1234", 3, 6, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
+			args{"1234", 3, 6, 10, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"100000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
 		},
 	}
 	for i, tc := range tests {
-		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.fee, tc.args.msgs, tc.args.memo))
+		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.timeoutHeight, tc.args.fee, tc.args.msgs, tc.args.memo))
 		require.Equal(t, tc.want, got, "Got unexpected result on test case i: %d", i)
 	}
 }
@@ -107,7 +105,7 @@ func TestTxValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFee := NewTestStdFee()
 	badFee.Amount[0].Amount = sdk.NewInt(-5)
-	tx := NewTestTx(ctx, nil, nil, nil, nil, badFee)
+	tx := NewTestTx(ctx, nil, nil, nil, nil, 0, badFee)
 
 	err := tx.ValidateBasic()
 	require.Error(t, err)
@@ -116,7 +114,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when no signatures exist
 	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
-	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, 0, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -125,7 +123,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when signatures do not match expected signers
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
-	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, 0, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -135,7 +133,7 @@ func TestTxValidateBasic(t *testing.T) {
 	// require to fail with invalid gas supplied
 	badFee = NewTestStdFee()
 	badFee.Gas = 9223372036854775808
-	tx = NewTestTx(ctx, nil, nil, nil, nil, badFee)
+	tx = NewTestTx(ctx, nil, nil, nil, nil, 0, badFee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -144,7 +142,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
-	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, 0, fee)
 
 	err = tx.ValidateBasic()
 	require.NoError(t, err)

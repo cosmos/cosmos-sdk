@@ -32,6 +32,7 @@ message GenesisState {
   ];
   repeated ClientConsensusStates clients_consensus = 2 [
     (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "ClientsConsensusStates",
     (gogoproto.moretags) = "yaml:\"clients_consensus\""
   ];
   bool create_localhost = 3 [

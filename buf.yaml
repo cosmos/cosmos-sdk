@@ -18,6 +18,7 @@ lint:
     - tendermint
     - gogoproto
     - cosmos_proto
+    - confio
 breaking:
   use:
     - FILE

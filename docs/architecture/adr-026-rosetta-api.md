@@ -60,7 +60,7 @@ An internal `router` type exposes the Rosetta API endpoints:
 ```
 type router struct {
     muxRouter mux.router
-    rosettaAdapter RosettaAPIAdapter
+    rosettaAdapter Adapter
 }
 
 func newRouter(adapter Adapter) {

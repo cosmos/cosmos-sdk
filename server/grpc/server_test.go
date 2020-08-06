@@ -68,7 +68,7 @@ func (s *IntegrationTestSuite) TestGRPC() {
 		*bankRes.GetBalance(),
 	)
 	blockHeight := header.Get(servergrpc.GRPCBlockHeightHeader)
-	s.Require().Equal([]string{"2"}, blockHeight)
+	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
 	bankRes, err = bankClient.Balance(

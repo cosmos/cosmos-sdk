@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/base64"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -51,7 +50,7 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenInit) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -98,9 +97,6 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
-	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
@@ -113,7 +109,7 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenTry) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -156,9 +152,6 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
-	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
 	}
@@ -171,7 +164,7 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenAck) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -225,7 +218,7 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -270,7 +263,7 @@ func (msg MsgChannelCloseInit) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelCloseInit) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -324,7 +317,7 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -369,7 +362,7 @@ func (msg MsgRecvPacket) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgRecvPacket) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetDataSignBytes returns the base64-encoded bytes used for the
@@ -427,7 +420,7 @@ func (msg MsgTimeout) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgTimeout) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -464,9 +457,6 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if len(msg.Acknowledgement) > 100 {
-		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
-	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
@@ -479,7 +469,7 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgAcknowledgement) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

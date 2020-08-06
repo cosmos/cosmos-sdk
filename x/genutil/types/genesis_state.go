@@ -13,11 +13,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// GenesisState defines the raw genesis transaction in JSON
-type GenesisState struct {
-	GenTxs []json.RawMessage `json:"gentxs" yaml:"gentxs"`
-}
-
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(genTxs []json.RawMessage) GenesisState {
 	// Ensure genTxs is never nil, https://github.com/cosmos/cosmos-sdk/issues/5086

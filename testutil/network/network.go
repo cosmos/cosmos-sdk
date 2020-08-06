@@ -13,8 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
-
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -29,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -63,6 +62,7 @@ func NewSimApp(val Validator) servertypes.Application {
 // in-process local testing network.
 type Config struct {
 	Codec            codec.Marshaler
+	LegacyAmino      *codec.Codec
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
@@ -89,6 +89,7 @@ func DefaultConfig() Config {
 	return Config{
 		Codec:            encCfg.Marshaler,
 		TxConfig:         encCfg.TxConfig,
+		LegacyAmino:      encCfg.Amino,
 		AccountRetriever: authtypes.NewAccountRetriever(encCfg.Marshaler),
 		AppConstructor:   NewSimApp,
 		GenesisState:     simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
@@ -192,10 +193,11 @@ func New(t *testing.T, cfg Config) *Network {
 		tmCfg := ctx.Config
 		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
-		// Only allow the first validator to expose an RPC and API server/client
-		// due to Tendermint in-process constraints.
+		// Only allow the first validator to expose an RPC, API and gRPC
+		// server/client due to Tendermint in-process constraints.
 		apiAddr := ""
 		tmCfg.RPC.ListenAddress = ""
+		appCfg.GRPC.Enable = false
 		if i == 0 {
 			apiListenAddr, _, err := server.FreeTCPAddr()
 			require.NoError(t, err)
@@ -313,6 +315,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithJSONMarshaler(cfg.Codec).
+			WithCodec(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)
 
@@ -436,6 +439,10 @@ func (n *Network) Cleanup() {
 
 		if v.api != nil {
 			_ = v.api.Close()
+		}
+
+		if v.grpc != nil {
+			v.grpc.Stop()
 		}
 	}
 

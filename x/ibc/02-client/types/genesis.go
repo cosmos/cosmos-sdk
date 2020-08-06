@@ -93,8 +93,8 @@ func NewClientConsensusStates(clientID string, consensusStates []exported.Consen
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range ccs.ConsensusStates {
-		var clientState exported.ClientState
-		err := unpacker.UnpackAny(any, &clientState)
+		var consensusState exported.ConsensusState
+		err := unpacker.UnpackAny(any, &consensusState)
 		if err != nil {
 			return err
 		}

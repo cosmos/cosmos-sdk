@@ -312,17 +312,6 @@ func request_Query_Delegation_0(ctx context.Context, marshaler runtime.Marshaler
 		_   = err
 	)
 
-	val, ok = pathParams["delegator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
-	}
-
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
-	}
-
 	val, ok = pathParams["validator_addr"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
@@ -332,6 +321,17 @@ func request_Query_Delegation_0(ctx context.Context, marshaler runtime.Marshaler
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
+	}
+
+	val, ok = pathParams["delegator_addr"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
+	}
+
+	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
 	}
 
 	msg, err := client.Delegation(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -350,17 +350,6 @@ func local_request_Query_Delegation_0(ctx context.Context, marshaler runtime.Mar
 		_   = err
 	)
 
-	val, ok = pathParams["delegator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
-	}
-
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
-	}
-
 	val, ok = pathParams["validator_addr"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
@@ -370,6 +359,17 @@ func local_request_Query_Delegation_0(ctx context.Context, marshaler runtime.Mar
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
+	}
+
+	val, ok = pathParams["delegator_addr"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
+	}
+
+	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
 	}
 
 	msg, err := server.Delegation(ctx, &protoReq)
@@ -388,17 +388,6 @@ func request_Query_UnbondingDelegation_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["delegator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
-	}
-
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
-	}
-
 	val, ok = pathParams["validator_addr"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
@@ -408,6 +397,17 @@ func request_Query_UnbondingDelegation_0(ctx context.Context, marshaler runtime.
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
+	}
+
+	val, ok = pathParams["delegator_addr"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
+	}
+
+	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
 	}
 
 	msg, err := client.UnbondingDelegation(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -426,17 +426,6 @@ func local_request_Query_UnbondingDelegation_0(ctx context.Context, marshaler ru
 		_   = err
 	)
 
-	val, ok = pathParams["delegator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
-	}
-
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
-	}
-
 	val, ok = pathParams["validator_addr"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
@@ -446,6 +435,17 @@ func local_request_Query_UnbondingDelegation_0(ctx context.Context, marshaler ru
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
+	}
+
+	val, ok = pathParams["delegator_addr"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
+	}
+
+	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
 	}
 
 	msg, err := server.UnbondingDelegation(ctx, &protoReq)
@@ -598,7 +598,7 @@ func local_request_Query_DelegatorUnbondingDelegations_0(ctx context.Context, ma
 }
 
 var (
-	filter_Query_Redelegations_0 = &utilities.DoubleArray{Encoding: map[string]int{"delegator_addr": 0, "src_validator_addr": 1, "dst_validator_addr": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
+	filter_Query_Redelegations_0 = &utilities.DoubleArray{Encoding: map[string]int{"delegator_addr": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_Query_Redelegations_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -621,28 +621,6 @@ func request_Query_Redelegations_0(ctx context.Context, marshaler runtime.Marsha
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
-	}
-
-	val, ok = pathParams["src_validator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "src_validator_addr")
-	}
-
-	protoReq.SrcValidatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "src_validator_addr", err)
-	}
-
-	val, ok = pathParams["dst_validator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "dst_validator_addr")
-	}
-
-	protoReq.DstValidatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "dst_validator_addr", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -677,28 +655,6 @@ func local_request_Query_Redelegations_0(ctx context.Context, marshaler runtime.
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
-	}
-
-	val, ok = pathParams["src_validator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "src_validator_addr")
-	}
-
-	protoReq.SrcValidatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "src_validator_addr", err)
-	}
-
-	val, ok = pathParams["dst_validator_addr"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "dst_validator_addr")
-	}
-
-	protoReq.DstValidatorAddr, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "dst_validator_addr", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -1565,25 +1521,25 @@ var (
 
 	pattern_Query_Validator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "validator", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ValidatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "delegations", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ValidatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "staking", "v1beta", "validators", "validator_addr", "delegations"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ValidatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "unbonding-delegations", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ValidatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "staking", "v1beta", "validators", "validator_addr", "unbonding-delegations"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Delegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1beta", "delegation", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Delegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "staking", "v1beta", "validators", "validator_addr", "delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_UnbondingDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1beta", "unbonding-delegation", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnbondingDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"cosmos", "staking", "v1beta", "validators", "validator_addr", "delegations", "delegator_addr", "unbonding_delegation"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "delegator-delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "unbonding-delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorUnbondingDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "staking", "v1beta", "delegators", "delegator_addr", "unbonding_delegations"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Redelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "staking", "v1beta", "redelegations", "delegator_addr", "src_validator_addr", "dst_validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Redelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "staking", "v1beta", "delegators", "delegator_addr", "redelegations"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "delegator-validators", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "staking", "v1beta", "delegators", "delegator_addr", "validators"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegatorValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "staking", "v1beta", "delegator-validator", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "staking", "v1beta", "delegators", "delegator_addr", "validators", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_HistoricalInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "historical-info", "height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_HistoricalInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "staking", "v1beta", "historical_info", "height"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Pool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "staking", "v1beta", "pool"}, "", runtime.AssumeColonVerbOpt(true)))
 

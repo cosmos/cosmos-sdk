@@ -47,7 +47,7 @@ service Query {
 
   // TallyResult queries the tally of a proposal vote
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta/tally/{proposal_id}";
+    option (google.api.http).get = "/cosmos/gov/v1beta/proposals/{proposal_id}/tally";
   }
 }
 

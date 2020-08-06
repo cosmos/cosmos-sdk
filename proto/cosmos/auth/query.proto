@@ -13,7 +13,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 service Query{
     // Account returns account details based on address
     rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {
-      option (google.api.http).get = "/cosmos/auth/v1beta/account/{address}";
+      option (google.api.http).get = "/cosmos/auth/v1beta/accounts/{address}";
     }
 
     // Params queries all parameters

@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 service Query {
   // Balance queries the balance of a single coin for a single account
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta/balance/{address}/{denom}";
+    option (google.api.http).get = "/cosmos/bank/v1beta/balances/{address}/{denom}";
   }
 
   // AllBalances queries the balance of all coins for a single account
@@ -22,7 +22,7 @@ service Query {
 
   // TotalSupply queries the total supply of all coins
   rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta/total-supply";
+    option (google.api.http).get = "/cosmos/bank/v1beta/supply";
   }
 
   // SupplyOf queries the supply of a single coin

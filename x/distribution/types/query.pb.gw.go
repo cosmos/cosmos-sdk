@@ -941,13 +941,13 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "distribution", "v1beta", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ValidatorOutstandingRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "distribution", "v1beta", "outstanding-rewards", "validator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ValidatorOutstandingRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta", "validators", "validator_address", "outstanding_rewards"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ValidatorCommission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "distribution", "v1beta", "validator-commission", "validator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ValidatorCommission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta", "validators", "validator_address", "commission"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_ValidatorSlashes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "distribution", "v1beta", "validator-slashes", "validator_address", "starting_height", "ending_height"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DelegationRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"cosmos", "distribution", "v1beta", "delegators", "delegator_address", "validators", "validator_address", "rewards"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegationRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "distribution", "v1beta", "delegators", "delegator_address", "rewards", "validator_address"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_DelegationTotalRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta", "delegators", "delegator_address", "rewards"}, "", runtime.AssumeColonVerbOpt(true)))
 

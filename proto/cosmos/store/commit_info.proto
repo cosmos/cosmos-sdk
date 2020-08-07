@@ -1,0 +1,23 @@
+syntax = "proto3";
+package cosmos.store;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/store/types";
+
+message CommitInfo {
+  int64              version     = 1;
+  repeated StoreInfo store_infos = 2 [(gogoproto.nullable) = false];
+}
+
+message StoreInfo {
+  string   name      = 1;
+  CommitID commit_id = 2 [(gogoproto.nullable) = false, (gogoproto.customname) = "CommitID"];
+}
+
+message CommitID {
+  option (gogoproto.goproto_stringer) = false;
+
+  int64 version = 1;
+  bytes hash    = 2;
+}

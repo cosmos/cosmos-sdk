@@ -6,7 +6,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -29,7 +28,7 @@ func newMerkleMap() *merkleMap {
 // of kv.Pairs. Whenever called, the MerkleMap must be resorted.
 func (sm *merkleMap) set(key string, value []byte) {
 	byteKey := []byte(key)
-	types.AssertValidKey(byteKey)
+	assertValidKey(byteKey)
 
 	sm.sorted = false
 
@@ -90,7 +89,7 @@ func newSimpleMap() *simpleMap {
 // and then appends it to SimpleMap's kv pairs.
 func (sm *simpleMap) Set(key string, value []byte) {
 	byteKey := []byte(key)
-	types.AssertValidKey(byteKey)
+	assertValidKey(byteKey)
 	sm.sorted = false
 
 	// The value is hashed, so you can
@@ -206,4 +205,10 @@ func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.Simple
 	}
 
 	return rootHash, proofs, keys
+}
+
+func assertValidKey(key []byte) {
+	if len(key) == 0 {
+		panic("key is nil")
+	}
 }

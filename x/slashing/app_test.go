@@ -2,7 +2,6 @@ package slashing_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -81,7 +80,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
+	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1)}
 
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(valAddr), true)
 
@@ -90,6 +89,5 @@ func TestSlashingMsgs(t *testing.T) {
 	_, res, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)
-	fmt.Println(err)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
 }

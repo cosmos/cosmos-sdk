@@ -214,7 +214,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
 	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -284,7 +284,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
 	// Ensure foo has right amount of funds
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -307,7 +307,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), account.GetAddress())
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, account.GetAddress())
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -315,7 +315,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -451,7 +451,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -475,7 +475,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -567,7 +567,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse

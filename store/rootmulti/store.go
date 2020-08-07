@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -30,8 +29,6 @@ const (
 	pruneHeightsKey  = "s/pruneheights"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
-
-var cdc = codec.New()
 
 // Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is for cache-wrapping other MultiStores. It implements
@@ -290,9 +287,6 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
-//----------------------------------------
-// +CommitStore
-
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitInfo.CommitID()
@@ -364,9 +358,6 @@ func (rs *Store) CacheWrap() types.CacheWrap {
 func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	return rs.CacheWrap()
 }
-
-//----------------------------------------
-// +MultiStore
 
 // CacheMultiStore cache-wraps the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
@@ -452,8 +443,6 @@ func (rs *Store) getStoreByName(name string) types.Store {
 
 	return rs.GetCommitKVStore(key)
 }
-
-//---------------------- Query ------------------
 
 // Query calls substore.Query with the same `req` where `req.Path` is
 // modified to remove the substore prefix.
@@ -578,17 +567,11 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	}
 }
 
-//----------------------------------------
-// storeParams
-
 type storeParams struct {
 	key types.StoreKey
 	db  dbm.DB
 	typ types.StoreType
 }
-
-//----------------------------------------
-// commitInfo
 
 // NOTE: Keep commitInfo a simple immutable struct.
 type commitInfo struct {
@@ -646,9 +629,6 @@ func (ci commitInfo) CommitID() types.CommitID {
 	}
 }
 
-//----------------------------------------
-// storeInfo
-
 // storeInfo contains the name and core reference for an
 // underlying store.  It is the leaf of the Stores top
 // level simple merkle tree.
@@ -673,9 +653,6 @@ type storeCore struct {
 func (si storeInfo) GetHash() []byte {
 	return si.Core.CommitID.Hash
 }
-
-//----------------------------------------
-// Misc.
 
 func getLatestVersion(db dbm.DB) int64 {
 	var latest int64

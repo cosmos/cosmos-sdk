@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -41,7 +44,17 @@ func GetCmdQueryClientStates() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(clientStates)
+
+			toPrint := make([]proto.Message, len(clientStates))
+			for i, st := range clientStates {
+				any, err := types2.NewAnyWithValue(st)
+				if err != nil {
+					return err
+				}
+				toPrint[i] = any
+			}
+
+			return clientCtx.PrintOutputArray(toPrint)
 		},
 	}
 
@@ -81,7 +94,7 @@ func GetCmdQueryClientState() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(int64(clientStateRes.ProofHeight))
-			return clientCtx.PrintOutput(clientStateRes)
+			return clientCtx.PrintOutputLegacy(clientStateRes)
 		},
 	}
 
@@ -125,7 +138,7 @@ func GetCmdQueryConsensusState() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(int64(csRes.ProofHeight))
-			return clientCtx.PrintOutput(csRes)
+			return clientCtx.PrintOutputLegacy(csRes)
 		},
 	}
 
@@ -155,7 +168,7 @@ func GetCmdQueryHeader() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(header)
+			return clientCtx.PrintOutputLegacy(header)
 		},
 	}
 

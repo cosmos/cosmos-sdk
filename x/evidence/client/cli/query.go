@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -86,13 +87,7 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 		return err
 	}
 
-	var evidence exported.Evidence
-	err = clientCtx.InterfaceRegistry.UnpackAny(res.Evidence, &evidence)
-	if err != nil {
-		return err
-	}
-
-	return clientCtx.PrintOutput(evidence)
+	return clientCtx.PrintOutput(res.Evidence)
 }
 
 func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) error {
@@ -108,16 +103,10 @@ func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) erro
 		return err
 	}
 
-	evidence := make([]exported.Evidence, 0, len(res.Evidence))
+	outputArray := make([]proto.Message, 0, len(res.Evidence))
 	for _, eviAny := range res.Evidence {
-		var evi exported.Evidence
-		err = clientCtx.InterfaceRegistry.UnpackAny(eviAny, &evi)
-		if err != nil {
-			return err
-		}
-
-		evidence = append(evidence, evi)
+		outputArray = append(outputArray, eviAny)
 	}
 
-	return clientCtx.PrintOutput(evidence)
+	return clientCtx.PrintOutputArray(outputArray)
 }

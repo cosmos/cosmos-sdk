@@ -52,7 +52,7 @@ func GetCmdQueryParams() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetParams())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -84,7 +84,7 @@ func GetCmdQueryInflation() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Inflation)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -116,7 +116,7 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.AnnualProvisions)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 

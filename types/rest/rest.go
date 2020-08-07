@@ -45,7 +45,7 @@ func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHei
 
 // ParseResponseWithHeight returns the raw result from a JSON-encoded
 // ResponseWithHeight object.
-func ParseResponseWithHeight(cdc codec.JSONMarshaler, bz []byte) ([]byte, error) {
+func ParseResponseWithHeight(cdc *codec.Codec, bz []byte) ([]byte, error) {
 	r := ResponseWithHeight{}
 	if err := cdc.UnmarshalJSON(bz, &r); err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body int
 		resp = b
 
 	default:
-		resp, err = ctx.JSONMarshaler.MarshalJSON(body)
+		resp, err = ctx.Codec.MarshalJSON(body)
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -302,15 +302,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 		return
 	}
 
-	// TODO: Remove once PubKey Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/6886
-	var marshaler codec.JSONMarshaler
-
-	if ctx.JSONMarshaler != nil {
-		marshaler = ctx.JSONMarshaler
-	} else {
-		marshaler = ctx.Codec
-	}
+	marshaler := ctx.Codec
 
 	switch res := resp.(type) {
 	case []byte:

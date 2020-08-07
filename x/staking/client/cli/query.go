@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -80,7 +82,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Validator)
+			return clientCtx.PrintOutput(&res.Validator)
 		},
 	}
 
@@ -116,17 +118,17 @@ $ %s query staking validators
 				return err
 			}
 
-			var validators types.Validators
+			var validators []proto.Message
 			for _, kv := range resKVs {
 				validator, err := types.UnmarshalValidator(types.ModuleCdc, kv.Value)
 				if err != nil {
 					return err
 				}
 
-				validators = append(validators, validator)
+				validators = append(validators, &validator)
 			}
 
-			return clientCtx.PrintOutput(validators)
+			return clientCtx.PrintOutputArray(validators)
 		},
 	}
 
@@ -452,7 +454,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Unbond)
+			return clientCtx.PrintOutput(&res.Unbond)
 		},
 	}
 
@@ -567,7 +569,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.RedelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -705,7 +707,7 @@ $ %s query staking pool
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Pool)
+			return clientCtx.PrintOutput(&res.Pool)
 		},
 	}
 
@@ -743,7 +745,7 @@ $ %s query staking params
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 

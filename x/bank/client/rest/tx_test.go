@@ -93,7 +93,7 @@ func getAccountInfo(val *network.Validator) (authtypes.AccountI, error) {
 		return nil, err
 	}
 
-	bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+	bz, err := rest.ParseResponseWithHeight(val.ClientCtx.Codec, resp)
 	if err != nil {
 		return nil, err
 	}

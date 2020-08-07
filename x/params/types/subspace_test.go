@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -14,19 +16,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 type SubspaceTestSuite struct {
 	suite.Suite
 
-	cdc codec.Marshaler
-	ctx sdk.Context
-	ss  types.Subspace
+	cdc   codec.Marshaler
+	amino *codec.Codec
+	ctx   sdk.Context
+	ss    types.Subspace
 }
 
 func (suite *SubspaceTestSuite) SetupTest() {
-	cdc := proposal.ModuleCdc
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
@@ -34,9 +35,11 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	ss := types.NewSubspace(cdc, key, tkey, "testsubspace")
+	encCfg := simapp.MakeEncodingConfig()
+	ss := types.NewSubspace(encCfg.Marshaler, encCfg.Amino, key, tkey, "testsubspace")
 
-	suite.cdc = cdc
+	suite.cdc = encCfg.Marshaler
+	suite.amino = encCfg.Amino
 	suite.ctx = sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
@@ -47,7 +50,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
 	suite.Require().NotPanics(func() {
-		ss := types.NewSubspace(proposal.ModuleCdc, key, tkey, "testsubspace2")
+		ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }

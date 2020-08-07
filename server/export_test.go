@@ -70,7 +70,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	var exportedGenDoc tmtypes.GenesisDoc
-	err = app.Codec().UnmarshalJSON(output.Bytes(), &exportedGenDoc)
+	err = json.Unmarshal(output.Bytes(), &exportedGenDoc)
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}

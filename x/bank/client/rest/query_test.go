@@ -75,7 +75,7 @@ func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.Codec, resp)
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
@@ -122,7 +122,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.Codec, resp)
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())

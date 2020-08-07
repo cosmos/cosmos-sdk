@@ -254,14 +254,14 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 
 			tc.malleate()
 
-			var gs types.GenesisState
+			var gs *types.GenesisState
 			suite.NotPanics(func() {
 				gs = ibc.ExportGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper)
 			})
 
 			// init genesis based on export
 			suite.NotPanics(func() {
-				ibc.InitGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper, true, &gs)
+				ibc.InitGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper, true, gs)
 			})
 
 			suite.NotPanics(func() {
@@ -272,7 +272,7 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 
 			// init genesis based on marshal and unmarshal
 			suite.NotPanics(func() {
-				ibc.InitGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper, true, &gs)
+				ibc.InitGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper, true, gs)
 			})
 		})
 	}

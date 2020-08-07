@@ -52,7 +52,7 @@ var (
 			WithTxConfig(encodingConfig.TxConfig).
 			WithCodec(encodingConfig.Amino).
 			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
+			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Amino)).
 			WithBroadcastMode(flags.BroadcastBlock).
 			WithHomeDir(simapp.DefaultNodeHome)
 )

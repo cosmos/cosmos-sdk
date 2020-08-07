@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 var _ types.UnpackInterfacesMessage = GenesisState{}

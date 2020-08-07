@@ -104,7 +104,7 @@ $ <appcli> query slashing signing-infos
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Info)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 

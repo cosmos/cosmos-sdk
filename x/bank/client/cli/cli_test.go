@@ -14,8 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -62,11 +64,14 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
-			),
+			&types.QueryAllBalancesResponse{},
+			&types.QueryAllBalancesResponse{
+				Balances: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+				),
+				Pagination: &query.PageResponse{},
+			},
 		},
 		{
 			"total account balance of a specific denom",

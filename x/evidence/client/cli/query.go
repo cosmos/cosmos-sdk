@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -98,15 +96,9 @@ func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) erro
 	}
 
 	res, err := queryClient.AllEvidence(context.Background(), params)
-
 	if err != nil {
 		return err
 	}
 
-	outputArray := make([]proto.Message, 0, len(res.Evidence))
-	for _, eviAny := range res.Evidence {
-		outputArray = append(outputArray, eviAny)
-	}
-
-	return clientCtx.PrintOutputArray(outputArray)
+	return clientCtx.PrintOutput(res)
 }

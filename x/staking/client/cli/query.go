@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -118,17 +116,17 @@ $ %s query staking validators
 				return err
 			}
 
-			var validators []proto.Message
+			var validators []types.Validator
 			for _, kv := range resKVs {
 				validator, err := types.UnmarshalValidator(types.ModuleCdc, kv.Value)
 				if err != nil {
 					return err
 				}
 
-				validators = append(validators, &validator)
+				validators = append(validators, validator)
 			}
 
-			return clientCtx.PrintOutputArray(validators)
+			return clientCtx.PrintOutputLegacy(validators)
 		},
 	}
 

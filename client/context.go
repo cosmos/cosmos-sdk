@@ -264,10 +264,6 @@ func (ctx Context) printOutput(toPrint interface{}) error {
 	return nil
 }
 
-func (ctx Context) PrintOutputArray(toPrint []proto.Message) error {
-	panic("TODO")
-}
-
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.

@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -300,11 +298,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 				var votes types.Votes
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &votes)
-				toPrint := make([]proto.Message, len(votes))
-				for i, vote := range votes {
-					toPrint[i] = &vote
-				}
-				return clientCtx.PrintOutputArray(toPrint)
+				return clientCtx.PrintOutputLegacy(votes)
 
 			}
 
@@ -454,11 +448,7 @@ $ %s query gov deposits 1
 				var dep types.Deposits
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &dep)
 
-				toPrint := make([]proto.Message, len(dep))
-				for i, d := range dep {
-					toPrint[i] = &d
-				}
-				return clientCtx.PrintOutputArray(toPrint)
+				return clientCtx.PrintOutputLegacy(dep)
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())

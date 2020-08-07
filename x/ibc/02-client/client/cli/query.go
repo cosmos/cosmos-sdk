@@ -6,9 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -45,16 +42,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 
 			clientCtx = clientCtx.WithHeight(height)
 
-			toPrint := make([]proto.Message, len(clientStates))
-			for i, st := range clientStates {
-				any, err := types2.NewAnyWithValue(st)
-				if err != nil {
-					return err
-				}
-				toPrint[i] = any
-			}
-
-			return clientCtx.PrintOutputArray(toPrint)
+			return clientCtx.PrintOutputLegacy(clientStates)
 		},
 	}
 

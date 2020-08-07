@@ -93,6 +93,7 @@ func GenesisStateFromGenFile(cdc codec.JSONMarshaler, genFile string) (genesisSt
 	}
 
 	genesisState, err = GenesisStateFromGenDoc(cdc, *genDoc)
+
 	return genesisState, genDoc, err
 }
 

@@ -87,6 +87,8 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(FlagUpgradeTime, "", fmt.Sprintf("The time at which the upgrade must happen (ex. %s) (not to be used together with --upgrade-height)", TimeFormat))
 	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
 
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 

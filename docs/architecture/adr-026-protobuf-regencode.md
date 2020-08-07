@@ -50,7 +50,7 @@ default behaviour of all protobuf encoders the author is aware of, the 3rd rule
 is more interesting. Protobuf 3 has no notion of optional values and thus cannot
 differentiate between null/unset and empty fields. At serialization level
 however, it is possible to set the fields with an empty value or omitting them
-entirely. This is a significat difference to e.g. JSON where a property can be
+entirely. This is a significant difference to e.g. JSON where a property can be
 empty (`""`, `0`), `null` or undefined, leading to 3 different documents.
 
 Omitting empty fields is a valid option because the parser must assign the
@@ -60,13 +60,14 @@ preferring one of those options over the other.
 
 ### Implementation
 
-There are three main implementation strategies, orderd from the least to the
+There are three main implementation strategies, ordered from the least to the
 most custom development:
 
 - **Use a protobuf serializer that follows the above rules by default.** E.g.
   [gogoproto](https://pkg.go.dev/github.com/gogo/protobuf/gogoproto) is known to
-  be compliant by default. It might also be an option to configure an existing
-  serializer accoringly.
+  be compliant by in most cases, but not when certain annotations such as
+  `nullable = false` are used. It might also be an option to configure an
+  existing serializer accordingly.
 - **Normalize default values before encoding them.** If your serializer follows
   rule 1. and 2. and allows you to explicitely unset fields for serialization,
   you can normalize empty values to unset. This can be done when working with
@@ -82,7 +83,7 @@ most custom development:
   }).finish();
   ```
 
-- **Use a hand-written serializer for the types you need.** If non of the above
+- **Use a hand-written serializer for the types you need.** If none of the above
   ways works for you, you can write a serializer yourself. For SignDoc this
   would look something like this in Go, building on existing protobuf utilities:
 

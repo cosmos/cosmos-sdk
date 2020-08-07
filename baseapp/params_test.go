@@ -36,9 +36,9 @@ func TestValidateEvidenceParams(t *testing.T) {
 		{nil, true},
 		{&tmproto.EvidenceParams{}, true},
 		{tmproto.EvidenceParams{}, true},
-		{tmproto.EvidenceParams{MaxAgeNumBlocks: -1, MaxAgeDuration: 18004000}, true},
-		{tmproto.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: -1}, true},
-		{tmproto.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: 18004000}, false},
+		{tmproto.EvidenceParams{MaxAgeNumBlocks: -1, MaxAgeDuration: 18004000, MaxNum: 50, ProofTrialPeriod: 10_000}, true},
+		{tmproto.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: 18004000, MaxNum: 50, ProofTrialPeriod: -1}, true},
+		{tmproto.EvidenceParams{MaxAgeNumBlocks: 360000, MaxAgeDuration: 18004000, MaxNum: 50, ProofTrialPeriod: 50_0000}, false},
 	}
 
 	for _, tc := range testCases {

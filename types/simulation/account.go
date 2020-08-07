@@ -23,11 +23,6 @@ func (acc Account) Equals(acc2 Account) bool {
 	return acc.Address.Equals(acc2.Address)
 }
 
-type Accounts struct {
-	Account   []Account
-	Validator []Account
-}
-
 // RandomAcc picks and returns a random account from an array and returs its
 // position in the array.
 func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {

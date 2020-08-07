@@ -299,7 +299,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			"null",
+			"{\"slashes\":null,\"pagination\":{}}",
 		},
 		{
 			"text output",
@@ -309,7 +309,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 				sdk.ValAddress(val.Address).String(), "1", "3",
 			},
 			false,
-			"null",
+			"pagination: {}\nslashes: null",
 		},
 	}
 

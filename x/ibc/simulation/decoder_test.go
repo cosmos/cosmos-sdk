@@ -17,17 +17,14 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
-	cdc := app.AppCodec()
-	aminoCdc := app.Codec()
-
-	dec := simulation.NewDecodeStore(app.IBCKeeper.Codecs())
+	dec := simulation.NewDecodeStore(*app.IBCKeeper)
 
 	clientID := "clientidone"
 	connectionID := "connectionidone"
 	channelID := "channelidone"
 	portID := "portidone"
 
-	clientState := ibctmtypes.ClientState{
+	clientState := &ibctmtypes.ClientState{
 		FrozenHeight: 10,
 	}
 	connection := connectiontypes.ConnectionEnd{
@@ -42,15 +39,15 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
-			Value: aminoCdc.MustMarshalBinaryBare(clientState),
+			Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
 		},
 		kv.Pair{
 			Key:   host.KeyConnection(connectionID),
-			Value: cdc.MustMarshalBinaryBare(&connection),
+			Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&connection),
 		},
 		kv.Pair{
 			Key:   host.KeyChannel(portID, channelID),
-			Value: cdc.MustMarshalBinaryBare(&channel),
+			Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&channel),
 		},
 		kv.Pair{
 			Key:   []byte{0x99},

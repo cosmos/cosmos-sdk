@@ -12,12 +12,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 service Query {
   // Validators queries all validators that match the given status
   rpc Validators (QueryValidatorsRequest) returns (QueryValidatorsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1beta/validators/{status}";
+		option (google.api.http).get = "/cosmos/staking/v1beta/validators";
   }
 
   // Validator queries validator info for given validator addr
   rpc Validator (QueryValidatorRequest) returns (QueryValidatorResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1beta/validator/{validator_addr}";
+		option (google.api.http).get = "/cosmos/staking/v1beta/validators/{validator_addr}";
   }
 
   // ValidatorDelegations queries delegate info for given validator

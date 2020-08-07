@@ -158,7 +158,7 @@ func local_request_Query_ValidatorCommission_0(ctx context.Context, marshaler ru
 }
 
 var (
-	filter_Query_ValidatorSlashes_0 = &utilities.DoubleArray{Encoding: map[string]int{"validator_address": 0, "starting_height": 1, "ending_height": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
+	filter_Query_ValidatorSlashes_0 = &utilities.DoubleArray{Encoding: map[string]int{"validator_address": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_Query_ValidatorSlashes_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -181,28 +181,6 @@ func request_Query_ValidatorSlashes_0(ctx context.Context, marshaler runtime.Mar
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_address", err)
-	}
-
-	val, ok = pathParams["starting_height"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "starting_height")
-	}
-
-	protoReq.StartingHeight, err = runtime.Uint64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "starting_height", err)
-	}
-
-	val, ok = pathParams["ending_height"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ending_height")
-	}
-
-	protoReq.EndingHeight, err = runtime.Uint64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ending_height", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -237,28 +215,6 @@ func local_request_Query_ValidatorSlashes_0(ctx context.Context, marshaler runti
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_address", err)
-	}
-
-	val, ok = pathParams["starting_height"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "starting_height")
-	}
-
-	protoReq.StartingHeight, err = runtime.Uint64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "starting_height", err)
-	}
-
-	val, ok = pathParams["ending_height"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ending_height")
-	}
-
-	protoReq.EndingHeight, err = runtime.Uint64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ending_height", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -945,7 +901,7 @@ var (
 
 	pattern_Query_ValidatorCommission_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta", "validators", "validator_address", "commission"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ValidatorSlashes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "distribution", "v1beta", "validator-slashes", "validator_address", "starting_height", "ending_height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ValidatorSlashes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"cosmos", "distribution", "v1beta", "validators", "validator_address", "slashes"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_DelegationRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"cosmos", "distribution", "v1beta", "delegators", "delegator_address", "rewards", "validator_address"}, "", runtime.AssumeColonVerbOpt(true)))
 

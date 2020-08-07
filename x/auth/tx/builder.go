@@ -3,6 +3,7 @@ package tx
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
@@ -38,8 +39,9 @@ type builder struct {
 }
 
 var (
-	_ authsigning.SigFeeMemoTx = &builder{}
-	_ client.TxBuilder         = &builder{}
+	_ authsigning.SigFeeMemoTx   = &builder{}
+	_ client.TxBuilder           = &builder{}
+	_ ante.HasExtensionOptionsTx = &builder{}
 )
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
@@ -377,4 +379,12 @@ func (t *builder) setSignatures(sigs [][]byte) {
 
 func (t *builder) GetTx() authsigning.SigFeeMemoTx {
 	return t
+}
+
+func (t *builder) GetExtensionOptions() []*codectypes.Any {
+	return t.tx.Body.ExtensionOptions
+}
+
+func (t *builder) GetNonCriticalExtensionOptions() []*codectypes.Any {
+	return t.tx.Body.NonCriticalExtensionOptions
 }

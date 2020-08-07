@@ -106,6 +106,9 @@ var (
 	// ErrInvalidType defines an error an invalid type.
 	ErrInvalidType = Register(RootCodespace, 29, "invalid type")
 
+	// ErrUnknownExtensionOptions defines an error for unknown extension options.
+	ErrUnknownExtensionOptions = Register(RootCodespace, 30, "unknown extension options")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

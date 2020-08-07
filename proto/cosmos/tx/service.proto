@@ -8,96 +8,16 @@ import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
-// TxService defines a gRPC convenience service for generating, broadcasting and querying Tx's.
+// TxService defines a gRPC convenience service for simulating, broadcasting and querying Tx's.
 service TxService {
     // Generate takes a GenerateRequest to build a Tx, optionally simulating the transaction and estimating gas.
-    rpc Generate(GenerateRequest) returns (GenerateResponse) {}
-
-    // Broadcast broadcasts a Tx to nodes.
-    rpc Broadcast(BroadcastRequest) returns (BroadcastResponse) {}
+    rpc Simulate(SimulateRequest) returns (SimulateResponse) {}
 }
 
 // GenerateRequest is the request type for the TxService.Generate RPC method.
-message GenerateRequest {
-    // messages are the messages to include in the generated transaction.
-    repeated google.protobuf.Any messages = 1;
-
-    // base defines the base transaction generation parameters.
-    Base base = 2;
-
-    // Base defines common request parameters for GenerateRequest that can be used
-    // by other module-specific transaction generation helpers if desired.
-    message Base {
-        string from = 1;
-
-        // memo is the TxBody memo
-        string memo = 2;
-
-        // chain_id is the chain ID to sign against
-        string chain_id = 3;
-
-        // account_number is the account number to sign against
-        uint64 account_number = 4;
-
-        // account_sequence is the account sequence to sign against
-        uint64 account_sequence = 5;
-
-        // fees is the fees paid
-        repeated cosmos.Coin fees = 6 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-
-        // gas prices are the gas prices used to calculate fees
-        repeated cosmos.DecCoin gas_prices = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
-
-        // gas is the gas setting - either auto or an integer gas limit value
-        string gas = 8;
-
-        // gas_adjustment is the gas adjustment used for calculating fees. It is multiplied by the gas used in simulate
-        double gas_adjustment = 9;
-
-        // simulate specifies whether or not to simulate the transaction to calculate gas
-        bool simulate = 10;
-    }
+message SimulateRequest {
 }
 
 // GenerateResponse is the response type for the TxService.Generate RPC method.
-message GenerateResponse {
-    Tx tx = 1;
+message SimulateResponse {
 }
-
-// BroadcastRequest is the request type for the TxService.Broadcast RPC method.
-message BroadcastRequest {
-    TxRaw tx = 1;
-    BroadcastMode mode = 2;
-}
-
-// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC method.
-enum BroadcastMode {
-    // BROADCAST_MODE_BLOCK defines a tx broadcasting mode where the client waits for
-    // the tx to be committed in a block.
-    BROADCAST_MODE_BLOCK = 0;
-
-    // BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for
-    // a CheckTx execution response only.
-    BROADCAST_MODE_SYNC = 1;
-
-    // BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns
-    // immediately.
-    BROADCAST_MODE_ASYNC = 2;
-}
-
-// BroadcastResponse is the response type for the TxService.Broadcast RPC method.
-message BroadcastResponse {
-    int64 height = 1;
-    string txhash = 2 [(gogoproto.customname) = "TxHash"];
-    string codespace = 3;
-    uint32 code = 4;
-    string data = 5;
-    string raw_log = 6;
-    repeated cosmos.ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
-    string info = 8;
-    int64 gas_wanted = 9;
-    int64 gas_used = 10;
-    Tx tx = 11;
-    string timestamp = 12;
-}
-

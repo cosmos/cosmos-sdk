@@ -9,7 +9,6 @@ import "cosmos/slashing/slashing.proto";
 // GenesisState - all slashing state that must be provided at genesis
 message GenesisState {
   Params params = 1 [
-    (gogoproto.casttype) = "Params",
     (gogoproto.nullable) = false
   ];
 

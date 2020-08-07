@@ -9,12 +9,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 // GenesisState - minter state
 message GenesisState {
   Minter minter = 1 [
-    (gogoproto.casttype) = "Minter",
     (gogoproto.nullable) = false
   ];
 
   Params params = 2 [
-    (gogoproto.casttype) = "Params",
     (gogoproto.nullable) = false
   ];
 }

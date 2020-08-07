@@ -10,7 +10,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 // GenesisState - all staking state that must be provided at genesis
 message GenesisState{
 	uint64 starting_proposal_id  = 1 [
-	  (gogoproto.customname) = "StartingProposalID",
 	  (gogoproto.moretags) = "yaml:\"starting_proposal_id\""
 	];
 	repeated Deposit deposits    = 2 [

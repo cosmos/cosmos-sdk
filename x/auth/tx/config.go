@@ -3,6 +3,8 @@ package tx
 import (
 	"fmt"
 
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -11,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-type generator struct {
+type config struct {
 	pubkeyCodec types.PublicKeyCodec
 	handler     signing.SignModeHandler
 	decoder     sdk.TxDecoder
@@ -21,11 +23,12 @@ type generator struct {
 	protoCodec  *codec.ProtoCodec
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec, PublicKeyCodec and SignModeHandler.
-func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec, signModeHandler signing.SignModeHandler) client.TxConfig {
-	return &generator{
+// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec, PublicKeyCodec and sign modes. The
+// first enabled sign mode will become the default sign mode.
+func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec, enabledSignModes []signingtypes.SignMode) client.TxConfig {
+	return &config{
 		pubkeyCodec: pubkeyCodec,
-		handler:     signModeHandler,
+		handler:     makeSignModeHandler(enabledSignModes),
 		decoder:     DefaultTxDecoder(protoCodec, pubkeyCodec),
 		encoder:     DefaultTxEncoder(),
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec, pubkeyCodec),
@@ -34,12 +37,12 @@ func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec,
 	}
 }
 
-func (g generator) NewTxBuilder() client.TxBuilder {
+func (g config) NewTxBuilder() client.TxBuilder {
 	return newBuilder(g.pubkeyCodec)
 }
 
 // WrapTxBuilder returns a builder from provided transaction
-func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	newBuilder, ok := newTx.(*builder)
 	if !ok {
 		return nil, fmt.Errorf("expected %T, got %T", &builder{}, newTx)
@@ -48,22 +51,22 @@ func (g generator) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	return newBuilder, nil
 }
 
-func (g generator) SignModeHandler() signing.SignModeHandler {
+func (g config) SignModeHandler() signing.SignModeHandler {
 	return g.handler
 }
 
-func (g generator) TxEncoder() sdk.TxEncoder {
+func (g config) TxEncoder() sdk.TxEncoder {
 	return g.encoder
 }
 
-func (g generator) TxDecoder() sdk.TxDecoder {
+func (g config) TxDecoder() sdk.TxDecoder {
 	return g.decoder
 }
 
-func (g generator) TxJSONEncoder() sdk.TxEncoder {
+func (g config) TxJSONEncoder() sdk.TxEncoder {
 	return g.jsonEncoder
 }
 
-func (g generator) TxJSONDecoder() sdk.TxDecoder {
+func (g config) TxJSONDecoder() sdk.TxDecoder {
 	return g.jsonDecoder
 }

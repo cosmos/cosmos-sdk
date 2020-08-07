@@ -21,19 +21,13 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
-
-// ClientState requires (read-only) access to keys outside the client prefix.
-type ClientState struct {
-	ChainID string `json:"chain_id" yaml:"chain_id"`
-	Height  int64  `json:"height" yaml:"height"`
-}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
-func NewClientState(chainID string, height int64) ClientState {
-	return ClientState{
+func NewClientState(chainID string, height int64) *ClientState {
+	return &ClientState{
 		ChainID: chainID,
-		Height:  height,
+		Height:  uint64(height),
 	}
 }
 
@@ -49,12 +43,17 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.Height)
+	return cs.Height
 }
 
 // IsFrozen returns false.
 func (cs ClientState) IsFrozen() bool {
 	return false
+}
+
+// GetFrozenHeight returns 0.
+func (cs ClientState) GetFrozenHeight() uint64 {
+	return 0
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -73,45 +72,13 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
-// VerifyClientConsensusState verifies a proof of the consensus
-// state of the loop-back client.
-// VerifyClientConsensusState verifies a proof of the consensus state of the
-// Tendermint client stored on the target machine.
+// VerifyClientConsensusState returns an error since a local host client does not store consensus
+// states.
 func (cs ClientState) VerifyClientConsensusState(
-	store sdk.KVStore,
-	_ codec.BinaryMarshaler,
-	aminoCdc *codec.Codec,
-	_ commitmentexported.Root,
-	height uint64,
-	_ string,
-	consensusHeight uint64,
-	prefix commitmentexported.Prefix,
-	_ []byte,
-	consensusState clientexported.ConsensusState,
+	sdk.KVStore, codec.BinaryMarshaler, commitmentexported.Root,
+	uint64, string, uint64, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientexported.ClientTypeLocalHost)
-	if err != nil {
-		return err
-	}
-
-	data := store.Get([]byte(path.String()))
-	if len(data) == 0 {
-		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
-	}
-
-	var prevConsensusState clientexported.ConsensusState
-	if err := aminoCdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
-		return err
-	}
-
-	if consensusState != prevConsensusState {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrFailedClientConsensusStateVerification,
-			"consensus state ≠ previous stored consensus state: \n%v\n≠\n%v", consensusState, prevConsensusState,
-		)
-	}
-
-	return nil
+	return ErrConsensusStatesNotStored
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the

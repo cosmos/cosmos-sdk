@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -17,32 +17,31 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
-	cdc := app.Codec()
 	clientID := "clientidone"
 
-	clientState := ibctmtypes.ClientState{
+	clientState := &ibctmtypes.ClientState{
 		FrozenHeight: 10,
 	}
 
-	consState := ibctmtypes.ConsensusState{
+	consState := &ibctmtypes.ConsensusState{
 		Height:    10,
 		Timestamp: time.Now().UTC(),
 	}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
+	kvPairs := kv.Pairs{
+		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
-			Value: cdc.MustMarshalBinaryBare(clientState),
+			Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
 			Value: []byte(exported.Tendermint.String()),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
-			Value: cdc.MustMarshalBinaryBare(consState),
+			Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
 		},
-		tmkv.Pair{
+		kv.Pair{
 			Key:   []byte{0x99},
 			Value: []byte{0x99},
 		},
@@ -60,7 +59,7 @@ func TestDecodeStore(t *testing.T) {
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, found := simulation.NewDecodeStore(cdc, kvPairs[i], kvPairs[i])
+			res, found := simulation.NewDecodeStore(app.IBCKeeper.ClientKeeper, kvPairs[i], kvPairs[i])
 			if i == len(tests)-1 {
 				require.False(t, found, string(kvPairs[i].Key))
 				require.Empty(t, res, string(kvPairs[i].Key))

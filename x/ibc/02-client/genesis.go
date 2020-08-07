@@ -16,6 +16,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		if !ok {
 			panic("invalid client state")
 		}
+
 		k.SetClientState(ctx, client.ClientID, cs)
 		k.SetClientType(ctx, client.ClientID, cs.ClientType())
 	}
@@ -55,6 +56,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
 		Clients:          k.GetAllGenesisClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
-		CreateLocalhost:  true,
+		CreateLocalhost:  false,
 	}
 }

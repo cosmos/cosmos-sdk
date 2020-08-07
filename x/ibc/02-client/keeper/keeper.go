@@ -131,17 +131,17 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusSta
 	mapClientIDToConsStateIdx := make(map[string]int)
 
 	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
-		anyClientState := types.MustPackConsensusState(cs)
+		anyConsensusState := types.MustPackConsensusState(cs)
 
 		idx, ok := mapClientIDToConsStateIdx[clientID]
 		if ok {
-			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, anyClientState)
+			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, anyConsensusState)
 			return false
 		}
 
 		clientConsState := types.ClientConsensusStates{
 			ClientID:        clientID,
-			ConsensusStates: []*codectypes.Any{anyClientState},
+			ConsensusStates: []*codectypes.Any{anyConsensusState},
 		}
 
 		clientConsStates = append(clientConsStates, clientConsState)

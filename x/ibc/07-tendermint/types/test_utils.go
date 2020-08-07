@@ -40,6 +40,7 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 		ProposerAddress:    valSet.Proposer.Address,
 	}
+
 	hhash := tmHeader.Hash()
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
 	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)

@@ -69,6 +69,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
+			expPass: true,
 		},
 		{
 			name: "successful update with next height and different validator set",

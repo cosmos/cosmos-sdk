@@ -8,6 +8,8 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -21,7 +23,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -106,7 +107,7 @@ which accepts a path for the resulting pprof file.
 
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(serverCtx, clientCtx.JSONMarshaler, appCreator)
+			err := startInProcess(serverCtx, clientCtx.Codec, appCreator)
 			return err
 		},
 	}
@@ -177,7 +178,8 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppCreator) error {
+// legacyAminoCdc is used for the legacy REST API
+func startInProcess(ctx *Context, legacyAminoCdc *codec.Codec, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -230,7 +232,8 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppC
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(cdc).
+			WithJSONMarshaler(legacyAminoCdc).
+			WithCodec(legacyAminoCdc).
 			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))

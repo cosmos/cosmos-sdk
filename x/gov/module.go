@@ -70,7 +70,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(&data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the gov module.
@@ -160,7 +160,7 @@ func (am AppModule) RegisterQueryService(server grpc.Server) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, genesisState)
+	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

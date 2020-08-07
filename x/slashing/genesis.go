@@ -41,7 +41,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 // ExportGenesis writes the current store values
 // to a genesis file, which can be imported again
 // with InitGenesis
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data types.GenesisState) {
+func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisState) {
 	params := keeper.GetParams(ctx)
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)

@@ -21,21 +21,23 @@ const (
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
 type Subspace struct {
-	cdc   codec.Marshaler
-	key   sdk.StoreKey // []byte -> []byte, stores parameter
-	tkey  sdk.StoreKey // []byte -> bool, stores parameter change
-	name  []byte
-	table KeyTable
+	cdc         codec.BinaryMarshaler
+	legacyAmino *codec.Codec
+	key         sdk.StoreKey // []byte -> []byte, stores parameter
+	tkey        sdk.StoreKey // []byte -> bool, stores parameter change
+	name        []byte
+	table       KeyTable
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc codec.Marshaler, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.BinaryMarshaler, legacyAmino *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
 	return Subspace{
-		cdc:   cdc,
-		key:   key,
-		tkey:  tkey,
-		name:  []byte(name),
-		table: NewKeyTable(),
+		cdc:         cdc,
+		legacyAmino: legacyAmino,
+		key:         key,
+		tkey:        tkey,
+		name:        []byte(name),
+		table:       NewKeyTable(),
 	}
 }
 
@@ -103,7 +105,7 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 
-	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
+	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -120,7 +122,7 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 
 	s.checkType(key, ptr)
 
-	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
+	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -170,7 +172,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 	s.checkType(key, value)
 	store := s.kvStore(ctx)
 
-	bz, err := s.cdc.MarshalJSON(value)
+	bz, err := s.legacyAmino.MarshalJSON(value)
 	if err != nil {
 		panic(err)
 	}
@@ -197,7 +199,7 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	dest := reflect.New(ty).Interface()
 	s.GetIfExists(ctx, key, dest)
 
-	if err := s.cdc.UnmarshalJSON(value, dest); err != nil {
+	if err := s.legacyAmino.UnmarshalJSON(value, dest); err != nil {
 		return err
 	}
 

@@ -19,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -41,9 +40,9 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	serverCtx := NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
-	clientCtx := client.Context{}.WithJSONMarshaler(app.Codec())
+	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
 
-	genDoc := newDefaultGenesisDoc(app.Codec())
+	genDoc := newDefaultGenesisDoc()
 	err = saveGenesisFile(genDoc, serverCtx.Config.GenesisFile())
 
 	app.InitChain(
@@ -90,10 +89,10 @@ func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0700)
 }
 
-func newDefaultGenesisDoc(cdc *codec.Codec) *tmtypes.GenesisDoc {
+func newDefaultGenesisDoc() *tmtypes.GenesisDoc {
 	genesisState := simapp.NewDefaultGenesisState()
 
-	stateBytes, err := codec.MarshalJSONIndent(cdc, genesisState)
+	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {
 		panic(err)
 	}

@@ -22,7 +22,7 @@ func QueryGenesisTxs(clientCtx client.Context, w http.ResponseWriter) {
 		return
 	}
 
-	appState, err := types.GenesisStateFromGenDoc(clientCtx.Codec, *resultGenesis.Genesis)
+	appState, err := types.GenesisStateFromGenDoc(*resultGenesis.Genesis)
 	if err != nil {
 		rest.WriteErrorResponse(
 			w, http.StatusInternalServerError,

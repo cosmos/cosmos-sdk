@@ -231,3 +231,20 @@ func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
 
 	return nil
 }
+
+// AddPreRunEHook adds a PreRunE middleware hook to the command. It wraps any existing PreRunE
+// hook and calls it first instead of replacing it.
+func AddPreRunEHook(cmd *cobra.Command, preRunHook func(cmd *cobra.Command, args []string) error) {
+	existing := cmd.PreRunE
+	if existing != nil {
+		cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			err := existing(cmd, args)
+			if err != nil {
+				return err
+			}
+			return preRunHook(cmd, args)
+		}
+	} else {
+		cmd.PreRunE = preRunHook
+	}
+}

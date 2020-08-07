@@ -75,10 +75,21 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			true,
 		},
 		{
-			"trusted heights don't match",
+			"valid evidence with different trusted headers",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-2, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-3, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
+				ChainID:  chainID,
+				ClientID: "gaiamainnet",
+			},
+			func(ev *ibctmtypes.Evidence) error { return nil },
+			true,
+		},
+		{
+			"trusted height1 is 0",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  suite.header,
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -86,10 +97,32 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			false,
 		},
 		{
-			"trusted valsets don't match",
+			"trusted height2 is 0",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				ChainID:  chainID,
+				ClientID: "gaiamainnet",
+			},
+			func(ev *ibctmtypes.Evidence) error { return nil },
+			false,
+		},
+		{
+			"trusted valset1 is nil",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
+				Header2:  suite.header,
+				ChainID:  chainID,
+				ClientID: "gaiamainnet",
+			},
+			func(ev *ibctmtypes.Evidence) error { return nil },
+			false,
+		},
+		{
+			"trusted valset2 is nil",
+			ibctmtypes.Evidence{
+				Header1:  suite.header,
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},

@@ -99,7 +99,7 @@ func getAccountInfo(val *network.Validator) (authtypes.AccountI, error) {
 	}
 
 	var acc authtypes.AccountI
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, &acc)
+	err = val.ClientCtx.Codec.UnmarshalJSON(bz, &acc)
 	if err != nil {
 		return nil, err
 	}

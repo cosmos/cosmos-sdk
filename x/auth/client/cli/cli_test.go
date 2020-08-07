@@ -635,7 +635,7 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	val := s.network.Validators[0]
 
 	cmd := authcli.GetAccountCmd()
-	args := []string{fmt.Sprintf("%s", val.Address),
+	args := []string{val.Address.String(),
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 
 	var acc authtypes.BaseAccount

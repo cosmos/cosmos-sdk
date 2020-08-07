@@ -17,14 +17,13 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
-	cdc := app.Codec()
 	clientID := "clientidone"
 
-	clientState := ibctmtypes.ClientState{
+	clientState := &ibctmtypes.ClientState{
 		FrozenHeight: 10,
 	}
 
-	consState := ibctmtypes.ConsensusState{
+	consState := &ibctmtypes.ConsensusState{
 		Height:    10,
 		Timestamp: time.Now().UTC(),
 	}
@@ -32,7 +31,7 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
-			Value: cdc.MustMarshalBinaryBare(clientState),
+			Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
 		},
 		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
@@ -40,7 +39,7 @@ func TestDecodeStore(t *testing.T) {
 		},
 		kv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
-			Value: cdc.MustMarshalBinaryBare(consState),
+			Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
 		},
 		kv.Pair{
 			Key:   []byte{0x99},
@@ -60,7 +59,7 @@ func TestDecodeStore(t *testing.T) {
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, found := simulation.NewDecodeStore(cdc, kvPairs[i], kvPairs[i])
+			res, found := simulation.NewDecodeStore(app.IBCKeeper.ClientKeeper, kvPairs[i], kvPairs[i])
 			if i == len(tests)-1 {
 				require.False(t, found, string(kvPairs[i].Key))
 				require.Empty(t, res, string(kvPairs[i].Key))

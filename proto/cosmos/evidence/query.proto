@@ -39,6 +39,6 @@ message QueryAllEvidenceResponse {
   // evidence returns all evidences.
   repeated google.protobuf.Any evidence = 1;
 
-  // pagination defines an optional pagination in the response.
+  // pagination defines the pagination in the response.
   cosmos.query.PageResponse pagination = 2;
 }

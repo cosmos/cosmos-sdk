@@ -64,7 +64,7 @@ message QueryProposalsRequest {
 message QueryProposalsResponse {
   repeated Proposal proposals = 1 [(gogoproto.nullable) = false];
 
-  // pagination defines an optional pagination in the response.
+  // pagination defines the pagination in the response.
   cosmos.query.PageResponse pagination = 2;
 }
 
@@ -97,7 +97,7 @@ message QueryVotesResponse {
   // votes defined the queried votes.
   repeated Vote votes = 1 [(gogoproto.nullable) = false];
 
-  // pagination defines an optional pagination in the response.
+  // pagination defines the pagination in the response.
   cosmos.query.PageResponse pagination = 2;
 }
 
@@ -145,7 +145,7 @@ message QueryDepositsRequest {
 message QueryDepositsResponse {
   repeated Deposit deposits = 1 [(gogoproto.nullable) = false];
 
-  // pagination defines an optional pagination in the response.
+  // pagination defines the pagination in the response.
   cosmos.query.PageResponse pagination = 2;
 }
 

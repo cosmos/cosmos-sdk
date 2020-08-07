@@ -87,7 +87,7 @@ message QueryValidatorSlashesResponse {
   // slashes defines the slashes the validator received.
   repeated ValidatorSlashEvent slashes = 1 [(gogoproto.nullable) = false];
 
-  // pagination defines an optional pagination in the response.
+  // pagination defines the pagination in the response.
   cosmos.query.PageResponse pagination = 2;
 }
 

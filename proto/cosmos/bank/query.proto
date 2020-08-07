@@ -53,7 +53,7 @@ message QueryAllBalancesResponse {
   repeated cosmos.Coin balances = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
-  // pagination defines an optional pagination in the response.
+  // pagination defines the pagination in the response.
   cosmos.query.PageResponse pagination = 2;
 }
 
